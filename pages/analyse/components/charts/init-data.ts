@@ -1,0 +1,94 @@
+// 扇形图（饼图）
+import PieChart from '~/components/pie-chart/index.vue'
+// 柱状图
+import IntervalChart from '~/components/interval-chart/index.vue'
+// 折线图
+import LineChart from '~/components/line-chart/index.vue'
+// 表格
+import TableChart from '~/components/table-chart/index.vue'
+
+export const initData = () => {
+  const dimensionStore = useDimensionStore()
+  const groupStore = useGroupStore()
+  const chartStore = useChartStore()
+  /**
+   * @desc 图表 loading
+   * @type {boolean}
+   */
+  const chartLoading = computed(() => {
+    return chartStore.getChartLoading<'chartLoading'>()
+  })
+  /**
+   * @desc 图表错误信息
+   */
+  const chartErrorMessage = computed(() => {
+    return chartStore.getChartErrorMessage<'chartErrorMessage'>()
+  })
+  /**
+   * @desc X轴字段
+   * @type {Array<DimensionStore.DimensionState['dimensions']>}
+   */
+  const xAxisFields = computed<
+    DimensionStore.DimensionState['dimensions']
+  >(() => {
+    const dimensions =
+      dimensionStore.getDimensions<'dimensions'>()
+    return dimensions
+  })
+  /**
+   * @desc Y轴字段
+   * @type {Array<GroupStore.GroupState['groups']>}
+   */
+  const yAxisFields = computed<
+    GroupStore.GroupState['groups']
+  >(() => {
+    const groups = groupStore.getGroups<'groups'>()
+    return groups
+  })
+  /**
+   * @desc 表格数据
+   * @type {Array<ChartDataItem>}
+   */
+  const data = computed<Array<ChartDataItem>>(() => {
+    return [
+      {
+        id: 1,
+        name: '张三',
+        age: 18
+      },
+      {
+        id: 2,
+        name: '李四',
+        age: 20
+      }
+    ]
+  })
+  /**
+   * @desc 图表类型
+   * @type {Component}
+   */
+  const chartType = computed(() => {
+    const chartType = chartStore.getChartType<'chartType'>()
+
+    switch (chartType) {
+      case 'table':
+        return TableChart
+      case 'line':
+        return LineChart
+      case 'interval':
+        return IntervalChart
+      case 'pie':
+        return PieChart
+      default:
+        return TableChart
+    }
+  })
+  return {
+    chartLoading,
+    chartErrorMessage,
+    xAxisFields,
+    yAxisFields,
+    data,
+    chartType
+  }
+}
