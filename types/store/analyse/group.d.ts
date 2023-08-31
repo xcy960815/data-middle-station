@@ -30,6 +30,6 @@ declare namespace GroupStore {
   interface GroupActions {
     updateGroup: (groups: Group[]) => void
     addGroup: (groups: Group[]) => void
-    remvoeGroup: (index: number) => void
+    removeGroup: (index: number) => void
   }
 }

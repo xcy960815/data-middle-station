@@ -1,23 +1,19 @@
 /// <reference path="../store/commom.d.ts" />
 
-/**
- * @file table-chart.d.ts
- * @desc table-chart 组件的类型声明文件
- */
-declare namespace TableChartModule {
+declare namespace TableChart {
   import type { TableColumnCtx } from 'element-plus'
 
-  interface TableColumn
-    extends TableColumnCtx<TableHeaderItem> {}
-
-  interface TableHeaderItem extends FieldOption {
+  /**
+   * @desc 表格表头字段类型
+   */
+  interface TableHeaderOption extends FieldOption {
     minWidth?: number
   }
-
-  interface TableDataItem extends ChartDataItem {}
+  interface TableColumn
+    extends TableColumnCtx<TableHeaderOption> {}
 
   interface CellStyleParams {
-    row: TableHeaderItem
+    row: TableHeaderOption
     column: TableColumn
     rowIndex: number
     columnIndex: number

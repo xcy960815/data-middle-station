@@ -1,7 +1,6 @@
 <template>
   <!--  v-sticky="{ top, parent }" -->
   <ClientOnly>
-    <!-- v-if="renderTable" -->
     <el-table
       size="small"
       class="table-chart"
@@ -31,7 +30,6 @@
       >
       </el-table-column>
     </el-table>
-    <!--  v-if="renderPagination" -->
     <el-pagination
       v-model:current-page="pageNum"
       v-model:page-size="pageSize"
@@ -49,15 +47,15 @@ import { initData as tableChartInitData } from './init-data';
 import { handler as tableChartHandler } from './handler';
 const props = defineProps({
   data: {
-    type: Array as PropType<Array<TableChartModule.TableDataItem>>,
+    type: Array as PropType<Array<Chart.ChartData>>,
     default: () => [],
   },
   xAxisFields: {
-    type: Array as PropType<Array<TableChartModule.TableHeaderItem>>,
+    type: Array as PropType<Array<Chart.XAxisFields>>,
     default: () => [],
   },
   yAxisFields: {
-    type: Array as PropType<Array<TableChartModule.TableHeaderItem>>,
+    type: Array as PropType<Array<Chart.YAxisFields>>,
     default: () => [],
   },
   autoWidth: {
@@ -77,12 +75,12 @@ const props = defineProps({
     default: () => null,
   },
 });
-const renderTable = computed<boolean>(()=>{
- return props.xAxisFields.concat(props.yAxisFields).length > 0;
-})
-const renderPagination = computed<boolean>(()=>{
- return props.xAxisFields.concat(props.yAxisFields).length > 0;
-})
+// const renderTable = computed<boolean>(()=>{
+//  return props.xAxisFields.concat(props.yAxisFields).length > 0;
+// })
+// const renderPagination = computed<boolean>(()=>{
+//  return props.xAxisFields.concat(props.yAxisFields).length > 0;
+// })
 const { total, pageNum, pageSize, tableHeader, tableData } = tableChartInitData(props);
 
 const { cellStyle, tableColumnFormatter, spanMethod } = tableChartHandler({});

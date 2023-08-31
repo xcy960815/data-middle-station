@@ -1,14 +1,46 @@
 <template>
   <!-- 环形图 -->
-  <div id="container-pie"></div>
+  <div id="container-pie" class="h-full w-full"></div>
 </template>
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
+
+import DataSet from '@antv/data-set'
+const props = defineProps({
+  data: {
+    type: Array as PropType<
+      Array<Chart.TableDataItem>
+    >,
+    default: () => []
+  },
+  xAxisFields: {
+    type: Array as PropType<
+      Array<Chart.TableHeaderItem>
+    >,
+    default: () => []
+  },
+  yAxisFields: {
+    type: Array as PropType<
+      Array<Chart.TableHeaderItem>
+    >,
+    default: () => []
+  }
+})
 const initChart = () => {
+  const dv = new DataSet.View().source(props.data)
+  dv.transform({
+    type: 'fold',
+    fields: props.yAxisFields.map(
+      (item) => item.alias || item.name
+    ),
+    key: 'key',
+    value: 'value'
+  })
   const chart = new Chart({
     container: 'container-pie',
-    theme: 'classic'
+    theme: 'classic',
+    autoFit: true
   })
 
   chart.coordinate({ type: 'theta', innerRadius: 0.6 })
@@ -16,13 +48,9 @@ const initChart = () => {
   chart
     .interval()
     .transform({ type: 'stackY' })
-    .data({
-      type: 'fetch',
-      value:
-        'https://gw.alipayobjects.com/os/bmw-prod/79fd9317-d2af-4bc4-90fa-9d07357398fd.csv'
-    })
+    .data(dv.rows)
     .encode('y', 'value')
-    .encode('color', 'name')
+    .encode('color', 'key')
     .style('stroke', 'white')
     .style('inset', 1)
     .style('radius', 10)
@@ -35,6 +63,7 @@ const initChart = () => {
       style: { fontSize: 10, fontWeight: 'bold' }
     })
     .label({
+      // @ts-ignore
       text: (d, i, data) =>
         i < data.length - 3 ? d.value : '',
       style: {

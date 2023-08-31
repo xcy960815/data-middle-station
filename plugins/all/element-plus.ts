@@ -3,7 +3,7 @@ import ElementPlus, { ID_INJECTION_KEY } from "element-plus";
 import "element-plus/dist/index.css";
 /**
  * @desc 通过插件的形式加载 Element Plus 组件库 也可以通过在 nuxt.config.ts 中的 modules 中引入 '@element-plus/nuxt'
- * @param {import('@nuxt/types').NuxtAppOptions} nuxtApp
+ * @param nuxtApp
  * @returns {void}
  */
 export default defineNuxtPlugin((nuxtApp) => {
