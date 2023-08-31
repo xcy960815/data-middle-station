@@ -80,11 +80,11 @@ export default defineNuxtConfig({
     {
       src: '../plugins/all/element-plus.ts',
       mode: 'all'
-    },
-    {
-      src: '../plugins/all/table-stick.ts',
-      mode: 'all'
     }
+    // {
+    //   src: '../plugins/all/table-stick.ts',
+    //   mode: 'all'
+    // }
   ],
   nitro: {
     esbuild: {
@@ -96,5 +96,5 @@ export default defineNuxtConfig({
         }
       }
     }
-  },
+  }
 })

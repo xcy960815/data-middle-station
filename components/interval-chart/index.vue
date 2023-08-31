@@ -5,30 +5,30 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
-import DataSet from '@antv/data-set'
+import DataSet from '@antv/data-set';
+
 const props = defineProps({
   data: {
     type: Array as PropType<
-      Array<TableChartModule.TableDataItem>
+      Array<Chart.ChartData>
     >,
     default: () => []
   },
   xAxisFields: {
     type: Array as PropType<
-      Array<TableChartModule.TableHeaderItem>
+      Array<Chart.XAxisFields>
     >,
     default: () => []
   },
   yAxisFields: {
     type: Array as PropType<
-      Array<TableChartModule.TableHeaderItem>
+      Array<Chart.YAxisFields>
     >,
     default: () => []
   }
 })
 const initChart = () => {
   const dv = new DataSet.View().source(props.data)
-
   dv.transform({
     type: 'fold',
     fields: props.yAxisFields.map(
@@ -37,15 +37,6 @@ const initChart = () => {
     key: 'key',
     value: 'value'
   })
-
-  // 准备数据
-  const data = [
-    { genre: 'Sports', sold: 275 },
-    { genre: 'Strategy', sold: 115 },
-    { genre: 'Action', sold: 120 },
-    { genre: 'Shooter', sold: 350 },
-    { genre: 'Other', sold: 150 }
-  ]
 
   // 初始化图表实例
   const chart = new Chart({
@@ -57,16 +48,16 @@ const initChart = () => {
   // 声明可视化
   chart
     .interval() // 创建一个 Interval 标记
-    .data(data) // 绑定数据
-    .encode('x', 'genre') // 编码 x 通道
-    .encode('y', 'sold') // 编码 y 通道
+    .data(dv.rows) // 绑定数据
+    .encode('x', 'key') // 编码 x 通道
+    .encode('y', 'value') // 编码 y 通道
 
   // 渲染可视化
   chart.render()
 }
 
 onMounted(() => {
-  initChart()
+  initChart() 
 })
 </script>
 <style lang="less" scoped></style>

@@ -5,24 +5,24 @@ export const useGroupStore = definePiniaStore<
   GroupStore.GroupActions
 >('group', {
   state: () => ({
-    groups: [],
+    groups: []
   }),
   getters: {
     getGroups: (state) => {
       return () => {
-        return state.groups;
-      };
-    },
+        return state.groups
+      }
+    }
   },
   actions: {
     addGroup(groups) {
-      this.groups = this.groups.concat(groups);
+      this.groups = this.groups.concat(groups)
     },
     updateGroup(groups) {
-      this.groups = groups;
+      this.groups = groups
     },
-    remvoeGroup(index) {
-      this.groups.splice(index, 1);
-    },
-  },
-});
+    removeGroup(index) {
+      this.groups.splice(index, 1)
+    }
+  }
+})

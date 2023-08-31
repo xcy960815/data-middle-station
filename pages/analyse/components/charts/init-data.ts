@@ -47,9 +47,9 @@ export const initData = () => {
   })
   /**
    * @desc 表格数据
-   * @type {Array<ChartDataItem>}
+   * @type {Array<Chart. ChartData>}
    */
-  const data = computed<Array<ChartDataItem>>(() => {
+  const data = computed<Array<Chart.ChartData>>(() => {
     return [
       {
         id: 1,

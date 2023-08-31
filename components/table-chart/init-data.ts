@@ -1,20 +1,19 @@
 /**
  * @desc 初始化 table-chart 组件的数据
- * @param {TableChartModule.InitDataParams} props
- * @returns {TableChartModule.InitDataReturn}
+ * @param {TableChart.InitDataParams} props
+ * @returns {TableChart.InitDataReturn}
  */
-export const initData = (
-  props: TableChartModule.InitDataParams
-) => {
+export const initData = (props: TableChart.InitDataParams) => {
   const pageNum = ref(1)
   const pageSize = ref(10)
-
   const total = computed(() => {
     return props.data.length
   })
-
+  /**
+   * @desc 获取当前列的最大长度
+   */
   const tableHeader = computed<
-    TableChartModule.TableHeaderItem[]
+    TableChart.TableHeaderOption[]
   >(() => {
     // 获取当前表格的所有字段
     const fields = [
@@ -39,7 +38,9 @@ export const initData = (
 
     return tableHeader
   })
-
+  /**
+   * @desc 表格数据
+   */
   const tableData = computed(() => {
     return props.data
       .map((item) => {
