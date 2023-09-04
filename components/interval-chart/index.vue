@@ -5,31 +5,26 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
-import DataSet from '@antv/data-set';
+import DataSet from '@antv/data-set'
 
 const props = defineProps({
   data: {
-    type: Array as PropType<
-      Array<Chart.ChartData>
-    >,
+    type: Array as PropType<Array<Chart.ChartData>>,
     default: () => []
   },
   xAxisFields: {
-    type: Array as PropType<
-      Array<Chart.XAxisFields>
-    >,
+    type: Array as PropType<Array<Chart.XAxisFields>>,
     default: () => []
   },
   yAxisFields: {
-    type: Array as PropType<
-      Array<Chart.YAxisFields>
-    >,
+    type: Array as PropType<Array<Chart.YAxisFields>>,
     default: () => []
   }
 })
+
 const initChart = () => {
-  const dv = new DataSet.View().source(props.data)
-  dv.transform({
+  const dataView = new DataSet.View().source(props.data)
+  dataView.transform({
     type: 'fold',
     fields: props.yAxisFields.map(
       (item) => item.alias || item.name
@@ -37,27 +32,46 @@ const initChart = () => {
     key: 'key',
     value: 'value'
   })
-
+  console.log("dataView",dataView);
+  
   // 初始化图表实例
   const chart = new Chart({
     container: 'container-interval',
     theme: 'classic',
-    autoFit: true
   })
+  
 
   // 声明可视化
-  chart
-    .interval() // 创建一个 Interval 标记
-    .data(dv.rows) // 绑定数据
-    .encode('x', 'key') // 编码 x 通道
-    .encode('y', 'value') // 编码 y 通道
+  chart.options({
+    autoFit: true,
+    data: dataView.rows,
+   
+
+  })
+    // .interval() // 创建一个 Interval 标记
+    // .data({
+    //   type: 'inline',
+    //   value: props.data,
+    //   transform: [
+    //     {
+    //       type: 'fold',
+    //       fields: props.yAxisFields.map(
+    //         (item) => item.alias || item.name
+    //       ),
+    //       key: 'key',
+    //       value: 'value'
+    //     }
+    //   ]
+    // })
+    // .encode('x', '编码 x 通道') // 编码 x 通道
+    // .encode('y', '编码 y 通道') // 编码 y 通道
 
   // 渲染可视化
   chart.render()
 }
 
 onMounted(() => {
-  initChart() 
+  initChart()
 })
 </script>
 <style lang="less" scoped></style>
