@@ -10,10 +10,10 @@ export const useDimensionStore = definePiniaStore<
   state: () => ({
     dimensions: [
       {
-        name: 'age',
-        alias: 'age',
-        comment: '年龄',
-        displyName: '年龄',
+        name: 'register',
+        alias: 'register',
+        comment: '注册',
+        displyName: '注册',
         type: 'number',
         choosed: true
       }

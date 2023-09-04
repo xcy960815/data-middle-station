@@ -5,7 +5,16 @@ export const useGroupStore = definePiniaStore<
   GroupStore.GroupActions
 >('group', {
   state: () => ({
-    groups: []
+    groups: [
+      {
+        name: 'date',
+        alias: 'date',
+        comment: '日期',
+        displyName: '日期',
+        type: 'date',
+        choosed: true
+      }
+    ]
   }),
   getters: {
     getGroups: (state) => {

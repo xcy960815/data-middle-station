@@ -5,7 +5,7 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
-import DataSet from '@antv/data-set'
+
 
 const props = defineProps({
   data: {
@@ -21,57 +21,91 @@ const props = defineProps({
     default: () => []
   }
 })
-
+const emits = defineEmits([
+  'renderChartStart',
+  'renderChartEnd'
+])
+/**
+ * 初始化图表
+ */
 const initChart = () => {
-  const dataView = new DataSet.View().source(props.data)
-  dataView.transform({
-    type: 'fold',
-    fields: props.yAxisFields.map(
-      (item) => item.alias || item.name
-    ),
-    key: 'key',
-    value: 'value'
-  })
-  console.log("dataView",dataView);
-  
+  emits('renderChartStart')
   // 初始化图表实例
   const chart = new Chart({
     container: 'container-interval',
     theme: 'classic',
+    autoFit: true
   })
-  
-
-  // 声明可视化
-  chart.options({
-    autoFit: true,
-    data: dataView.rows,
-   
-
+  chart.title({
+    title: '我是图表标题',
+    subtitle:
+      '我是图表备注'
   })
-    // .interval() // 创建一个 Interval 标记
-    // .data({
-    //   type: 'inline',
-    //   value: props.data,
-    //   transform: [
-    //     {
-    //       type: 'fold',
-    //       fields: props.yAxisFields.map(
-    //         (item) => item.alias || item.name
-    //       ),
-    //       key: 'key',
-    //       value: 'value'
-    //     }
-    //   ]
-    // })
-    // .encode('x', '编码 x 通道') // 编码 x 通道
-    // .encode('y', '编码 y 通道') // 编码 y 通道
+  const fields = props.yAxisFields.map(
+    (item) => item.alias || item.name
+  )
+  chart
+    .interval()
+    .data({
+      type: 'inline',
+      value: props.data,
+      transform: [
+        {
+          type: 'fold',
+          fields: fields,
+          key: 'type',
+          value: 'value'
+        }
+      ]
+    })
+    .transform({
+      type: 'sortX',
+      by: 'y',
+      reverse: true,
+      slice: 6
+    })
+    .transform({ type: 'dodgeX' })
+    .encode('x', props.xAxisFields.map((item) => item.name))
+    .encode('y', 'value')
+    .encode('color', 'type')
+    .scale('y', { nice: true })
+    .axis('y', { labelFormatter: '~s' })
+    .scale('color', {
+      type: 'ordinal',
+      range: getChartColors()
+    })
+    
 
-  // 渲染可视化
+    chart
+    .interaction('tooltip', { shared: true })
+    .interaction('elementHighlightByColor', {
+      background: true
+    })
   chart.render()
+  emits('renderChartEnd')
 }
 
 onMounted(() => {
   initChart()
 })
+
+watch(
+  () => props.data,
+  () => {
+    initChart()
+  }
+)
+watch(
+  () => props.xAxisFields,
+  () => {
+    initChart()
+  }
+)
+watch(
+  () => props.yAxisFields,
+  () => {
+    initChart()
+  }
+)
 </script>
 <style lang="less" scoped></style>

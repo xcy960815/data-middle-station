@@ -16,7 +16,6 @@
     <template v-else>
       <component
         :is="chartType"
-        :autoWidth="true"
         :xAxisFields="xAxisFields"
         :yAxisFields="yAxisFields"
         :data="data"
@@ -36,7 +35,7 @@ const {
   data,
   chartType
 } = initData()
-const {} = handler()
+handler()
 </script>
 
 <style lang="less" scoped></style>

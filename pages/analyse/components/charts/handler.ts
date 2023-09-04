@@ -15,31 +15,48 @@ export const handler = () => {
       filter: filterStore.getFilters(),
       order: orderStore.getOrders(),
       dimension: dimensionStore.getDimensions(),
-      group: groupStore.getGroups()
-      // chartType: chartStore.getChartType<'chartType'>()
+      group: groupStore.getGroups(),
+      chartType: chartStore.getChartType<'chartType'>()
     }
   })
-  // 图表推荐策略类
+  /**
+   * @desc 图表推荐策略类
+   * @param {ChartStore.ChartState['chartType']} chartType
+   * @returns {string}
+   */
   const chartSuggestStrategies = (
     chartType: ChartStore.ChartState['chartType']
   ) => {
     const dimensions = dimensionStore.getDimensions()
     const groups = groupStore.getGroups()
+    const chartNames = {
+      table: '表格',
+      interval: '柱状图',
+      line: '折线图',
+      pie: '饼图'
+    }
     switch (chartType) {
       case 'table':
-      case 'interval':
-      case 'line':
-      case 'pie':
-        const chartName = {
-          table: '表格',
-          interval: '柱状图',
-          line: '折线图',
-          pie: '饼图'
-        }
         if (dimensions.length > 0 || groups.length > 0) {
           return ''
         } else {
-          return `${chartName[chartType]}至少需要一个值或者一个分组`
+          return `${chartNames[chartType]}至少需要一个值或者一个分组`
+        }
+      case 'interval':
+      case 'line':
+        if (dimensions.length > 0 && groups.length > 0) {
+          return ''
+        } else {
+          return `${chartNames[chartType]}至少需要一个值和一个分组`
+        }
+      case 'pie':
+        if (
+          dimensions.length === 1 &&
+          groups.length === 1
+        ) {
+          return ''
+        } else {
+          return `${chartNames[chartType]}只需要一个值和一个分组`
         }
       default:
         return ''
@@ -62,7 +79,7 @@ export const handler = () => {
     chartStore.setChartLoading(true)
     setTimeout(() => {
       chartStore.setChartLoading(false)
-    }, 1000)
+    }, 500)
   }
 
   onMounted(() => {
