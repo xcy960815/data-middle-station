@@ -15,7 +15,7 @@ export const useChartStore = definePiniaStore<
 >('chart', {
   state: () => ({
     chartErrorMessage: '',
-    chartType: 'table',
+    chartType: 'line',
     chartId: null,
     chartLoading: false,
     chartData: [

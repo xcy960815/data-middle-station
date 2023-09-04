@@ -10,26 +10,34 @@ export const useColumnStore = definePiniaStore<
   state: () => ({
     columns: [
       {
-        name: 'id',
-        alias: 'id',
-        comment: '主键',
-        displyName: '主键',
+        name: 'date',
+        alias: 'date',
+        comment: '日期',
+        displyName: '日期',
+        type: 'date',
+        choosed: true
+      },
+      {
+        name: 'bill',
+        alias: 'bill',
+        comment: '账单',
+        displyName: '账单',
         type: 'number',
         choosed: true
       },
       {
-        name: 'name',
-        alias: 'name',
-        comment: '姓名',
-        displyName: '姓名',
-        type: 'string',
+        name: 'register',
+        alias: 'register',
+        comment: '注册',
+        displyName: '注册',
+        type: 'number',
         choosed: true
       },
       {
-        name: 'age',
-        alias: 'age',
-        comment: '年龄',
-        displyName: '年龄',
+        name: 'download',
+        alias: 'download',
+        comment: '下载',
+        displyName: '下载',
         type: 'number',
         choosed: true
       }

@@ -6,79 +6,97 @@
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
 
-import DataSet from '@antv/data-set'
 const props = defineProps({
   data: {
-    type: Array as PropType<
-      Array<Chart.TableDataItem>
-    >,
+    type: Array as PropType<Array<Chart.ChartData>>,
     default: () => []
   },
   xAxisFields: {
-    type: Array as PropType<
-      Array<Chart.TableHeaderItem>
-    >,
+    type: Array as PropType<Array<Chart.XAxisFields>>,
     default: () => []
   },
   yAxisFields: {
-    type: Array as PropType<
-      Array<Chart.TableHeaderItem>
-    >,
+    type: Array as PropType<Array<Chart.YAxisFields>>,
     default: () => []
   }
 })
+const emits = defineEmits([
+  'renderChartStart',
+  'renderChartEnd'
+])
+
+/**
+ * 初始化图表
+ */
 const initChart = () => {
-  const dv = new DataSet.View().source(props.data)
-  dv.transform({
-    type: 'fold',
-    fields: props.yAxisFields.map(
-      (item) => item.alias || item.name
-    ),
-    key: 'key',
-    value: 'value'
-  })
+  emits('renderChartStart')
   const chart = new Chart({
     container: 'container-pie',
     theme: 'classic',
     autoFit: true
   })
-
   chart.coordinate({ type: 'theta', innerRadius: 0.6 })
-
+  const fields = props.yAxisFields.map(
+    (item) => item.alias || item.name
+  )
   chart
     .interval()
     .transform({ type: 'stackY' })
-    .data(dv.rows)
+    .data({
+      type: 'inline',
+      value: props.data,
+      transform: [
+        {
+          type: 'fold',
+          fields: fields,
+          key: 'type',
+          value: 'value'
+        }
+      ]
+    })
     .encode('y', 'value')
-    .encode('color', 'key')
+    .encode('color', 'type')
     .style('stroke', 'white')
     .style('inset', 1)
     .style('radius', 10)
     .scale('color', {
-      palette: 'spectral',
-      offset: (t) => t * 0.8 + 0.1
+      range: getChartColors()
     })
     .label({
-      text: 'name',
+      text: 'type',
       style: { fontSize: 10, fontWeight: 'bold' }
     })
-    .label({
-      // @ts-ignore
-      text: (d, i, data) =>
-        i < data.length - 3 ? d.value : '',
-      style: {
-        fontSize: 9,
-        dy: 12
-      }
-    })
     .animate('enter', { type: 'waveIn' })
-    .legend(false)
+    
+
+  emits('renderChartEnd')
 
   chart.render()
 }
 onMounted(() => {
+  
+  
   initChart()
 })
+
+watch(
+  () => props.data,
+  () => {
+    initChart()
+  }
+)
+watch(
+  () => props.xAxisFields,
+  () => {
+    initChart()
+  }
+)
+watch(
+  () => props.yAxisFields,
+  () => {
+    initChart()
+  }
+)
 </script>
 
 <style scoped lang="scss"></style>
