@@ -6,6 +6,14 @@
 import { Chart } from '@antv/g2'
 
 const props = defineProps({
+  title: {
+    type: String,
+    default: () => '我是折线图标题'
+  },
+  subtitle: {
+    type: String,
+    default: () => '我是折线图副标题'
+  },
   data: {
     type: Array as PropType<Array<Chart.ChartData>>,
     default: () => []
@@ -24,13 +32,15 @@ const emits = defineEmits([
   'renderChartEnd'
 ])
 
-const chartConfigStore = useChartsConfigStore()
-const lineChartsConfig = computed(() => {
-  return chartConfigStore.chartConfigFormData.line
+const chartConfigStore = useChartConfigStore()
+const lineChartConfig = computed(() => {
+  return chartConfigStore.chartConfigData.line
 })
-
+/**
+ * 监听配置变化
+ */
 watch(
-  () => lineChartsConfig.value,
+  () => lineChartConfig.value,
   () => {
     initChart()
   },
@@ -51,7 +61,11 @@ const initChart = () => {
     theme: 'classic',
     autoFit: true
   })
-  chart
+  chart.title({
+    title: props.title,
+    subtitle: props.subtitle
+  })
+  const lineChart = chart
     .line()
     .data({
       type: 'inline',
@@ -72,17 +86,57 @@ const initChart = () => {
     .encode('y', 'value')
     .encode('color', 'type')
     .scale('color', {
-      type: 'ordinal',
       range: getChartColors()
     })
-    .style('strokeWidth', 10)
-    .style('shape', 'smooth')
+    .style('strokeWidth', 5)
+    .animate('enter', { type: 'pathIn' })
 
-
-  if (lineChartsConfig.value.smooth) {
-    console.log('smooth')
+  // 是否画圆点
+  if (lineChartConfig.value.showPoint) {
+    chart
+      .point()
+      .data({
+        type: 'inline',
+        value: props.data,
+        transform: [
+          {
+            type: 'fold',
+            fields: fields,
+            key: 'type',
+            value: 'value'
+          }
+        ]
+      })
+      .encode(
+        'x',
+        props.xAxisFields.map((item) => item.name)
+      )
+      .encode('y', 'value')
+      .encode('color', 'type')
+      .scale('color', {
+        range: getChartColors()
+      })
+      .style('strokeWidth', 5)
+      .animate('enter', { type: 'pathIn' })
   }
-  
+  // 是否平滑展示
+  if (lineChartConfig.value.smooth) {
+    lineChart.style('shape', 'smooth')
+  }
+
+  // 是否显示说明文字
+  if (lineChartConfig.value.showLabel) {
+    lineChart.label({
+      text: 'value',
+      transform: [{ type: 'overlapDodgeY' }],
+      fontSize: 12,
+      position: 'top'
+    })
+  }
+  // 是否开启横向滚动
+  if (lineChartConfig.value.horizontalBar) {
+    lineChart.slider('x', true)
+  }
   chart.render()
   emits('renderChartEnd')
 }
@@ -93,18 +147,27 @@ watch(
   () => props.data,
   () => {
     initChart()
+  },
+  {
+    deep: true
   }
 )
 watch(
   () => props.xAxisFields,
   () => {
     initChart()
+  },
+  {
+    deep: true
   }
 )
 watch(
   () => props.yAxisFields,
   () => {
     initChart()
+  },
+  {
+    deep: true
   }
 )
 </script>

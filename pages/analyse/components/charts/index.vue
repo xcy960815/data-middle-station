@@ -19,6 +19,8 @@
         :xAxisFields="xAxisFields"
         :yAxisFields="yAxisFields"
         :data="data"
+        @renderChartStart="handleRenderChartStart"
+        @renderChartEnd="handleRenderChartEnd"
       />
     </template>
   </div>
@@ -35,7 +37,8 @@ const {
   data,
   chartType
 } = initData()
-handler()
+const { handleRenderChartStart, handleRenderChartEnd } =
+  handler()
 </script>
 
 <style lang="less" scoped></style>

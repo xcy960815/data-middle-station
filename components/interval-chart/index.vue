@@ -6,8 +6,15 @@
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
 
-
 const props = defineProps({
+  title: {
+    type: String,
+    default: () => '我是柱状图标题'
+  },
+  subtitle: {
+    type: String,
+    default: () => '我是柱状图副标题'
+  },
   data: {
     type: Array as PropType<Array<Chart.ChartData>>,
     default: () => []
@@ -25,6 +32,23 @@ const emits = defineEmits([
   'renderChartStart',
   'renderChartEnd'
 ])
+
+const chartConfigStore = useChartConfigStore()
+const intervalChartConfig = computed(() => {
+  return chartConfigStore.chartConfigData.interval
+})
+/**
+ * 监听配置变化
+ */
+watch(
+  () => intervalChartConfig.value,
+  () => {
+    initChart()
+  },
+  {
+    deep: true
+  }
+)
 /**
  * 初始化图表
  */
@@ -36,15 +60,16 @@ const initChart = () => {
     theme: 'classic',
     autoFit: true
   })
+
   chart.title({
-    title: '我是图表标题',
-    subtitle:
-      '我是图表备注'
+    title: props.title,
+    subtitle: props.subtitle
   })
+
   const fields = props.yAxisFields.map(
     (item) => item.alias || item.name
   )
-  chart
+  const intervalChart = chart
     .interval()
     .data({
       type: 'inline',
@@ -61,26 +86,68 @@ const initChart = () => {
     .transform({
       type: 'sortX',
       by: 'y',
-      reverse: true,
-      slice: 6
+      reverse: true
     })
-    .transform({ type: 'dodgeX' })
-    .encode('x', props.xAxisFields.map((item) => item.name))
+    .encode(
+      'x',
+      props.xAxisFields.map((item) => item.name)
+    )
     .encode('y', 'value')
     .encode('color', 'type')
     .scale('y', { nice: true })
     .axis('y', { labelFormatter: '~s' })
     .scale('color', {
-      type: 'ordinal',
       range: getChartColors()
     })
-    
 
-    chart
-    .interaction('tooltip', { shared: true })
-    .interaction('elementHighlightByColor', {
-      background: true
+  // 是否显示百分比
+  if (intervalChartConfig.value.showPercentage) {
+    // TODO 值也要 展示 百分比
+    intervalChart.axis({
+      y: {
+        labelFormatter: (d: number) => `${d / 100}%`,
+        transform: [{ type: 'hide' }]
+      }
     })
+  }
+  // 平级展示
+  if (
+    intervalChartConfig.value.displayMode === 'levelDisplay'
+  ) {
+    intervalChart.transform({ type: 'dodgeX' })
+  }
+  // 叠加展示
+  if (
+    intervalChartConfig.value.displayMode === 'stackDisplay'
+  ) {
+    intervalChart.transform({ type: 'stackY' })
+  }
+
+  // 是否显示标题
+  if (intervalChartConfig.value.showLabel) {
+    intervalChart.label({
+      text: 'value',
+      transform: [{ type: 'overlapDodgeY' }],
+      fontSize: 12,
+      position: 'inside'
+    })
+  }
+
+  // 是否水平展示
+  if (intervalChartConfig.value.horizontalDisplay) {
+    intervalChart.coordinate({
+      transform: [{ type: 'transpose' }]
+    })
+  }
+
+  if (intervalChartConfig.value.horizontalBar) {
+    intervalChart.slider('x', true)
+  }
+  // chart
+  //   .interaction('tooltip', { shared: true })
+  //   .interaction('elementHighlightByColor', {
+  //     background: true
+  //   })
   chart.render()
   emits('renderChartEnd')
 }
@@ -99,12 +166,18 @@ watch(
   () => props.xAxisFields,
   () => {
     initChart()
+  },
+  {
+    deep: true
   }
 )
 watch(
   () => props.yAxisFields,
   () => {
     initChart()
+  },
+  {
+    deep: true
   }
 )
 </script>

@@ -7,6 +7,14 @@
 import { Chart } from '@antv/g2'
 
 const props = defineProps({
+  title: {
+    type: String,
+    default: () => '我是扇形图标题'
+  },
+  subtitle: {
+    type: String,
+    default: () => '我是扇形图副标题'
+  },
   data: {
     type: Array as PropType<Array<Chart.ChartData>>,
     default: () => []
@@ -24,7 +32,19 @@ const emits = defineEmits([
   'renderChartStart',
   'renderChartEnd'
 ])
-
+const chartConfigStore = useChartConfigStore()
+const pieChartConfigData = computed(() => {
+  return chartConfigStore.chartConfigData.pie
+})
+watch(
+  () => pieChartConfigData.value,
+  () => {
+    initChart()
+  },
+  {
+    deep: true
+  }
+)
 /**
  * 初始化图表
  */
@@ -35,13 +55,17 @@ const initChart = () => {
     theme: 'classic',
     autoFit: true
   })
+  chart.title({
+    title: props.title,
+    subtitle: props.subtitle
+  })
   chart.coordinate({ type: 'theta', innerRadius: 0.6 })
   const fields = props.yAxisFields.map(
     (item) => item.alias || item.name
   )
-  chart
+
+  const pieChart = chart
     .interval()
-    .transform({ type: 'stackY' })
     .data({
       type: 'inline',
       value: props.data,
@@ -56,26 +80,41 @@ const initChart = () => {
     })
     .encode('y', 'value')
     .encode('color', 'type')
-    .style('stroke', 'white')
-    .style('inset', 1)
-    .style('radius', 10)
     .scale('color', {
       range: getChartColors()
     })
     .label({
-      text: 'type',
+      text: 'value',
       style: { fontSize: 10, fontWeight: 'bold' }
     })
+    .style('stroke', '#fff')
+    .style('inset', 1)
+    .style('radius', 10)
     .animate('enter', { type: 'waveIn' })
-    
 
-  emits('renderChartEnd')
+  if (pieChartConfigData.value.chartType === 'pie') {
+    pieChart.transform({ type: 'stackY' })
+  }
 
+  if (pieChartConfigData.value.chartType === 'rose') {
+    pieChart.transform({ type: 'groupX', y: 'sum' })
+  }
+  // 是否展示label
+  if (pieChartConfigData.value.showLabel) {
+    pieChart.label({
+      text: props.xAxisFields.map(
+        (item) => item.alias || item.name
+      ),
+      position: 'spider',
+      connectorDistance: 0,
+      fontWeight: 'bold',
+      textBaseline: 'bottom'
+    })
+  }
   chart.render()
+  emits('renderChartEnd')
 }
 onMounted(() => {
-  
-  
   initChart()
 })
 
@@ -83,18 +122,27 @@ watch(
   () => props.data,
   () => {
     initChart()
+  },
+  {
+    deep: true
   }
 )
 watch(
   () => props.xAxisFields,
   () => {
     initChart()
+  },
+  {
+    deep: true
   }
 )
 watch(
   () => props.yAxisFields,
   () => {
     initChart()
+  },
+  {
+    deep: true
   }
 )
 </script>

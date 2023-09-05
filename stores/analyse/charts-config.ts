@@ -2,12 +2,12 @@
  * @desc 图表配置 store
  * @desc setup 用法
  */
-export const useChartsConfigStore = definePiniaStore<
+export const useChartConfigStore = definePiniaStore<
   'chartsConfig',
   {
     chartsConfigDrawer: Ref<boolean>
     /* 图表公共配置 */
-    commonConfigFormData: {
+    chartCommonConfigData: {
       description: string
       limit: number
       // 智能作图建议
@@ -19,7 +19,7 @@ export const useChartsConfigStore = definePiniaStore<
     }
     setChartsConfigDrawer: (drawer: boolean) => void
     // 折线图配置
-    chartConfigFormData: {
+    chartConfigData: {
       line: {
         // 是否画圆点
         showPoint: boolean
@@ -32,6 +32,24 @@ export const useChartsConfigStore = definePiniaStore<
         // 是否横向拖动条
         horizontalBar: boolean
       }
+      interval: {
+        // 展示方式
+        displayMode: string // 'levelDisplay' | 'stackDisplay'
+        // 是否百分比显示
+        showPercentage: boolean
+        // 是否显示文字
+        showLabel: boolean
+        // 水平展示
+        horizontalDisplay: boolean
+        // 横线滚动
+        horizontalBar: boolean
+      }
+      pie: {
+        // 是否显示文字
+        showLabel: boolean
+        // 图表类型
+        chartType: string // "pie" | "rose"
+      }
     }
   }
 >('chartsConfig', () => {
@@ -39,7 +57,7 @@ export const useChartsConfigStore = definePiniaStore<
   /**
    * @desc 图表公共配置
    */
-  const commonConfigFormData = reactive({
+  const chartCommonConfigData = reactive({
     description: '',
     limit: 0,
     suggest: false,
@@ -49,7 +67,7 @@ export const useChartsConfigStore = definePiniaStore<
   /**
    * @desc 图表配置
    */
-  const chartConfigFormData = reactive({
+  const chartConfigData = reactive({
     // 折线图配置
     line: {
       showPoint: false,
@@ -57,6 +75,23 @@ export const useChartsConfigStore = definePiniaStore<
       smooth: false,
       autoDualAxis: false,
       horizontalBar: false
+    },
+    // 柱状图配置
+    interval: {
+      // 展示方式
+      displayMode: 'levelDisplay',
+      // 是否百分比显示
+      showPercentage: false,
+      // 是否显示文字
+      showLabel: false,
+      // 水平展示
+      horizontalDisplay: false,
+      // 横线滚动
+      horizontalBar: false
+    },
+    pie: {
+      showLabel: false,
+      chartType: 'pie'
     }
   })
   /**
@@ -69,8 +104,8 @@ export const useChartsConfigStore = definePiniaStore<
 
   return {
     chartsConfigDrawer,
-    commonConfigFormData,
-    chartConfigFormData,
+    chartCommonConfigData,
+    chartConfigData,
     setChartsConfigDrawer
   }
 })
