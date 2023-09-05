@@ -4,11 +4,11 @@
     label-position="top"
     label-width="auto"
     class="line-charts-config relative h-full w-full"
-    :model="lineChartsConfigFormData"
+    :model="lineChartsConfigData"
   >
     <el-form-item label="是否画圆点">
       <el-switch
-        v-model="lineChartsConfigFormData.showPoint"
+        v-model="lineChartsConfigData.showPoint"
         style="
           --el-switch-on-color: #13ce66;
           --el-switch-off-color: #ff4949;
@@ -17,7 +17,7 @@
     </el-form-item>
     <el-form-item label="显示说明文字">
       <el-switch
-        v-model="lineChartsConfigFormData.showLabel"
+        v-model="lineChartsConfigData.showLabel"
         style="
           --el-switch-on-color: #13ce66;
           --el-switch-off-color: #ff4949;
@@ -26,7 +26,7 @@
     </el-form-item>
     <el-form-item label="是否平滑展示">
       <el-switch
-        v-model="lineChartsConfigFormData.smooth"
+        v-model="lineChartsConfigData.smooth"
         style="
           --el-switch-on-color: #13ce66;
           --el-switch-off-color: #ff4949;
@@ -35,7 +35,7 @@
     </el-form-item>
     <el-form-item label="自动双轴">
       <el-switch
-        v-model="lineChartsConfigFormData.autoDualAxis"
+        v-model="lineChartsConfigData.autoDualAxis"
         style="
           --el-switch-on-color: #13ce66;
           --el-switch-off-color: #ff4949;
@@ -44,7 +44,7 @@
     </el-form-item>
     <el-form-item label="横向拖动条">
       <el-switch
-        v-model="lineChartsConfigFormData.horizontalBar"
+        v-model="lineChartsConfigData.horizontalBar"
         style="
           --el-switch-on-color: #13ce66;
           --el-switch-off-color: #ff4949;
@@ -55,9 +55,9 @@
 </template>
 
 <script setup lang="ts">
-const chartsConfigStore = useChartsConfigStore()
-const lineChartsConfigFormData = computed(() => {
-  return chartsConfigStore.chartConfigFormData.line
+const chartsConfigStore = useChartConfigStore()
+const lineChartsConfigData = computed(() => {
+  return chartsConfigStore.chartConfigData.line
 })
 </script>
 

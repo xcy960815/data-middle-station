@@ -81,6 +81,15 @@ export const handler = () => {
       chartStore.setChartLoading(false)
     }, 500)
   }
+  /**
+   * @desc 图表开始渲染
+   */
+  const handleRenderChartStart = () => {}
+
+  /**
+   * @desc 图表结束渲染
+   */
+  const handleRenderChartEnd = () => {}
 
   onMounted(() => {
     getAnalyseData()
@@ -94,5 +103,8 @@ export const handler = () => {
     { deep: true }
   )
 
-  return {}
+  return {
+    handleRenderChartStart,
+    handleRenderChartEnd
+  }
 }

@@ -1,10 +1,15 @@
-import LineChartConfig from './components/line-charts-config.vue'
+// 折线图 配置
+import LineChartConfig from './components/line-charts-config/index.vue'
+// 柱状图 配置
+import IntervalChartConfig from './components/interval-chart-config/index.vue'
+// 扇形图 配置
+import PieChartConfig from './components/pie-chart-config/index.vue'
 /**
  * @desc charts-config组件初始化数据
  * @returns
  */
 export const initData = () => {
-  const chartsConfigStore = useChartsConfigStore()
+  const chartsConfigStore = useChartConfigStore()
   const chartStore = useChartStore()
   const chartConfigTab = ref('common')
   /**
@@ -25,6 +30,10 @@ export const initData = () => {
     switch (chartType) {
       case 'line':
         return LineChartConfig
+      case 'interval':
+        return IntervalChartConfig
+      case 'pie':
+        return PieChartConfig
       default:
         return LineChartConfig
     }
@@ -32,13 +41,13 @@ export const initData = () => {
   /**
    * @desc 图表公共配置
    */
-  const commonConfigFormData = computed(() => {
-    return chartsConfigStore.commonConfigFormData
+  const chartCommonConfigData = computed(() => {
+    return chartsConfigStore.chartCommonConfigData
   })
   return {
     chartConfigTab,
     chartsConfigDrawer,
     chartConfigComponent,
-    commonConfigFormData
+    chartCommonConfigData
   }
 }

@@ -1,5 +1,5 @@
 export const handler = () => {
-  const chartsConfigStore = useChartsConfigStore()
+  const chartsConfigStore = useChartConfigStore()
   const dimensionStore = useDimensionStore()
   const groupStore = useGroupStore()
   /**
