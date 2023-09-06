@@ -1,44 +1,18 @@
 <template>
   <!--  v-sticky="{ top, parent }" -->
   <ClientOnly>
-    <el-table
-      size="small"
-      class="table-chart"
-      :data="tableData"
-      :header-cell-style="{
-        background: 'rgb(240, 240, 240)'
-      }"
-      style="width: 100%"
-      highlight-current-row
-      border
-      stripe
-      :cell-style="cellStyle"
-      :span-method="spanMethod"
-    >
-      <el-table-column
-        v-for="tableHeaderOption in tableHeader"
-        show-overflow-tooltip
-        :prop="tableHeaderOption.alias"
-        :label="
-          tableHeaderOption.displyName ||
+    <el-table size="small" class="table-chart" :data="tableDataState.tableData" :header-cell-style="{
+      background: 'rgb(240, 240, 240)'
+    }" style="width: 100%" highlight-current-row border stripe :cell-style="cellStyle" :span-method="spanMethod">
+      <el-table-column v-for="tableHeaderOption in tableHeaderState.tableHeader" show-overflow-tooltip
+        :prop="tableHeaderOption.alias" :label="tableHeaderOption.displyName ||
           tableHeaderOption.alias ||
           tableHeaderOption.name
-        "
-        :min-width="tableHeaderOption.minWidth"
-        sortable
-        :formatter="tableColumnFormatter"
-      >
+          " :min-width="tableHeaderOption.minWidth" sortable :formatter="tableColumnFormatter">
       </el-table-column>
     </el-table>
-    <el-pagination
-      v-model:current-page="pageNum"
-      v-model:page-size="pageSize"
-      :page-sizes="[10, 20, 30, 40]"
-      size="small"
-      :background="true"
-      layout="total, sizes, prev, pager, next, jumper"
-      :total="total"
-    />
+    <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[10, 20, 30, 40]" size="small"
+      :background="true" layout="total, sizes, prev, pager, next, jumper" :total="total" />
   </ClientOnly>
 </template>
 
@@ -60,44 +34,36 @@ const props = defineProps({
   },
   autoWidth: {
     type: Boolean,
-    default: () => false,
+    default: () => true,
   },
-  autoHeight: {
-    type: Boolean,
-    default: () => false,
-  },
-  top: {
-    type: Number,
-    default: () => 0,
-  },
-  parent: {
-    type: String,
-    default: () => null,
-  },
+  // autoHeight: {
+  //   type: Boolean,
+  //   default: () => false,
+  // },
 });
-// const renderTable = computed<boolean>(()=>{
-//  return props.xAxisFields.concat(props.yAxisFields).length > 0;
-// })
-// const renderPagination = computed<boolean>(()=>{
-//  return props.xAxisFields.concat(props.yAxisFields).length > 0;
-// })
-const { total, pageNum, pageSize, tableHeader, tableData } = tableChartInitData(props);
 
-const { cellStyle, tableColumnFormatter, spanMethod } = tableChartHandler({});
+
+
+const { total, pageNum, pageSize, tableHeaderState,
+  tableDataState, tableChartConfig } = tableChartInitData(props);
+
+const { cellStyle, tableColumnFormatter, spanMethod } = tableChartHandler({ pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
 </script>
 
 <style scoped lang="less">
 .table-chart {
   position: relative;
+
   // 修改表格样式 让其变得更加紧凑
   :deep(.el-table__header-wrapper) {
     .el-table__header {
-      thead > tr > th {
+      thead>tr>th {
         padding: 5px 0px;
       }
     }
+
     .el-table__header {
-      thead > tr > th > div {
+      thead>tr>th>div {
         padding: 0px 20px;
         font-size: 14px;
         font-weight: 500;
@@ -106,14 +72,16 @@ const { cellStyle, tableColumnFormatter, spanMethod } = tableChartHandler({});
       }
     }
   }
+
   // 修改表格样式 让其变得更加紧凑
   :deep(.el-table__body-wrapper) {
     .el-table__body {
-      tbody > tr > td {
+      tbody>tr>td {
         padding: 0;
         font-size: 14px;
       }
-      tbody > tr > td > div {
+
+      tbody>tr>td>div {
         padding: 5px 22px;
         overflow: hidden;
         text-overflow: ellipsis;

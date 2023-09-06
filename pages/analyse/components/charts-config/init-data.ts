@@ -1,3 +1,5 @@
+// 表格 配置
+import TableChartConfig from './components/table-chart-config/index.vue'
 // 折线图 配置
 import LineChartConfig from './components/line-charts-config/index.vue'
 // 柱状图 配置
@@ -28,6 +30,8 @@ export const initData = () => {
   const chartConfigComponent = computed(() => {
     const chartType = chartStore.getChartType<'chartType'>()
     switch (chartType) {
+      case 'table':
+        return TableChartConfig
       case 'line':
         return LineChartConfig
       case 'interval':

@@ -128,9 +128,12 @@ const initChart = () => {
   if (lineChartConfig.value.showLabel) {
     lineChart.label({
       text: 'value',
-      transform: [{ type: 'overlapDodgeY' }],
-      fontSize: 12,
-      position: 'top'
+      render: (text: string) => {
+        return `
+        <div style="left:-50%;top:-20px;position:relative;font-size:14px;">
+          <span>${text}</span>
+        </div>`
+      }
     })
   }
   // 是否开启横向滚动

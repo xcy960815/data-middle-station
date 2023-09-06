@@ -127,9 +127,12 @@ const initChart = () => {
   if (intervalChartConfig.value.showLabel) {
     intervalChart.label({
       text: 'value',
-      transform: [{ type: 'overlapDodgeY' }],
-      fontSize: 12,
-      position: 'inside'
+      render: (text: string) => {
+        return `
+        <div style="left:-50%;top:-20px;position:relative;font-size:14px;">
+          <span>${text}</span>
+        </div>`
+      }
     })
   }
 
