@@ -2,7 +2,15 @@
 
 declare namespace TableChart {
   import type { TableColumnCtx } from 'element-plus'
-
+  type PageNum = Ref<number>
+  type PageSize = Ref<number>
+  type Total = ComputedRef<number>
+  type Props = {
+    readonly data: Chart.ChartData[]
+    readonly xAxisFields: Chart.XAxisFields[]
+    readonly yAxisFields: Chart.YAxisFields[]
+    readonly autoWidth: boolean
+  }
   /**
    * @desc 表格表头字段类型
    */
@@ -20,18 +28,34 @@ declare namespace TableChart {
   }
 
   interface SpanMethodProps {
-    row: DataOption
-    column: TableColumn<DataOption>
+    row: Chart.ChartData
+    column: TableColumn<Chart.ChartData>
     rowIndex: number
     columnIndex: number
   }
 
-  interface InitDataParams {
-    readonly data: DataOption[]
-    readonly xAxisFields: FieldOption[]
-    readonly yAxisFields: FieldOption[]
-    readonly autoWidth?: boolean
+  interface TableHeaderState {
+    tableHeader: TableChart.TableHeaderOption[]
   }
 
-  interface HandlerParams {}
+  interface TableDataState {
+    tableData: Chart.ChartData[]
+  }
+  /**
+   * @desc 初始化 方法所需的参数 就是整个props
+   */
+  interface InitDataParams extends Props {}
+
+  interface HandlerParams {
+    pageNum: PageNum
+    pageSize: PageSize
+    props: Props
+    tableHeaderState: TableHeaderState
+    tableDataState: TableDataState
+    tableChartConfig: ComputedRef<{
+      displayMode: string
+      showCompare: boolean
+      conditions: {}[]
+    }>
+  }
 }

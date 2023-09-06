@@ -50,6 +50,11 @@ export const useChartConfigStore = definePiniaStore<
         // 图表类型
         chartType: string // "pie" | "rose"
       }
+      table: {
+        displayMode: string // "originalDisplay"|"aggregationDisplay"
+        showCompare: boolean
+        conditions: Array<{}>
+      }
     }
   }
 >('chartsConfig', () => {
@@ -59,7 +64,7 @@ export const useChartConfigStore = definePiniaStore<
    */
   const chartCommonConfigData = reactive({
     description: '',
-    limit: 0,
+    limit: 1000,
     suggest: false,
     mixStrategy: 'daily',
     shareStrategy: ''
@@ -92,6 +97,11 @@ export const useChartConfigStore = definePiniaStore<
     pie: {
       showLabel: false,
       chartType: 'pie'
+    },
+    table: {
+      displayMode: 'originalDisplay',
+      showCompare: false,
+      conditions: []
     }
   })
   /**
