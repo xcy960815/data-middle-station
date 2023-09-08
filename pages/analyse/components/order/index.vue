@@ -1,7 +1,7 @@
 <template>
-  <div class="order relative h-full" @dragover="dragoverHandler" @drop="dropHandler">
+  <div class="order relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="sort__title">排序</div>
-    <div class="sort__content">
+    <div class="sort__content flex-auto">
       <div
         data-action="drag"
         class="sort__item"

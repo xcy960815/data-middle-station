@@ -5,7 +5,7 @@
     @drop="dropHandler"
   >
     <div class="group__title">分组</div>
-    <div class="group__content flex items-center">
+    <div class="group__content flex items-center flex-1">
       <div
         data-action="drag"
         class="group__item"
