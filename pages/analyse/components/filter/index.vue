@@ -1,7 +1,7 @@
 <template>
-  <div class="filter relative h-full" @dragover="dragoverHandler" @drop="dropHandler">
+  <div class="filter relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="filter__title">筛选</div>
-    <div class="filter__content">
+    <div class="filter__content flex-auto">
       <div
         data-action="drag"
         class="filter__item"

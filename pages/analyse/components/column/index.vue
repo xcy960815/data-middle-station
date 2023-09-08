@@ -1,22 +1,10 @@
 <template>
-  <div
-    class="column"
-    @dragover="dragoverHandler"
-    @drop="dropHandler"
-  >
+  <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="column__title">维度</div>
     <div class="column__content">
-      <div
-        @contextmenu="contextmenuHandler(column)"
-        v-contextmenu:contextmenu
-        :class="columnClasses(column)"
-        v-for="(column, index) in columnList"
-        :key="index"
-        draggable="true"
-        @dragstart="dragstartHandler(column, index, $event)"
-        @dragend="dragendHandler"
-        @mousedown.stop
-      >
+      <div @contextmenu="contextmenuHandler(column)" v-contextmenu:contextmenu :class="columnClasses(column)"
+        v-for="(column, index) in columnList" :key="index" draggable="true"
+        @dragstart="dragstartHandler(column, index, $event)" @dragend="dragendHandler" @mousedown.stop>
         <span class="column__item__name">{{
           column.name
         }}</span>
@@ -47,27 +35,15 @@
       </context-menu-item>
       <context-menu-divider> </context-menu-divider>
       <context-menu-submenu title="时间">
-        <context-menu-item @click="setDataModel"
-          >时间</context-menu-item
-        >
-        <context-menu-item @click="setDataModel"
-          >日期</context-menu-item
-        >
+        <context-menu-item @click="setDataModel">时间</context-menu-item>
+        <context-menu-item @click="setDataModel">日期</context-menu-item>
       </context-menu-submenu>
       <context-menu-divider> </context-menu-divider>
       <context-menu-submenu title="地理角色">
-        <context-menu-item @click="setDataModel"
-          >经度</context-menu-item
-        >
-        <context-menu-item @click="setDataModel"
-          >纬度</context-menu-item
-        >
-        <context-menu-item @click="setDataModel"
-          >位置</context-menu-item
-        >
-        <context-menu-item @click="setDataModel"
-          >关联值</context-menu-item
-        >
+        <context-menu-item @click="setDataModel">经度</context-menu-item>
+        <context-menu-item @click="setDataModel">纬度</context-menu-item>
+        <context-menu-item @click="setDataModel">位置</context-menu-item>
+        <context-menu-item @click="setDataModel">关联值</context-menu-item>
       </context-menu-submenu>
     </context-menu>
   </div>
@@ -94,6 +70,7 @@ const {
 .column {
   height: 100%;
   pointer-events: initial;
+
   .column__content {
     list-style: none;
     overflow: auto;
@@ -104,6 +81,7 @@ const {
       height: 30px;
       line-height: 30px;
       position: relative;
+
       &.column__item-choosed::after {
         position: absolute;
         left: 0px;
