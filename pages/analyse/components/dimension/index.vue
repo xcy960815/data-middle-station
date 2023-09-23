@@ -5,7 +5,10 @@
     @drop="dropHandler"
   >
     <div class="dimension__title">值</div>
-    <div class="dimension__content flex-1">
+    <div
+      class="dimension__content flex-1"
+      v-contextmenu:contextmenu
+    >
       <div
         data-action="drag"
         class="dimension__item"
@@ -23,6 +26,30 @@
         ></selecter>
       </div>
     </div>
+    <!-- 字段的操作选项 -->
+    <context-menu ref="contextmenu">
+      <context-menu-item @click="handleCreateComputedField">
+        创建计算字段
+      </context-menu-item>
+    </context-menu>
+    <!-- <client-only>
+      <el-dialog
+        v-model="createComputedFieldVisible"
+        title="创建计算字段"
+        width="30%"
+      >
+        <monaco-editor></monaco-editor>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button
+              @click="createComputedFieldVisible = false"
+            >
+              取消
+            </el-button>
+          </span>
+        </template>
+      </el-dialog>
+    </client-only> -->
   </div>
 </template>
 
@@ -30,12 +57,20 @@
 import { initData } from './init-data'
 import { handler } from './handler'
 const { dimensionList } = initData()
+const createComputedFieldVisible = ref<boolean>(false)
 const {
   dragstartHandler,
   dragHandler,
   dragoverHandler,
   dropHandler
 } = handler({ dimensionList })
+/**
+ * @desc 创建计算字段
+ */
+const handleCreateComputedField = () => {
+  console.log('创建计算字段')
+  createComputedFieldVisible.value = true
+}
 </script>
 
 <style lang="less" scoped>
