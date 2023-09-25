@@ -1,10 +1,12 @@
 import { EmployeesDao } from '../../database/employees';
+
+
 /**
  * @description 删除员工
  * @param {number} id 员工id
- * @return {ResponseModule.Response<EmployeesModule.EmployeesOptions | null>}
+ * @return {Promise<ResponseModule.Response<EmployeesModule.EmployeesOptions | null>>}
  */
-export default defineEventHandler<ResponseModule.Response<EmployeesModule.EmployeesOptions>>(
+export default defineEventHandler<Promise<ResponseModule.Response<EmployeesModule.EmployeesOptions>>>(
   async (event) => {
     try {
       const { id } = getQuery(event);

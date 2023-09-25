@@ -1,5 +1,11 @@
 import { EmployeesDao } from '../../database/employees';
 
+
+
+/**
+ * @desc 新建或更新员工数据
+ * @returns {Promise<ResponseModule.Response<EmployeesModule.EmployeesOptions>>}
+ */
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);

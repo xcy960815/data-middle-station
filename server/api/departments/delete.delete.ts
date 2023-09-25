@@ -1,6 +1,10 @@
 import { DepartmentsDao } from '../../database/departments';
 
-export default defineEventHandler<ResponseModule.Response<DepartmentsModule.DepartmentsOptions>>(
+/**
+ * @desc 删除部门接口
+ * @returns {Promise<ResponseModule.Response<DepartmentsModule.DepartmentsOptions>>}
+ */
+export default defineEventHandler<Promise<ResponseModule.Response<DepartmentsModule.DepartmentsOptions>>>(
   async (event) => {
     try {
       const { id } = getQuery(event);

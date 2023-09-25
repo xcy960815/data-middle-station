@@ -7,7 +7,6 @@ const logger = new Logger({ fileName: 'database', folderName: 'database' });
  * @desc ts 装饰器
  * @link  https://www.cnblogs.com/winfred/p/8216650.html
  */
-
 /**
  * @desc 数据源配置
  * @param dataSourceName { keyof DataSourceConfig}

@@ -1,10 +1,14 @@
 import { DepartmentsDao } from '../../database/departments';
+
 interface ResponseData {
   data: Array<DepartmentsModule.DepartmentsOptions>;
   total: number;
 }
-
-export default defineEventHandler<ResponseModule.Response<ResponseData>>(async (event) => {
+/**
+ * @desc 获取部门列表接口
+ * @returns {Promise<ResponseModule.Response<ResponseData>>}
+ */
+export default defineEventHandler<Promise<ResponseModule.Response<ResponseData>>>(async (event) => {
   try {
     const { pageNum, pageSize } = getQuery(event);
     const departmentsDao = new DepartmentsDao();
