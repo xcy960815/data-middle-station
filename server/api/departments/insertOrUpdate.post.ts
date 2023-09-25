@@ -1,10 +1,11 @@
 import { DepartmentsDao } from '../../database/departments';
+
 /**
  * @description 新增或者更新部门
  * @param {DepartmentsModule.DepartmentsOptions} event.body
- * @returns {void}
+ * @returns {Promise<ResponseModule.Response<DepartmentsModule.DepartmentsOptions>>}
  */
-export default defineEventHandler(async (event) => {
+export default defineEventHandler<Promise<ResponseModule.Response<DepartmentsModule.DepartmentsOptions>>>(async (event) => {
   try {
     const body = await readBody<DepartmentsModule.DepartmentsOptions>(event);
     const departmentId = body.departmentId;

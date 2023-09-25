@@ -7,13 +7,12 @@ import { DepartmentsDao } from '../../database/departments';
  */
 
 export default defineEventHandler<
-  ResponseModule.Response<DepartmentsModule.DepartmentsOptions> | undefined
+  Promise<ResponseModule.Response<DepartmentsModule.DepartmentsOptions> | null>
 >(async (event) => {
   try {
     const { id } = getQuery(event);
     const departmentsDao = new DepartmentsDao();
     const data = await departmentsDao.queryById(id as number);
-
     return {
       code: data ? 200 : 404,
       data,

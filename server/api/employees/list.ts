@@ -1,5 +1,6 @@
 import { EmployeesDao } from '../../database/employees';
-interface ResponseData {
+
+interface Data {
   data: Array<EmployeesModule.EmployeesOptions>;
   total: number;
 }
@@ -8,7 +9,7 @@ interface ResponseData {
  * @param {import('h3').Event} event
  * @returns {Promise<ResponseModule.Response<ResponseData>>}
  */
-export default defineEventHandler<ResponseModule.Response<ResponseData>>(async (event) => {
+export default defineEventHandler<Promise<ResponseModule.Response<Data>>>(async (event) => {
   try {
     const { pageNum, pageSize } = getQuery(event);
     const employeesDao = new EmployeesDao();

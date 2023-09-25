@@ -5,16 +5,12 @@
  * @param {string} message 响应消息
  * @return {Response}
  */
-declare global {
-  namespace ResponseModule {
-    interface Response<D = any> {
-      code: 200 | 404 | 500;
-      data: D | null;
-      message: string;
-      success?: boolean;
-      errorMsg?: string;
-    }
+declare namespace ResponseModule {
+  interface Response<D = any> {
+    code: 200 | 404 | 500;
+    data: D | null;
+    message: string;
+    success?: boolean;
   }
 }
 
-export {};

@@ -3,6 +3,8 @@
  */
 declare namespace EmployeesModule {
   // type HiredateRetrunType<T> = T extends string ? string : ReturnType<typeof T>;
+
+  /* 员工数据 */
   interface EmployeesOptions {
     status?: 0 | 1
     employeeId: number
