@@ -1,8 +1,9 @@
 import { DOBase, Mapping, BindDataSource, Column } from './dobase';
 
 
-
-
+/**
+ * @desc 部门类
+ */
 export class DepartmentsOptions implements DepartmentsModule.DepartmentsOptions {
   @Column('department_id')
   departmentId: number = 0;

@@ -9,6 +9,11 @@ interface ResponseData {
  * @returns {Promise<ResponseModule.Response<ResponseData>>}
  */
 export default defineEventHandler<Promise<ResponseModule.Response<ResponseData>>>(async (event) => {
+  throw createError({
+    statusCode: 400,
+    statusMessage: 'list接口400',
+  })
+
   try {
     const { pageNum, pageSize } = getQuery(event);
     const departmentsDao = new DepartmentsDao();

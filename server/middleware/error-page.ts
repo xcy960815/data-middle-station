@@ -7,7 +7,7 @@ import type { PropType } from "vue"
  * @desc 错误页面
  */
 export default defineEventHandler(async (event) => {
-  // console.log('error--page', event.node.res);
+  console.log('error--page', event.node.res);
   // TODO 捕获 api 接口返回的状态码
   return;
   const errorPageApp = createSSRApp(
