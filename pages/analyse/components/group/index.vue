@@ -1,4 +1,5 @@
 <template>
+  <!-- 分析页面下方分组 -->
   <div
     class="group relative h-full flex items-center"
     @dragover="dragoverHandler"
@@ -8,14 +9,18 @@
     <div class="group__content flex items-center flex-1">
       <div
         data-action="drag"
-        class="group__item"
+        class="group__item flex items-center flex-1"
         v-for="(item, index) in groupList"
         :key="index"
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
       >
-        <div class="group__item__name">{{ item.name }}</div>
+        <selecter
+          class="group__item__name"
+          cast="dimension"
+          :name="item.name"
+        ></selecter>
       </div>
     </div>
   </div>

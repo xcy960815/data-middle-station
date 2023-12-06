@@ -1,4 +1,5 @@
 <template>
+  <!-- 主入口页面 -->
   <canvas id="cvs"></canvas>
 </template>
 
