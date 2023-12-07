@@ -8,7 +8,22 @@ export const initData = () => {
       'column__item-choosed': column.choosed,
     };
   });
+
   const columnStore = useColumnStore();
+
+  /**
+   * @desc 数据源
+   */
+  const dataSource =  computed<ColumnStore.ColumnState['dataSource']>(()=>{
+    return columnStore.getDataSource<'dataSource'>()
+  });
+
+  /**
+   * @desc 数据源选项
+   */
+  const dataSourceOptions =  computed<ColumnStore.ColumnState['dataSourceOptions']>(() =>{
+    return  columnStore.getDataSourceOptions<'dataSourceOptions'>()
+  });
 
   const columnList = computed<ColumnStore.ColumnState['columns']>(() => {
     return columnStore.getColumns<'columns'>();
@@ -17,6 +32,8 @@ export const initData = () => {
   const currentColumn = ref<ColumnStore.Column>();
   return {
     columnClasses,
+    dataSource,
+    dataSourceOptions,
     columnList,
     currentColumn,
   };

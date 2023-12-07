@@ -33,13 +33,28 @@ const props = defineProps({
     >
   }
 })
-
+/**
+ * @description 判断当前tag是维度还是度量
+ * @returns {boolean}
+ */
 const isDimension = computed(() => props.cast === 'dimension')
 
+/**
+ * @description 判断当前tag是分组还是度量
+ * @returns {boolean}
+ */
 const isGroup = computed(() => props.cast === 'group')
 
+/**
+ * @description 判断当前tag是排序还是过滤
+ * @returns {boolean}
+ */
 const isFilter = computed(() => props.cast === 'filter')
 
+/**
+ * @description 判断当前tag是排序还是过滤
+ * @returns {boolean}
+ */
 const isOrder = computed(() => props.cast === 'order')
 
 </script>
@@ -54,6 +69,6 @@ const isOrder = computed(() => props.cast === 'order')
   border: 1px solid #ddd;
   border-radius: 5px;
   background-color: #fff;
-  font-size: 14px;
+  font-size: 12px;
 }
 </style>

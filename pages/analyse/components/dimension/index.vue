@@ -4,7 +4,7 @@
     @dragover="dragoverHandler"
     @drop="dropHandler"
   >
-    <div class="dimension__title">值</div>
+    <div class="dimension__title my-1">值</div>
     <div
       class="dimension__content flex-1"
       v-contextmenu:contextmenu
