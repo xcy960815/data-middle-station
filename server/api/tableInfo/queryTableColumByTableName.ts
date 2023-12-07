@@ -1,9 +1,9 @@
+
+
+import { TableInfoDao } from '../../database/tableInfo';
 /**
  * @desc 根据表名查询数据
  */
-
-import { TableInfoDao } from '../../database/tableinfo';
-
 export default defineEventHandler<ResponseModule.Response<Array<TableInfoModule.TableInfoOptions>>>(
   async (event) => {
     try {

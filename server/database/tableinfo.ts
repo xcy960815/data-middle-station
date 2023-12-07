@@ -20,11 +20,11 @@ export class TableInfoDao extends DOBase {
   /**
    * @datasource blog
    * @table table_info
-   * @desc 查询所有的数据
-   * @returns {Promise<Array<TableInfoModule.TableInfoOptions>>}
+   * @desc 查询当前数据库所有的表
+   * @returns {Promise<Array<string>>}
    */
-  public async queryAll(): Promise<Array<TableInfoModule.TableInfoOptions>> {
-    const sql = 'SELECT table_name, field_name, field_type, field_comment FROM blog.table_info';
+  public async queryTableList(): Promise<Array<TableInfoModule.TableInfoOptions>> {
+    const sql = `SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema='blog'`;
     return await this.exe<Array<TableInfoModule.TableInfoOptions>>(sql);
   }
   /**
@@ -34,7 +34,7 @@ export class TableInfoDao extends DOBase {
    * @param {number} id
    * @returns {Promise<Array<TableInfoModule.TableInfoOptions>>}
    */
-  public async queryByTableName(
+  public async queryTableColumByTableName(
     tableName: string,
   ): Promise<Array<TableInfoModule.TableInfoOptions>> {
     const sql =

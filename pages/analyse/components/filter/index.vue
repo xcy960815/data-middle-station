@@ -1,6 +1,6 @@
 <template>
   <div class="filter relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
-    <div class="filter__title">筛选</div>
+    <div class="filter__title my-1">筛选</div>
     <div class="filter__content flex-auto">
       <div
         data-action="drag"
@@ -12,7 +12,11 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <div class="filter__item__name">{{ item.name }}</div>
+        <selecter
+          class="filter__item__name"
+          cast="filter"
+          :name="item.name"
+        ></selecter>
       </div>
     </div>
   </div>
@@ -33,7 +37,6 @@ const { dragstartHandler, dragHandler, dragoverHandler, dropHandler } = handler(
     list-style: none;
     overflow: auto;
     .filter__item {
-      padding: 0 10px;
       cursor: move;
       height: 30px;
       line-height: 30px;

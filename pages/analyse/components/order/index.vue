@@ -1,6 +1,6 @@
 <template>
   <div class="order relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
-    <div class="sort__title">排序</div>
+    <div class="sort__title my-1">排序</div>
     <div class="sort__content flex-auto">
       <div
         data-action="drag"
@@ -12,7 +12,11 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <div class="sort__item__name">{{ item.name }}</div>
+        <selecter
+          class="sort__item__name"
+          cast="order"
+          :name="item.name"
+        ></selecter>
       </div>
     </div>
   </div>
@@ -34,7 +38,6 @@ const { dragstartHandler, dragHandler, dragoverHandler, dropHandler } = handler(
     overflow: auto;
 
     .sort__item {
-      padding: 0 10px;
       cursor: move;
       height: 30px;
       line-height: 30px;

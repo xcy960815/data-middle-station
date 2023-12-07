@@ -136,7 +136,6 @@ export class DOBase {
    */
   protected async exe<T>(sql: string, params?: Array<any>): Promise<T> {
     const dataSourceName = Object.getPrototypeOf(this).dataSourceName;
-
     //  查找线程池
     const pool = this.getPool(dataSourceName);
     // 获取连接
@@ -146,22 +145,11 @@ export class DOBase {
       .query(sql, params)
       .then(([rows]) => {
         const duration = Date.now() - startTime;
-        // console.log(
-        //   chalk.green('业务查询sql'),
-        //   sql,
-        //   chalk.blue('请求参数'),
-        //   params ? params : '无',
-        //   chalk.yellow('耗时'),
-        //   duration,
-        //   'ms',
-        // );
         logger.info(`${sql} 请求参数 ${params ? params : '无'} 耗时 ${duration} ms`);
-
         return rows;
       })
       .catch((error) => {
-        // console.log('error---error', chalk.redBright(error.message));
-        logger.error(`${sql} 请求参数 ${params} error ${error}`);
+        logger.error(`${sql} 请求参数 ${params ? params : '无'} error ${error}`);
         throw error;
       })
       .finally(() => {

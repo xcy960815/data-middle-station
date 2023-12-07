@@ -11,7 +11,7 @@
           " :min-width="tableHeaderOption.minWidth" sortable :formatter="tableColumnFormatter">
       </el-table-column>
     </el-table>
-    <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[10, 20, 30, 40]" size="small"
+    <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[10, 20, 30, 40]" small="small"
       :background="true" layout="total, sizes, prev, pager, next, jumper" :total="total" />
   </ClientOnly>
 </template>

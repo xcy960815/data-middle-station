@@ -1,13 +1,20 @@
 <template>
+  
+  <el-select v-model="dataSource" placeholder="请选择数据源" size="small">
+    <!-- <el-option
+      v-for="item in dataSourceOptions"
+      :key="item.value"
+      :label="item.label"
+      :value="item.value"
+    /> -->
+  </el-select>
   <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="column__title">维度</div>
     <div class="column__content">
       <div @contextmenu="contextmenuHandler(column)" v-contextmenu:contextmenu :class="columnClasses(column)"
         v-for="(column, index) in columnList" :key="index" draggable="true"
         @dragstart="dragstartHandler(column, index, $event)" @dragend="dragendHandler" @mousedown.stop>
-        <span class="column__item__name">{{
-          column.name
-        }}</span>
+        <span class="column__item__name">{{ column.name }}</span>
       </div>
     </div>
     <!-- 字段的操作选项 -->
@@ -52,7 +59,8 @@
 <script setup lang="ts">
 import { initData } from './init-data'
 import { handler } from './handler'
-const { columnClasses, columnList, currentColumn } =
+const { columnClasses,dataSource,
+    dataSourceOptions, columnList, currentColumn } =
   initData()
 const {
   dragstartHandler,
