@@ -1,7 +1,7 @@
 export const useGroupStore = definePiniaStore<
   GroupStore.GroupKey,
   GroupStore.GroupState,
-  GroupStore.GroupGetters,
+  GroupStore.GroupGetters<GroupStore.GroupState>,
   GroupStore.GroupActions
 >('group', {
   state: () => ({
@@ -18,20 +18,18 @@ export const useGroupStore = definePiniaStore<
   }),
   getters: {
     getGroups: (state) => {
-      return () => {
-        return state.groups
-      }
+      return state.groups
     }
   },
   actions: {
-    addGroup(groups) {
-      this.groups = this.groups.concat(groups)
-    },
-    updateGroup(groups) {
+    // addGroup(groups) {
+    //   this.groups = this.groups.concat(groups)
+    // },
+    setGroups(groups) {
       this.groups = groups
     },
-    removeGroup(index) {
-      this.groups.splice(index, 1)
-    }
+    // removeGroup(index) {
+    //   this.groups.splice(index, 1)
+    // }
   }
 })

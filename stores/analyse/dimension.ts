@@ -4,7 +4,7 @@
 export const useDimensionStore = definePiniaStore<
   DimensionStore.DimensionKey,
   DimensionStore.DimensionState,
-  DimensionStore.DimensionGetters,
+  DimensionStore.DimensionGetters<DimensionStore.DimensionState>,
   DimensionStore.DimensionActions
 >('dimension', {
   state: () => ({
@@ -21,20 +21,18 @@ export const useDimensionStore = definePiniaStore<
   }),
   getters: {
     getDimensions(state) {
-      return () => {
-        return state.dimensions
-      }
+      return state.dimensions
     }
   },
   actions: {
-    updateDimension(dimensions) {
+    setDimensions(dimensions) {
       this.dimensions = dimensions
     },
-    addDimension(dimensions) {
-      this.dimensions = this.dimensions.concat(dimensions)
-    },
-    removeDimension(index) {
-      this.dimensions.splice(index, 1)
-    }
+    // addDimension(dimensions) {
+    //   this.dimensions = this.dimensions.concat(dimensions)
+    // },
+    // removeDimension(index) {
+    //   this.dimensions.splice(index, 1)
+    // }
   }
 })

@@ -35,39 +35,65 @@
 /**
  * @desc 列 store
  */
-export const useColumnStore = definePiniaStore<string,ColumnStore.ColumnState>('column', {
+export const useColumnStore = definePiniaStore<ColumnStore.ColumnKey, ColumnStore.ColumnState, ColumnStore.ColumnGetters<ColumnStore.ColumnState>, ColumnStore.ColumnAction>('column', {
+  /**
+   * @desc 关于列所哟的数据字段
+   * @returns {ColumnStore.ColumnState}
+   */
   state: () => ({
-    dataSource:"",
-    dataSourceOptions:[],
-    columns: [
-      
-    ]
+    dataSource: "",
+    dataSourceOptions: [],
+    columns: []
   }),
+
   getters: {
-    getColumns() {
-      return () => {
-        return this.columns
-      }
+    /**
+     * @desc 返回列名
+     * @param state {ColumnStore.ColumnState}
+     * @returns {ColumnStore.Column[]}
+     */
+    getColumns(state) {
+      return state.columns;
     },
-    getDataSource() {
-      return () => {
-        return this.dataSource
-      }
+    /**
+     * @desc 返回数据源
+     * @param state {ColumnStore.ColumnState}
+     * @returns {string}
+     */
+    getDataSource(state) {
+      return state.dataSource;
     },
-    getDataSourceOptions(){
-      return () => {
-        return this.dataSourceOptions
-      }
-    }
+    /**
+     * @desc 返回数据源选项
+     * @param state {ColumnStore.ColumnState}
+     * @returns {ColumnStore.dataSourceOption[]}
+     */
+    getDataSourceOptions(state) {
+      return state.dataSourceOptions;
+    },
   },
+
   actions: {
-    setColumns(columns: ColumnStore.Column[]) {
+    /**
+     * @desc 更新列名
+     * @param columns {Array<ColumnStore.Column>}
+     */
+    setColumns(columns) {
       this.columns = columns
     },
-    setDataSource(dataSource: string) {
+    /**
+     * @desc 更新数据源
+     * @param dataSource {string}
+     */
+    setDataSource(dataSource) {
       this.dataSource = dataSource
     },
-    setDataSourceOptions(dataSourceOptions:ColumnStore.dataSourceOption[]) {
+    /**
+     * @desc 更新所有的表
+     * @param dataSourceOptions {ColumnStore.dataSourceOption[]}
+     * @returns {void}
+     */
+    setDataSourceOptions(dataSourceOptions) {
       this.dataSourceOptions = dataSourceOptions
     }
   }

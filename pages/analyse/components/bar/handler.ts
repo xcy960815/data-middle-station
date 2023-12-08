@@ -37,8 +37,8 @@ export const handler = () => {
   const handleClickDownload = () => {
     const { $webworker } = useNuxtApp()
     const feilds = dimensionStore
-      .getDimensions()
-      .concat(groupStore.getGroups())
+      .getDimensions
+      .concat(groupStore.getGroups)
     console.log('handleClickDownload', feilds)
   }
   return {

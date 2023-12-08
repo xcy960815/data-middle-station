@@ -1,13 +1,13 @@
 <template>
-  
   <el-select v-model="dataSource" placeholder="请选择数据源" size="small">
-    <!-- <el-option
+    <el-option
       v-for="item in dataSourceOptions"
       :key="item.value"
       :label="item.label"
       :value="item.value"
-    /> -->
+    />
   </el-select>
+
   <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="column__title">维度</div>
     <div class="column__content">
@@ -59,9 +59,14 @@
 <script setup lang="ts">
 import { initData } from './init-data'
 import { handler } from './handler'
-const { columnClasses,dataSource,
-    dataSourceOptions, columnList, currentColumn } =
-  initData()
+const {
+  columnClasses,
+  dataSource,
+  dataSourceOptions,
+  columnList,
+  currentColumn
+} = initData()
+
 const {
   dragstartHandler,
   dragendHandler,

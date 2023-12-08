@@ -44,17 +44,17 @@ import Charts from './components/charts/index.vue'
 import ChartsType from './components/charts-type/index.vue'
 import ChartsConfig from './components/charts-config/index.vue'
 const layoutName = 'analyse'
-/**
- * @desc 初始化列数据
- * @returns {Promise<void>}
- */
-const initColumData = async () => {
+const columnStore = useColumnStore();
+const initColumnData = async () => {
   const result = await $fetch('/api/tableInfo/queryTableList')
-  console.log("result",result);
-  
+  if (result.code === 200) {
+    columnStore.setDataSourceOptions(result.data || [])
+  }else {
+     columnStore.setDataSourceOptions([])
+  }
 }
 onMounted(async () => {
-  initColumData()
+  initColumnData()
 })
 </script>
 

@@ -11,25 +11,32 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface Group extends FieldOption {}
+  interface Group extends FieldOption { }
 
-  interface GroupState {
+  type GroupState = {
     groups: Group[]
   }
 
-  interface GroupGetters
-    extends Record<
-      `get${Capitalize<keyof GroupState>}`,
-      (
-        state: GroupState
-      ) => <
-        K extends string & keyof GroupState
-      >() => GroupState[K]
-    > {}
+  /**
+  * @desc getter 名称
+  */
+  type GetterName<T extends string> = `get${Capitalize<T>}`;
 
-  interface GroupActions {
-    updateGroup: (groups: Group[]) => void
-    addGroup: (groups: Group[]) => void
-    removeGroup: (index: number) => void
+  /**
+   * @desc getter
+   */
+  type GroupGetters<S> = {
+    [K in keyof S as GetterName<K & string>]: (state: S) => S[K];
+  };
+
+  /**
+   * @desc action 名称
+   */
+  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  /**
+   * @desc action
+   */
+  type GroupActions = {
+    [K in keyof GroupState as ActionName<K & string>]: (value: GroupState[K]) => void;
   }
 }

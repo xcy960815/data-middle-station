@@ -3,7 +3,7 @@
  * @desc 左侧列字段
  */
 declare namespace OrderStore {
-  type OrderKey = 'sort'
+  type OrderKey = 'order'
   /**
    * @desc 左侧列字段
    * @interface Order
@@ -11,25 +11,32 @@ declare namespace OrderStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface Order extends FieldOption {}
+  interface Order extends FieldOption { }
 
-  interface OrderState {
+  type OrderState = {
     orders: Order[]
   }
 
-  interface OrderGetters
-    extends Record<
-      `get${Capitalize<keyof OrderState>}`,
-      (
-        state: OrderState
-      ) => <
-        K extends string & keyof OrderState
-      >() => OrderState[K]
-    > {}
+  /**
+   * @desc getter 名称
+   */
+  type GetterName<T extends string> = `get${Capitalize<T>}`;
 
-  interface OrderActions {
-    updateOrder: (orders: Order[]) => void
-    addOrder: (orders: Order[]) => void
-    removeOrder: (index: number) => void
+  /**
+   * @desc getter
+   */
+  type OrderGetters<S> = {
+    [K in keyof S as GetterName<K & string>]: (state: S) => S[K];
+  };
+
+  /**
+    * @desc action 名称
+    */
+  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  /**
+   * @desc action
+   */
+  type OrderActions = {
+    [K in keyof OrderState as ActionName<K & string>]?: (value: OrderState[K]) => void;
   }
 }

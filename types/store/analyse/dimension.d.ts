@@ -12,30 +12,34 @@ declare namespace DimensionStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface Dimension extends FieldOption {}
+  interface Dimension extends FieldOption { }
 
   type DimensionKey = 'dimension'
 
-  interface DimensionState {
+  type DimensionState = {
     dimensions: Dimension[]
   }
 
-  type DimensionStateKeys = `get${Capitalize<
-    keyof DimensionState & string
-  >}`
-  interface DimensionGetters
-    extends Record<
-      DimensionStateKeys,
-      (
-        state: DimensionState
-      ) => <
-        K extends string & keyof DimensionState
-      >() => DimensionState[K]
-    > {}
+  /**
+   * @desc getter 名称
+   */
+  type GetterName<T extends string> = `get${Capitalize<T>}`;
 
-  interface DimensionActions {
-    updateDimension: (dimensions: Dimension[]) => void
-    addDimension: (dimensions: Dimension[]) => void
-    removeDimension: (index: number) => void
-  }
+  /**
+   * @desc getter
+   */
+  type DimensionGetters<S> = {
+    [K in keyof S as GetterName<K & string>]: (state: S) => S[K];
+  };
+
+  /**
+   * @desc action 名称
+   */
+  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  /**
+   * @desc action
+   */
+  type DimensionActions = {
+    [K in keyof DimensionState as ActionName<K & string>]?: (value: DimensionState[K]) => void;
+  };
 }

@@ -1,5 +1,5 @@
 declare namespace ChartStore {
-  import type { _GettersTree } from 'pinia'
+
   const ChartTypesEnums = {
     table: 'table',
     line: 'line',
@@ -9,33 +9,9 @@ declare namespace ChartStore {
 
   type ChartKey = 'chart'
 
-  type ChartType =
-    (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
-  /**
-   * @desc getters keys
-   */
-  type ChartGetterKeys = `get${Capitalize<
-    keyof ChartState & string
-  >}`
-  type ChartGetters = Record<
-    ChartGetterKeys,
-    (
-      state: ChartState
-    ) => <K>() => K extends string & keyof ChartState
-      ? ChartState[K]
-      : void
-  >
-  // type ChartGetters = Partial<
-  //   Record<
-  //     ChartGetterKeys,
-  //     (
-  //       state: ChartState
-  //     ) => <K>() => K extends string & keyof ChartState
-  //       ? ChartState[K]
-  //       : void
-  //   >
-  // >
-  interface ChartState {
+  type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
+
+  type ChartState = {
     chartErrorMessage: string
     // 图表类型
     chartType: ChartType
@@ -46,15 +22,32 @@ declare namespace ChartStore {
     // 图表加载状态
     chartLoading: boolean
   }
-  type ChartActionsKeys = `set${Capitalize<
-    keyof ChartState & string
-  >}`
+  /**
+   * @desc getters keys
+   */
+  type ChartGetterKeys = `get${Capitalize<keyof ChartState & string>}`
+  
 
-  interface ChartActions
-    extends Record<
-      ChartActionsKeys,
-      <K extends string & keyof ChartState>(
-        payload: ChartState[K]
-      ) => void
-    > {}
+  /**
+   * @desc getter 名称
+   */
+  type GetterName<T extends string> = `get${Capitalize<T>}`;
+
+  /**
+   * @desc getter
+   */
+  type ChartGetters<S> = {
+    [K in keyof S as GetterName<K & string>]?: (state: S) => S[K];
+  };
+
+  /**
+   * @desc action 名称
+   */
+  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  /**
+   * @desc action
+   */
+  type ChartActions = {
+    [K in keyof ChartState as ActionName<K & string>]?: (value: ChartState[K]) => void;
+  }
 }

@@ -12,9 +12,7 @@ export const useFilterStore = definePiniaStore<
   }),
   getters: {
     getFilters(state) {
-      return () => {
-        return state.filters;
-      };
+      return state.filters;
     },
   },
   actions: {

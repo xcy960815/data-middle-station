@@ -4,7 +4,7 @@ export const initData = () => {
    * @desc dimensionList
    */
   const dimensionList = computed<DimensionStore.DimensionState['dimensions']>(() => {
-    return dimensionStore.getDimensions<'dimensions'>();
+    return dimensionStore.getDimensions;
   });
   return {
     dimensionList,

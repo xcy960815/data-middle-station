@@ -1,10 +1,7 @@
 export const initData = () => {
   const chartStore = useChartStore()
-  const chartType = computed<
-    ChartStore.ChartState['chartType']
-  >(() => {
-    const chartType = chartStore.getChartType<'chartType'>()
-
+  const chartType = computed(() => {
+    const chartType = chartStore.getChartType as ChartStore.ChartState['chartType']
     return chartType
   })
   const chartsType = ref([
