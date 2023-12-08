@@ -1,7 +1,7 @@
 export const initData = () => {
   const filterStore = useFilterStore();
-  const filterList = computed<FilterStore.FilterState['filters']>(() =>
-    filterStore.getFilters<'filters'>(),
+  const filterList = computed(() =>
+    filterStore.getFilters,
   );
   return { filterList };
 };

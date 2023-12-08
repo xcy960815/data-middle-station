@@ -2,13 +2,18 @@ import { TableInfoDao } from '../../database/tableInfo';
 
 /**
  * @desc 获取所有的表名
- * @returns {Promise<ResponseModule.Response<Array<string>>>}
+ * @returns {Promise<ResponseModule.Response<Array<{label:string,value:string}>>>}
  */
 export default defineEventHandler(
   async (_event) => {
     try {
         const tableInfo = new TableInfoDao();
-        const tableList = await tableInfo.queryTableList()
+        const tableList = (await tableInfo.queryTableList()).map(item=>{
+          return {
+            label:item.tableName,
+            value:item.tableName
+          }
+        })
         return {
             code: 200,
             data: tableList,

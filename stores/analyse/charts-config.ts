@@ -6,9 +6,13 @@ export const useChartConfigStore = definePiniaStore<
   'chartsConfig',
   {
     chartsConfigDrawer: Ref<boolean>
-    /* 图表公共配置 */
+    /**
+     * @desc 图表公共配置
+     */
     chartCommonConfigData: {
+      // 描述
       description: string
+      // 数据量
       limit: number
       // 智能作图建议
       suggest: boolean
@@ -20,6 +24,9 @@ export const useChartConfigStore = definePiniaStore<
     setChartsConfigDrawer: (drawer: boolean) => void
     // 折线图配置
     chartConfigData: {
+      /**
+       * @desc 折线图配置
+       */
       line: {
         // 是否画圆点
         showPoint: boolean
@@ -32,6 +39,9 @@ export const useChartConfigStore = definePiniaStore<
         // 是否横向拖动条
         horizontalBar: boolean
       }
+      /**
+       * @desc 柱状图配置
+       */
       interval: {
         // 展示方式
         displayMode: string // 'levelDisplay' | 'stackDisplay'
@@ -44,12 +54,18 @@ export const useChartConfigStore = definePiniaStore<
         // 横线滚动
         horizontalBar: boolean
       }
+      /**
+       * @desc 饼图配置
+       */
       pie: {
         // 是否显示文字
         showLabel: boolean
         // 图表类型
         chartType: string // "pie" | "rose"
       }
+      /**
+       * @desc 表格配置
+       */
       table: {
         displayMode: string // "originalDisplay"|"aggregationDisplay"
         showCompare: boolean

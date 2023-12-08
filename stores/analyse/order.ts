@@ -1,28 +1,26 @@
 export const useOrderStore = definePiniaStore<
   OrderStore.OrderKey,
   OrderStore.OrderState,
-  OrderStore.OrderGetters,
+  OrderStore.OrderGetters<OrderStore.OrderState>,
   OrderStore.OrderActions
->('sort', {
+>('order', {
   state: () => ({
     orders: [],
   }),
   getters: {
     getOrders(state) {
-      return () => {
-        return state.orders;
-      };
+      return state.orders;
     },
   },
   actions: {
-    addOrder(sort) {
-      this.orders = this.orders.concat(sort);
-    },
-    updateOrder(orders) {
+    // addOrder(sort) {
+    //   this.orders = this.orders.concat(sort);
+    // },
+    setOrders(orders) {
       this.orders = orders;
     },
-    removeOrder(index) {
-      this.orders.splice(index, 1);
-    },
+    // removeOrder(index) {
+    //   this.orders.splice(index, 1);
+    // },
   },
 });

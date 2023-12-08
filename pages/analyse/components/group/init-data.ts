@@ -4,7 +4,7 @@ export const initData = () => {
    * @desc groupList
    */
   const groupList = computed<GroupStore.GroupState['groups']>(() => {
-    return groupStore.getGroups<'groups'>();
+    return groupStore.getGroups;
   });
   return {
     groupList,

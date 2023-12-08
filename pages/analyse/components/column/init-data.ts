@@ -1,6 +1,7 @@
 export const initData = () => {
   /**
    * @description: 维度列样式
+   * @returns {}
    */
   const columnClasses = computed(() => (column: ColumnStore.Column) => {
     return {
@@ -14,22 +15,26 @@ export const initData = () => {
   /**
    * @desc 数据源
    */
-  const dataSource =  computed<ColumnStore.ColumnState['dataSource']>(()=>{
-    return columnStore.getDataSource<'dataSource'>()
+  const dataSource = computed(() => {
+    return columnStore.getDataSource
   });
 
   /**
    * @desc 数据源选项
    */
-  const dataSourceOptions =  computed<ColumnStore.ColumnState['dataSourceOptions']>(() =>{
-    return  columnStore.getDataSourceOptions<'dataSourceOptions'>()
+  const dataSourceOptions = computed(() => {
+    return columnStore.getDataSourceOptions
   });
 
-  const columnList = computed<ColumnStore.ColumnState['columns']>(() => {
-    return columnStore.getColumns<'columns'>();
+  /**
+   * @desc 维度字段列表
+   */
+  const columnList = computed(() => {
+    return columnStore.getColumns
   });
 
   const currentColumn = ref<ColumnStore.Column>();
+
   return {
     columnClasses,
     dataSource,

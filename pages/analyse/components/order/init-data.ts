@@ -4,7 +4,7 @@ export const initData = () => {
    * @desc orderList
    */
   const orderList = computed<OrderStore.OrderState['orders']>(() => {
-    return orderStore.getOrders<'orders'>();
+    return orderStore.getOrders;
   });
   return {
     orderList,

@@ -28,7 +28,7 @@ export const initData = () => {
    * @desc 图表配置组件
    */
   const chartConfigComponent = computed(() => {
-    const chartType = chartStore.getChartType<'chartType'>()
+    const chartType = chartStore.getChartType
     switch (chartType) {
       case 'table':
         return TableChartConfig

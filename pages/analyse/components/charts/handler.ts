@@ -12,11 +12,11 @@ export const handler = () => {
    */
   const analyseParams = computed(() => {
     return {
-      filter: filterStore.getFilters(),
-      order: orderStore.getOrders(),
-      dimension: dimensionStore.getDimensions(),
-      group: groupStore.getGroups(),
-      chartType: chartStore.getChartType<'chartType'>()
+      filter: filterStore.getFilters,
+      order: orderStore.getOrders,
+      dimension: dimensionStore.getDimensions,
+      group: groupStore.getGroups,
+      chartType: chartStore.getChartType
     }
   })
   /**
@@ -27,8 +27,8 @@ export const handler = () => {
   const chartSuggestStrategies = (
     chartType: ChartStore.ChartState['chartType']
   ) => {
-    const dimensions = dimensionStore.getDimensions()
-    const groups = groupStore.getGroups()
+    const dimensions = dimensionStore.getDimensions
+    const groups = groupStore.getGroups
     const chartNames = {
       table: '表格',
       interval: '柱状图',
@@ -70,7 +70,7 @@ export const handler = () => {
     /**
      * @desc 前置校验先检查维度、分组是否有值
      */
-    const chartType = chartStore.getChartType<'chartType'>()
+    const chartType = chartStore.getChartType as ChartStore.ChartState['chartType']
     const errorMessage = chartSuggestStrategies(chartType)
     chartStore.setChartErrorMessage(errorMessage)
     if (errorMessage) {

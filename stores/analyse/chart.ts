@@ -1,8 +1,3 @@
-// type getNumber = () => number
-// type getString = () => string
-// type GetReturnType<T> = T extends () => infer R ? R : T
-// let numberResult: GetReturnType<getNumber>
-// let stringResult: GetReturnType<getString>
 
 /**
  * @desc chart store
@@ -10,7 +5,7 @@
 export const useChartStore = definePiniaStore<
   ChartStore.ChartKey,
   ChartStore.ChartState,
-  ChartStore.ChartGetters,
+  ChartStore.ChartGetters<ChartStore.ChartState>,
   ChartStore.ChartActions
 >('chart', {
   state: () => ({
@@ -113,51 +108,40 @@ export const useChartStore = definePiniaStore<
   }),
   getters: {
     getChartErrorMessage(state) {
-      return <K>() => {
-        return state.chartErrorMessage as K
-      }
+      return state.chartErrorMessage
     },
     getChartLoading(state) {
-      return <K>() => {
-        return state.chartLoading as K
-      }
+      return state.chartLoading
     },
     getChartType(state) {
-      return <K>() => {
-        return state.chartType as K
-      }
+      return state.chartType
     },
     getChartId(state) {
-      return <K>() => {
-        return state.chartId as K
-      }
+      return state.chartId
     },
     getChartData(state) {
-      return <K>() => {
-        return state.chartData as K
-      }
+      return state.chartData
     }
   },
   actions: {
     setChartType(chartType) {
-      this.chartType =
-        chartType as ChartStore.ChartState['chartType']
+      this.chartType = chartType
     },
     setChartLoading(chartLoading) {
       this.chartLoading =
-        chartLoading as ChartStore.ChartState['chartLoading']
+        chartLoading
     },
     setChartId(chartId) {
       this.chartId =
-        chartId as ChartStore.ChartState['chartId']
+        chartId
     },
     setChartErrorMessage(chartErrorMessage) {
       this.chartErrorMessage =
-        chartErrorMessage as ChartStore.ChartState['chartErrorMessage']
+        chartErrorMessage
     },
     setChartData(chartData) {
       this.chartData =
-        chartData as ChartStore.ChartState['chartData']
+        chartData
     }
   }
 })
