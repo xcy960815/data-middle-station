@@ -12,7 +12,11 @@ declare namespace DimensionStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface Dimension extends FieldOption { }
+  interface Dimension extends TableInfoModule.TableColumnOptions {
+    choosed: boolean
+    alias?: string
+    displyName?: string
+   }
 
   type DimensionKey = 'dimension'
 

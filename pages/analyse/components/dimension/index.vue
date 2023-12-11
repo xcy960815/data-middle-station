@@ -22,7 +22,7 @@
         <selecter
           class="dimension__item__name"
           cast="dimension"
-          :name="item.name"
+          :name="item.columnName"
         ></selecter>
       </div>
     </div>
