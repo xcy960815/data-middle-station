@@ -128,20 +128,16 @@ export const useChartStore = definePiniaStore<
       this.chartType = chartType
     },
     setChartLoading(chartLoading) {
-      this.chartLoading =
-        chartLoading
+      this.chartLoading = chartLoading
     },
     setChartId(chartId) {
-      this.chartId =
-        chartId
+      this.chartId = chartId
     },
     setChartErrorMessage(chartErrorMessage) {
-      this.chartErrorMessage =
-        chartErrorMessage
+      this.chartErrorMessage = chartErrorMessage
     },
     setChartData(chartData) {
-      this.chartData =
-        chartData
+      this.chartData =chartData
     }
   }
 })

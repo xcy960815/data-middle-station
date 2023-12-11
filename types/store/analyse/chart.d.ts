@@ -43,11 +43,13 @@ declare namespace ChartStore {
   /**
    * @desc action 名称
    */
-  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  type ActionName<T extends string> = `set${Capitalize<T>}`;
   /**
    * @desc action
    */
   type ChartActions = {
     [K in keyof ChartState as ActionName<K & string>]?: (value: ChartState[K]) => void;
+  }&{
+   
   }
 }

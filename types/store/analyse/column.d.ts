@@ -21,7 +21,7 @@ declare namespace ColumnStore {
   }
 
   /**
-   * @desc getter 名称
+   * @desc getter 名称 根据state 生成 相对应的 getter 名称 比如 state 为 dataSource 那么 getter 名称为 getDataSource
    */
   type GetterName<T extends string> = `get${Capitalize<T>}`;
 
@@ -33,13 +33,13 @@ declare namespace ColumnStore {
   };
 
   /**
-   * @desc action 名称
+   * @desc action 名称 根据state 生成 相对应的 action 名称 比如 state 为 dataSource 那么 action 名称为 setDataSource
    */
-  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  type ActionName<T extends string> = `set${Capitalize<T>}` | `remove${Capitalize<T>}`;
   /**
    * @desc action
    */
-  type ColumnAction = {
-    [K in keyof ColumnState as ActionName<K & string>]?: (value: ColumnState[K]) => void;
+  type ColumnActions = {
+    [K in keyof ColumnState as ActionName<K & string>]: (value: ColumnState[K]) => void;
   };
 }

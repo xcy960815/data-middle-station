@@ -35,11 +35,13 @@ declare namespace DimensionStore {
   /**
    * @desc action 名称
    */
-  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  type ActionName<T extends string> = `set${Capitalize<T>}`;
   /**
    * @desc action
    */
   type DimensionActions = {
-    [K in keyof DimensionState as ActionName<K & string>]?: (value: DimensionState[K]) => void;
+    [K in keyof DimensionState as ActionName<K & string>]: (value: DimensionState[K]) => void;
+  }&{
+    removeDimensions: (value: number) => void;
   };
 }
