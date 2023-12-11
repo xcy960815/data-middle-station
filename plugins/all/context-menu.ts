@@ -28,8 +28,13 @@ class ContextMenuPlugin {
   ): void {
     // this.unmounted(contextMenuElement, contextMenuBinding);
     // this.mounted(contextMenuElement, contextMenuBinding);
-    console.log("updated",this);
-    
+    const contextmenuRefName = contextMenuBinding.arg;
+    if (!contextmenuRefName) return;
+    const contextmenuOptions = contextMenuBinding.value;
+    const contextmenuInstance: ContextMenuModule.ContextMenuInstance = contextMenuBinding.instance
+      ?.$refs[contextmenuRefName] as ContextMenuModule.ContextMenuInstance;
+    contextMenuElement.$contextmenuRefName = contextmenuRefName;
+    contextmenuInstance.initContextMenuEvent(contextMenuElement, contextmenuOptions);
   }
   /**
    * @desc 解绑右键菜单指令

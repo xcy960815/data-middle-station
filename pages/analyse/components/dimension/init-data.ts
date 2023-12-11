@@ -2,8 +2,9 @@ export const initData = () => {
   const dimensionStore = useDimensionStore();
   /**
    * @desc dimensionList
+   * @returns {ComputedRef<DimensionStore.Dimension[]>}
    */
-  const dimensionList = computed<DimensionStore.DimensionState['dimensions']>(() => {
+  const dimensionList = computed(() => {
     return dimensionStore.getDimensions;
   });
   return {
