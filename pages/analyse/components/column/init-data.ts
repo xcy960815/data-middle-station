@@ -16,8 +16,13 @@ export const initData = () => {
    * @desc 数据源
    * @returns {string}
    */
-  const dataSource = computed(() => {
-    return columnStore.getDataSource
+  const dataSource = computed({
+    get:() => {
+      return columnStore.getDataSource
+    },
+    set:(val) => {
+      columnStore.setDataSource(val)
+    }
   });
 
   /**
