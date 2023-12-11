@@ -43,19 +43,9 @@ import Bar from './components/bar/index.vue'
 import Charts from './components/charts/index.vue'
 import ChartsType from './components/charts-type/index.vue'
 import ChartsConfig from './components/charts-config/index.vue'
+import { handler } from "./handler"
 const layoutName = 'analyse'
-const columnStore = useColumnStore();
-const initColumnData = async () => {
-  const result = await $fetch('/api/tableInfo/queryTableList')
-  if (result.code === 200) {
-    columnStore.setDataSourceOptions(result.data || [])
-  }else {
-     columnStore.setDataSourceOptions([])
-  }
-}
-onMounted(async () => {
-  initColumnData()
-})
+handler()
 </script>
 
 <style scoped lang="less"></style>

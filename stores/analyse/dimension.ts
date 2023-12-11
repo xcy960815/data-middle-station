@@ -28,11 +28,8 @@ export const useDimensionStore = definePiniaStore<
     setDimensions(dimensions) {
       this.dimensions = dimensions
     },
-    // addDimension(dimensions) {
-    //   this.dimensions = this.dimensions.concat(dimensions)
-    // },
-    // removeDimension(index) {
-    //   this.dimensions.splice(index, 1)
-    // }
+    removeDimensions(index) {
+      this.dimensions.splice(index, 1)
+    }
   }
 })

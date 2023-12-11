@@ -75,8 +75,6 @@
  * @returns {void}
  */
 const handleCloumnMouseDown = (mouseEvent: MouseEvent) => {
-  console.log('handleCloumnMouseDown')
-
   const layoutCloumn = document.querySelector(
     '.layout-analyse-cloumn'
   ) as HTMLElement

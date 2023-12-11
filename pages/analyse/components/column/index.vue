@@ -1,5 +1,5 @@
 <template>
-  <el-select v-model="dataSource" placeholder="请选择数据源" size="small">
+  <el-select v-model="dataSource" class="dataSource-select mb-1 w-full z-40" placeholder="请选择数据源" >
     <el-option
       v-for="item in dataSourceOptions"
       :key="item.value"

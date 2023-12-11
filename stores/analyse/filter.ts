@@ -4,7 +4,7 @@
 export const useFilterStore = definePiniaStore<
   FilterStore.FilterKey,
   FilterStore.FilterState,
-  FilterStore.FilterGetters,
+  FilterStore.FilterGetters<FilterStore.FilterState>,
   FilterStore.FilterActions
 >('filter', {
   state: () => ({
@@ -16,14 +16,14 @@ export const useFilterStore = definePiniaStore<
     },
   },
   actions: {
-    updateFilter(filters) {
+    setFilters(filters) {
       this.filters = filters;
     },
-    addFilter(filters) {
-      this.filters = this.filters.concat(filters);
-    },
-    removeFilter(index) {
-      this.filters.splice(index, 1);
-    },
+    // addFilter(filters) {
+    //   this.filters = this.filters.concat(filters);
+    // },
+    // removeFilter(index) {
+    //   this.filters.splice(index, 1);
+    // },
   },
 });
