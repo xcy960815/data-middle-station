@@ -28,16 +28,17 @@ const props = defineProps({
     default: ''
   },
   cast: {
-    type: String as PropType<
-      'dimension' | 'group' | 'order' | 'filter'
-    >
+    type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
+    default: ''
   }
 })
 /**
  * @description 判断当前tag是维度还是度量
  * @returns {boolean}
  */
-const isDimension = computed(() => props.cast === 'dimension')
+const isDimension = computed(() => {
+  return props.cast === 'dimension'
+})
 
 /**
  * @description 判断当前tag是分组还是度量

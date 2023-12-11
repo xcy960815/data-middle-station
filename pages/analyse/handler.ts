@@ -20,6 +20,12 @@ export const handler = () => {
              columnStore.setDataSourceOptions([])
         }
     }
+    
+    watch(() => columnStore.getDataSource, () => {
+        // 重置左侧列数据
+        columnStore.setDataSourceOptions([])
+    })
+
     onMounted(async () => {
         queryTableList()
     })

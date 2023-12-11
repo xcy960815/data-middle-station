@@ -31,6 +31,7 @@
       <ChartsConfig></ChartsConfig>
     </template>
   </NuxtLayout>
+ 
 </template>
 
 <script setup lang="ts">

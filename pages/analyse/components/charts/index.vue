@@ -3,7 +3,6 @@
     class="charts relative h-full w-full"
     v-loading="chartLoading"
   >
-    <!-- 图表的错误信息 -->
     <template v-if="chartErrorMessage">
       <div
         class="absolute inset-0 flex justify-center items-center"
@@ -24,6 +23,7 @@
       />
     </template>
   </div>
+  
 </template>
 
 <script setup lang="ts">

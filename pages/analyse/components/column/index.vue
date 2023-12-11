@@ -1,14 +1,9 @@
 <template>
-  <el-select v-model="dataSource" class="dataSource-select mb-1 w-full z-40" placeholder="请选择数据源" >
-    <el-option
-      v-for="item in dataSourceOptions"
-      :key="item.value"
-      :label="item.label"
-      :value="item.value"
-    />
-  </el-select>
-
   <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
+    <!-- 数据源 -->
+    <el-select v-model="dataSource" class="dataSource-select mb-1 w-full z-40" placeholder="请选择数据源" :teleported="false">
+      <el-option v-for="item in dataSourceOptions" :key="item.value" :label="item.label" :value="item.value" />
+    </el-select>
     <div class="column__title">维度</div>
     <div class="column__content">
       <div @contextmenu="contextmenuHandler(column)" v-contextmenu:contextmenu :class="columnClasses(column)"
@@ -17,6 +12,7 @@
         <span class="column__item__name">{{ column.name }}</span>
       </div>
     </div>
+
     <!-- 字段的操作选项 -->
     <context-menu ref="contextmenu">
       <context-menu-item @click="setDataModel">
@@ -77,6 +73,9 @@ const {
 } = handler({
   currentColumn
 })
+const handleClickTitle = () => {
+  console.log('handleClickTitle')
+}
 </script>
 
 <style scoped lang="less">
