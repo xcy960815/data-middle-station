@@ -42,6 +42,7 @@ declare namespace DimensionStore {
   type DimensionActions = {
     [K in keyof DimensionState as ActionName<K & string>]: (value: DimensionState[K]) => void;
   }&{
+    addDimensions: (value: Dimension[]) => void;
     removeDimensions: (value: number) => void;
   };
 }

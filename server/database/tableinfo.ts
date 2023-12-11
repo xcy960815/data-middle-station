@@ -3,12 +3,12 @@ import { Column, BindDataSource, Mapping, DOBase } from './dobase';
 export class TableInfoOptions implements TableInfoModule.TableInfoOptions {
   @Column('table_name')
   tableName: string = '';
-  @Column('field_name')
-  fieldName: string = '';
-  @Column('field_type')
-  fieldType: string = '';
-  @Column('field_comment')
-  fieldComment: string = '';
+  @Column('column_name')
+  columnName: string = '';
+  @Column('column_type')
+  columnType: string = '';
+  @Column('column_comment')
+  columnComment: string = '';
 }
 
 @BindDataSource('blog')
@@ -34,11 +34,10 @@ export class TableInfoDao extends DOBase {
    * @param {number} id
    * @returns {Promise<Array<TableInfoModule.TableInfoOptions>>}
    */
-  public async queryTableColumByTableName(
+  public async queryTableColumns(
     tableName: string,
   ): Promise<Array<TableInfoModule.TableInfoOptions>> {
-    const sql =
-      'SELECT table_name, field_name, field_type, field_comment FROM blog.table_info WHERE table_name = ?';
+    const sql = `SELECT column_name, column_type, column_comment FROM information_schema.columns  WHERE table_name = ? AND table_schema = 'blog';`
     return await this.exe<Array<TableInfoModule.TableInfoOptions>>(sql, [tableName]);
   }
 }

@@ -9,7 +9,7 @@
       <div @contextmenu="contextmenuHandler(column)" v-contextmenu:contextmenu :class="columnClasses(column)"
         v-for="(column, index) in columnList" :key="index" draggable="true"
         @dragstart="dragstartHandler(column, index, $event)" @dragend="dragendHandler" @mousedown.stop>
-        <span class="column__item__name">{{ column.name }}</span>
+        <span class="column__item__name">{{ column.columnName }}</span>
       </div>
     </div>
 

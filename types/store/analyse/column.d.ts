@@ -7,7 +7,11 @@ declare namespace ColumnStore {
   /**
    * @desc 列字段
    */
-  interface Column extends FieldOption { }
+  interface Column extends TableInfoModule.TableColumnOptions {
+    choosed: boolean
+    alias?: string
+    displyName?: string
+   }
 
   interface dataSourceOption {
     label: string
