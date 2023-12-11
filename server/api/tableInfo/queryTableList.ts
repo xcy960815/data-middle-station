@@ -1,8 +1,13 @@
 import { TableInfoDao } from '../../database/tableInfo';
 
+type tableOption = {
+  label: string
+  value: string
+
+}
 /**
  * @desc 获取所有的表名
- * @returns {Promise<ResponseModule.Response<Array<{label:string,value:string}>>>}
+ * @returns {Promise<ResponseModule.Response<Array<tableOption>>>}
  */
 export default defineEventHandler(
   async (_event) => {

@@ -10,7 +10,7 @@ export const handler = ({ dimensionList }: HandlerParams) => {
    */
   const addDimension = (dimension: DimensionStore.Dimension | Array<DimensionStore.Dimension>) => {
     dimension = Array.isArray(dimension) ? dimension : [dimension];
-    dimensionStore.addDimension(dimension);
+    dimensionStore.addDimensions(dimension);
   };
   /**
    * @desc getTargetIndex
@@ -84,7 +84,7 @@ export const handler = ({ dimensionList }: HandlerParams) => {
         const dimensions = JSON.parse(JSON.stringify(dimensionStore.dimensions));
         const target = dimensions.splice(data.index, 1)[0];
         dimensions.splice(targetIndex, 0, target);
-        dimensionStore.updateDimension(dimensions);
+        dimensionStore.setDimensions(dimensions);
         break;
       }
       default: {

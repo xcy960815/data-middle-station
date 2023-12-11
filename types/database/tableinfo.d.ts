@@ -1,8 +1,8 @@
 declare namespace TableInfoModule {
-  interface TableInfoOptions {
+  interface TableColumnOptions {
     tableName: string
-    fieldName: string
-    fieldType: string
-    fieldComment: string
+    columnName: string
+    columnType: string
+    columnComment: string
   }
 }

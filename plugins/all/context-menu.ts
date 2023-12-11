@@ -26,8 +26,10 @@ class ContextMenuPlugin {
     contextMenuElement: ContextMenuModule.ContextMenuElement,
     contextMenuBinding: ContextMenuModule.ContextMenuBinding,
   ): void {
-    this.unmounted(contextMenuElement, contextMenuBinding);
-    this.mounted(contextMenuElement, contextMenuBinding);
+    // this.unmounted(contextMenuElement, contextMenuBinding);
+    // this.mounted(contextMenuElement, contextMenuBinding);
+    console.log("updated",this);
+    
   }
   /**
    * @desc 解绑右键菜单指令

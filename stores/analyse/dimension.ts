@@ -8,16 +8,7 @@ export const useDimensionStore = definePiniaStore<
   DimensionStore.DimensionActions
 >('dimension', {
   state: () => ({
-    dimensions: [
-      {
-        name: 'register',
-        alias: 'register',
-        comment: '注册',
-        displyName: '注册',
-        type: 'number',
-        choosed: true
-      }
-    ]
+    dimensions: []
   }),
   getters: {
     getDimensions(state) {
@@ -27,6 +18,9 @@ export const useDimensionStore = definePiniaStore<
   actions: {
     setDimensions(dimensions) {
       this.dimensions = dimensions
+    },
+    addDimensions(dimensions) {
+      this.dimensions.push(...dimensions)
     },
     removeDimensions(index) {
       this.dimensions.splice(index, 1)
