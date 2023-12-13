@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+// import chalk from 'chalk';
 const logger = new Logger({ fileName: 'log', folderName: 'middleware' });
 /**
  * @desc 打印日志中间件

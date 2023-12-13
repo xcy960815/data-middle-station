@@ -7,13 +7,13 @@ declare namespace DimensionStore {
   // extends _GettersTree<DimensionState>
   /**
    * @desc 维度字段
-   * @interface Dimension
+   * @interface DimensionOption
    * @property {string} name 列名
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface Dimension extends TableInfoModule.TableColumnOptions {
-    choosed: boolean
+  interface DimensionOption extends TableInfoModule.TableColumnOption {
+    choosed?: boolean
     alias?: string
     displyName?: string
    }
@@ -21,7 +21,7 @@ declare namespace DimensionStore {
   type DimensionKey = 'dimension'
 
   type DimensionState = {
-    dimensions: Dimension[]
+    dimensions: DimensionOption[]
   }
 
   /**
@@ -46,7 +46,7 @@ declare namespace DimensionStore {
   type DimensionActions = {
     [K in keyof DimensionState as ActionName<K & string>]: (value: DimensionState[K]) => void;
   }&{
-    addDimensions: (value: Dimension[]) => void;
+    addDimensions: (value: DimensionOption[]) => void;
     removeDimensions: (value: number) => void;
   };
 }

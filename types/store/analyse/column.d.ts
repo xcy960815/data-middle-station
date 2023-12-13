@@ -7,7 +7,7 @@ declare namespace ColumnStore {
   /**
    * @desc 列字段
    */
-  interface Column extends TableInfoModule.TableColumnOptions {
+  interface Column extends TableInfoModule.TableColumnOption {
     choosed: boolean
     alias?: string
     displyName?: string

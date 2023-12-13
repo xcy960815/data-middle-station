@@ -1,9 +1,8 @@
-import { TableInfoDao } from '../../database/tableInfo';
+import { AnalyseDao } from '../../database/analyse';
 
 type tableOption = {
   label: string
   value: string
-
 }
 /**
  * @desc 获取所有的表名
@@ -12,8 +11,8 @@ type tableOption = {
 export default defineEventHandler(
   async (_event) => {
     try {
-        const tableInfo = new TableInfoDao();
-        const tableList = (await tableInfo.queryTableList()).map(item=>{
+        const analyseInstence = new AnalyseDao();
+        const tableList = (await analyseInstence.queryTableList()).map(item=>{
           return {
             label:item.tableName,
             value:item.tableName
@@ -24,11 +23,11 @@ export default defineEventHandler(
             data: tableList,
             message: 'success',
         }
-    }catch (e) {
+    }catch (error) {
        return {
             code: 500,
             data:null,
-            message: e,
+            message: error,
           };
     }
    

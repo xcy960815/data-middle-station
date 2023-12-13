@@ -19,11 +19,11 @@ export const useFilterStore = definePiniaStore<
     setFilters(filters) {
       this.filters = filters;
     },
-    // addFilter(filters) {
-    //   this.filters = this.filters.concat(filters);
-    // },
-    // removeFilter(index) {
-    //   this.filters.splice(index, 1);
-    // },
+    addFilters(filters) {
+      this.filters = this.filters.concat(filters);
+    },
+    removeFilter(index) {
+      this.filters.splice(index, 1);
+    },
   },
 });

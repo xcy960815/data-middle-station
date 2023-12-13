@@ -13,14 +13,14 @@ export const useOrderStore = definePiniaStore<
     },
   },
   actions: {
-    // addOrder(sort) {
-    //   this.orders = this.orders.concat(sort);
-    // },
+    addOrders(orders) {
+      this.orders = this.orders.concat(orders);
+    },
     setOrders(orders) {
       this.orders = orders;
     },
-    // removeOrder(index) {
-    //   this.orders.splice(index, 1);
-    // },
+    removeOrder(index) {
+      this.orders.splice(index, 1);
+    },
   },
 });

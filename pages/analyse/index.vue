@@ -13,10 +13,10 @@
       <Order></Order>
     </template>
     <template #dimension>
-      <Dimension></Dimension>
+      <DimensionOption></DimensionOption>
     </template>
     <template #group>
-      <Group></Group>
+      <GroupOption></GroupOption>
     </template>
     <template #bar>
       <Bar></Bar>
@@ -36,10 +36,10 @@
 
 <script setup lang="ts">
 import Column from './components/column/index.vue'
-import Dimension from './components/dimension/index.vue'
+import DimensionOption from './components/dimension/index.vue'
 import Filter from './components/filter/index.vue'
 import Order from './components/order/index.vue'
-import Group from './components/group/index.vue'
+import GroupOption from './components/group/index.vue'
 import Bar from './components/bar/index.vue'
 import Charts from './components/charts/index.vue'
 import ChartsType from './components/charts-type/index.vue'

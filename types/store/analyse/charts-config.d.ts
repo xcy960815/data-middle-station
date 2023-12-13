@@ -79,10 +79,6 @@ declare namespace ChartConfigStore {
             }
         }
     }
-    /**
-     * @desc getters keys
-     */
-    type ChartConfigGetterKeys = `get${Capitalize<keyof ChartState & string>}`
 
     /**
      * @desc getter 名称

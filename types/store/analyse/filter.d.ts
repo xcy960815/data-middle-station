@@ -3,12 +3,15 @@
 declare namespace FilterStore {
   type FilterKey = 'filter'
 
-  interface Filter extends FieldOption { }
-
-  type FilterState = {
-    filters: Array<Filter>
+  interface FilterOption extends TableInfoModule.TableColumnOption { 
+    choosed?: boolean
+    alias?: string
+    displyName?: string
   }
 
+  type FilterState = {
+    filters: Array<FilterOption>
+  }
 
   /**
    * @desc getter 名称
@@ -25,11 +28,13 @@ declare namespace FilterStore {
   /**
    * @desc action 名称
    */
-  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}`
   /**
    * @desc action
    */
   type FilterActions = {
-    [K in keyof FilterState as ActionName<K & string>]?: (value: FilterState[K]) => void;
-  };
+    [K in keyof FilterState as ActionName<K & string>]: (value: FilterState[K]) => void;
+  }& {
+    removeFilter: (value: number) => void;
+  }
 }
