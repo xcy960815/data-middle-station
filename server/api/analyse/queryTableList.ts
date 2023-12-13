@@ -1,12 +1,12 @@
 import { AnalyseDao } from '../../database/analyse';
 
-type tableOption = {
+type TableOption = {
   label: string
   value: string
 }
 /**
  * @desc 获取所有的表名
- * @returns {Promise<ResponseModule.Response<Array<tableOption>>>}
+ * @returns {Promise<ResponseModule.Response<Array<TableOption>>>}
  */
 export default defineEventHandler(
   async (_event) => {

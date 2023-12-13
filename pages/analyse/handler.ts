@@ -16,7 +16,7 @@ export const handler = () => {
     const queryTableList = async () => {
         const result = await $fetch('/api/analyse/queryTableList')
         if (result.code === 200) {
-            columnStore.setDataSourceOptions(result.data as Array<{label:string; value:string}> || [])
+            columnStore.setDataSourceOptions(result.data as Array<{ label: string; value: string }> || [])
         } else {
             columnStore.setDataSourceOptions([])
         }
@@ -71,18 +71,69 @@ export const handler = () => {
             orders: orderStore.getOrders,
             groups: groupStore.getGroups,
             dimensions: dimensionStore.getDimensions,
-            limit:chartConfigStore.getChartCommonConfigData,
+            limit: chartConfigStore.getChartCommonConfigData,
         }
     })
+    /**
+   * @desc 图表推荐策略类
+   * @param {ChartStore.ChartState['chartType']} chartType
+   * @returns {string}
+   */
+    const chartSuggestStrategies = (
+        chartType: ChartStore.ChartState['chartType']
+    ) => {
+        const dimensions = dimensionStore.getDimensions
+        const groups = groupStore.getGroups
+        const chartNames = {
+            table: '表格',
+            interval: '柱状图',
+            line: '折线图',
+            pie: '饼图'
+        }
+        switch (chartType) {
+            case 'table':
+                if (dimensions.length > 0 || groups.length > 0) {
+                    return ''
+                } else {
+                    return `${chartNames[chartType]}至少需要一个值或者一个分组`
+                }
+            case 'interval':
+            case 'line':
+                if (dimensions.length > 0 && groups.length > 0) {
+                    return ''
+                } else {
+                    return `${chartNames[chartType]}至少需要一个值和一个分组`
+                }
+            case 'pie':
+                if (
+                    dimensions.length === 1 &&
+                    groups.length === 1
+                ) {
+                    return ''
+                } else {
+                    return `${chartNames[chartType]}只需要一个值和一个分组`
+                }
+            default:
+                return ''
+        }
+    }
     /**
      * @desc 查询表格数据
      * @returns {Promise<void>}
      */
     const queryChartData = async () => {
-        const {dataSource, dimensions} = queryChartDataParams.value
-        if(!dataSource) return
-        if(!dimensions.length) return
+        const chartType = chartStore.getChartType as ChartStore.ChartState['chartType']
 
+        const errorMessage = chartSuggestStrategies(chartType)
+        chartStore.setChartErrorMessage(errorMessage)
+        if (errorMessage) {
+            return
+        }
+        const { dataSource, dimensions } = queryChartDataParams.value
+        if (!dataSource) return
+        if (!dimensions.length) return
+       
+        chartStore.setChartLoading(true)
         const result = await $fetch('/api/analyse/getAnswer', {
             method: 'POST',
             // 请求参数
@@ -91,17 +142,19 @@ export const handler = () => {
         if (result.code === 200) {
             chartStore.setChartData(result.data || [])
         } else {
-            console.log('查询表格数据失败');
-            
+            chartStore.setChartData([])
         }
+        chartStore.setChartLoading(false)
     }
-    watch(queryChartDataParams, (params) => {
+
+    watch(queryChartDataParams, () => {
         queryChartData()
     }, {
-        deep: true
+        deep: true,
+        immediate: true
     })
 
-    
+
 
     onMounted(async () => {
         queryTableList()
