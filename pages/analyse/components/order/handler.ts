@@ -1,16 +1,20 @@
 interface HandlerParams {
-  orderList: Ref<Array<OrderStore.Order>>;
+  orderList: Ref<Array<OrderStore.OrderOption>>;
 }
-
+/**
+ * @desc 排序逻辑处理
+ * @params {HandlerParams}
+ * @returns {Handler}
+ */
 export const handler = ({ orderList }: HandlerParams) => {
   const orderStore = useOrderStore();
   /**
    * @desc addOrder
-   * @param {OrderStore.Order|Array<OrderStore.Order>} orders
+   * @param {OrderStore.OrderOption|Array<OrderStore.OrderOption>} orders
    */
-  const addOrder = (order: OrderStore.Order | Array<OrderStore.Order>) => {
+  const addOrder = (order: OrderStore.OrderOption | Array<OrderStore.OrderOption>) => {
     order = Array.isArray(order) ? order : [order];
-    orderStore.addOrder(order);
+    orderStore.addOrders(order);
   };
   /**
    * @desc getTargetIndex
@@ -86,7 +90,7 @@ export const handler = ({ orderList }: HandlerParams) => {
         const sorts = JSON.parse(JSON.stringify(orderStore.orders));
         const target = sorts.splice(data.index, 1)[0];
         sorts.splice(targetIndex, 0, target);
-        orderStore.updateOrder(sorts);
+        orderStore.setOrders(sorts);
         break;
       }
       default: {

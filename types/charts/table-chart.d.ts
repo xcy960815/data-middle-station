@@ -1,5 +1,7 @@
-/// <reference path="../store/commom.d.ts" />
 
+/**
+ * @desc table-chart 组件的类型定义
+ */
 declare namespace TableChart {
   import type { TableColumnCtx } from 'element-plus'
   type PageNum = Ref<number>
@@ -14,7 +16,7 @@ declare namespace TableChart {
   /**
    * @desc 表格表头字段类型
    */
-  interface TableHeaderOption extends FieldOption {
+  interface TableHeaderOption extends TableInfoModule.TableColumnOption {
     minWidth?: number
   }
   interface TableColumn

@@ -42,12 +42,10 @@ const props = defineProps({
   // },
 });
 
-
-
-const { total, pageNum, pageSize, tableHeaderState,
-  tableDataState, tableChartConfig } = tableChartInitData(props);
+const { total, pageNum, pageSize, tableHeaderState,tableDataState, tableChartConfig } = tableChartInitData(props);
 
 const { cellStyle, tableColumnFormatter, spanMethod } = tableChartHandler({ pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
+
 </script>
 
 <style scoped lang="less">

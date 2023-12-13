@@ -6,15 +6,19 @@ declare namespace GroupStore {
   type GroupKey = 'group'
   /**
    * @desc 左侧列字段
-   * @interface Group
+   * @interface GroupOption
    * @property {string} name 列名
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface Group extends FieldOption { }
+  interface GroupOption extends TableInfoModule.TableColumnOption { 
+    choosed?: boolean
+    alias?: string
+    displyName?: string
+  }
 
   type GroupState = {
-    groups: Group[]
+    groups: GroupOption[]
   }
 
   /**
@@ -32,11 +36,13 @@ declare namespace GroupStore {
   /**
    * @desc action 名称
    */
-  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` | `remove${Capitalize<T>}`;
+  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` 
   /**
    * @desc action
    */
   type GroupActions = {
     [K in keyof GroupState as ActionName<K & string>]: (value: GroupState[K]) => void;
+  }&{
+    removeGroup: (value: number) => void;
   }
 }

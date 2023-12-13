@@ -1,14 +1,14 @@
 interface HandlerParams {
-  dimensionList: Ref<Array<DimensionStore.Dimension>>;
+  dimensionList: Ref<Array<DimensionStore.DimensionOption>>;
 }
 
 export const handler = ({ dimensionList }: HandlerParams) => {
   const dimensionStore = useDimensionStore();
   /**
    * @desc addDimension
-   * @param {DimensionStore.Dimension|Array<DimensionStore.Dimension>} dimensions
+   * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
    */
-  const addDimension = (dimension: DimensionStore.Dimension | Array<DimensionStore.Dimension>) => {
+  const addDimension = (dimension: DimensionStore.DimensionOption | Array<DimensionStore.DimensionOption>) => {
     dimension = Array.isArray(dimension) ? dimension : [dimension];
     dimensionStore.addDimensions(dimension);
   };
@@ -74,6 +74,7 @@ export const handler = ({ dimensionList }: HandlerParams) => {
    */
   const dropHandler = (dragEvent: DragEvent) => {
     dragEvent.preventDefault();
+    // get drag data
     const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
     const dimensions = data.value;
     switch (data.from) {

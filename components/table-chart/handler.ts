@@ -1,6 +1,6 @@
 /**
  *@desc chart-table 组件的逻辑处理
- * @param {TableChart.HandlerParams} params
+ *@param {TableChart.HandlerParams} params
  */
 export const handler = ({
   pageNum,
@@ -90,6 +90,11 @@ export const handler = ({
     },
     { deep: true }
   )
+
+  watch(() => props.data, () => {
+    initTableData()
+    initTableHeader()
+  }, { deep: true })
   /**
    * @desc 初始化表头
    * @returns {void}
@@ -134,10 +139,13 @@ export const handler = ({
       // 在第二条数据开始插入数据 处理字段为数字类型 的数据 变成
     }
   }
+
   onMounted(() => {
     initTableHeader()
     initTableData()
   })
+
+
   return {
     cellStyle,
     tableColumnFormatter,

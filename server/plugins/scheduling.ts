@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+// import chalk from 'chalk';
 import cron from 'node-cron';
 import dayjs from 'dayjs';
 const logger = new Logger({ fileName: 'scheduling', folderName: 'plugins' });
@@ -16,7 +16,7 @@ export default defineNitroPlugin(() => {
   // │ │ │ │ │ │
   // │ │ │ │ │ │
   // * * * * * *
-  cron.schedule('* * * * *', () => {
+  cron.schedule('0 * * * *', () => {
     logger.info(
       `${'每分钟执行一次调度任务'}${
         '当前时间为' + dayjs(Date.now()).format('YYYY-MM-DDTHH:mm:ss')

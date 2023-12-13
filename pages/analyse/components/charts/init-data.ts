@@ -32,8 +32,7 @@ export const initData = () => {
    * @type {Array<DimensionStore.DimensionState['dimensions']>}
    */
   const yAxisFields = computed(() => {
-    const dimensions =
-      dimensionStore.getDimensions
+    const dimensions = dimensionStore.getDimensions
     return dimensions
   })
 
@@ -52,8 +51,9 @@ export const initData = () => {
    * @desc 表格数据
    * @type {Array<Chart. ChartData>}
    */
-  const data = computed<Array<Chart.ChartData>>(() => {
-    return chartStore.getChartData
+  const data = computed(() => {
+    const chartData = chartStore.getChartData
+    return chartData
   })
 
   /**

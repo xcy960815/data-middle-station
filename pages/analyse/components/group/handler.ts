@@ -1,14 +1,14 @@
 interface HandlerParams {
-  groupList: Ref<Array<GroupStore.Group>>;
+  groupList: Ref<Array<GroupStore.GroupOption>>;
 }
 
 export const handler = ({ groupList }: HandlerParams) => {
   const groupStore = useGroupStore();
   /**
    * @desc addGroup
-   * @param {GroupStore.Group|Array<GroupStore.Group>} groups
+   * @param {GroupStore.GroupOption|Array<GroupStore.GroupOption>} groups
    */
-  const addGroup = (group: GroupStore.Group | Array<GroupStore.Group>) => {
+  const addGroup = (group: GroupStore.GroupOption | Array<GroupStore.GroupOption>) => {
     group = Array.isArray(group) ? group : [group];
     groupStore.addGroup(group);
   };

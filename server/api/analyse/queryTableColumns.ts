@@ -1,6 +1,6 @@
 
 
-import { TableInfoDao } from '../../database/tableInfo';
+import { AnalyseDao } from '../../database/analyse';
 /**
  * @desc 根据表名查询数据
  * @returns {ResponseModule.Response<Array<TableInfoModule.TableInfoOptions>>}
@@ -9,8 +9,8 @@ export default defineEventHandler(
   async (event) => {
     try {
       const { tableName } = getQuery(event);
-      const tableInfoDao = new TableInfoDao();
-      const data = await tableInfoDao.queryTableColumns(tableName as string);
+      const analyseInstence = new AnalyseDao();
+      const data = await analyseInstence.queryTableColumns(tableName as string);
       return {
         code: 200,
         data,
