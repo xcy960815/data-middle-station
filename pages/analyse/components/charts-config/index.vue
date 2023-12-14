@@ -13,22 +13,22 @@
           <el-form
             label-position="top"
             label-width="auto"
-            :model="chartCommonConfigData"
+            :model="commonChartConfig"
           >
             <el-form-item label="备注">
               <el-input
                 type="textarea"
-                v-model="chartCommonConfigData.description"
+                v-model="commonChartConfig.description"
               />
             </el-form-item>
             <el-form-item label="数据量上限(limit)">
               <el-input
-                v-model="chartCommonConfigData.limit"
+                v-model="commonChartConfig.limit"
               />
             </el-form-item>
             <el-form-item label="智能作图建议">
               <el-switch
-                v-model="chartCommonConfigData.suggest"
+                v-model="commonChartConfig.suggest"
                 class="ml-2"
                 style="
                   --el-switch-on-color: #13ce66;
@@ -38,7 +38,7 @@
             </el-form-item>
             <el-form-item label="缓存策略">
               <el-select
-                v-model="chartCommonConfigData.mixStrategy"
+                v-model="commonChartConfig.mixStrategy"
                 placeholder="缓存策略"
               >
                 <el-option label="实时" value="real" />
@@ -48,7 +48,7 @@
             <el-form-item label="分享">
               <el-input
                 type="textarea"
-                v-model="chartCommonConfigData.shareStrategy"
+                v-model="commonChartConfig.shareStrategy"
               />
             </el-form-item>
           </el-form>
@@ -68,7 +68,7 @@ const {
   chartConfigTab,
   chartsConfigDrawer,
   chartConfigComponent,
-  chartCommonConfigData
+  commonChartConfig
 } = initData()
 </script>
 

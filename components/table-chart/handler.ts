@@ -10,54 +10,39 @@ export const handler = ({
   tableDataState,
   tableChartConfig
 }: TableChart.HandlerParams) => {
-  /**
-   * @desc 表格单元格样式
-   * @param {TableChart.CellStyleParams} params
-   * @returns CssProperties
-   */
-  const cellStyle = ({
-    row,
-    column
-  }: TableChart.CellStyleParams) => {
-    return {}
-  }
-  /**
-   * @desc 表格列格式化
-   * @param {TableChart.DataOption} row
-   * @param {TableChart.TableColumn} column
-   * @param {number|string} cellValue
-   * @param {number} index
-   * @returns
-   */
-  const tableColumnFormatter = (
-    row: Chart.ChartData,
-    column: TableChart.TableColumn,
-    cellValue: number | string,
-    index: number
-  ) => {
-    // console.log(row, column, cellValue, index);
-    return cellValue
-  }
-  /**
-   * @desc 表格合并
-   * @param {TableChart.SpanMethodProps} param
-   * @returns {number[]|void}
-   */
-  const spanMethod = ({
-    row,
-    column,
-    rowIndex,
-    columnIndex
-  }: TableChart.SpanMethodProps) => {
-    // if (rowIndex % 2 === 0) {
-    //   if (columnIndex === 0) {
-    //     return [1, 2]
-    //   } else if (columnIndex === 1) {
-    //     return [0, 0]
-    //   }
-    // }
-  }
+  
+/**
+ * @desc 给表格中的字段添加排序功能
+ * @param field {string} 字段名
+ */
+const handleEmitOrder = (field: string | undefined) => {
+  if (!field) return;
 
+}
+/**
+ * @desc 获取表格中的字段的样式
+ * @param tableDataOption {Chart.ChartData} 表格数据
+ * @param tableHeaderOption {TableChart.TableHeaderOption} 表头数据
+ * @returns {string}
+ */
+const getComparedClass = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption) => {
+  return '';
+}
+
+
+const getTableRenderItem = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption, idx: number) => {
+  if (tableHeaderOption.alias) {
+    return tableDataOption[tableHeaderOption.alias] !== undefined && tableDataOption[tableHeaderOption.alias] !== null ? tableDataOption[tableHeaderOption.alias] : ''
+  } else if (tableHeaderOption.columnName) {
+    return tableDataOption[tableHeaderOption.columnName] !== undefined && tableDataOption[tableHeaderOption.columnName] !== null ? tableDataOption[tableHeaderOption.columnName] : ''
+  } else {
+    return '';
+  }
+}
+  /**
+   * @desc 监听x轴、y轴字段变化
+   * @returns {void}
+   */
   watch(
     () => [props.xAxisFields, props.yAxisFields],
     () => {
@@ -69,13 +54,18 @@ export const handler = ({
     }
   )
 
+  /**
+   * @desc 监听每页多少条数变化
+   */
   watch(
     () => pageSize.value,
     () => {
       initTableData()
     }
   )
-
+  /**
+   * @desc 监听页码变化
+   */
   watch(
     () => pageNum.value,
     () => {
@@ -83,6 +73,9 @@ export const handler = ({
     }
   )
 
+  /**
+   * @desc 监听表格配置变化
+   */
   watch(
     () => tableChartConfig.value,
     () => {
@@ -90,11 +83,15 @@ export const handler = ({
     },
     { deep: true }
   )
-
+  /**
+   * @desc  监听数据变化
+   */
   watch(() => props.data, () => {
     initTableData()
     initTableHeader()
   }, { deep: true })
+
+
   /**
    * @desc 初始化表头
    * @returns {void}
@@ -110,7 +107,7 @@ export const handler = ({
           String(item[field.alias ? field.alias : ''])
         )
       currentColumnData.push(
-        field.displyName || field.alias || field.name
+        field.displayName || field.alias || field.columnName || ''
       )
       return {
         ...field,
@@ -147,8 +144,8 @@ export const handler = ({
 
 
   return {
-    cellStyle,
-    tableColumnFormatter,
-    spanMethod
+    handleEmitOrder,
+    getComparedClass,
+    getTableRenderItem
   }
 }

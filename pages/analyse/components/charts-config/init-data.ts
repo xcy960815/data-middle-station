@@ -45,13 +45,13 @@ export const initData = () => {
   /**
    * @desc 图表公共配置
    */
-  const chartCommonConfigData = computed(() => {
-    return chartsConfigStore.chartCommonConfigData
+  const commonChartConfig = computed(() => {
+    return chartsConfigStore.commonChartConfig
   })
   return {
     chartConfigTab,
     chartsConfigDrawer,
     chartConfigComponent,
-    chartCommonConfigData
+    commonChartConfig
   }
 }

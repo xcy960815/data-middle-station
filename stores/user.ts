@@ -12,7 +12,7 @@ export const useUserStore = definePiniaStore<
     avatar: 'https://avatars.githubusercontent.com/u/18083515?v=4',
   }),
   getters: {
-    userInfo: (state) => {
+    userInfo (state) {
       return {
         name: state.name,
         avatar: state.avatar,

@@ -32,7 +32,7 @@
 <script lang="ts" setup>
 const chartsConfigStore = useChartConfigStore()
 const tableChartConfigData = computed(() => {
-  return chartsConfigStore.chartConfigData.table
+  return chartsConfigStore.chartConfig.table
 })
 </script>
 

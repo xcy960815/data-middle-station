@@ -14,7 +14,7 @@ declare namespace GroupStore {
   interface GroupOption extends TableInfoModule.TableColumnOption { 
     choosed?: boolean
     alias?: string
-    displyName?: string
+    displayName?: string
   }
 
   type GroupState = {

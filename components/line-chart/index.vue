@@ -34,7 +34,7 @@ const emits = defineEmits([
 
 const chartConfigStore = useChartConfigStore()
 const lineChartConfig = computed(() => {
-  return chartConfigStore.chartConfigData.line
+  return chartConfigStore.chartConfig.line
 })
 /**
  * 监听配置变化

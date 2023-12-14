@@ -1,24 +1,29 @@
 <template>
-  <!--  v-sticky="{ top, parent }" -->
-  <ClientOnly>
-    <el-table size="small" class="table-chart" :data="tableDataState.tableData" :header-cell-style="{
-      background: 'rgb(240, 240, 240)'
-    }" style="width: 100%" highlight-current-row border stripe :cell-style="cellStyle" :span-method="spanMethod">
-      <el-table-column v-for="tableHeaderOption in tableHeaderState.tableHeader" show-overflow-tooltip
-        :prop="tableHeaderOption.alias" :label="tableHeaderOption.displyName ||
-          tableHeaderOption.alias ||
-          tableHeaderOption.name
-          " :min-width="tableHeaderOption.minWidth" sortable :formatter="tableColumnFormatter">
-      </el-table-column>
-    </el-table>
-    <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[10, 20, 30, 40]" small="small"
-      :background="true" layout="total, sizes, prev, pager, next, jumper" :total="total" />
-  </ClientOnly>
+  <table class="table-chart">
+    <thead>
+      <tr>
+        <th v-for="tableHeaderOption in tableHeaderState.tableHeader"
+          @click="handleEmitOrder(tableHeaderOption.displayName || tableHeaderOption.alias || tableHeaderOption.columnName)">
+          <span>{{ tableHeaderOption.displayName || tableHeaderOption.alias || tableHeaderOption.columnName }}</span>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="(tableDataOption, index) in tableDataState.tableData">
+        <td v-for="(tableHeaderOption) in tableHeaderState.tableHeader"
+          :style="tdStyle(tableDataOption, tableHeaderOption)"
+          :class="getComparedClass(tableDataOption, tableHeaderOption)"
+          v-html="getTableRenderItem(tableDataOption, tableHeaderOption, index)">
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <script lang="ts" setup type="module">
 import { initData as tableChartInitData } from './init-data';
 import { handler as tableChartHandler } from './handler';
+
 const props = defineProps({
   data: {
     type: Array as PropType<Array<Chart.ChartData>>,
@@ -36,56 +41,73 @@ const props = defineProps({
     type: Boolean,
     default: () => true,
   },
-  // autoHeight: {
-  //   type: Boolean,
-  //   default: () => false,
-  // },
 });
 
-const { total, pageNum, pageSize, tableHeaderState,tableDataState, tableChartConfig } = tableChartInitData(props);
+const { total, pageNum, pageSize, tableHeaderState, tableDataState, tableChartConfig } = tableChartInitData(props);
 
-const { cellStyle, tableColumnFormatter, spanMethod } = tableChartHandler({ pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
+const { handleEmitOrder,getComparedClass,getTableRenderItem } = tableChartHandler({ pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
+
+
+/**
+ * @desc tbody中的td的样式
+ * @param tableDataOption {Chart.ChartData} 表格数据
+ * @param tableHeaderOption {TableChart.TableHeaderOption} 表头数据
+ * @returns {CSSStyleDeclaration}
+ */
+const tdStyle = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption) => {
+  return {
+    // background:  '#f2f2f2' || '#fff',
+  }
+}
 
 </script>
 
 <style scoped lang="less">
 .table-chart {
   position: relative;
+  width: 100%;
+  background: #ccc;
+  margin: 10px auto;
+  border-collapse: collapse;
 
-  // 修改表格样式 让其变得更加紧凑
-  :deep(.el-table__header-wrapper) {
-    .el-table__header {
-      thead>tr>th {
-        padding: 5px 0px;
-      }
-    }
+  table-layout: fixed;
 
-    .el-table__header {
-      thead>tr>th>div {
-        padding: 0px 20px;
-        font-size: 14px;
-        font-weight: 500;
-        font-family: 'Trebuchet MS', 'Lucida Sans Unicode',
-          'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-      }
-    }
+  thead th {
+    border-bottom: 1px solid #ddd;
   }
 
-  // 修改表格样式 让其变得更加紧凑
-  :deep(.el-table__body-wrapper) {
-    .el-table__body {
-      tbody>tr>td {
-        padding: 0;
-        font-size: 14px;
-      }
-
-      tbody>tr>td>div {
-        padding: 5px 22px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-    }
+  tbody td {
+    border: 1px solid #ddd;
   }
-}
-</style>
+
+  th,
+  td {
+    height: 25px;
+    line-height: 25px;
+    text-align: left;
+    font-size: 12px;
+    color: #727479;
+    padding: 0 10px;
+  }
+
+  th {
+    background: #eee;
+    font-weight: normal;
+  }
+
+  tr {
+    background: #fff;
+  }
+
+  tr:nth-child(odd) {
+    background-color: #ffffff;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+
+  tr:hover {
+    background-color: #e2e2e2;
+  }
+}</style>

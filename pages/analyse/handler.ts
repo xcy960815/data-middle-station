@@ -34,12 +34,12 @@ export const handler = () => {
             }
         })
         if (result.code === 200) {
-            const cloumns = result.data?.map((item: TableInfoModule.TableColumnOption) => {
+            const cloumns = result.data?.map((item) => {
                 return {
                     ...item,
                     choosed: false,
                     alias: item.columnName,
-                    displyName: item.columnName
+                    displayName: item.columnName
                 }
             })
             columnStore.setColumns(cloumns || [])
@@ -71,7 +71,7 @@ export const handler = () => {
             orders: orderStore.getOrders,
             groups: groupStore.getGroups,
             dimensions: dimensionStore.getDimensions,
-            limit: chartConfigStore.getChartCommonConfigData,
+            limit: chartConfigStore.getCommonChartConfig.limit,
         }
     })
     /**
@@ -122,8 +122,7 @@ export const handler = () => {
      * @returns {Promise<void>}
      */
     const queryChartData = async () => {
-        const chartType = chartStore.getChartType as ChartStore.ChartState['chartType']
-
+        const chartType = chartStore.getChartType 
         const errorMessage = chartSuggestStrategies(chartType)
         chartStore.setChartErrorMessage(errorMessage)
         if (errorMessage) {
@@ -147,6 +146,9 @@ export const handler = () => {
         chartStore.setChartLoading(false)
     }
 
+    /**
+     * @desc 监听查询表格数据的参数变化
+     */
     watch(queryChartDataParams, () => {
         queryChartData()
     }, {

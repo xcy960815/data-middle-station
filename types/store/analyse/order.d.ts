@@ -14,7 +14,7 @@ declare namespace OrderStore {
   interface OrderOption extends TableInfoModule.TableColumnOption {
     choosed?: boolean
     alias?: string
-    displyName?: string
+    displayName?: string
   }
 
   type OrderState = {

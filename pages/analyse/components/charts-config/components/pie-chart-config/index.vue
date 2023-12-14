@@ -29,7 +29,7 @@
 <script setup lang="ts">
 const chartsConfigStore = useChartConfigStore()
 const pieChartConfigData = computed(() => {
-  return chartsConfigStore.chartConfigData.pie
+  return chartsConfigStore.chartConfig.pie
 })
 </script>
 

@@ -1,4 +1,3 @@
-/// <reference path="../store/commom.d.ts" />
 
 /**
  * @file chart.d.ts
@@ -8,13 +7,9 @@ declare namespace Chart {
   /**
    * @desc 图表x轴、y轴字段类型
    */
-  interface XAxisFields extends TableInfoModule.TableColumnOption {
+  type XAxisFields = ColumnStore.Column 
 
-  }
-
-  interface YAxisFields extends TableInfoModule.TableColumnOption {
-    
-  }
+  type YAxisFields = ColumnStore.Column
 
   type ChartData = Record<string, string | number>
 }
