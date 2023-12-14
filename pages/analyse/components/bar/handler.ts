@@ -21,7 +21,7 @@ export const handler = () => {
    * @returns void
    */
   const handleClickSetting = () => {
-    chartsConfigStore.setChartsConfigDrawer(true)
+    chartsConfigStore.setChartConfigDrawer(true)
   }
   /**
    * @desc 点全屏按钮
@@ -36,9 +36,7 @@ export const handler = () => {
    */
   const handleClickDownload = () => {
     const { $webworker } = useNuxtApp()
-    const feilds = dimensionStore
-      .getDimensions
-      .concat(groupStore.getGroups)
+    const feilds = dimensionStore.getDimensions.concat(groupStore.getGroups)
     console.log('handleClickDownload', feilds)
   }
   return {

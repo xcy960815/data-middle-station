@@ -56,7 +56,7 @@
 <script lang="ts" setup>
 const chartsConfigStore = useChartConfigStore()
 const intervalChartConfigData = computed(() => {
-  return chartsConfigStore.chartConfigData.interval
+  return chartsConfigStore.chartConfig.interval
 })
 </script>
 

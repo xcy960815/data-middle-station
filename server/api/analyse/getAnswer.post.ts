@@ -7,6 +7,7 @@ interface QueryChartDataParams {
     orders: Array<OrderStore.OrderOption>;
     groups: Array<GroupStore.GroupOption>;
     dimensions: Array<DimensionStore.DimensionOption>;
+    limit: number;
 }
 /**
  * @desc 查询图表数据
@@ -15,7 +16,7 @@ interface QueryChartDataParams {
  */
 export default defineEventHandler(async (event) => {
     try {
-        const {dimensions,dataSource}: QueryChartDataParams = await readBody(event);
+        const { dimensions, dataSource, limit }: QueryChartDataParams = await readBody(event);
         const getAnswerInstance = new GetAnswerDao();
         let sql = 'select';
         dimensions.forEach((item: DimensionStore.DimensionOption) => {
@@ -23,8 +24,8 @@ export default defineEventHandler(async (event) => {
         });
         // 删除最后一个逗号
         sql = sql.slice(0, sql.length - 1);
-        sql += ` from ${dataSource}`;
-        
+        sql += ` from ${dataSource} limit ${limit} ;`;
+
         const data = await getAnswerInstance.exe(sql as string);
         return {
             code: 200,

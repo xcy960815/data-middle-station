@@ -1,6 +1,6 @@
 
 /**
- * @desc table-chart 组件的类型定义
+ * @desc table-chart 组件的数据类型定义
  */
 declare namespace TableChart {
   import type { TableColumnCtx } from 'element-plus'
@@ -16,39 +16,38 @@ declare namespace TableChart {
   /**
    * @desc 表格表头字段类型
    */
-  interface TableHeaderOption extends TableInfoModule.TableColumnOption {
+  type TableHeaderOption = ColumnStore.Column & {
     minWidth?: number
   }
-  interface TableColumn
-    extends TableColumnCtx<TableHeaderOption> {}
+  type TableColumn = TableColumnCtx<TableHeaderOption> 
 
-  interface CellStyleParams {
+  type CellStyleParams = {
     row: TableHeaderOption
     column: TableColumn
     rowIndex: number
     columnIndex: number
   }
 
-  interface SpanMethodProps {
+  type SpanMethodProps = {
     row: Chart.ChartData
     column: TableColumn<Chart.ChartData>
     rowIndex: number
     columnIndex: number
   }
 
-  interface TableHeaderState {
+  type TableHeaderState = {
     tableHeader: TableChart.TableHeaderOption[]
   }
 
-  interface TableDataState {
+  type TableDataState = {
     tableData: Chart.ChartData[]
   }
   /**
    * @desc 初始化 方法所需的参数 就是整个props
    */
-  interface InitDataParams extends Props {}
+  type InitDataParams = Props
 
-  interface HandlerParams {
+  type HandlerParams = {
     pageNum: PageNum
     pageSize: PageSize
     props: Props

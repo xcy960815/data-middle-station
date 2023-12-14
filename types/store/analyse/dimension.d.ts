@@ -15,7 +15,7 @@ declare namespace DimensionStore {
   interface DimensionOption extends TableInfoModule.TableColumnOption {
     choosed?: boolean
     alias?: string
-    displyName?: string
+    displayName?: string
    }
 
   type DimensionKey = 'dimension'

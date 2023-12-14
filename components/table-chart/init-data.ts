@@ -38,7 +38,7 @@ export const initData = ({
    * @desc 表格图表配置
    */
   const tableChartConfig = computed(
-    () => chartsConfigStore.chartConfigData.table
+    () => chartsConfigStore.chartConfig.table
   )
   return {
     pageNum,

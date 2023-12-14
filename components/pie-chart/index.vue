@@ -34,7 +34,7 @@ const emits = defineEmits([
 ])
 const chartConfigStore = useChartConfigStore()
 const pieChartConfigData = computed(() => {
-  return chartConfigStore.chartConfigData.pie
+  return chartConfigStore.chartConfig.pie
 })
 watch(
   () => pieChartConfigData.value,

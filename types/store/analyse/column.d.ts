@@ -10,7 +10,7 @@ declare namespace ColumnStore {
   interface Column extends TableInfoModule.TableColumnOption {
     choosed: boolean
     alias?: string
-    displyName?: string
+    displayName?: string
    }
 
   interface dataSourceOption {

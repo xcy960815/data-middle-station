@@ -57,7 +57,7 @@
 <script setup lang="ts">
 const chartsConfigStore = useChartConfigStore()
 const lineChartsConfigData = computed(() => {
-  return chartsConfigStore.chartConfigData.line
+  return chartsConfigStore.chartConfig.line
 })
 </script>
 

@@ -35,7 +35,7 @@ const emits = defineEmits([
 
 const chartConfigStore = useChartConfigStore()
 const intervalChartConfig = computed(() => {
-  return chartConfigStore.chartConfigData.interval
+  return chartConfigStore.chartConfig.interval
 })
 /**
  * 监听配置变化

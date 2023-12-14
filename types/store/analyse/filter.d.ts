@@ -6,7 +6,7 @@ declare namespace FilterStore {
   interface FilterOption extends TableInfoModule.TableColumnOption { 
     choosed?: boolean
     alias?: string
-    displyName?: string
+    displayName?: string
   }
 
   type FilterState = {

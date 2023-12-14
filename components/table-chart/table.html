@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            background: #ccc;
+            margin: 10px auto;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            height: 25px;
+            line-height: 25px;
+            text-align: center;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background: #eee;
+            font-weight: normal;
+        }
+
+        tr {
+            background: #fff;
+        }
+
+
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background: #cc0;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th width="500px">序号</th>
+                <th width="500px">职业名称</th>
+                <th width="500px">招聘人数</th>
+                <th width="500px">工作地点</th>
+                <th width="500px">有效时间</th>
+                <th width="500px">职位描述</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>PHP程序员</td>
+                <td>10</td>
+                <td>北京</td>
+                <td>2015-10-10</td>
+                <td><a href="#">查看</a></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>PHP程序员</td>
+                <td>10</td>
+                <td>北京</td>
+                <td>2015-10-10</td>
+                <td><a href="#">查看</a></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>PHP程序员</td>
+                <td>10</td>
+                <td>北京</td>
+                <td>2015-10-10</td>
+                <td><a href="#">查看</a></td>
+            </tr>
+    </table>
+    </div>
+</body>
+
+</html>

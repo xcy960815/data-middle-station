@@ -10,15 +10,15 @@ export const useChartConfigStore = definePiniaStore<
 >('chartConfig',
   {
     state: () => ({
-      chartsConfigDrawer: false,
-      chartCommonConfigData: {
+      chartConfigDrawer: false,
+      commonChartConfig: {
         description: '',
         limit: 1000,
         suggest: false,
         mixStrategy: 'daily',
         shareStrategy: ''
       },
-      chartConfigData: {
+      chartConfig: {
         line: {
           showPoint: false,
           showLabel: false,
@@ -45,25 +45,25 @@ export const useChartConfigStore = definePiniaStore<
       }
     }),
     getters: {
-      getChartsConfigDrawer(state) {
-        return state.chartsConfigDrawer
+      getChartConfigDrawer(state) {
+        return state.chartConfigDrawer
       },
-      getChartCommonConfigData(state) {
-        return state.chartCommonConfigData
+      getCommonChartConfig(state) {
+        return state.commonChartConfig
       },
-      getChartConfigData(state) {
-        return state.chartConfigData
+      getChartConfig(state) {
+        return state.chartConfig
       }
     },
     actions: {
-      setChartsConfigDrawer(drawer) {
-        this.chartsConfigDrawer = drawer
+      setChartConfigDrawer(drawer) {
+        this.chartConfigDrawer = drawer
       },
-      setChartCommonConfigData(config) {
-        this.chartCommonConfigData = config
+      setChartCommonConfig(config) {
+        this.commonChartConfig = config
       },
-      setChartConfigData(config) {
-        this.chartConfigData = config
+      setChartConfig(config) {
+        this.chartConfig = config
       }
     }
   })
