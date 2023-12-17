@@ -21,24 +21,27 @@ export class AnalyseOptions implements TableInfoModule.TableListOption, TableInf
 @BindDataSource('blog')
 export class AnalyseDao extends DOBase {
   @Mapping(AnalyseOptions)
+  /**
+   * @desc 执行sql
+   * @param sql {string} sql语句
+   * @param params {Array<any>} 参数
+   * @returns {Promise<T>}
+   */
   protected async exe<T>(sql: string, params?: Array<any>): Promise<T> {
     return await super.exe<T>(sql, params);
   }
   /**
+   * @desc 查询所有的表名
    * @datasource blog
-   * @table table_info
-   * @desc 查询当前数据库所有的表
-   * @returns {Promise<Array<string>>}
+   * @returns {Promise<Array<TableInfoModule.TableListOption>>}
    */
-  public async queryTableList(): Promise<Array<TableInfoModule.TableColumnOption>> {
+  public async queryTableList(): Promise<Array<TableInfoModule.TableListOption>> {
     const sql = `SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema='blog'`;
-    return await this.exe<Array<TableInfoModule.TableColumnOption>>(sql);
+    return await this.exe<Array<TableInfoModule.TableListOption>>(sql);
   }
   /**
-   * @datasource blog
-   * @table table_info
-   * @desc 根据表名查询数据
-   * @param {number} id
+   * @desc 查询表的所有列
+   * @param tableName {string} 表名
    * @returns {Promise<Array<TableInfoModule.TableColumnOption>>}
    */
   public async queryTableColumns(
@@ -55,7 +58,7 @@ export class AnalyseDao extends DOBase {
  */
 @BindDataSource('blog')
 export class GetAnswerDao extends DOBase {
-    public async exe<T>(sql: string, params?: Array<any>): Promise<T> {
-        return await super.exe<T>(sql, params);
-    }
+  public async exe<T>(sql: string, params?: Array<any>): Promise<T> {
+    return await super.exe<T>(sql, params);
+  }
 }

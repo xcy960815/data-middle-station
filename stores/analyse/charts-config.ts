@@ -1,6 +1,10 @@
 /**
  * @desc 图表配置 store
- * @desc setup 用法
+ * @param {string} ChartConfigKey
+ * @param {ChartConfigState} ChartConfigState
+ * @param {ChartConfigGetters} ChartConfigGetters
+ * @param {ChartConfigActions} ChartConfigActions
+ * @returns {Store}
  */
 export const useChartConfigStore = definePiniaStore<
   ChartConfigStore.ChartConfigKey,
@@ -59,7 +63,7 @@ export const useChartConfigStore = definePiniaStore<
       setChartConfigDrawer(drawer) {
         this.chartConfigDrawer = drawer
       },
-      setChartCommonConfig(config) {
+      setCommonChartConfig(config) {
         this.commonChartConfig = config
       },
       setChartConfig(config) {

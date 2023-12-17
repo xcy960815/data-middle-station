@@ -114,6 +114,6 @@ declare namespace ChartConfigStore {
      * @desc action
      */
     type ChartConfigActions = {
-        [K in keyof ChartState as ActionName<K & string>]: (value: ChartState[K]) => void;
+        [K in keyof ChartConfigState as ActionName<K & string>]: (value: ChartConfigState[K]) => void;
     }
 }
