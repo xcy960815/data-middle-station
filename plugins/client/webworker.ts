@@ -46,7 +46,6 @@ export class Webworker {
       return new Promise((resolve, reject) => {
         worker.onmessage = (event) => {
           console.log('_createDisposableWorker', JSON.stringify(event));
-
           URL.revokeObjectURL(objectURL);
           resolve(event.data);
         };
