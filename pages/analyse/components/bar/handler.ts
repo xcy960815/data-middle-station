@@ -1,6 +1,6 @@
 import { ElMessageBox, ElCheckboxGroup, ElCheckbox, ElMessage } from "element-plus"
 export const handler = () => {
-  const chartsConfigStore = useChartConfigStore()
+  const chartConfigStore = useChartConfigStore()
   const dimensionStore = useDimensionStore()
   const groupStore = useGroupStore()
   /**
@@ -22,7 +22,8 @@ export const handler = () => {
    * @returns void
    */
   const handleClickSetting = () => {
-    chartsConfigStore.setChartConfigDrawer(true)
+    chartConfigStore.setChartConfigDrawer(true)
+    
   }
   /**
    * @desc 点全屏按钮
@@ -40,6 +41,7 @@ export const handler = () => {
     // 获取所有的维度和分组
     const feilds = dimensionStore.getDimensions.concat(groupStore.getGroups)
     if (feilds.length === 0) {
+      ElMessage.warning('请先选择维度或分组')
       return
     }
 

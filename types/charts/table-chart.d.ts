@@ -7,6 +7,9 @@ declare namespace TableChart {
   type PageNum = Ref<number>
   type PageSize = Ref<number>
   type Total = ComputedRef<number>
+  type StartIndex = ComputedRef<number>
+  type EndIndex = ComputedRef<number>
+  type TotalPage = ComputedRef<number>
   type Props = {
     readonly data: Chart.ChartData[]
     readonly xAxisFields: Chart.XAxisFields[]
