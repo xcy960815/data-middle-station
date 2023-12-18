@@ -17,12 +17,12 @@ export const initData = () => {
   /**
    * @desc 图表配置抽屉 状态
    */
-  const chartsConfigDrawer = computed({
+  const chartConfigDrawer = computed({
     get: () => {
-      return chartsConfigStore.chartsConfigDrawer
+      return chartsConfigStore.chartConfigDrawer
     },
     set: (value) =>
-      chartsConfigStore.setChartsConfigDrawer(value)
+      chartsConfigStore.setChartConfigDrawer(value)
   })
   /**
    * @desc 图表配置组件
@@ -50,7 +50,7 @@ export const initData = () => {
   })
   return {
     chartConfigTab,
-    chartsConfigDrawer,
+    chartConfigDrawer,
     chartConfigComponent,
     commonChartConfig
   }

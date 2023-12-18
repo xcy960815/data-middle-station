@@ -3,7 +3,7 @@
   <ClientOnly>
     <el-drawer
       modal-class="charts-config-drawer"
-      v-model="chartsConfigDrawer"
+      v-model="chartConfigDrawer"
       :with-header="false"
       size="300px"
       direction="rtl"
@@ -66,7 +66,7 @@
 import { initData } from './init-data'
 const {
   chartConfigTab,
-  chartsConfigDrawer,
+  chartConfigDrawer,
   chartConfigComponent,
   commonChartConfig
 } = initData()
