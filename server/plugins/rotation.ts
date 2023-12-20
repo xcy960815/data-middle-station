@@ -23,7 +23,6 @@ async function queryTasks() {
  * @returns {Promise<void>}
  */
 export default defineNitroPlugin(() => {
-  // console.log(chalk.green('开启轮询任务'));
   logger.info('开启轮询任务')
   queryTasks()
 })

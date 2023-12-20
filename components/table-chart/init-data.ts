@@ -10,7 +10,7 @@ export const initData = ({
   // 开始页码
   const pageNum: TableChart.PageNum = ref(1)
   // 每页条数
-  const pageSize: TableChart.PageSize = ref(10)
+  const pageSize: TableChart.PageSize = ref(0)
   /**
    * @desc 总条数
    * @type {TableChart.Total}
