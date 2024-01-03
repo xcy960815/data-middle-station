@@ -20,7 +20,7 @@
                 <tbody>
                     <tr v-for="(row, idx) in tableRenderData" :key="idx">
                         <td v-for="(field, i) in fields" :class="getComparedClass(row, field)" :key="i"
-                            v-html="getTableRenderItem(row, field, idx)"></td>
+                            v-html="getComparedContent(row, field, idx)"></td>
                     </tr>
                 </tbody>
             </table>
@@ -332,7 +332,7 @@ export default {
             return rowMap.otherHtmlTemplate;
         },
         // 获取v-html显示的内容
-        getTableRenderItem(row: { [key: string]: any }, field: Field, idx: number): string {
+        getComparedContent(row: { [key: string]: any }, field: Field, idx: number): string {
             let htmlTemplate;
             const templateValue = row[field.alias] !== undefined && row[field.alias] !== null ? row[field.alias] : '';
             if (this.columnIsSellerId(field)) {

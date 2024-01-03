@@ -11,8 +11,7 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface GroupOption extends TableInfoModule.TableColumnOption { 
-    choosed?: boolean
+  interface GroupOption extends  ColumnStore.Column { 
     alias?: string
     displayName?: string
   }

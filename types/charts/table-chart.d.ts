@@ -19,8 +19,8 @@ declare namespace TableChart {
   /**
    * @desc 表格表头字段类型
    */
-  type TableHeaderOption = ColumnStore.Column & {
-    minWidth?: number
+  type TableHeaderOption = DimensionStore.DimensionOption & GroupStore.GroupOption & OrderStore.OrderOption & FilterStore.FilterOption & {
+    // 自定义属性 ...
   }
   type TableColumn = TableColumnCtx<TableHeaderOption> 
 

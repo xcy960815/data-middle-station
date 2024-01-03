@@ -68,6 +68,9 @@ export const useChartConfigStore = definePiniaStore<
       },
       setChartConfig(config) {
         this.chartConfig = config
+      },
+      setTableChartConditions(conditions) {
+        this.chartConfig.table.conditions = conditions
       }
     }
   })

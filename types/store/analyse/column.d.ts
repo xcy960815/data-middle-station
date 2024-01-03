@@ -9,9 +9,7 @@ declare namespace ColumnStore {
    */
   interface Column extends TableInfoModule.TableColumnOption {
     choosed: boolean
-    alias?: string
-    displayName?: string
-   }
+  }
 
   interface dataSourceOption {
     label: string
@@ -45,5 +43,7 @@ declare namespace ColumnStore {
    */
   type ColumnActions = {
     [K in keyof ColumnState as ActionName<K & string>]: (value: ColumnState[K]) => void;
+  } & {
+    updateColumn: (value: Column, index: number) => void;
   };
 }

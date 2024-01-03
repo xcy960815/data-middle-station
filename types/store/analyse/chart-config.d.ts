@@ -53,10 +53,30 @@ declare namespace ChartConfigStore {
         chartType: string // "pie" | "rose"
     }
 
+    type TableChartConfigConditionOption = {
+        // 条件
+        conditionType: string
+        // 条件字段
+        conditionField: string
+        // 条件符号
+        conditionSymbol: string
+        // 最小范围值
+        conditionMinValue?: string
+        // 最大范围值
+        conditionMaxValue?: string
+        // 条件值
+        conditionValue?: string
+        // 条件颜色
+        conditionColor: string
+    }
+
+    /**
+     * @desc 表格配置
+     */
     type TableChartConfig = {
         displayMode: string // "originalDisplay"|"aggregationDisplay"
         showCompare: boolean
-        conditions: Array<{}>
+        conditions: Array<TableChartConfigConditionOption>
     }
 
     type ChartConfig = {
@@ -82,7 +102,7 @@ declare namespace ChartConfigStore {
         /**
          * @desc 图表配置抽屉
          */
-        chartConfigDrawer:boolean
+        chartConfigDrawer: boolean
         /**
          * @desc 图表公共配置
          */
@@ -91,7 +111,7 @@ declare namespace ChartConfigStore {
          * @desc 图表配置
          */
         chartConfig: ChartConfig
-        
+
     }
 
     /**
@@ -115,5 +135,7 @@ declare namespace ChartConfigStore {
      */
     type ChartConfigActions = {
         [K in keyof ChartConfigState as ActionName<K & string>]: (value: ChartConfigState[K]) => void;
+    } & {
+        setTableChartConditions: (value: TableChartConfig['conditions']) => void;
     }
 }

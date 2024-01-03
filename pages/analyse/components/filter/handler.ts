@@ -1,11 +1,11 @@
 interface HandlerParams {
-  filterList: Ref<Array<FilterStore.Filter>>;
+  filterList: Ref<Array<FilterStore.FilterOption>>;
 }
 export const handler = ({ filterList }: HandlerParams) => {
   const filterStore = useFilterStore();
-  const addFilter = (filter: FilterStore.Filter | Array<FilterStore.Filter>) => {
+  const addFilter = (filter: FilterStore.FilterOption | Array<FilterStore.FilterOption>) => {
     filter = Array.isArray(filter) ? filter : [filter];
-    filterStore.addFilter(filter);
+    filterStore.addFilters(filter);
   };
   /**
    * @desc getTargetIndex
@@ -80,7 +80,7 @@ export const handler = ({ filterList }: HandlerParams) => {
         const filters = JSON.parse(JSON.stringify(filterStore.filters));
         const target = filters.splice(data.index, 1)[0];
         filters.splice(targetIndex, 0, target);
-        filterStore.updateFilter(filters);
+        filterStore.setFilters(filters);
         break;
       }
       default: {
