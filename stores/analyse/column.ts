@@ -56,6 +56,15 @@ export const useColumnStore = definePiniaStore<ColumnStore.ColumnKey, ColumnStor
       this.columns = this.columns.filter(column => !columns.includes(column))
     },
     /**
+     * @desc 更新列名
+     * @param column {ColumnStore.Column}
+     * @param index {number}
+     * @returns {void}
+     */
+    updateColumn(column, index) {
+      this.columns[index] = column
+    },
+    /**
      * @desc 更新数据源
      * @param dataSource {string}
      */

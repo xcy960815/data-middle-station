@@ -1,10 +1,10 @@
 <template>
   <div class="order relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
-    <div class="sort__title my-1">排序</div>
-    <div class="sort__content flex-auto">
+    <div class="order__title my-1">排序</div>
+    <div class="order__content flex-auto">
       <div
         data-action="drag"
-        class="sort__item"
+        class="order__item"
         v-for="(item, index) in orderList"
         :key="index"
         draggable="true"
@@ -13,9 +13,10 @@
         @mousedown.stop
       >
         <selecter
-          class="sort__item__name"
+          class="order__item__name"
           cast="order"
-          :name="item.name"
+          :order-type="item.orderType"
+          :name="item.columnName"
         ></selecter>
       </div>
     </div>
@@ -33,11 +34,11 @@ const { dragstartHandler, dragHandler, dragoverHandler, dropHandler } = handler(
 .order {
   pointer-events: initial;
 
-  .sort__content {
+  .order__content {
     list-style: none;
     overflow: auto;
 
-    .sort__item {
+    .order__item {
       cursor: move;
       height: 30px;
       line-height: 30px;

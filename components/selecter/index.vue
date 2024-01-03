@@ -1,11 +1,15 @@
 <template>
-  <el-popover
-    class="chart-tag relative"
-    placement="bottom"
-    trigger="click"
-  >
+  <el-popover class="chart-tag relative" placement="bottom" trigger="click">
     <template #reference>
-      <div class="tag-name">{{ name }}</div>
+      <div class="tag-name">
+        <span>{{ name }}</span>
+        <template v-if="isOrder">
+          <el-icon @click="handleOrderEmit" class="cursor-pointer" :size="14">
+            <CaretTop v-if="orderType === 'asc'" />
+            <CaretBottom v-else />
+          </el-icon>
+        </template>
+      </div>
     </template>
     <template v-if="isDimension">dimension</template>
     <template v-if="isGroup">group</template>
@@ -15,6 +19,7 @@
 </template>
 
 <script lang="ts" setup>
+
 // import DatePicker from '../../../modules/filterBuilder/DatePicker.vue'
 // import StringPicker from '../../../modules/filterBuilder/StringPicker.vue'
 // import NumberPicker from '../../../modules/filterBuilder/NumberPicker.vue'
@@ -30,6 +35,10 @@ const props = defineProps({
   cast: {
     type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
     default: ''
+  },
+  orderType: {
+    type: String as PropType<OrderStore.OrderType>,
+    default: 'default'
   }
 })
 /**
@@ -58,12 +67,16 @@ const isFilter = computed(() => props.cast === 'filter')
  */
 const isOrder = computed(() => props.cast === 'order')
 
+const handleOrderEmit = () => {
+  // emit('order', props.name)
+
+}
 </script>
 
 <style lang="less" scoped>
 .tag-name {
   position: relative;
-  padding: 0 35px 0 5px;
+  padding: 0 5px 0 5px;
   height: 26px;
   line-height: 24px;
   box-sizing: border-box;
@@ -71,5 +84,8 @@ const isOrder = computed(() => props.cast === 'order')
   border-radius: 5px;
   background-color: #fff;
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

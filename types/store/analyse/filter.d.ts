@@ -3,10 +3,9 @@
 declare namespace FilterStore {
   type FilterKey = 'filter'
 
-  interface FilterOption extends TableInfoModule.TableColumnOption { 
-    choosed?: boolean
-    alias?: string
-    displayName?: string
+  interface FilterOption extends  ColumnStore.Column { 
+    // alias?: string
+    // displayName?: string
   }
 
   type FilterState = {

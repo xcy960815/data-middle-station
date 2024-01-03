@@ -40,9 +40,7 @@ export const initData = () => {
    * @desc X轴字段
    * @type {Array<GroupStore.GroupState['groups']>}
    */
-  const xAxisFields = computed<
-    GroupStore.GroupState['groups']
-  >(() => {
+  const xAxisFields = computed(() => {
     const groups = groupStore.getGroups
     return groups
   })

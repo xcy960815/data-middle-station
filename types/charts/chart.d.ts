@@ -7,9 +7,9 @@ declare namespace Chart {
   /**
    * @desc 图表x轴、y轴字段类型
    */
-  type XAxisFields = ColumnStore.Column 
+  type XAxisFields = GroupStore.GroupOption
 
-  type YAxisFields = ColumnStore.Column
+  type YAxisFields = DimensionStore.DimensionOption
 
   type ChartData = Record<string, string | number>
 }

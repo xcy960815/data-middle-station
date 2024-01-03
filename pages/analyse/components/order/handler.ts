@@ -80,25 +80,21 @@ export const handler = ({ orderList }: HandlerParams) => {
   const dropHandler = (dragEvent: DragEvent) => {
     dragEvent.preventDefault();
     const data = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
-    const sorts = data.value;
+    const orders = data.value;
 
     switch (data.from) {
       case 'order': {
         // relocate postion by dragging
         const targetIndex = getTargetIndex(data.index, dragEvent);
         if (targetIndex === data.index) return;
-        const sorts = JSON.parse(JSON.stringify(orderStore.orders));
-        const target = sorts.splice(data.index, 1)[0];
-        sorts.splice(targetIndex, 0, target);
-        orderStore.setOrders(sorts);
+        const orders = JSON.parse(JSON.stringify(orderStore.orders));
+        const target = orders.splice(data.index, 1)[0];
+        orders.splice(targetIndex, 0, target);
+        orderStore.setOrders(orders);
         break;
       }
       default: {
-        if (Array.isArray(sorts)) {
-          addOrder(sorts);
-        } else {
-          addOrder(sorts);
-        }
+        addOrder(orders);
         break;
       }
     }

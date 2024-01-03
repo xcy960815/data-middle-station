@@ -1,28 +1,32 @@
 <template>
   <div class="table-chart h-full">
+    <!-- 普通表格 -->
     <table>
       <thead>
         <tr>
-          <th v-for="tableHeaderOption in tableHeaderState.tableHeader"
-            @click="handleEmitOrder(tableHeaderOption.displayName || tableHeaderOption.alias || tableHeaderOption.columnName)">
-            <span>{{ tableHeaderOption.displayName || tableHeaderOption.alias || tableHeaderOption.columnName }}</span>
+          <th v-for="tableHeaderOption in tableHeaderState.tableHeader" class="cursor-pointer"
+            @click="handleEmitOrder(tableHeaderOption)">
+            <span class="table-header-item"
+              :class="tableHeaderOption.orderType == 'desc' ? 'icon-desc' : tableHeaderOption.orderType == 'asc' ? 'icon-asc' : ''">
+              {{ tableHeaderOption.displayName || tableHeaderOption.alias || tableHeaderOption.columnName }}
+            </span>
           </th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(tableDataOption, index) in tableDataState.tableData">
           <td v-for="(tableHeaderOption) in tableHeaderState.tableHeader"
-            :style="tdStyle(tableDataOption, tableHeaderOption)"
+            :style="getComparedStyle(tableDataOption, tableHeaderOption)"
             :class="getComparedClass(tableDataOption, tableHeaderOption)"
-            v-html="getTableRenderItem(tableDataOption, tableHeaderOption, index)">
+            v-html="getComparedContent(tableDataOption, tableHeaderOption, index)">
           </td>
         </tr>
       </tbody>
     </table>
     <!-- 分页器 -->
     <div class="pagination">
-      <span class="information-container">第{{ startIndex}}-{{ endIndex }}条</span>
-      <span class="information2-container">共{{ totalPage  }}页{{ total }}条</span>
+      <span class="information-container">第{{ startIndex }}-{{ endIndex }}条</span>
+      <span class="information2-container">共{{ totalPage }}页{{ total }}条</span>
       <!-- 回到第一页 -->
       <el-icon :size="12">
         <DArrowLeft />
@@ -68,23 +72,10 @@ const props = defineProps({
   },
 });
 
-const { startIndex,totalPage,
-  endIndex, total, pageNum, pageSize, tableHeaderState, tableDataState, tableChartConfig } = tableChartInitData(props);
+const { startIndex, totalPage, endIndex, total, pageNum, pageSize, tableHeaderState, tableDataState, tableChartConfig } = tableChartInitData(props);
 
-const { handleEmitOrder, getComparedClass, getTableRenderItem } = tableChartHandler({ pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
+const { handleEmitOrder, getComparedClass, getComparedContent, getComparedStyle } = tableChartHandler({ pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
 
-
-/**
- * @desc tbody中的td的样式
- * @param tableDataOption {Chart.ChartData} 表格数据
- * @param tableHeaderOption {TableChart.TableHeaderOption} 表头数据
- * @returns {CSSStyleDeclaration}
- */
-const tdStyle = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption) => {
-  return {
-    // background:  '#f2f2f2' || '#fff',
-  }
-}
 
 </script>
 
@@ -103,6 +94,27 @@ const tdStyle = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart
 
     thead th {
       border-bottom: 1px solid #ddd;
+
+      .table-header-item {
+        position: relative;
+      }
+
+      .icon-asc::after {
+        height: inherit;
+        position: absolute;
+        top: -6px;
+        content: '\00a0\25B4';
+        font-size: 20px;
+      }
+
+      .icon-desc::after {
+        height: inherit;
+        position: absolute;
+        top: -6px;
+        content: '\00a0\25BE';
+        font-size: 20px;
+      }
+
     }
 
     tbody td {
@@ -139,8 +151,6 @@ const tdStyle = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart
     tr:hover {
       background-color: #e2e2e2;
     }
-
-
   }
 
   // 分页样式

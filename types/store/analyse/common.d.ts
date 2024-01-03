@@ -7,7 +7,7 @@ interface DragData {
     | 'order'
     | 'filter'
     | 'group'
-    | 'cloumn'
+    | 'column'
   index: number
-  value: TableInfoModule.TableColumnOption
+  value: DimensionStore.Dimension | FilterStore.FilterOption | OrderStore.OrderOption | GroupStore.GroupOption | ColumnStore.Column
 }

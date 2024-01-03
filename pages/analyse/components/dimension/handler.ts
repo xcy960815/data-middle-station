@@ -3,6 +3,7 @@ interface HandlerParams {
 }
 
 export const handler = ({ dimensionList }: HandlerParams) => {
+  const columnStore = useColumnStore();
   const dimensionStore = useDimensionStore();
   /**
    * @desc addDimension
@@ -76,10 +77,12 @@ export const handler = ({ dimensionList }: HandlerParams) => {
     dragEvent.preventDefault();
     // get drag data
     const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
-    const dimensions = data.value;
+    const dimension = data.value;
+    const cloumn = data.value;
+    const index = data.index;
     switch (data.from) {
-      case 'dimension': {
-        // relocate postion by dragging
+      case 'dimension':
+        // 移动位置
         const targetIndex = getTargetIndex(data.index, dragEvent);
         if (targetIndex === data.index) return;
         const dimensions = JSON.parse(JSON.stringify(dimensionStore.dimensions));
@@ -87,11 +90,12 @@ export const handler = ({ dimensionList }: HandlerParams) => {
         dimensions.splice(targetIndex, 0, target);
         dimensionStore.setDimensions(dimensions);
         break;
-      }
-      default: {
-        addDimension(dimensions);
+      default:
+        dimension.choosed = true;
+        // 更新列名 主要是显示已经选中的标志
+        columnStore.updateColumn(cloumn, index);
+        addDimension(dimension);
         break;
-      }
     }
   };
   return {

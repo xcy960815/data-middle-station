@@ -12,7 +12,7 @@ declare namespace TableInfoModule {
   }
 
   /**
-   * @desc 左侧数据源字段类型
+   * @desc 左侧数据源字段类型 刚从数据库出来的字段
    */
   export type TableColumnOption = {
     columnName?: string

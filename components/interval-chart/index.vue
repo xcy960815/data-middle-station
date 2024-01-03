@@ -69,6 +69,9 @@ const initChart = () => {
   const fields = props.yAxisFields.map(
     (item) => item.alias || item.name
   )
+
+
+  
   const intervalChart = chart
     .interval()
     .data({

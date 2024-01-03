@@ -4,6 +4,7 @@
  */
 declare namespace OrderStore {
   type OrderKey = 'order'
+  type OrderType = 'asc' | 'desc' | 'default'
   /**
    * @desc 左侧列字段
    * @interface OrderOption
@@ -11,10 +12,8 @@ declare namespace OrderStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface OrderOption extends TableInfoModule.TableColumnOption {
-    choosed?: boolean
-    alias?: string
-    displayName?: string
+  interface OrderOption extends  ColumnStore.Column {
+    orderType:OrderType
   }
 
   type OrderState = {
@@ -36,13 +35,15 @@ declare namespace OrderStore {
   /**
     * @desc action 名称
     */
-  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}`
+  type ActionName<T extends string> = `set${Capitalize<T>}`;
   /**
    * @desc action
    */
   type OrderActions = {
     [K in keyof OrderState as ActionName<K & string>]: (value: OrderState[K]) => void;
   } & {
+    updateOrder: (value: OrderOption, index: number) => void;
+    addOrders: (value: OrderOption[]) => void;
     removeOrder: (value: number) => void;
   }
 }

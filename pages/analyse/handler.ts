@@ -37,9 +37,9 @@ export const handler = () => {
             const cloumns = result.data?.map((item) => {
                 return {
                     ...item,
+                    // 刚从数据库出来的时候 只有 columnName columnComment columnType 
+                    // 所以到列配置的时候 需要给他加上 是否选中 属性
                     choosed: false,
-                    alias: item.columnName,
-                    displayName: item.columnName
                 }
             })
             columnStore.setColumns(cloumns || [])
