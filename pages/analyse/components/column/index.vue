@@ -94,7 +94,7 @@ const handleClickTitle = () => {
       line-height: 30px;
       position: relative;
 
-      &.column__item-choosed::after {
+      &.column__item_dimension_choosed::after {
         position: absolute;
         left: 0px;
         top: 13px;
@@ -103,6 +103,16 @@ const handleClickTitle = () => {
         height: 5px;
         border-radius: 50%;
         background-color: #54c32a;
+      }
+      &.column__item_group_choosed::after {
+        position: absolute;
+        left: 0px;
+        top: 13px;
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: #1292f7;
       }
     }
   }

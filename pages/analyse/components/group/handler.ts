@@ -3,6 +3,7 @@ interface HandlerParams {
 }
 
 export const handler = ({ groupList }: HandlerParams) => {
+  const columnStore = useColumnStore();
   const groupStore = useGroupStore();
   /**
    * @desc addGroup
@@ -10,7 +11,7 @@ export const handler = ({ groupList }: HandlerParams) => {
    */
   const addGroup = (group: GroupStore.GroupOption | Array<GroupStore.GroupOption>) => {
     group = Array.isArray(group) ? group : [group];
-    groupStore.addGroup(group);
+    groupStore.addGroups(group);
   };
   /**
    * @desc getTargetIndex
@@ -75,25 +76,25 @@ export const handler = ({ groupList }: HandlerParams) => {
   const dropHandler = (dragEvent: DragEvent) => {
     dragEvent.preventDefault();
     const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
-    const groups = data.value;
-
+    const group = data.value;
+    const cloumn = data.value;
+    const index = data.index;
     switch (data.from) {
       case 'group': {
         // relocate postion by dragging
         const targetIndex = getTargetIndex(data.index, dragEvent);
         if (targetIndex === data.index) return;
-        const groups = JSON.parse(JSON.stringify(groupStore.groups));
+        const groups = JSON.parse(JSON.stringify(groupStore.getGroups));
         const target = groups.splice(data.index, 1)[0];
         groups.splice(targetIndex, 0, target);
-        groupStore.updateGroup(groups);
+        groupStore.setGroups(groups);
         break;
       }
       default: {
-        if (Array.isArray(groups)) {
-          addGroup(groups);
-        } else {
-          addGroup(groups);
-        }
+        group.groupChoosed = true;
+        // 更新列名 主要是显示已经选中的标志
+        columnStore.updateColumn(cloumn, index);
+        addGroup(group);
         break;
       }
     }

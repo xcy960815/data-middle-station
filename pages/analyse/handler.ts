@@ -39,7 +39,8 @@ export const handler = () => {
                     ...item,
                     // 刚从数据库出来的时候 只有 columnName columnComment columnType 
                     // 所以到列配置的时候 需要给他加上 是否选中 属性
-                    choosed: false,
+                    dimensionChoosed: false,
+                    groupChoosed: false,
                 }
             })
             columnStore.setColumns(cloumns || [])

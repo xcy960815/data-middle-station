@@ -91,7 +91,7 @@ export const handler = ({ dimensionList }: HandlerParams) => {
         dimensionStore.setDimensions(dimensions);
         break;
       default:
-        dimension.choosed = true;
+        dimension.dimensionChoosed = true;
         // 更新列名 主要是显示已经选中的标志
         columnStore.updateColumn(cloumn, index);
         addDimension(dimension);
