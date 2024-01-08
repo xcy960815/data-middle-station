@@ -9,5 +9,5 @@ interface DragData {
     | 'group'
     | 'column'
   index: number
-  value: DimensionStore.Dimension | FilterStore.FilterOption | OrderStore.OrderOption | GroupStore.GroupOption | ColumnStore.Column
+  value: DimensionStore.DimensionOption | FilterStore.FilterOption | OrderStore.OrderOption | GroupStore.GroupOption | ColumnStore.Column
 }

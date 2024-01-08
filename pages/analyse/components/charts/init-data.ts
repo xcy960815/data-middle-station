@@ -11,7 +11,9 @@ export const initData = () => {
   const dimensionStore = useDimensionStore()
   const groupStore = useGroupStore()
   const chartStore = useChartStore()
-
+const chartWidth = ref(0)
+const chartHeight = ref(0)
+const chartResizeObserver = ref<ResizeObserver>()
   /**
    * @desc 图表 loading
    * @type {boolean}
@@ -75,6 +77,9 @@ export const initData = () => {
   })
 
   return {
+    chartWidth,
+    chartHeight,
+    chartResizeObserver,
     chartLoading,
     chartErrorMessage,
     xAxisFields,

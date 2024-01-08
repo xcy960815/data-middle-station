@@ -4,8 +4,7 @@ declare namespace FilterStore {
   type FilterKey = 'filter'
 
   interface FilterOption extends  ColumnStore.Column { 
-    // alias?: string
-    // displayName?: string
+   
   }
 
   type FilterState = {

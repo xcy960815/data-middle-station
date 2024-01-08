@@ -6,7 +6,8 @@ export const initData = () => {
   const columnClasses = computed(() => (column: ColumnStore.Column) => {
     return {
       column__item: true,
-      'column__item-choosed': column.choosed,
+      'column__item_dimension_choosed': column.dimensionChoosed,
+      'column__item_group_choosed': column.groupChoosed,
     };
   });
 
@@ -29,9 +30,7 @@ export const initData = () => {
    * @desc 数据源选项
    * @returns {ColumnStore.dataSourceOption[]}
    */
-  const dataSourceOptions = computed(() => {
-    return columnStore.getDataSourceOptions
-  });
+  const dataSourceOptions = computed(() => columnStore.getDataSourceOptions);
 
   /**
    * @desc 维度字段列表
@@ -40,6 +39,7 @@ export const initData = () => {
   const columnList = computed(() => {
     return columnStore.getColumns
   });
+  
   /**
    * @desc 当前列
    * @returns {ColumnStore.Column}

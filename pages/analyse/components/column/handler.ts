@@ -8,6 +8,7 @@ interface HandlerParams {
  * @returns {HandlerReturn} 
  */
 export const handler = ({ currentColumn }: HandlerParams) => {
+  const columnStore = useColumnStore();
   /**
    * @desc 发起拖拽
    * @param {ColumnStore.Column} column
@@ -49,11 +50,16 @@ export const handler = ({ currentColumn }: HandlerParams) => {
   const dropHandler = (dragEvent: DragEvent) => {
     dragEvent.preventDefault();
     const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
+    const columnIndex = columnStore.getColumns.findIndex((column) => column.columnName === data.value.columnName);
+
     switch (data.from) {
       case 'dimension':
         // 从维度拖拽到列
         const dimensionSrore = useDimensionStore();
         dimensionSrore.removeDimension(data.index);
+        data.value.dimensionChoosed = false;
+        columnStore.updateColumn(data.value, columnIndex);
+
         break;
       case 'filter':
         // 从筛选拖拽到列
@@ -69,6 +75,8 @@ export const handler = ({ currentColumn }: HandlerParams) => {
         // 从分组拖拽到列
         const groupStore = useGroupStore();
         groupStore.removeGroup(data.index);
+        data.value.groupChoosed = false;
+        columnStore.updateColumn(data.value, columnIndex);
         break;
       case 'column':
         // 放弃拖拽
