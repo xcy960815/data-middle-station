@@ -1,3 +1,4 @@
+
 /**
  * @desc 分析页面逻辑处理
  */
@@ -52,6 +53,7 @@ export const handler = () => {
      * @desc 监听表格数据源变化
      */
     watch(() => columnStore.getDataSource, (dataSource) => {
+        if(!dataSource) return
         queryTableColumns(dataSource)
         // 如果数据源变化，清空筛选条件
         filterStore.setFilters([])
@@ -61,6 +63,8 @@ export const handler = () => {
         groupStore.setGroups([])
         // 如果数据源变化，清空维度条件
         dimensionStore.setDimensions([])
+    },{
+        immediate:true
     })
     /**
      * @desc 需要查询表格数据的参数
@@ -143,6 +147,7 @@ export const handler = () => {
             chartStore.setChartData(result.data || [])
         } else {
             chartStore.setChartData([])
+            chartStore.setChartErrorMessage(result.message)
         }
         chartStore.setChartLoading(false)
     }

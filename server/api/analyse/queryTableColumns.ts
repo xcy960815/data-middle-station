@@ -3,9 +3,9 @@
 import { AnalyseDao } from '../../database/analyse';
 /**
  * @desc 根据表名查询数据
- * @returns {ResponseModule.Response<Array<TableInfoModule.TableInfoOptions>>}
+ * @returns {ResponseModule.Response<Array<TableInfoModule.TableColumnOption>>}
  */
-export default defineEventHandler(
+export default defineEventHandler<Promise<ResponseModule.Response<Array<TableInfoModule.TableColumnOption>>>>(
   async (event) => {
     try {
       const { tableName } = getQuery(event);

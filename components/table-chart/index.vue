@@ -29,8 +29,8 @@
 
     <!-- 分页器 -->
     <div class="pagination">
-      <!-- <span class="information-container">第{{ startIndex }}-{{ endIndex }}条</span>
-      <span class="information2-container">共{{ totalPage }}页{{ total }}条</span> -->
+      <span class="information-container">第{{ startIndex }}-{{ endIndex }}条</span>
+      <span class="information2-container">共{{ totalPage }}页{{ total }}条</span>
       <!-- 回到第一页 -->
       <!-- <el-icon :size="12">
         <DArrowLeft />
@@ -81,6 +81,8 @@ const props = defineProps({
 });
 
 const {
+  TABLEHEADERHEIGHT,
+  PAGINATIONHEIGHT,
   startIndex,
   totalPage,
   endIndex,
@@ -94,7 +96,7 @@ const {
 
 const {
   handleEmitOrder,
-} = tableChartHandler({ pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
+} = tableChartHandler({TABLEHEADERHEIGHT,PAGINATIONHEIGHT, pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
 
 </script>
 
@@ -176,9 +178,9 @@ const {
   }
 
   // 分页样式
-  // .pagination {
-  //   text-align: right;
-  //   font-size: 12px;
-  // }
+  .pagination {
+    text-align: right;
+    font-size: 14px;
+  }
 }
 </style>

@@ -8,7 +8,7 @@ export const useColumnStore = definePiniaStore<ColumnStore.ColumnKey, ColumnStor
    * @returns {ColumnStore.ColumnState}
    */
   state: () => ({
-    dataSource: "",
+    dataSource: "employees",
     dataSourceOptions: [],
     columns: []
   }),

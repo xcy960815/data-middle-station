@@ -4,6 +4,8 @@ import { render } from 'vue'
  *@param {TableChart.HandlerParams} params
  */
 export const handler = ({
+  TABLEHEADERHEIGHT,
+  PAGINATIONHEIGHT,
   pageNum,
   pageSize,
   props,
@@ -161,24 +163,7 @@ export const handler = ({
     }
   }
 
-  // /**
-  //  * @desc 监听每页多少条数变化
-  //  */
-  // watch(
-  //   () => pageSize.value,
-  //   () => {
-  //     initTableData()
-  //   }
-  // )
-  // /**
-  //  * @desc 监听页码变化
-  //  */
-  // watch(
-  //   () => pageNum.value,
-  //   () => {
-  //     initTableData()
-  //   }
-  // )
+
 
   /**
    * @desc 监听表格配置变化
@@ -203,7 +188,18 @@ export const handler = ({
     },
     { deep: true }
   )
-
+  /**
+   * @desc 监听高度变化
+   * @returns {void}
+   */
+  watch(
+    () => props.chartHeight,
+    async () => {
+      // renderTableBody()
+      console.log('高度变化了');
+      
+    },
+  )
 
   /**
    * @desc 初始化表头
@@ -232,13 +228,13 @@ export const handler = ({
    */
   const initTableData = () => {
     return new Promise<void>((resolve) => {
-      tableDataState.tableData = props.data
+      tableDataState.tableData = props.data//.slice((pageNum.value - 1) * pageSize.value, pageNum.value * pageSize.value)
       resolve();
     })
   }
 
   /**
-   * @desc 渲染表格内容
+   * @desc 渲染表格内容 因为要做到分页 所以要根据每页的条数来渲染 所以走的是dom操作
    * @returns {void}
    */
   const renderTableBody = () => {
@@ -259,7 +255,11 @@ export const handler = ({
         tr.appendChild(td);
       }
       const tableHeight = tbody?.offsetHeight!;
-      if (tableHeight > props.chartHeight - 25) {
+      // 先判断 再添加
+      if (tableHeight > props.chartHeight - TABLEHEADERHEIGHT - PAGINATIONHEIGHT) {
+        console.log("当前页展示" + i + '条数据');
+        // 计算得出每页可以放多少条
+        pageSize.value = i;
         break
       }
       tbody?.appendChild(tr);
