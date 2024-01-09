@@ -9,12 +9,15 @@ interface QueryChartDataParams {
     dimensions: Array<DimensionStore.DimensionOption>;
     limit: number;
 }
+
+type QueryChartData = Array<{ [key: string]: string | number }>
+
 /**
  * @desc 查询图表数据
  * @param {QueryChartDataParams} params
- * @returns {Promise<ResponseModule.Response<Array<Record<string,string|number>>>>}
+ * @returns {Promise<ResponseModule.Response<QueryChartData>>}
  */
-export default defineEventHandler(async (event) => {
+export default defineEventHandler<Promise<ResponseModule.Response<QueryChartData>>>(async (event) => {
     try {
         const { dimensions, dataSource, orders, limit }: QueryChartDataParams = await readBody(event);
         const getAnswerInstance = new GetAnswerDao();
@@ -30,7 +33,7 @@ export default defineEventHandler(async (event) => {
         }
 
         sql += ` limit ${limit}`;
-        const data = await getAnswerInstance.exe(sql as string);
+        const data = await getAnswerInstance.exe<QueryChartData>(sql as string);
         return {
             code: 200,
             data,

@@ -47,7 +47,7 @@
           <slot name="bar"></slot>
         </div>
 
-        <div class="layout-analyse-charts flex-1">
+        <div class="layout-analyse-charts flex-1 overflow-hidden">
           <slot name="charts"></slot>
         </div>
 

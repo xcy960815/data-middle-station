@@ -20,7 +20,7 @@ export const handler = ({ chartResizeObserver, chartWidth, chartHeight }: Handle
    * @desc 图表结束渲染
    * @returns {void}
    */
-  const handleRenderChartEnd = () => { 
+  const handleRenderChartEnd = () => {
     console.log('handleRenderChartEnd');
   }
 
@@ -29,9 +29,13 @@ export const handler = ({ chartResizeObserver, chartWidth, chartHeight }: Handle
    * @type {ResizeObserver}
    */
   onMounted(() => {
-    chartResizeObserver.value = new ResizeObserver(() => {
+    const sizeChange =  debounce(() => {
       chartWidth.value = document.querySelector('.charts')?.clientWidth || 0
       chartHeight.value = document.querySelector('.charts')?.clientHeight || 0
+    }, 300)
+    chartResizeObserver.value = new ResizeObserver(() => {
+      // 防抖
+      sizeChange()
     })
     chartResizeObserver.value?.observe(document.querySelector('.charts')!)
   })
@@ -42,7 +46,7 @@ export const handler = ({ chartResizeObserver, chartWidth, chartHeight }: Handle
   onUnmounted(() => {
     chartResizeObserver.value?.disconnect()
   })
-  
+
   return {
     handleRenderChartStart,
     handleRenderChartEnd

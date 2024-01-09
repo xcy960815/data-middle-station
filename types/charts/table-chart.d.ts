@@ -48,6 +48,8 @@ declare namespace TableChart {
   type InitDataParams = Props
 
   type HandlerParams = {
+    TABLEHEADERHEIGHT: number
+    PAGINATIONHEIGHT: number
     pageNum: PageNum
     pageSize: PageSize
     props: Props

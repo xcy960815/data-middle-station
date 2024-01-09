@@ -79,31 +79,31 @@ export function Debounce(delay: number, immediate = false) {
     _propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<(...args: A) => unknown>,
   ): TypedPropertyDescriptor<(...args: A) => void> | undefined {
-    let timer: NodeJS.Timer | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null;
     const originalMethod = descriptor.value;
 
     if (originalMethod) {
       descriptor.value = function (this: ThisParameterType<(...args: A) => unknown>, ...args: A) {
         const context = this;
-        if (timer) {
-          clearTimeout(timer);
-          timer = null;
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
         }
-        if (immediate && !timer) {
+        if (immediate && !timeoutId) {
           return originalMethod.apply(context, args);
         }
 
         const later = () => {
-          timer = null;
+          timeoutId = null;
           if (!immediate) {
             return originalMethod.apply(context, args);
           }
         };
 
-        timer && clearTimeout(timer);
-        timer = setTimeout(later, delay);
+        timeoutId && clearTimeout(timeoutId);
+        timeoutId = setTimeout(later, delay);
 
-        if (immediate && !timer) {
+        if (immediate && !timeoutId) {
           return originalMethod.apply(context, args);
         }
       };
@@ -125,7 +125,7 @@ export function Throttle(delay: number, leading: boolean = true) {
     descriptor: TypedPropertyDescriptor<(...args: A) => Promise<R>>,
   ) {
     let previous = 0;
-    let timer: NodeJS.Timer | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null;
     const originalMethod = descriptor.value!;
 
     descriptor.value = function (
@@ -138,8 +138,8 @@ export function Throttle(delay: number, leading: boolean = true) {
         previous = now;
         return result;
       } else if (now - previous > delay) {
-        clearTimeout(timer as NodeJS.Timer);
-        timer = setTimeout(() => {
+        timeoutId && clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
           const result = originalMethod.apply(this, args);
           previous = Date.now();
           return result;
@@ -147,7 +147,7 @@ export function Throttle(delay: number, leading: boolean = true) {
       }
 
       return new Promise((resolve, reject) => {
-        timer = setTimeout(async () => {
+        timeoutId = setTimeout(async () => {
           try {
             const result = await originalMethod.apply(this, args);
             resolve(result);
@@ -162,3 +162,63 @@ export function Throttle(delay: number, leading: boolean = true) {
     return descriptor;
   };
 }
+
+
+
+
+/**
+ * @desc 防抖函数
+ * @param func {Function} 需要防抖的函数
+ * @param delay {number} 延迟时间
+ * @returns {Function}
+ */
+export function debounce<F extends (...args: any[]) => any>(func: F, delay: number): (...args: Parameters<F>) => ReturnType<F> {
+  let timeoutId: ReturnType<typeof setTimeout> | null;
+
+  const debouncedFunction = function (this: ThisParameterType<F>, ...args: Parameters<F>) {
+    const context = this;
+
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    return new Promise<ReturnType<F>>(resolve => {
+      // 延迟执行传入的函数
+      timeoutId = setTimeout(() => {
+        resolve(func.apply(context, args));
+      }, delay);
+    });
+  };
+
+  return debouncedFunction as (...args: Parameters<F>) => ReturnType<F>;
+}
+
+/**
+ * @desc 节流函数
+ * @param func {Function} 需要节流的函数
+ * @param delay {number} 延迟时间
+ * @returns {Function}
+ */
+export function throttle<F extends (...args: any[]) => any>(func: F, delay: number): (...args: Parameters<F>) => ReturnType<F> {
+  let previous = 0;
+  let timeoutId: ReturnType<typeof setTimeout> | null;
+
+  const throttledFunction = function (this: ThisParameterType<F>, ...args: Parameters<F>) {
+    const context = this;
+    const now = Date.now();
+
+    if (now - previous > delay) {
+      timeoutId && clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func.apply(context, args);
+        previous = Date.now();
+      }, delay);
+    }
+  };
+
+  return throttledFunction as (...args: Parameters<F>) => ReturnType<F>;
+}
+
+
+
+

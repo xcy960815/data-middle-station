@@ -5,6 +5,14 @@
  * @returns {TableChart.InitDataReturn}
  */
 export const initData = ({ data }: TableChart.InitDataParams) => {
+  /**
+   * @desc 表头高度
+   */
+  const TABLEHEADERHEIGHT = 25
+  /**
+   * @desc 分页器高度
+   */
+  const PAGINATIONHEIGHT = 25
   const chartsConfigStore = useChartConfigStore()
   /**
    * @desc 当前页码
@@ -22,34 +30,26 @@ export const initData = ({ data }: TableChart.InitDataParams) => {
    * @desc 总条数
    * @type {TableChart.Total}
    */
-  const total: TableChart.Total = computed(() => {
-    return data.length
-  })
+  const total: TableChart.Total = computed(() => data.length)
 
   /**
    * @desc 条数开始索引
    * @type {TableChart.StartIndex}
    * @returns {TableChart.StartIndex}
    */
-  const startIndex: TableChart.StartIndex = computed(() => {
-    return (pageNum.value - 1) === 0 ? 1 : (pageNum.value - 1) * pageSize.value
-  })
+  const startIndex: TableChart.StartIndex = computed(() => (pageNum.value - 1) === 0 ? 1 : (pageNum.value - 1) * pageSize.value)
 
   /**
    * @desc 条数结束索引
    * @type {TableChart.EndIndex}
    */
-  const endIndex: TableChart.EndIndex = computed(() => {
-    return pageNum.value * pageSize.value
-  })
+  const endIndex: TableChart.EndIndex = computed(() => pageNum.value * pageSize.value)
 
   /**
    * @desc 总页数
    * @type {TableChart.TotalPage}
    */
-  const totalPage: TableChart.TotalPage = computed(() => {
-    return Math.ceil(total.value / pageSize.value)
-  })
+  const totalPage: TableChart.TotalPage = computed(() => Math.ceil(total.value / pageSize.value))
 
   /**
    * @desc 表头数据
@@ -78,6 +78,8 @@ export const initData = ({ data }: TableChart.InitDataParams) => {
   )
 
   return {
+    TABLEHEADERHEIGHT,
+    PAGINATIONHEIGHT,
     startIndex,
     endIndex,
     totalPage,
