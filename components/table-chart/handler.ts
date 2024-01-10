@@ -60,64 +60,50 @@ export const handler = ({
    * @desc tbody中的td的样式
    * @param tableDataOption {Chart.ChartData} 表格数据
    * @param tableHeaderOption {TableChart.TableHeaderOption} 表头数据
-   * @returns {CSSStyleDeclaration}
+   * @returns {string}
    */
-  const getComparedStyle = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption) => {
+  const getComparedStyle = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption): string | undefined => {
     const conditions = chartsConfigStore.getChartConfig.table.conditions;
-    if (!conditions) return {};
+    if (!conditions) return "";
     const condition = conditions.find(c => c.conditionField === tableHeaderOption.columnName);
-    if (!condition) return {};
+    if (!condition) return "";
     const { conditionType, conditionSymbol, conditionValue, conditionColor, conditionMinValue, conditionMaxValue } = condition;
     if (conditionType === '单色') {
       const currentValue = tableDataOption[tableHeaderOption.columnName || ""] ? tableDataOption[tableHeaderOption.columnName || ""] : 0;
       switch (conditionSymbol) {
         case 'gt':
           if (currentValue > (conditionValue || 0)) {
-            return {
-              color: conditionColor,
-            }
+            return `color: ${conditionColor}`
           }
           break;
         case 'lt':
           if (currentValue < (conditionValue || 0)) {
-            return {
-              color: conditionColor,
-            }
+            return `color: ${conditionColor}`
           }
           break;
         case 'eq':
           if (currentValue == conditionValue) {
-            return {
-              color: conditionColor,
-            }
+            return `color: ${conditionColor}`
           }
           break;
         case 'ne':
           if (currentValue != conditionValue) {
-            return {
-              color: conditionColor,
-            }
+            return `color: ${conditionColor}`
           }
           break;
         case 'ge':
           if (currentValue >= (conditionValue || 0)) {
-            return {
-              color: conditionColor,
-            }
+            return `color: ${conditionColor}`
           }
           break;
         case 'le':
           if (currentValue <= (conditionValue || 0)) {
-            return {
-              color: conditionColor,
-            }
+            return `color: ${conditionColor}`
           }
           break;
         case 'between':
           if (currentValue >= (conditionMinValue || 0) && currentValue <= (conditionMaxValue || 0)) {
-            return {
-              color: conditionColor,
-            }
+            return `color: ${conditionColor}`
           }
           break;
         default:
@@ -138,11 +124,9 @@ export const handler = ({
       const G = 256 - (256 - g) * ((currentValue - minValue) / valueDif);
       const B = 256 - (256 - b) * ((currentValue - minValue) / valueDif);
       const rgb = `rgb(${R},${G},${B})`;
-      return {
-        color: rgb,
-      }
+      return `background-color:${rgb}`
     } else {
-      return {};
+      return "";
     }
   }
 
@@ -169,7 +153,7 @@ export const handler = ({
    * @desc 监听表格配置变化
    */
   watch(
-    () => tableChartConfig.value,
+    () => tableChartConfig.value.conditions,
     async () => {
       renderTableBody()
     },
@@ -195,9 +179,8 @@ export const handler = ({
   watch(
     () => props.chartHeight,
     async () => {
-      // renderTableBody()
-      console.log('高度变化了');
-      
+      renderTableBody()
+      // console.log('高度变化了');
     },
   )
 
@@ -238,8 +221,12 @@ export const handler = ({
    * @returns {void}
    */
   const renderTableBody = () => {
+    // console.log('页面高度',props.chartHeight);
+    // console.log('表头高度',TABLEHEADERHEIGHT);
+    // console.log('分页高度',PAGINATIONHEIGHT);
     const tbody = document.querySelector<HTMLTableSectionElement>('.table-chart table tbody');
     if (!tbody) return;
+    // 清空tbody
     while (tbody.firstChild) {
       tbody.removeChild(tbody.firstChild);
     }
@@ -249,17 +236,20 @@ export const handler = ({
       for (let j = 0; j < tableHeaderState.tableHeader.length; j++) {
         const tableHeaderOption = tableHeaderState.tableHeader[j];
         const td = document.createElement('td');
-        td.style.cssText = getComparedStyle(tableDataOption, tableHeaderOption)?.toString() || "";
+        td.style.cssText = getComparedStyle(tableDataOption, tableHeaderOption) || ""
         td.className = getComparedClass(tableDataOption, tableHeaderOption);
         td.innerHTML = getComparedContent(tableDataOption, tableHeaderOption, i);
         tr.appendChild(td);
       }
+      // 获取上一次的高度
       const tableHeight = tbody?.offsetHeight!;
+      // console.log("当前表格高度",tableHeight,i);
+
       // 先判断 再添加
-      if (tableHeight > props.chartHeight - TABLEHEADERHEIGHT - PAGINATIONHEIGHT) {
-        console.log("当前页展示" + i + '条数据');
+      if (tableHeight > props.chartHeight - TABLEHEADERHEIGHT - PAGINATIONHEIGHT - 10) {
+        // console.log("当前页展示" + (i-1) + '条数据');
         // 计算得出每页可以放多少条
-        pageSize.value = i;
+        pageSize.value = i - 1;
         break
       }
       tbody?.appendChild(tr);

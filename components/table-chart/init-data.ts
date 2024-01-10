@@ -77,6 +77,13 @@ export const initData = ({ data }: TableChart.InitDataParams) => {
     () => chartsConfigStore.chartConfig.table
   )
 
+  /**
+   * @desc 获取表头样式
+   */
+  const getTableHeaderClass = computed(() => (item: TableChart.TableHeaderOption) => {
+    return ['table-header-content',item.orderType == 'desc' ? 'icon-desc' : item.orderType == 'asc' ? 'icon-asc' : ''] 
+  })
+
   return {
     TABLEHEADERHEIGHT,
     PAGINATIONHEIGHT,
@@ -88,6 +95,7 @@ export const initData = ({ data }: TableChart.InitDataParams) => {
     total,
     tableHeaderState,
     tableDataState,
-    tableChartConfig
+    tableChartConfig,
+    getTableHeaderClass
   }
 }
