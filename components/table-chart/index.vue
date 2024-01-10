@@ -1,13 +1,12 @@
 <template>
   <div class="table-chart h-full">
     <!-- 普通表格 -->
-    <table>
+    <table class="over">
       <thead>
         <tr>
           <th v-for="tableHeaderOption in tableHeaderState.tableHeader" class="cursor-pointer"
             @click="handleEmitOrder(tableHeaderOption)">
-            <span class="table-header-item"
-              :class="tableHeaderOption.orderType == 'desc' ? 'icon-desc' : tableHeaderOption.orderType == 'asc' ? 'icon-asc' : ''">
+            <span :class="getTableHeaderClass(tableHeaderOption)">
               {{ tableHeaderOption.displayName || tableHeaderOption.alias || tableHeaderOption.columnName }}
             </span>
           </th>
@@ -91,12 +90,13 @@ const {
   pageSize,
   tableHeaderState,
   tableDataState,
-  tableChartConfig
+  tableChartConfig,
+  getTableHeaderClass
 } = tableChartInitData(props);
 
 const {
   handleEmitOrder,
-} = tableChartHandler({TABLEHEADERHEIGHT,PAGINATIONHEIGHT, pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
+} = tableChartHandler({ TABLEHEADERHEIGHT, PAGINATIONHEIGHT, pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
 
 </script>
 
@@ -124,7 +124,7 @@ const {
       color: #727479;
       padding: 0 10px;
 
-      .table-header-item {
+      .table-header-content {
         position: relative;
       }
 
