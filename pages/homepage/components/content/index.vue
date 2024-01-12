@@ -1,19 +1,17 @@
 <template>
-    <div class="home">
-        
+    <div class="homepage-content">
+        homepage content
+        你好，{{ initData.name }}
     </div>
 </template>
 
 <script lang="ts" setup>
-import { initData } from "./init-data"
+import { initData } from './init-data'
 import { handler } from "./handler"
-const { chartsState } = initData()
-const { } = handler()
-
 </script>
 
 <style scoped lang="less">
-.home {
+.homepage-content {
     position: relative;
 }
 </style>

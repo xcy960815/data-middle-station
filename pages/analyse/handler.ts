@@ -173,6 +173,5 @@ export const handler = () => {
 
     onMounted(async () => {
         queryTableList()
-        // queryChartData()
     })
 }
