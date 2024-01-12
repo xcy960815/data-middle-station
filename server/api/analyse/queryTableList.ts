@@ -1,4 +1,4 @@
-import { AnalyseDao } from '../../database/analyse';
+import { AnalyseDao } from '../../database/table';
 import { Response } from "../../database/response"
 type TableOption = {
   label: string

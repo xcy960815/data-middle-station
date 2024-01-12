@@ -2,7 +2,7 @@
  * @desc  表结构
  */
 declare namespace ChartsModule {
-  interface ChartsMappingOption {
+  type ChartsMappingOption = {
     id?: number;
     name: string;
     filter?: (value: string) => Array<FilterStore.FilterOption>;
@@ -13,7 +13,7 @@ declare namespace ChartsModule {
     updateTime?: string;
     visits?: number;
   }
-  interface ChartsParamsOption {
+  type ChartsParamsOption = {
     id?: number;
     name: string;
     filter?: Array<FilterStore.FilterOption>;

@@ -1,6 +1,11 @@
 
-import { GetAnswerDao } from '../../database/analyse';
+import { GetAnswerDao } from '../../database/getAnswer';
 import { Response } from "../../database/response"
+
+
+/**
+ * 这是一个很重要的接口，动态拼接sql 动态查询
+ */
 interface QueryChartDataParams {
     dataSource: string;
     filters: Array<FilterStore.FilterOption>;

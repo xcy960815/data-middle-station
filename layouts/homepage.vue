@@ -1,5 +1,5 @@
 <template>
-  <!-- 看板页面的layout布局 -->
+  <!-- 首页页面的layout布局 -->
   <el-container
     class="layout-dashboard-main h-full w-full !flex !flex-col flex-1 border-box"
   >
@@ -7,6 +7,7 @@
     <el-container
       class="layout-dashboard-body !flex overflow-hidden"
     >
+    <slot name="content"></slot>
     </el-container>
   </el-container>
 </template>
