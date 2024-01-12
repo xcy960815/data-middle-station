@@ -1,5 +1,5 @@
 import { AnalyseDao } from '../../database/analyse';
-
+import { Response } from "../../database/response"
 type TableOption = {
   label: string
   value: string
@@ -18,17 +18,9 @@ export default defineEventHandler<Promise<ResponseModule.Response<Array<TableOpt
           value: item.tableName || '',
         }
       })
-      return {
-        code: 200,
-        data: tableList,
-        message: 'success',
-      }
+      return Response.success(tableList);
     } catch (error:any) {
-      return {
-        code: 500,
-        data: null,
-        message: error.message,
-      };
+      return Response.error(error.message);
     }
 
   },

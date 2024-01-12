@@ -15,7 +15,7 @@
         <selecter
           class="filter__item__name"
           cast="filter"
-          :name="item.name"
+          :name="item.columnName"
         ></selecter>
       </div>
     </div>

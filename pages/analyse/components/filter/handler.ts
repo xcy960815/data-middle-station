@@ -1,8 +1,14 @@
 interface HandlerParams {
   filterList: Ref<Array<FilterStore.FilterOption>>;
 }
+
 export const handler = ({ filterList }: HandlerParams) => {
   const filterStore = useFilterStore();
+  /**
+   * @desc addFilter
+   * @param filter {FilterStore.FilterOption | Array<FilterStore.FilterOption>}
+   * @returns {void}
+   */
   const addFilter = (filter: FilterStore.FilterOption | Array<FilterStore.FilterOption>) => {
     filter = Array.isArray(filter) ? filter : [filter];
     filterStore.addFilters(filter);

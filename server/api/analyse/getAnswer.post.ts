@@ -1,6 +1,6 @@
 
 import { GetAnswerDao } from '../../database/analyse';
-
+import { Response } from "../../database/response"
 interface QueryChartDataParams {
     dataSource: string;
     filters: Array<FilterStore.FilterOption>;
@@ -34,16 +34,8 @@ export default defineEventHandler<Promise<ResponseModule.Response<QueryChartData
 
         sql += ` limit ${limit}`;
         const data = await getAnswerInstance.exe<QueryChartData>(sql as string);
-        return {
-            code: 200,
-            data,
-            message: 'success',
-        };
+        return Response.success(data);
     } catch (error: any) {
-        return {
-            code: 500,
-            data: null,
-            message: error.message,
-        };
+        return Response.error(error.message);
     }
 })

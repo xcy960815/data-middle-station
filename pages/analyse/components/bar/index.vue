@@ -9,11 +9,18 @@
     <el-button link @click="handleClickSetting">设置</el-button>
     <el-button link @click="handleClickFullScreen">全屏</el-button>
     <el-button link @click="handleClickDownload">下载</el-button>
+    <el-tag v-show="chartUpdateTakesTime" type="info">{{ chartUpdateTakesTime }}</el-tag>
+    <el-tag v-show="chartUpdateTime" type="info">{{ chartUpdateTime }}</el-tag>
   </div>
 </template>
 
 <script setup lang="ts">
+import { initData } from "./init-data"
 import { handler } from './handler'
+const {
+  chartUpdateTakesTime,
+  chartUpdateTime,
+} = initData()
 const {
   handleClickRefresh,
   handleClickAlarm,

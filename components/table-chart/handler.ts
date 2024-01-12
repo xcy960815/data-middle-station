@@ -241,6 +241,7 @@ export const handler = ({
         td.innerHTML = getComparedContent(tableDataOption, tableHeaderOption, i);
         tr.appendChild(td);
       }
+      tbody?.appendChild(tr);
       // 获取上一次的高度
       const tableHeight = tbody?.offsetHeight!;
       // console.log("当前表格高度",tableHeight,i);
@@ -248,11 +249,12 @@ export const handler = ({
       // 先判断 再添加
       if (tableHeight > props.chartHeight - TABLEHEADERHEIGHT - PAGINATIONHEIGHT - 10) {
         // console.log("当前页展示" + (i-1) + '条数据');
+        tbody.removeChild(tr);
         // 计算得出每页可以放多少条
         pageSize.value = i - 1;
         break
       }
-      tbody?.appendChild(tr);
+      
     }
 
 
