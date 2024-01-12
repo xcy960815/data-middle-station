@@ -180,7 +180,8 @@ const {
   // 分页样式
   .pagination {
     text-align: right;
-    font-size: 14px;
+    font-size: 12px;
+    color: rgb(85, 85, 85);
   }
 }
 </style>

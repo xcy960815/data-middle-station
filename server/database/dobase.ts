@@ -100,6 +100,8 @@ export function Mapping(mapping: { new (): Object }): MethodDecorator {
     return descriptor;
   };
 }
+
+
 /**
  * @desc 数据库操作基类
  */

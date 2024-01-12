@@ -1,4 +1,4 @@
-
+import dayjs from "dayjs";
 /**
  * @desc 分析页面逻辑处理
  */
@@ -136,20 +136,27 @@ export const handler = () => {
         const { dataSource, dimensions } = queryChartDataParams.value
         if (!dataSource) return
         if (!dimensions.length) return
-       
+        const startTime = dayjs().valueOf()
         chartStore.setChartLoading(true)
         const result = await $fetch('/api/analyse/getAnswer', {
             method: 'POST',
             // 请求参数
             body: queryChartDataParams.value
         })
+        const endTime = dayjs().valueOf()
         if (result.code === 200) {
             chartStore.setChartData(result.data || [])
+            chartStore.setChartErrorMessage("")
         } else {
             chartStore.setChartData([])
             chartStore.setChartErrorMessage(result.message)
         }
+        /**
+         * 统一处理的逻辑
+         */
         chartStore.setChartLoading(false)
+        chartStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
+        chartStore.setChartUpdateTakesTime(dayjs(`${endTime - startTime}`).format('ss') )
     }
 
     /**

@@ -12,6 +12,13 @@ declare namespace ChartStore {
   type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
 
   type ChartState = {
+    // 图表名称
+    chartName: string
+    // 更新时间
+    chartUpdateTime: string
+    // 更新耗时
+    chartUpdateTakesTime: string
+    // 图表错误信息
     chartErrorMessage: string
     // 图表类型
     chartType: ChartType
@@ -44,7 +51,7 @@ declare namespace ChartStore {
    */
   type ChartActions = {
     [K in keyof ChartState as ActionName<K & string>]: (value: ChartState[K]) => void;
-  }&{
-   
+  } & {
+
   }
 }
