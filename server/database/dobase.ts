@@ -100,6 +100,25 @@ export function Mapping(mapping: { new (): Object }): MethodDecorator {
     return descriptor;
   };
 }
+// export function Mapping<T extends object>(mapping: new () => T): MethodDecorator {
+//   return function (
+//     target: Object,
+//     propertyKey: string | symbol,
+//     descriptor: TypedPropertyDescriptor<any>,
+//   ) {
+//     const originalMethod = descriptor.value;
+//     descriptor.value = async function (...args: any[]) {
+//       const originValue = await originalMethod.apply(this, args);
+//       if (mapping) {
+//         return new mapping()['columnsMapper'](originValue);
+//       } else {
+//         return originValue;
+//       }
+//     };
+//     return descriptor;
+//   };
+// }
+
 
 
 /**
@@ -110,14 +129,13 @@ export class DOBase {
   private poolMap: Map<string, mysql.Pool> = new Map();
   // 查找线程池
   private getPool(dataSourceName: string): mysql.Pool {
-    if (!this.poolMap) {
-      this.poolMap = new Map();
-    }
+    // if (!this.poolMap) {
+    //   this.poolMap = new Map();
+    // }
     let pool = this.poolMap.get(dataSourceName);
     if (!pool) {
       const dataSourceConfig = getProcessEnvProperties('dataSourceConfig');
-      const currentDataSourceConfig: mysql.PoolOptions =
-        JSON.parse(dataSourceConfig)[dataSourceName];
+      const currentDataSourceConfig: mysql.PoolOptions = JSON.parse(dataSourceConfig)[dataSourceName];
       // 创建连接池
       pool = mysql.createPool(currentDataSourceConfig);
       this.poolMap.set(dataSourceName, pool);

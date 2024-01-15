@@ -1,7 +1,7 @@
 
 
 /**
- * @desc 页面的dao层
+ * @desc 首页的dao层
  */
 import { Column, BindDataSource, Mapping, DOBase } from './dobase';
 import dayjs from 'dayjs';
@@ -96,9 +96,9 @@ export class ChartsDao extends DOBase {
    * @desc 获取所有的图表
    * @returns {Promise<Array<ChartsOption>>}
    */
-  public async getCharts(): Promise<Array<ChartsModule.ChartsParamsOption>> {
+  public async getCharts(): Promise<Array<ChartsModule.ChartsOption>> {
     const sql = `select * from charts`
-    return await this.exe<Array<ChartsModule.ChartsParamsOption>>(sql)
+    return await this.exe<Array<ChartsModule.ChartsOption>>(sql)
   }
 
 }

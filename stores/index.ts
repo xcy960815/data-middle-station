@@ -5,3 +5,4 @@ export { useColumnStore } from './analyse/column'
 export { useFilterStore } from './analyse/filter'
 export { useOrderStore } from './analyse/order'
 export { useChartConfigStore } from './analyse/charts-config'
+export { useHomepageStore } from "./homepage/index"
