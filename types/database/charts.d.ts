@@ -2,6 +2,7 @@
  * @desc  表结构
  */
 declare namespace ChartsModule {
+  
   type ChartsMappingOption = {
     id?: number;
     name: string;
@@ -13,6 +14,7 @@ declare namespace ChartsModule {
     updateTime?: string;
     visits?: number;
   }
+
   type ChartsParamsOption = {
     id?: number;
     name: string;
@@ -23,5 +25,16 @@ declare namespace ChartsModule {
     createTime?: string;
     updateTime?: string;
     visits?: number;
+  }
+
+  type ChartsOption = ChartsParamsOption & {
+    id:number
+    filter: Array<FilterStore.FilterOption>;
+    group: Array<GroupStore.GroupOption>;
+    dimension: Array<DimensionStore.DimensionOption>;
+    order: Array<OrderStore.OrderOption>;
+    createTime: string;
+    updateTime: string;
+    visits: number;
   }
 }

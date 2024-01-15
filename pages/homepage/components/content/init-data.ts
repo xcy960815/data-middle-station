@@ -4,10 +4,9 @@
 
 
 export const initData = ()=>{
-    const chartsState = reactive({
-        charts: [] 
-    })
+    const HomePageStore = useHomepageStore()
+    const chartsList = computed(() => HomePageStore.getCharts)
     return {
-        chartsState
+        chartsList
     }
 }

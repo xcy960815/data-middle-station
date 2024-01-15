@@ -1,4 +1,4 @@
-import { AnalyseDao } from '../../database/table';
+import { TableDao } from '../../database/table';
 import { Response } from "../../database/response"
 type TableOption = {
   label: string
@@ -11,8 +11,8 @@ type TableOption = {
 export default defineEventHandler<Promise<ResponseModule.Response<Array<TableOption>>>>(
   async (_event) => {
     try {
-      const analyseInstence = new AnalyseDao();
-      const tableList = (await analyseInstence.queryTableList()).map(item => {
+      const tableInstence = new TableDao();
+      const tableList = (await tableInstence.queryTableList()).map(item => {
         return {
           label: item.tableName || '',
           value: item.tableName || '',
@@ -22,6 +22,5 @@ export default defineEventHandler<Promise<ResponseModule.Response<Array<TableOpt
     } catch (error:any) {
       return Response.error(error.message);
     }
-
   },
 );
