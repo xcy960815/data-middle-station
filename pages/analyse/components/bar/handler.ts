@@ -1,5 +1,15 @@
 import { ElMessageBox, ElCheckboxGroup, ElCheckbox, ElMessage } from "element-plus"
+
+
+/**
+ * @desc 处理函数
+ * @returns 
+ */
 export const handler = () => {
+  const chartStore = useChartStore()
+  const columnStore = useColumnStore()
+  const filterStore = useFilterStore()
+  const orderStore = useOrderStore()
   const chartConfigStore = useChartConfigStore()
   const dimensionStore = useDimensionStore()
   const groupStore = useGroupStore()
@@ -96,11 +106,48 @@ export const handler = () => {
 
 
   }
+
+
+  /**
+   * @desc 点击保存
+   */
+  const handleClickSave = async () => {
+    const chartConfig = chartConfigStore.getChartConfig
+    const dimension = dimensionStore.getDimensions
+    const group = groupStore.getGroups
+    const order = orderStore.getOrders
+    const filter = filterStore.getFilters
+    const commonChartConfig = chartConfigStore.getCommonChartConfig
+    const id = chartStore.getChartId
+    const chartName = chartStore.getChartName
+    const chartType = chartStore.getChartType
+    const tableName = columnStore.getDataSource
+    const result  =  await $fetch('/api/analyse/saveChartById', {
+      method: 'POST',
+      body: {
+        id,
+        chartName,
+        tableName,
+        chartType,
+        // chartConfig,
+        // dimension,
+        // group,
+        // order,
+        // filter,
+        // commonChartConfig
+      }
+    })
+    console.log('result', result);
+    
+
+    
+  }
   return {
     handleClickRefresh,
     handleClickAlarm,
     handleClickSetting,
     handleClickFullScreen,
-    handleClickDownload
+    handleClickDownload,
+    handleClickSave
   }
 }

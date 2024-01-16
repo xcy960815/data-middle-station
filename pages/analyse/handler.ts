@@ -189,17 +189,17 @@ export const handler = () => {
         })
      
         if (result.code === 200) {
-            const name = result.data?.name
+            const chartName = result.data?.chartName
             const filter = result.data?.filter
             const group = result.data?.group
             const dimension = result.data?.dimension
             const order = result.data?.order
             const chartType = result.data?.chartType
-            const tbName = result.data?.tbName
+            const tableName = result.data?.tableName
             chartStore.setChartId(id as unknown as number)
             chartStore.setChartType(chartType as ChartStore.ChartState['chartType'])
-            chartStore.setChartName(name || "")
-            columnStore.setDataSource(tbName || "")
+            chartStore.setChartName(chartName || "")
+            columnStore.setDataSource(tableName || "")
             dimensionStore.setDimensions(dimension || [])
             filterStore.setFilters(filter || [])
             groupStore.setGroups(group || [])

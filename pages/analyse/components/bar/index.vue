@@ -9,8 +9,9 @@
     <el-button link @click="handleClickSetting">设置</el-button>
     <el-button link @click="handleClickFullScreen">全屏</el-button>
     <el-button link @click="handleClickDownload">下载</el-button>
-    <el-tag v-show="chartUpdateTakesTime" type="info">{{ chartUpdateTakesTime }}</el-tag>
-    <el-tag v-show="chartUpdateTime" type="info">{{ chartUpdateTime }}</el-tag>
+    <el-button link @click="handleClickSave">保存</el-button>
+    <el-tag v-show="chartUpdateTakesTime" size="small" class="pr-[10px]" type="info">更新耗时 ：{{ chartUpdateTakesTime }}</el-tag>
+    <el-tag v-show="chartUpdateTime" size="small" class="pr-[10px]" type="info">更新时间 ：{{ chartUpdateTime }}</el-tag>
   </div>
 </template>
 
@@ -26,8 +27,14 @@ const {
   handleClickAlarm,
   handleClickSetting,
   handleClickFullScreen,
-  handleClickDownload
+  handleClickDownload,
+  handleClickSave
 } = handler()
 </script>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.bar {
+  display: flex;
+  align-items: center;
+}
+</style>

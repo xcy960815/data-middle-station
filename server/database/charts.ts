@@ -6,6 +6,7 @@
 import { log } from 'console';
 import { Column, BindDataSource, Mapping, DOBase } from './dobase';
 import dayjs from 'dayjs';
+import { ca } from 'element-plus/es/locale';
 
 export class ChartsMapping implements ChartsModule.ChartsMappingOption {
 
@@ -14,16 +15,16 @@ export class ChartsMapping implements ChartsModule.ChartsMappingOption {
   id: number = 0;
 
   // 图表名称
-  @Column('name')
-  name: string = '';
+  @Column('chart_name')
+  chartName: string = '';
 
   // 图表类型
   @Column('chart_type')
   chartType: string = '';
 
   // 表名
-  @Column('tb_name')
-  tbName: string = '';
+  @Column('table_name')
+  tableName: string = '';
 
   // 过滤条件
   @Column('filter')
@@ -77,8 +78,8 @@ export class ChartsDao extends DOBase {
   public async createChart(chart: ChartsModule.ChartsParamsOption): Promise<number> {
     const createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const updateTime = createTime
-    const sql = "INSERT INTO charts (name, filter, `group`, dimension, `order`, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?, ?);"
-    return await this.exe<number>(sql, [chart.name, JSON.stringify(chart.filter), JSON.stringify(chart.group), JSON.stringify(chart.dimension), JSON.stringify(chart.order), createTime, updateTime])
+    const sql = "INSERT INTO charts (chart_name, filter, `group`, dimension, `order`, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?, ?);"
+    return await this.exe<number>(sql, [chart.chartName, JSON.stringify(chart.filter), JSON.stringify(chart.group), JSON.stringify(chart.dimension), JSON.stringify(chart.order), createTime, updateTime])
   }
 
   /**
@@ -86,12 +87,17 @@ export class ChartsDao extends DOBase {
    * @param chart {ChartsOption} 图表
    * @returns {Promise<void>}
    */
-  public async updateChart(chart: ChartsModule.ChartsParamsOption): Promise<void> {
+  public async updateChart(chart: ChartsModule.ChartsParamsOption): Promise<number> {
     const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    // const sql = `UPDATE charts SET name = ?, filter = ?, \`group\` = ?, dimension = ?, \`order\` = ?, update_time = ? WHERE id = ?`
-    // return await this.exe<number>(sql, [chart.name, JSON.stringify(chart.filter), JSON.stringify(chart.group), JSON.stringify(chart.dimension), JSON.stringify(chart.order), updateTime, chart.id])
-    const sql = `UPDATE charts SET name = ?, chart_type = ?, tb_name = ?, filter = ?, \`group\` = ?, dimension = ?, \`order\` = ?, update_time = ? WHERE id = ?`
-    return await this.exe<void>(sql, [chart.name, chart.chartType, chart.tbName, JSON.stringify(chart.filter), JSON.stringify(chart.group), JSON.stringify(chart.dimension), JSON.stringify(chart.order),updateTime, chart.id])
+    const filter = JSON.stringify(chart.filter || "")
+    const group = JSON.stringify(chart.group || "")
+    const dimension = JSON.stringify(chart.dimension || "")
+    const order = JSON.stringify(chart.order || "")
+    const sql = `UPDATE charts SET chart_name = ?, chart_type = ?, table_name = ?, filter = ?, \`group\` = ?, dimension = ?, \`order\` = ?, update_time = ? WHERE id = ?`
+    const result = await this.exe<number>(sql, [chart.chartName, chart.chartType, chart.tableName, filter, group, dimension, order, updateTime, chart.id])
+    log("result", result)
+    return result
+
   }
 
   /**

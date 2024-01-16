@@ -13,6 +13,8 @@ export default defineEventHandler(async (event) => {
     try {
         const chartsParamsOption = await readBody<ChartsModule.ChartsParamsOption>(event);
         const chartsInstance = new ChartsDao();
+        console.log('chartsParamsOption', chartsParamsOption);
+        
         const data = await chartsInstance.updateChart(chartsParamsOption);
         return Response.success(data);
     } catch (error: any) {
