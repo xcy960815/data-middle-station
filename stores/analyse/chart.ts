@@ -9,6 +9,7 @@ export const useChartStore = definePiniaStore<
   ChartStore.ChartActions
 >('chart', {
   state: () => ({
+   
     chartName: "",
     chartUpdateTime: "",
     chartUpdateTakesTime: "",
