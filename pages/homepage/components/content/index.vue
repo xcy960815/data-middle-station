@@ -1,6 +1,6 @@
 <template>
     <div class="homepage-content">
-       <ChartCard v-for="chart in chartsList" :name="chart.name" :id="chart.id" :key="chart.id"></ChartCard>
+       <ChartCard v-for="chart in chartsList" :name="chart.name" :id="chart.id" :key="chart.id" :visits="chart.visits"></ChartCard>
     </div>
 </template>
 

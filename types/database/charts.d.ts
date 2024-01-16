@@ -11,13 +11,15 @@ declare namespace ChartsModule {
     interval: 'interval'
   } as const
 
-
+  /**
+   * @desc 图表类型
+   */
   type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
   
   type ChartsMappingOption = {
     id: number;
-    name: string;
-    tbName?: string;
+    chartName: string;
+    tableName?: string;
     chartType?: string;
     filter?: (value: string) => Array<FilterStore.FilterOption>;
     group?: (value: string) => Array<GroupStore.GroupOption>;
@@ -30,8 +32,8 @@ declare namespace ChartsModule {
 
   type ChartsParamsOption = {
     id?: number;
-    name: string;
-    tbName?: string;
+    chartName: string;
+    tableName?: string;
     filter?: Array<FilterStore.FilterOption>;
     group?: Array<GroupStore.GroupOption>;
     dimension?: Array<DimensionStore.DimensionOption>;
@@ -44,8 +46,8 @@ declare namespace ChartsModule {
 
   type ChartsOption =  {
     id:number
-    name: string;
-    tbName: string;
+    chartName: string;
+    tableName: string;
     filter: Array<FilterStore.FilterOption>;
     group: Array<GroupStore.GroupOption>;
     dimension: Array<DimensionStore.DimensionOption>;

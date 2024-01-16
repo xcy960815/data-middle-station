@@ -1,6 +1,7 @@
 <template>
     <div class="chart-card" @click="handleClickCard">
-        {{ name }}
+        <span>{{ name }}</span>
+        <span>{{ visits }}</span>
     </div>
 </template>
 
@@ -8,7 +9,7 @@
 const router = useRouter()
 const props = defineProps({
     id: {
-        type: String,
+        type: Number,
         required: true,
         default: ''
     },
@@ -16,6 +17,11 @@ const props = defineProps({
         type: String,
         required: true,
         default: ''
+    },
+    visits: {
+        type: Number,
+        required: true,
+        default: 0
     }
 })
 /**
