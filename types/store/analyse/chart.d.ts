@@ -12,6 +12,7 @@ declare namespace ChartStore {
   type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
 
   type ChartState = {
+   
     // 图表名称
     chartName: string
     // 更新时间

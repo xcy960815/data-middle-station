@@ -3,6 +3,8 @@ import dayjs from "dayjs";
  * @desc 分析页面逻辑处理
  */
 export const handler = () => {
+    // const router = useRouter()
+
     const columnStore = useColumnStore();
     const filterStore = useFilterStore();
     const orderStore = useOrderStore();
@@ -53,7 +55,7 @@ export const handler = () => {
      * @desc 监听表格数据源变化
      */
     watch(() => columnStore.getDataSource, (dataSource) => {
-        if(!dataSource) return
+        if (!dataSource) return
         queryTableColumns(dataSource)
         // 如果数据源变化，清空筛选条件
         filterStore.setFilters([])
@@ -63,8 +65,8 @@ export const handler = () => {
         groupStore.setGroups([])
         // 如果数据源变化，清空维度条件
         dimensionStore.setDimensions([])
-    },{
-        immediate:true
+    }, {
+        // immediate: true
     })
     /**
      * @desc 需要查询表格数据的参数
@@ -122,12 +124,15 @@ export const handler = () => {
                 return ''
         }
     }
+
+
+
     /**
      * @desc 查询表格数据
      * @returns {Promise<void>}
      */
     const queryChartData = async () => {
-        const chartType = chartStore.getChartType 
+        const chartType = chartStore.getChartType
         const errorMessage = chartSuggestStrategies(chartType)
         chartStore.setChartErrorMessage(errorMessage)
         if (errorMessage) {
@@ -156,7 +161,7 @@ export const handler = () => {
          */
         chartStore.setChartLoading(false)
         chartStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
-        chartStore.setChartUpdateTakesTime(dayjs(`${endTime - startTime}`).format('ss') )
+        chartStore.setChartUpdateTakesTime(dayjs(`${endTime - startTime}`).format('ss'))
     }
 
     /**
@@ -169,9 +174,44 @@ export const handler = () => {
         immediate: true
     })
 
+    /**
+     * @desc 获取图表
+     */
+    const getChartById = async () => {
+        const router = useRouter()
+        const id = router.currentRoute.value.query.id
+        if (!id) return
+        const result = await $fetch('/api/analyse/getChartById', {
+            method: 'post',
+            body: {
+                id
+            }
+        })
+     
+        if (result.code === 200) {
+            const name = result.data?.name
+            const filter = result.data?.filter
+            const group = result.data?.group
+            const dimension = result.data?.dimension
+            const order = result.data?.order
+            const chartType = result.data?.chartType
+            const tbName = result.data?.tbName
+            chartStore.setChartId(id as unknown as number)
+            chartStore.setChartType(chartType as ChartStore.ChartState['chartType'])
+            chartStore.setChartName(name || "")
+            columnStore.setDataSource(tbName || "")
+            dimensionStore.setDimensions(dimension || [])
+            filterStore.setFilters(filter || [])
+            groupStore.setGroups(group || [])
+            orderStore.setOrders(order || [])
+        } else {
 
+        }
+    }
 
     onMounted(async () => {
-        queryTableList()
+         queryTableList()
+        await getChartById()
+       
     })
 }

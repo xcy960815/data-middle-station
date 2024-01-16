@@ -10,20 +10,7 @@
 
 <script lang="ts" setup>
 import UserInfo from './user-info/index.vue';
-const collapseProps = defineProps({
-  collapse: {
-    default: () => false,
-    type: Boolean,
-  },
-});
-const isCollapse: Ref<Boolean> = computed({
-  get: () => {
-    return collapseProps.collapse;
-  },
-  set: (val) => {
-    // emit('update:collapse', val)
-  },
-});
+
 </script>
 <style lang="less" scoped>
 .header {

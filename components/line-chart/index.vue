@@ -54,7 +54,7 @@ watch(
 const initChart = () => {
   emits('renderChartStart')
   const fields = props.yAxisFields.map(
-    (item) => item.alias || item.name
+    (item) => item.alias || item.columnName
   )
   const chart = new Chart({
     container: 'container-line',
@@ -81,7 +81,7 @@ const initChart = () => {
     })
     .encode(
       'x',
-      props.xAxisFields.map((item) => item.name)
+      props.xAxisFields.map((item) => item.columnName)
     )
     .encode('y', 'value')
     .encode('color', 'type')
@@ -109,7 +109,7 @@ const initChart = () => {
       })
       .encode(
         'x',
-        props.xAxisFields.map((item) => item.name)
+        props.xAxisFields.map((item) => item.columnName)
       )
       .encode('y', 'value')
       .encode('color', 'type')
