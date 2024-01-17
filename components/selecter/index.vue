@@ -45,9 +45,7 @@ const props = defineProps({
  * @description 判断当前tag是维度还是度量
  * @returns {boolean}
  */
-const isDimension = computed(() => {
-  return props.cast === 'dimension'
-})
+const isDimension = computed(() => props.cast === 'dimension')
 
 /**
  * @description 判断当前tag是分组还是度量
