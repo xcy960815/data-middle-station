@@ -3,7 +3,7 @@
     <div class="header-left">
       <h4 style="color: #fff">blog-home-nuxt</h4>
     </div>
-    <div style="flex: 1"></div>
+    <div class="flex-1"></div>
     <user-info class="header-right"></user-info>
   </div>
 </template>

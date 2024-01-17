@@ -1,6 +1,6 @@
 <template>
     <div class="chart-card" @click="handleClickCard">
-        <span>{{ name }}</span>
+        <span>{{ chartName }}</span>
         <span>{{ visits }}</span>
     </div>
 </template>
@@ -13,7 +13,7 @@ const props = defineProps({
         required: true,
         default: ''
     },
-    name: {
+    chartName: {
         type: String,
         required: true,
         default: ''

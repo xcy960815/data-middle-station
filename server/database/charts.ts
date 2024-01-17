@@ -3,10 +3,10 @@
 /**
  * @desc 首页的dao层
  */
-import { log } from 'console';
+
 import { Column, BindDataSource, Mapping, DOBase } from './dobase';
 import dayjs from 'dayjs';
-import { ca } from 'element-plus/es/locale';
+import { getObjectProperties } from './common';
 
 export class ChartsMapping implements ChartsModule.ChartsMappingOption {
 
@@ -56,6 +56,11 @@ export class ChartsMapping implements ChartsModule.ChartsMappingOption {
 
 }
 
+/**
+ * @desc 本页面使用到的表
+ */
+const CHARTNAME = 'charts';
+
 @BindDataSource('blog')
 export class ChartsDao extends DOBase {
 
@@ -78,7 +83,7 @@ export class ChartsDao extends DOBase {
   public async createChart(chart: ChartsModule.ChartsParamsOption): Promise<number> {
     const createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const updateTime = createTime
-    const sql = "INSERT INTO charts (chart_name, filter, `group`, dimension, `order`, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?, ?);"
+    const sql = "INSERT INTO " + CHARTNAME + " (chart_name, filter, `group`, dimension, `order`, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?, ?);"
     return await this.exe<number>(sql, [chart.chartName, JSON.stringify(chart.filter), JSON.stringify(chart.group), JSON.stringify(chart.dimension), JSON.stringify(chart.order), createTime, updateTime])
   }
 
@@ -87,16 +92,11 @@ export class ChartsDao extends DOBase {
    * @param chart {ChartsOption} 图表
    * @returns {Promise<void>}
    */
-  public async updateChart(chart: ChartsModule.ChartsParamsOption): Promise<number> {
-    const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    const filter = JSON.stringify(chart.filter || "")
-    const group = JSON.stringify(chart.group || "")
-    const dimension = JSON.stringify(chart.dimension || "")
-    const order = JSON.stringify(chart.order || "")
-    const sql = `UPDATE charts SET chart_name = ?, chart_type = ?, table_name = ?, filter = ?, \`group\` = ?, dimension = ?, \`order\` = ?, update_time = ? WHERE id = ?`
-    const result = await this.exe<number>(sql, [chart.chartName, chart.chartType, chart.tableName, filter, group, dimension, order, updateTime, chart.id])
-    log("result", result)
-    return result
+  public async updateChart(chartOption: ChartsModule.ChartsParamsOption): Promise<void> {
+    const { keys, values } = getObjectProperties(chartOption);
+    const setClause = keys.map((key) => `${key} = ?`).join(', ');
+    const sql = `UPDATE ${CHARTNAME} SET ${setClause} WHERE id = ?`;
+    await this.exe<number>(sql, [...values, chartOption.id]);
 
   }
 
@@ -105,7 +105,7 @@ export class ChartsDao extends DOBase {
    * @param id {number} 图表id
    */
   public async updateChartVisits(id: number): Promise<number> {
-    const sql = `UPDATE charts SET visits = visits + 1 WHERE id = ?`
+    const sql = `UPDATE ${CHARTNAME} SET visits = visits + 1 WHERE id = ?`
     return await this.exe<number>(sql, [id])
   }
 
@@ -117,7 +117,7 @@ export class ChartsDao extends DOBase {
   public async getChartById(id: number): Promise<ChartsModule.ChartsOption> {
     // 更新访问次数 不知道为什么报错
     // await this.updateChartVisits(id)
-    const sql = `select * from charts where id = ?`
+    const sql = `select * from ${CHARTNAME} where id = ?`
     const result = await this.exe<Array<ChartsModule.ChartsOption>>(sql, [id])
     // log("result",result)
     return result?.[0]
@@ -129,7 +129,7 @@ export class ChartsDao extends DOBase {
    * @returns {Promise<number>}
    */
   public async deleteChart(id: number): Promise<number> {
-    const sql = `delete from charts where id = ?`
+    const sql = `delete from ${CHARTNAME} where id = ?`
     return await this.exe<number>(sql, [id])
   }
 
@@ -138,7 +138,7 @@ export class ChartsDao extends DOBase {
    * @returns {Promise<Array<ChartsOption>>}
    */
   public async getCharts(): Promise<Array<ChartsModule.ChartsOption>> {
-    const sql = `select * from charts`
+    const sql = `select * from ${CHARTNAME}`
     return await this.exe<Array<ChartsModule.ChartsOption>>(sql)
   }
 

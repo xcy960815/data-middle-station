@@ -45,6 +45,7 @@ export const handler = ({
    * @description: 初始化代码雨
    */
   const initCodeRain = debounce(() => {
+    
     if (setIntervalId.value) {
       clearInterval(setIntervalId.value)
     }
@@ -102,7 +103,7 @@ export const handler = ({
     }
 
     setIntervalId.value = setInterval(draw, 100)
-  }, 100)
+  }, 300)
 
 
   onMounted(() => {

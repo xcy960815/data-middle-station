@@ -10,7 +10,7 @@
     <el-button link @click="handleClickFullScreen">全屏</el-button>
     <el-button link @click="handleClickDownload">下载</el-button>
     <el-button link @click="handleClickSave">保存</el-button>
-    <el-tag v-show="chartUpdateTakesTime" size="small" class="pr-[10px]" type="info">更新耗时 ：{{ chartUpdateTakesTime }}</el-tag>
+    <!-- <el-tag v-show="chartUpdateTakesTime" size="small" class="pr-[10px]" type="info">更新耗时 ：{{ chartUpdateTakesTime }}</el-tag> -->
     <el-tag v-show="chartUpdateTime" size="small" class="pr-[10px]" type="info">更新时间 ：{{ chartUpdateTime }}</el-tag>
   </div>
 </template>
