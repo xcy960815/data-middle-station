@@ -1,5 +1,16 @@
 export const initData = () => {
+  /**
+   * @desc 获取随机颜色
+   * @returns {string}
+   */
   const fontSizeMultiplier = 20
+
+  
+  const setIntervalId = ref<ReturnType<typeof setInterval> | null>(null)
+
+  /**
+   * @desc 颜色列表
+   */
   const fontColors = [
     '#33BSE5',
     '#0099CC',
@@ -12,9 +23,13 @@ export const initData = () => {
     '#FF4444',
     '#CCO000'
   ]
+  /**
+   * @description: 初始化代码雨
+   */
+  const charSet = 'console.log("Blog Home Nuxt3!")'
 
-  const charSet = 'console.log("Hello World!")'
   return {
+    setIntervalId,
     fontSizeMultiplier,
     fontColors,
     charSet

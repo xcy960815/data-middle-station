@@ -61,7 +61,7 @@ const initChart = () => {
   })
   chart.coordinate({ type: 'theta', innerRadius: 0.6 })
   const fields = props.yAxisFields.map(
-    (item) => item.alias || item.name
+    (item) => item.alias || item.columnName
   )
 
   const pieChart = chart
@@ -103,7 +103,7 @@ const initChart = () => {
   if (pieChartConfigData.value.showLabel) {
     pieChart.label({
       text: props.xAxisFields.map(
-        (item) => item.alias || item.name
+        (item) => item.alias || item.columnName
       ),
       position: 'spider',
       connectorDistance: 0,

@@ -6,9 +6,8 @@
 <script lang="ts" setup>
 import { initData } from './init-data'
 import { handler } from './handler'
-const { charSet, fontColors, fontSizeMultiplier } =
-  initData()
-handler({ charSet, fontColors, fontSizeMultiplier })
+const { charSet, fontColors, fontSizeMultiplier, setIntervalId } = initData()
+handler({ charSet, fontColors, fontSizeMultiplier, setIntervalId })
 </script>
 
 <style scoped lang="less">
