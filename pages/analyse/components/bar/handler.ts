@@ -138,7 +138,11 @@ export const handler = () => {
       }
     })
     console.log('result', result);
-    
+    if (result.code === 200) {
+      ElMessage.success('保存成功')
+    } else {
+      ElMessage.error('保存失败')
+    }
 
     
   }

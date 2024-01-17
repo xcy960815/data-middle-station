@@ -1,22 +1,25 @@
 
 import { ChartsDao } from "../../database/charts"
 import { Response } from "../../database/response"
-
+import dayjs from 'dayjs'
 /**
  * @api {post} /analyse/saveChartById
  * @apiName saveChartById
  * @apiGroup analyse
  * @apiDescription 保存图表
- * 
+ * @returns {Promise<ResponseModule.Response<number>>}
  */
-export default defineEventHandler(async (event) => {
+export default defineEventHandler<Promise<ResponseModule.Response<number>>>(async (event) => {
     try {
         const chartsParamsOption = await readBody<ChartsModule.ChartsParamsOption>(event);
+        chartsParamsOption.updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
         const chartsInstance = new ChartsDao();
-        console.log('chartsParamsOption', chartsParamsOption);
-        
         const data = await chartsInstance.updateChart(chartsParamsOption);
-        return Response.success(data);
+        console.log("data",data);
+        
+        // return Response.success(data);
+        return Response.success(1);
+
     } catch (error: any) {
         return Response.error(error.message);
     }

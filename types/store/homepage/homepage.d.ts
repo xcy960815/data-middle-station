@@ -6,7 +6,7 @@ declare namespace HomePageStore {
 
   type ChartOption = {
     id: number,
-    name: string,
+    chartName: string,
     updateTime: string,
     createTime: string,
     visits: number,
