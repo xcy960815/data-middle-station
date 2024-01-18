@@ -3,13 +3,14 @@
 /**
  * @desc 首页的dao层
  */
-
+import type { ResultSetHeader } from 'mysql2';
 import { Column, BindDataSource, Mapping, DOBase } from './dobase';
 import dayjs from 'dayjs';
 import { getObjectProperties } from './common';
 
-export class ChartsMapping implements ChartsModule.ChartsMappingOption {
-
+export class ChartsMapping implements ChartsModule.ChartsMappingOption, Partial<Omit<ResultSetHeader, 'constructor'>>{
+  @Column('affectedRows')
+  affectedRows: number = 0;
   // 表名
   @Column('id')
   id: number = 0;
@@ -28,19 +29,27 @@ export class ChartsMapping implements ChartsModule.ChartsMappingOption {
 
   // 过滤条件
   @Column('filter')
-  filter = (value: string): Array<FilterStore.FilterOption> => JSON.parse(value)
+  filter = (value: string): Array<FilterStore.FilterOption> => {
+    return value ? JSON.parse(value) : undefined
+  }
 
   // 分组条件
   @Column('group')
-  group = (value: string): Array<GroupStore.GroupOption> => JSON.parse(value)
+  group = (value: string): Array<GroupStore.GroupOption> => {
+    return value ? JSON.parse(value) : undefined
+  }
 
   // 维度条件
   @Column('dimension')
-  dimension = (value: string): Array<DimensionStore.DimensionOption> => JSON.parse(value)
+  dimension = (value: string): Array<DimensionStore.DimensionOption> => {
+    return value ? JSON.parse(value) : undefined
+  }
 
   // 排序条件
   @Column('order')
-  order = (value: string): Array<OrderStore.OrderOption> => JSON.parse(value)
+  order = (value: string): Array<OrderStore.OrderOption> => {
+    return value ? JSON.parse(value) : undefined
+  }
 
   // 创建时间
   @Column('create_time')
@@ -56,10 +65,19 @@ export class ChartsMapping implements ChartsModule.ChartsMappingOption {
 
 }
 
+
+export class UpdateResultMapping {
+  @Column('affectedRows')
+  affectedRows: number = 0;
+}
+
 /**
  * @desc 本页面使用到的表
  */
 const CHARTNAME = 'charts';
+
+
+
 
 @BindDataSource('blog')
 export class ChartsDao extends DOBase {
@@ -80,11 +98,11 @@ export class ChartsDao extends DOBase {
    * @param chart {ChartsOption} 图表
    * @returns {Promise<number>}
    */
-  public async createChart(chart: ChartsModule.ChartsParamsOption): Promise<number> {
-    const createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    const updateTime = createTime
-    const sql = "INSERT INTO " + CHARTNAME + " (chart_name, filter, `group`, dimension, `order`, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?, ?);"
-    return await this.exe<number>(sql, [chart.chartName, JSON.stringify(chart.filter), JSON.stringify(chart.group), JSON.stringify(chart.dimension), JSON.stringify(chart.order), createTime, updateTime])
+  public async createChart(chartOption: ChartsModule.ChartsParamsOption): Promise<boolean> {
+    const { keys, values } = getObjectProperties(chartOption);
+    const sql = `INSERT INTO ${CHARTNAME} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`
+    const result = await this.exe<ResultSetHeader>(sql, values)
+    return result.affectedRows > 0
   }
 
   /**
@@ -92,12 +110,12 @@ export class ChartsDao extends DOBase {
    * @param chart {ChartsOption} 图表
    * @returns {Promise<void>}
    */
-  public async updateChart(chartOption: ChartsModule.ChartsParamsOption): Promise<void> {
+  public async updateChart(chartOption: ChartsModule.ChartsParamsOption): Promise<boolean> {
     const { keys, values } = getObjectProperties(chartOption);
     const setClause = keys.map((key) => `${key} = ?`).join(', ');
     const sql = `UPDATE ${CHARTNAME} SET ${setClause} WHERE id = ?`;
-    await this.exe<number>(sql, [...values, chartOption.id]);
-
+    const result = await this.exe<ResultSetHeader>(sql, [...values, chartOption.id]);
+    return result.affectedRows > 0;
   }
 
   /**
@@ -119,7 +137,6 @@ export class ChartsDao extends DOBase {
     // await this.updateChartVisits(id)
     const sql = `select * from ${CHARTNAME} where id = ?`
     const result = await this.exe<Array<ChartsModule.ChartsOption>>(sql, [id])
-    // log("result",result)
     return result?.[0]
   }
 

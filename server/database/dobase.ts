@@ -1,5 +1,6 @@
 
 import mysql from 'mysql2/promise';
+
 import { getProcessEnvProperties } from '~/utils/utils.server';
 
 /* 初始化logger */
