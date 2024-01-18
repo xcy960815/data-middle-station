@@ -8,8 +8,8 @@ declare namespace ColumnStore {
    * @desc 列字段
    */
   interface Column extends TableInfoModule.TableColumnOption {
-    dimensionChoosed?: boolean
-    groupChoosed?: boolean
+    // dimensionChoosed?: boolean
+    // groupChoosed?: boolean
   }
 
   interface dataSourceOption {

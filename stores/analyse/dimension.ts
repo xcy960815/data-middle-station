@@ -22,6 +22,8 @@ export const useDimensionStore = definePiniaStore<
      * @returns {void}
      */
     setDimensions(dimensions) {
+     
+      
       this.dimensions = dimensions
     },
     /**

@@ -1,5 +1,5 @@
 import { ElMessageBox, ElCheckboxGroup, ElCheckbox, ElMessage } from "element-plus"
-
+import * as XLSX from 'xlsx';
 
 /**
  * @desc 处理函数
@@ -33,7 +33,7 @@ export const handler = () => {
    */
   const handleClickSetting = () => {
     chartConfigStore.setChartConfigDrawer(true)
-    
+
   }
   /**
    * @desc 点全屏按钮
@@ -50,6 +50,8 @@ export const handler = () => {
   const handleClickDownload = () => {
     // 获取所有的维度和分组
     const feilds = dimensionStore.getDimensions.concat(groupStore.getGroups)
+
+
     if (feilds.length === 0) {
       ElMessage.warning('请先选择维度或分组')
       return
@@ -63,6 +65,8 @@ export const handler = () => {
         return feild.columnName || ""
       })
     })
+
+
     /**
      * @desc 
      */
@@ -74,13 +78,13 @@ export const handler = () => {
           {
             modelValue: selectFeildsState.selectFeilds,
             'onUpdate:modelValue': (value) => {
-              selectFeildsState.selectFeilds = value.map(item=>item.toString())
+              selectFeildsState.selectFeilds = value.map(item => item.toString())
             },
             style: 'width: 100%;display: grid;',
           },
           () => {
             return feilds.map((feild) => {
-              return h(ElCheckbox, { label: feild.displayName, value: feild.columnName || "", })
+              return h(ElCheckbox, { label: feild.displayName || feild.columnName, value: feild.columnName || "", })
             })
           }
         ),
@@ -89,18 +93,95 @@ export const handler = () => {
       cancelButtonText: '取消',
     })
       .then(async (action) => {
-        const { $webworker } = useNuxtApp()
-        const webworker = new $webworker()
-        const result = await webworker.run(() => {
-          let sum = 0;
-          for (let i = 1; i <= 1000000000; i++) {
-            sum += i;
-          }
-          return sum;
-        })
-        console.log("result", result);
+        // const { $webworker } = useNuxtApp()
+        // const webworker = new $webworker()
+        // const result = await webworker.run(() => {
+        //   let sum = 0;
+        //   for (let i = 1; i <= 1000000000; i++) {
+        //     sum += i;
+        //   }
+        //   return sum;
+        // })
+
+       
+
+       type DataOption = Record<string, string | number>
+       
+       function exportToExcel(data: DataOption[], fileName: string, sheetName: string, columns?: (keyof DataOption)[], autoWidth: boolean = true): void {
+         let worksheet: XLSX.WorkSheet | null = null;
+         if (Array.isArray(columns) && columns.length > 0) {
+           const filteredData = data.map((item: DataOption) => {
+             const filteredItem = {} as Record<keyof DataOption, string | number>;
+             columns.forEach((column) => {
+               filteredItem[column] = item[column];
+             });
+             return filteredItem;
+           });
+       
+           worksheet = XLSX.utils.json_to_sheet(filteredData);
+         } else {
+           worksheet = XLSX.utils.json_to_sheet(data);
+         }
+       
+         if (autoWidth) {
+           const maxWidthMap = {} as Record<string, number>;
+       
+           // 计算每列的最大宽度
+           for (let k in worksheet) {
+             if (!k.startsWith('!')) {
+               const colIndex = k.replace(/[0-9]/g, '');
+               const cellValue = worksheet[k].v.toString();
+               const cellLen = Math.max(cellValue.length, 10);
+       
+               if (!maxWidthMap[colIndex]) {
+                 maxWidthMap[colIndex] = cellLen;
+               } else {
+                 if (cellLen > maxWidthMap[colIndex]) {
+                   maxWidthMap[colIndex] = cellLen;
+                 }
+               }
+             }
+           }
+       
+           // 设置每列的宽度
+           worksheet['!cols'] = Object.keys(maxWidthMap).map(colIndex => ({ width: maxWidthMap[colIndex] + 2 }));
+         }
+       
+         const workbook: XLSX.WorkBook = {
+           Sheets: { [sheetName]: worksheet },
+           SheetNames: [sheetName]
+         };
+       
+         const excelBuffer: ArrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+       
+         saveExcelFile(excelBuffer, fileName);
+       }
+       
+       function saveExcelFile(buffer: ArrayBuffer, fileName: string): void {
+         const data: Blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+         const url = window.URL.createObjectURL(data);
+         const link = document.createElement('a');
+         link.href = url;
+         link.download = fileName;
+         link.click();
+       }
+       
+       const data: DataOption[] = [
+         { name: 'AliceAliceAliceAliceAliceAlice', age: 25, gender: 'Female' },
+         { name: 'Bob', age: 30, gender: 'MaleFemaleFemaleFemaleFemaleFemaleFemale' },
+         { name: 'CharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlie', age: 35, gender: 'Male' },
+       ];
+       
+       exportToExcel(data, 'users.xlsx', 'Users', ['name', 'gender'], true);
+       
+
+
+
+
       })
       .catch((e) => {
+        console.log(e);
+
         ElMessage.info('取消下载')
       })
 
@@ -122,7 +203,7 @@ export const handler = () => {
     const chartName = chartStore.getChartName
     const chartType = chartStore.getChartType
     const tableName = columnStore.getDataSource
-    const result  =  await $fetch('/api/analyse/saveChartById', {
+    const result = await $fetch('/api/analyse/saveChartById', {
       method: 'POST',
       body: {
         id,
@@ -130,7 +211,7 @@ export const handler = () => {
         tableName,
         chartType,
         // chartConfig,
-        // dimension,
+        dimension,
         // group,
         // order,
         // filter,
@@ -144,7 +225,7 @@ export const handler = () => {
       ElMessage.error('保存失败')
     }
 
-    
+
   }
   return {
     handleClickRefresh,

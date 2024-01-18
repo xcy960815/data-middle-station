@@ -5,12 +5,12 @@
  */
 import type { ResultSetHeader } from 'mysql2';
 import { Column, BindDataSource, Mapping, DOBase } from './dobase';
-import dayjs from 'dayjs';
 import { getObjectProperties } from './common';
 
-export class ChartsMapping implements ChartsModule.ChartsMappingOption, Partial<Omit<ResultSetHeader, 'constructor'>>{
+export class ChartsMapping implements ChartsModule.ChartsMappingOption {
   @Column('affectedRows')
   affectedRows: number = 0;
+  
   // 表名
   @Column('id')
   id: number = 0;
@@ -66,17 +66,10 @@ export class ChartsMapping implements ChartsModule.ChartsMappingOption, Partial<
 }
 
 
-export class UpdateResultMapping {
-  @Column('affectedRows')
-  affectedRows: number = 0;
-}
-
 /**
  * @desc 本页面使用到的表
  */
 const CHARTNAME = 'charts';
-
-
 
 
 @BindDataSource('blog')

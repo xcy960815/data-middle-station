@@ -16,7 +16,7 @@ declare namespace ChartsModule {
    */
   type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
   
-  type ChartsMappingOption = {
+  type ChartsMappingOption = Partial<Omit<ResultSetHeader, 'constructor'>> & {
     id: number;
     chartName: string;
     tableName?: string;
