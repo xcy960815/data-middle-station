@@ -57,7 +57,7 @@ export const handler = ({ currentColumn }: HandlerParams) => {
         // 从维度拖拽到列
         const dimensionSrore = useDimensionStore();
         dimensionSrore.removeDimension(data.index);
-        data.value.dimensionChoosed = false;
+        // data.value.dimensionChoosed = false;
         columnStore.updateColumn(data.value, columnIndex);
 
         break;
@@ -75,7 +75,7 @@ export const handler = ({ currentColumn }: HandlerParams) => {
         // 从分组拖拽到列
         const groupStore = useGroupStore();
         groupStore.removeGroup(data.index);
-        data.value.groupChoosed = false;
+        // data.value.groupChoosed = false;
         columnStore.updateColumn(data.value, columnIndex);
         break;
       case 'column':

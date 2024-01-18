@@ -42,8 +42,8 @@ export const handler = () => {
                     ...item,
                     // 刚从数据库出来的时候 只有 columnName columnComment columnType 
                     // 所以到列配置的时候 需要给他加上 是否选中 属性
-                    dimensionChoosed: false,
-                    groupChoosed: false,
+                    // dimensionChoosed: false,
+                    // groupChoosed: false,
                 }
             })
             columnStore.setColumns(cloumns || [])
@@ -57,14 +57,14 @@ export const handler = () => {
     watch(() => columnStore.getDataSource, (dataSource) => {
         if (!dataSource) return
         queryTableColumns(dataSource)
-        // 如果数据源变化，清空筛选条件
-        filterStore.setFilters([])
-        // 如果数据源变化，清空排序条件
-        orderStore.setOrders([])
-        // 如果数据源变化，清空分组条件
-        groupStore.setGroups([])
-        // 如果数据源变化，清空维度条件
-        dimensionStore.setDimensions([])
+        // // 如果数据源变化，清空筛选条件
+        // filterStore.setFilters([])
+        // // 如果数据源变化，清空排序条件
+        // orderStore.setOrders([])
+        // // 如果数据源变化，清空分组条件
+        // groupStore.setGroups([])
+        // // 如果数据源变化，清空维度条件
+        // dimensionStore.setDimensions([])
     }, {
         // immediate: true
     })
@@ -124,8 +124,6 @@ export const handler = () => {
                 return ''
         }
     }
-
-
 
     /**
      * @desc 查询表格数据
@@ -187,7 +185,6 @@ export const handler = () => {
                 id
             }
         })
-     
         if (result.code === 200) {
             const chartName = result.data?.chartName
             const filter = result.data?.filter
@@ -210,8 +207,8 @@ export const handler = () => {
     }
 
     onMounted(async () => {
-         queryTableList()
+        queryTableList()
         await getChartById()
-       
+
     })
 }

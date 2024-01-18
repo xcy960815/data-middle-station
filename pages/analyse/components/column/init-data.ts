@@ -4,10 +4,13 @@ export const initData = () => {
    * @returns { (column: ColumnStore.Column) => { column__item: boolean; column__item-choosed: boolean } }
    */
   const columnClasses = computed(() => (column: ColumnStore.Column) => {
+
+    const dimensionChoosed = useDimensionStore().getDimensions.find((dimensionOption) => dimensionOption.columnName === column.columnName)
+    const groupChoosed = useGroupStore().getGroups.find((groupOption) => groupOption.columnName === column.columnName)
     return {
       column__item: true,
-      'column__item_dimension_choosed': column.dimensionChoosed,
-      'column__item_group_choosed': column.groupChoosed,
+      'column__item_dimension_choosed': dimensionChoosed,
+      'column__item_group_choosed': groupChoosed,
     };
   });
 
@@ -18,10 +21,10 @@ export const initData = () => {
    * @returns {string}
    */
   const dataSource = computed({
-    get:() => {
+    get: () => {
       return columnStore.getDataSource
     },
-    set:(val) => {
+    set: (val) => {
       columnStore.setDataSource(val)
     }
   });
@@ -39,7 +42,7 @@ export const initData = () => {
   const columnList = computed(() => {
     return columnStore.getColumns
   });
-  
+
   /**
    * @desc 当前列
    * @returns {ColumnStore.Column}

@@ -42,7 +42,8 @@
     "socket.io-client": "^4.7.1",
     "vue-server-renderer": "^2.7.14",
     "winston": "^3.10.0",
-    "winston-daily-rotate-file": "^4.7.1"
+    "winston-daily-rotate-file": "^4.7.1",
+    "xlsx": "^0.18.5"
   },
   "volta": {
     "node": "18.15.0"

@@ -221,9 +221,6 @@ export const handler = ({
    * @returns {void}
    */
   const renderTableBody = () => {
-    // console.log('页面高度',props.chartHeight);
-    // console.log('表头高度',TABLEHEADERHEIGHT);
-    // console.log('分页高度',PAGINATIONHEIGHT);
     const tbody = document.querySelector<HTMLTableSectionElement>('.table-chart table tbody');
     if (!tbody) return;
     // 清空tbody
@@ -254,7 +251,7 @@ export const handler = ({
         pageSize.value = i - 1;
         break
       }
-      
+
     }
 
 
@@ -270,7 +267,11 @@ export const handler = ({
     // console.log(document.querySelector('.table-chart table'));
   }
 
-
+  onMounted(async () => {
+    await initTableHeader()
+    await initTableData()
+    renderTableBody()
+  })
   return {
     handleEmitOrder,
   }
