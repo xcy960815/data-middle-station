@@ -138,14 +138,8 @@ export const handler = ({
    * @param idx {number} 当前数据的索引
    * @returns {string}
    */
-  const getComparedContent = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption, idx: number): string => {
-    if (tableHeaderOption.alias) {
-      return tableDataOption[tableHeaderOption.alias || ""] ? tableDataOption[tableHeaderOption.alias || ""].toString() : ''
-    } else if (tableHeaderOption.columnName) {
-      return tableDataOption[tableHeaderOption.columnName || ""] ? tableDataOption[tableHeaderOption.columnName || ""].toString() : ''
-    } else {
-      return '';
-    }
+  const getComparedContent = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption, _idx: number): string  => {
+    return tableDataOption[tableHeaderOption.alias ? tableHeaderOption.alias : tableHeaderOption.columnName ? tableHeaderOption.columnName : ""].toString();
   }
 
   /**
@@ -154,7 +148,7 @@ export const handler = ({
   watch(
     () => tableChartConfig.value.conditions,
     async () => {
-      renderTableBody()
+      renderTableBody('监听表格配置变化')
     },
     { deep: true }
   )
@@ -167,7 +161,7 @@ export const handler = ({
     async () => {
       await initTableHeader()
       await initTableData()
-      renderTableBody()
+      renderTableBody('监听数据变化')
     },
     { deep: true }
   )
@@ -178,8 +172,7 @@ export const handler = ({
   watch(
     () => props.chartHeight,
     async () => {
-      renderTableBody()
-      console.log("监听高度变化");
+      renderTableBody('监听高度变化')
     },
   )
 
@@ -219,7 +212,9 @@ export const handler = ({
    * @desc 渲染表格内容 因为要做到分页 所以要根据每页的条数来渲染 所以走的是dom操作
    * @returns {void}
    */
-  const renderTableBody = () => {
+  const renderTableBody = debounce((callFrom?: string) => {
+    // console.log("renderTableBody",callFrom);
+
     const tbody = document.querySelector<HTMLTableSectionElement>('.table-chart table tbody');
     if (!tbody) return;
     // 清空tbody
@@ -249,7 +244,7 @@ export const handler = ({
         break
       }
     }
-  }
+  }, 300)
   /**
    * @desc 点击上一页
    * @param page {number} 当前页码
@@ -264,7 +259,7 @@ export const handler = ({
       // 变更当前页码
       pageNum.value = currentPageNum
     }
-    renderTableBody()
+    renderTableBody('点击上一页')
   }
 
   /**
@@ -281,15 +276,15 @@ export const handler = ({
       // 变更当前页码
       pageNum.value = currentPageNum
     }
-    renderTableBody()
+    renderTableBody('点击下一页')
   }
 
   onMounted(async () => {
     await initTableHeader()
     await initTableData()
-    renderTableBody()
+    renderTableBody('onMounted')
   })
-  
+
   return {
     handleEmitOrder,
     handlePreviousPage,
