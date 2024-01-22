@@ -29,11 +29,12 @@ const {
   data,
   chartType
 } = initData()
-const { handleRenderChartStart, handleRenderChartEnd, } = handler({
-  chartWidth,
-  chartHeight,
-  chartResizeObserver
-})
+const { handleRenderChartStart, handleRenderChartEnd }
+  = handler({
+    chartWidth,
+    chartHeight,
+    chartResizeObserver
+  })
 onMounted(() => {
   // renderChart()
 })

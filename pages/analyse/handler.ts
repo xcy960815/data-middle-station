@@ -54,17 +54,21 @@ export const handler = () => {
     /**
      * @desc 监听表格数据源变化
      */
-    watch(() => columnStore.getDataSource, (dataSource) => {
-        if (!dataSource) return
-        queryTableColumns(dataSource)
-        // // 如果数据源变化，清空筛选条件
-        // filterStore.setFilters([])
-        // // 如果数据源变化，清空排序条件
-        // orderStore.setOrders([])
-        // // 如果数据源变化，清空分组条件
-        // groupStore.setGroups([])
-        // // 如果数据源变化，清空维度条件
-        // dimensionStore.setDimensions([])
+    watch(() => columnStore.getDataSource, (newDataSource, oldDataSource) => {
+        if (!newDataSource) return
+        queryTableColumns(newDataSource)
+        if (oldDataSource && oldDataSource !== newDataSource) {
+            // 如果手动变更数据源，清空图表数据
+            // 如果数据源变化，清空筛选条件
+            filterStore.setFilters([])
+            // 如果数据源变化，清空排序条件
+            orderStore.setOrders([])
+            // 如果数据源变化，清空分组条件
+            groupStore.setGroups([])
+            // 如果数据源变化，清空维度条件
+            dimensionStore.setDimensions([])
+        }
+
     }, {
         // immediate: true
     })

@@ -38,8 +38,7 @@
       <el-icon :size="12" class="cursor-pointer">
         <ArrowLeft @click="handlePreviousPage" />
       </el-icon>
-      <!-- <input class="pageInput" type="number" @change="changePageNum" :value="Number(pageNum) + 1" min="1"
-      :max="Math.ceil(rawTableData.length / rowCountPerPage)" /> -->
+      <input class="page-input" type="number" :value="pageNum" min="1" :max="totalPage" />
       <!-- 下一页 -->
       <el-icon :size="12" class="cursor-pointer">
         <ArrowRight @click="handleNextPage" />
@@ -191,9 +190,22 @@ const {
 
   // 分页样式
   .pagination {
+    margin-top: 5px;
     text-align: right;
     font-size: 12px;
     color: rgb(85, 85, 85);
+    display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    .page-input {
+      width: 35px;
+      height: 20px;
+      color: #666;
+      text-align: center;
+      border: 1px solid #888;
+      border-radius: 3px;
+     
+    }
   }
 }
 </style>
