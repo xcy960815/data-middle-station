@@ -31,23 +31,23 @@
       <span class="information-container">第{{ startIndex }}-{{ endIndex }}条</span>
       <span class="information2-container">共{{ totalPage }}页{{ total }}条</span>
       <!-- 回到第一页 -->
-      <!-- <el-icon :size="12">
-        <DArrowLeft />
-      </el-icon> -->
+      <el-icon :size="12" class="cursor-pointer">
+        <DArrowLeft @click="handlePreviousPage(1)" />
+      </el-icon>
       <!-- 上一页 -->
-      <!-- <el-icon :size="12">
-        <ArrowLeft />
-      </el-icon> -->
+      <el-icon :size="12" class="cursor-pointer">
+        <ArrowLeft @click="handlePreviousPage" />
+      </el-icon>
       <!-- <input class="pageInput" type="number" @change="changePageNum" :value="Number(pageNum) + 1" min="1"
       :max="Math.ceil(rawTableData.length / rowCountPerPage)" /> -->
       <!-- 下一页 -->
-      <!-- <el-icon :size="12">
-        <ArrowRight />
-      </el-icon> -->
+      <el-icon :size="12" class="cursor-pointer">
+        <ArrowRight @click="handleNextPage" />
+      </el-icon>
       <!-- 最后一页 -->
-      <!-- <el-icon :size="12">
-        <DArrowRight />
-      </el-icon> -->
+      <el-icon :size="12" class="cursor-pointer">
+        <DArrowRight @click="handleNextPage(totalPage)" />
+      </el-icon>
     </div>
   </div>
 </template>
@@ -96,7 +96,19 @@ const {
 
 const {
   handleEmitOrder,
-} = tableChartHandler({ TABLEHEADERHEIGHT, PAGINATIONHEIGHT, pageSize, pageNum, props, tableHeaderState, tableDataState, tableChartConfig });
+  handlePreviousPage,
+  handleNextPage
+} = tableChartHandler({
+  TABLEHEADERHEIGHT,
+  PAGINATIONHEIGHT,
+  pageSize,
+  pageNum,
+  totalPage,
+  props,
+  tableHeaderState,
+  tableDataState,
+  tableChartConfig
+});
 
 </script>
 

@@ -1,4 +1,4 @@
-import { render } from 'vue'
+
 /**
  *@desc chart-table 组件的逻辑处理
  *@param {TableChart.HandlerParams} params
@@ -7,6 +7,7 @@ export const handler = ({
   TABLEHEADERHEIGHT,
   PAGINATIONHEIGHT,
   pageNum,
+  totalPage,
   pageSize,
   props,
   tableHeaderState,
@@ -147,8 +148,6 @@ export const handler = ({
     }
   }
 
-
-
   /**
    * @desc 监听表格配置变化
    */
@@ -180,7 +179,7 @@ export const handler = ({
     () => props.chartHeight,
     async () => {
       renderTableBody()
-      // console.log('高度变化了');
+      console.log("监听高度变化");
     },
   )
 
@@ -211,7 +210,7 @@ export const handler = ({
    */
   const initTableData = () => {
     return new Promise<void>((resolve) => {
-      tableDataState.tableData = props.data//.slice((pageNum.value - 1) * pageSize.value, pageNum.value * pageSize.value)
+      tableDataState.tableData = props.data
       resolve();
     })
   }
@@ -241,8 +240,6 @@ export const handler = ({
       tbody?.appendChild(tr);
       // 获取上一次的高度
       const tableHeight = tbody?.offsetHeight!;
-      // console.log("当前表格高度",tableHeight,i);
-
       // 先判断 再添加
       if (tableHeight > props.chartHeight - TABLEHEADERHEIGHT - PAGINATIONHEIGHT - 10) {
         // console.log("当前页展示" + (i-1) + '条数据');
@@ -251,20 +248,40 @@ export const handler = ({
         pageSize.value = i - 1;
         break
       }
-
     }
+  }
+  /**
+   * @desc 点击上一页
+   * @param page {number} 当前页码
+   */
+  const handlePreviousPage = (page?: number) => {
+    if (page === 1) {
+      tableDataState.tableData = props.data.slice(0, pageSize.value)
+      pageNum.value = page
+    } else {
+      const currentPageNum = pageNum.value - 1
+      tableDataState.tableData = props.data.slice((currentPageNum - 1) * pageSize.value, currentPageNum * pageSize.value)
+      // 变更当前页码
+      pageNum.value = currentPageNum
+    }
+    renderTableBody()
+  }
 
-
-    // const tbody = h('tbody', {}, [...tableDataState.tableData.map((tableDataOption, idx) => {
-    //   return h('tr', {}, [...tableHeaderState.tableHeader.map((tableHeaderOption) => {
-    //     return h('td', {
-    //       class: getComparedClass(tableDataOption, tableHeaderOption),
-    //       style: getComparedStyle(tableDataOption, tableHeaderOption)
-    //     }, [getComparedContent(tableDataOption, tableHeaderOption, idx)])
-    //   })])
-    // })])
-    // render(tbody, document.querySelector('.table-chart table')!)
-    // console.log(document.querySelector('.table-chart table'));
+  /**
+   * @desc 点击下一页
+   * @param page {number} 当前页码
+   */
+  const handleNextPage = (page?: number) => {
+    if (page && page === totalPage.value) {
+      tableDataState.tableData = props.data.slice((page - 1) * pageSize.value)
+      pageNum.value = page
+    } else {
+      const currentPageNum = pageNum.value + 1
+      tableDataState.tableData = props.data.slice((currentPageNum - 1) * pageSize.value, currentPageNum * pageSize.value)
+      // 变更当前页码
+      pageNum.value = currentPageNum
+    }
+    renderTableBody()
   }
 
   onMounted(async () => {
@@ -272,7 +289,10 @@ export const handler = ({
     await initTableData()
     renderTableBody()
   })
+  
   return {
     handleEmitOrder,
+    handlePreviousPage,
+    handleNextPage
   }
 }

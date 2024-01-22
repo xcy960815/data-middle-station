@@ -107,7 +107,7 @@ export const handler = () => {
 
        type DataOption = Record<string, string | number>
        
-       function exportToExcel(data: DataOption[], fileName: string, sheetName: string, columns?: (keyof DataOption)[], autoWidth: boolean = true): void {
+       function exportToExcel(data: DataOption[], fileName: string, sheetName: string, columns?: (keyof DataOption)[]): void {
          let worksheet: XLSX.WorkSheet | null = null;
          if (Array.isArray(columns) && columns.length > 0) {
            const filteredData = data.map((item: DataOption) => {
@@ -123,8 +123,7 @@ export const handler = () => {
            worksheet = XLSX.utils.json_to_sheet(data);
          }
        
-         if (autoWidth) {
-           const maxWidthMap = {} as Record<string, number>;
+         const maxWidthMap = {} as Record<string, number>;
        
            // 计算每列的最大宽度
            for (let k in worksheet) {
@@ -145,7 +144,6 @@ export const handler = () => {
        
            // 设置每列的宽度
            worksheet['!cols'] = Object.keys(maxWidthMap).map(colIndex => ({ width: maxWidthMap[colIndex] + 2 }));
-         }
        
          const workbook: XLSX.WorkBook = {
            Sheets: { [sheetName]: worksheet },
@@ -166,21 +164,13 @@ export const handler = () => {
          link.click();
        }
        
-       const data: DataOption[] = [
-         { name: 'AliceAliceAliceAliceAliceAlice', age: 25, gender: 'Female' },
-         { name: 'Bob', age: 30, gender: 'MaleFemaleFemaleFemaleFemaleFemaleFemale' },
-         { name: 'CharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlieCharlie', age: 35, gender: 'Male' },
-       ];
        
-       exportToExcel(data, 'users.xlsx', 'Users', ['name', 'gender'], true);
        
-
-
-
+       exportToExcel(chartStore.getChartData, '文件名.xlsx', '文件名', selectFeildsState.selectFeilds,);
+      
 
       })
       .catch((e) => {
-        console.log(e);
 
         ElMessage.info('取消下载')
       })

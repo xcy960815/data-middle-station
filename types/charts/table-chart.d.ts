@@ -51,6 +51,7 @@ declare namespace TableChart {
     TABLEHEADERHEIGHT: number
     PAGINATIONHEIGHT: number
     pageNum: PageNum
+    totalPage: TotalPage
     pageSize: PageSize
     props: Props
     tableHeaderState: TableHeaderState

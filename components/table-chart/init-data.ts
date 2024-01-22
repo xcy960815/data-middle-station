@@ -4,7 +4,7 @@
  * @param {TableChart.InitDataParams} props
  * @returns {TableChart.InitDataReturn}
  */
-export const initData = ({ data }: TableChart.InitDataParams) => {
+export const initData = (props: TableChart.InitDataParams) => {
   /**
    * @desc 表头高度
    */
@@ -13,6 +13,7 @@ export const initData = ({ data }: TableChart.InitDataParams) => {
    * @desc 分页器高度
    */
   const PAGINATIONHEIGHT = 25
+  
   const chartsConfigStore = useChartConfigStore()
   /**
    * @desc 当前页码
@@ -30,7 +31,7 @@ export const initData = ({ data }: TableChart.InitDataParams) => {
    * @desc 总条数
    * @type {TableChart.Total}
    */
-  const total: TableChart.Total = computed(() => data.length)
+  const total: TableChart.Total = computed(() => props.data.length)
 
   /**
    * @desc 条数开始索引
@@ -81,7 +82,7 @@ export const initData = ({ data }: TableChart.InitDataParams) => {
    * @desc 获取表头样式
    */
   const getTableHeaderClass = computed(() => (item: TableChart.TableHeaderOption) => {
-    return ['table-header-content',item.orderType == 'desc' ? 'icon-desc' : item.orderType == 'asc' ? 'icon-asc' : ''] 
+    return ['table-header-content', item.orderType == 'desc' ? 'icon-desc' : item.orderType == 'asc' ? 'icon-asc' : '']
   })
 
   return {
