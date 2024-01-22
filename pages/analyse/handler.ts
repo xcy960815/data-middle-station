@@ -55,10 +55,12 @@ export const handler = () => {
      * @desc 监听表格数据源变化
      */
     watch(() => columnStore.getDataSource, (newDataSource, oldDataSource) => {
+
         if (!newDataSource) return
         queryTableColumns(newDataSource)
-        if (oldDataSource && oldDataSource !== newDataSource) {
-            // 如果手动变更数据源，清空图表数据
+        // 如果手动变更数据源，清空图表数据
+        if (oldDataSource) {
+
             // 如果数据源变化，清空筛选条件
             filterStore.setFilters([])
             // 如果数据源变化，清空排序条件
