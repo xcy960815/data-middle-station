@@ -37,15 +37,7 @@ export const handler = () => {
             }
         })
         if (result.code === 200) {
-            const cloumns = result.data?.map((item) => {
-                return {
-                    ...item,
-                    // 刚从数据库出来的时候 只有 columnName columnComment columnType 
-                    // 所以到列配置的时候 需要给他加上 是否选中 属性
-                    // dimensionChoosed: false,
-                    // groupChoosed: false,
-                }
-            })
+            const cloumns = result.data
             columnStore.setColumns(cloumns || [])
         } else {
             columnStore.setDataSourceOptions([])
@@ -60,7 +52,6 @@ export const handler = () => {
         queryTableColumns(newDataSource)
         // 如果手动变更数据源，清空图表数据
         if (oldDataSource) {
-
             // 如果数据源变化，清空筛选条件
             filterStore.setFilters([])
             // 如果数据源变化，清空排序条件
