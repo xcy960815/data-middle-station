@@ -33,7 +33,7 @@ export const handler = ({ currentColumn }: HandlerParams) => {
    * @param {DragEvent} event
    */
   const dragendHandler = (event: DragEvent) => {
-    // 阻止默认事件
+    // 阻止默认事件 防止拖拽结束后触发click事件 还有就是 div p tr td 标签默认不允许进
     event.preventDefault();
   };
   /**
