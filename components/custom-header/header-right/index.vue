@@ -12,9 +12,11 @@
       </el-tooltip>
       <!-- 主题 -->
       <el-tooltip effect="dark" content="主题" placement="bottom">
-        <span class="tooltip-sapn">
-          <Icon icon="carbon:theme" color="white" width="30" height="30" />
-        </span>
+        <el-select v-model="theme" class="w-[80px]">
+          <el-option label="高亮" value="light"></el-option>
+          <el-option lable="暗黑" value="dark"></el-option>
+          <el-option label="自动" value="auto"></el-option>
+        </el-select>
       </el-tooltip>
       <!-- 用户信息 -->
       <el-dropdown size="large" @command="dropDownClick">
@@ -38,9 +40,9 @@
 import { initData } from "./init-data"
 import { handler } from "./handler"
 
-const { THEME_KEY, fullscreen, userInfo, theme } = initData()
+const { mediaQuery, theme, THEME_KEY, fullscreen, userInfo, } = initData()
 
-const { handleFullscreen, dropDownClick } = handler({ fullscreen, theme, THEME_KEY })
+const { handleFullscreen, dropDownClick } = handler({ fullscreen, theme, THEME_KEY, mediaQuery })
 
 </script>
 <style lang="less" scoped>
