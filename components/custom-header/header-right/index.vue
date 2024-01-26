@@ -11,10 +11,10 @@
         </span>
       </el-tooltip>
       <!-- 主题 -->
-      <el-tooltip effect="dark" content="主题" placement="bottom">
-        <el-select v-model="theme" class="w-[80px]">
+      <el-tooltip effect="dark" content="设置主题" placement="bottom">
+        <el-select v-model="theme" class="w-[75px] mr-1">
           <el-option label="高亮" value="light"></el-option>
-          <el-option lable="暗黑" value="dark"></el-option>
+          <el-option label="暗黑" value="dark"></el-option>
           <el-option label="自动" value="auto"></el-option>
         </el-select>
       </el-tooltip>
