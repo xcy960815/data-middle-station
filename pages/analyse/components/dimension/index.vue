@@ -11,7 +11,7 @@
     >
       <div
         data-action="drag"
-        class="dimension__item"
+        class="dimension__item my-1"
         v-for="(item, index) in dimensionList"
         :key="index"
         draggable="true"
@@ -81,8 +81,6 @@ const handleCreateComputedField = () => {
     overflow: auto;
     .dimension__item {
       cursor: move;
-      height: 30px;
-      line-height: 30px;
       position: relative;
     }
   }

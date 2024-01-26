@@ -4,12 +4,13 @@ type HandlerParams = {
     fullscreen: Ref<boolean>;
     theme: Ref<Theme>;
     THEME_KEY: string;
+    mediaQuery: Ref<MediaQueryList | undefined>
 }
 
 /**
  * @desc 操作逻辑
  */
-export const handler = ({ fullscreen, theme, THEME_KEY }: HandlerParams) => {
+export const handler = ({ fullscreen, theme, THEME_KEY, mediaQuery }: HandlerParams) => {
 
     /**
      * @desc 展开全屏和关闭全屏
@@ -95,17 +96,41 @@ export const handler = ({ fullscreen, theme, THEME_KEY }: HandlerParams) => {
     };
 
 
-    watchEffect(() => {
-        // console.log('fullscreen---fullscreen');
-        // document.body.dataset.theme = theme.value;
+    /**
+     * @desc 根据系统主题切换
+     */
+    const fllowSystemTheme = () => {
+        const theme = mediaQuery.value?.matches ? 'dark' : 'light';
+        document.documentElement.className = theme;
+    }
+
+    /**
+     * @desc 监听主题变化
+     */
+    watch(() => theme.value, () => {
+        if (process.client) {
+            localStorage.setItem(THEME_KEY, theme.value);
+            if (theme.value === 'auto') {
+                fllowSystemTheme();
+                // 根据系统主题切换
+                mediaQuery.value?.addEventListener('change', fllowSystemTheme);
+            } else {
+                // 给html标签添加class
+                document.documentElement.className = theme.value;
+                // 移除监听
+                mediaQuery.value?.removeEventListener('change', fllowSystemTheme);
+            }
+        }
     });
 
     onMounted(() => {
         handleWathFullscreen();
+        fllowSystemTheme();
     });
 
     return {
         handleFullscreen,
-        dropDownClick
+        dropDownClick,
+
     }
 }
