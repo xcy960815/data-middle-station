@@ -26,9 +26,20 @@ const props = defineProps({
       stack: string;
     }>,
     required: true,
+    default: () => ({
+      url: '',
+      statusCode: 404,
+      statusMessage: 'Not Found',
+      message: 'Not Found',
+      stack: '',
+    }),
   },
 });
 const { error } = toRefs(props);
+
+onMounted(()=>{
+  console.log(error.value)
+})
 </script>
 
 <style scoped lang="less">

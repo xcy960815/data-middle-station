@@ -9,12 +9,12 @@
 </template>
 
 <script lang="ts" setup>
-import UserInfo from './user-info/index.vue';
+import UserInfo from './user-info/index.client.vue';
 
 </script>
 <style lang="less" scoped>
 .header {
-  background-color: #001529;
+  // background-color: #001529;
   height: 50px;
   min-height: 50px;
   width: 100%;

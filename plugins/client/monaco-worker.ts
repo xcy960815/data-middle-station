@@ -7,6 +7,7 @@ import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
+
 /**
  * @desc  加载monaco-editor的worker
  * @see https://fnlearner.github.io/2022/01/monaco-editor/
