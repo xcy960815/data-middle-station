@@ -1,0 +1,29 @@
+@import "theme-variables.scss";
+
+// 当前的主题
+$currentTheme: "light";
+
+@mixin useTheme() {
+    @each $key, $value in $themes {
+        $currentTheme: $key !global;
+
+        html[data-theme="#{$key}"] & {
+            @content;
+        }
+    }
+}
+
+@function getVar($paramName) {
+    $themeMap: map-get($themes, $currentTheme );
+    @return map-get($themeMap, $paramName);
+}
+
+// // 使用方式
+// body {
+//     // 通用样式
+//     width: 100%;
+//     height: 100%;
+//     @include useTheme {
+//         background-color: getVar('bgColor');
+//     }
+// }

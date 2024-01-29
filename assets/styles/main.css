@@ -1,4 +1,4 @@
-/* Path: assets/main.css */
+/* Path: assets/style/main.css */
 /* 引入element-plus css样式 */
 @import 'element-plus/dist/index.css';
 /* @import '../../components/context-menu/themes/default/index.less'; */
@@ -20,3 +20,7 @@ body {
   height: 100%;
   width: 100%;
 }
+
+
+
+

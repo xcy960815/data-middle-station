@@ -14,7 +14,7 @@ const { charSet, fontColors, fontSizeMultiplier, setIntervalId } = initData()
 handler({ charSet, fontColors, fontSizeMultiplier, setIntervalId })
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 #cvs {
   width: 100%;
   height: 100%;

@@ -95,13 +95,23 @@ export const handler = ({ fullscreen, theme, THEME_KEY, mediaQuery }: HandlerPar
         }
     };
 
+    /**
+     * @desc 设置主题
+     * @param {Theme} theme
+     */
+    const setTheme = (theme: Theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem(THEME_KEY, theme);
+    }
+
 
     /**
      * @desc 根据系统主题切换
      */
     const fllowSystemTheme = () => {
         const theme = mediaQuery.value?.matches ? 'dark' : 'light';
-        document.documentElement.className = theme;
+        // document.documentElement.className = theme;
+        setTheme(theme);
     }
 
     /**
@@ -109,14 +119,15 @@ export const handler = ({ fullscreen, theme, THEME_KEY, mediaQuery }: HandlerPar
      */
     watch(() => theme.value, () => {
         if (process.client) {
-            localStorage.setItem(THEME_KEY, theme.value);
+            // localStorage.setItem(THEME_KEY, theme.value);
             if (theme.value === 'auto') {
                 fllowSystemTheme();
                 // 根据系统主题切换
                 mediaQuery.value?.addEventListener('change', fllowSystemTheme);
             } else {
                 // 给html标签添加class
-                document.documentElement.className = theme.value;
+                // document.documentElement.className = theme.value;
+                setTheme(theme.value);
                 // 移除监听
                 mediaQuery.value?.removeEventListener('change', fllowSystemTheme);
             }
@@ -131,6 +142,5 @@ export const handler = ({ fullscreen, theme, THEME_KEY, mediaQuery }: HandlerPar
     return {
         handleFullscreen,
         dropDownClick,
-
     }
 }
