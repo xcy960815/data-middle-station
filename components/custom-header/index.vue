@@ -1,6 +1,6 @@
 <template>
   <div class="header pl-5 pr-5">
-    <div class="header-left">
+    <div class="header-left cursor-pointer" @click="handleClickTitle">
       <h4>blog-home-nuxt</h4>
     </div>
     <div class="flex-1"></div>
@@ -10,6 +10,10 @@
 
 <script lang="ts" setup>
 import HeaderRight from './header-right/index.vue';
+const router = useRouter();
+const handleClickTitle = () => {
+  router.push('/homepage');
+};
 
 </script>
 <style lang="less" scoped>
