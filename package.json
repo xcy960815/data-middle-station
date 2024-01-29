@@ -10,7 +10,9 @@
   },
   "overrides": {
     "vue": "latest",
-    "rollup": "npm:@rollup/wasm-node"
+    "vite": {
+      "rollup": "npm:@rollup/wasm-node"
+    }
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
