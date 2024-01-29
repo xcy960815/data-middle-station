@@ -17,8 +17,11 @@ export default defineNuxtConfig({
   },
   css: [
     // 加载全局 css
-    '~/assets/css/main.css'
+    '~/assets/css/main.css',
+    // 加载全局 less
+    '~/assets/less/theme.scss',
   ],
+
   postcss: {
     plugins: {
       tailwindcss: {},
@@ -86,6 +89,7 @@ export default defineNuxtConfig({
     //   mode: 'all'
     // }
   ],
+  
   nitro: {
     esbuild: {
       options: {

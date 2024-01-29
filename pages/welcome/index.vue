@@ -1,11 +1,15 @@
 <template>
-  <!-- 欢迎页面 -->
+   <NuxtLayout :name="layoutName">
+    <!-- 欢迎页面 -->
   <canvas id="cvs"></canvas>
+  </NuxtLayout>
+  
 </template>
 
 <script lang="ts" setup>
 import { initData } from './init-data'
 import { handler } from './handler'
+const layoutName = 'welcome'
 const { charSet, fontColors, fontSizeMultiplier, setIntervalId } = initData()
 handler({ charSet, fontColors, fontSizeMultiplier, setIntervalId })
 </script>

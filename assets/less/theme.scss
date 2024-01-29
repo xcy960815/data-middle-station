@@ -1,0 +1,31 @@
+$thmems: (
+    light: (
+        bgColor: "white",
+        textColor: "black"
+    ),
+
+    dark:(
+        bgColor: "black",
+        textColor: "white",
+    )
+);
+
+
+
+$currentTheme: "light";
+
+@mixin useTheme($theme) {
+    @each $key, $value in $themes {
+        $currentTheme: $key !global;
+
+        html[data-theme="#{$key}"] & {
+            @content;
+        }
+    }
+}
+
+
+@function getVar($paramName) {
+    $thmemMap: map-get($themes, $currentTheme );
+    @return map-get($thmemMap, $paramName);
+}

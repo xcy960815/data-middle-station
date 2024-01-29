@@ -42,7 +42,9 @@ export const handler = ({ container }: HandlerParams) => {
     })
 
     onUnmounted(() => {
-        container.value!.onmousemove = null
+        // container.value.onmousemove = null
+        // console.log("container.value",container.value);
+        
     })
     return {
 
