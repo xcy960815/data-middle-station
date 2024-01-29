@@ -1,15 +1,29 @@
-
-
 // 主题通用配色
 
 $themes: (
-    light: (
+    light: ( 
+        // 背景颜色
         bgColor: #fff,
-        textColor: #000
+        // 文字颜色
+        textColor: #000,
+        // 阴影颜色
+        shadowColor: rgba(0, 0, 0, 0.3),
+        // border 颜色
+        borderColor: #eaeaea,
+        // card 背景颜色
+        // cardBgColor: #fff,
     ),
 
-    dark:(
+    dark:( 
+        // 背景颜色
         bgColor: #000,
+        // 文字颜色
         textColor: #fff,
+        // 阴影颜色
+        shadowColor: rgba(255, 255, 255, 1),
+        // border 颜色
+        borderColor: #333,
+        // card 背景颜色
+        // cardBgColor: #000,
     )
 );

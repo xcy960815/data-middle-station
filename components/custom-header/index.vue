@@ -1,5 +1,5 @@
 <template>
-  <div class="header h-[50px] min-h-[50px] w-full flex items-center box-border shadow-md pl-5 pr-5">
+  <div class="header h-[50px] min-h-[50px] w-full flex items-center box-border pl-5 pr-5">
     <div class="header-left flex items-center cursor-pointer" @click="handleClickTitle">
       <h4 class="title">blog-home-nuxt</h4>
     </div>
@@ -18,10 +18,12 @@ const handleClickTitle = () => {
 </script>
 <style lang="scss" scoped>
 .header {
+  z-index: 1;
   @include useTheme {
     background-color: getVar('bgColor');
+    // 阴影颜色
+    box-shadow: 0 0 10px 0 getVar('shadowColor');
   }
-
   .title {
     @include useTheme {
       color: getVar('textColor');

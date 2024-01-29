@@ -67,11 +67,11 @@ const initChart = () => {
   })
 
   const fields = props.yAxisFields.map(
-    (item) => item.alias || item.name
+    (item) => item.alias || item.columnName
   )
 
 
-  
+
   const intervalChart = chart
     .interval()
     .data({
@@ -93,7 +93,7 @@ const initChart = () => {
     })
     .encode(
       'x',
-      props.xAxisFields.map((item) => item.name)
+      props.xAxisFields.map((item) => item.alias || item.columnName)
     )
     .encode('y', 'value')
     .encode('color', 'type')
@@ -187,4 +187,4 @@ watch(
   }
 )
 </script>
-<style lang="less" scoped></style>
+<style lang="scss" scoped></style>

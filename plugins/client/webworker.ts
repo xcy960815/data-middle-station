@@ -45,7 +45,6 @@ export class Webworker {
     worker.post = () => {
       return new Promise((resolve, reject) => {
         worker.onmessage = (event) => {
-
           URL.revokeObjectURL(objectURL);
           resolve(event.data);
         };

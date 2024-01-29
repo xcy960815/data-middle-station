@@ -71,7 +71,7 @@ const handleOrderEmit = () => {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .tag-name {
   position: relative;
   padding: 0 5px 0 5px;
