@@ -16,13 +16,14 @@ const { } = handler({ container })
 
 <style scoped lang="scss">
 .homepage-container {
-    background-color: #555;
+    @include useTheme {
+        background-color: getVar('bgColor');
+    }
     position: relative;
     padding: 1rem;
     display: grid;
     grid-gap: 20px;
     grid-template-columns: repeat(12, minmax(250px, 1fr));
-    /* 使用auto-fit和minmax()函数 */
     .card {
         aspect-ratio: 4 / 3;
     }

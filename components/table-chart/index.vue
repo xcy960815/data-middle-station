@@ -111,7 +111,7 @@ const {
 
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 .table-chart {
 
   // 表格样式

@@ -1,5 +1,5 @@
 <template>
-    <div class="card" @click="handleClickCard" :title="'访问次数' + visits">
+    <div class="card relative w-[245px] h-[180px] cursor-pointer" @click="handleClickCard" :title="'访问次数' + visits">
         <div class="card-inset">
             <div class="card-title">{{ chartName }}</div>
             <div class="create-info">
@@ -51,11 +51,7 @@ const handleClickCard = () => {
 
 <style scoped lang="scss">
 .card {
-    position: relative;
     overflow: hidden;
-    width: 245px;
-    height: 180px;
-    cursor: pointer;
     font-family: 'Microsoft YaHei';
     border-radius: 10px;
     z-index: 1;
@@ -80,6 +76,9 @@ const handleClickCard = () => {
         background: #ccc;
         border-radius: inherit;
         z-index: 3;
+        @include useTheme {
+            // background: getVar('bgColor');
+        }
     }
 
     // 标题
