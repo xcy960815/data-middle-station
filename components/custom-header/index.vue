@@ -17,11 +17,11 @@ const handleClickTitle = () => {
 
 </script>
 <style lang="scss" scoped>
-@import "@/assets/styles/theme-util.scss";
 .header {
   @include useTheme {
     background-color: getVar('bgColor');
   }
+
   .title {
     @include useTheme {
       color: getVar('textColor');

@@ -89,7 +89,16 @@ export default defineNuxtConfig({
     //   mode: 'all'
     // }
   ],
-  
+  vite:{
+    css:{
+      preprocessorOptions:{
+        scss:{
+          // 引入全局scss 变量 
+          additionalData:`@import "./assets/styles/theme-util.scss";`
+        }
+      }
+    },
+  },
   nitro: {
     esbuild: {
       options: {

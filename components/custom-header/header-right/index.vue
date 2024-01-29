@@ -4,10 +4,10 @@
       <!-- 全屏退出全屏 -->
       <el-tooltip effect="dark" :content="fullscreen ? `退出全屏` : `全屏`" placement="bottom">
         <span @click="handleFullscreen" class="tooltip-sapn fullscreen-tooltip">
-          <Icon v-if="!fullscreen" icon="material-symbols:pinch-zoom-out-sharp" color="white" width="30" height="30"
-            :rotate="2" :horizontalFlip="true" :verticalFlip="true" />
-          <Icon v-if="fullscreen" icon="material-symbols:pinch-zoom-in-sharp" color="white" width="30" height="30"
-            :rotate="2" :horizontalFlip="true" :verticalFlip="true" />
+          <Icon v-if="!fullscreen" icon="material-symbols:pinch-zoom-out-sharp" class="icon-pinch-zoom-out-sharp"
+            width="30" height="30" :rotate="2" :horizontalFlip="true" :verticalFlip="true" />
+          <Icon v-if="fullscreen" icon="material-symbols:pinch-zoom-in-sharp" class="icon-pinch-zoom-in-sharp" width="30"
+            height="30" :rotate="2" :horizontalFlip="true" :verticalFlip="true" />
         </span>
       </el-tooltip>
       <!-- 主题 -->
@@ -39,13 +39,10 @@
 <script lang="ts" setup>
 import { initData } from "./init-data"
 import { handler } from "./handler"
-
 const { mediaQuery, theme, THEME_KEY, fullscreen, userInfo, } = initData()
-
 const { handleFullscreen, dropDownClick } = handler({ fullscreen, theme, THEME_KEY, mediaQuery })
-
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .user-info {
   height: 100%;
   display: flex;
@@ -57,6 +54,14 @@ const { handleFullscreen, dropDownClick } = handler({ fullscreen, theme, THEME_K
     font-size: 24px;
     color: #fff;
   }
+
+  .icon-pinch-zoom-out-sharp,
+  .icon-pinch-zoom-in-sharp {
+    @include useTheme {
+      color: getVar('textColor');
+    }
+  }
+
 
   .tooltip-sapn {
     cursor: pointer;
