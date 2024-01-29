@@ -17,9 +17,9 @@ export default defineNuxtConfig({
   },
   css: [
     // 加载全局 css
-    '~/assets/css/main.css',
-    // 加载全局 less
-    '~/assets/less/theme.scss',
+    '~/assets/styles/main.css',
+    // 加载全局 scss
+    // '~/assets/styles/theme-util.scss',
   ],
 
   postcss: {

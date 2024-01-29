@@ -14,5 +14,5 @@ import Content from './components/content/index.vue'
 const layoutName = 'homepage'
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 </style>

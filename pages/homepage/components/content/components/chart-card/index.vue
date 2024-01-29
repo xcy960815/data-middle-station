@@ -49,7 +49,7 @@ const handleClickCard = () => {
 
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 .card {
     position: relative;
     overflow: hidden;

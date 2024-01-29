@@ -1,17 +1,18 @@
 /** @type {import('tailwindcss').Config} */
-import type { Config } from 'tailwindcss';
+import type { Config as TailwindcssConfig } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
 import colors from 'tailwindcss/colors';
 /**
  * @desc TailwindCSS 配置文件
  */
-export default <Partial<Config>>{
+export default <Partial<TailwindcssConfig>>{
   content: [
     './components/**/*.{vue,js,ts}',
     './layouts/**/*.vue',
     './pages/**/*.vue',
     './plugins/**/*.{js,ts}',
     './app.vue',
+    "./error.vue",
   ],
   theme: {
     extend: {
