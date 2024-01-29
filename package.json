@@ -9,7 +9,8 @@
     "postinstall": "nuxt prepare"
   },
   "overrides": {
-    "vue": "latest"
+    "vue": "latest",
+    "rollup": "npm:@rollup/wasm-node"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
