@@ -3,7 +3,9 @@
  * @desc 左侧列字段
  */
 declare namespace OrderStore {
+  
   type OrderKey = 'order'
+
   type OrderType = 'asc' | 'desc' | 'default'
   /**
    * @desc 左侧列字段

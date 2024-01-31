@@ -2,6 +2,8 @@
  * @desc 表格的dao层
  */
 import { Column, BindDataSource, Mapping, DOBase } from './dobase';
+import {toHump} from "./utils"
+
 
 export class TableDaoMapping implements TableInfoModule.TableListOption, TableInfoModule.TableColumnOption {
   // 表名
@@ -9,7 +11,9 @@ export class TableDaoMapping implements TableInfoModule.TableListOption, TableIn
   tableName: string = '';
   // 列名
   @Column('column_name')
-  columnName: string = '';
+  columnName(value:string) {
+    return toHump(value)
+  }
   // 列类型
   @Column('column_type')
   columnType: string = '';

@@ -1,32 +1,28 @@
 <template>
-  <el-popover class="chart-tag relative" placement="bottom" trigger="click">
+  <el-popover class="chart-selecter relative" :visible="selecterVisible" placement="bottom" width="200px">
     <template #reference>
-      <div class="tag-name">
-        <span>{{ name }}</span>
-        <template v-if="isOrder">
-          <el-icon @click="handleOrderEmit" class="cursor-pointer" :size="14">
-            <CaretTop v-if="orderType === 'asc'" />
-            <CaretBottom v-else />
-          </el-icon>
-        </template>
-      </div>
+      <span @click="handleClickTag" class="tag-name">{{ name }}</span>
+    </template>
+    <template v-if="isOrder">
+      <el-icon class="cursor-pointer" :size="14">
+        <CaretTop v-if="orderType === 'asc'" />
+        <CaretBottom v-if="orderType === 'desc'" />
+      </el-icon>
     </template>
     <template v-if="isDimension">dimension</template>
     <template v-if="isGroup">group</template>
     <template v-if="isOrder">order</template>
-    <template v-if="isFilter">filter</template>
+    <template v-if="isFilter">
+      <!--  :filterType="filterType" :filterValue="filterValue" -->
+      <filter-selecter v-bind="$attrs"
+        v-model:selecterVisible="selecterVisible"></filter-selecter>
+    </template>
   </el-popover>
 </template>
 
 <script lang="ts" setup>
-
-// import DatePicker from '../../../modules/filterBuilder/DatePicker.vue'
-// import StringPicker from '../../../modules/filterBuilder/StringPicker.vue'
-// import NumberPicker from '../../../modules/filterBuilder/NumberPicker.vue'
-// import DatePickerExt from '../../../modules/filterBuilderExt/DatePicker.vue'
-// import StringPickerExt from '../../../modules/filterBuilderExt/StringPicker.vue'
-// import NumberPickerExt from '../../../modules/filterBuilderExt/NumberPicker.vue'
-
+import { initData } from "./init-data"
+import FilterSelecter from "./components/filter-selecter/index.vue"
 const props = defineProps({
   name: {
     type: String,
@@ -38,37 +34,35 @@ const props = defineProps({
   },
   orderType: {
     type: String as PropType<OrderStore.OrderType>,
-    default: 'default'
+    default: ''
+  },
+  filterType: {
+    type: String,
+    default: ''
+  },
+  filterValue: {
+    type: String,
+    default: ''
+  },
+})
+const {
+  selecterVisible,
+  isDimension,
+  isGroup,
+  isFilter,
+  isOrder
+} = initData(props)
+
+const handleClickTag = () => {
+  selecterVisible.value = true
+}
+
+onMounted(() => {
+  if (isFilter.value) {
+    selecterVisible.value = true
   }
 })
-/**
- * @description 判断当前tag是维度还是度量
- * @returns {boolean}
- */
-const isDimension = computed(() => props.cast === 'dimension')
 
-/**
- * @description 判断当前tag是分组还是度量
- * @returns {boolean}
- */
-const isGroup = computed(() => props.cast === 'group')
-
-/**
- * @description 判断当前tag是排序还是过滤
- * @returns {boolean}
- */
-const isFilter = computed(() => props.cast === 'filter')
-
-/**
- * @description 判断当前tag是排序还是过滤
- * @returns {boolean}
- */
-const isOrder = computed(() => props.cast === 'order')
-
-const handleOrderEmit = () => {
-  // emit('order', props.name)
-
-}
 </script>
 
 <style lang="scss" scoped>

@@ -1,7 +1,7 @@
 
 import { GetAnswerDao } from '../../database/getAnswer';
 import { Response } from "../../database/response"
-
+import { toLine } from "../../database/utils"
 
 /**
  * 这是一个很重要的接口，动态拼接sql 动态查询
@@ -24,22 +24,50 @@ type QueryChartData = Array<{ [key: string]: string | number }>
  */
 export default defineEventHandler<Promise<ResponseModule.Response<QueryChartData>>>(async (event) => {
     try {
-        const { dimensions, dataSource, orders, limit }: QueryChartDataParams = await readBody(event);
+        const { dimensions, dataSource, orders, filters, limit } = await readBody<QueryChartDataParams>(event);
+
         const getAnswerInstance = new GetAnswerDao();
+
         let sql = 'select';
+
         dimensions.forEach((item: DimensionStore.DimensionOption) => {
-            sql += ` ${item.columnName} as ${item.alias ? item.alias : item.columnName},`;
+            /* 因为在数据库中存储的字段都是下划线 为了好看到前端层是驼峰，在进行sql查询的时候又得转成下划线 */
+            sql += ` ${toLine(item.columnName)} as ${item.alias ? item.alias : item.columnName},`;
         });
+
         // 删除最后一个逗号
         sql = sql.slice(0, sql.length - 1);
+
         sql += ` from ${dataSource} `;
+
+        // 拼接where语句
+        if (filters.length > 0) {
+            /* 因为在数据库中存储的字段都是下划线 为了好看到前端层是驼峰，在进行sql查询的时候又得转成下划线 */
+
+            sql += ` where ${filters.map((item) => {
+                // 兼容 filterType 和 filterValue 为 空字符串 不生成sql语句
+                if (!item.filterType || !item.filterValue) {
+                    return ''
+                }
+                return `${toLine(item.columnName)} ${item.filterType} '${item.filterValue}'`
+            }).filter(_ => _).join(' and ')}`;
+
+        }
+
+        // 拼接 order by语句
         if (orders.length > 0) {
-            sql += ` order by ${orders.map((item: OrderStore.OrderOption) => `${item.columnName} ${item.orderType}`).join(',')}`;
+            /* 因为在数据库中存储的字段都是下划线 为了好看到前端层是驼峰，在进行sql查询的时候又得转成下划线 */
+            sql += ` order by ${orders.map((item) => `${toLine(item.columnName)} ${item.orderType}`).join(',')}`;
         }
 
         sql += ` limit ${limit}`;
+
+        console.log(sql);
+
         const data = await getAnswerInstance.exe<QueryChartData>(sql as string);
+
         return Response.success(data);
+
     } catch (error: any) {
         return Response.error(error.message);
     }

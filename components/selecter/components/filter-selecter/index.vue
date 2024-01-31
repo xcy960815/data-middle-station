@@ -1,0 +1,112 @@
+<template>
+    <div class='filter-selecter relative'>
+        <el-select v-model="localFilterType" placeholder="请选择过滤条件" class="w-full mb-1">
+            <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+        <el-input v-if="hasFilterValue()" v-model="localFilterValue" placeholder="请输入过滤值"></el-input>
+        <div class="handle-box mt-1">
+            <el-button @Click="handleConfirm">确定</el-button>
+        </div>
+
+    </div>
+</template>
+
+<script lang="ts" setup>
+
+const props = defineProps({
+    filterType: {
+        type: String,
+        default: ''
+    },
+    filterValue: {
+        type: String,
+        default: ''
+    },
+    selecterVisible: {
+        type: Boolean,
+        default: false
+    }
+})
+const emits = defineEmits(['update:filterType', 'update:filterValue', 'update:selecterVisible'])
+
+// 是否存在过滤值
+const hasFilterValue = computed(() => () => {
+    const currentFilterType = filterOptions.find(item => item.value === localFilterType.value)
+
+    return currentFilterType ? ['为空', '不为空'].includes(currentFilterType.label) ? false : true : false
+})
+const filterOptions = [
+    {
+        label: "等于",
+        value: "="
+    },
+    {
+        label: "不等于",
+        value: "!="
+    },
+    {
+        label: "大于",
+        value: ">"
+    },
+    {
+        label: "大于等于",
+        value: ">="
+    },
+    {
+        label: "小于",
+        value: "<"
+    },
+    {
+        label: "小于等于",
+        value: "<="
+    },
+    {
+        label: "包含",
+        value: "like"
+    },
+    {
+        label: "不包含",
+        value: "notLike"
+    },
+    {
+        label: "为空",
+        value: "is Null"
+    },
+    {
+        label: "不为空",
+        value: "is Not Null"
+    }
+]
+const localFilterType = ref("")
+
+
+const localFilterValue = ref("")
+
+/**
+ * @desc 点击确认按钮
+ */
+const handleConfirm = () => {
+    emits('update:filterType', localFilterType.value)
+    emits('update:filterValue', localFilterValue.value)
+    emits('update:selecterVisible', false)
+}
+</script>
+
+<style lang='scss' scoped>
+.filter-selecter {
+    position: reactive;
+
+    .handle-box {
+        text-align: right;
+    }
+}
+</style>
+
+
+
+
+
+
+
+
+<style lang='scss' scoped></style> 

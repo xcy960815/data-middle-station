@@ -57,7 +57,7 @@ export const handler = ({ filterList }: HandlerParams) => {
    * @param {DragEvent} dragEvent
    * @returns {void}
    */
-  const dragHandler = (index: number, dragEvent: DragEvent) => {
+  const dragHandler = (_index: number, dragEvent: DragEvent) => {
     dragEvent.preventDefault();
   };
   /**
@@ -78,9 +78,10 @@ export const handler = ({ filterList }: HandlerParams) => {
     dragEvent.preventDefault();
     const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
     const filters = data.value;
+    
     switch (data.from) {
       case 'filter': {
-        // relocate postion by dragging
+        // 调整位置
         const targetIndex = getTargetIndex(data.index, dragEvent);
         if (targetIndex === data.index) return;
         const filters = JSON.parse(JSON.stringify(filterStore.filters));
@@ -90,11 +91,7 @@ export const handler = ({ filterList }: HandlerParams) => {
         break;
       }
       default: {
-        if (Array.isArray(filters)) {
-          addFilter(filters);
-        } else {
-          addFilter(filters);
-        }
+        addFilter(filters);
         break;
       }
     }

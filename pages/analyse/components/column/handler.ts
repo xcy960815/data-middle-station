@@ -17,7 +17,6 @@ export const handler = ({ currentColumn }: HandlerParams) => {
    * @return {void}
    */
   const dragstartHandler = (column: ColumnStore.Column, index: number, event: DragEvent) => {
-
     event.dataTransfer?.setData(
       'text/plain',
       JSON.stringify({
