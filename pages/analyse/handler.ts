@@ -71,7 +71,7 @@ export const handler = () => {
     const queryChartDataParams = computed(() => {
         return {
             dataSource: columnStore.getDataSource,
-            filters: filterStore.getFilters,
+            filters: filterStore.getFilters.filter(item => item.filterType || item.filterValue),
             orders: orderStore.getOrders,
             groups: groupStore.getGroups,
             dimensions: dimensionStore.getDimensions,
@@ -133,15 +133,18 @@ export const handler = () => {
         if (errorMessage) {
             return
         }
-        const { dataSource, dimensions } = queryChartDataParams.value
+        const { dataSource, dimensions, filters } = queryChartDataParams.value
         if (!dataSource) return
         if (!dimensions.length) return
+
         const startTime = dayjs().valueOf()
         chartStore.setChartLoading(true)
         const result = await $fetch('/api/analyse/getAnswer', {
             method: 'POST',
             // 请求参数
-            body: queryChartDataParams.value
+            body: {
+                ...queryChartDataParams.value,
+            }
         })
         const endTime = dayjs().valueOf()
         if (result.code === 200) {
@@ -162,7 +165,7 @@ export const handler = () => {
     /**
      * @desc 监听查询表格数据的参数变化
      */
-    watch(queryChartDataParams, () => {
+    watch(() => queryChartDataParams.value, () => {
         queryChartData()
     }, {
         deep: true,

@@ -133,14 +133,17 @@ export const handler = ({
 
   /**
    * @desc 获取表格中的字段的内容 
-   * @param tableDataOption {Chart.ChartData} 表格数据
-   * @param tableHeaderOption {TableChart.TableHeaderOption} 表头数据
+   * @param tableData {Chart.ChartData} 表格数据
+   * @param tableHeader {TableChart.TableHeaderOption} 表头数据
    * @param idx {number} 当前数据的索引
    * @returns {string}
    */
-  const getComparedContent = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption, _idx: number): string  => {
-    return tableDataOption[tableHeaderOption.alias ? tableHeaderOption.alias : tableHeaderOption.columnName ? tableHeaderOption.columnName : ""].toString();
-  }
+  const getComparedContent = (tableDataOption: Chart.ChartData, tableHeaderOption: TableChart.TableHeaderOption, _idx: number): string => {
+    const key = tableHeaderOption.alias || tableHeaderOption.columnName;
+    return key != null && tableDataOption[key] != null ? String(tableDataOption[key]) : "";
+  };
+
+
 
   /**
    * @desc 监听表格配置变化

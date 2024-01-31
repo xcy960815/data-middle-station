@@ -1,5 +1,5 @@
 <template>
-    <div class="homepage-container" ref="container">
+    <div class="homepage-container relative" ref="container">
         <ChartCard ref="cards" class="card" v-for="chart in chartsList" :create-time="chart.createTime"
             :chart-name="chart.chartName" :id="chart.id" :key="chart.id" :visits="chart.visits">
         </ChartCard>
@@ -19,11 +19,10 @@ const { } = handler({ container })
     @include useTheme {
         background-color: getVar('bgColor');
     }
-    position: relative;
     padding: 1rem;
     display: grid;
     grid-gap: 20px;
-    grid-template-columns: repeat(12, minmax(250px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     .card {
         aspect-ratio: 4 / 3;
     }

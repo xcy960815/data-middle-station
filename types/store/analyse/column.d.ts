@@ -8,8 +8,8 @@ declare namespace ColumnStore {
    * @desc 列字段
    */
   interface Column extends TableInfoModule.TableColumnOption {
-    // dimensionChoosed?: boolean
-    // groupChoosed?: boolean
+    // 重写 columnName 类型 在dao层已经转换为驼峰
+    columnName: string
   }
 
   interface dataSourceOption {
