@@ -1,45 +1,22 @@
 <template>
+  <!-- selecter 公共模版 -->
   <el-popover class="chart-selecter relative" :visible="selecterVisible" popper-class="chart-selecter-popover"
-    placement="bottom" width="100px" @hide="handleHidePopover">
+    placement="bottom" width="100px">
     <template #reference>
       <div class="chart-selecter-container" @click="handleClickTag">
         <span class="chart-selecter-name">{{ displayName }}</span>
-        <!-- order 进行升降排序的icon -->
-        <Icon class="chart-selecter-order-icon" v-if="isOrder" @click="handleClickOrder"
-          :icon="orderIconName(orderType)" />
+        <slot name="order-icon"></slot>
         <!-- 通用icon 删除使用 -->
         <el-icon class="chart-selecter-delete" size="12" @click.stop="handleDeleteTag">
           <Delete />
         </el-icon>
       </div>
     </template>
-
-    <!-- <template v-if="isDimension">dimension</template>
-    <template v-if="isGroup">group</template> -->
-    <template v-if="isOrder">
-      <div class="aggregation-option"
-        @click="handleClickOrderAggregation(orderAggregation.value as OrderStore.OrderAggregationsType)"
-        v-for="orderAggregation in orderAggregations">
-        <!-- 复现用户选择的聚合条件 -->
-        <Icon class="aggregation-mark" icon="icon-park-solid:correct" v-if="orderAggregation.value === aggregationType" />
-        <span>{{ orderAggregation.label }}</span>
-      </div>
-    </template>
-    <template v-if="isFilter">
-      <div class="h-[26px] flex items-center hover:bg-gray-300 hover:text-white"
-        v-for="filterAggregation in filterAggregations">{{ filterAggregation.label }}</div>
-
-      <filter-selecter v-bind="$attrs" v-model:selecterVisible="selecterVisible"></filter-selecter>
-    </template>
+    <slot></slot>
   </el-popover>
 </template>
 
 <script lang="ts" setup>
-import { initData } from "./init-data"
-import { handler } from "./handler"
-import type { ElPopover } from "element-plus"
-import FilterSelecter from "./components/filter-selecter/index.vue"
-
 const props = defineProps({
   name: {
     type: String,
@@ -79,63 +56,40 @@ const props = defineProps({
     default: ''
   },
 })
-
-
-const {
-  filterAggregations,
-  orderAggregations,
-  selecterVisible,
-  isDimension,
-  isGroup,
-  isFilter,
-  isOrder,
-  orderIconName
-} = initData(props)
-
-
-const {
-  handleClickTag,
-  handleDeleteTag,
-  handleClickOrder,
-  handleClickOrderAggregation
-} = handler({
-  selecterVisible,
-  isDimension,
-  isGroup,
-  isFilter,
-  isOrder,
-  index: props.index,
-  orderType: props.orderType,
-  name: props.name,
-  orderAggregations
-})
-
+const selecterVisible = ref(false)
+/**
+ * @description: 点击标签
+ */
+const handleClickTag = () => {
+  selecterVisible.value = true
+}
+const filterStore = useFilterStore();
+const orderStore = useOrderStore();
+const dimensionStore = useDimensionStore();
+const groupStore = useGroupStore();
 
 /**
- * @description: 关闭popover
+ * @desc 删除标签
  */
-const handleHidePopover = () => {
-  // console.log("handleHidePopover");
-
-  // selecterVisible.value = false
+const handleDeleteTag = () => {
+  if (props.cast === 'filter') {
+    filterStore.removeFilter(props.index)
+  } else if (props.cast === 'order') {
+    orderStore.removeOrder(props.index)
+  } else if (props.cast === 'dimension') {
+    dimensionStore.removeDimension(props.index)
+  } else if (props.cast === 'group') {
+    groupStore.removeGroup(props.index)
+  }
 }
 
-
 onMounted(() => {
-  if (isFilter.value) {
-    // 有值就说明不是拖进来的 不是新的 不用打开
-    if (!props.filterType || !props.filterValue) {
-      selecterVisible.value = true
-    }
-  }
-  if (isOrder.value) {
-    if (!props.orderType) {
-      selecterVisible.value = true
-    }
-  }
+ console.log(1111);
+ 
 })
 
 </script>
+
 <style lang="scss">
 .chart-selecter-popover {
   padding: 5px 0 !important;

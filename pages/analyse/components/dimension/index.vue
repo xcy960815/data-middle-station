@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import Selecter from '@/components/selecter/dimension-selecter/index.vue'
 import { initData } from './init-data'
 import { handler } from './handler'
 const { dimensionList } = initData()
