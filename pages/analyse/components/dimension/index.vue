@@ -23,6 +23,8 @@
           class="dimension__item__name"
           cast="dimension"
           :name="item.columnName"
+          v-model:displayName="item.displayName"
+          :index="index"
         ></selecter>
       </div>
     </div>

@@ -11,9 +11,8 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface GroupOption extends  ColumnStore.Column { 
-    alias?: string
-    displayName?: string
+  type GroupOption = ColumnStore.Column & {
+
   }
 
   type GroupState = {
@@ -35,13 +34,13 @@ declare namespace GroupStore {
   /**
    * @desc action 名称
    */
-  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}` 
+  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}`
   /**
    * @desc action
    */
   type GroupActions = {
     [K in keyof GroupState as ActionName<K & string>]: (value: GroupState[K]) => void;
-  }&{
+  } & {
     removeGroup: (value: number) => void;
   }
 }

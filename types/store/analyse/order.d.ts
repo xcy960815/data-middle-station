@@ -1,12 +1,23 @@
-/// <reference path="./commom.d.ts" />
+
 /**
  * @desc 左侧列字段
  */
 declare namespace OrderStore {
-  
+
   type OrderKey = 'order'
 
   type OrderType = 'asc' | 'desc' | 'default'
+
+  const OrderAggregationsEnum = {
+    原始值: 'raw',
+    计数: 'count',
+    总计: 'sum',
+    平均: 'avg',
+    最大值: 'max',
+    最小值: 'min',
+  } as const
+
+  type OrderAggregationsType = typeof OrderAggregationsEnum[keyof typeof OrderAggregationsEnum]
   /**
    * @desc 左侧列字段
    * @interface OrderOption
@@ -14,8 +25,9 @@ declare namespace OrderStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface OrderOption extends  ColumnStore.Column {
-    orderType:OrderType
+  interface OrderOption extends ColumnStore.Column {
+    orderType: OrderType
+    aggregationType: OrderAggregationsType
   }
 
   type OrderState = {

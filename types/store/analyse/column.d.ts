@@ -10,6 +10,10 @@ declare namespace ColumnStore {
   interface Column extends TableInfoModule.TableColumnOption {
     // 重写 columnName 类型 在dao层已经转换为驼峰
     columnName: string
+    columnType: string
+    columnComment?: string
+    alias: string
+    displayName: string
   }
 
   interface dataSourceOption {

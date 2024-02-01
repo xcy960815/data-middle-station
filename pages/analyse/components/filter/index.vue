@@ -5,7 +5,7 @@
       <div data-action="drag" class="filter__item" v-for="(item, index) in filterList" :key="index" draggable="true"
         @dragstart.native="dragstartHandler(index, $event)" @drag.native="dragHandler(index, $event)" @mousedown.stop>
         <selecter class="filter__item__name" cast="filter" :name="item.columnName" v-model:filterType="item.filterType"
-          v-model:filterValue="item.filterValue"></selecter>
+          v-model:displayName="item.displayName" :index="index" v-model:filterValue="item.filterValue"></selecter>
       </div>
     </div>
   </div>

@@ -1,7 +1,18 @@
 
 
 declare namespace FilterStore {
+
   type FilterKey = 'filter'
+
+  const FilterAggregationsEnum = {
+    原始值: 'raw',
+    计数: 'count',
+    计数去重: 'countDistinct',
+    总计: 'sum',
+    平均: 'avg',
+    最大值: 'max',
+    最小值: 'min',
+  } as const
 
   const FilterTypeEnums = {
     "等于": "eq",
@@ -18,9 +29,14 @@ declare namespace FilterStore {
 
   type FilterType = (typeof FilterTypeEnums)[keyof typeof FilterTypeEnums]
 
+  type FilterAggregationsType = typeof FilterAggregationsEnum[keyof typeof FilterAggregationsEnum]
+
   type FilterOption = ColumnStore.Column & {
     filterType?: FilterType
     filterValue?: string
+    displayName?: string
+    // 聚合方式
+    aggregationType: FilterAggregationsType
   }
 
   type FilterState = {

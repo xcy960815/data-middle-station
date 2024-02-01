@@ -2,24 +2,51 @@
  * @desc 表格的dao层
  */
 import { Column, BindDataSource, Mapping, DOBase } from './dobase';
-import {toHump} from "./utils"
+import { toHump } from "./utils"
 
+const NUMBER_TYPE_ENUM = ['tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'decimal', 'float', 'double']
+const STRING_TYPE_ENUM = ['char', 'varchar', 'tinytext', 'text', 'mediumtext', 'longtext', 'tinyblob', 'blob', 'mediumblob', 'longblob']
+const DATE_TYPE_ENUM = ['date', 'datetime', 'timestamp', 'time', 'year']
 
 export class TableDaoMapping implements TableInfoModule.TableListOption, TableInfoModule.TableColumnOption {
   // 表名
   @Column('table_name')
   tableName: string = '';
+
   // 列名
   @Column('column_name')
-  columnName(value:string) {
+  columnName(value: string) {
     return toHump(value)
   }
   // 列类型
   @Column('column_type')
-  columnType: string = '';
+  columnType = (value: string) => {
+    if (NUMBER_TYPE_ENUM.includes(value)) {
+      return 'number'
+    } else if (STRING_TYPE_ENUM.includes(value)) {
+      return 'string'
+    } else if (DATE_TYPE_ENUM.includes(value)) {
+      return 'date'
+    } else {
+      return value
+    }
+  }
+
   // 列注释
   @Column('column_comment')
   columnComment: string = '';
+
+  // 别名
+  @Column('alias')
+  alias = () => {
+    return this.columnName as unknown as string
+  }
+
+  // 显示名称
+  @Column('display_name')
+  displayName = () => {
+    return this.columnName as unknown as string
+  }
 }
 
 @BindDataSource('blog')
@@ -52,7 +79,16 @@ export class TableDao extends DOBase {
     tableName: string,
   ): Promise<Array<TableInfoModule.TableColumnOption>> {
     const sql =
-      `SELECT column_name, column_type, column_comment FROM information_schema.columns  WHERE table_name = ? AND table_schema = 'blog';`
+      // `SELECT column_name, column_type, column_comment FROM information_schema.columns  WHERE table_name = ? AND table_schema = 'blog';`
+      `SELECT 
+          column_name, 
+          REPLACE(SUBSTRING_INDEX(column_type, '(', 1), ' ', '') AS column_type,  -- 去掉类型后面的长度
+          column_comment 
+      FROM 
+          information_schema.columns  
+      WHERE 
+          table_name = ? 
+          AND table_schema = 'blog';`
     return await this.exe<Array<TableInfoModule.TableColumnOption>>(sql, [tableName]);
   }
 }

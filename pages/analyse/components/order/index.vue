@@ -15,8 +15,11 @@
         <selecter
           class="order__item__name"
           cast="order"
-          :order-type="item.orderType"
+          v-model:order-type="item.orderType"
+          v-model:display-name="item.displayName"
           :name="item.columnName"
+          :index="index"
+          v-model:aggregationType="item.aggregationType"
         ></selecter>
       </div>
     </div>

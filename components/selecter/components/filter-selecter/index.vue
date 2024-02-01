@@ -14,6 +14,14 @@
 <script lang="ts" setup>
 
 const props = defineProps({
+    name: {
+        type: String,
+        default: ''
+    },
+    displayName: {
+        type: String,
+        default: ''
+    },
     filterType: {
         type: String,
         default: ''
@@ -27,7 +35,7 @@ const props = defineProps({
         default: false
     }
 })
-const emits = defineEmits(['update:filterType', 'update:filterValue', 'update:selecterVisible'])
+const emits = defineEmits(['update:filterType', 'update:filterValue', 'update:selecterVisible', 'update:displayName'])
 
 // 是否存在过滤值
 const hasFilterValue = computed(() => () => {
@@ -86,6 +94,9 @@ const localFilterValue = ref("")
  * @desc 点击确认按钮
  */
 const handleConfirm = () => {
+    // 修改父组件的显示的name
+    const currentFilterOption = filterOptions.find(item => item.value === localFilterType.value)
+    emits('update:displayName', `${props.name} ${currentFilterOption?.label} ${localFilterValue.value ? localFilterValue.value : ""}`)
     emits('update:filterType', localFilterType.value)
     emits('update:filterValue', localFilterValue.value)
     emits('update:selecterVisible', false)

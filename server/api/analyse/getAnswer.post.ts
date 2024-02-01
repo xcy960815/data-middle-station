@@ -57,7 +57,14 @@ export default defineEventHandler<Promise<ResponseModule.Response<QueryChartData
         // 拼接 order by语句
         if (orders.length > 0) {
             /* 因为在数据库中存储的字段都是下划线 为了好看到前端层是驼峰，在进行sql查询的时候又得转成下划线 */
-            sql += ` order by ${orders.map((item) => `${toLine(item.columnName)} ${item.orderType}`).join(',')}`;
+            // sql += ` order by ${orders.map((item) => `${toLine(item.columnName)} ${item.orderType}`).join(',')}`;
+            sql += `order by ${orders.map((item) => {
+                if (item.aggregationType === 'raw') {
+                    return `${toLine(item.columnName)} ${item.orderType}`
+                } else {
+                    return `${item.aggregationType}(${toLine(item.columnName)}) ${item.orderType}`
+                }
+            }).filter(_ => _).join(',')}`;
         }
 
         sql += ` limit ${limit}`;
