@@ -1,18 +1,27 @@
 <template>
-    <div class='filter-selecter relative'>
-        <el-select v-model="localFilterType" placeholder="请选择过滤条件" class="w-full mb-1">
-            <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-        <el-input v-if="hasFilterValue()" v-model="localFilterValue" placeholder="请输入过滤值"></el-input>
-        <div class="handle-box mt-1">
-            <el-button @Click="handleConfirm">确定</el-button>
-        </div>
-
-    </div>
+    <selecter-template v-bin="$attrs">
+        <template>
+            <div class="aggregation-option" v-for="filterAggregation in filterAggregations">
+                <!-- 复现用户选择的聚合条件 -->
+                <Icon class="aggregation-mark" icon="icon-park-solid:correct"
+                    v-if="filterAggregation.value === aggregationType" />
+                <span>{{ filterAggregation.label }}</span>
+            </div>
+            <div class='filter-selecter relative'>
+                <el-select v-model="localFilterType" placeholder="请选择过滤条件" class="w-full mb-1">
+                    <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-input v-if="hasFilterValue()" v-model="localFilterValue" placeholder="请输入过滤值"></el-input>
+                <div class="handle-box mt-1">
+                    <el-button @Click="handleConfirm">确定</el-button>
+                </div>
+            </div>
+        </template>
+    </selecter-template>
 </template>
 
 <script lang="ts" setup>
-
+import SelecterTemplate from "../selecter-template/index.vue";
 const props = defineProps({
     name: {
         type: String,
@@ -33,16 +42,45 @@ const props = defineProps({
     selecterVisible: {
         type: Boolean,
         default: false
-    }
+    },
+    aggregationType: {
+        type: String as PropType<OrderStore.OrderAggregationsType>,
+        default: ''
+    },
 })
 const emits = defineEmits(['update:filterType', 'update:filterValue', 'update:selecterVisible', 'update:displayName'])
+
+const filterAggregations = ref([
+    {
+        label: "原始值",
+        value: "raw",
+    }, {
+        label: "计数",
+        value: "count",
+    }, {
+        label: "计数(去重)",
+        value: "countDistinct",
+    }, {
+        label: "总计",
+        value: "sum"
+    }, {
+        label: "平均",
+        value: "avg"
+    }, {
+        label: "最大值",
+        value: "max"
+    }, {
+        label: "最小值",
+        value: "min"
+    }
+])
 
 // 是否存在过滤值
 const hasFilterValue = computed(() => () => {
     const currentFilterType = filterOptions.find(item => item.value === localFilterType.value)
-
     return currentFilterType ? ['为空', '不为空'].includes(currentFilterType.label) ? false : true : false
 })
+
 const filterOptions = [
     {
         label: "等于",
@@ -85,6 +123,7 @@ const filterOptions = [
         value: "is Not Null"
     }
 ]
+
 const localFilterType = ref("")
 
 

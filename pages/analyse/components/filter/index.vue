@@ -12,6 +12,7 @@
 </template>
 
 <script setup lang="ts">
+import Selecter from '@/components/selecter/filter-selecter/index.vue';
 import { initData } from './init-data';
 import { handler } from './handler';
 const { filterList } = initData();
