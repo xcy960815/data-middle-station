@@ -1,3 +1,7 @@
+/**
+ * @desc 初始化数据
+ * @returns 
+ */
 export const initData = () => {
   const dimensionStore = useDimensionStore();
   /**
@@ -5,7 +9,8 @@ export const initData = () => {
    * @returns {ComputedRef<DimensionStore.DimensionOption[]>}
    */
   const dimensionList = computed(() => {
-    return dimensionStore.getDimensions;
+    const dimensionList =  dimensionStore.getDimensions;  
+    return dimensionList
   });
   return {
     dimensionList,

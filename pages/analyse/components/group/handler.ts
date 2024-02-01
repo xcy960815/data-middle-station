@@ -91,7 +91,6 @@ export const handler = ({ groupList }: HandlerParams) => {
         break;
       }
       default: {
-        // group.groupChoosed = true;
         // 更新列名 主要是显示已经选中的标志
         columnStore.updateColumn(cloumn, index);
         addGroup(group);

@@ -4,7 +4,6 @@ import dayjs from "dayjs";
  */
 export const handler = () => {
     // const router = useRouter()
-
     const columnStore = useColumnStore();
     const filterStore = useFilterStore();
     const orderStore = useOrderStore();
@@ -37,7 +36,16 @@ export const handler = () => {
             }
         })
         if (result.code === 200) {
-            const cloumns = result.data
+            const cloumns = result.data?.map(item => {
+                return {
+                    ...item,
+                    columnName: item.columnName || "",
+                    columnType: item.columnType || "",
+                    columnComment: item.columnComment || "",
+                    displayName: item.displayName || "",
+                    alias: item.alias || "",
+                }
+            })
             columnStore.setColumns(cloumns || [])
         } else {
             columnStore.setDataSourceOptions([])
@@ -71,8 +79,9 @@ export const handler = () => {
     const queryChartDataParams = computed(() => {
         return {
             dataSource: columnStore.getDataSource,
-            filters: filterStore.getFilters.filter(item => item.filterType || item.filterValue),
-            orders: orderStore.getOrders,
+            // 这样做可以避免条件没有选完就进行查询的情况 good
+            filters: filterStore.getFilters.filter(item => item.aggregationType && (item.filterType || item.filterValue)),
+            orders: orderStore.getOrders.filter(item => item.aggregationType && item.orderType),
             groups: groupStore.getGroups,
             dimensions: dimensionStore.getDimensions,
             limit: chartConfigStore.getCommonChartConfig.limit,
@@ -167,6 +176,8 @@ export const handler = () => {
      */
     watch(() => queryChartDataParams.value, () => {
         queryChartData()
+        // console.log('queryChartDataParams', queryChartDataParams.value);
+
     }, {
         deep: true,
         immediate: true

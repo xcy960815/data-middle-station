@@ -16,8 +16,10 @@ declare namespace TableInfoModule {
    */
   export type TableColumnOption = {
     columnName?: string | ((value: string) => string)
-    columnType?: string
+    columnType?: string | ((value: string) => string)
     columnComment?: string
+    alias?: string | ((value: string) => string)
+    displayName?: string | ((value: string) => string)
   }
 }
 

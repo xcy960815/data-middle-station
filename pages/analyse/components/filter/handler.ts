@@ -76,8 +76,10 @@ export const handler = ({ filterList }: HandlerParams) => {
    */
   const dropHandler = (dragEvent: DragEvent) => {
     dragEvent.preventDefault();
-    const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
-    const filters = data.value;
+    const data: DragData<FilterStore.FilterOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
+    // 自己处理成自己需要的数据
+    const filter = data.value
+    console.log('filter', filter);
     
     switch (data.from) {
       case 'filter': {
@@ -91,7 +93,7 @@ export const handler = ({ filterList }: HandlerParams) => {
         break;
       }
       default: {
-        addFilter(filters);
+        addFilter(filter);
         break;
       }
     }

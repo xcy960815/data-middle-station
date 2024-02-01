@@ -12,10 +12,9 @@ declare namespace DimensionStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface DimensionOption extends ColumnStore.Column {
-    alias?: string
-    displayName?: string
-   }
+  type DimensionOption = ColumnStore.Column & {
+
+  }
 
   type DimensionKey = 'dimension'
 
@@ -44,7 +43,7 @@ declare namespace DimensionStore {
    */
   type DimensionActions = {
     [K in keyof DimensionState as ActionName<K & string>]: (value: DimensionState[K]) => void;
-  }&{
+  } & {
     addDimensions: (value: DimensionOption[]) => void;
     removeDimension: (value: number) => void;
   };

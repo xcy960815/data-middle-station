@@ -6,9 +6,10 @@
     </el-select>
     <div class="column__title">维度</div>
     <div class="column__content">
-      <div @contextmenu="contextmenuHandler(column)" v-contextmenu:contextmenu :class="columnClasses(column)"
-        v-for="(column, index) in columnList" :key="index" draggable="true"
+      <div @contextmenu="contextmenuHandler(column)" v-contextmenu:contextmenu class="flex items-center"
+        :class="columnClasses(column)" v-for="(column, index) in columnList" :key="index" draggable="true"
         @dragstart="dragstartHandler(column, index, $event)" @dragend="dragendHandler" @mousedown.stop>
+        <Icon class="mt-[1px] mr-[1px]" width="14" height="14" :rotate="2" :horizontalFlip="true" :verticalFlip="true" :icon="columnIconName(column)" />
         <span class="column__item__name">{{ column.columnName }}</span>
       </div>
     </div>
@@ -57,6 +58,7 @@ import { initData } from './init-data'
 import { handler } from './handler'
 const {
   columnClasses,
+  columnIconName,
   dataSource,
   dataSourceOptions,
   columnList,
@@ -97,17 +99,18 @@ const handleClickTitle = () => {
       &.column__item_dimension_choosed::after {
         position: absolute;
         left: 0px;
-        top: 13px;
+        top: 14px;
         content: '';
         width: 5px;
         height: 5px;
         border-radius: 50%;
         background-color: #54c32a;
       }
+
       &.column__item_group_choosed::after {
         position: absolute;
         left: 0px;
-        top: 13px;
+        top: 14px;
         content: '';
         width: 5px;
         height: 5px;
