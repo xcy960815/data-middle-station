@@ -3,24 +3,30 @@
   <el-popover class="chart-selecter relative" :visible="selecterVisible" popper-class="chart-selecter-popover"
     placement="bottom" width="100px">
     <template #reference>
-      <div class="chart-selecter-container" @click="handleClickTag">
+      <div class="chart-selecter-container" :class="invalidClass" @click="selecterVisible = true"
+        v-click-outside="onClickOutside">
         <span class="chart-selecter-name">{{ displayName }}</span>
-        <slot name="order-icon"></slot>
-        <!-- 通用icon 删除使用 -->
-        <el-icon class="chart-selecter-delete" size="12" @click.stop="handleDeleteTag">
-          <Delete />
-        </el-icon>
+        <slot class="chart-selecter-order-icon" name="order-icon"></slot>
+        <!-- 无效字段标志 -->
+        <el-tooltip class="box-item" effect="dark" :content="invalidContent" placement="top">
+          <Icon v-if="hasInvalidIcon()" class="chart-selecterinvalid-icon" icon="mingcute:warning-fill" />
+        </el-tooltip>
+        <Icon class="chart-selecter-delete" icon="material-symbols:delete-outline" @click.stop="handleDeleteSelecter" />
       </div>
     </template>
-    <slot></slot>
+    <template #default>
+      <slot></slot>
+    </template>
   </el-popover>
 </template>
 
 <script lang="ts" setup>
+import { ClickOutside as vClickOutside } from 'element-plus'
 const props = defineProps({
-  name: {
-    type: String,
-    default: ''
+  // 通用参数
+  __invalid: {
+    type: Boolean,
+    default: false
   },
   // 通用参数
   displayName: {
@@ -32,46 +38,49 @@ const props = defineProps({
     type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
     default: ''
   },
-  orderType: {
-    type: String as PropType<OrderStore.OrderType>,
-    default: ''
-  },
-  filterType: {
-    type: String,
-    default: ''
-  },
-  filterValue: {
-    type: String,
-    default: ''
-  },
   // 通用参数
   index: {
     type: Number,
     default: null,
     required: true
   },
-  // 聚合方式
-  aggregationType: {
-    type: String as PropType<OrderStore.OrderAggregationsType | FilterStore.FilterAggregationsType>,
-    default: ''
-  },
 })
-const selecterVisible = ref(false)
-/**
- * @description: 点击标签
- */
-const handleClickTag = () => {
-  selecterVisible.value = true
-}
 const filterStore = useFilterStore();
 const orderStore = useOrderStore();
 const dimensionStore = useDimensionStore();
 const groupStore = useGroupStore();
+const selecterVisible = ref(false)
+const invalidClass = computed(() => {
+  return props.__invalid ? 'invalid' : ''
+})
+const invalidContent = computed(() => {
+  switch (props.cast) {
+    case 'filter':
+      return '无效的筛选条件'
+    case 'order':
+      return '无效的排序条件'
+    case 'dimension':
+      return '无效的维度'
+    case 'group':
+      return '无效的分组'
+    default:
+      return ''
+  }
+})
+const hasInvalidIcon = computed(() => () => {
+  return props.__invalid
+})
+/**
+ * @desc 点击外部隐藏 TODO 不知道为什么触发了两次
+ */
+const onClickOutside = () => {
+  selecterVisible.value = false
+}
 
 /**
  * @desc 删除标签
  */
-const handleDeleteTag = () => {
+const handleDeleteSelecter = () => {
   if (props.cast === 'filter') {
     filterStore.removeFilter(props.index)
   } else if (props.cast === 'order') {
@@ -84,8 +93,9 @@ const handleDeleteTag = () => {
 }
 
 onMounted(() => {
- console.log(1111);
- 
+  if (props.cast === 'filter' || props.cast === 'order') {
+    selecterVisible.value = true
+  }
 })
 
 </script>
@@ -106,8 +116,8 @@ onMounted(() => {
     .aggregation-mark {
       position: absolute;
       left: 10px;
-      top: 6px;
-
+      top: 4px;
+    
     }
 
     &:hover {
@@ -132,7 +142,11 @@ onMounted(() => {
   display: flex;
   align-items: center;
 
-  // justify-content: space-between;
+  // 无效字段样式
+  &.invalid {
+    border-color: #ff4d4f;
+  }
+
   .chart-selecter-name {
     flex-grow: 1;
     // 超出部分隐藏 并且显示省略号
@@ -143,7 +157,7 @@ onMounted(() => {
   }
 
   .chart-selecter-delete,
-  .chart-selecter-order-icon {
+  :deep(.chart-selecter-order-icon) {
     cursor: pointer;
     flex-shrink: 0;
     margin-left: auto;
@@ -152,6 +166,12 @@ onMounted(() => {
   .chart-selecter-order-icon {
     margin-right: 6px;
     font-size: 14px;
+  }
+
+  .chart-selecterinvalid-icon {
+    color: #ff4d4f;
+    margin-right: 6px;
+    cursor: help;
   }
 }
 </style>

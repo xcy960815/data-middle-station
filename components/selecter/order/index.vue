@@ -1,9 +1,10 @@
 <template>
-    <selecter-template v-bind="$attrs">
+    <selecter-template v-bind="$attrs" :display-name="displayName" :cast="cast" :index="index">
         <template #order-icon>
-            <Icon class="chart-selecter-order-icon" @click="handleClickOrder" :icon="orderIconName(orderType)" />
+            <Icon class="chart-selecter-order-icon" width="1.2em" height="1.2em" @click="handleClickOrder"
+                :icon="orderIconName(orderType)" />
         </template>
-        <template>
+        <template #default>
             <div class="aggregation-option"
                 @click="handleClickOrderAggregation(orderAggregation.value as OrderStore.OrderAggregationsType)"
                 v-for="orderAggregation in orderAggregations">
@@ -17,7 +18,6 @@
 </template>
 
 <script lang='ts' setup>
-import SelecterTemplate from "../selecter-template/index.vue";
 
 const props = defineProps({
     name: {
@@ -83,13 +83,7 @@ const orderAggregations = ref([
  * @desc 升降序icon图标
  */
 const orderIconName = computed(() => (orderType: OrderStore.OrderType) => {
-    if (orderType === 'asc') {
-        return 'mdi:arrow-top-bold'
-    } else if (orderType === 'desc') {
-        return 'mdi:arrow-bottom-bold'
-    } else {
-        return ''
-    }
+    return orderType === 'asc' ? 'mdi:arrow-top-bold' : 'mdi:arrow-bottom-bold'
 })
 
 
@@ -100,11 +94,7 @@ const orderIconName = computed(() => (orderType: OrderStore.OrderType) => {
 const handleClickOrder = (e: Event) => {
     // 阻止冒泡
     e.stopPropagation()
-    if (props.orderType === "desc") {
-        emits('update:orderType', "asc")
-    } else {
-        emits('update:orderType', "desc")
-    }
+    emits('update:orderType', props.orderType === "desc" ? "asc" : "desc")
 }
 
 
@@ -119,8 +109,8 @@ const handleClickOrderAggregation = (orderAggregationValue: OrderStore.OrderAggr
     emits('update:orderType', "desc")
     // 重新计算displayName
     const currentDisplayName = orderAggregations.value.find(item => item.value === orderAggregationValue)?.label
-    emits('update:displayName', `${currentDisplayName}(${name})`)
-    // selecterVisible.value = false
+    emits('update:displayName', `${currentDisplayName}(${props.name})`)
 }
+
 </script>
 <style lang='less' scoped></style>

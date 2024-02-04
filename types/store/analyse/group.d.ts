@@ -11,8 +11,9 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type GroupOption = ColumnStore.Column & {
-
+  type GroupOption = ColumnStore.ColumnOption & {
+    // 无效的字段
+    __invalid?: boolean
   }
 
   type GroupState = {

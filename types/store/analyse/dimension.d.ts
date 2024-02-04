@@ -12,14 +12,15 @@ declare namespace DimensionStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type DimensionOption = ColumnStore.Column & {
-
+  type DimensionOption = ColumnStore.ColumnOption & {
+    // 无效的字段
+    __invalid?: boolean
   }
 
   type DimensionKey = 'dimension'
 
   type DimensionState = {
-    dimensions: DimensionOption[]
+    dimensions: Array<DimensionOption>
   }
 
   /**

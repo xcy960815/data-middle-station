@@ -65,7 +65,7 @@ export default defineNuxtConfig({
       mode: 'client'
     },
     {
-      src: '../plugins/client/iconify.ts',
+      src: '../plugins/all/iconify.ts',
       mode: 'client'
     },
     {

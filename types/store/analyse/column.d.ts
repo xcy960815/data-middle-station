@@ -1,4 +1,4 @@
-/// <reference path="./commom.d.ts" />
+
 /**
  * @desc 左侧列字段
  */
@@ -6,8 +6,14 @@ declare namespace ColumnStore {
   type ColumnKey = 'column'
   /**
    * @desc 列字段
+   * @interface ColumnOption
+   * @property {string} columnName 列名
+   * @property {string} columnType 列类型
+   * @property {string} columnComment 列注释
+   * @property {string} alias 别名
+   * @property {string} displayName 显示名称
    */
-  interface Column extends TableInfoModule.TableColumnOption {
+  type ColumnOption = TableInfoModule.TableColumnOption & {
     // 重写 columnName 类型 在dao层已经转换为驼峰
     columnName: string
     columnType: string
@@ -16,7 +22,7 @@ declare namespace ColumnStore {
     displayName: string
   }
 
-  interface dataSourceOption {
+  type dataSourceOption = {
     label: string
     value: string
   }
@@ -24,7 +30,7 @@ declare namespace ColumnStore {
   type ColumnState = {
     dataSource: string
     dataSourceOptions: Array<dataSourceOption>
-    columns: Column[]
+    columns: ColumnOption[]
   }
 
   /**

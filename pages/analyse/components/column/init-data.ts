@@ -13,9 +13,9 @@ const STRING_ICON_NAME = "ant-design:field-string-outlined"
 export const initData = () => {
   /**
    * @description: 维度列样式
-   * @returns { (column: ColumnStore.Column) => { column__item: boolean; column__item-choosed: boolean } }
+   * @returns { (column: ColumnStore.ColumnOption) => { column__item: boolean; column__item-choosed: boolean } }
    */
-  const columnClasses = computed(() => (column: ColumnStore.Column) => {
+  const columnClasses = computed(() => (column: ColumnStore.ColumnOption) => {
     const dimensionChoosed = useDimensionStore().getDimensions.find((dimensionOption) => dimensionOption.columnName === column.columnName)
     const groupChoosed = useGroupStore().getGroups.find((groupOption) => groupOption.columnName === column.columnName)
     return {
@@ -28,7 +28,7 @@ export const initData = () => {
   /**
     * @desc icon name
     */
-  const columnIconName = computed(() => (column: ColumnStore.Column) => {
+  const columnIconName = computed(() => (column: ColumnStore.ColumnOption) => {
     const { columnType } = column
     if (columnType === 'number') {
       return NUMBER_ICON_NAME
@@ -64,7 +64,7 @@ export const initData = () => {
 
   /**
    * @desc 维度字段列表
-   * @returns {ColumnStore.Column[]}
+   * @returns {ColumnStore.ColumnOption[]}
    */
   const columnList = computed(() => {
     return columnStore.getColumns
@@ -72,9 +72,9 @@ export const initData = () => {
 
   /**
    * @desc 当前列
-   * @returns {ColumnStore.Column}
+   * @returns {ColumnStore.ColumnOption}
    */
-  const currentColumn = ref<ColumnStore.Column>();
+  const currentColumn = ref<ColumnStore.ColumnOption>();
 
   return {
     columnClasses,

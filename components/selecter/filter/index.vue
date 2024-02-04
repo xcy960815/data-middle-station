@@ -1,5 +1,5 @@
 <template>
-    <selecter-template v-bin="$attrs">
+    <selecter-template v-bin="$attrs" :display-name="displayName">
         <template>
             <div class="aggregation-option" v-for="filterAggregation in filterAggregations">
                 <!-- 复现用户选择的聚合条件 -->
@@ -21,7 +21,6 @@
 </template>
 
 <script lang="ts" setup>
-import SelecterTemplate from "../selecter-template/index.vue";
 const props = defineProps({
     name: {
         type: String,
