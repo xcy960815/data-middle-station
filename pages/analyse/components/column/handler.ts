@@ -1,5 +1,5 @@
 interface HandlerParams {
-  currentColumn: Ref<ColumnStore.Column | undefined>;
+  currentColumn: Ref<ColumnStore.ColumnOption | undefined>;
 }
 
 /**
@@ -11,12 +11,12 @@ export const handler = ({ currentColumn }: HandlerParams) => {
   const columnStore = useColumnStore();
   /**
    * @desc 发起拖拽
-   * @param {ColumnStore.Column} column
+   * @param {ColumnStore.ColumnOption} column
    * @param {number} index
    * @param {DragEvent} event
    * @return {void}
    */
-  const dragstartHandler = (column: ColumnStore.Column, index: number, event: DragEvent) => {
+  const dragstartHandler = (column: ColumnStore.ColumnOption, index: number, event: DragEvent) => {
     event.dataTransfer?.setData(
       'text/plain',
       JSON.stringify({
@@ -48,7 +48,7 @@ export const handler = ({ currentColumn }: HandlerParams) => {
    */
   const dropHandler = (dragEvent: DragEvent) => {
     dragEvent.preventDefault();
-    const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
+    const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
     const columnIndex = columnStore.getColumns.findIndex((column) => column.columnName === data.value.columnName);
 
     switch (data.from) {
@@ -56,9 +56,6 @@ export const handler = ({ currentColumn }: HandlerParams) => {
         // 从维度拖拽到列
         const dimensionSrore = useDimensionStore();
         dimensionSrore.removeDimension(data.index);
-        // data.value.dimensionChoosed = false;
-        columnStore.updateColumn(data.value, columnIndex);
-
         break;
       case 'filter':
         // 从筛选拖拽到列
@@ -86,7 +83,7 @@ export const handler = ({ currentColumn }: HandlerParams) => {
     }
   };
 
-  const contextmenuHandler = (column: ColumnStore.Column) => {
+  const contextmenuHandler = (column: ColumnStore.ColumnOption) => {
     currentColumn.value = column;
   };
 

@@ -31,7 +31,7 @@ declare namespace FilterStore {
 
   type FilterAggregationsType = typeof FilterAggregationsEnum[keyof typeof FilterAggregationsEnum]
 
-  type FilterOption = ColumnStore.Column & {
+  type FilterOption = ColumnStore.ColumnOption & {
     filterType?: FilterType
     filterValue?: string
     displayName?: string

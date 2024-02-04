@@ -24,7 +24,7 @@ type QueryChartData = Array<{ [key: string]: string | number }>
  */
 export default defineEventHandler<Promise<ResponseModule.Response<QueryChartData>>>(async (event) => {
     try {
-        const { dimensions, dataSource, orders, filters, limit } = await readBody<QueryChartDataParams>(event);
+        const { dimensions,groups, dataSource, orders, filters, limit } = await readBody<QueryChartDataParams>(event);
 
         const getAnswerInstance = new GetAnswerDao();
 
@@ -43,7 +43,6 @@ export default defineEventHandler<Promise<ResponseModule.Response<QueryChartData
         // 拼接where语句
         if (filters.length > 0) {
             /* 因为在数据库中存储的字段都是下划线 为了好看到前端层是驼峰，在进行sql查询的时候又得转成下划线 */
-
             sql += ` where ${filters.map((item) => {
                 // 兼容 filterType 和 filterValue 为 空字符串 不生成sql语句
                 if (!item.filterType || !item.filterValue) {
@@ -67,9 +66,13 @@ export default defineEventHandler<Promise<ResponseModule.Response<QueryChartData
             }).filter(_ => _).join(',')}`;
         }
 
-        sql += ` limit ${limit}`;
+        // 拼接 group by语句
+        if (groups.length > 0) {
+            /* 因为在数据库中存储的字段都是下划线 为了好看到前端层是驼峰，在进行sql查询的时候又得转成下划线 */
+            sql += ` group by ${groups.map((item) => toLine(item.columnName)).join(',')}`;
+        }
 
-        console.log(sql);
+        sql += ` limit ${limit}`;
 
         const data = await getAnswerInstance.exe<QueryChartData>(sql as string);
 

@@ -1,7 +1,7 @@
 /**
  * @description: 分析模块公共类型
  */
-type DragData<V = ColumnStore.Column> = {
+type DragData<V = ColumnStore.ColumnOption> = {
   from:
   | 'dimension'
   | 'order'
@@ -9,6 +9,6 @@ type DragData<V = ColumnStore.Column> = {
   | 'group'
   | 'column'
   index: number
-  // value: DimensionStore.DimensionOption | FilterStore.FilterOption | OrderStore.OrderOption | GroupStore.GroupOption | ColumnStore.Column
+  // value: DimensionStore.DimensionOption | FilterStore.FilterOption | OrderStore.OrderOption | GroupStore.GroupOption | ColumnStore.ColumnOption
   value: V
 }

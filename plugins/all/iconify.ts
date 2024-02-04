@@ -5,6 +5,6 @@ import { Icon } from '@iconify/vue';
  * @link https://icon-sets.iconify.design/
  * @param {NuxtApp} nuxtApp
  */
-export default defineNuxtPlugin(({ vueApp }) => {
-  vueApp.component('Icon', Icon);
+export default defineNuxtPlugin((nuxtApp) => {
+  nuxtApp.vueApp.component('Icon', Icon);
 });

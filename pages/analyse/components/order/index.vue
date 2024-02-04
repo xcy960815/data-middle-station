@@ -12,26 +12,26 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <selecter
+        <selecter-order
           class="order__item__name"
           cast="order"
-          v-model:order-type="item.orderType"
-          v-model:display-name="item.displayName"
+          v-model:displayName="item.displayName"
+          v-model:orderType="item.orderType"
           :name="item.columnName"
           :index="index"
           v-model:aggregationType="item.aggregationType"
-        ></selecter>
+        ></selecter-order>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import Selecter from '@/components/selecter/order-selecter/index.vue';
 import { initData } from './init-data';
 import { handler } from './handler';
 const { orderList } = initData();
 const { dragstartHandler, dragHandler, dragoverHandler, dropHandler } = handler({ orderList });
+
 </script>
 
 <style lang="less" scoped>

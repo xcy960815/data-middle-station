@@ -16,18 +16,17 @@
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
       >
-        <selecter
+        <selecter-group
           class="group__item__name"
           cast="dimension"
           :name="item.columnName"
-        ></selecter>
+        ></selecter-group>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import Selecter from '@/components/selecter/group-selecter/index.vue'
 import { initData } from './init-data'
 import { handler } from './handler'
 const { groupList } = initData()

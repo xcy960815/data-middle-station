@@ -6,7 +6,12 @@ declare namespace OrderStore {
 
   type OrderKey = 'order'
 
-  type OrderType = 'asc' | 'desc' | 'default'
+  const OrderTypeEnums = {
+    "升序": 'asc',
+    "降序": 'desc'
+  } as const
+
+  type OrderType = (typeof OrderTypeEnums)[keyof typeof OrderTypeEnums]
 
   const OrderAggregationsEnum = {
     原始值: 'raw',
@@ -25,7 +30,7 @@ declare namespace OrderStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface OrderOption extends ColumnStore.Column {
+  interface OrderOption extends ColumnStore.ColumnOption {
     orderType: OrderType
     aggregationType: OrderAggregationsType
   }

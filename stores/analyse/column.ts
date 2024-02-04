@@ -17,7 +17,7 @@ export const useColumnStore = definePiniaStore<ColumnStore.ColumnKey, ColumnStor
     /**
      * @desc 返回列名
      * @param state {ColumnStore.ColumnState}
-     * @returns {ColumnStore.Column[]}
+     * @returns {ColumnStore.ColumnOption[]}
      */
     getColumns(state) {
       return state.columns;
@@ -43,21 +43,21 @@ export const useColumnStore = definePiniaStore<ColumnStore.ColumnKey, ColumnStor
   actions: {
     /**
      * @desc 更新列名
-     * @param columns {Array<ColumnStore.Column>}
+     * @param columns {Array<ColumnStore.ColumnOption>}
      */
     setColumns(columns) {
       this.columns = columns
     },
     /**
      * @desc 删除列名
-     * @param columns {Array<ColumnStore.Column>}
+     * @param columns {Array<ColumnStore.ColumnOption>}
      */
     removeColumns(columns) {
       this.columns = this.columns.filter(column => !columns.includes(column))
     },
     /**
      * @desc 更新列名
-     * @param column {ColumnStore.Column}
+     * @param column {ColumnStore.ColumnOption}
      * @param index {number}
      * @returns {void}
      */

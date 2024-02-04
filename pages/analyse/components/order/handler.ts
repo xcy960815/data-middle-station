@@ -79,12 +79,15 @@ export const handler = ({ orderList }: HandlerParams) => {
    */
   const dropHandler = (dragEvent: DragEvent) => {
     dragEvent.preventDefault();
-    const data = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
-    const orders = data.value;
-
+    const data: DragData<OrderStore.OrderOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
+    const order: OrderStore.OrderOption = {
+      ...data.value,
+      // 默认降序
+      orderType: "desc",
+    };
     switch (data.from) {
       case 'order': {
-        // relocate postion by dragging
+        // 调整顺序
         const targetIndex = getTargetIndex(data.index, dragEvent);
         if (targetIndex === data.index) return;
         const orders = JSON.parse(JSON.stringify(orderStore.orders));
@@ -94,7 +97,7 @@ export const handler = ({ orderList }: HandlerParams) => {
         break;
       }
       default: {
-        addOrder(orders);
+        addOrder(order);
         break;
       }
     }

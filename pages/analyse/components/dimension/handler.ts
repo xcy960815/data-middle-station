@@ -76,9 +76,10 @@ export const handler = ({ dimensionList }: HandlerParams) => {
   const dropHandler = (dragEvent: DragEvent) => {
     dragEvent.preventDefault();
     // get drag data
-    const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
-    const dimension = data.value;
-    const cloumn = data.value;
+    const data: DragData<DimensionStore.DimensionOption | ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
+    const dimension = data.value as DimensionStore.DimensionOption 
+    dimension.__invalid = true;
+    const cloumn = data.value as ColumnStore.ColumnOption;
     const index = data.index;
     switch (data.from) {
       case 'dimension':

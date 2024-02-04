@@ -19,13 +19,14 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <selecter
+        <selecter-dimension
           class="dimension__item__name"
           cast="dimension"
           :name="item.columnName"
           v-model:displayName="item.displayName"
           :index="index"
-        ></selecter>
+          :invalid="item.__invalid"
+        ></selecter-dimension>
       </div>
     </div>
     <!-- 字段的操作选项 -->
@@ -56,7 +57,6 @@
 </template>
 
 <script setup lang="ts">
-import Selecter from '@/components/selecter/dimension-selecter/index.vue'
 import { initData } from './init-data'
 import { handler } from './handler'
 const { dimensionList } = initData()
