@@ -4,8 +4,18 @@
     <div class="filter__content flex-auto">
       <div data-action="drag" class="filter__item" v-for="(item, index) in filterList" :key="index" draggable="true"
         @dragstart.native="dragstartHandler(index, $event)" @drag.native="dragHandler(index, $event)" @mousedown.stop>
-        <selecter-filter class="filter__item__name" cast="filter" :name="item.columnName" v-model:filterType="item.filterType"
-          v-model:displayName="item.displayName" :index="index" v-model:filterValue="item.filterValue"></selecter-filter>
+        <selecter-filter 
+          class="filter__item__name" 
+          cast="filter" 
+          :name="item.columnName" 
+          v-model:filterType="item.filterType"
+          v-model:displayName="item.displayName"
+          v-model:filterValue="item.filterValue"
+          v-model:aggregationType="item.aggregationType"
+          :column-type="item.columnType"
+          :index="index" 
+          >
+        </selecter-filter>
       </div>
     </div>
   </div>

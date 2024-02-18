@@ -1,6 +1,6 @@
 <template>
   <!-- selecter 公共模版 -->
-  <el-popover class="chart-selecter relative" :visible="selecterVisible" popper-class="chart-selecter-popover"
+  <el-popover class="chart-selecter relative" :visible="selecterVisible"  trigger="click" popper-class="chart-selecter-template-popover"
     placement="bottom" width="100px">
     <template #reference>
       <div class="chart-selecter-container" :class="invalidClass" @click="selecterVisible = true"
@@ -24,7 +24,7 @@
 import { ClickOutside as vClickOutside } from 'element-plus'
 const props = defineProps({
   // 通用参数
-  __invalid: {
+  invalid: {
     type: Boolean,
     default: false
   },
@@ -51,7 +51,7 @@ const dimensionStore = useDimensionStore();
 const groupStore = useGroupStore();
 const selecterVisible = ref(false)
 const invalidClass = computed(() => {
-  return props.__invalid ? 'invalid' : ''
+  return props.invalid ? 'invalid' : ''
 })
 const invalidContent = computed(() => {
   switch (props.cast) {
@@ -68,12 +68,13 @@ const invalidContent = computed(() => {
   }
 })
 const hasInvalidIcon = computed(() => () => {
-  return props.__invalid
+  return props.invalid
 })
 /**
  * @desc 点击外部隐藏 TODO 不知道为什么触发了两次
  */
 const onClickOutside = () => {
+  if(props.cast === 'filter' ) return
   selecterVisible.value = false
 }
 
@@ -101,7 +102,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss">
-.chart-selecter-popover {
+.chart-selecter-template-popover {
   padding: 5px 0 !important;
 
   .aggregation-option {
