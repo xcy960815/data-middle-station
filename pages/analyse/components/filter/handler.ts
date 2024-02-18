@@ -79,7 +79,7 @@ export const handler = ({ filterList }: HandlerParams) => {
     const data: DragData<FilterStore.FilterOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}');
     // 自己处理成自己需要的数据
     const filter = data.value
-    console.log('filter', filter);
+   
     
     switch (data.from) {
       case 'filter': {

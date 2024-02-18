@@ -1,22 +1,25 @@
 <template>
-    <selecter-template v-bin="$attrs" :display-name="displayName">
-        <template>
-            <div class="aggregation-option" v-for="filterAggregation in filterAggregations">
-                <!-- 复现用户选择的聚合条件 -->
+    <selecter-template v-bind="$attrs" :display-name="displayName">
+        <template #default>
+            <div class="aggregation-option" v-if="!aggregationType"
+                @click="handleChangeAggregation(filterAggregation.value as FilterStore.FilterAggregationsType)"
+                v-for="filterAggregation in filterAggregations">
                 <Icon class="aggregation-mark" icon="icon-park-solid:correct"
                     v-if="filterAggregation.value === aggregationType" />
                 <span>{{ filterAggregation.label }}</span>
             </div>
-            <div class='filter-selecter relative'>
+            <div v-else>test</div>
+            <!-- <div class='filter-selecter relative'>
                 <el-select v-model="localFilterType" placeholder="请选择过滤条件" class="w-full mb-1">
                     <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
                 <el-input v-if="hasFilterValue()" v-model="localFilterValue" placeholder="请输入过滤值"></el-input>
                 <div class="handle-box mt-1">
-                    <el-button @Click="handleConfirm">确定</el-button>
+                    <el-button @click="handleConfirm">确定</el-button>
                 </div>
-            </div>
+            </div> -->
         </template>
+
     </selecter-template>
 </template>
 
@@ -38,16 +41,16 @@ const props = defineProps({
         type: String,
         default: ''
     },
-    selecterVisible: {
-        type: Boolean,
-        default: false
-    },
     aggregationType: {
-        type: String as PropType<OrderStore.OrderAggregationsType>,
+        type: String as PropType<FilterStore.FilterAggregationsType>,
         default: ''
     },
+    columnType: {
+        type: String,
+        default: ''
+    }
 })
-const emits = defineEmits(['update:filterType', 'update:filterValue', 'update:selecterVisible', 'update:displayName'])
+const emits = defineEmits(['update:filterType', 'update:filterValue', 'update:displayName', 'update:aggregationType'])
 
 const filterAggregations = ref([
     {
@@ -79,6 +82,11 @@ const hasFilterValue = computed(() => () => {
     const currentFilterType = filterOptions.find(item => item.value === localFilterType.value)
     return currentFilterType ? ['为空', '不为空'].includes(currentFilterType.label) ? false : true : false
 })
+
+
+const handleChangeAggregation = (aggregationType: FilterStore.FilterAggregationsType) => {
+    emits('update:aggregationType', aggregationType)
+}
 
 const filterOptions = [
     {
@@ -137,8 +145,13 @@ const handleConfirm = () => {
     emits('update:displayName', `${props.name} ${currentFilterOption?.label} ${localFilterValue.value ? localFilterValue.value : ""}`)
     emits('update:filterType', localFilterType.value)
     emits('update:filterValue', localFilterValue.value)
-    emits('update:selecterVisible', false)
 }
+
+onMounted(() => {
+    localFilterType.value = props.filterType
+    localFilterValue.value = props.filterValue
+})
+
 </script>
 
 <style lang='scss' scoped>
