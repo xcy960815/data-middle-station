@@ -23,5 +23,5 @@ export default defineEventHandler<Promise<ResponseModule.Response<ChartsModule.C
     } catch (error: any) {
         return Response.error(error.message);
     }
-
 })
+
