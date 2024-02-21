@@ -3,9 +3,11 @@
  */
 import { Column, BindDataSource, Mapping, DOBase } from './dobase';
 import { toHump } from "./utils"
-
+/** 将数据库所有的类型罗列出来在前端统一展示成 number */
 const NUMBER_TYPE_ENUM = ['tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'decimal', 'float', 'double']
+/** 将数据库所有的类型罗列出来在前端统一展示成 string */
 const STRING_TYPE_ENUM = ['char', 'varchar', 'tinytext', 'text', 'mediumtext', 'longtext', 'tinyblob', 'blob', 'mediumblob', 'longblob']
+/** 将数据库所有的类型罗列出来在前端统一展示成 date */
 const DATE_TYPE_ENUM = ['date', 'datetime', 'timestamp', 'time', 'year']
 
 export class TableDaoMapping implements TableInfoModule.TableListOption, TableInfoModule.TableColumnOption {
@@ -67,7 +69,13 @@ export class TableDao extends DOBase {
    * @returns {Promise<Array<TableInfoModule.TableListOption>>}
    */
   public async queryTableList(): Promise<Array<TableInfoModule.TableListOption>> {
-    const sql = `SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema='blog'`;
+    const sql = 
+      `SELECT 
+        table_name 
+      FROM information_schema.tables 
+      WHERE 
+        table_type = 'BASE TABLE' 
+        AND table_schema='blog'`;
     return await this.exe<Array<TableInfoModule.TableListOption>>(sql);
   }
   /**
