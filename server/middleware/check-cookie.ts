@@ -28,7 +28,8 @@ export default defineEventHandler(async (event) => {
         httpOnly: true,
         path: '/',
         domain: 'localhost',
-        sameSite: 'lax'
+        sameSite: 'lax',
+        secure: false,
       })
       // 如果有sso单点登录页面，直接重定向到登录页面
       // sendRedirect(event, 'https://juejin.cn/post/7236635191379509308');
