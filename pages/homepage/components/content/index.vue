@@ -19,12 +19,10 @@ const { } = handler({ container })
     @include useTheme {
         background-color: getVar('bgColor');
     }
-    padding: 1rem;
-    display: grid;
-    grid-gap: 20px;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     .card {
-        aspect-ratio: 4 / 3;
+        margin: 1rem;
     }
 }
 </style>
