@@ -14,4 +14,4 @@
 
 <script setup lang="ts"></script>
 
-<style less scoped></style>
+<style scss scoped></style>

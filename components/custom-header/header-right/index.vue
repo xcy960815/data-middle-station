@@ -62,7 +62,6 @@ const { handleFullscreen, dropDownClick } = handler({ fullscreen, theme, THEME_K
     }
   }
 
-
   .tooltip-sapn {
     cursor: pointer;
     margin-right: 20px;

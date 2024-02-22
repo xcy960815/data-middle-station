@@ -34,7 +34,7 @@ const { dragstartHandler, dragHandler, dragoverHandler, dropHandler } = handler(
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .order {
   pointer-events: initial;
 

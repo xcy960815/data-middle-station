@@ -49,4 +49,4 @@ const layoutName = 'analyse'
 handler()
 </script>
 
-<style scoped lang="less"></style>
+<style scoped lang="scss"></style>

@@ -51,45 +51,8 @@ export default defineNuxtConfig({
       ['defineStore', 'definePiniaStore']
     ]
   },
-  // plugins: [
-  //   {
-  //     src: '../plugins/client/common-watermark.ts',
-  //     mode: 'client'
-  //   },
-  //   {
-  //     src: '../plugins/client/monaco-worker.ts',
-  //     mode: 'client'
-  //   },
-  //   {
-  //     src: '../plugins/client/socket.ts',
-  //     mode: 'client'
-  //   },
-  //   {
-  //     src: '../plugins/all/iconify.ts',
-  //     mode: 'client'
-  //   },
-  //   {
-  //     src: '../plugins/client/webworker.ts',
-  //     mode: 'client'
-  //   },
-  //   {
-  //     src: '../plugins/all/context-menu.ts',
-  //     mode: 'all'
-  //   },
-  //   {
-  //     src: '../plugins/all/element-iconfont.ts',
-  //     mode: 'all'
-  //   },
-  //   {
-  //     src: '../plugins/all/element-plus.ts',
-  //     mode: 'all'
-  //   }
-  //   // {
-  //   //   src: '../plugins/all/table-stick.ts',
-  //   //   mode: 'all'
-  //   // }
-  // ],
   vite:{
+    // publicPath: ''
     css:{
       preprocessorOptions:{
         scss:{

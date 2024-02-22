@@ -72,7 +72,7 @@ const {
 } = initData()
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 :deep(.charts-config-drawer) {
   :deep(.el-drawer) {
     margin-top: 60px !important;

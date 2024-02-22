@@ -38,7 +38,7 @@ const {
 } = handler({ groupList })
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .group {
   .group__content {
     list-style: none;

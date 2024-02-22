@@ -42,7 +42,7 @@ onMounted(()=>{
 })
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 .notfind {
   width: 100%;
   height: 100%;
