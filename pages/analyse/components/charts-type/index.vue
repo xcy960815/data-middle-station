@@ -18,7 +18,7 @@ const { chartType, chartsType } = initData();
 const { changeChartType } = handler();
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .charts-type {
   .active {
     border: 2px solid #f60;

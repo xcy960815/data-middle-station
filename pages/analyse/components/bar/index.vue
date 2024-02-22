@@ -32,7 +32,7 @@ const {
 } = handler()
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .bar {
   display: flex;
   align-items: center;

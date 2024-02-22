@@ -26,7 +26,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 .lazy-load {
   width: 100%;
   height: 100%;

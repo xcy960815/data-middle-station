@@ -33,4 +33,4 @@ const pieChartConfigData = computed(() => {
 })
 </script>
 
-<style lang="less" scoped></style>
+<style lang="scss" scoped></style>

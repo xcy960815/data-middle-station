@@ -80,7 +80,7 @@ const handleClickTitle = () => {
 }
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 .column {
   height: 100%;
   pointer-events: initial;

@@ -77,7 +77,7 @@ const handleCreateComputedField = () => {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .dimension {
   .dimension__content {
     list-style: none;

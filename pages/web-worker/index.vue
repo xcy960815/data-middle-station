@@ -60,7 +60,7 @@ const notUseWebworkerComputeCount = () => {
 };
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 @keyframes animatedNodeKeyframe {
   0% {
     background-color: red;

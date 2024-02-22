@@ -145,7 +145,7 @@ const handleOrderMouseDown = (mouseEvent: MouseEvent) => {
   document.addEventListener('mouseup', handleMouseUp)
 }
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .layout-analyse-main {
   .layout-analyse-body {
     .layout-analyse-cloumn {
