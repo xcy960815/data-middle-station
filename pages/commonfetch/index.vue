@@ -1,31 +1,25 @@
 <template>
     <div class='test-commonfetch'>
-        test-commonfetch
+        <button @click="getData">test-commonfetch</button>
     </div>
 </template>
 
 <script lang='ts' setup>
-commonFetch.baseUrl = 'https://api.github.com'
+// 设置请求域名
+// commonFetch.baseUrl = 'https://api.github.com'
+// commonFetch.withCredentials = true
 const getData = async () => {
-    const res = await commonFetch.get<string>('/users/defunkt', { name: "xiaoming" }, {
-        method: 'GET',
+    const result = await commonFetch.post<string>('/api/homepage/getData', { name: 'test', age: 18 }, {
+        // method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
     })
-    const result = await res.json()
 }
-// getData()
-
 
 onMounted(() => {
-    // fetch('https://api.github.com/users/defunkt', {
-    //     method: 'GET',
-    //     // body: JSON.stringify({
-    //     //     name: 'defunkt'
-    //     // })
-    // })
-    //     .then(res => res)
-    //     .then(data => {
-    //         console.log(data)
-    //     })
+    getData()
 })
+
 </script>
 <style lang='scss' scoped></style>

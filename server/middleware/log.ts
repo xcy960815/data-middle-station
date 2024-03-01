@@ -5,5 +5,6 @@ const logger = new Logger({ fileName: 'log', folderName: 'middleware' });
  */
 export default defineEventHandler(async (event) => {
   // console.log(chalk.greenBright('中间件日志---->   ') + getRequestURL(event));
+  
   logger.info(getRequestURL(event).toString());
 });
