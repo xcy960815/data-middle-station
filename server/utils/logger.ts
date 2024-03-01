@@ -3,7 +3,7 @@ import type { Logger as LoggerType } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
 /**
- * 日志类
+ * @description 日志类
  */
 export class Logger {
   private logger: LoggerType = createLogger({
