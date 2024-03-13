@@ -20,7 +20,6 @@ function isFetchRequestInit(options: unknown): options is FetchRequestInit {
   if (typeof options !== 'object' || options === null) {
     return false;
   }
-  // debugger
   // fetch请求配置的属性
   const fetchOptionsKeys = [
     'method', 'body', 'headers', 'cache', 'credentials',
