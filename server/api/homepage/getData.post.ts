@@ -14,7 +14,7 @@ export default defineEventHandler<Promise<ReturnData>>(async () => {
                     data: "post 请求 返回结果",
                     message: "success"
                 })
-            }, 3000)
+            }, 2000)
 
         })
     }

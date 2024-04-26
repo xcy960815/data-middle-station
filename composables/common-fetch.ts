@@ -1,19 +1,25 @@
 import pTimeout from 'p-timeout';
-import type { ClearablePromise } from "p-timeout"
 
 
-
+/**
+ * 自定义请求配置
+ */
 export interface FetchRequestInit extends RequestInit {
   // 请求域名
   baseUrl?: string;
-  // 携带cookie
-  credentials?: "omit" | "same-origin" | "include"
   // 请求拦截器
   requestInterceptor?: (requestConfig: FetchRequestInit) => FetchRequestInit;
   // 响应拦截器
   responseInterceptor?: <T = any>(response: FetchResponse<T>) => FetchResponse<T>;
 }
 
+// fetch请求配置的属性
+const fetchOptionsKeys = [
+  'method', 'body', 'headers', 'cache', 'credentials',
+  'keepalive', 'mode', 'redirect', 'referrer', 'integrity',
+  'signal', 'window', 'baseUrl', 'requestInterceptor',
+  'responseInterceptor'
+];
 
 /**
  * @desc 判断是否是Fetch请求配置
@@ -25,13 +31,7 @@ function isFetchRequestInit(options: unknown): options is FetchRequestInit {
   if (typeof options !== 'object' || options === null) {
     return false;
   }
-  // fetch请求配置的属性
-  const fetchOptionsKeys = [
-    'method', 'body', 'headers', 'cache', 'credentials',
-    'keepalive', 'mode', 'redirect', 'referrer', 'integrity',
-    'signal', 'window', 'baseUrl', 'requestInterceptor',
-    'responseInterceptor'
-  ];
+
 
   for (const key of fetchOptionsKeys) {
     if (!(key in options)) {
@@ -81,25 +81,32 @@ function isFetchRequestInit(options: unknown): options is FetchRequestInit {
 // 支持定义返回的json数据类型
 export interface FetchResponse<T = any> extends Response {
   json(): Promise<T>;
-  clear: Function
 }
 
 /**
  * @desc 封装一个基于fetch的通用请求方法
  */
 export class commonFetch {
-  // 域名
+  /**'
+   * 域名
+   */
   static baseUrl: string = "";
 
-  // 携带cookie
+  /**
+   * 是否携带cookie
+   */
   static credentials?: "omit" | "same-origin" | "include" = "omit";
 
-  // 默认超时时间
+  /**
+   * 默认超时时间
+   */
   static timeout: number = 60000;
 
-  static abortController: AbortController = new AbortController();
+  /**
+   * 对象控制器 用于终止一个或多个web请求
+   */
+  private static abortController: AbortController = new AbortController();
 
-  // 函数重载
   static get<T = any>(url: string, params?: Record<string, string | number>): Promise<FetchResponse<T>>
   static get<T = any>(url: string, options?: FetchRequestInit): Promise<FetchResponse<T>>
   static get<T = any>(url: string, params?: Record<string, string | number>, options?: FetchRequestInit): Promise<FetchResponse<T>>
@@ -117,7 +124,6 @@ export class commonFetch {
       url = `${url} ? ${new URLSearchParams(paramsOrOptions as Record<string, string>).toString()}`;
     }
 
-
     return commonFetch.request<T>(url, {
       method: "GET",
       ...paramsOrOptions,
@@ -125,8 +131,6 @@ export class commonFetch {
     });
 
   }
-
-  // 函数重载
   static post<T = any>(url: string, data: Record<string, string | number>, options?: FetchRequestInit): Promise<FetchResponse<T>>
   static post<T = any>(url: string, options?: FetchRequestInit): Promise<FetchResponse<T>>
   static post<T = any>(url: string, dataOrOptions?: Record<string, string | number> | FetchRequestInit, options?: FetchRequestInit): Promise<FetchResponse<T>>
@@ -157,23 +161,22 @@ export class commonFetch {
   /**
    * @desc 格式化参数
    * @param {FetchRequestInit} options 
-   * @returns 
+   * @returns {baseUrl:string; options:FetchRequestInit}
    */
-  static cleanOptions(options: FetchRequestInit) {
+  private static cleanOptions(options: FetchRequestInit):{
+    baseUrl:string
+    options:FetchRequestInit
+  } {
     const signal = this.abortController.signal;
     options.signal = signal
     options.credentials = options.credentials || commonFetch.credentials
-    const requestInterceptor = options.requestInterceptor;
-    const responseInterceptor = options.responseInterceptor;
-    const baseUrl = options.baseUrl || this.baseUrl;
+    const baseUrl = options.baseUrl || commonFetch.baseUrl;
     delete options.requestInterceptor;
     delete options.responseInterceptor;
     delete options.baseUrl;
     return {
       baseUrl,
       options,
-      requestInterceptor,
-      responseInterceptor,
     }
   }
 
@@ -183,9 +186,8 @@ export class commonFetch {
    * @param options {FetchRequestInit}
    * @returns {Promise<FetchResponse<T>>}
    */
-  static async request<T = any>(url: string, options: FetchRequestInit): Promise<FetchResponse<T>> {
+  private static request<T = any>(url: string, options: FetchRequestInit): Promise<FetchResponse<T>> {
     const { requestInterceptor, responseInterceptor } = options
-
     if (requestInterceptor) {
       // 请求配置的拦截器
       options = requestInterceptor(options);
@@ -196,33 +198,28 @@ export class commonFetch {
     // 拼接请求地址
     const requsetUrl = `${baseUrl}${url}`;
     // 发起请求
-    const responseP = new Promise<FetchResponse<T>>(async (resolve, reject) => {
-      const result = await fetch(requsetUrl, {
-        ...realOptions,
-      })
+    const responseP = fetch(requsetUrl, {
+      ...realOptions,
+    }).then((response: FetchResponse<T>) => {
       if (responseInterceptor) {
         // 响应配置的拦截器
-        resolve(responseInterceptor(result as FetchResponse<T>));
+        return responseInterceptor(response);
       } else {
         // 统一响应拦截器
-        resolve(result as FetchResponse<T>)
+        return (response)
       }
     })
 
 
     if (this.timeout) {
-      (responseP as ClearablePromise<FetchResponse<T>>).clear = () => {
-        this.abortController?.abort();
-      };
       return pTimeout(responseP, {
         milliseconds: this.timeout,
+        signal: this.abortController.signal,
         message: `${requsetUrl} timed out waiting for response`,
       });
     } else {
       return responseP as Promise<FetchResponse<T>>;
     }
-
-
   }
 }
 
