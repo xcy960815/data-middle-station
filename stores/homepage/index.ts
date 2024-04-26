@@ -5,10 +5,10 @@
  */
 
 export const useHomepageStore = definePiniaStore<
-HomePageStore.HomePageKey,
-HomePageStore.HomePageState,
-HomePageStore.HomePageGetters<HomePageStore.HomePageState>,
-HomePageStore.HomePageActions
+    HomePageStore.HomePageKey,
+    HomePageStore.HomePageState,
+    HomePageStore.HomePageGetters<HomePageStore.HomePageState>,
+    HomePageStore.HomePageActions
 >("homepage",
     {
         state: () => {

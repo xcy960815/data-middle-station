@@ -38,7 +38,7 @@ const props = defineProps({
 const { error } = toRefs(props);
 
 onMounted(()=>{
-  console.log(error.value)
+  // console.log(error.value)
 })
 </script>
 

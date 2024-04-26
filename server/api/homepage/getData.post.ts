@@ -1,14 +1,25 @@
 
-
-
-export default defineEventHandler<{
+interface ReturnData {
     code: number;
     data: string;
     message: string;
-}>(() => {
-    return {
-        code: 200,
-        data: "hello world",
-        message: "success"
+}
+
+export default defineEventHandler<Promise<ReturnData>>(async () => {
+    const returnData = () => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    code: 200,
+                    data: "post 请求 返回结果",
+                    message: "success"
+                })
+            }, 3000)
+
+        })
     }
+    const result = await returnData() as ReturnData
+
+    return result
+
 })

@@ -8,7 +8,7 @@ export default defineEventHandler<{
 }>(() => {
     return {
         code: 200,
-        data: "hello world",
+        data: "get 请求 返回结果",
         message: "success"
     }
 })
