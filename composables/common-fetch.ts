@@ -1,8 +1,13 @@
+import pTimeout from 'p-timeout';
+import type { ClearablePromise } from "p-timeout"
+
 
 
 export interface FetchRequestInit extends RequestInit {
   // 请求域名
   baseUrl?: string;
+  // 携带cookie
+  credentials?: "omit" | "same-origin" | "include"
   // 请求拦截器
   requestInterceptor?: (requestConfig: FetchRequestInit) => FetchRequestInit;
   // 响应拦截器
@@ -76,6 +81,7 @@ function isFetchRequestInit(options: unknown): options is FetchRequestInit {
 // 支持定义返回的json数据类型
 export interface FetchResponse<T = any> extends Response {
   json(): Promise<T>;
+  clear: Function
 }
 
 /**
@@ -84,11 +90,14 @@ export interface FetchResponse<T = any> extends Response {
 export class commonFetch {
   // 域名
   static baseUrl: string = "";
-  // 携带cookie
-  static withCredentials: boolean = false;
-  // 超时 TODO
-  static timeout: number = 10000;
 
+  // 携带cookie
+  static credentials?: "omit" | "same-origin" | "include" = "omit";
+
+  // 默认超时时间
+  static timeout: number = 60000;
+
+  static abortController: AbortController = new AbortController();
 
   // 函数重载
   static get<T = any>(url: string, params?: Record<string, string | number>): Promise<FetchResponse<T>>
@@ -105,8 +114,7 @@ export class commonFetch {
 
     if (!isFetchRequestInit(paramsOrOptions)) {
       // 当paramsOrOptions为请求参数的时候 将里面的value变成字符串
-      // paramsOrOptions = 
-      url = url + "?" + new URLSearchParams(paramsOrOptions as Record<string, string>).toString();
+      url = `${url} ? ${new URLSearchParams(paramsOrOptions as Record<string, string>).toString()}`;
     }
 
 
@@ -147,40 +155,74 @@ export class commonFetch {
   }
 
   /**
-   * @desc 封装一个基于fetch的通用请求方法
+   * @desc 格式化参数
+   * @param {FetchRequestInit} options 
+   * @returns 
+   */
+  static cleanOptions(options: FetchRequestInit) {
+    const signal = this.abortController.signal;
+    options.signal = signal
+    options.credentials = options.credentials || commonFetch.credentials
+    const requestInterceptor = options.requestInterceptor;
+    const responseInterceptor = options.responseInterceptor;
+    const baseUrl = options.baseUrl || this.baseUrl;
+    delete options.requestInterceptor;
+    delete options.responseInterceptor;
+    delete options.baseUrl;
+    return {
+      baseUrl,
+      options,
+      requestInterceptor,
+      responseInterceptor,
+    }
+  }
+
+  /**
+   * @desc 通用请求
    * @param url {string}
    * @param options {FetchRequestInit}
    * @returns {Promise<FetchResponse<T>>}
    */
   static async request<T = any>(url: string, options: FetchRequestInit): Promise<FetchResponse<T>> {
-    const requestInterceptor = options.requestInterceptor;
-    const responseInterceptor = options.responseInterceptor;
-    const baseUrl = options.baseUrl;
-    delete options.requestInterceptor;
-    delete options.responseInterceptor;
-    delete options.baseUrl;
+    const { requestInterceptor, responseInterceptor } = options
 
-    // 请求拦截器
     if (requestInterceptor) {
+      // 请求配置的拦截器
       options = requestInterceptor(options);
     } else {
       // 统一请求拦截器
     }
+    const { baseUrl, options: realOptions } = this.cleanOptions(options)
     // 拼接请求地址
-    const requsetUrl = `${baseUrl ? baseUrl : commonFetch.baseUrl}${url}`;
+    const requsetUrl = `${baseUrl}${url}`;
     // 发起请求
-    const response = await fetch(requsetUrl, {
-      credentials: commonFetch.withCredentials ? "include" : "same-origin",
-      // timeout: commonFetch.timeout,
-      ...options,
+    const responseP = new Promise<FetchResponse<T>>(async (resolve, reject) => {
+      const result = await fetch(requsetUrl, {
+        ...realOptions,
+      })
+      if (responseInterceptor) {
+        // 响应配置的拦截器
+        resolve(responseInterceptor(result as FetchResponse<T>));
+      } else {
+        // 统一响应拦截器
+        resolve(result as FetchResponse<T>)
+      }
     })
-    // 响应拦截器
-    if (responseInterceptor) {
-      return responseInterceptor(response);
+
+
+    if (this.timeout) {
+      (responseP as ClearablePromise<FetchResponse<T>>).clear = () => {
+        this.abortController?.abort();
+      };
+      return pTimeout(responseP, {
+        milliseconds: this.timeout,
+        message: `${requsetUrl} timed out waiting for response`,
+      });
     } else {
-      // 统一响应拦截器
+      return responseP as Promise<FetchResponse<T>>;
     }
-    return response as FetchResponse<T>;
+
+
   }
 }
 

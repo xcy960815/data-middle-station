@@ -9,7 +9,7 @@ const getUserNameByCookie = (
 }
 
 /**
- * @desc 权限校验中间件
+ * @desc 校验登录状态
  * @param {import("h3").Event} event
  * @returns {void}
  */
