@@ -41,7 +41,6 @@
     "monaco-editor": "^0.40.0",
     "mysql2": "^3.4.0",
     "node-cron": "^3.0.2",
-    "p-timeout": "^6.1.2",
     "pinia": "^2.1.4",
     "socket.io": "^4.7.1",
     "socket.io-client": "^4.7.1",
