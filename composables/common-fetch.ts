@@ -1,5 +1,13 @@
-import pTimeout from 'p-timeout';
+// import { throwError } from 'element-plus/es/utils/error.mjs';
+// import pTimeout from 'p-timeout';
 
+import { error } from "console";
+
+
+// 支持定义返回的json数据类型
+export interface FetchResponse<T = any> extends Response {
+  json(): Promise<T>;
+}
 
 /**
  * 自定义请求配置
@@ -7,19 +15,45 @@ import pTimeout from 'p-timeout';
 export interface FetchRequestInit extends RequestInit {
   // 请求域名
   baseUrl?: string;
+  // 超时时间
+  timeout?: number
   // 请求拦截器
   requestInterceptor?: (requestConfig: FetchRequestInit) => FetchRequestInit;
   // 响应拦截器
-  responseInterceptor?: <T = any>(response: FetchResponse<T>) => FetchResponse<T>;
+  responseInterceptor?: <T = any>(response: FetchResponse<T>) => Promise<FetchResponse<T>> | FetchResponse<T>;
 }
+
 
 // fetch请求配置的属性
 const fetchOptionsKeys = [
-  'method', 'body', 'headers', 'cache', 'credentials',
-  'keepalive', 'mode', 'redirect', 'referrer', 'integrity',
-  'signal', 'window', 'baseUrl', 'requestInterceptor',
+  'method',
+  'body',
+  'headers',
+  'cache',
+  'credentials',
+  'keepalive',
+  'mode',
+  'redirect',
+  'referrer',
+  'integrity',
+  'signal',
+  'window',
+  'referrerPolicy',
+  'dispatcher',
+  'duplex',
+  'baseUrl',
+  'requestInterceptor',
   'responseInterceptor'
 ];
+
+
+// function checkAsyncFunction(func: Function): boolean {
+//   const asyncFunctionRegExp = /^\s*async\s+/;
+//   const funcString = func.toString();
+//   return asyncFunctionRegExp.test(funcString);
+// }
+
+
 
 /**
  * @desc 判断是否是Fetch请求配置
@@ -75,22 +109,19 @@ function isFetchRequestInit(options: unknown): options is FetchRequestInit {
   return isFetchRequestInit;
 }
 
-
-
-
-// 支持定义返回的json数据类型
-export interface FetchResponse<T = any> extends Response {
-  json(): Promise<T>;
-}
-
 /**
  * @desc 封装一个基于fetch的通用请求方法
  */
 export class commonFetch {
-  /**'
+  /**
    * 域名
    */
   static baseUrl: string = "";
+
+  /**
+   * 临时域名
+   */
+  private static tempBaseUrl: string
 
   /**
    * 是否携带cookie
@@ -101,6 +132,11 @@ export class commonFetch {
    * 默认超时时间
    */
   static timeout: number = 60000;
+
+  /**
+   * 临时超时时间
+   */
+  private static tempTimeout: number
 
   /**
    * 对象控制器 用于终止一个或多个web请求
@@ -121,10 +157,9 @@ export class commonFetch {
 
     if (!isFetchRequestInit(paramsOrOptions)) {
       // 当paramsOrOptions为请求参数的时候 将里面的value变成字符串
-      url = `${url} ? ${new URLSearchParams(paramsOrOptions as Record<string, string>).toString()}`;
+      url = `${url}?${new URLSearchParams(paramsOrOptions as Record<string, string>).toString()}`;
     }
-
-    return commonFetch.request<T>(url, {
+    return this.request<T>(url, {
       method: "GET",
       ...paramsOrOptions,
       ...options,
@@ -144,13 +179,13 @@ export class commonFetch {
   static post<T = any>(url: string, dataOrOptions?: Record<string, string | number> | FetchRequestInit, options?: FetchRequestInit): Promise<FetchResponse<T>> {
     if (!isFetchRequestInit(dataOrOptions)) {
       // 当dataOrOptions为请求参数的时候 将里面的value变成字符串
-      return commonFetch.request<T>(url, {
+      return this.request<T>(url, {
         method: "POST",
         body: JSON.stringify(dataOrOptions),
         ...options,
       });
     } else {
-      return commonFetch.request<T>(url, {
+      return this.request<T>(url, {
         method: "POST",
         ...dataOrOptions,
         ...options,
@@ -161,23 +196,21 @@ export class commonFetch {
   /**
    * @desc 格式化参数
    * @param {FetchRequestInit} options 
-   * @returns {baseUrl:string; options:FetchRequestInit}
+   * @returns {FetchRequestInit}
    */
-  private static cleanOptions(options: FetchRequestInit):{
-    baseUrl:string
-    options:FetchRequestInit
-  } {
+  private static cleanOptions<RI extends FetchRequestInit>(options: RI): RI {
     const signal = this.abortController.signal;
     options.signal = signal
-    options.credentials = options.credentials || commonFetch.credentials
-    const baseUrl = options.baseUrl || commonFetch.baseUrl;
+    options.credentials = options.credentials || this.credentials
+    this.tempBaseUrl = options.baseUrl || this.baseUrl;
+    this.tempTimeout = options.timeout || this.timeout
+    /** 删除跟请求无关的配置参数 start */
+    delete options.baseUrl;
+    delete options.timeout
     delete options.requestInterceptor;
     delete options.responseInterceptor;
-    delete options.baseUrl;
-    return {
-      baseUrl,
-      options,
-    }
+    /** 删除跟请求无关的配置参数 end */
+    return options
   }
 
   /**
@@ -188,40 +221,57 @@ export class commonFetch {
    */
   private static request<T = any>(url: string, options: FetchRequestInit): Promise<FetchResponse<T>> {
     const { requestInterceptor, responseInterceptor } = options
+
     if (requestInterceptor) {
       // 请求配置的拦截器
       options = requestInterceptor(options);
     } else {
       // 统一请求拦截器
     }
-    const { baseUrl, options: realOptions } = this.cleanOptions(options)
+    const requestOptions = this.cleanOptions(options)
     // 拼接请求地址
-    const requsetUrl = `${baseUrl}${url}`;
+    const requsetUrl = `${this.tempBaseUrl}${url}`;
     // 发起请求
     const responseP = fetch(requsetUrl, {
-      ...realOptions,
+      ...requestOptions,
     }).then((response: FetchResponse<T>) => {
       if (responseInterceptor) {
-        // 响应配置的拦截器
         return responseInterceptor(response);
       } else {
         // 统一响应拦截器
-        return (response)
+        return response
       }
     })
 
 
-    if (this.timeout) {
-      return pTimeout(responseP, {
-        milliseconds: this.timeout,
-        signal: this.abortController.signal,
-        message: `${requsetUrl} timed out waiting for response`,
-      });
-    } else {
-      return responseP as Promise<FetchResponse<T>>;
-    }
+    return promiseTimeout(responseP, {
+      milliseconds: this.tempTimeout,
+      signal: this.abortController.signal,
+      message: `${requsetUrl} timed out waiting for response`,
+    })
+      .catch((error) => {
+        (error.name === 'TimeoutError') && this.abortController.abort("人为控制超时")
+        throw new Error(error)
+      })
+
+
   }
 }
 
 
-
+/**
+ * @desc CommonFetch 错误类
+ * @todo 使用错误类
+ */
+class CommonFetchError extends Error {
+  statusCode?: number;
+  statusText?: string;
+  reason?: string;
+  response?: Response;
+  constructor(errorMessage: string, options?: { response: Response }) {
+    super(errorMessage);
+    if (options?.response) {
+      this.response = options.response;
+    }
+  }
+}

@@ -15,7 +15,7 @@ async function queryTasks() {
       `queryAlarms ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`
     )
   )
-  await serverSleep(300000)
+  await serverSleep(3000000)
   queryTasks()
 }
 /**
