@@ -1,7 +1,3 @@
-// import { throwError } from 'element-plus/es/utils/error.mjs';
-// import pTimeout from 'p-timeout';
-
-import { error } from "console";
 
 
 // 支持定义返回的json数据类型
@@ -242,8 +238,7 @@ export class commonFetch {
         return response
       }
     })
-
-
+    
     return promiseTimeout(responseP, {
       milliseconds: this.tempTimeout,
       signal: this.abortController.signal,
@@ -253,8 +248,6 @@ export class commonFetch {
         (error.name === 'TimeoutError') && this.abortController.abort("人为控制超时")
         throw new Error(error)
       })
-
-
   }
 }
 

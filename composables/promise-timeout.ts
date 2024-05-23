@@ -15,6 +15,9 @@ export type ClearablePromiseOptions = {
 };
 
 
+/**
+ * @desc 超时错误类
+ */
 export class TimeoutError extends Error {
     name: string
     constructor(message?: string) {
@@ -23,6 +26,9 @@ export class TimeoutError extends Error {
     }
 }
 
+/**
+ * @desc Abort 错误类
+ */
 export class AbortError extends Error {
     name: string
     message: string;
@@ -33,19 +39,23 @@ export class AbortError extends Error {
     }
 }
 
-
-const getDOMException = (errorMessage: string): AbortError | DOMException => {
-    return globalThis.DOMException === undefined
-        ? new AbortError(errorMessage)
-        : new DOMException(errorMessage);
+/**
+ * @desc 获取dom异常信息
+ * @param {string} errorMessage 
+ * @returns { AbortError | DOMException }
+ */
+const getDomException = (errorMessage: string): AbortError | DOMException => {
+    return globalThis.DOMException === undefined ? new AbortError(errorMessage) : new DOMException(errorMessage);
 }
 
+/**
+ * 
+ * @param {AbortSignal} signal 
+ * @returns 
+ */
 const getAbortedReason = (signal: AbortSignal) => {
-    const reason = signal.reason === undefined
-        ? getDOMException('This operation was aborted')
-        : signal.reason;
-
-    return reason instanceof Error ? reason : getDOMException(reason);
+    const reason = signal.reason === undefined ? getDomException('This operation was aborted') : signal.reason;
+    return reason instanceof Error ? reason : getDomException(reason);
 };
 
 export function promiseTimeout<V = any>(inputPromise: PromiseLike<V>, options: ClearablePromiseOptions) {
@@ -68,11 +78,11 @@ export function promiseTimeout<V = any>(inputPromise: PromiseLike<V>, options: C
                 reject(getAbortedReason(signal));
             });
         }
-        
+
         if (milliseconds === Number.POSITIVE_INFINITY) {
-			inputPromise.then(resolve, reject);
-			return;
-		}
+            inputPromise.then(resolve, reject);
+            return;
+        }
 
         timer = customTimers.setTimeout.call(undefined, () => {
             if (message === false) {
@@ -96,14 +106,18 @@ export function promiseTimeout<V = any>(inputPromise: PromiseLike<V>, options: C
         })();
     });
 
-
+    /**
+     * @desc 给传递进来的promise 设置 clear 方法 
+     */
     const cancelablePromise = wrappedPromise.finally(() => {
-        cancelablePromise.clear();
-    }) as ClearablePromise<V>;
-
-    cancelablePromise.clear = () => {
+        // cancelablePromise.clear();
         customTimers.clearTimeout.call(undefined, timer);
         timer = undefined;
+    }) as ClearablePromise<V>;
+
+
+    cancelablePromise.clear = () => {
+
     };
 
     return cancelablePromise;
