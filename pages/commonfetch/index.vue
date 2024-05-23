@@ -1,6 +1,6 @@
 <template>
     <div class='test-commonfetch'>
-        <button @click="getData">test-commonfetch</button>
+        <button class="btn btn-primary" @click="getData">test-commonfetch</button>
     </div>
 </template>
 
@@ -30,7 +30,7 @@ const getData = async () => {
             // 临时添加cookie
             requestConfig.credentials = "same-origin"
             // 临时修改超时时间
-            requestConfig.timeout = 3000
+            requestConfig.timeout = 1000
 
             return requestConfig
         },
@@ -55,4 +55,12 @@ onMounted(() => {
 })
 
 </script>
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.test-commonfetch {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+</style>
