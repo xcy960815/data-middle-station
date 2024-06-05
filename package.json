@@ -51,5 +51,11 @@
   },
   "volta": {
     "node": "18.15.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged",
+      "commit-msg": "vcm"
+    }
   }
 }

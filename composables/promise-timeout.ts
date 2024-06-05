@@ -1,11 +1,7 @@
 export type ClearablePromiseOptions = {
   milliseconds: number
   message?: string | Error | false
-  readonly customTimers?: {
-    setTimeout: typeof globalThis.setTimeout
-    clearTimeout: typeof globalThis.clearTimeout
-  }
-  signal?: globalThis.AbortSignal
+  abortController?: globalThis.AbortController
 }
 
 /**
@@ -64,50 +60,48 @@ export function promiseTimeout<V = any>(
   inputPromise: PromiseLike<V>,
   options: ClearablePromiseOptions
 ) {
-  const {
-    milliseconds,
-    message,
-    customTimers = { setTimeout, clearTimeout }
-  } = options
+  const { milliseconds, message, abortController } = options
 
   let timer: ReturnType<typeof setTimeout> | undefined
 
   const wrappedPromise = new Promise<V | void>(
     (resolve, reject) => {
-      const { signal } = options
-      if (signal) {
-        if (signal.aborted) {
-          reject(getAbortedReason(signal))
-        }
+      // const { signal } = options
+      // if (signal) {
+      //   if (signal.aborted) {
+      //     reject(getAbortedReason(signal))
+      //   }
 
-        signal.addEventListener('abort', () => {
-          reject(getAbortedReason(signal))
-        })
-      }
+      //   signal.addEventListener('abort', () => {
+      //     reject(getAbortedReason(signal))
+      //   })
+      // }
 
       if (milliseconds === Number.POSITIVE_INFINITY) {
         inputPromise.then(resolve, reject)
         return
       }
 
-      timer = customTimers.setTimeout.call(
+      timer = setTimeout.call(
         undefined,
         () => {
+          abortController?.abort()
           if (message === false) {
             resolve()
           } else if (message instanceof Error) {
             reject(message)
           } else {
-            const timeoutError = new TimeoutError()
-            timeoutError.message =
+            const errorMessage =
               message ??
               `Promise timed out after ${milliseconds} milliseconds`
+            const timeoutError = new TimeoutError(
+              errorMessage
+            )
             reject(timeoutError)
           }
         },
         milliseconds
       )
-
       ;(async () => {
         try {
           const inputPromiseResult = await inputPromise
@@ -123,7 +117,7 @@ export function promiseTimeout<V = any>(
    * @desc 默认清除定时器
    */
   const cancelablePromise = wrappedPromise.finally(() => {
-    customTimers.clearTimeout.call(undefined, timer)
+    clearTimeout.call(undefined, timer)
     timer = undefined
   })
 
