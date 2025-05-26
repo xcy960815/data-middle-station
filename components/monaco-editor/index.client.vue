@@ -179,7 +179,7 @@ const initEditor = () => {
           position
         ) as monaco.languages.ProviderResult<monaco.languages.CompletionList>
     })
-    
+
   const monacoEditorOptionIsEmpty =
     Object.keys(props.monacoEditorOption).length === 0 &&
     props.monacoEditorOption.constructor === Object
@@ -208,7 +208,6 @@ const resetEditor = () => {
 }
 
 onMounted(() => {
-  console.log("onMounted")
   // 解决通过dialog 弹出的组件 无法正常渲染的问题
   nextTick(() => {
     initEditor()

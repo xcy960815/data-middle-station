@@ -7,7 +7,14 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "changelog": "conventional-changelog -c changelog.config.js -i CHANGELOG.md -s --commit-path . --date-format YYYY-MM-DD --output-unreleased",
+    "changelog:first": "conventional-changelog -c changelog.config.js -i CHANGELOG.md -s -r 0 --date-format YYYY-MM-DD --output-unreleased",
+    "changelog:version": "conventional-changelog -c changelog.config.js -i CHANGELOG.md -s -r 0 --release-count 0 --date-format YYYY-MM-DD --output-unreleased",
+    "version": "conventional-changelog -c changelog.config.js -i CHANGELOG.md -s --date-format YYYY-MM-DD --output-unreleased && git add CHANGELOG.md && git commit -m \"docs: update changelog\"",
+    "version:patch": "npm version patch -m \"chore(release): %s\" && npm run version",
+    "version:minor": "npm version minor -m \"chore(release): %s\" && npm run version",
+    "version:major": "npm version major -m \"chore(release): %s\" && npm run version"
   },
   "overrides": {
     "vue": "latest"
@@ -22,6 +29,7 @@
     "@types/node": "^18.17.3",
     "@types/node-cron": "^3.0.1",
     "commitlint": "^17.6.7",
+    "conventional-changelog-cli": "^5.0.0",
     "globals": "^16.2.0",
     "husky": "^8.0.3",
     "less": "^4.1.3",
