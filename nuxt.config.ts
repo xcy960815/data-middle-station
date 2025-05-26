@@ -60,9 +60,15 @@ export default defineNuxtConfig({
           additionalData: `@use "./assets/styles/theme-variables.scss" as *;`
         }
       }
+    },
+    server: {
+      hmr: {
+        overlay: false
+      }
     }
   },
   nitro: {
+    compatibilityDate: '2024-05-27',
     esbuild: {
       options: {
         tsconfigRaw: {
