@@ -19,7 +19,7 @@ export default defineNuxtConfig({
     // 加载全局 css
     '~/assets/styles/main.css',
     // 加载全局 scss
-    // '~/assets/styles/theme-util.scss',
+    '~/assets/styles/theme-util.scss'
   ],
 
   postcss: {
@@ -51,16 +51,16 @@ export default defineNuxtConfig({
       ['defineStore', 'definePiniaStore']
     ]
   },
-  vite:{
+  vite: {
     // publicPath: ''
-    css:{
-      preprocessorOptions:{
-        scss:{
-          // 引入全局scss 变量 
-          additionalData:`@import "./assets/styles/theme-util.scss";`
+    css: {
+      preprocessorOptions: {
+        scss: {
+          // 引入全局scss 变量
+          additionalData: `@use "./assets/styles/theme-variables.scss" as *;`
         }
       }
-    },
+    }
   },
   nitro: {
     esbuild: {

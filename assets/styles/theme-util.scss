@@ -1,21 +1,21 @@
-@import "theme-variables.scss";
+@use 'theme-variables' as *;
 
 // 当前的主题
-$currentTheme: "light";
+$currentTheme: 'light';
 
 @mixin useTheme() {
-    @each $key, $value in $themes {
-        $currentTheme: $key !global;
+  @each $key, $value in $themes {
+    $currentTheme: $key !global;
 
-        html[data-theme="#{$key}"] & {
-            @content;
-        }
+    html[data-theme='#{$key}'] & {
+      @content;
     }
+  }
 }
 
 @function getVar($paramName) {
-    $themeMap: map-get($themes, $currentTheme );
-    @return map-get($themeMap, $paramName);
+  $themeMap: map-get($themes, $currentTheme);
+  @return map-get($themeMap, $paramName);
 }
 
 // // 使用方式
