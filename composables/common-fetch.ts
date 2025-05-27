@@ -268,7 +268,7 @@ export class commonFetch {
   private static request<T = any>(
     url: string,
     options: FetchRequestInit
-  ): Promise<FetchResponse<T> | void> {
+  ): Promise<FetchResponse<T>> {
     const { requestInterceptor, responseInterceptor } =
       options
 

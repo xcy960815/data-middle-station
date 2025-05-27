@@ -1,14 +1,13 @@
 <template>
   <!-- 看板页面的layout布局 -->
-  <el-container
+  <div
     class="layout-dashboard-main h-full w-full !flex !flex-col flex-1 border-box"
   >
     <slot name="header"></slot>
-    <el-container
+    <div
       class="layout-dashboard-body !flex overflow-hidden"
-    >
-    </el-container>
-  </el-container>
+    ></div>
+  </div>
 </template>
 
 <script setup lang="ts"></script>
