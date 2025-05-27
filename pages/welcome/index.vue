@@ -116,19 +116,23 @@ onUnmounted(() => {
   if (setIntervalId.value) {
     cancelAnimationFrame(setIntervalId.value)
   }
-  window.removeEventListener('resize', setCanvasSize)
+  if (process.client) {
+    window.removeEventListener('resize', setCanvasSize)
+  }
 })
 
 onMounted(() => {
-  canvas.value = document.getElementById(
-    'cvs'
-  ) as HTMLCanvasElement
-  ctx.value = canvas.value.getContext('2d')
+  if (process.client) {
+    canvas.value = document.getElementById(
+      'cvs'
+    ) as HTMLCanvasElement
+    ctx.value = canvas.value.getContext('2d')
 
-  if (canvas.value && ctx.value) {
-    setCanvasSize()
-    window.addEventListener('resize', setCanvasSize)
-    animate()
+    if (canvas.value && ctx.value) {
+      setCanvasSize()
+      window.addEventListener('resize', setCanvasSize)
+      animate()
+    }
   }
 })
 </script>

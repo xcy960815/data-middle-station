@@ -4,12 +4,14 @@
     <div class="noise"></div>
     <div class="overlay"></div>
     <div class="terminal">
-      <h1>Error Page</h1>
+      <h1>错误页面</h1>
       <h2>{{ error.message }}</h2>
       <ul class="error-list">
-        <li class="error-item">您要查找的页面可能已被删除、名称已更改或暂时不可用。</li>
+        <li class="error-item">
+          您要查找的页面可能已被删除、名称已更改或暂时不可用。
+        </li>
         <li class="error-item">请返回上一页或首页</li>
-        <li class="error-item">good luck.</li>
+        <li class="error-item">祝您好运。</li>
       </ul>
     </div>
   </div>
@@ -19,11 +21,11 @@
 const props = defineProps({
   error: {
     type: Object as PropType<{
-      url: string;
-      statusCode: number;
-      statusMessage: string;
-      message: string;
-      stack: string;
+      url: string
+      statusCode: number
+      statusMessage: string
+      message: string
+      stack: string
     }>,
     required: true,
     default: () => ({
@@ -31,13 +33,13 @@ const props = defineProps({
       statusCode: 404,
       statusMessage: 'Not Found',
       message: 'Not Found',
-      stack: '',
-    }),
-  },
-});
-const { error } = toRefs(props);
+      stack: ''
+    })
+  }
+})
+const { error } = toRefs(props)
 
-onMounted(()=>{
+onMounted(() => {
   // console.log(error.value)
 })
 </script>
@@ -71,7 +73,12 @@ onMounted(()=>{
     pointer-events: none;
     position: absolute;
     width: 100%;
-    background: repeating-linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.3) 50%, transparent);
+    background: repeating-linear-gradient(
+      180deg,
+      transparent,
+      rgba(0, 0, 0, 0.3) 50%,
+      transparent
+    );
     background-size: auto;
     background-size: auto 4px;
     z-index: 2;
@@ -109,7 +116,9 @@ onMounted(()=>{
 
   .terminal > * {
     color: #80ff80cc;
-    text-shadow: 0 0 1px rgba(51, 255, 51, 0.4), 0 0 2px hsla(0, 0%, 100%, 0.8);
+    text-shadow:
+      0 0 1px rgba(51, 255, 51, 0.4),
+      0 0 2px hsla(0, 0%, 100%, 0.8);
   }
   .error-list {
     margin-top: 2rem;

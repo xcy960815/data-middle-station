@@ -23,11 +23,11 @@ const {} = handler({ container })
 </script>
 
 <style lang="scss" scoped>
-@import '~/assets/styles/theme-util.scss';
+@use '~/assets/styles/theme-util.scss' as theme;
 
 .homepage-container {
-  @include useTheme {
-    background-color: getVar('bgColor');
+  @include theme.useTheme {
+    background-color: theme.getVar('bgColor');
   }
   display: flex;
   flex-wrap: wrap;
