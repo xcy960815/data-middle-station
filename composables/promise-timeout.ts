@@ -59,24 +59,13 @@ const getAbortedReason = (signal: AbortSignal) => {
 export function promiseTimeout<V = any>(
   inputPromise: PromiseLike<V>,
   options: ClearablePromiseOptions
-) {
+): Promise<V> {
   const { milliseconds, message, abortController } = options
 
   let timer: ReturnType<typeof setTimeout> | undefined
 
-  const wrappedPromise = new Promise<V | void>(
+  const wrappedPromise = new Promise<V>(
     (resolve, reject) => {
-      // const { signal } = options
-      // if (signal) {
-      //   if (signal.aborted) {
-      //     reject(getAbortedReason(signal))
-      //   }
-
-      //   signal.addEventListener('abort', () => {
-      //     reject(getAbortedReason(signal))
-      //   })
-      // }
-
       if (milliseconds === Number.POSITIVE_INFINITY) {
         inputPromise.then(resolve, reject)
         return
@@ -87,7 +76,7 @@ export function promiseTimeout<V = any>(
         () => {
           abortController?.abort()
           if (message === false) {
-            resolve()
+            reject(new TimeoutError('Operation timed out'))
           } else if (message instanceof Error) {
             reject(message)
           } else {

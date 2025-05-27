@@ -1,12 +1,10 @@
 <template>
   <!-- 分析页面的layout布局 -->
-  <el-container
+  <div
     class="layout-analyse-main h-full w-full !flex !flex-col flex-1 border-box"
   >
     <slot name="header"></slot>
-    <el-container
-      class="layout-analyse-body !flex overflow-hidden"
-    >
+    <div class="layout-analyse-body !flex overflow-hidden">
       <!-- cloumn -->
       <el-aside
         class="layout-analyse-cloumn relative text-[14px] p-[18px,30px]"
@@ -47,7 +45,9 @@
           <slot name="bar"></slot>
         </div>
 
-        <div class="layout-analyse-charts flex-1 overflow-hidden">
+        <div
+          class="layout-analyse-charts flex-1 overflow-hidden"
+        >
           <slot name="charts"></slot>
         </div>
 
@@ -63,8 +63,8 @@
         <slot name="charts-type"></slot>
       </el-aside>
       <slot name="charts-config"></slot>
-    </el-container>
-  </el-container>
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>

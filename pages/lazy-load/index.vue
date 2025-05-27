@@ -1,5 +1,5 @@
 <template>
-  <div class="lazy-load">
+  <div class="lazy-load-container">
     <div class="lazy-load-item" v-for="item in 100"></div>
   </div>
 </template>
@@ -10,24 +10,28 @@ onMounted(() => {
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('lazy-load-item--loaded');
-          ob.unobserve(entry.target);
+          entry.target.classList.add(
+            'lazy-load-item--loaded'
+          )
+          ob.unobserve(entry.target)
         }
-      });
+      })
     },
     {
-      threshold: 1,
-    },
-  );
-  const lazyLoadItems = document.querySelectorAll('.lazy-load-item');
+      threshold: 1
+    }
+  )
+  const lazyLoadItems = document.querySelectorAll(
+    '.lazy-load-item'
+  )
   lazyLoadItems.forEach((item) => {
-    ob.observe(item);
-  });
-});
+    ob.observe(item)
+  })
+})
 </script>
 
 <style scoped lang="scss">
-.lazy-load {
+.lazy-load-container {
   width: 100%;
   height: 100%;
   background-color: #fff;
