@@ -1,64 +1,67 @@
 <template>
-  <div
-    class="dimension relative h-full flex flex-col"
-    @dragover="dragoverHandler"
-    @drop="dropHandler"
-  >
-    <div class="dimension__title my-1">值</div>
+  <ClientOnly>
     <div
-      class="dimension__content flex-1"
-      v-contextmenu:contextmenu
+      class="dimension relative h-full flex flex-col"
+      @dragover="dragoverHandler"
+      @drop="dropHandler"
     >
-      <div
-        data-action="drag"
-        class="dimension__item my-1"
-        v-for="(item, index) in dimensionList"
-        :key="index"
-        draggable="true"
-        @dragstart.native="dragstartHandler(index, $event)"
-        @drag.native="dragHandler(index, $event)"
-        @mousedown.stop
-      >
-        <selecter-dimension
-          class="dimension__item__name"
-          cast="dimension"
-          :name="item.columnName"
-          v-model:displayName="item.displayName"
-          :index="index"
-          :invalid="item.__invalid"
-        ></selecter-dimension>
+      <div class="dimension__title my-1">值</div>
+      <div class="dimension__content flex-1">
+        <div
+          data-action="drag"
+          class="dimension__item my-1"
+          v-for="(item, index) in dimensionList"
+          :key="index"
+          draggable="true"
+          @dragstart.native="
+            dragstartHandler(index, $event)
+          "
+          @drag.native="dragHandler(index, $event)"
+          @mousedown.stop
+        >
+          <selecter-dimension
+            class="dimension__item__name"
+            cast="dimension"
+            :name="item.columnName"
+            v-model:displayName="item.displayName"
+            :index="index"
+            :invalid="item.__invalid"
+          ></selecter-dimension>
+        </div>
       </div>
+      <!-- v-contextmenu:contextmenu -->
+      <!-- 字段的操作选项 -->
+      <!-- <context-menu ref="contextmenu">
+        <context-menu-item @click="handleCreateComputedField">
+          创建计算字段
+        </context-menu-item>
+      </context-menu> -->
+      <!-- <client-only>
+        <el-dialog
+          v-model="createComputedFieldVisible"
+          title="创建计算字段"
+          width="30%"
+        >
+          <monaco-editor></monaco-editor>
+          <template #footer>
+            <span class="dialog-footer">
+              <el-button
+                @click="createComputedFieldVisible = false"
+              >
+                取消
+              </el-button>
+            </span>
+          </template>
+        </el-dialog>
+      </client-only> -->
     </div>
-    <!-- 字段的操作选项 -->
-    <context-menu ref="contextmenu">
-      <context-menu-item @click="handleCreateComputedField">
-        创建计算字段
-      </context-menu-item>
-    </context-menu>
-    <!-- <client-only>
-      <el-dialog
-        v-model="createComputedFieldVisible"
-        title="创建计算字段"
-        width="30%"
-      >
-        <monaco-editor></monaco-editor>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button
-              @click="createComputedFieldVisible = false"
-            >
-              取消
-            </el-button>
-          </span>
-        </template>
-      </el-dialog>
-    </client-only> -->
-  </div>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">
 import { initData } from './init-data'
 import { handler } from './handler'
+
 const { dimensionList } = initData()
 const createComputedFieldVisible = ref<boolean>(false)
 const {

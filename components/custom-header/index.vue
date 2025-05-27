@@ -23,18 +23,18 @@ const handleClickTitle = () => {
 }
 </script>
 <style lang="scss" scoped>
-@import '~/assets/styles/theme-util.scss';
+@use '~/assets/styles/theme-util.scss' as theme;
 
 .header {
   z-index: 1;
-  @include useTheme {
-    background-color: getVar('bgColor');
+  @include theme.useTheme {
+    background-color: theme.getVar('bgColor');
     // 阴影颜色
-    box-shadow: 0 0 10px 0 getVar('shadowColor');
+    box-shadow: 0 0 10px 0 theme.getVar('shadowColor');
   }
   .title {
-    @include useTheme {
-      color: getVar('textColor');
+    @include theme.useTheme {
+      color: theme.getVar('textColor');
     }
   }
 }

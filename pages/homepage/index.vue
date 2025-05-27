@@ -1,5 +1,5 @@
 <template>
-   <NuxtLayout :name="layoutName">
+  <NuxtLayout :name="layoutName">
     <template #header>
       <custom-header></custom-header>
     </template>
@@ -14,5 +14,4 @@ import Content from './components/content/index.vue'
 const layoutName = 'homepage'
 </script>
 
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>

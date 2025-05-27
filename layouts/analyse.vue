@@ -4,41 +4,39 @@
     class="layout-analyse-main h-full w-full !flex !flex-col flex-1 border-box"
   >
     <slot name="header"></slot>
-    <div class="layout-analyse-body !flex overflow-hidden">
-      <!-- cloumn -->
-      <el-aside
+    <div
+      class="layout-analyse-body !flex flex-1 overflow-hidden"
+    >
+      <div
         class="layout-analyse-cloumn relative text-[14px] p-[18px,30px]"
         @mousedown.prevent="handleCloumnMouseDown"
       >
         <slot name="cloumn"></slot>
-      </el-aside>
+      </div>
 
-      <el-aside
+      <div
         class="layout-analyse-handler !flex flex-col !w-[180px] text-[12px] m-[18px]"
       >
-        <!-- filter -->
-        <el-aside
+        <div
           class="layout-filter relative h-[130px] !w-full bg-[#f5f5f5] rounded-[4px] p-[7px]"
           @mousedown.prevent="handleFilterMouseDown"
         >
           <slot name="filter"></slot>
-        </el-aside>
-        <!-- order -->
-        <el-aside
+        </div>
+        <div
           class="layout-order relative h-[130px] !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]"
           @mousedown.prevent="handleOrderMouseDown"
         >
           <slot name="order"></slot>
-        </el-aside>
-        <!-- dimension -->
-        <el-aside
+        </div>
+        <div
           class="layout-dimension flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]"
         >
           <slot name="dimension"></slot>
-        </el-aside>
-      </el-aside>
+        </div>
+      </div>
 
-      <el-main
+      <div
         class="layout-analyse-content !flex flex-1 flex-col overflow-hidden"
       >
         <div class="layout-analyse-bar">
@@ -56,12 +54,12 @@
         >
           <slot name="group"></slot>
         </div>
-      </el-main>
-      <el-aside
+      </div>
+      <div
         class="layout-analyse-charts-type !w-[140px] pt-[18px] bg-[#f5f5f5]"
       >
         <slot name="charts-type"></slot>
-      </el-aside>
+      </div>
       <slot name="charts-config"></slot>
     </div>
   </div>

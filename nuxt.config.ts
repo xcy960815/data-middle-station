@@ -3,7 +3,7 @@ import { resolve } from 'path'
 export default defineNuxtConfig({
   app: {
     head: {
-      title: 'blog-home-nuxt',
+      title: '数据分析平台',
       link: [
         // 要放在public中
         {

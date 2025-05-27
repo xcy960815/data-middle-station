@@ -1,23 +1,59 @@
 /**
  * @desc 表格的dao层
  */
-import { Column, BindDataSource, Mapping, DOBase } from './dobase';
-import { toHump } from "./utils"
+import {
+  Column,
+  BindDataSource,
+  Mapping,
+  DOBase
+} from './dobase'
+import { toHump } from './utils'
 /** 将数据库所有的类型罗列出来在前端统一展示成 number */
-const NUMBER_TYPE_ENUM = ['tinyint', 'smallint', 'mediumint', 'int', 'bigint', 'decimal', 'float', 'double']
+const NUMBER_TYPE_ENUM = [
+  'tinyint',
+  'smallint',
+  'mediumint',
+  'int',
+  'bigint',
+  'decimal',
+  'float',
+  'double'
+]
 /** 将数据库所有的类型罗列出来在前端统一展示成 string */
-const STRING_TYPE_ENUM = ['char', 'varchar', 'tinytext', 'text', 'mediumtext', 'longtext', 'tinyblob', 'blob', 'mediumblob', 'longblob']
+const STRING_TYPE_ENUM = [
+  'char',
+  'varchar',
+  'tinytext',
+  'text',
+  'mediumtext',
+  'longtext',
+  'tinyblob',
+  'blob',
+  'mediumblob',
+  'longblob'
+]
 /** 将数据库所有的类型罗列出来在前端统一展示成 date */
-const DATE_TYPE_ENUM = ['date', 'datetime', 'timestamp', 'time', 'year']
+const DATE_TYPE_ENUM = [
+  'date',
+  'datetime',
+  'timestamp',
+  'time',
+  'year'
+]
 
-export class TableDaoMapping implements TableInfoModule.TableListOption, TableInfoModule.TableColumnOption {
+export class TableDaoMapping
+  implements
+    TableInfoModule.TableListOption,
+    TableInfoModule.TableColumnOption
+{
   // 表名
   @Column('table_name')
-  tableName: string = '';
+  tableName: string = ''
 
   // 列名
   @Column('column_name')
   columnName(value: string) {
+    if (!value) return ''
     return toHump(value)
   }
   // 列类型
@@ -36,7 +72,7 @@ export class TableDaoMapping implements TableInfoModule.TableListOption, TableIn
 
   // 列注释
   @Column('column_comment')
-  columnComment: string = '';
+  columnComment: string = ''
 
   // 别名
   @Column('alias')
@@ -51,7 +87,9 @@ export class TableDaoMapping implements TableInfoModule.TableListOption, TableIn
   }
 }
 
-@BindDataSource('blog')
+const tableSchema = 'kanban_data'
+
+@BindDataSource(tableSchema)
 export class TableDao extends DOBase {
   @Mapping(TableDaoMapping)
   /**
@@ -60,23 +98,31 @@ export class TableDao extends DOBase {
    * @param params {Array<any>} 参数
    * @returns {Promise<T>}
    */
-  protected async exe<T>(sql: string, params?: Array<any>): Promise<T> {
-    return await super.exe<T>(sql, params);
+  protected async exe<T>(
+    sql: string,
+    params?: Array<any>
+  ): Promise<T> {
+    return await super.exe<T>(sql, params)
   }
   /**
    * @desc 查询所有的表名
-   * @datasource blog
+   * @datasource ${tableSchema}
    * @returns {Promise<Array<TableInfoModule.TableListOption>>}
    */
-  public async queryTableList(): Promise<Array<TableInfoModule.TableListOption>> {
-    const sql = 
-      `SELECT 
+  public async queryTableList(): Promise<
+    Array<TableInfoModule.TableListOption>
+  > {
+    const sql = `SELECT 
         table_name 
       FROM information_schema.tables 
       WHERE 
         table_type = 'BASE TABLE' 
-        AND table_schema='blog'`;
-    return await this.exe<Array<TableInfoModule.TableListOption>>(sql);
+        AND table_schema='${tableSchema}'`
+    const res =
+      await this.exe<
+        Array<TableInfoModule.TableListOption>
+      >(sql)
+    return res
   }
   /**
    * @desc 查询表的所有列
@@ -84,7 +130,7 @@ export class TableDao extends DOBase {
    * @returns {Promise<Array<TableInfoModule.TableColumnOption>>}
    */
   public async queryTableColumns(
-    tableName: string,
+    tableName: string
   ): Promise<Array<TableInfoModule.TableColumnOption>> {
     const sql =
       // `SELECT column_name, column_type, column_comment FROM information_schema.columns  WHERE table_name = ? AND table_schema = 'blog';`
@@ -96,9 +142,9 @@ export class TableDao extends DOBase {
           information_schema.columns  
       WHERE 
           table_name = ? 
-          AND table_schema = 'blog';`
-    return await this.exe<Array<TableInfoModule.TableColumnOption>>(sql, [tableName]);
+          AND table_schema = '${tableSchema}';`
+    return await this.exe<
+      Array<TableInfoModule.TableColumnOption>
+    >(sql, [tableName])
   }
 }
-
-

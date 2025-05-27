@@ -1,8 +1,14 @@
-import chalk from 'chalk';
+import chalk from 'chalk'
 // import mysql from 'mysql2/promise';
-import { setProcessEnvProperties, getProcessEnvProperties } from '~/utils/utils.server';
+import {
+  setProcessEnvProperties,
+  getProcessEnvProperties
+} from '~/utils/utils.server'
 
-const logger = new Logger({ fileName: 'database', folderName: 'plugins' });
+const logger = new Logger({
+  fileName: 'database',
+  folderName: 'plugins'
+})
 /**
  * @desc 模拟动态获取数据数据
  * @returns {Promise<NodeJS.DataSourceConfig>}
@@ -16,17 +22,17 @@ async function getDatasourceList() {
       // const user = getProcessEnvProperties('DB_USER') as mysql.PoolOptions['user'];
       // const database = getProcessEnvProperties('DB_DATABASE') as mysql.PoolOptions['database'];
       const dataSourceConfig: NodeJS.DataSourceConfig = {
-        blog: {
+        kanban_data: {
           host: 'localhost',
-          port: 3306,
+          port: 3308,
           user: 'root',
           password: '123456',
-          database: 'blog',
-        },
-      };
-      resolve(dataSourceConfig);
-    }, 50);
-  });
+          database: 'kanban_data'
+        }
+      }
+      resolve(dataSourceConfig)
+    }, 0)
+  })
 }
 
 /**
@@ -34,7 +40,11 @@ async function getDatasourceList() {
  * @returns {Promise<void>}
  */
 export default defineNitroPlugin(async (_nitro) => {
-  const dataSourceConfig = await getDatasourceList();
-  setProcessEnvProperties('dataSourceConfig', JSON.stringify(dataSourceConfig, null, 2));
-  logger.info(chalk.green('数据库配置加载成功'));
-});
+  const dataSourceConfig = await getDatasourceList()
+  console.log(dataSourceConfig)
+  setProcessEnvProperties(
+    'dataSourceConfig',
+    JSON.stringify(dataSourceConfig, null, 2)
+  )
+  logger.info(chalk.green('数据库配置加载成功'))
+})

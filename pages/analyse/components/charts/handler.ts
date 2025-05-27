@@ -6,14 +6,17 @@ type HandlerParams = {
   chartWidth: Ref<number>
   chartHeight: Ref<number>
 }
-export const handler = ({ chartResizeObserver, chartWidth, chartHeight }: HandlerParams) => {
-
+export const handler = ({
+  chartResizeObserver,
+  chartWidth,
+  chartHeight
+}: HandlerParams) => {
   /**
    * @desc 图表开始渲染
    * @returns {void}
    */
   const handleRenderChartStart = () => {
-    console.log('handleRenderChartStart');
+    console.log('handleRenderChartStart')
   }
 
   /**
@@ -21,7 +24,7 @@ export const handler = ({ chartResizeObserver, chartWidth, chartHeight }: Handle
    * @returns {void}
    */
   const handleRenderChartEnd = () => {
-    console.log('handleRenderChartEnd');
+    console.log('handleRenderChartEnd')
   }
 
   /**
@@ -29,15 +32,20 @@ export const handler = ({ chartResizeObserver, chartWidth, chartHeight }: Handle
    * @type {ResizeObserver}
    */
   onMounted(() => {
-    const sizeChange =  debounce(() => {
-      chartWidth.value = document.querySelector('.charts')?.clientWidth || 0
-      chartHeight.value = document.querySelector('.charts')?.clientHeight || 0
+    const sizeChange = debounce(() => {
+      chartWidth.value =
+        document.querySelector('.charts')?.clientWidth || 0
+      chartHeight.value =
+        document.querySelector('.charts')?.clientHeight || 0
     }, 300)
     chartResizeObserver.value = new ResizeObserver(() => {
       // 防抖
       sizeChange()
     })
-    chartResizeObserver.value?.observe(document.querySelector('.charts')!)
+    const chartsDom = document.querySelector('.charts')
+    if (chartsDom) {
+      chartResizeObserver.value?.observe(chartsDom)
+    }
   })
   /**
    * @desc 销毁监听

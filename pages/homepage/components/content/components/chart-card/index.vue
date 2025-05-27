@@ -52,7 +52,7 @@ const handleClickCard = () => {
 </script>
 
 <style lang="scss" scoped>
-@import '~/assets/styles/theme-util.scss';
+@use '~/assets/styles/theme-util.scss' as theme;
 
 .card {
   overflow: hidden;
@@ -85,8 +85,9 @@ const handleClickCard = () => {
     background: #ccc;
     border-radius: inherit;
     z-index: 3;
-    @include useTheme {
-      // background: getVar('bgColor');
+
+    @include theme.useTheme {
+      // background: theme.getVar('bgColor');
     }
   }
 

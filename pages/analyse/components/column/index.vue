@@ -1,19 +1,39 @@
 <template>
-  <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
+  <div
+    class="column"
+    @dragover="dragoverHandler"
+    @drop="dropHandler"
+  >
     <!-- 数据源 -->
-    <el-select v-model="dataSource" class="dataSource-select mb-1 w-full z-40" placeholder="请选择数据源" :teleported="false">
-      <el-option v-for="item in dataSourceOptions" :key="item.value" :label="item.label" :value="item.value" />
-    </el-select>
+    <TableSelecter />
     <div class="column__title">维度</div>
     <div class="column__content">
-      <div @contextmenu="contextmenuHandler(column)" v-contextmenu:contextmenu class="flex items-center"
-        :class="columnClasses(column)" v-for="(column, index) in columnList" :key="index" draggable="true"
-        @dragstart="dragstartHandler(column, index, $event)" @dragend="dragendHandler" @mousedown.stop>
-        <Icon class="mt-[1px] mr-[1px]" width="14" height="14" :rotate="2" :horizontalFlip="true" :verticalFlip="true" :icon="columnIconName(column)" />
-        <span class="column__item__name">{{ column.columnName }}</span>
+      <div
+        @contextmenu="contextmenuHandler(column)"
+        class="flex items-center"
+        :class="columnClasses(column)"
+        v-for="(column, index) in columnList"
+        :key="index"
+        draggable="true"
+        @dragstart="dragstartHandler(column, index, $event)"
+        @dragend="dragendHandler"
+        @mousedown.stop
+      >
+        <Icon
+          class="mt-[1px] mr-[1px]"
+          width="14"
+          height="14"
+          :rotate="2"
+          :horizontalFlip="true"
+          :verticalFlip="true"
+          :icon="columnIconName(column)"
+        />
+        <span class="column__item__name">{{
+          column.columnName
+        }}</span>
       </div>
     </div>
-
+    <!-- v-contextmenu:contextmenu -->
     <!-- 字段的操作选项 -->
     <context-menu ref="contextmenu">
       <context-menu-item @click="setDataModel">
@@ -39,28 +59,41 @@
       </context-menu-item>
       <context-menu-divider> </context-menu-divider>
       <context-menu-submenu title="时间">
-        <context-menu-item @click="setDataModel">时间</context-menu-item>
-        <context-menu-item @click="setDataModel">日期</context-menu-item>
+        <context-menu-item @click="setDataModel"
+          >时间</context-menu-item
+        >
+        <context-menu-item @click="setDataModel"
+          >日期</context-menu-item
+        >
       </context-menu-submenu>
       <context-menu-divider> </context-menu-divider>
       <context-menu-submenu title="地理角色">
-        <context-menu-item @click="setDataModel">经度</context-menu-item>
-        <context-menu-item @click="setDataModel">纬度</context-menu-item>
-        <context-menu-item @click="setDataModel">位置</context-menu-item>
-        <context-menu-item @click="setDataModel">关联值</context-menu-item>
+        <context-menu-item @click="setDataModel"
+          >经度</context-menu-item
+        >
+        <context-menu-item @click="setDataModel"
+          >纬度</context-menu-item
+        >
+        <context-menu-item @click="setDataModel"
+          >位置</context-menu-item
+        >
+        <context-menu-item @click="setDataModel"
+          >关联值</context-menu-item
+        >
       </context-menu-submenu>
     </context-menu>
   </div>
 </template>
 
 <script setup lang="ts">
+import TableSelecter from '@/components/selecter/table/index.vue'
+import Icon from '@/components/context-menu/Icon.vue'
+import ContextMenu from '@/components/context-menu/index.vue'
 import { initData } from './init-data'
 import { handler } from './handler'
 const {
   columnClasses,
   columnIconName,
-  dataSource,
-  dataSourceOptions,
   columnList,
   currentColumn
 } = initData()

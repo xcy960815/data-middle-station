@@ -1,5 +1,5 @@
 {
-  "name": "blog-home-nuxt",
+  "name": "data-middle-station",
   "private": true,
   "scripts": {
     "build": "nuxt build",
@@ -51,10 +51,10 @@
     "common-watermark": "^0.0.1",
     "dayjs": "^1.11.13",
     "element-plus": "^2.9.11",
-    "monaco-editor": "^0.40.0",
+    "monaco-editor": "^0.52.2",
     "mysql2": "^3.14.1",
-    "node-cron": "^3.0.3",
-    "pinia": "^2.3.1",
+    "node-cron": "^4.0.7",
+    "pinia": "^3.0.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "vue-server-renderer": "^2.7.16",
