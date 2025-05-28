@@ -7,7 +7,7 @@ import {
   Mapping,
   DOBase
 } from './dobase'
-import { toHump } from './utils'
+import { toHump, toLine } from './utils'
 /** 将数据库所有的类型罗列出来在前端统一展示成 number */
 const NUMBER_TYPE_ENUM = [
   'tinyint',
@@ -41,49 +41,106 @@ const DATE_TYPE_ENUM = [
   'year'
 ]
 
-export class TableDaoMapping
-  implements
-    TableInfoModule.TableListOption,
-    TableInfoModule.TableColumnOption
+// 表列表映射
+export class TableListMapping
+  implements TableInfoModule.TableOptionDao
 {
-  // 表名
-  @Column('table_name')
-  tableName: string = ''
+  @Column('TABLE_NAME')
+  tableName(value: string) {
+    if (!value) return ''
+    return toHump(value.toLowerCase())
+  }
 
-  // 列名
-  @Column('column_name')
+  @Column('TABLE_TYPE')
+  tableType(value: string) {
+    if (!value) return ''
+    return value.toLowerCase()
+  }
+
+  @Column('TABLE_COMMENT')
+  tableComment: string = ''
+
+  @Column('CREATE_TIME')
+  createTime: string = ''
+
+  @Column('UPDATE_TIME')
+  updateTime: string = ''
+
+  @Column('TABLE_ROWS')
+  tableRows: number = 0
+
+  @Column('AVG_ROW_LENGTH')
+  avgRowLength: number = 0
+
+  @Column('DATA_LENGTH')
+  dataLength: number = 0
+
+  @Column('INDEX_LENGTH')
+  indexLength: number = 0
+
+  @Column('AUTO_INCREMENT')
+  autoIncrement: number = 0
+
+  @Column('ENGINE')
+  engine(value: string) {
+    if (!value) return ''
+    return value.toLowerCase()
+  }
+
+  @Column('TABLE_COLLATION')
+  tableCollation(value: string) {
+    if (!value) return ''
+    return value.toLowerCase()
+  }
+
+  // 计算属性：表大小（MB）
+  get tableSize(): number {
+    return Number(
+      (
+        (this.dataLength + this.indexLength) /
+        1024 /
+        1024
+      ).toFixed(2)
+    )
+  }
+}
+
+// 表列映射
+export class TableColumnMapping
+  implements TableInfoModule.TableColumnOptionDao
+{
+  @Column('COLUMN_NAME')
   columnName(value: string) {
     if (!value) return ''
     return toHump(value)
   }
-  // 列类型
+
   @Column('column_type')
   columnType = (value: string) => {
-    if (NUMBER_TYPE_ENUM.includes(value)) {
+    if (!value) return ''
+    const type = value.toLowerCase()
+    if (NUMBER_TYPE_ENUM.includes(type)) {
       return 'number'
-    } else if (STRING_TYPE_ENUM.includes(value)) {
+    } else if (STRING_TYPE_ENUM.includes(type)) {
       return 'string'
-    } else if (DATE_TYPE_ENUM.includes(value)) {
+    } else if (DATE_TYPE_ENUM.includes(type)) {
       return 'date'
     } else {
-      return value
+      return type
     }
   }
 
-  // 列注释
-  @Column('column_comment')
+  @Column('COLUMN_COMMENT')
   columnComment: string = ''
 
-  // 别名
   @Column('alias')
-  alias = () => {
-    return this.columnName as unknown as string
+  alias = (value: string) => {
+    return value ? toHump(value) : ''
   }
 
-  // 显示名称
   @Column('display_name')
-  displayName = () => {
-    return this.columnName as unknown as string
+  displayName = (value: string) => {
+    return value ? toHump(value) : ''
   }
 }
 
@@ -91,60 +148,58 @@ const tableSchema = 'kanban_data'
 
 @BindDataSource(tableSchema)
 export class TableDao extends DOBase {
-  @Mapping(TableDaoMapping)
-  /**
-   * @desc 执行sql
-   * @param sql {string} sql语句
-   * @param params {Array<any>} 参数
-   * @returns {Promise<T>}
-   */
-  protected async exe<T>(
-    sql: string,
-    params?: Array<any>
-  ): Promise<T> {
-    return await super.exe<T>(sql, params)
-  }
   /**
    * @desc 查询所有的表名
    * @datasource ${tableSchema}
-   * @returns {Promise<Array<TableInfoModule.TableListOption>>}
+   * @returns {Promise<Array<T>>}
    */
-  public async queryTableList(): Promise<
-    Array<TableInfoModule.TableListOption>
-  > {
+  @Mapping(TableListMapping)
+  public async queryTableList<
+    T extends TableInfoModule.TableOptionDao
+  >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
-        table_name 
+        table_name,
+        table_type,
+        table_comment,
+        create_time,
+        update_time,
+        table_rows,
+        avg_row_length,
+        data_length,
+        index_length,
+        auto_increment,
+        engine,
+        table_collation
       FROM information_schema.tables 
       WHERE 
         table_type = 'BASE TABLE' 
-        AND table_schema='${tableSchema}'`
-    const res =
-      await this.exe<
-        Array<TableInfoModule.TableListOption>
-      >(sql)
-    return res
+        AND table_schema='${tableSchema}'
+        ${!!tableName ? `AND table_name like '%${tableName}%'` : ''}`
+    const result = await this.exe<Array<T>>(sql)
+    return result
   }
+
   /**
    * @desc 查询表的所有列
    * @param tableName {string} 表名
    * @returns {Promise<Array<TableInfoModule.TableColumnOption>>}
    */
-  public async queryTableColumns(
-    tableName: string
-  ): Promise<Array<TableInfoModule.TableColumnOption>> {
-    const sql =
-      // `SELECT column_name, column_type, column_comment FROM information_schema.columns  WHERE table_name = ? AND table_schema = 'blog';`
-      `SELECT 
-          column_name, 
-          REPLACE(SUBSTRING_INDEX(column_type, '(', 1), ' ', '') AS column_type,  -- 去掉类型后面的长度
-          column_comment 
+  @Mapping(TableColumnMapping)
+  public async queryTableColumns<
+    T extends TableInfoModule.TableColumnOptionDao
+  >(tableName: string): Promise<Array<T>> {
+    const sql = `SELECT 
+        column_name, 
+        REPLACE(SUBSTRING_INDEX(column_type, '(', 1), ' ', '') AS column_type,
+        column_comment 
       FROM 
-          information_schema.columns  
+        information_schema.columns  
       WHERE 
-          table_name = ? 
-          AND table_schema = '${tableSchema}';`
-    return await this.exe<
-      Array<TableInfoModule.TableColumnOption>
-    >(sql, [tableName])
+        table_name = ? 
+        AND table_schema = '${tableSchema}';`
+    const result = await this.exe<Array<T>>(sql, [
+      toLine(tableName)
+    ])
+    return result
   }
 }

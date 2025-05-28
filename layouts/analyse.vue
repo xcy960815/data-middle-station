@@ -8,7 +8,7 @@
       class="layout-analyse-body !flex flex-1 overflow-hidden"
     >
       <div
-        class="layout-analyse-cloumn relative text-[14px] p-[18px,30px]"
+        class="layout-analyse-cloumn relative text-[14px]"
         @mousedown.prevent="handleCloumnMouseDown"
       >
         <slot name="cloumn"></slot>
@@ -147,7 +147,7 @@ const handleOrderMouseDown = (mouseEvent: MouseEvent) => {
 .layout-analyse-main {
   .layout-analyse-body {
     .layout-analyse-cloumn {
-      padding: 18px 30px;
+      padding: 18px 10px;
       width: 200px;
       pointer-events: none;
 
