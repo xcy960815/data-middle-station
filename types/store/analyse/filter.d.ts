@@ -1,3 +1,6 @@
+/**
+ * @description: 过滤器 store
+ */
 declare namespace FilterStore {
   type FilterKey = 'filter'
 
@@ -42,35 +45,13 @@ declare namespace FilterStore {
   type FilterState = {
     filters: Array<FilterOption>
   }
-
-  /**
-   * @desc getter 名称
-   */
-  type GetterName<T extends string> = `get${Capitalize<T>}`
-
   /**
    * @desc getter
    */
-  type FilterGetters<S> = {
-    [K in keyof S as GetterName<K & string>]: (
-      state: S
-    ) => S[K]
-  }
+  type FilterGetters = {}
 
-  /**
-   * @desc action 名称
-   */
-  type ActionName<T extends string> =
-    | `set${Capitalize<T>}`
-    | `add${Capitalize<T>}`
-  /**
-   * @desc action
-   */
   type FilterActions = {
-    [K in keyof FilterState as ActionName<K & string>]: (
-      value: FilterState[K]
-    ) => void
-  } & {
-    removeFilter: (value: number) => void
+    addFilters: (filters: FilterOptionDto[]) => void
+    removeFilter: (index: number) => void
   }
 }

@@ -1,25 +1,49 @@
-export const useGroupStore = definePiniaStore<
+/**
+ * @desc 分组 store
+ */
+export const useGroupStore = defineStore<
   GroupStore.GroupKey,
-  GroupStore.GroupState,
-  GroupStore.GroupGetters<GroupStore.GroupState>,
-  GroupStore.GroupActions
+  BaseStore.State<GroupStore.GroupState>,
+  BaseStore.Getters<
+    GroupStore.GroupState,
+    GroupStore.GroupGetters
+  >,
+  BaseStore.Actions<
+    GroupStore.GroupState,
+    GroupStore.GroupActions
+  >
 >('group', {
   state: () => ({
     groups: []
   }),
   getters: {
-    getGroups: (state) => {
+    getGroups(state) {
       return state.groups
     }
   },
   actions: {
+    /**
+     * @desc 添加分组
+     * @param groups {GroupOption[]}
+     * @returns {void}
+     */
     addGroups(groups) {
       this.groups = this.groups.concat(groups)
     },
+    /**
+     * @desc 设置分组
+     * @param groups {GroupOption[]}
+     * @returns {void}
+     */
     setGroups(groups) {
       this.groups = groups
     },
-    removeGroup(index) {
+    /**
+     * @desc 删除分组
+     * @param index {number}
+     * @returns {void}
+     */
+    removeGroup(index: number) {
       this.groups.splice(index, 1)
     }
   }

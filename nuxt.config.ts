@@ -45,11 +45,7 @@ export default defineNuxtConfig({
     }
   ],
   pinia: {
-    disableVuex: true,
-    autoImports: [
-      // 自动引入 `defineStore()` 并重命名为 `definePiniaStore()`
-      ['defineStore', 'definePiniaStore']
-    ]
+    disableVuex: true
   },
   vite: {
     // publicPath: ''
@@ -77,6 +73,7 @@ export default defineNuxtConfig({
           }
         }
       }
-    }
+    },
+    moduleSideEffects: ['node-cron']
   }
 })

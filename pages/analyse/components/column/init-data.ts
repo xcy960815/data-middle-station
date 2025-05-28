@@ -16,7 +16,7 @@ export const initData = () => {
    * @returns { (column: ColumnStore.ColumnOption) => { column__item: boolean; column__item-choosed: boolean } }
    */
   const columnClasses = computed(
-    () => (column: ColumnStore.ColumnOption) => {
+    () => (column: ColumnStore.ColumnOptionDto) => {
       const dimensionChoosed =
         useDimensionStore().getDimensions.find(
           (dimensionOption) =>
