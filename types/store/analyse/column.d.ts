@@ -22,12 +22,7 @@ declare namespace ColumnStore {
     displayName: string
   }
 
-  type DataSourceOption = {
-    label: string
-    value: string
-    createTime?: string
-    comment?: string
-  }
+  type DataSourceOption = TableInfoModule.TableOptionDao
 
   type ColumnState = {
     dataSource: string
