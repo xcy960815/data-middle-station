@@ -11,37 +11,44 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type GroupOption = ColumnStore.ColumnOption & {
+  interface GroupOptionDto
+    extends ColumnStore.ColumnOptionDto {
     // 无效的字段
     __invalid?: boolean
   }
 
   type GroupState = {
-    groups: GroupOption[]
+    groups: GroupOptionDto[]
   }
 
   /**
-  * @desc getter 名称
-  */
-  type GetterName<T extends string> = `get${Capitalize<T>}`;
+   * @desc getter 名称
+   */
+  type GetterName<T extends string> = `get${Capitalize<T>}`
 
   /**
    * @desc getter
    */
   type GroupGetters<S> = {
-    [K in keyof S as GetterName<K & string>]: (state: S) => S[K];
-  };
+    [K in keyof S as GetterName<K & string>]: (
+      state: S
+    ) => S[K]
+  }
 
   /**
    * @desc action 名称
    */
-  type ActionName<T extends string> = `set${Capitalize<T>}` | `add${Capitalize<T>}`
+  type ActionName<T extends string> =
+    | `set${Capitalize<T>}`
+    | `add${Capitalize<T>}`
   /**
    * @desc action
    */
   type GroupActions = {
-    [K in keyof GroupState as ActionName<K & string>]: (value: GroupState[K]) => void;
+    [K in keyof GroupState as ActionName<K & string>]: (
+      value: GroupState[K]
+    ) => void
   } & {
-    removeGroup: (value: number) => void;
+    removeGroup: (value: number) => void
   }
 }

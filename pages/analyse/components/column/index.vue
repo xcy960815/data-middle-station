@@ -6,7 +6,7 @@
   >
     <!-- 数据源 -->
     <TableSelecter />
-    <div class="column__title">维度</div>
+    <div class="column__title pt-2 pb-2">维度</div>
     <div class="column__content">
       <div
         @contextmenu="contextmenuHandler(column)"
