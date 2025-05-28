@@ -16,7 +16,7 @@
           :class="{ 'is-active': isPopoverVisible }"
         >
           <span class="selected-value">{{
-            selectedTable?.label || '请选择数据库表'
+            selectedTable?.tableName || '请选择数据库表'
           }}</span>
         </div>
       </template>
@@ -38,7 +38,7 @@
       </div>
 
       <el-table
-        :data="filteredTables"
+        :data="dataSourceOptions"
         border
         style="width: 100%"
         @row-click="handleSelectTable"
@@ -48,8 +48,13 @@
         empty-text="暂无数据"
       >
         <el-table-column
-          prop="label"
+          prop="tableName"
           label="表名"
+          min-width="120"
+        />
+        <el-table-column
+          prop="tableComment"
+          label="备注"
           min-width="120"
         />
       </el-table>
@@ -80,6 +85,11 @@ const isPopoverVisible = ref(false)
  */
 const dataSource = computed({
   get: () => {
+    console.log(
+      'columnStore.getDataSource',
+      columnStore.getDataSource
+    )
+
     return columnStore.getDataSource
   },
   set: (val) => {
@@ -100,15 +110,8 @@ const dataSourceOptions = computed(
  */
 const selectedTable = computed(() => {
   return dataSourceOptions.value.find(
-    (table) => table.value === dataSource.value
+    (table) => table.tableName === dataSource.value
   )
-})
-
-/**
- * @desc 过滤后的表列表
- */
-const filteredTables = computed(() => {
-  return dataSourceOptions.value
 })
 
 /**
@@ -123,9 +126,9 @@ const handleSearch = () => {
  * @desc 选择表
  */
 const handleSelectTable = (
-  row: ColumnStore.dataSourceOption
+  row: ColumnStore.DataSourceOption
 ) => {
-  dataSource.value = row.value
+  dataSource.value = row.tableName
   isPopoverVisible.value = false
 }
 
@@ -145,25 +148,19 @@ const rowClassName = ({
  * @returns {Promise<void>}
  */
 const queryTableList = async () => {
-  try {
-    const result = await $fetch(
-      '/api/analyse/queryTableList',
-      {
-        method: 'GET',
-        params: {
-          tableName: searchKeyword.value
-        }
+  const result = await $fetch(
+    '/api/analyse/queryTableList',
+    {
+      method: 'GET',
+      params: {
+        tableName: searchKeyword.value
       }
-    )
-    if (result.code === 200) {
-      columnStore.setDataSourceOptions(result.data || [])
-    } else {
-      ElMessage.error(result.message || '获取表列表失败')
-      columnStore.setDataSourceOptions([])
     }
-  } catch (error) {
-    console.error('获取表列表失败:', error)
-    ElMessage.error('获取表列表失败')
+  )
+  if (result.code === 200) {
+    columnStore.setDataSourceOptions(result.data || [])
+  } else {
+    ElMessage.error(result.message || '获取表列表失败')
     columnStore.setDataSourceOptions([])
   }
 }

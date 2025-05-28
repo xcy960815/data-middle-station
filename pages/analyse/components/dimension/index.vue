@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { initData } from './init-data'
 import { handler } from './handler'
-
+import SelecterDimension from '@/components/selecter/dimension/index.vue'
 const { dimensionList } = initData()
 const createComputedFieldVisible = ref<boolean>(false)
 const {

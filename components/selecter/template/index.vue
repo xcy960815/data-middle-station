@@ -1,17 +1,45 @@
 <template>
   <!-- selecter 公共模版 -->
-  <el-popover class="chart-selecter relative" :visible="selecterVisible"  trigger="click" popper-class="chart-selecter-template-popover"
-    placement="bottom" width="100px">
+  <el-popover
+    class="chart-selecter relative"
+    :visible="selecterVisible"
+    trigger="click"
+    popper-class="chart-selecter-template-popover"
+    placement="bottom"
+    width="100px"
+  >
     <template #reference>
-      <div class="chart-selecter-container" :class="invalidClass" @click="selecterVisible = true"
-        v-click-outside="onClickOutside">
-        <span class="chart-selecter-name">{{ displayName }}</span>
-        <slot class="chart-selecter-order-icon" name="order-icon"></slot>
+      <div
+        class="chart-selecter-container"
+        :class="invalidClass"
+        @click="selecterVisible = true"
+        v-click-outside="onClickOutside"
+      >
+        <span class="chart-selecter-name">{{
+          displayName
+        }}</span>
+        <slot
+          class="chart-selecter-order-icon"
+          name="order-icon"
+        ></slot>
         <!-- 无效字段标志 -->
-        <el-tooltip class="box-item" effect="dark" :content="invalidContent" placement="top">
-          <Icon v-if="hasInvalidIcon()" class="chart-selecterinvalid-icon" icon="mingcute:warning-fill" />
+        <el-tooltip
+          class="box-item"
+          effect="dark"
+          :content="invalidContent"
+          placement="top"
+        >
+          <Icon
+            v-if="hasInvalidIcon()"
+            class="chart-selecterinvalid-icon"
+            icon="mingcute:warning-fill"
+          />
         </el-tooltip>
-        <Icon class="chart-selecter-delete" icon="material-symbols:delete-outline" @click.stop="handleDeleteSelecter" />
+        <Icon
+          class="chart-selecter-delete"
+          icon="material-symbols:delete-outline"
+          @click.stop="handleDeleteSelecter"
+        />
       </div>
     </template>
     <template #default>
@@ -21,7 +49,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ClickOutside as vClickOutside } from 'element-plus'
+import {
+  ClickOutside as vClickOutside,
+  ElTooltip
+} from 'element-plus'
+import Icon from '@/components/context-menu/Icon.vue'
+
 const props = defineProps({
   // 通用参数
   invalid: {
@@ -35,7 +68,9 @@ const props = defineProps({
   },
   // 通用参数
   cast: {
-    type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
+    type: String as PropType<
+      'dimension' | 'group' | 'order' | 'filter'
+    >,
     default: ''
   },
   // 通用参数
@@ -43,12 +78,12 @@ const props = defineProps({
     type: Number,
     default: null,
     required: true
-  },
+  }
 })
-const filterStore = useFilterStore();
-const orderStore = useOrderStore();
-const dimensionStore = useDimensionStore();
-const groupStore = useGroupStore();
+const filterStore = useFilterStore()
+const orderStore = useOrderStore()
+const dimensionStore = useDimensionStore()
+const groupStore = useGroupStore()
 const selecterVisible = ref(false)
 const invalidClass = computed(() => {
   return props.invalid ? 'invalid' : ''
@@ -74,7 +109,7 @@ const hasInvalidIcon = computed(() => () => {
  * @desc 点击外部隐藏 TODO 不知道为什么触发了两次
  */
 const onClickOutside = () => {
-  if(props.cast === 'filter' ) return
+  if (props.cast === 'filter') return
   selecterVisible.value = false
 }
 
@@ -98,7 +133,6 @@ onMounted(() => {
     selecterVisible.value = true
   }
 })
-
 </script>
 
 <style lang="scss">
@@ -118,7 +152,6 @@ onMounted(() => {
       position: absolute;
       left: 10px;
       top: 4px;
-    
     }
 
     &:hover {
@@ -154,7 +187,6 @@ onMounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-
   }
 
   .chart-selecter-delete,
