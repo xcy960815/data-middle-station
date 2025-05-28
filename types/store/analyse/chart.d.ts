@@ -1,5 +1,7 @@
+/**
+ * @description: 图表 store
+ */
 declare namespace ChartStore {
-
   const ChartTypesEnums = {
     table: 'table',
     line: 'line',
@@ -9,10 +11,10 @@ declare namespace ChartStore {
 
   type ChartKey = 'chart'
 
-  type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
+  type ChartType =
+    (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
 
   type ChartState = {
-   
     // 图表名称
     chartName: string
     // 更新时间
@@ -34,25 +36,27 @@ declare namespace ChartStore {
   /**
    * @desc getter 名称
    */
-  type GetterName<T extends string> = `get${Capitalize<T>}`;
+  type GetterName<T extends string> = `get${Capitalize<T>}`
 
   /**
    * @desc getter
    */
   type ChartGetters<S> = {
-    [K in keyof S as GetterName<K & string>]: (state: S) => S[K];
-  };
+    [K in keyof S as GetterName<K & string>]: (
+      state: S
+    ) => S[K]
+  }
 
   /**
    * @desc action 名称
    */
-  type ActionName<T extends string> = `set${Capitalize<T>}`;
+  type ActionName<T extends string> = `set${Capitalize<T>}`
   /**
    * @desc action
    */
   type ChartActions = {
-    [K in keyof ChartState as ActionName<K & string>]: (value: ChartState[K]) => void;
-  } & {
-
-  }
+    [K in keyof ChartState as ActionName<K & string>]: (
+      value: ChartState[K]
+    ) => void
+  } & {}
 }

@@ -1,18 +1,22 @@
-
 /**
  * @desc chart store
  */
-export const useChartStore = definePiniaStore<
-  ChartStore.ChartKey,
-  ChartStore.ChartState,
-  ChartStore.ChartGetters<ChartStore.ChartState>,
-  ChartStore.ChartActions
->('chart', {
-  state: () => ({
+interface ChartState {
+  chartName: string
+  chartUpdateTime: string
+  chartUpdateTakesTime: string
+  chartErrorMessage: string
+  chartType: string
+  chartId: string | null
+  chartLoading: boolean
+  chartData: any[]
+}
 
-    chartName: "",
-    chartUpdateTime: "",
-    chartUpdateTakesTime: "",
+export const useChartStore = defineStore('chart', {
+  state: (): ChartState => ({
+    chartName: '',
+    chartUpdateTime: '',
+    chartUpdateTakesTime: '',
     chartErrorMessage: '',
     chartType: 'table',
     chartId: null,
@@ -22,132 +26,132 @@ export const useChartStore = definePiniaStore<
   getters: {
     /**
      * @desc 获取图表名称
-     * @param state { ChartStore.ChartState} 
+     * @param state {ChartState}
      * @returns {string}
      */
-    getChartName(state) {
+    getChartName(state): string {
       return state.chartName
     },
     /**
      * @desc 获取图表更新时间
-     * @param state { ChartStore.ChartState} 
+     * @param state {ChartState}
      * @returns {string}
      */
-    getChartUpdateTime(state) {
+    getChartUpdateTime(state): string {
       return state.chartUpdateTime
     },
     /**
      * @desc 获取图表更新耗时
-     * @param state { ChartStore.ChartState} 
+     * @param state {ChartState}
      * @returns {string}
      */
-    getChartUpdateTakesTime(state) {
+    getChartUpdateTakesTime(state): string {
       return state.chartUpdateTakesTime
     },
     /**
      * @desc 获取图表错误信息
-     * @param state { ChartStore.ChartState} 
+     * @param state {ChartState}
      * @returns {string}
      */
-    getChartErrorMessage(state) {
+    getChartErrorMessage(state): string {
       return state.chartErrorMessage
     },
     /**
      * @desc 获取图表加载状态
-     * @param state { ChartStore.ChartState} 
+     * @param state {ChartState}
      * @returns {boolean}
      */
-    getChartLoading(state) {
+    getChartLoading(state): boolean {
       return state.chartLoading
     },
     /**
      * @desc 获取图表类型
-     * @param state { ChartStore.ChartState} 
-     * @returns {ChartStore.ChartState['chartType']}
+     * @param state {ChartState}
+     * @returns {string}
      */
-    getChartType(state) {
+    getChartType(state): string {
       return state.chartType
     },
     /**
      * @desc 获取图表id
-     * @param state { ChartStore.ChartState} 
-     * @returns {ChartStore.ChartState['chartId']}
+     * @param state {ChartState}
+     * @returns {string | null}
      */
-    getChartId(state) {
+    getChartId(state): string | null {
       return state.chartId
     },
     /**
      * @desc 获取图表数据
-     * @param state { ChartStore.ChartState} 
-     * @returns {ChartStore.ChartState['chartData']}
+     * @param state {ChartState}
+     * @returns {any[]}
      */
-    getChartData(state) {
+    getChartData(state): any[] {
       return state.chartData
     }
   },
   actions: {
     /**
      * @desc 设置图表名称
-     * @param chartName {ChartStore.ChartState['chartName']}
+     * @param chartName {string}
      * @returns {void}
      */
-    setChartName(chartName) {
+    setChartName(chartName: string) {
       this.chartName = chartName
     },
     /**
      * @desc 设置图表更新时间
-     * @param chartUpdateTime {ChartStore.ChartState['chartUpdateTime']}
+     * @param chartUpdateTime {string}
      * @returns {void}
      */
-    setChartUpdateTime(chartUpdateTime) {
+    setChartUpdateTime(chartUpdateTime: string) {
       this.chartUpdateTime = chartUpdateTime
     },
     /**
      * @desc 设置图表更新耗时
-     * @param chartUpdateTakesTime {ChartStore.ChartState['chartUpdateTakesTime']}
+     * @param chartUpdateTakesTime {string}
      * @returns {void}
      */
-    setChartUpdateTakesTime(chartUpdateTakesTime) {
+    setChartUpdateTakesTime(chartUpdateTakesTime: string) {
       this.chartUpdateTakesTime = chartUpdateTakesTime
     },
     /**
      * @desc 设置图表错误信息
-     * @param chartErrorMessage {ChartStore.ChartState['chartErrorMessage']}
+     * @param chartErrorMessage {string}
      * @returns {void}
      */
-    setChartType(chartType) {
+    setChartType(chartType: string) {
       this.chartType = chartType
     },
     /**
      * @desc 设置图表加载状态
-     * @param chartLoading {ChartStore.ChartState['chartLoading']}
+     * @param chartLoading {boolean}
      * @returns {void}
      */
-    setChartLoading(chartLoading) {
+    setChartLoading(chartLoading: boolean) {
       this.chartLoading = chartLoading
     },
     /**
      * @desc 设置图表id
-     * @param chartId {ChartStore.ChartState['chartId']}
+     * @param chartId {string | null}
      * @returns {void}
      */
-    setChartId(chartId) {
+    setChartId(chartId: string | null) {
       this.chartId = chartId
     },
     /**
-     * @desc 设置图表数据
-     * @param chartData {ChartStore.ChartState['chartData']}
+     * @desc 设置图表错误信息
+     * @param chartErrorMessage {string}
      * @returns {void}
      */
-    setChartErrorMessage(chartErrorMessage) {
+    setChartErrorMessage(chartErrorMessage: string) {
       this.chartErrorMessage = chartErrorMessage
     },
     /**
      * @desc 设置图表数据
-     * @param chartData {ChartStore.ChartState['chartData']}
+     * @param chartData {any[]}
      * @returns {void}
      */
-    setChartData(chartData) {
+    setChartData(chartData: any[]) {
       this.chartData = chartData
     }
   }

@@ -1,11 +1,18 @@
 /**
  * @desc 维度 store
  */
-export const useDimensionStore = definePiniaStore<
+
+export const useDimensionStore = defineStore<
   DimensionStore.DimensionKey,
-  DimensionStore.DimensionState,
-  DimensionStore.DimensionGetters<DimensionStore.DimensionState>,
-  DimensionStore.DimensionActions
+  BaseStore.State<DimensionStore.DimensionState>,
+  BaseStore.Getters<
+    DimensionStore.DimensionState,
+    DimensionStore.DimensionGetters
+  >,
+  BaseStore.Actions<
+    DimensionStore.DimensionState,
+    DimensionStore.DimensionActions
+  >
 >('dimension', {
   state: () => ({
     dimensions: []
@@ -18,17 +25,15 @@ export const useDimensionStore = definePiniaStore<
   actions: {
     /**
      * @desc 更新维度
-     * @param dimensions {Array<DimensionStore.DimensionOption>}
+     * @param dimensions {DimensionOption[]}
      * @returns {void}
      */
     setDimensions(dimensions) {
-     
-      
       this.dimensions = dimensions
     },
     /**
      * @desc 添加维度
-     * @param dimensions {Array<DimensionStore.DimensionOption>}
+     * @param dimensions {DimensionStore.DimensionOption[]}
      * @returns {void}
      */
     addDimensions(dimensions) {
@@ -39,7 +44,7 @@ export const useDimensionStore = definePiniaStore<
      * @param index {number}
      * @returns {void}
      */
-    removeDimension(index) {
+    removeDimension(index: number) {
       this.dimensions.splice(index, 1)
     }
   }

@@ -1,19 +1,59 @@
 /**
  * @desc 图表配置 store
- * @param {string} ChartConfigKey
- * @param {ChartConfigState} ChartConfigState
- * @param {ChartConfigGetters} ChartConfigGetters
- * @param {ChartConfigActions} ChartConfigActions
- * @returns {Store}
  */
-export const useChartConfigStore = definePiniaStore<
-  ChartConfigStore.ChartConfigKey,
-  ChartConfigStore.ChartConfigState,
-  ChartConfigStore.ChartConfigGetters<ChartConfigStore.ChartConfigState>,
-  ChartConfigStore.ChartConfigActions
->('chartConfig',
+
+interface CommonChartConfig {
+  description: string
+  limit: number
+  suggest: boolean
+  mixStrategy: string
+  shareStrategy: string
+}
+
+interface LineChartConfig {
+  showPoint: boolean
+  showLabel: boolean
+  smooth: boolean
+  autoDualAxis: boolean
+  horizontalBar: boolean
+}
+
+interface IntervalChartConfig {
+  displayMode: string
+  showPercentage: boolean
+  showLabel: boolean
+  horizontalDisplay: boolean
+  horizontalBar: boolean
+}
+
+interface PieChartConfig {
+  showLabel: boolean
+  chartType: string
+}
+
+interface TableChartConfig {
+  displayMode: string
+  showCompare: boolean
+  conditions: any[]
+}
+
+interface ChartConfig {
+  line: LineChartConfig
+  interval: IntervalChartConfig
+  pie: PieChartConfig
+  table: TableChartConfig
+}
+
+interface ChartConfigState {
+  chartConfigDrawer: boolean
+  commonChartConfig: CommonChartConfig
+  chartConfig: ChartConfig
+}
+
+export const useChartConfigStore = defineStore(
+  'chartConfig',
   {
-    state: () => ({
+    state: (): ChartConfigState => ({
       chartConfigDrawer: false,
       commonChartConfig: {
         description: '',
@@ -49,29 +89,45 @@ export const useChartConfigStore = definePiniaStore<
       }
     }),
     getters: {
-      getChartConfigDrawer(state) {
+      getChartConfigDrawer(state): boolean {
         return state.chartConfigDrawer
       },
-      getCommonChartConfig(state) {
+      getCommonChartConfig(state): CommonChartConfig {
         return state.commonChartConfig
       },
-      getChartConfig(state) {
+      getChartConfig(state): ChartConfig {
         return state.chartConfig
       }
     },
     actions: {
-      setChartConfigDrawer(drawer) {
+      /**
+       * @desc 设置图表配置抽屉状态
+       * @param drawer {boolean}
+       */
+      setChartConfigDrawer(drawer: boolean) {
         this.chartConfigDrawer = drawer
       },
-      setCommonChartConfig(config) {
+      /**
+       * @desc 设置通用图表配置
+       * @param config {CommonChartConfig}
+       */
+      setCommonChartConfig(config: CommonChartConfig) {
         this.commonChartConfig = config
       },
-      setChartConfig(config) {
+      /**
+       * @desc 设置图表配置
+       * @param config {ChartConfig}
+       */
+      setChartConfig(config: ChartConfig) {
         this.chartConfig = config
       },
-      setTableChartConditions(conditions) {
+      /**
+       * @desc 设置表格图表条件
+       * @param conditions {any[]}
+       */
+      setTableChartConditions(conditions: any[]) {
         this.chartConfig.table.conditions = conditions
       }
     }
-  })
-
+  }
+)

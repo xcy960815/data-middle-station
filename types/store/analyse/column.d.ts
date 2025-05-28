@@ -13,7 +13,7 @@ declare namespace ColumnStore {
    * @property {string} displayName 显示名称
    */
   interface ColumnOptionDto
-    extends TableInfoModule.TableColumnOption {
+    extends TableInfoModule.TableColumnOptionDao {
     // 重写 columnName 类型 在dao层已经转换为驼峰
     columnName: string
     columnType: string
@@ -22,7 +22,7 @@ declare namespace ColumnStore {
     displayName: string
   }
 
-  type dataSourceOption = {
+  type DataSourceOption = {
     label: string
     value: string
     createTime?: string
@@ -31,38 +31,30 @@ declare namespace ColumnStore {
 
   type ColumnState = {
     dataSource: string
-    dataSourceOptions: Array<dataSourceOption>
+    dataSourceOptions: Array<DataSourceOption>
     columns: ColumnOption[]
   }
 
   /**
-   * @desc getter 名称 根据state 生成 相对应的 getter 名称 比如 state 为 dataSource 那么 getter 名称为 getDataSource
-   */
-  type GetterName<T extends string> = `get${Capitalize<T>}`
-
-  /**
    * @desc getter
    */
-  type ColumnGetters<S> = {
-    [K in keyof S as GetterName<K & string>]: (
-      state: S
-    ) => S[K]
-  }
-
-  /**
-   * @desc action 名称 根据state 生成 相对应的 action 名称 比如 state 为 dataSource 那么 action 名称为 setDataSource
-   */
-  type ActionName<T extends string> =
-    | `set${Capitalize<T>}`
-    | `remove${Capitalize<T>}`
+  type ColumnGetters = {}
   /**
    * @desc action
    */
   type ColumnActions = {
-    [K in keyof ColumnState as ActionName<K & string>]: (
-      value: ColumnState[K]
+    removeColumns: (columns: ColumnOption[]) => void
+    setDataSource: (dataSource: string) => void
+    setDataSourceOptions: (
+      dataSourceOptions: DataSourceOption[]
     ) => void
-  } & {
-    updateColumn: (value: Column, index: number) => void
+    removeDataSource: (dataSource: string) => void
+    removeDataSourceOptions: (
+      dataSourceOptions: DataSourceOption[]
+    ) => void
+    updateColumn: (params: {
+      column: ColumnOption
+      index: number
+    }) => void
   }
 }

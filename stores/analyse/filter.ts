@@ -1,29 +1,51 @@
 /**
- * @desc 维度 store
+ * @desc 过滤器 store
  */
-export const useFilterStore = definePiniaStore<
+
+export const useFilterStore = defineStore<
   FilterStore.FilterKey,
-  FilterStore.FilterState,
-  FilterStore.FilterGetters<FilterStore.FilterState>,
-  FilterStore.FilterActions
+  BaseStore.State<FilterStore.FilterState>,
+  BaseStore.Getters<
+    FilterStore.FilterState,
+    FilterStore.FilterGetters
+  >,
+  BaseStore.Actions<
+    FilterStore.FilterState,
+    FilterStore.FilterActions
+  >
 >('filter', {
   state: () => ({
-    filters: [],
+    filters: []
   }),
   getters: {
     getFilters(state) {
-      return state.filters;
-    },
+      return state.filters
+    }
   },
   actions: {
+    /**
+     * @desc 设置过滤器
+     * @param filters {FilterOption[]}
+     * @returns {void}
+     */
     setFilters(filters) {
-      this.filters = filters;
+      this.filters = filters
     },
+    /**
+     * @desc 添加过滤器
+     * @param filters {FilterOption[]}
+     * @returns {void}
+     */
     addFilters(filters) {
-      this.filters = this.filters.concat(filters);
+      this.filters = this.filters.concat(filters)
     },
-    removeFilter(index) {
-      this.filters.splice(index, 1);
-    },
-  },
-});
+    /**
+     * @desc 删除过滤器
+     * @param index {number}
+     * @returns {void}
+     */
+    removeFilter(index: number) {
+      this.filters.splice(index, 1)
+    }
+  }
+})

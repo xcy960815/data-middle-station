@@ -1,29 +1,57 @@
-export const useOrderStore = definePiniaStore<
-  OrderStore.OrderKey,
-  OrderStore.OrderState,
-  OrderStore.OrderGetters<OrderStore.OrderState>,
-  OrderStore.OrderActions
->('order', {
-  state: () => ({
-    orders: [],
+/**
+ * @desc 排序 store
+ */
+interface OrderOption {
+  label: string
+  value: string
+}
+
+interface OrderState {
+  orders: OrderOption[]
+}
+
+export const useOrderStore = defineStore('order', {
+  state: (): OrderState => ({
+    orders: []
   }),
   getters: {
-    getOrders(state) {
-      return state.orders;
-    },
+    getOrders(state): OrderOption[] {
+      return state.orders
+    }
   },
   actions: {
-    setOrders(orders) {
-      this.orders = orders;
+    /**
+     * @desc 设置排序
+     * @param orders {OrderOption[]}
+     * @returns {void}
+     */
+    setOrders(orders: OrderOption[]) {
+      this.orders = orders
     },
-    addOrders(orders) {
-      this.orders.push(...orders);
+    /**
+     * @desc 添加排序
+     * @param orders {OrderOption[]}
+     * @returns {void}
+     */
+    addOrders(orders: OrderOption[]) {
+      this.orders.push(...orders)
     },
-    updateOrder(order,index) {
-      this.orders[index] = order;
+    /**
+     * @desc 更新排序
+     * @param order {OrderOption}
+     * @param index {number}
+     * @returns {void}
+     */
+    updateOrder(order: OrderOption, index: number) {
+      this.orders[index] = order
     },
-    removeOrder(index) {
-      this.orders.splice(index, 1);
-    },
-  },
-});
+    /**
+     * @desc 删除排序
+     * @param index {number}
+     * @returns {void}
+     */
+    removeOrder(index: number) {
+      this.orders.splice(index, 1)
+    }
+  }
+})
