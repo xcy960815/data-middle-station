@@ -5,8 +5,8 @@
  * @returns {void}
  */
 export default defineEventHandler((event) => {
-  const requestProtocol = getRequestProtocol(event);
-  const requestHost = getRequestHost(event);
+  // const requestProtocol = getRequestProtocol(event);
+  // const requestHost = getRequestHost(event);
   // setResponseHeaders(event, {
   //   'Access-Control-Allow-Origin': `${requestProtocol}//${requestHost}`,
   //   'Access-Control-Allow-Credentials': 'true',
@@ -26,9 +26,6 @@ export default defineEventHandler((event) => {
   //   'Proxy-Authenticate': 'Basic'  // 添加缺失的属性
   // };
   // setResponseHeaders(event, headers);
-
-  
-
   // if(getMethod(event) === 'OPTIONS'){
   //   setResponseHeaders(event, {
   //     'Content-Length': '0',
@@ -37,8 +34,7 @@ export default defineEventHandler((event) => {
   //   event.res.statusMessage = "No Content."
   //   return 'OK'
   // }
-});
-
+})
 
 // export default defineEventHandler((event) => {
 //   setResponseHeaders(event, {

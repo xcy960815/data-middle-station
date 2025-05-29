@@ -1,21 +1,18 @@
-/**
- * @desc chart store
- */
-interface ChartState {
-  chartName: string
-  chartUpdateTime: string
-  chartUpdateTakesTime: string
-  chartErrorMessage: string
-  chartType: string
-  chartId: string | null
-  chartLoading: boolean
-  chartData: any[]
-}
-
 import { defineStore } from 'pinia'
 
-export const useChartStore = defineStore('chart', {
-  state: (): ChartState => ({
+export const useChartStore = defineStore<
+  ChartStore.ChartKey,
+  BaseStore.State<ChartStore.ChartState>,
+  BaseStore.Getters<
+    ChartStore.ChartState,
+    ChartStore.ChartGetters
+  >,
+  BaseStore.Actions<
+    ChartStore.ChartState,
+    ChartStore.ChartActions
+  >
+>('chart', {
+  state: () => ({
     chartName: '',
     chartUpdateTime: '',
     chartUpdateTakesTime: '',
@@ -28,32 +25,24 @@ export const useChartStore = defineStore('chart', {
   getters: {
     /**
      * @desc 获取图表名称
-     * @param state {ChartState}
-     * @returns {string}
      */
-    getChartName(state): string {
+    getChartName(state) {
       return state.chartName
     },
     /**
      * @desc 获取图表更新时间
-     * @param state {ChartState}
-     * @returns {string}
      */
-    getChartUpdateTime(state): string {
+    getChartUpdateTime(state) {
       return state.chartUpdateTime
     },
     /**
      * @desc 获取图表更新耗时
-     * @param state {ChartState}
-     * @returns {string}
      */
     getChartUpdateTakesTime(state): string {
       return state.chartUpdateTakesTime
     },
     /**
      * @desc 获取图表错误信息
-     * @param state {ChartState}
-     * @returns {string}
      */
     getChartErrorMessage(state): string {
       return state.chartErrorMessage
@@ -68,26 +57,20 @@ export const useChartStore = defineStore('chart', {
     },
     /**
      * @desc 获取图表类型
-     * @param state {ChartState}
-     * @returns {string}
      */
-    getChartType(state): string {
+    getChartType(state) {
       return state.chartType
     },
     /**
      * @desc 获取图表id
-     * @param state {ChartState}
-     * @returns {string | null}
      */
-    getChartId(state): string | null {
+    getChartId(state) {
       return state.chartId
     },
     /**
      * @desc 获取图表数据
-     * @param state {ChartState}
-     * @returns {any[]}
      */
-    getChartData(state): any[] {
+    getChartData(state) {
       return state.chartData
     }
   },
@@ -121,7 +104,7 @@ export const useChartStore = defineStore('chart', {
      * @param chartErrorMessage {string}
      * @returns {void}
      */
-    setChartType(chartType: string) {
+    setChartType(chartType) {
       this.chartType = chartType
     },
     /**
@@ -137,23 +120,19 @@ export const useChartStore = defineStore('chart', {
      * @param chartId {string | null}
      * @returns {void}
      */
-    setChartId(chartId: string | null) {
+    setChartId(chartId) {
       this.chartId = chartId
     },
     /**
      * @desc 设置图表错误信息
-     * @param chartErrorMessage {string}
-     * @returns {void}
      */
-    setChartErrorMessage(chartErrorMessage: string) {
+    setChartErrorMessage(chartErrorMessage) {
       this.chartErrorMessage = chartErrorMessage
     },
     /**
      * @desc 设置图表数据
-     * @param chartData {any[]}
-     * @returns {void}
      */
-    setChartData(chartData: any[]) {
+    setChartData(chartData) {
       this.chartData = chartData
     }
   }

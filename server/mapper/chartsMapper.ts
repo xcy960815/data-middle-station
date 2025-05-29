@@ -12,7 +12,7 @@ import {
 import { convertToSqlProperties } from '../utils/string-case-converter'
 
 export class ChartsMapping
-  implements ChartsDao.ChartsMappingOption
+  implements ChartsDao.ChartsOption
 {
   @Column('affectedRows')
   affectedRows: number = 0
@@ -105,7 +105,7 @@ export class ChartsMapper extends BaseMapper {
    * @returns {Promise<number>}
    */
   public async createChart(
-    chartOption: ChartsDao.ChartsParamsOption
+    chartOption: ChartsDao.ChartsOption
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartOption)
@@ -123,7 +123,7 @@ export class ChartsMapper extends BaseMapper {
    * @returns {Promise<void>}
    */
   public async updateChart(
-    chartOption: ChartsDao.ChartsParamsOption
+    chartOption: ChartsDao.ChartsOption
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartOption)
@@ -154,15 +154,13 @@ export class ChartsMapper extends BaseMapper {
    * @param id {number} 图表id
    * @returns {Promise<ChartsOption>}
    */
-  public async getChartById(
-    id: number
-  ): Promise<ChartsDao.ChartsOption> {
+  public async getChartById<
+    T extends ChartsDao.ChartsOption
+  >(id: number): Promise<T> {
     // 更新访问次数 不知道为什么报错
     // await this.updateChartVisits(id)
     const sql = `select * from ${CHARTNAME} where id = ?`
-    const result = await this.exe<
-      Array<ChartsDao.ChartsOption>
-    >(sql, [id])
+    const result = await this.exe<Array<T>>(sql, [id])
 
     return result?.[0]
   }

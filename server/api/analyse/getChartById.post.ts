@@ -1,11 +1,10 @@
 import { Response } from '../../utils/response'
 import { ChartsService } from '../../service/chartsService'
+
 const chartsService = new ChartsService()
 
 export default defineEventHandler<
-  Promise<
-    ResponseModule.Response<ChartsModule.ChartsOption>
-  >
+  Promise<ResponseModule.Response<ChartsVo.ChartsOption>>
 >(async (event) => {
   try {
     const { id } = await readBody(event)

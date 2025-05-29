@@ -93,7 +93,7 @@ export const handler = () => {
    * @returns {string}
    */
   const chartSuggestStrategies = (
-    chartType: ChartStore.ChartState['chartType']
+    chartType: ChartStore.ChartType
   ) => {
     const dimensions = dimensionStore.getDimensions
     const groups = groupStore.getGroups
@@ -220,7 +220,7 @@ export const handler = () => {
       const tableName = result.data?.tableName
       chartStore.setChartId(id as unknown as number)
       chartStore.setChartType(
-        chartType as ChartStore.ChartState['chartType']
+        chartType as ChartStore.ChartType
       )
       chartStore.setChartName(chartName || '')
       columnStore.setDataSource(tableName || '')
@@ -232,7 +232,7 @@ export const handler = () => {
     }
   }
 
-  onMounted(async () => {
-    await getChartById()
+  onMounted(() => {
+    getChartById()
   })
 }

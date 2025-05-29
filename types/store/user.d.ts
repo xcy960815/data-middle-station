@@ -3,17 +3,16 @@
  */
 declare namespace UserStore {
   interface UserState {
-    name: string;
-    avatar: string;
+    name: string
+    avatar: string
   }
   interface UserGetters {
     userInfo(state: UserState): {
-      name: string;
-      avatar: string;
-    };
-    [key: string]: any;
+      name: string
+      avatar: string
+    }
   }
   interface UserActions {
-    updateName(name: string): void;
+    updateName(name: string): void
   }
 }

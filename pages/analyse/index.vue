@@ -31,7 +31,6 @@
       <ChartsConfig></ChartsConfig>
     </template>
   </NuxtLayout>
- 
 </template>
 
 <script setup lang="ts">
@@ -44,7 +43,7 @@ import Bar from './components/bar/index.vue'
 import Charts from './components/charts/index.vue'
 import ChartsType from './components/charts-type/index.vue'
 import ChartsConfig from './components/charts-config/index.vue'
-import { handler } from "./handler"
+import { handler } from './handler'
 const layoutName = 'analyse'
 handler()
 </script>
