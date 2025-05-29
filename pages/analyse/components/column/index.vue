@@ -298,8 +298,8 @@ const setDataModel = () => {
 
       &.column__item_group_choosed::after {
         position: absolute;
-        left: 0px;
-        top: 14px;
+        left: 5px;
+        top: 13px;
         content: '';
         width: 5px;
         height: 5px;
