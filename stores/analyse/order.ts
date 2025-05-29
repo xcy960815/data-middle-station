@@ -6,28 +6,30 @@ interface OrderOption {
   value: string
 }
 
-interface OrderState {
-  orders: OrderOption[]
-}
-
 import { defineStore } from 'pinia'
 
-export const useOrderStore = defineStore('order', {
-  state: (): OrderState => ({
+export const useOrderStore = defineStore<
+  OrderStore.OrderKey,
+  BaseStore.State<OrderStore.OrderState>,
+  BaseStore.Getters<
+    OrderStore.OrderState,
+    OrderStore.OrderGetters
+  >,
+  BaseStore.Actions<
+    OrderStore.OrderState,
+    OrderStore.OrderActions
+  >
+>('order', {
+  state: () => ({
     orders: []
   }),
   getters: {
-    getOrders(state): OrderOption[] {
+    getOrders(state) {
       return state.orders
     }
   },
   actions: {
-    /**
-     * @desc 设置排序
-     * @param orders {OrderOption[]}
-     * @returns {void}
-     */
-    setOrders(orders: OrderOption[]) {
+    setOrders(orders) {
       this.orders = orders
     },
     /**

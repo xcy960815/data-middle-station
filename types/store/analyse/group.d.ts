@@ -11,14 +11,13 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface GroupOptionDto
-    extends ColumnStore.ColumnOptionDto {
+  interface GroupOption extends ColumnStore.ColumnOption {
     // 无效的字段
     __invalid?: boolean
   }
 
   type GroupState = {
-    groups: GroupOptionDto[]
+    groups: GroupOption[]
   }
 
   /**
@@ -29,7 +28,7 @@ declare namespace GroupStore {
    * @desc action
    */
   type GroupActions = {
-    addGroups: (groups: GroupOptionDto[]) => void
+    addGroups: (groups: GroupOption[]) => void
     removeGroup: (index: number) => void
   }
 }

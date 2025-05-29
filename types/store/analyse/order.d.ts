@@ -30,8 +30,7 @@ declare namespace OrderStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface OrderOptionDto
-    extends ColumnStore.ColumnOptionDto {
+  interface OrderOption extends ColumnStore.ColumnOption {
     orderType: OrderType
     aggregationType: OrderAggregationsType
   }
@@ -39,35 +38,18 @@ declare namespace OrderStore {
   type OrderState = {
     orders: OrderOption[]
   }
-
-  /**
-   * @desc getter 名称
-   */
-  type GetterName<T extends string> = `get${Capitalize<T>}`
-
   /**
    * @desc getter
    */
-  type OrderGetters<S> = {
-    [K in keyof S as GetterName<K & string>]: (
-      state: S
-    ) => S[K]
-  }
+  type OrderGetters = {}
 
-  /**
-   * @desc action 名称
-   */
-  type ActionName<T extends string> = `set${Capitalize<T>}`
-  /**
-   * @desc action
-   */
   type OrderActions = {
-    [K in keyof OrderState as ActionName<K & string>]: (
-      value: OrderState[K]
-    ) => void
+    updateOrder: ({
+      order: OrderOption,
+      index: number
+    }) => void
   } & {
-    updateOrder: (value: OrderOption, index: number) => void
-    addOrders: (value: OrderOption[]) => void
-    removeOrder: (value: number) => void
+    addOrders: (orders: OrderOption[]) => void
+    removeOrder: (index: number) => void
   }
 }

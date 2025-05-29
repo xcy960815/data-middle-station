@@ -52,24 +52,185 @@
               </el-button>
             </span>
           </template>
-        </el-dialog>
-      </client-only> -->
+</el-dialog>
+</client-only> -->
     </div>
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
-import { initData } from './init-data'
-import { handler } from './handler'
 import SelecterDimension from '@/components/selecter/dimension/index.vue'
-const { dimensionList } = initData()
+
+// 初始化数据
+const columnStore = useColumnStore()
+const dimensionStore = useDimensionStore()
+const groupStore = useGroupStore()
+
+/**
+ * @desc dimensionList
+ * @returns {ComputedRef<DimensionStore.DimensionOption[]>}
+ */
+const dimensionList = computed(() => {
+  const dimensionList = dimensionStore.getDimensions
+  return dimensionList
+})
+
+/**
+ * @desc groupList
+ */
+const groupList = computed<GroupStore.GroupState['groups']>(
+  () => {
+    return groupStore.getGroups
+  }
+)
+
 const createComputedFieldVisible = ref<boolean>(false)
-const {
-  dragstartHandler,
-  dragHandler,
-  dragoverHandler,
-  dropHandler
-} = handler({ dimensionList })
+
+/**
+ * @desc addDimension
+ * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
+ */
+const addDimension = (
+  dimension:
+    | DimensionStore.DimensionOption
+    | Array<DimensionStore.DimensionOption>
+) => {
+  dimension = Array.isArray(dimension)
+    ? dimension
+    : [dimension]
+  dimensionStore.addDimensions(dimension)
+}
+
+/**
+ * @desc addGroup
+ * @param {GroupStore.GroupOption|Array<GroupStore.GroupOption>} groups
+ */
+const addGroup = (
+  group:
+    | GroupStore.GroupOption
+    | Array<GroupStore.GroupOption>
+) => {
+  group = Array.isArray(group) ? group : [group]
+  groupStore.addGroups(group)
+}
+
+/**
+ * @desc getTargetIndex
+ * @param {number} index
+ * @param {DragEvent} dragEvent
+ * @returns {number}
+ */
+const getTargetIndex = (
+  index: number,
+  dragEvent: DragEvent
+): number => {
+  const dropY = dragEvent.clientY // 落点Y
+  let ys = [].slice
+    .call(
+      document.querySelectorAll(
+        '.dimension__content > [data-action="drag"]'
+      )
+    )
+    .map(
+      (element: HTMLDivElement) =>
+        (element.getBoundingClientRect().top +
+          element.getBoundingClientRect().bottom) /
+        2
+    )
+  ys.splice(index, 1)
+  let targetIndex = ys.findIndex((e) => dropY < e)
+  if (targetIndex === -1) {
+    targetIndex = ys.length
+  }
+  return targetIndex
+}
+
+/**
+ * @desc 发起拖拽
+ * @param {number} index
+ * @param {DragEvent} dragEvent
+ * @returns {void}
+ */
+const dragstartHandler = (
+  index: number,
+  dragEvent: DragEvent
+) => {
+  dragEvent.dataTransfer?.setData(
+    'text',
+    JSON.stringify({
+      from: 'dimension',
+      index,
+      value: dimensionList.value[index]
+    })
+  )
+}
+
+/**
+ * @desc 结束拖拽
+ * @param {number} index
+ * @param {DragEvent} dragEvent
+ * @returns {void}
+ */
+const dragHandler = (
+  index: number,
+  dragEvent: DragEvent
+) => {
+  dragEvent.preventDefault()
+}
+
+/**
+ * @desc 拖拽开始
+ * @param {DragEvent} dragEvent
+ * @returns {void}
+ */
+const dragoverHandler = (dragEvent: DragEvent) => {
+  dragEvent.preventDefault()
+}
+
+/**
+ * @desc 拖拽结束
+ * @param {DragEvent} dragEvent
+ * @returns {void}
+ */
+const dropHandler = (dragEvent: DragEvent) => {
+  dragEvent.preventDefault()
+  // get drag data
+  const data: DragData<
+    | DimensionStore.DimensionOption
+    | ColumnStore.ColumnOption
+  > = JSON.parse(
+    dragEvent.dataTransfer?.getData('text') || '{}'
+  )
+  const dimension =
+    data.value as DimensionStore.DimensionOption
+  dimension.__invalid = true
+  const column = data.value as ColumnStore.ColumnOption
+  const index = data.index
+  switch (data.from) {
+    case 'dimension':
+      // 移动位置
+      const targetIndex = getTargetIndex(
+        data.index,
+        dragEvent
+      )
+      if (targetIndex === data.index) return
+      const dimensions = JSON.parse(
+        JSON.stringify(dimensionStore.dimensions)
+      )
+      const target = dimensions.splice(data.index, 1)[0]
+      dimensions.splice(targetIndex, 0, target)
+      dimensionStore.setDimensions(dimensions)
+      break
+    default:
+      // 更新列名 主要是显示已经选中的标志
+      columnStore.updateColumn({ column, index })
+      // 添加维度
+      console.log('dimension', dimension)
+      addDimension(dimension)
+      break
+  }
+}
+
 /**
  * @desc 创建计算字段
  * @return void
@@ -78,6 +239,16 @@ const handleCreateComputedField = () => {
   console.log('创建计算字段')
   createComputedFieldVisible.value = true
 }
+
+/**
+ * @desc 右键点击事件
+ * @param {DimensionStore.DimensionOption} dimension
+ */
+const contextmenuHandler = (
+  dimension: DimensionStore.DimensionOption
+) => {
+  console.log('dimension', dimension)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -85,6 +256,7 @@ const handleCreateComputedField = () => {
   .dimension__content {
     list-style: none;
     overflow: auto;
+
     .dimension__item {
       cursor: move;
       position: relative;
