@@ -1,6 +1,3 @@
-/**
- * @desc 表格的dao层
- */
 import {
   Column,
   BindDataSource,
@@ -11,7 +8,7 @@ import {
   toHump,
   toLine
 } from '../utils/string-case-converter'
-
+import dayjs from 'dayjs'
 /** 将数据库所有的类型罗列出来在前端统一展示成 number */
 const NUMBER_TYPE_ENUM = [
   'tinyint',
@@ -46,8 +43,8 @@ const DATE_TYPE_ENUM = [
 ]
 
 // 表列表映射
-export class TableListMapping
-  implements TableInfoDao.TableOptionDao
+export class QueryTableMapping
+  implements DatabaseDao.TableOptionDao
 {
   @Column('TABLE_NAME')
   tableName(value: string) {
@@ -65,10 +62,16 @@ export class TableListMapping
   tableComment: string = ''
 
   @Column('CREATE_TIME')
-  createTime: string = ''
+  createTime(value: string) {
+    if (!value) return ''
+    return dayjs(value).format('YYYY-MM-DD HH:mm:ss')
+  }
 
   @Column('UPDATE_TIME')
-  updateTime: string = ''
+  updateTime(value: string) {
+    if (!value) return ''
+    return dayjs(value).format('YYYY-MM-DD HH:mm:ss')
+  }
 
   @Column('TABLE_ROWS')
   tableRows: number = 0
@@ -111,7 +114,7 @@ export class TableListMapping
 
 // 表列映射
 export class TableColumnMapping
-  implements TableInfoDao.TableColumnOptionDao
+  implements DatabaseDao.TableColumnOptionDao
 {
   @Column('COLUMN_NAME')
   columnName(value: string) {
@@ -151,15 +154,15 @@ export class TableColumnMapping
 const tableSchema = 'kanban_data'
 
 @BindDataSource(tableSchema)
-export class TableMapper extends BaseMapper {
+export class DatabaseMapper extends BaseMapper {
   /**
    * @desc 查询所有的表名
    * @datasource ${tableSchema}
    * @returns {Promise<Array<T>>}
    */
-  @Mapping(TableListMapping)
+  @Mapping(QueryTableMapping)
   public async queryTable<
-    T extends TableInfoDao.TableOptionDao
+    T extends DatabaseDao.TableOptionDao
   >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         table_name,
@@ -190,7 +193,7 @@ export class TableMapper extends BaseMapper {
    */
   @Mapping(TableColumnMapping)
   public async queryTableColumns<
-    T extends TableInfoDao.TableColumnOptionDao
+    T extends DatabaseDao.TableColumnOptionDao
   >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         column_name, 
@@ -202,7 +205,7 @@ export class TableMapper extends BaseMapper {
         table_name = ? 
         AND table_schema = '${tableSchema}';`
     const result = await this.exe<Array<T>>(sql, [
-      toLine(tableName)
+      tableName
     ])
     return result
   }

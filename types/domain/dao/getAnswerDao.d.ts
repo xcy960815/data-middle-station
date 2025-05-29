@@ -1,7 +1,4 @@
-/**
- * @desc  表结构
- */
-declare namespace ChartsDao {
+declare namespace GetAnswerDao {
   type ChartDataDao = Array<{
     [key: string]: string | number
   }>

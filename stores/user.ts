@@ -1,3 +1,5 @@
+import { defineStore } from 'pinia'
+
 /**
  * @desc 定义用户模块的 store
  */

@@ -1,5 +1,6 @@
-import { TableMapper } from '../../mapper/tableMapper'
+import { DatabaseService } from '../../service/databaseService'
 import { Response } from '../../utils/response'
+const databaseService = new DatabaseService()
 /**
  * @desc 根据表名查询数据
  * @returns {ResponseModule.Response<Array<TableInfoModule.TableColumnOption>>}
@@ -7,7 +8,7 @@ import { Response } from '../../utils/response'
 export default defineEventHandler<
   Promise<
     ResponseModule.Response<
-      Array<TableInfoModule.TableColumnOptionDao>
+      Array<DatabaseVo.TableColumnOptionVo>
     >
   >
 >(async (event) => {
@@ -15,9 +16,8 @@ export default defineEventHandler<
     const { tableName } = getQuery<{ tableName: string }>(
       event
     )
-    const tableInstence = new TableMapper()
     const data =
-      await tableInstence.queryTableColumns(tableName)
+      await databaseService.queryTableColumns(tableName)
     return Response.success(data)
   } catch (error: any) {
     return Response.error(error.message)

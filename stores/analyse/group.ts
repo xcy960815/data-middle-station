@@ -1,6 +1,7 @@
 /**
  * @desc 分组 store
  */
+import { defineStore } from 'pinia'
 export const useGroupStore = defineStore<
   GroupStore.GroupKey,
   BaseStore.State<GroupStore.GroupState>,

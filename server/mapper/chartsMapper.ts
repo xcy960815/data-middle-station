@@ -8,10 +8,11 @@ import {
   Mapping,
   BaseMapper
 } from './baseMapper'
+
 import { convertToSqlProperties } from '../utils/string-case-converter'
 
 export class ChartsMapping
-  implements ChartsModule.ChartsMappingOption
+  implements ChartsDao.ChartsMappingOption
 {
   @Column('affectedRows')
   affectedRows: number = 0
@@ -104,7 +105,7 @@ export class ChartsMapper extends BaseMapper {
    * @returns {Promise<number>}
    */
   public async createChart(
-    chartOption: ChartsModule.ChartsParamsOption
+    chartOption: ChartsDao.ChartsParamsOption
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartOption)
@@ -122,7 +123,7 @@ export class ChartsMapper extends BaseMapper {
    * @returns {Promise<void>}
    */
   public async updateChart(
-    chartOption: ChartsModule.ChartsParamsOption
+    chartOption: ChartsDao.ChartsParamsOption
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartOption)
@@ -155,13 +156,14 @@ export class ChartsMapper extends BaseMapper {
    */
   public async getChartById(
     id: number
-  ): Promise<ChartsModule.ChartsOption> {
+  ): Promise<ChartsDao.ChartsOption> {
     // 更新访问次数 不知道为什么报错
     // await this.updateChartVisits(id)
     const sql = `select * from ${CHARTNAME} where id = ?`
     const result = await this.exe<
-      Array<ChartsModule.ChartsOption>
+      Array<ChartsDao.ChartsOption>
     >(sql, [id])
+
     return result?.[0]
   }
 
@@ -179,9 +181,9 @@ export class ChartsMapper extends BaseMapper {
    * @desc 获取所有的图表
    * @returns {Promise<Array<ChartsOption>>}
    */
-  public async getCharts<
-    T extends ChartsDao.ChartsOption
-  >(): Promise<Array<T>> {
+  public async getCharts<T extends any>(): Promise<
+    Array<T>
+  > {
     const sql = `select * from ${CHARTNAME}`
     return await this.exe<Array<T>>(sql)
   }

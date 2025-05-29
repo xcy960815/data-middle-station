@@ -50,6 +50,8 @@ interface ChartConfigState {
   chartConfig: ChartConfig
 }
 
+import { defineStore } from 'pinia'
+
 export const useChartConfigStore = defineStore(
   'chartConfig',
   {

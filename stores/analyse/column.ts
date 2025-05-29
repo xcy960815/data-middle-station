@@ -1,3 +1,4 @@
+import { defineStore } from 'pinia'
 /**
  * @desc 列 store
  */
