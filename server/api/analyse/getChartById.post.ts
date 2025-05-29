@@ -1,11 +1,8 @@
-
-
-
-import { ChartsDao } from "../../database/charts"
-import { Response } from "../../database/response"
+import { ChartsMapper } from '../../mapper/chartsMapper'
+import { Response } from '../../utils/response'
 
 /**
- * @api {post} /analyse/getChartById 
+ * @api {post} /analyse/getChartById
  * @apiName getChartById
  * @apiGroup analyse
  * @apiDescription 获取图表
@@ -14,14 +11,17 @@ import { Response } from "../../database/response"
  * @apiSuccessExample {json} Success-Response:
  * @returns {Promise<ResponseModule.Response<ChartsModule.ChartsOption>>}
  */
-export default defineEventHandler<Promise<ResponseModule.Response<ChartsModule.ChartsOption>>>(async (event) => {
-    try {
-        const { id } = await readBody(event);
-        const chartsInstance = new ChartsDao();
-        const data = await chartsInstance.getChartById(id);
-        return Response.success(data);
-    } catch (error: any) {
-        return Response.error(error.message);
-    }
+export default defineEventHandler<
+  Promise<
+    ResponseModule.Response<ChartsModule.ChartsOption>
+  >
+>(async (event) => {
+  try {
+    const { id } = await readBody(event)
+    const chartsInstance = new ChartsMapper()
+    const data = await chartsInstance.getChartById(id)
+    return Response.success(data)
+  } catch (error: any) {
+    return Response.error(error.message)
+  }
 })
-

@@ -1,6 +1,6 @@
-import { GetAnswerDao } from '../../database/getAnswer'
-import { Response } from '../../database/response'
-import { toLine } from '../../database/utils'
+import { GetAnswerMapper } from '../../mapper/getAnswerMapper'
+import { Response } from '../../utils/response'
+import { toLine } from '../../utils/string-case-converter'
 /**
  * 这是一个很重要的接口，动态拼接sql 动态查询
  */
@@ -35,7 +35,7 @@ export default defineEventHandler<
       limit
     } = await readBody<ChartDataParamsDto>(event)
 
-    const getAnswerInstance = new GetAnswerDao()
+    const getAnswerInstance = new GetAnswerMapper()
 
     let sql = 'select'
 

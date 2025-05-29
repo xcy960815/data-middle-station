@@ -1,5 +1,5 @@
-import { TableDao } from '../../database/table'
-import { Response } from '../../database/response'
+import { TableMapper } from '../../mapper/tableMapper'
+import { Response } from '../../utils/response'
 /**
  * @desc 根据表名查询数据
  * @returns {ResponseModule.Response<Array<TableInfoModule.TableColumnOption>>}
@@ -15,7 +15,7 @@ export default defineEventHandler<
     const { tableName } = getQuery<{ tableName: string }>(
       event
     )
-    const tableInstence = new TableDao()
+    const tableInstence = new TableMapper()
     const data =
       await tableInstence.queryTableColumns(tableName)
     return Response.success(data)

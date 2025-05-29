@@ -89,27 +89,127 @@
 import TableSelecter from '@/components/selecter/table/index.vue'
 import Icon from '@/components/context-menu/Icon.vue'
 import ContextMenu from '@/components/context-menu/index.vue'
-import { initData } from './init-data'
-import { handler } from './handler'
-const {
-  columnClasses,
-  columnIconName,
-  columnList,
-  currentColumn
-} = initData()
+import { ref, computed } from 'vue'
+import { useColumnStore } from '@/stores/analyse/column'
+import { useDimensionStore } from '@/stores/analyse/dimension'
+import { useGroupStore } from '@/stores/analyse/group'
+import { useFilterStore } from '@/stores/analyse/filter'
+import { useOrderStore } from '@/stores/analyse/order'
 
-const {
-  dragstartHandler,
-  dragendHandler,
-  contextmenuHandler,
-  setDataModel,
-  dragoverHandler,
-  dropHandler
-} = handler({
-  currentColumn
+// 常量定义
+const NUMBER_ICON_NAME = 'ant-design:number-outlined'
+const DATE_ICON_NAME = 'ant-design:calendar-outlined'
+const STRING_ICON_NAME = 'ant-design:field-string-outlined'
+
+const columnClasses = computed(
+  () => (column: ColumnStore.ColumnOptionDto) => {
+    const dimensionChoosed =
+      useDimensionStore().getDimensions.find(
+        (dimensionOption: DimensionStore.DimensionOption) =>
+          dimensionOption.columnName === column.columnName
+      )
+    const groupChoosed = useGroupStore().getGroups.find(
+      (groupOption: GroupStore.GroupOptionDto) =>
+        groupOption.columnName === column.columnName
+    )
+    return {
+      column__item: true,
+      column__item_dimension_choosed: dimensionChoosed,
+      column__item_group_choosed: groupChoosed
+    }
+  }
+)
+
+const columnIconName = computed(
+  () => (column: ColumnStore.ColumnOptionDto) => {
+    const { columnType } = column
+    if (columnType === 'number') {
+      return NUMBER_ICON_NAME
+    } else if (columnType === 'date') {
+      return DATE_ICON_NAME
+    } else if (columnType === 'string') {
+      return STRING_ICON_NAME
+    } else {
+      return ''
+    }
+  }
+)
+
+const columnStore = useColumnStore()
+const columnList = computed(() => {
+  return columnStore.getColumns
 })
-const handleClickTitle = () => {
-  console.log('handleClickTitle')
+const currentColumn = ref<ColumnStore.ColumnOptionDto>()
+
+const dragstartHandler = (
+  column: ColumnStore.ColumnOptionDto,
+  index: number,
+  event: DragEvent
+) => {
+  event.dataTransfer?.setData(
+    'text/plain',
+    JSON.stringify({
+      from: 'column',
+      type: 'single',
+      index,
+      value: column
+    })
+  )
+}
+
+const dragendHandler = (event: DragEvent) => {
+  event.preventDefault()
+}
+
+const dragoverHandler = (dragEvent: DragEvent) => {
+  dragEvent.preventDefault()
+}
+
+const dropHandler = (dragEvent: DragEvent) => {
+  dragEvent.preventDefault()
+  const data: DragData<ColumnStore.ColumnOptionDto> =
+    JSON.parse(
+      dragEvent.dataTransfer?.getData('text') || '{}'
+    )
+  const columnIndex = columnStore.getColumns.findIndex(
+    (column: ColumnStore.ColumnOptionDto) =>
+      column.columnName === data.value.columnName
+  )
+
+  switch (data.from) {
+    case 'dimension':
+      const dimensionSrore = useDimensionStore()
+      dimensionSrore.removeDimension(data.index)
+      break
+    case 'filter':
+      const filterStore = useFilterStore()
+      filterStore.removeFilter(data.index)
+      break
+    case 'order':
+      const orderStore = useOrderStore()
+      orderStore.removeOrder(data.index)
+      break
+    case 'group':
+      const groupStore = useGroupStore()
+      groupStore.removeGroup(data.index)
+      columnStore.updateColumn(data.value, columnIndex)
+      break
+    case 'column':
+      break
+    default:
+      console.error('未知拖拽类型', data.from)
+      break
+  }
+}
+
+const contextmenuHandler = (
+  column: ColumnStore.ColumnOptionDto
+) => {
+  currentColumn.value = column
+}
+
+const setDataModel = () => {
+  console.log('column', currentColumn.value)
 }
 </script>
 

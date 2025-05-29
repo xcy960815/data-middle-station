@@ -5,9 +5,13 @@ import {
   Column,
   BindDataSource,
   Mapping,
-  DOBase
-} from './dobase'
-import { toHump, toLine } from './utils'
+  BaseMapper
+} from './baseMapper'
+import {
+  toHump,
+  toLine
+} from '../utils/string-case-converter'
+
 /** 将数据库所有的类型罗列出来在前端统一展示成 number */
 const NUMBER_TYPE_ENUM = [
   'tinyint',
@@ -43,7 +47,7 @@ const DATE_TYPE_ENUM = [
 
 // 表列表映射
 export class TableListMapping
-  implements TableInfoModule.TableOptionDao
+  implements TableInfoDao.TableOptionDao
 {
   @Column('TABLE_NAME')
   tableName(value: string) {
@@ -107,7 +111,7 @@ export class TableListMapping
 
 // 表列映射
 export class TableColumnMapping
-  implements TableInfoModule.TableColumnOptionDao
+  implements TableInfoDao.TableColumnOptionDao
 {
   @Column('COLUMN_NAME')
   columnName(value: string) {
@@ -147,15 +151,15 @@ export class TableColumnMapping
 const tableSchema = 'kanban_data'
 
 @BindDataSource(tableSchema)
-export class TableDao extends DOBase {
+export class TableMapper extends BaseMapper {
   /**
    * @desc 查询所有的表名
    * @datasource ${tableSchema}
    * @returns {Promise<Array<T>>}
    */
   @Mapping(TableListMapping)
-  public async queryTableList<
-    T extends TableInfoModule.TableOptionDao
+  public async queryTable<
+    T extends TableInfoDao.TableOptionDao
   >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         table_name,
@@ -182,11 +186,11 @@ export class TableDao extends DOBase {
   /**
    * @desc 查询表的所有列
    * @param tableName {string} 表名
-   * @returns {Promise<Array<TableInfoModule.TableColumnOption>>}
+   * @returns {Promise<Array<TableInfoDao.TableColumnOptionDao>>}
    */
   @Mapping(TableColumnMapping)
   public async queryTableColumns<
-    T extends TableInfoModule.TableColumnOptionDao
+    T extends TableInfoDao.TableColumnOptionDao
   >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         column_name, 

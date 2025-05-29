@@ -3,6 +3,7 @@
  */
 declare namespace ColumnStore {
   type ColumnKey = 'column'
+
   /**
    * @desc 列字段
    * @interface ColumnOption
