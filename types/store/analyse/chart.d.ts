@@ -32,31 +32,13 @@ declare namespace ChartStore {
     // 图表加载状态
     chartLoading: boolean
   }
-
-  /**
-   * @desc getter 名称
-   */
-  type GetterName<T extends string> = `get${Capitalize<T>}`
-
   /**
    * @desc getter
    */
-  type ChartGetters<S> = {
-    [K in keyof S as GetterName<K & string>]: (
-      state: S
-    ) => S[K]
-  }
+  type ChartGetters = {}
 
-  /**
-   * @desc action 名称
-   */
-  type ActionName<T extends string> = `set${Capitalize<T>}`
   /**
    * @desc action
    */
-  type ChartActions = {
-    [K in keyof ChartState as ActionName<K & string>]: (
-      value: ChartState[K]
-    ) => void
-  } & {}
+  type ChartActions = {}
 }

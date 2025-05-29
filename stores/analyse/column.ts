@@ -62,7 +62,7 @@ export const useColumnStore = defineStore<
      */
     removeColumns(columns) {
       this.columns = this.columns.filter(
-        (column: ColumnStore.ColumnOptionDto) =>
+        (column: ColumnStore.ColumnOption) =>
           !columns.includes(column)
       )
     },

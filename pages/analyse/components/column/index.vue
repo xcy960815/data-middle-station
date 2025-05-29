@@ -266,10 +266,14 @@ const setDataModel = () => {
 .column {
   height: 100%;
   pointer-events: initial;
+  display: flex;
+  flex-direction: column;
 
   .column__content {
+    flex: 1;
+    overflow-y: auto;
     list-style: none;
-    overflow: auto;
+    // overflow: auto;
 
     .column__item {
       padding: 0 10px;

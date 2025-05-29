@@ -11,7 +11,7 @@ export class ChartsService {
 
   public async getChartById(
     id: number
-  ): Promise<ChartsDao.ChartsOption> {
+  ): Promise<ChartsVo.ChartsOption> {
     return this.chartsMapper.getChartById(id)
   }
 }
