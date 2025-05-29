@@ -1,5 +1,7 @@
-import { TableDao } from '../../database/table'
-import { Response } from '../../database/response'
+import { Response } from '../../utils/response'
+import { AnalyseService } from '../../service/analyse'
+
+const analyseService = new AnalyseService()
 
 /**
  * @desc 获取所有的表名
@@ -8,7 +10,7 @@ import { Response } from '../../database/response'
 export default defineEventHandler<
   Promise<
     ResponseModule.Response<
-      Array<TableInfoModule.TableOptionDao>
+      Array<TableInfoVo.TableOptionVo>
     >
   >
 >(async (event) => {
@@ -16,12 +18,10 @@ export default defineEventHandler<
     const { tableName } = getQuery<{ tableName: string }>(
       event
     )
-    const tableDaoInstence = new TableDao()
     const tableList =
-      await tableDaoInstence.queryTableList(tableName)
+      await analyseService.queryTable(tableName)
     return Response.success(tableList)
   } catch (error: any) {
-    console.log(error)
     return Response.error(error.message)
   }
 })

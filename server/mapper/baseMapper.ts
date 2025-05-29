@@ -144,29 +144,11 @@ export function Mapping(mapping: {
     return descriptor
   }
 }
-// export function Mapping<T extends object>(mapping: new () => T): MethodDecorator {
-//   return function (
-//     target: Object,
-//     propertyKey: string | symbol,
-//     descriptor: TypedPropertyDescriptor<any>,
-//   ) {
-//     const originalMethod = descriptor.value;
-//     descriptor.value = async function (...args: any[]) {
-//       const originValue = await originalMethod.apply(this, args);
-//       if (mapping) {
-//         return new mapping()['columnsMapper'](originValue);
-//       } else {
-//         return originValue;
-//       }
-//     };
-//     return descriptor;
-//   };
-// }
 
 /**
  * @desc 数据库操作基类
  */
-export class DOBase {
+export class BaseMapper {
   // 线程池
   private poolMap: Map<string, mysql.Pool> = new Map()
   // 查找线程池
