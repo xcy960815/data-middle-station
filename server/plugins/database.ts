@@ -23,8 +23,8 @@ async function getDatasourceList() {
       // const database = getProcessEnvProperties('DB_DATABASE') as mysql.PoolOptions['database'];
       const dataSourceConfig: NodeJS.DataSourceConfig = {
         kanban_data: {
-          // host: '192.168.100.1',
-          host: '127.0.0.1',
+          host: '192.168.100.1',
+          // host: '127.0.0.1',
           port: 3308,
           user: 'root',
           password: '123456',
