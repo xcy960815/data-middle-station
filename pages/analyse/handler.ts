@@ -183,7 +183,10 @@ export const handler = () => {
     () => queryChartDataParams.value,
     () => {
       queryChartData()
-      // console.log('queryChartDataParams', queryChartDataParams.value);
+      console.log(
+        'queryChartDataParams',
+        queryChartDataParams.value
+      )
     },
     {
       deep: true,

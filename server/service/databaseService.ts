@@ -16,7 +16,36 @@ export class DatabaseService {
   public async queryTable(
     tableName: string
   ): Promise<Array<DatabaseVo.TableOptionVo>> {
-    return this.databaseMapper.queryTable(tableName)
+    const result =
+      await this.databaseMapper.queryTable(tableName)
+    return result.map((item) => ({
+      ...item,
+      createTime:
+        typeof item.createTime === 'function'
+          ? item.createTime('')
+          : item.createTime,
+      updateTime:
+        typeof item.updateTime === 'function'
+          ? item.updateTime('')
+          : item.updateTime,
+      tableName:
+        typeof item.tableName === 'function'
+          ? item.tableName('')
+          : item.tableName,
+      tableType:
+        typeof item.tableType === 'function'
+          ? item.tableType('')
+          : item.tableType,
+      tableComment: item.tableComment,
+      engine:
+        typeof item.engine === 'function'
+          ? item.engine('')
+          : item.engine,
+      tableCollation:
+        typeof item.tableCollation === 'function'
+          ? item.tableCollation('')
+          : item.tableCollation
+    }))
   }
 
   /**
@@ -27,8 +56,30 @@ export class DatabaseService {
   public async queryTableColumns(
     tableName: string
   ): Promise<Array<DatabaseVo.TableColumnOptionVo>> {
-    return this.databaseMapper.queryTableColumns(
-      toLine(tableName)
-    )
+    const result =
+      await this.databaseMapper.queryTableColumns(
+        toLine(tableName)
+      )
+    return result.map((item) => {
+      return {
+        columnName:
+          typeof item.columnName === 'function'
+            ? item.columnName('')
+            : item.columnName,
+        columnType:
+          typeof item.columnType === 'function'
+            ? item.columnType('')
+            : item.columnType,
+        columnComment: item.columnComment,
+        alias:
+          typeof item.columnName === 'function'
+            ? item.columnName('')
+            : item.columnName,
+        displayName:
+          typeof item.columnName === 'function'
+            ? item.columnName('')
+            : item.columnName
+      }
+    })
   }
 }

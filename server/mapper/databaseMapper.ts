@@ -122,7 +122,7 @@ export class TableColumnMapping
     return toHump(value)
   }
 
-  @Column('column_type')
+  @Column('COLUMN_TYPE')
   columnType = (value: string) => {
     if (!value) return ''
     const type = value.toLowerCase()
@@ -139,16 +139,6 @@ export class TableColumnMapping
 
   @Column('COLUMN_COMMENT')
   columnComment: string = ''
-
-  @Column('alias')
-  alias = (value: string) => {
-    return value ? toHump(value) : ''
-  }
-
-  @Column('display_name')
-  displayName = (value: string) => {
-    return value ? toHump(value) : ''
-  }
 }
 
 const tableSchema = 'kanban_data'
@@ -197,7 +187,7 @@ export class DatabaseMapper extends BaseMapper {
   >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         column_name, 
-        REPLACE(SUBSTRING_INDEX(column_type, '(', 1), ' ', '') AS column_type,
+        column_type,
         column_comment 
       FROM 
         information_schema.columns  

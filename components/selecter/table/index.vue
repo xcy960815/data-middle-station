@@ -150,8 +150,6 @@ const queryTable = async () => {
       tableName: searchKeyword.value
     }
   })
-  console.log('result--result', result.data)
-
   if (result.code === 200) {
     columnStore.setDataSourceOptions(result.data || [])
   } else {

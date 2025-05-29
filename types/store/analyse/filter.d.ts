@@ -33,8 +33,7 @@ declare namespace FilterStore {
   type FilterAggregationsType =
     (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
 
-  interface FilterOptionDto
-    extends ColumnStore.ColumnOptionDto {
+  interface FilterOption extends ColumnStore.ColumnOption {
     filterType?: FilterType
     filterValue?: string
     displayName?: string

@@ -10,7 +10,7 @@ declare namespace DimensionStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type DimensionOption = ColumnStore.ColumnOptionDto & {
+  type DimensionOption = ColumnStore.ColumnOption & {
     // 无效的字段
     __invalid?: boolean
   }

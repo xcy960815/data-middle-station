@@ -51,8 +51,10 @@
 <script lang="ts" setup>
 import {
   ClickOutside as vClickOutside,
-  ElTooltip
+  ElTooltip,
+  ElPopover
 } from 'element-plus'
+
 import Icon from '@/components/context-menu/Icon.vue'
 
 const props = defineProps({

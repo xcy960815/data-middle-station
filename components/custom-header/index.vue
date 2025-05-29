@@ -6,7 +6,7 @@
       class="header-left flex items-center cursor-pointer"
       @click="handleClickTitle"
     >
-      <h4 class="title">blog-home-nuxt</h4>
+      <h4 class="title">数据分析平台</h4>
     </div>
     <div class="flex-1"></div>
     <header-right
