@@ -85,11 +85,6 @@ const isPopoverVisible = ref(false)
  */
 const dataSource = computed({
   get: () => {
-    console.log(
-      'columnStore.getDataSource',
-      columnStore.getDataSource
-    )
-
     return columnStore.getDataSource
   },
   set: (val) => {
@@ -118,8 +113,7 @@ const selectedTable = computed(() => {
  * @desc 搜索按钮点击（目前只做UI，实际过滤仍为输入框实时过滤）
  */
 const handleSearch = () => {
-  // 这里可以扩展为服务端搜索或其他逻辑
-  queryTableList()
+  queryTable()
 }
 
 /**
@@ -138,25 +132,26 @@ const handleSelectTable = (
 const rowClassName = ({
   row
 }: {
-  row: ColumnStore.dataSourceOption
+  row: DatabaseVo.TableOptionVo
 }) => {
-  return row.value === dataSource.value ? 'is-selected' : ''
+  return row.tableName === dataSource.value
+    ? 'is-selected'
+    : ''
 }
 
 /**
  * @desc 查询表格列表
  * @returns {Promise<void>}
  */
-const queryTableList = async () => {
-  const result = await $fetch(
-    '/api/analyse/queryTableList',
-    {
-      method: 'GET',
-      params: {
-        tableName: searchKeyword.value
-      }
+const queryTable = async () => {
+  const result = await $fetch('/api/analyse/queryTable', {
+    method: 'GET',
+    params: {
+      tableName: searchKeyword.value
     }
-  )
+  })
+  console.log('result--result', result.data)
+
   if (result.code === 200) {
     columnStore.setDataSourceOptions(result.data || [])
   } else {
@@ -169,7 +164,7 @@ watch(
   () => isPopoverVisible.value,
   (visible) => {
     if (visible) {
-      queryTableList()
+      queryTable()
     }
   }
 )
@@ -185,7 +180,6 @@ watch(
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
-  // min-width: 180px;
   box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.03);
   transition:
     border-color 0.2s,

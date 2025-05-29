@@ -10,6 +10,8 @@ interface OrderState {
   orders: OrderOption[]
 }
 
+import { defineStore } from 'pinia'
+
 export const useOrderStore = defineStore('order', {
   state: (): OrderState => ({
     orders: []

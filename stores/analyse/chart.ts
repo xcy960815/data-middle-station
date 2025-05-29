@@ -12,6 +12,8 @@ interface ChartState {
   chartData: any[]
 }
 
+import { defineStore } from 'pinia'
+
 export const useChartStore = defineStore('chart', {
   state: (): ChartState => ({
     chartName: '',

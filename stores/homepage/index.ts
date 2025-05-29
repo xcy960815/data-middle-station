@@ -14,6 +14,8 @@ interface HomepageState {
   charts: Chart[]
 }
 
+import { defineStore } from 'pinia'
+
 export const useHomepageStore = defineStore('homepage', {
   state: (): HomepageState => ({
     charts: []

@@ -1,7 +1,7 @@
 /**
  * @desc 过滤器 store
  */
-
+import { defineStore } from 'pinia'
 export const useFilterStore = defineStore<
   FilterStore.FilterKey,
   BaseStore.State<FilterStore.FilterState>,

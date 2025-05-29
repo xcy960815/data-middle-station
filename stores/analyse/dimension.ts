@@ -1,7 +1,7 @@
 /**
  * @desc 维度 store
  */
-
+import { defineStore } from 'pinia'
 export const useDimensionStore = defineStore<
   DimensionStore.DimensionKey,
   BaseStore.State<DimensionStore.DimensionState>,

@@ -1,7 +1,8 @@
 import { Response } from '../../utils/response'
-import { AnalyseService } from '../../service/analyse'
-
-const analyseService = new AnalyseService()
+// import { AnalyseService } from '../../service/analyseService'
+import { DatabaseService } from '../../service/databaseService'
+// const analyseService = new AnalyseService()
+const databaseService = new DatabaseService()
 
 /**
  * @desc 获取所有的表名
@@ -9,9 +10,7 @@ const analyseService = new AnalyseService()
  */
 export default defineEventHandler<
   Promise<
-    ResponseModule.Response<
-      Array<TableInfoVo.TableOptionVo>
-    >
+    ResponseModule.Response<Array<DatabaseVo.TableOptionVo>>
   >
 >(async (event) => {
   try {
@@ -19,7 +18,7 @@ export default defineEventHandler<
       event
     )
     const tableList =
-      await analyseService.queryTable(tableName)
+      await databaseService.queryTable(tableName)
     return Response.success(tableList)
   } catch (error: any) {
     return Response.error(error.message)
