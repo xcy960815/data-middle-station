@@ -16,7 +16,7 @@
           :class="{ 'is-active': isPopoverVisible }"
         >
           <span class="selected-value">{{
-            selectedTable?.tableName || '请选择数据库表'
+            dataSource || '请选择数据库表'
           }}</span>
         </div>
       </template>
@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { useColumnStore } from '@/stores/analyse/column'
 import {
@@ -99,15 +99,6 @@ const dataSource = computed({
 const dataSourceOptions = computed(
   () => columnStore.getDataSourceOptions
 )
-
-/**
- * @desc 当前选中的表
- */
-const selectedTable = computed(() => {
-  return dataSourceOptions.value.find(
-    (table) => table.tableName === dataSource.value
-  )
-})
 
 /**
  * @desc 搜索按钮点击（目前只做UI，实际过滤仍为输入框实时过滤）

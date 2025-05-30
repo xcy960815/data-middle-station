@@ -189,13 +189,11 @@ export class ChartsMapper extends BaseMapper {
     // from ${CHART_TABLE_NAME} c
     // left join ${CHART_CONFIG_TABLE_NAME} cc on c.chart_config_id = cc.id
     // where c.id = ?`
-
     const sql = `select 
       ${CHART_BASE_FIELDS.join(',\n    ')}
     from ${CHART_TABLE_NAME} where id = ?`
 
     const result = await this.exe<Array<T>>(sql, [id])
-
     return result?.[0]
   }
 
@@ -213,6 +211,7 @@ export class ChartsMapper extends BaseMapper {
    * @desc 获取所有的图表
    * @returns {Promise<Array<ChartDao.ChartOptionDao>>}
    */
+  @Mapping(ChartMapping)
   public async getCharts<
     T extends ChartDao.ChartOptionDao
   >(): Promise<Array<T>> {

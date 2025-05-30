@@ -12,6 +12,7 @@ export default defineEventHandler<
     const data = await chartsService.getChartById(id)
     return Response.success(data)
   } catch (error: any) {
+    console.log(error)
     return Response.error(error.message)
   }
 })

@@ -188,12 +188,19 @@ export class BaseMapper {
     const startTime = Date.now()
     const queryResult = await sqlContainer
       .query(sql, params)
-      .then(([rows]) => {
+      .then(([result]) => {
         const duration = Date.now() - startTime
         logger.info(
           `${sql} 请求参数 ${params ? params : '无'} 耗时 ${duration} ms`
         )
-        return rows
+        // 处理查询结果
+        // const [rows, fields] = result
+        // return {
+        //   data: rows,
+        //   fields,
+        //   insertId:rows.insertId,
+        // }
+        return result
       })
       .catch((error) => {
         logger.error(

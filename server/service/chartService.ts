@@ -1,6 +1,7 @@
 import { ChartsMapper } from '../mapper/chartMapper'
 import dayjs from 'dayjs'
 import { ChartConfigMapper } from '../mapper/chartConfigMapper'
+import { el } from 'element-plus/es/locales.mjs'
 
 /**
  * @desc 分析服务
@@ -23,6 +24,15 @@ export class ChartsService {
   private formatChart(
     chart: ChartDao.ChartOptionDao
   ): ChartsVo.ChartsOptionVo {
+    const chartConfig = chart.chartConfig || {
+      dataSource: '',
+      column: [],
+      dimension: [],
+      filter: [],
+      group: [],
+      order: []
+    }
+
     return {
       ...chart,
       createTime: dayjs(chart.createTime).format(
@@ -32,114 +42,119 @@ export class ChartsService {
         'YYYY-MM-DD HH:mm:ss'
       ),
       chartConfig: {
-        dataSource: chart.chartConfig?.dataSource || '',
-        column:
-          chart.chartConfig?.column?.map((col) => ({
-            columnName:
-              typeof col.columnName === 'function'
-                ? col.columnName('')
-                : col.columnName,
-            columnType:
-              typeof col.columnType === 'function'
-                ? col.columnType('')
-                : col.columnType,
-            columnComment: col.columnComment,
-            alias:
-              typeof col.columnName === 'function'
-                ? col.columnName('')
-                : col.columnName,
-            displayName:
-              typeof col.columnName === 'function'
-                ? col.columnName('')
-                : col.columnName
-          })) || [],
-        dimension:
-          chart.chartConfig?.dimension?.map((dim) => ({
-            columnName:
-              typeof dim.columnName === 'function'
-                ? dim.columnName('')
-                : dim.columnName,
-            columnType:
-              typeof dim.columnType === 'function'
-                ? dim.columnType('')
-                : dim.columnType,
-            columnComment: dim.columnComment,
-            alias:
-              typeof dim.columnName === 'function'
-                ? dim.columnName('')
-                : dim.columnName,
-            displayName:
-              typeof dim.columnName === 'function'
-                ? dim.columnName('')
-                : dim.columnName,
-            __invalid: dim.__invalid
-          })) || [],
-        filter:
-          chart.chartConfig?.filter?.map((fil) => ({
-            columnName:
-              typeof fil.columnName === 'function'
-                ? fil.columnName('')
-                : fil.columnName,
-            columnType:
-              typeof fil.columnType === 'function'
-                ? fil.columnType('')
-                : fil.columnType,
-            columnComment: fil.columnComment,
-            alias:
-              typeof fil.columnName === 'function'
-                ? fil.columnName('')
-                : fil.columnName,
-            displayName:
-              typeof fil.columnName === 'function'
-                ? fil.columnName('')
-                : fil.columnName,
-            filterType: fil.filterType,
-            filterValue: fil.filterValue,
-            aggregationType: fil.aggregationType
-          })) || [],
-        group:
-          chart.chartConfig?.group?.map((grp) => ({
-            columnName:
-              typeof grp.columnName === 'function'
-                ? grp.columnName('')
-                : grp.columnName,
-            columnType:
-              typeof grp.columnType === 'function'
-                ? grp.columnType('')
-                : grp.columnType,
-            columnComment: grp.columnComment,
-            alias:
-              typeof grp.columnName === 'function'
-                ? grp.columnName('')
-                : grp.columnName,
-            displayName:
-              typeof grp.columnName === 'function'
-                ? grp.columnName('')
-                : grp.columnName,
-            __invalid: grp.__invalid
-          })) || [],
-        order:
-          chart.chartConfig?.order?.map((ord) => ({
-            columnName:
-              typeof ord.columnName === 'function'
-                ? ord.columnName('')
-                : ord.columnName,
-            columnType:
-              typeof ord.columnType === 'function'
-                ? ord.columnType('')
-                : ord.columnType,
-            columnComment: ord.columnComment,
-            alias:
-              typeof ord.columnName === 'function'
-                ? ord.columnName('')
-                : ord.columnName,
-            displayName:
-              typeof ord.columnName === 'function'
-                ? ord.columnName('')
-                : ord.columnName,
-            orderType: ord.orderType,
-            aggregationType: ord.aggregationType
-          })) || []
+        dataSource: chartConfig.dataSource || '',
+        column: Array.isArray(chartConfig.column)
+          ? chartConfig.column.map((col) => ({
+              columnName:
+                typeof col.columnName === 'function'
+                  ? col.columnName('')
+                  : col.columnName,
+              columnType:
+                typeof col.columnType === 'function'
+                  ? col.columnType('')
+                  : col.columnType,
+              columnComment: col.columnComment,
+              alias:
+                typeof col.columnName === 'function'
+                  ? col.columnName('')
+                  : col.columnName,
+              displayName:
+                typeof col.columnName === 'function'
+                  ? col.columnName('')
+                  : col.columnName
+            }))
+          : [],
+        dimension: Array.isArray(chartConfig.dimension)
+          ? chartConfig.dimension.map((dim) => ({
+              columnName:
+                typeof dim.columnName === 'function'
+                  ? dim.columnName('')
+                  : dim.columnName,
+              columnType:
+                typeof dim.columnType === 'function'
+                  ? dim.columnType('')
+                  : dim.columnType,
+              columnComment: dim.columnComment,
+              alias:
+                typeof dim.columnName === 'function'
+                  ? dim.columnName('')
+                  : dim.columnName,
+              displayName:
+                typeof dim.columnName === 'function'
+                  ? dim.columnName('')
+                  : dim.columnName,
+              __invalid: dim.__invalid
+            }))
+          : [],
+        filter: Array.isArray(chartConfig.filter)
+          ? chartConfig.filter.map((fil) => ({
+              columnName:
+                typeof fil.columnName === 'function'
+                  ? fil.columnName('')
+                  : fil.columnName,
+              columnType:
+                typeof fil.columnType === 'function'
+                  ? fil.columnType('')
+                  : fil.columnType,
+              columnComment: fil.columnComment,
+              alias:
+                typeof fil.columnName === 'function'
+                  ? fil.columnName('')
+                  : fil.columnName,
+              displayName:
+                typeof fil.columnName === 'function'
+                  ? fil.columnName('')
+                  : fil.columnName,
+              filterType: fil.filterType,
+              filterValue: fil.filterValue,
+              aggregationType: fil.aggregationType
+            }))
+          : [],
+        group: Array.isArray(chartConfig.group)
+          ? chartConfig.group.map((grp) => ({
+              columnName:
+                typeof grp.columnName === 'function'
+                  ? grp.columnName('')
+                  : grp.columnName,
+              columnType:
+                typeof grp.columnType === 'function'
+                  ? grp.columnType('')
+                  : grp.columnType,
+              columnComment: grp.columnComment,
+              alias:
+                typeof grp.columnName === 'function'
+                  ? grp.columnName('')
+                  : grp.columnName,
+              displayName:
+                typeof grp.columnName === 'function'
+                  ? grp.columnName('')
+                  : grp.columnName,
+              __invalid: grp.__invalid
+            }))
+          : [],
+        order: Array.isArray(chartConfig.order)
+          ? chartConfig.order.map((ord) => ({
+              columnName:
+                typeof ord.columnName === 'function'
+                  ? ord.columnName('')
+                  : ord.columnName,
+              columnType:
+                typeof ord.columnType === 'function'
+                  ? ord.columnType('')
+                  : ord.columnType,
+              columnComment: ord.columnComment,
+              alias:
+                typeof ord.columnName === 'function'
+                  ? ord.columnName('')
+                  : ord.columnName,
+              displayName:
+                typeof ord.columnName === 'function'
+                  ? ord.columnName('')
+                  : ord.columnName,
+              orderType: ord.orderType,
+              aggregationType: ord.aggregationType
+            }))
+          : []
       }
     }
   }
@@ -184,23 +199,30 @@ export class ChartsService {
     chartsConfigDto: ChartsConfigDto.ChartsConfigDto
   ): Promise<boolean> {
     const { chartConfig, ...chartOption } = chartsConfigDto
+    let chartConfigId = chartOption.chartConfigId
+    if (!chartConfigId) {
+      chartConfigId =
+        await this.chartConfigMapper.createChartConfig({
+          id: 0,
+          ...chartConfig
+        })
+    } else {
+      await this.chartConfigMapper.updateChartConfig({
+        id: chartConfigId,
+        ...chartConfig
+      })
+    }
     const chart = await this.chartsMapper.updateChart({
       id: chartOption.id,
       chartName: chartOption.chartName,
       chartType: chartOption.chartType,
-      chartConfigId: chartOption.chartConfigId,
+      chartConfigId,
       viewCount: 0,
       createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       createdBy: 'system',
       updatedBy: 'system'
     })
-
-    const configResult =
-      await this.chartConfigMapper.updateChartConfig({
-        id: chartOption.chartConfigId,
-        ...chartConfig
-      })
-    return chart && configResult
+    return chart
   }
 }

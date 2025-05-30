@@ -183,10 +183,6 @@ export const handler = () => {
     () => queryChartDataParams.value,
     () => {
       queryChartData()
-      console.log(
-        'queryChartDataParams',
-        queryChartDataParams.value
-      )
     },
     {
       deep: true,
@@ -216,6 +212,8 @@ export const handler = () => {
       chartStore.setChartName(chartName)
       const id = data.id
       chartStore.setChartId(id)
+      const chartConfigId = data.chartConfigId
+      chartStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
       const {
         column,
@@ -230,10 +228,7 @@ export const handler = () => {
       filterStore.setFilters(filter || [])
       groupStore.setGroups(group || [])
       orderStore.setOrders(order || [])
-      // chartStore.setChartType(
-      //   chartType
-      // )
-      columnStore.setDataSource(dataSource || '')
+      columnStore.setDataSource(dataSource)
       dimensionStore.setDimensions(dimension || [])
       filterStore.setFilters(filter || [])
       groupStore.setGroups(group || [])

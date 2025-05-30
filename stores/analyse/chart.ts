@@ -19,6 +19,7 @@ export const useChartStore = defineStore<
     chartErrorMessage: '',
     chartType: 'table',
     chartId: null,
+    chartConfigId: null,
     chartLoading: false,
     chartData: []
   }),
@@ -66,6 +67,12 @@ export const useChartStore = defineStore<
      */
     getChartId(state) {
       return state.chartId
+    },
+    /**
+     * @desc 获取图表配置id
+     */
+    getChartConfigId(state) {
+      return state.chartConfigId
     },
     /**
      * @desc 获取图表数据
@@ -122,6 +129,14 @@ export const useChartStore = defineStore<
      */
     setChartId(chartId) {
       this.chartId = chartId
+    },
+    /**
+     * @desc 设置图表配置id
+     * @param chartConfigId {number | null}
+     * @returns {void}
+     */
+    setChartConfigId(chartConfigId) {
+      this.chartConfigId = chartConfigId
     },
     /**
      * @desc 设置图表错误信息
