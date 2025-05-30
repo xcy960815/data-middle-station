@@ -1,87 +1,48 @@
 version: '3.8'
 
 services:
-  # 主应用服务
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: data-middle-station
-    restart: unless-stopped
-    ports:
-      - '3000:3000'
-    environment:
-      - NODE_ENV=production
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USER=${DB_USER:-root}
-      - DB_PASSWORD=${DB_PASSWORD:-password}
-      - DB_NAME=${DB_NAME:-data_middle_station}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - app-network
-    volumes:
-      - ./logs:/app/logs
-      - ./uploads:/app/public/uploads
-
-  # MySQL 服务
+  # # redis配置
+  # redis:
+  #   image: redis:7.2.5
+  #   container_name: study-java-redis-container
+  #   command: [
+  #     "redis-server --bind 0.0.0.0"
+  #   ]
+  #   ports:
+  #     - "6381:6379"
+  #   networks:
+  #     - study-java-network
+  # mysql配置
   mysql:
-    image: mysql:8.0
-    container_name: data-middle-station-mysql
-    restart: unless-stopped
+    image: mysql:8.4.2
+    container_name: study-java-mysql-container
+    command: ['--bind-address=0.0.0.0']
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-password}
-      - MYSQL_DATABASE=${DB_NAME:-data_middle_station}
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: study_java
     ports:
-      - '3306:3306'
+      - '3308:3306'
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
     networks:
-      - app-network
-    command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Redis 服务
-  redis:
-    image: redis:7.0-alpine
-    container_name: data-middle-station-redis
-    restart: unless-stopped
+      - study-java-network
+  # 前端配置
+  vue:
+    image: xcy960815/study-java-web:latest
+    container_name: study-java-web-container
+    #    build: ./frontend  # 假设有前端代码的目录
     ports:
-      - '6379:6379'
-    volumes:
-      - redis-data:/data
+      - '12315:80'
+    environment:
+      VITE_API_SERVER_DOMAIN: 'http://study-java-container:12316' # 配置前端访问后端的地址
     networks:
-      - app-network
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # 日志收集服务（可选）
-  logspout:
-    image: gliderlabs/logspout:latest
-    container_name: data-middle-station-logspout
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - app-network
-    command: syslog://logstash:5000
-
-networks:
-  app-network:
-    driver: bridge
+      - study-java-network
 
 volumes:
   mysql-data:
-  redis-data:
+
+networks:
+  study-java-network:
+    driver: bridge
+# 执行指令
+#  docker-compose up -d
