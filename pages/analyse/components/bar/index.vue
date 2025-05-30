@@ -253,6 +253,8 @@ const handleClickDownload = () => {
  */
 const handleSaveChart = async () => {
   const chartConfig = chartConfigStore.getChartConfig
+  const chartConfigId = chartStore.getChartConfigId
+  const column = columnStore.getColumns
   const dimension = dimensionStore.getDimensions
   const group = groupStore.getGroups
   const order = orderStore.getOrders
@@ -270,15 +272,16 @@ const handleSaveChart = async () => {
       body: {
         id,
         chartName,
-        dataSource,
         chartType,
+        chartConfigId,
         chartConfig: {
-          // column,
+          dataSource,
+          column,
           dimension,
           group,
           order,
-          filter,
-          commonChartConfig
+          filter
+          // commonChartConfig
         }
       }
     }

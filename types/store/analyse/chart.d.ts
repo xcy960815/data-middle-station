@@ -27,6 +27,8 @@ declare namespace ChartStore {
     chartType: ChartType
     // 图表id
     chartId: number | null
+    // 图表配置id
+    chartConfigId: number | null
     // 表格数据
     chartData: Array<Record<string, string | number>>
     // 图表加载状态

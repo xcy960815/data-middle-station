@@ -15,7 +15,7 @@ declare namespace ChartsVo {
     updateTime: string
     createdBy: string
     updatedBy: string
-
+    chartConfigId: number
     chartConfig: {
       dataSource: string
       column: ChartConfigVo.ColumnOption[]

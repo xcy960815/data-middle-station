@@ -5,6 +5,7 @@ import {
   BaseMapper
 } from './baseMapper'
 import { convertToSqlProperties } from '../utils/string-case-converter'
+import { ResultSetHeader } from 'mysql2'
 
 export class ChartConfigMapping
   implements ChartConfigDao.ChartConfigOptionDao
@@ -51,22 +52,20 @@ export class ChartConfigMapper extends BaseMapper {
    * @returns {Promise<ChartConfigDao.ChartConfigOptionDao>} 图表配置
    */
   @Mapping(ChartConfigMapping)
-  public async getChartConfigById(
-    id: number
-  ): Promise<ChartConfigDao.ChartConfigOptionDao> {
+  public async getChartConfigById<
+    T extends ChartConfigDao.ChartConfigOptionDao
+  >(id: number): Promise<T> {
     const sql = `select 
             id,
             data_source,
-            column,
+            \`column\`,
             dimension,
             filter,
-            group,
-            order
+            \`group\`,
+            \`order\`
             from ${CHART_CONFIG_TABLE_NAME} where id = ?`
-    return await this.exe<ChartConfigDao.ChartConfigOptionDao>(
-      sql,
-      [id]
-    )
+    const result = await this.exe<Array<T>>(sql, [id])
+    return result?.[0]
   }
   /**
    * @desc 创建图表配置
@@ -75,11 +74,35 @@ export class ChartConfigMapper extends BaseMapper {
    */
   public async createChartConfig(
     chartConfig: ChartConfigDao.ChartConfigOptionDao
-  ): Promise<boolean> {
+  ): Promise<number> {
     const { keys, values } =
       convertToSqlProperties(chartConfig)
-    const sql = `insert into ${CHART_CONFIG_TABLE_NAME} (${keys.join(',')}) values (${keys.map(() => '?').join(',')})`
-    return (await this.exe<number>(sql, values)) > 0
+    // 只使用数据库表中存在的字段
+    const validKeys = keys.filter((key) =>
+      CHART_CONFIG_BASE_FIELDS.includes(key)
+    )
+    const validValues = validKeys.map(
+      (key) => values[keys.indexOf(key)]
+    )
+    const sql = `insert into ${CHART_CONFIG_TABLE_NAME} (${validKeys
+      .map((key) => {
+        if (
+          key === 'group' ||
+          key === 'order' ||
+          key === 'column'
+        ) {
+          return `\`${key}\``
+        }
+        return key
+      })
+      .join(
+        ','
+      )}) values (${validKeys.map(() => '?').join(',')})`
+    const result = await this.exe<ResultSetHeader>(
+      sql,
+      validValues
+    )
+    return result.insertId || 0
   }
 
   /**
@@ -92,7 +115,18 @@ export class ChartConfigMapper extends BaseMapper {
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartConfig)
-    const sql = `update ${CHART_CONFIG_TABLE_NAME} set ${keys.map((field) => `${field} = ?`).join(',')} where id = ?`
+    const sql = `update ${CHART_CONFIG_TABLE_NAME} set ${keys
+      .map((field) => {
+        if (
+          field === 'group' ||
+          field === 'order' ||
+          field === 'column'
+        ) {
+          return `\`${field}\` = ?`
+        }
+        return `${field} = ?`
+      })
+      .join(',')} where id = ?`
     return (
       (await this.exe<number>(sql, [
         ...values,
