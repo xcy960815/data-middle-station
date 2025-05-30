@@ -1,11 +1,21 @@
 # 构建阶段
-FROM node:18.15.0-alpine AS builder
+FROM node:18 AS builder
 
 # 设置工作目录
-WORKDIR /app
+WORKDIR /data-middle-station
+
+# 清除代理设置并设置 npm 镜像源
+RUN npm config delete proxy && \
+    npm config delete https-proxy && \
+    npm config set registry https://registry.npmmirror.com
 
 # 安装 pnpm
 RUN npm install -g pnpm@8.0.0
+
+# 设置 pnpm 镜像源
+RUN pnpm config delete proxy && \
+    pnpm config delete https-proxy && \
+    pnpm config set registry https://registry.npmmirror.com
 
 # 复制 package.json 和 pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
@@ -20,13 +30,23 @@ COPY . .
 RUN pnpm run build
 
 # 生产阶段
-FROM node:18.15.0-alpine AS production
+FROM node:18 AS production
 
 # 设置工作目录
-WORKDIR /app
+WORKDIR /data-middle-station
+
+# 清除代理设置并设置 npm 镜像源
+RUN npm config delete proxy && \
+    npm config delete https-proxy && \
+    npm config set registry https://registry.npmmirror.com
 
 # 安装 pnpm
 RUN npm install -g pnpm@8.0.0
+
+# 设置 pnpm 镜像源
+RUN pnpm config delete proxy && \
+    pnpm config delete https-proxy && \
+    pnpm config set registry https://registry.npmmirror.com
 
 # 复制 package.json 和 pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
@@ -35,9 +55,9 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --prod
 
 # 从构建阶段复制构建产物
-COPY --from=builder /app/.output ./.output
-COPY --from=builder /app/.nuxt ./.nuxt
-COPY --from=builder /app/public ./public
+COPY --from=builder /data-middle-station/.output ./.output
+COPY --from=builder /data-middle-station/.nuxt ./.nuxt
+COPY --from=builder /data-middle-station/public ./public
 
 # 设置环境变量
 ENV HOST=0.0.0.0
@@ -49,3 +69,5 @@ EXPOSE 3000
 
 # 启动应用
 CMD ["node", ".output/server/index.mjs"] 
+
+# docker build -t xcy960815/data-middle-station:1.0 .
