@@ -2,35 +2,33 @@
  * @desc homepage Store
  */
 
-interface Chart {
-  id: string
-  name: string
-  type: string
-  config: any
-  data: any
-}
-
-interface HomepageState {
-  charts: Chart[]
-}
-
 import { defineStore } from 'pinia'
 
-export const useHomepageStore = defineStore('homepage', {
-  state: (): HomepageState => ({
+export const useHomepageStore = defineStore<
+  HomePageStore.HomePageKey,
+  BaseStore.State<HomePageStore.HomePageState>,
+  BaseStore.Getters<
+    HomePageStore.HomePageState,
+    HomePageStore.HomePageGetters
+  >,
+  BaseStore.Actions<
+    HomePageStore.HomePageState,
+    HomePageStore.HomePageActions
+  >
+>('homepage', {
+  state: () => ({
     charts: []
   }),
   getters: {
-    getCharts(state): Chart[] {
+    getCharts(state) {
       return state.charts
     }
   },
   actions: {
     /**
      * @desc 设置图表列表
-     * @param value {Chart[]}
      */
-    setCharts(value: Chart[]) {
+    setCharts(value) {
       this.charts = value
     }
   }

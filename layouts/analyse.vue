@@ -15,7 +15,7 @@
       </div>
 
       <div
-        class="layout-analyse-handler !flex flex-col !w-[180px] text-[12px] m-[18px]"
+        class="layout-analyse-handler !flex flex-col !w-[180px] text-[12px] m-[14px]"
       >
         <div
           class="layout-filter relative h-[130px] !w-full bg-[#f5f5f5] rounded-[4px] p-[7px]"

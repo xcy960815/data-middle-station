@@ -7,6 +7,11 @@ export class GetAnswerService {
     this.getAnswerMapper = new GetAnswerMapper()
   }
 
+  /**
+   * @desc 获取答案
+   * @param requestParams {GetAnswerDto.GetAnswerParamsDto} 请求参数
+   * @returns {Promise<GetAnswerDao.ChartDataDao>} 答案
+   */
   public async getAnswer(
     requestParams: GetAnswerDto.GetAnswerParamsDto
   ): Promise<GetAnswerDao.ChartDataDao> {

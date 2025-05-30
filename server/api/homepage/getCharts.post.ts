@@ -1,20 +1,15 @@
-import { ChartsMapper } from '../../mapper/chartsMapper'
+import { ChartsService } from '../../service/chartService'
 import { Response } from '../../utils/response'
-/**
- * @获取图表数据
- * @returns { Promise<Array<ChartsModule.ChartsOption>>}
- *
- */
+
+const chartsService = new ChartsService()
+
 export default defineEventHandler<
   Promise<
-    ResponseModule.Response<
-      Array<ChartsModule.ChartsOption>
-    >
+    ResponseModule.Response<Array<ChartsVo.ChartsOptionVo>>
   >
 >(async () => {
   try {
-    const chartsInstance = new ChartsMapper()
-    const charts = await chartsInstance.getCharts()
+    const charts = await chartsService.getCharts()
     return Response.success(charts)
   } catch (e: any) {
     return Response.error(e.message)
