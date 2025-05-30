@@ -1,29 +1,39 @@
 <template>
   <div class="homepage-container relative" ref="container">
-    <ChartCard
+    <chart-card
       ref="cards"
-      class="card"
+      class="card-chart"
       v-for="chart in chartsList"
       :create-time="chart.createTime"
+      :update-time="chart.updateTime"
+      :created-by="chart.createdBy"
+      :updated-by="chart.updatedBy"
       :chart-name="chart.chartName"
+      :chart-type="chart.chartType"
       :id="chart.id"
       :key="chart.id"
-      :visits="chart.visits"
+      :view-count="chart.viewCount"
     >
-    </ChartCard>
+    </chart-card>
   </div>
 </template>
 
 <script lang="ts" setup>
 import ChartCard from './components/chart-card/index.vue'
 const HomePageStore = useHomepageStore()
-const chartsList = computed(() => HomePageStore.getCharts)
+const chartsList = computed(() => {
+  console.log('chartsList', HomePageStore.getCharts)
+
+  return HomePageStore.getCharts
+})
 const container = ref<HTMLDivElement>()
 /**
  * @description 获取所有的图表
  */
 const getCharts = async () => {
-  const res = await $fetch('/api/homepage/getCharts', {
+  const res = await $fetch<
+    ResponseModule.Response<HomePageStore.ChartOption[]>
+  >('/api/homepage/getCharts', {
     method: 'POST'
   })
   if (res.code === 200) {
@@ -32,7 +42,7 @@ const getCharts = async () => {
       // 添加window 日历效果
       const cards =
         container.value!.querySelectorAll<HTMLDivElement>(
-          '.card'
+          '.card-chart'
         )
 
       container.value!.onmousemove = (e) => {
@@ -51,10 +61,7 @@ onMounted(() => {
   getCharts()
 })
 
-onUnmounted(() => {
-  // container.value.onmousemove = null
-  // console.log("container.value",container.value);
-})
+onUnmounted(() => {})
 </script>
 
 <style lang="scss" scoped>
@@ -68,7 +75,7 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
 
-  .card {
+  .card-chart {
     margin: 1rem;
   }
 }

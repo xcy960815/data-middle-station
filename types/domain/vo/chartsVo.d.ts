@@ -6,13 +6,23 @@ declare namespace ChartsVo {
     [key: string]: string | number
   }>
 
-  type ChartsOption = {
+  type ChartsOptionVo = {
     id: number
     chartName: string
-    filter: any
-    group: any
-    order: any
-    dimension: any
-    chartData: ChartDataVo
+    chartType: string
+    viewCount: number
+    createTime: string
+    updateTime: string
+    createdBy: string
+    updatedBy: string
+
+    chartConfig: {
+      dataSource: string
+      column: ChartConfigVo.ColumnOption[]
+      dimension: ChartConfigVo.DimensionOption[]
+      filter: ChartConfigVo.FilterOption[]
+      group: ChartConfigVo.GroupOption[]
+      order: ChartConfigVo.OrderOption[]
+    }
   }
 }

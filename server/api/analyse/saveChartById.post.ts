@@ -1,6 +1,7 @@
-import { ChartsMapper } from '../../mapper/chartsMapper'
 import { Response } from '../../utils/response'
-import dayjs from 'dayjs'
+import { ChartsService } from '../../service/chartService'
+
+const chartsService = new ChartsService()
 /**
  * @api {post} /analyse/saveChartById
  * @apiName saveChartById
@@ -12,15 +13,10 @@ export default defineEventHandler<
   Promise<ResponseModule.Response<boolean>>
 >(async (event) => {
   try {
-    const chartsParamsOption =
-      await readBody<ChartsModule.ChartsParamsOption>(event)
-    chartsParamsOption.updateTime = dayjs().format(
-      'YYYY-MM-DD HH:mm:ss'
-    )
-    const chartsInstance = new ChartsMapper()
-    const data = await chartsInstance.updateChart(
-      chartsParamsOption
-    )
+    const chartsConfigDto =
+      await readBody<ChartsConfigDto.ChartsConfigDto>(event)
+    const data =
+      await chartsService.updateChart(chartsConfigDto)
     return Response.success(data)
   } catch (error: any) {
     return Response.error(error.message)

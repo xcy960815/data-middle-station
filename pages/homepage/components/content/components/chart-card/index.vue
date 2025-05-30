@@ -1,14 +1,24 @@
 <template>
   <div
-    class="card relative w-[245px] h-[180px] cursor-pointer"
+    class="card-item relative w-[245px] h-[180px] cursor-pointer"
     @click="handleClickCard"
-    :title="'访问次数' + visits"
+    :title="'访问次数' + viewCount"
   >
     <div class="card-inset">
       <div class="card-title">{{ chartName }}</div>
-      <div class="create-info">
-        <span class="creator">徐崇玉</span>
-        <span class="create-time">{{ createTime }}</span>
+      <div class="card-type-middle">{{ chartType }}</div>
+      <div class="card-info">
+        <div class="info-row">
+          <span class="creator">{{
+            createdBy || '未知'
+          }}</span>
+          <span class="create-time">{{
+            createTime ? createTime.split('T')[0] : ''
+          }}</span>
+        </div>
+        <!-- <div class="info-row">
+          <span class="update-time">{{ updateTime ? updateTime.split('T')[0] : '' }}</span>
+        </div> -->
       </div>
     </div>
   </div>
@@ -27,14 +37,30 @@ const props = defineProps({
     required: true,
     default: ''
   },
-  visits: {
+  viewCount: {
     type: Number,
     required: true,
     default: 0
   },
-  createTime: {
+  chartType: {
     type: String,
     required: true,
+    default: ''
+  },
+  createdBy: {
+    type: String,
+    default: ''
+  },
+  updatedBy: {
+    type: String,
+    default: ''
+  },
+  createTime: {
+    type: String,
+    default: ''
+  },
+  updateTime: {
+    type: String,
     default: ''
   }
 })
@@ -52,65 +78,84 @@ const handleClickCard = () => {
 </script>
 
 <style lang="scss" scoped>
-@use '~/assets/styles/theme-util.scss' as theme;
-
-.card {
+.card-item {
   overflow: hidden;
   font-family: 'Microsoft YaHei';
-  border-radius: 10px;
+  border-radius: 12px;
+  box-shadow:
+    0 2px 12px 0 rgba(0, 0, 0, 0.08),
+    0 1.5px 6px 0 rgba(0, 0, 0, 0.04);
+  background: #f7f8fa;
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.18s;
+  position: relative;
   z-index: 1;
 
-  // 中间层
-  &::before {
-    z-index: 2;
-    content: '';
-    position: absolute;
-    inset: 2px;
-    border-radius: inherit;
-    background: radial-gradient(
-      closest-side circle,
-      rgba(0, 0, 0, 0.6) 0%,
-      rgba(0, 0, 0, 1)
-    );
-    transform: translate(
-      var(--x, -1000px),
-      var(--y, -1000px)
-    );
+  &:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow:
+      0 6px 24px 0 rgba(0, 0, 0, 0.13),
+      0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    cursor: pointer;
   }
 
-  // 最上层的展示层
   .card-inset {
     position: absolute;
     inset: 2px;
-    background: #ccc;
+    background: #fff;
     border-radius: inherit;
     z-index: 3;
-
-    @include theme.useTheme {
-      // background: theme.getVar('bgColor');
-    }
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 4px);
+    justify-content: space-between;
   }
 
-  // 标题
   .card-title {
-    margin-top: 20px;
-    font-size: 14px;
-    padding: 0 10px;
+    margin-top: 24px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+    padding: 0 16px;
+    line-height: 1.4;
+    word-break: break-all;
   }
 
-  // 创建信息
-  .create-info {
-    padding: 0 10px;
+  .card-type-middle {
+    margin: 12px 16px 0 16px;
+    font-size: 15px;
+    color: #409eff;
+    font-weight: 500;
+    text-align: left;
+    word-break: break-all;
+  }
+
+  .card-info {
+    padding: 8px 16px 8px 16px;
     position: absolute;
     bottom: 0;
     width: 100%;
-    height: 32px;
-    background-color: #ccc;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: 0 0 10px 10px;
+    background: rgba(245, 245, 245, 0.85);
+    font-size: 13px;
+    color: #444;
+    border-radius: 0 0 12px 12px;
+    backdrop-filter: blur(2px);
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      line-height: 1.8;
+    }
+    .creator {
+      color: #666;
+    }
+    .create-time,
+    .update-time {
+      color: #999;
+      font-size: 12px;
+    }
   }
 }
 </style>

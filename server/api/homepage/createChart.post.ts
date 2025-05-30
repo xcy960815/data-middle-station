@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { ChartsMapper } from '../../mapper/chartsMapper'
+import { ChartsMapper } from '../../mapper/chartMapper'
 import { Response } from '../../utils/response'
 
 /**

@@ -211,24 +211,33 @@ export const handler = () => {
       }
     )
     if (result.code === 200) {
-      const chartName = result.data?.chartName
-      const filter = result.data?.filter
-      const group = result.data?.group
-      const dimension = result.data?.dimension
-      const order = result.data?.order
-      const chartType = result.data?.chartType
-      const tableName = result.data?.tableName
-      chartStore.setChartId(id as unknown as number)
-      chartStore.setChartType(
-        chartType as ChartStore.ChartType
-      )
-      chartStore.setChartName(chartName || '')
-      columnStore.setDataSource(tableName || '')
+      const data = result.data!
+      const chartName = data.chartName
+      chartStore.setChartName(chartName)
+      const id = data.id
+      chartStore.setChartId(id)
+      const chartConfig = data.chartConfig
+      const {
+        column,
+        dimension,
+        filter,
+        group,
+        order,
+        dataSource
+      } = chartConfig
+      columnStore.setColumns(column || [])
       dimensionStore.setDimensions(dimension || [])
       filterStore.setFilters(filter || [])
       groupStore.setGroups(group || [])
       orderStore.setOrders(order || [])
-    } else {
+      // chartStore.setChartType(
+      //   chartType
+      // )
+      columnStore.setDataSource(dataSource || '')
+      dimensionStore.setDimensions(dimension || [])
+      filterStore.setFilters(filter || [])
+      groupStore.setGroups(group || [])
+      orderStore.setOrders(order || [])
     }
   }
 
