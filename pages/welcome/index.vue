@@ -1,11 +1,17 @@
 <template>
   <NuxtLayout :name="layoutName">
     <canvas id="cvs"></canvas>
+    <div class="start-button">
+      <button @click="navigateToHome">开始使用</button>
+    </div>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 const layoutName = 'welcome'
 defineOptions({
   name: 'WelcomePage'
@@ -111,6 +117,11 @@ const animate = () => {
   setIntervalId.value = requestAnimationFrame(animate)
 }
 
+// 添加跳转函数
+const navigateToHome = () => {
+  router.push('/homepage')
+}
+
 // 清理函数
 onUnmounted(() => {
   if (setIntervalId.value) {
@@ -142,5 +153,36 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   background-color: #000;
+}
+
+.start-button {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+
+  button {
+    padding: 15px 40px;
+    font-size: 20px;
+    color: #fff;
+    background: linear-gradient(45deg, #33b5e5, #aa66cc);
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(45deg, #0099cc, #9933cc);
+    }
+
+    &:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+  }
 }
 </style>

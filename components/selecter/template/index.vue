@@ -87,9 +87,15 @@ const orderStore = useOrderStore()
 const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
 const selecterVisible = ref(false)
+/**
+ * @desc 无效样式
+ */
 const invalidClass = computed(() => {
   return props.invalid ? 'invalid' : ''
 })
+/**
+ * @desc 无效内容
+ */
 const invalidContent = computed(() => {
   switch (props.cast) {
     case 'filter':
@@ -104,6 +110,9 @@ const invalidContent = computed(() => {
       return ''
   }
 })
+/**
+ * @desc 是否显示无效图标
+ */
 const hasInvalidIcon = computed(() => () => {
   return props.invalid
 })
@@ -131,6 +140,7 @@ const handleDeleteSelecter = () => {
 }
 
 onMounted(() => {
+  // 如果cast为filter或order，则默认显示
   if (props.cast === 'filter' || props.cast === 'order') {
     selecterVisible.value = true
   }
