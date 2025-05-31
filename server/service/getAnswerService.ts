@@ -1,5 +1,9 @@
 import { GetAnswerMapper } from '../mapper/getAnswerMapper'
 import { toLine } from '../utils/string-case-converter'
+
+/**
+ * @desc 获取答案服务
+ */
 export class GetAnswerService {
   private getAnswerMapper: GetAnswerMapper
 
@@ -84,8 +88,9 @@ export class GetAnswerService {
       /* 因为在数据库中存储的字段都是下划线 为了好看到前端层是驼峰，在进行sql查询的时候又得转成下划线 */
       sql += ` group by ${groups.map((item) => toLine(item.columnName)).join(',')}`
     }
-    console.log(sql)
     sql += ` limit ${limit}`
-    return this.getAnswerMapper.getAnswer(sql)
+    const data = await this.getAnswerMapper.getAnswer(sql)
+    console.log(data)
+    return data
   }
 }

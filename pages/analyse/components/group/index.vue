@@ -5,11 +5,11 @@
     @dragover="dragoverHandler"
     @drop="dropHandler"
   >
-    <div class="group__title">分组</div>
+    <div class="group__title mx-1">分组</div>
     <div class="group__content flex items-center flex-1">
       <div
         data-action="drag"
-        class="group__item flex items-center flex-1"
+        class="group__item mx-1"
         v-for="(item, index) in groupList"
         :key="index"
         draggable="true"
@@ -101,6 +101,7 @@ const dragstartHandler = (
       value: groupList.value[index]
     })
   )
+  // 不做任何自定义拖影，保持和dimension一致
 }
 /**
  * @desc dragHandler
@@ -168,10 +169,8 @@ const dropHandler = (dragEvent: DragEvent) => {
     overflow: auto;
 
     .group__item {
-      padding: 0 10px;
       cursor: move;
-      height: 30px;
-      line-height: 30px;
+      position: relative;
     }
   }
 }

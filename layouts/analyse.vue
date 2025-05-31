@@ -30,7 +30,7 @@
           <slot name="order"></slot>
         </div>
         <div
-          class="layout-dimension flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]"
+          class="layout-analyse-dimension flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]"
         >
           <slot name="dimension"></slot>
         </div>

@@ -49,6 +49,8 @@ import {
   ElCheckboxGroup
 } from 'element-plus'
 import * as XLSX from 'xlsx'
+import { getAnswerHandler } from '../getAnswer-handler'
+const { queryChartData } = getAnswerHandler()
 const chartStore = useChartStore()
 const columnStore = useColumnStore()
 const filterStore = useFilterStore()
@@ -69,6 +71,7 @@ const name = ref('')
  */
 const handleClickRefresh = () => {
   console.log('handleClickRefresh')
+  queryChartData()
 }
 /**
  * @desc 点报警按钮

@@ -29,6 +29,7 @@ async function getDatasourceList() {
           user: 'root',
           password: '123456',
           database: 'kanban_data'
+          // timezone: '+08:00'
         },
         data_middle_station: {
           host: '192.168.100.1',
@@ -37,6 +38,7 @@ async function getDatasourceList() {
           user: 'root',
           password: '123456',
           database: 'data_middle_station'
+          // timezone: '+08:00'
         }
       }
       resolve(dataSourceConfig)
