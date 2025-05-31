@@ -6,8 +6,7 @@
   >
     <!-- 数据源 -->
     <TableSelecter />
-
-    <div class="column__title pt-2 pb-2">维度</div>
+    <div class="column__title py-2">维度</div>
     <div class="column__content">
       <div
         @contextmenu="contextmenuHandler(column)"
@@ -30,7 +29,7 @@
           :icon="columnIconName(column)"
         />
         <span class="column__item__name">{{
-          column.columnName
+          columnDisplayNames(column)
         }}</span>
       </div>
     </div>
@@ -104,6 +103,14 @@ const DATE_ICON_NAME = 'ant-design:calendar-outlined'
 
 const STRING_ICON_NAME = 'ant-design:field-string-outlined'
 
+const columnDisplayNames = (
+  column: ColumnStore.ColumnOption
+) => {
+  return (
+    column.alias || column.displayName || column.columnName
+  )
+}
+
 /**
  * @desc 列类名
  * @param column {ColumnStore.ColumnOption} 列选项
@@ -173,7 +180,8 @@ const dragstartHandler = (
   index: number,
   event: DragEvent
 ) => {
-  event.dataTransfer?.setData(
+  if (!event.dataTransfer) return
+  event.dataTransfer.setData(
     'text/plain',
     JSON.stringify({
       from: 'column',
@@ -182,6 +190,51 @@ const dragstartHandler = (
       value: column
     })
   )
+  // 克隆.flex.items-center父级容器，保证拖影和原节点样式完全一致
+  const target = event.target as HTMLElement
+  if (target) {
+    const parent = target.closest(
+      '.flex.items-center'
+    ) as HTMLElement
+    if (parent) {
+      const dragNode = parent.cloneNode(true) as HTMLElement
+      // 复制所有 data-v-xxx 属性
+      for (const attr of parent.attributes) {
+        if (attr.name.startsWith('data-v-')) {
+          dragNode.setAttribute(attr.name, attr.value)
+        }
+      }
+      dragNode.style.position = 'absolute'
+      dragNode.style.top = '-9999px'
+      dragNode.style.left = '-9999px'
+      dragNode.style.pointerEvents = 'none'
+      dragNode.style.opacity = '0.9'
+      dragNode.style.margin = '0'
+      dragNode.style.width = `${parent.offsetWidth}px`
+      dragNode.style.height = `${parent.offsetHeight}px`
+      dragNode.style.background = '#f0f0f0'
+      // 同步padding、box-sizing、border-radius、box-shadow、height、line-height、font-size
+      const computedStyle = window.getComputedStyle(parent)
+      dragNode.style.padding = computedStyle.padding
+      dragNode.style.boxSizing = computedStyle.boxSizing
+      dragNode.style.borderRadius =
+        computedStyle.borderRadius
+      dragNode.style.boxShadow = computedStyle.boxShadow
+      dragNode.style.height = computedStyle.height
+      dragNode.style.lineHeight = computedStyle.lineHeight
+      dragNode.style.fontSize = computedStyle.fontSize
+      document.body.appendChild(dragNode)
+      event.dataTransfer.setDragImage(
+        dragNode,
+        dragNode.offsetWidth / 2,
+        dragNode.offsetHeight / 2
+      )
+      setTimeout(
+        () => document.body.removeChild(dragNode),
+        0
+      )
+    }
+  }
 }
 
 /**
@@ -277,9 +330,10 @@ const setDataModel = () => {
 
     .column__item {
       padding: 0 10px;
+      font-size: 12px;
       cursor: move;
-      height: 30px;
-      line-height: 30px;
+      height: 24px;
+      line-height: 24px;
       position: relative;
       background-color: #f0f0f0;
       border-radius: 4px;
@@ -299,7 +353,7 @@ const setDataModel = () => {
       &.column__item_group_choosed::after {
         position: absolute;
         left: 5px;
-        top: 13px;
+        top: 9px;
         content: '';
         width: 5px;
         height: 5px;

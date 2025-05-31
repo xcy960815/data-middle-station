@@ -33,8 +33,6 @@ const layoutName = 'homepage'
 import ChartCard from './components/chart-card.vue'
 const HomePageStore = useHomepageStore()
 const chartsList = computed(() => {
-  console.log('chartsList', HomePageStore.getCharts)
-
   return HomePageStore.getCharts
 })
 const container = ref<HTMLDivElement>()

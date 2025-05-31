@@ -71,14 +71,8 @@ export class DatabaseService {
             ? item.columnType('')
             : item.columnType,
         columnComment: item.columnComment,
-        alias:
-          typeof item.columnName === 'function'
-            ? item.columnName('')
-            : item.columnName,
-        displayName:
-          typeof item.columnName === 'function'
-            ? item.columnName('')
-            : item.columnName
+        alias: item.columnComment,
+        displayName: item.columnComment
       }
     })
   }

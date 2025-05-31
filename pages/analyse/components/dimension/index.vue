@@ -1,42 +1,39 @@
 <template>
-  <ClientOnly>
-    <div
-      class="dimension relative h-full flex flex-col"
-      @dragover="dragoverHandler"
-      @drop="dropHandler"
-    >
-      <div class="dimension__title my-1">值</div>
-      <div class="dimension__content flex-1">
-        <div
-          data-action="drag"
-          class="dimension__item my-1"
-          v-for="(item, index) in dimensionList"
-          :key="index"
-          draggable="true"
-          @dragstart.native="
-            dragstartHandler(index, $event)
-          "
-          @drag.native="dragHandler(index, $event)"
-          @mousedown.stop
-        >
-          <selecter-dimension
-            class="dimension__item__name"
-            cast="dimension"
-            :name="item.columnName"
-            v-model:displayName="item.displayName"
-            :index="index"
-            :invalid="item.__invalid"
-          ></selecter-dimension>
-        </div>
+  <div
+    class="dimension relative h-full flex flex-col"
+    @dragover="dragoverHandler"
+    @drop="dropHandler"
+  >
+    <div class="dimension__title my-1">值</div>
+    <div class="dimension__content flex-1">
+      <div
+        data-action="drag"
+        class="dimension__item my-1"
+        v-for="(item, index) in dimensionList"
+        :key="index"
+        draggable="true"
+        @dragstart.native="dragstartHandler(index, $event)"
+        @drag.native="dragHandler(index, $event)"
+        @mousedown.stop
+      >
+        <selecter-dimension
+          class="dimension__item__name"
+          cast="dimension"
+          :name="item.columnName"
+          v-model:displayName="item.displayName"
+          :index="index"
+          :invalid="item.__invalid"
+        ></selecter-dimension>
       </div>
-      <!-- v-contextmenu:contextmenu -->
-      <!-- 字段的操作选项 -->
-      <!-- <context-menu ref="contextmenu">
+    </div>
+    <!-- v-contextmenu:contextmenu -->
+    <!-- 字段的操作选项 -->
+    <!-- <context-menu ref="contextmenu">
         <context-menu-item @click="handleCreateComputedField">
           创建计算字段
         </context-menu-item>
       </context-menu> -->
-      <!-- <client-only>
+    <!-- <client-only>
         <el-dialog
           v-model="createComputedFieldVisible"
           title="创建计算字段"
@@ -54,8 +51,7 @@
           </template>
 </el-dialog>
 </client-only> -->
-    </div>
-  </ClientOnly>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -71,8 +67,7 @@ const groupStore = useGroupStore()
  * @returns {ComputedRef<DimensionStore.DimensionOption[]>}
  */
 const dimensionList = computed(() => {
-  const dimensionList = dimensionStore.getDimensions
-  return dimensionList
+  return dimensionStore.getDimensions
 })
 
 /**
@@ -203,7 +198,21 @@ const dropHandler = (dragEvent: DragEvent) => {
   )
   const dimension =
     data.value as DimensionStore.DimensionOption
-  dimension.__invalid = true
+  const isSelected = dimensionStore.getDimensions.find(
+    (item) => item.columnName === dimension.columnName
+  )
+  if (isSelected) {
+    // 提示用户已经选中了
+    return
+  }
+  // 判断是否跟groupList中的字段相同
+  const isGroup = groupList.value.find(
+    (item) => item.columnName === dimension.columnName
+  )
+  if (isGroup) {
+    return
+  }
+  dimension.__invalid = false
   const column = data.value as ColumnStore.ColumnOption
   const index = data.index
   switch (data.from) {
@@ -224,8 +233,6 @@ const dropHandler = (dragEvent: DragEvent) => {
     default:
       // 更新列名 主要是显示已经选中的标志
       columnStore.updateColumn({ column, index })
-      // 添加维度
-      console.log('dimension', dimension)
       addDimension(dimension)
       break
   }
