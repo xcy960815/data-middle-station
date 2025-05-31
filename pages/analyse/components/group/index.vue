@@ -18,7 +18,7 @@
       >
         <selecter-group
           class="group__item__name"
-          cast="dimension"
+          cast="group"
           v-model:displayName="item.displayName"
           :name="item.columnName"
           :index="index"

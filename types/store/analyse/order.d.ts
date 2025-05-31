@@ -6,7 +6,8 @@ declare namespace OrderStore {
 
   const OrderTypeEnums = {
     升序: 'asc',
-    降序: 'desc'
+    降序: 'desc',
+    无: null
   } as const
 
   type OrderType =
