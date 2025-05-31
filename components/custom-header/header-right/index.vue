@@ -11,7 +11,7 @@
           @click="handleFullscreen"
           class="tooltip-sapn fullscreen-tooltip"
         >
-          <Icon
+          <iconify-icon
             v-if="!fullscreen"
             icon="material-symbols:pinch-zoom-out-sharp"
             class="icon-pinch-zoom-out-sharp"
@@ -21,7 +21,7 @@
             :horizontalFlip="true"
             :verticalFlip="true"
           />
-          <Icon
+          <iconify-icon
             v-if="fullscreen"
             icon="material-symbols:pinch-zoom-in-sharp"
             class="icon-pinch-zoom-in-sharp"

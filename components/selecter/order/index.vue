@@ -1,116 +1,156 @@
 <template>
-    <selecter-template v-bind="$attrs" :display-name="displayName" :cast="cast" :index="index">
-        <template #order-icon>
-            <Icon class="chart-selecter-order-icon" width="1.2em" height="1.2em" @click="handleClickOrder"
-                :icon="orderIconName(orderType)" />
-        </template>
-        <template #default>
-            <div class="aggregation-option"
-                @click="handleClickOrderAggregation(orderAggregation.value as OrderStore.OrderAggregationsType)"
-                v-for="orderAggregation in orderAggregations">
-                <!-- 复现用户选择的聚合条件 -->
-                <Icon class="aggregation-mark" icon="icon-park-solid:correct"
-                    v-if="orderAggregation.value === aggregationType" />
-                <span>{{ orderAggregation.label }}</span>
-            </div>
-        </template>
-    </selecter-template>
+  <selecter-template
+    v-bind="$attrs"
+    :display-name="displayName"
+    :cast="cast"
+    :index="index"
+  >
+    <template #order-icon>
+      <iconify-icon
+        class="chart-selecter-order-icon"
+        width="1.2em"
+        height="1.2em"
+        @click="handleClickOrder"
+        :icon="orderIconName(orderType)"
+      />
+    </template>
+    <template #default>
+      <div
+        class="aggregation-option"
+        @click="
+          handleClickOrderAggregation(
+            orderAggregation.value as OrderStore.OrderAggregationsType
+          )
+        "
+        v-for="orderAggregation in orderAggregations"
+      >
+        <!-- 复现用户选择的聚合条件 -->
+        <iconify-icon
+          class="aggregation-mark"
+          icon="icon-park-solid:correct"
+          v-if="orderAggregation.value === aggregationType"
+        />
+        <span>{{ orderAggregation.label }}</span>
+      </div>
+    </template>
+  </selecter-template>
 </template>
 
-<script lang='ts' setup>
-
+<script lang="ts" setup>
 const props = defineProps({
-    name: {
-        type: String,
-        default: ''
-    },
-    // 通用参数
-    displayName: {
-        type: String,
-        default: ''
-    },
-    // 通用参数
-    cast: {
-        type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
-        default: ''
-    },
-    orderType: {
-        type: String as PropType<OrderStore.OrderType>,
-        default: ''
-    },
-    // 通用参数
-    index: {
-        type: Number,
-        default: null,
-        required: true
-    },
-    // 聚合方式
-    aggregationType: {
-        type: String as PropType<OrderStore.OrderAggregationsType>,
-        default: ''
-    },
+  name: {
+    type: String,
+    default: ''
+  },
+  // 通用参数
+  displayName: {
+    type: String,
+    default: ''
+  },
+  // 通用参数
+  cast: {
+    type: String as PropType<
+      'dimension' | 'group' | 'order' | 'filter'
+    >,
+    default: ''
+  },
+  orderType: {
+    type: String as PropType<OrderStore.OrderType>,
+    default: ''
+  },
+  // 通用参数
+  index: {
+    type: Number,
+    default: null,
+    required: true
+  },
+  // 聚合方式
+  aggregationType: {
+    type: String as PropType<OrderStore.OrderAggregationsType>,
+    default: ''
+  }
 })
 
-const emits = defineEmits(['update:orderType', 'update:aggregationType', 'update:displayName'])
-
-const orderAggregations = ref([
-    {
-        label: "原始值",
-        value: "raw",
-    }, {
-        label: "计数",
-        value: "count",
-    }, {
-        label: "计数(去重)",
-        value: "countDistinct",
-    }, {
-        label: "总计",
-        value: "sum"
-    }, {
-        label: "平均",
-        value: "avg"
-    }, {
-        label: "最大值",
-        value: "max"
-    }, {
-        label: "最小值",
-        value: "min"
-    }
+const emits = defineEmits([
+  'update:orderType',
+  'update:aggregationType',
+  'update:displayName'
 ])
 
+const orderAggregations = ref([
+  {
+    label: '原始值',
+    value: 'raw'
+  },
+  {
+    label: '计数',
+    value: 'count'
+  },
+  {
+    label: '计数(去重)',
+    value: 'countDistinct'
+  },
+  {
+    label: '总计',
+    value: 'sum'
+  },
+  {
+    label: '平均',
+    value: 'avg'
+  },
+  {
+    label: '最大值',
+    value: 'max'
+  },
+  {
+    label: '最小值',
+    value: 'min'
+  }
+])
 
 /**
  * @desc 升降序icon图标
  */
-const orderIconName = computed(() => (orderType: OrderStore.OrderType) => {
-    return orderType === 'asc' ? 'mdi:arrow-top-bold' : 'mdi:arrow-bottom-bold'
-})
-
+const orderIconName = computed(
+  () => (orderType: OrderStore.OrderType) => {
+    return orderType === 'asc'
+      ? 'mdi:arrow-top-bold'
+      : 'mdi:arrow-bottom-bold'
+  }
+)
 
 /**
  * @desc 点击排序的升降序
  * @param e {Event}
  */
 const handleClickOrder = (e: Event) => {
-    // 阻止冒泡
-    e.stopPropagation()
-    emits('update:orderType', props.orderType === "desc" ? "asc" : "desc")
+  // 阻止冒泡
+  e.stopPropagation()
+  emits(
+    'update:orderType',
+    props.orderType === 'desc' ? 'asc' : 'desc'
+  )
 }
-
 
 /**
  * @desc 点击排序的聚合类型
  * @param orderAggregationValue {OrderStore.OrderAggregationsType}
  * @returns void
  */
-const handleClickOrderAggregation = (orderAggregationValue: OrderStore.OrderAggregationsType) => {
-    emits('update:aggregationType', orderAggregationValue)
-    // 默认降序
-    emits('update:orderType', "desc")
-    // 重新计算displayName
-    const currentDisplayName = orderAggregations.value.find(item => item.value === orderAggregationValue)?.label
-    emits('update:displayName', `${currentDisplayName}(${props.name})`)
+const handleClickOrderAggregation = (
+  orderAggregationValue: OrderStore.OrderAggregationsType
+) => {
+  emits('update:aggregationType', orderAggregationValue)
+  // 默认降序
+  emits('update:orderType', 'desc')
+  // 重新计算displayName
+  const currentDisplayName = orderAggregations.value.find(
+    (item) => item.value === orderAggregationValue
+  )?.label
+  emits(
+    'update:displayName',
+    `${currentDisplayName}(${props.name})`
+  )
 }
-
 </script>
-<style lang='scss' scoped></style>
+<style lang="scss" scoped></style>

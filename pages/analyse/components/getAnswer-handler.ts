@@ -1,3 +1,11 @@
+import { useChartStore } from '@/stores/analyse/chart'
+import { useDimensionStore } from '@/stores/analyse/dimension'
+import { useGroupStore } from '@/stores/analyse/group'
+import { useColumnStore } from '@/stores/analyse/column'
+import { useFilterStore } from '@/stores/analyse/filter'
+import { useOrderStore } from '@/stores/analyse/order'
+import { useChartConfigStore } from '@/stores/analyse/chart-config'
+import { computed } from 'vue'
 import dayjs from 'dayjs'
 
 export const getAnswerHandler = () => {
@@ -115,8 +123,14 @@ export const getAnswerHandler = () => {
     chartStore.setChartUpdateTime(
       dayjs().format('YYYY-MM-DD HH:mm:ss')
     )
+    const duration = endTime - startTime
+    const seconds = Math.floor(duration / 1000)
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
     chartStore.setChartUpdateTakesTime(
-      dayjs(`${endTime - startTime}`).format('ss')
+      minutes > 0
+        ? `${minutes}分${remainingSeconds}秒`
+        : `${remainingSeconds}秒`
     )
   }
   return {

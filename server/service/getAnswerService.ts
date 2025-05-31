@@ -32,18 +32,29 @@ export class GetAnswerService {
 
     dimensions.forEach(
       (item: DimensionStore.DimensionOption) => {
-        /* 因为在数据库中存储的字段都是下划线 为了好看到前端层是驼峰，在进行sql查询的时候又得转成下划线 */
-        if (
+        const columnName = toLine(item.columnName)
+        const alias = item.alias
+          ? item.alias
+          : item.columnName
+
+        // 判断是否需要使用聚合函数
+        const needAggregation =
           groups.length > 0 &&
           !groups.some(
             (group) => group.columnName === item.columnName
           )
-        ) {
-          // 如果列不在 GROUP BY 中，使用聚合函数
-          sql += ` MAX(${toLine(item.columnName)}) as ${item.alias ? item.alias : item.columnName},`
-        } else {
-          sql += ` ${toLine(item.columnName)} as ${item.alias ? item.alias : item.columnName},`
-        }
+
+        // 根据字段类型选择聚合函数
+        const aggregationFunction = needAggregation
+          ? 'MAX'
+          : ''
+
+        // 构建字段表达式
+        const fieldExpression = aggregationFunction
+          ? `${aggregationFunction}(${columnName})`
+          : columnName
+
+        sql += ` ${fieldExpression} as \`${alias}\`,`
       }
     )
 
@@ -90,7 +101,6 @@ export class GetAnswerService {
     }
     sql += ` limit ${limit}`
     const data = await this.getAnswerMapper.getAnswer(sql)
-    console.log(data)
     return data
   }
 }

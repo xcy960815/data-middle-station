@@ -9,38 +9,6 @@ import {
   toLine
 } from '../utils/string-case-converter'
 import dayjs from 'dayjs'
-/** 将数据库所有的类型罗列出来在前端统一展示成 number */
-const NUMBER_TYPE_ENUM = [
-  'tinyint',
-  'smallint',
-  'mediumint',
-  'int',
-  'bigint',
-  'decimal',
-  'float',
-  'double'
-]
-/** 将数据库所有的类型罗列出来在前端统一展示成 string */
-const STRING_TYPE_ENUM = [
-  'char',
-  'varchar',
-  'tinytext',
-  'text',
-  'mediumtext',
-  'longtext',
-  'tinyblob',
-  'blob',
-  'mediumblob',
-  'longblob'
-]
-/** 将数据库所有的类型罗列出来在前端统一展示成 date */
-const DATE_TYPE_ENUM = [
-  'date',
-  'datetime',
-  'timestamp',
-  'time',
-  'year'
-]
 
 // 表列表映射
 export class QueryTableMapping
@@ -123,19 +91,20 @@ export class TableColumnMapping
   }
 
   @Column('COLUMN_TYPE')
-  columnType = (value: string) => {
-    if (!value) return ''
-    const type = value.toLowerCase()
-    if (NUMBER_TYPE_ENUM.includes(type)) {
-      return 'number'
-    } else if (STRING_TYPE_ENUM.includes(type)) {
-      return 'string'
-    } else if (DATE_TYPE_ENUM.includes(type)) {
-      return 'date'
-    } else {
-      return type
-    }
-  }
+  columnType: string = ''
+  // columnType = (value: string) => {
+  //   if (!value) return ''
+  //   const type = value.toLowerCase()
+  //   if (NUMBER_TYPE_ENUM.includes(type)) {
+  //     return 'number'
+  //   } else if (STRING_TYPE_ENUM.includes(type)) {
+  //     return 'string'
+  //   } else if (DATE_TYPE_ENUM.includes(type)) {
+  //     return 'date'
+  //   } else {
+  //     return type
+  //   }
+  // }
 
   @Column('COLUMN_COMMENT')
   columnComment: string = ''

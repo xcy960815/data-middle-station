@@ -15,7 +15,7 @@
         @click="selecterVisible = true"
         v-click-outside="onClickOutside"
       >
-        <span class="chart-selecter-name">{{
+        <span class="chart-selecter-name mr-1">{{
           displayName
         }}</span>
         <slot
@@ -29,15 +29,17 @@
           :content="invalidContent"
           placement="top"
         >
-          <Icon
+          <iconify-icon
             v-if="hasInvalidIcon()"
             class="chart-selecterinvalid-icon"
             icon="mingcute:warning-fill"
           />
         </el-tooltip>
-        <Icon
+        <icon-park
           class="chart-selecter-delete"
-          icon="material-symbols:delete-outline"
+          type="DeleteTwo"
+          size="14"
+          fill="#333"
           @click.stop="handleDeleteSelecter"
         />
       </div>
@@ -54,8 +56,6 @@ import {
   ElTooltip,
   ElPopover
 } from 'element-plus'
-
-import Icon from '@/components/context-menu/Icon.vue'
 
 const props = defineProps({
   // 通用参数
@@ -179,7 +179,6 @@ onMounted(() => {
   position: relative;
   padding: 0 5px 0 5px;
   height: 26px;
-  line-height: 24px;
   box-sizing: border-box;
   border: 1px solid #ddd;
   border-radius: 5px;

@@ -28,8 +28,9 @@ async function getDatasourceList() {
           port: 3308,
           user: 'root',
           password: '123456',
-          database: 'kanban_data'
-          // timezone: '+08:00'
+          database: 'kanban_data',
+          timezone: '+08:00',
+          dateStrings: true // 👈 加上这个
         },
         data_middle_station: {
           host: '192.168.100.1',
@@ -37,8 +38,9 @@ async function getDatasourceList() {
           port: 3308,
           user: 'root',
           password: '123456',
-          database: 'data_middle_station'
-          // timezone: '+08:00'
+          database: 'data_middle_station',
+          timezone: '+08:00',
+          dateStrings: true // 👈 加上这个
         }
       }
       resolve(dataSourceConfig)

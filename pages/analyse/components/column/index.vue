@@ -19,15 +19,13 @@
         @dragend="dragendHandler"
         @mousedown.stop
       >
-        <Icon
-          class="mt-[1px] mr-[1px]"
-          width="14"
-          height="14"
-          :rotate="2"
-          :horizontalFlip="true"
-          :verticalFlip="true"
-          :icon="columnIconName(column)"
-        />
+        <icon-park
+          class="mx-1"
+          v-if="columnIconName(column)"
+          :type="columnIconName(column)"
+          size="14"
+          fill="#333"
+        ></icon-park>
         <span class="column__item__name">{{
           columnDisplayNames(column)
         }}</span>
@@ -87,7 +85,6 @@
 
 <script setup lang="ts">
 import TableSelecter from '@/components/selecter/table/index.vue'
-import Icon from '@/components/context-menu/Icon.vue'
 import ContextMenu from '@/components/context-menu/index.vue'
 import { ref, computed } from 'vue'
 import { useColumnStore } from '@/stores/analyse/column'
@@ -96,12 +93,14 @@ import { useGroupStore } from '@/stores/analyse/group'
 import { useFilterStore } from '@/stores/analyse/filter'
 import { useOrderStore } from '@/stores/analyse/order'
 
-// 常量定义
-const NUMBER_ICON_NAME = 'ant-design:number-outlined'
+// 数字图标
+const NUMBER_ICON_NAME = 'ListNumbers'
 
-const DATE_ICON_NAME = 'ant-design:calendar-outlined'
+// 日期图标
+const DATE_ICON_NAME = 'calendar-thirty'
 
-const STRING_ICON_NAME = 'ant-design:field-string-outlined'
+// 字符串图标
+const STRING_ICON_NAME = 'FieldString'
 
 const columnDisplayNames = (
   column: ColumnStore.ColumnOption
@@ -342,7 +341,7 @@ const setDataModel = () => {
       &.column__item_dimension_choosed::before {
         position: absolute;
         left: 5px;
-        top: 13px;
+        top: 9px;
         content: '';
         width: 5px;
         height: 5px;
