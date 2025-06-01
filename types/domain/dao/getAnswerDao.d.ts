@@ -1,5 +1,5 @@
-declare namespace GetAnswerDao {
-  type ChartDataDao = Array<{
+declare namespace ChartDataDao {
+  type ChartData = Array<{
     [key: string]: string | number
   }>
 }
