@@ -10,6 +10,7 @@
     >
       <span class="group__title">分组</span>
       <icon-park
+        class="cursor-pointer"
         v-if="hasClearAll('group')"
         type="clear"
         size="12"

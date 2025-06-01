@@ -9,6 +9,7 @@
     >
       <span class="filter__title">筛选</span>
       <icon-park
+        class="cursor-pointer"
         v-if="hasClearAll('filter')"
         type="clear"
         size="12"
