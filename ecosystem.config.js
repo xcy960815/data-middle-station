@@ -23,18 +23,18 @@ module.exports = {
       restart_delay: 60, // 异常重启情况下，延时重启时间
       env: {
         // 环境参数，当前指定为开发环境
-        NODE_ENV: 'development',
-        PORT: '3000'
+        NODE_ENV: 'dev', // 使用dev模式 pm2 start ecosystem.config.js --env dev
+        PORT: '12581'
       },
       env_production: {
         // 环境参数,当前指定为生产环境
-        NODE_ENV: 'production', // 使用production模式 pm2 start ecosystem.config.js --env production
-        PORT: '3000'
+        NODE_ENV: 'prod', // 使用production模式 pm2 start ecosystem.config.js --env prod
+        PORT: '12581'
       },
       env_pre: {
         // 环境参数,当前为测试环境
         NODE_ENV: 'pre', // 使用pre模式 pm2 start ecosystem.config.js --env pre
-        PORT: '3000'
+        PORT: '12581'
       }
     }
   ]
