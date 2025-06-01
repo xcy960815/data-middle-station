@@ -9,6 +9,7 @@
     >
       <span class="dimension__title">值</span>
       <icon-park
+        class="cursor-pointer"
         v-if="hasClearAll('dimension')"
         type="clear"
         size="12"
