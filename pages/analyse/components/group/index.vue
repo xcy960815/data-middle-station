@@ -5,7 +5,18 @@
     @dragover="dragoverHandler"
     @drop="dropHandler"
   >
-    <div class="group__title mx-1">分组</div>
+    <div
+      class="group__header flex items-center justify-between"
+    >
+      <span class="group__title">分组</span>
+      <icon-park
+        v-if="hasClearAll('group')"
+        type="clear"
+        size="12"
+        fill="#333"
+        @click="clearAll('group')"
+      />
+    </div>
     <div class="group__content flex items-center flex-1">
       <div
         data-action="drag"
@@ -30,6 +41,10 @@
 </template>
 
 <script setup lang="ts">
+import { clearAllHandler } from '../clearAll'
+
+const { clearAll, hasClearAll } = clearAllHandler()
+
 const columnStore = useColumnStore()
 
 const groupStore = useGroupStore()

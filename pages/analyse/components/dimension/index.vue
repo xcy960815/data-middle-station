@@ -4,7 +4,18 @@
     @dragover="dragoverHandler"
     @drop="dropHandler"
   >
-    <div class="dimension__title my-1">值</div>
+    <div
+      class="dimension__header flex items-center justify-between"
+    >
+      <span class="dimension__title">值</span>
+      <icon-park
+        v-if="hasClearAll('dimension')"
+        type="clear"
+        size="12"
+        fill="#333"
+        @click="clearAll('dimension')"
+      />
+    </div>
     <div class="dimension__content flex-1">
       <div
         data-action="drag"
@@ -55,7 +66,10 @@
 </template>
 
 <script setup lang="ts">
+import { clearAllHandler } from '../clearAll'
 import SelecterDimension from '@/components/selecter/dimension/index.vue'
+
+const { clearAll, hasClearAll } = clearAllHandler()
 
 // 初始化数据
 const columnStore = useColumnStore()

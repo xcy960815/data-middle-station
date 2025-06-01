@@ -1,5 +1,5 @@
 <template>
-  <div class="chart-type-container h-[100%]">
+  <div class="chart-type-container h-full overflow-y-auto">
     <ul class="chart-type">
       <li
         v-for="(i, index) in chartsType"

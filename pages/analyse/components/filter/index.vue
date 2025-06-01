@@ -4,7 +4,18 @@
     @dragover="dragoverHandler"
     @drop="dropHandler"
   >
-    <div class="filter__title my-1">筛选</div>
+    <div
+      class="filter__header flex items-center justify-between"
+    >
+      <span class="filter__title">筛选</span>
+      <icon-park
+        v-if="hasClearAll('filter')"
+        type="clear"
+        size="12"
+        fill="#333"
+        @click="clearAll('filter')"
+      />
+    </div>
     <div class="filter__content flex-auto">
       <div
         data-action="drag"
@@ -34,6 +45,10 @@
 </template>
 
 <script setup lang="ts">
+import { clearAllHandler } from '../clearAll'
+
+const { clearAll, hasClearAll } = clearAllHandler()
+
 const filterStore = useFilterStore()
 const filterList = computed(() => filterStore.getFilters)
 /**

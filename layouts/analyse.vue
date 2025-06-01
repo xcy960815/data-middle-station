@@ -37,7 +37,7 @@
       </div>
 
       <div
-        class="layout-analyse-content my-[14px] !flex flex-1 flex-col overflow-hidden"
+        class="layout-analyse-content m-[14px] ml-0 !flex flex-1 flex-col overflow-hidden"
       >
         <div class="layout-analyse-bar">
           <slot name="bar"></slot>
