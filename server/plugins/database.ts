@@ -30,7 +30,7 @@ async function getDatasourceList() {
           password: '123456',
           database: 'kanban_data',
           timezone: '+08:00',
-          dateStrings: true // 👈 加上这个
+          dateStrings: true // 让时间戳返回的是字符串
         },
         data_middle_station: {
           host: '192.168.100.1',
@@ -40,7 +40,7 @@ async function getDatasourceList() {
           password: '123456',
           database: 'data_middle_station',
           timezone: '+08:00',
-          dateStrings: true // 👈 加上这个
+          dateStrings: true // 让时间戳返回的是字符串
         }
       }
       resolve(dataSourceConfig)

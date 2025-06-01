@@ -49,8 +49,8 @@ import {
   ElCheckboxGroup
 } from 'element-plus'
 import * as XLSX from 'xlsx'
-import { getAnswerHandler } from '../getAnswer-handler'
-const { queryChartData } = getAnswerHandler()
+import { getChartDataHandler } from '../../getChartData-handler'
+const { queryChartData } = getChartDataHandler()
 const chartStore = useChartStore()
 const columnStore = useColumnStore()
 const filterStore = useFilterStore()

@@ -43,9 +43,9 @@ import Bar from './components/bar/index.vue'
 import Chart from './components/chart/index.vue'
 import ChartType from './components/chart-type/index.vue'
 import ChartConfig from './components/chart-config/index.vue'
-import { getAnswerHandler } from './components/getAnswer-handler'
+import { getChartDataHandler } from './getChartData-handler'
 const { queryChartData, queryChartDataParams } =
-  getAnswerHandler()
+  getChartDataHandler()
 const layoutName = 'analyse'
 // const router = useRouter()
 const columnStore = useColumnStore()

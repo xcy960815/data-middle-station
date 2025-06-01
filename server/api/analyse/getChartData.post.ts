@@ -1,6 +1,6 @@
-import { GetAnswerService } from '../../service/getAnswerService'
+import { ChartsService } from '../../service/chartService'
 import { Response } from '../../utils/response'
-const getAnswerService = new GetAnswerService()
+const chartsService = new ChartsService()
 
 /**
  * @desc 查询图表数据
@@ -16,7 +16,7 @@ export default defineEventHandler<
     const getAnswerParamsDto =
       await readBody<GetAnswerDto.GetAnswerParamsDto>(event)
 
-    const data = await getAnswerService.getAnswer(
+    const data = await chartsService.getChartData(
       getAnswerParamsDto
     )
 

@@ -1,7 +1,6 @@
 import { ChartsMapper } from '../mapper/chartMapper'
 import dayjs from 'dayjs'
 import { ChartConfigMapper } from '../mapper/chartConfigMapper'
-import { el } from 'element-plus/es/locales.mjs'
 
 /**
  * @desc 分析服务

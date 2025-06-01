@@ -8,7 +8,7 @@ import { useChartConfigStore } from '@/stores/analyse/chart-config'
 import { computed } from 'vue'
 import dayjs from 'dayjs'
 
-export const getAnswerHandler = () => {
+export const getChartDataHandler = () => {
   const chartStore = useChartStore()
   const dimensionStore = useDimensionStore()
   const groupStore = useGroupStore()
@@ -101,13 +101,16 @@ export const getAnswerHandler = () => {
 
     const startTime = dayjs().valueOf()
     chartStore.setChartLoading(true)
-    const result = await $fetch('/api/analyse/getAnswer', {
-      method: 'POST',
-      // 请求参数
-      body: {
-        ...queryChartDataParams.value
+    const result = await $fetch(
+      '/api/analyse/getChartData',
+      {
+        method: 'POST',
+        // 请求参数
+        body: {
+          ...queryChartDataParams.value
+        }
       }
-    })
+    )
     const endTime = dayjs().valueOf()
     if (result.code === 200) {
       chartStore.setChartData(result.data || [])
