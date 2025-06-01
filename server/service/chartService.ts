@@ -186,8 +186,8 @@ export class ChartsService {
   public async getCharts(): Promise<
     ChartsVo.ChartsOptionVo[]
   > {
-    const charts = await this.chartsMapper.getCharts()
-    return charts.map(this.formatChart)
+    const chart = await this.chartsMapper.getCharts()
+    return chart.map(this.formatChart)
   }
 
   /**

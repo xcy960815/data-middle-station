@@ -19,10 +19,10 @@ export default defineEventHandler<
     chartsParamsOption.updateTime = currentTime
     chartsParamsOption.createTime = currentTime
     const chartsDao = new ChartsMapper()
-    const charts = await chartsDao.createChart(
+    const chart = await chartsDao.createChart(
       chartsParamsOption
     )
-    return Response.success(charts)
+    return Response.success(chart)
   } catch (error: any) {
     return Response.error(error.message)
   }

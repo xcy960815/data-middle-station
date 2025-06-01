@@ -4,5 +4,5 @@ export { useGroupStore } from './analyse/group'
 export { useColumnStore } from './analyse/column'
 export { useFilterStore } from './analyse/filter'
 export { useOrderStore } from './analyse/order'
-export { useChartConfigStore } from './analyse/charts-config'
-export { useHomepageStore } from "./homepage/index"
+export { useChartConfigStore } from './analyse/chart-config'
+export { useHomepageStore } from './homepage/index'

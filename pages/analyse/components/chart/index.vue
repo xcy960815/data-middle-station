@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="charts relative h-full w-full overflow-hidden"
-  >
+  <div class="chart relative h-full w-full overflow-hidden">
     <template v-if="chartErrorMessage">
       <div
         class="absolute inset-0 flex justify-center items-center"
@@ -118,7 +116,7 @@ const handleRenderChartEnd = () => {
  * @type {ResizeObserver}
  */
 onMounted(() => {
-  const chartsDom = document.querySelector('.charts')
+  const chartsDom = document.querySelector('.chart')
   const sizeChange = debounce(() => {
     if (chartsDom) {
       chartWidth.value = chartsDom.clientWidth

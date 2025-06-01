@@ -1,17 +1,90 @@
 import { defineStore } from 'pinia'
 
-export const useChartConfigStore = defineStore(
-  'chart-config',
-  {
-    state: () => ({
-      commonChartConfig: {
-        limit: 1000
+export const useChartConfigStore = defineStore<
+  ChartConfigStore.ChartConfigKey,
+  BaseStore.State<ChartConfigStore.ChartConfigState>,
+  BaseStore.Getters<
+    ChartConfigStore.ChartConfigState,
+    ChartConfigStore.ChartConfigGetters
+  >,
+  BaseStore.Actions<
+    ChartConfigStore.ChartConfigState,
+    ChartConfigStore.ChartConfigActions
+  >
+>('chartConfig', {
+  state: () => ({
+    chartConfigDrawer: false,
+    chartConfig: {
+      line: {
+        chartType: 'line',
+        chartName: '',
+        chartUpdateTime: '',
+        chartUpdateTakesTime: '',
+        showPoint: false,
+        showLabel: false,
+        smooth: false,
+        autoDualAxis: false,
+        horizontalBar: false
+      },
+      table: {
+        chartType: 'table',
+        chartName: '',
+        chartUpdateTime: '',
+        chartUpdateTakesTime: '',
+        displayMode: 'normal',
+        showCompare: false,
+        conditions: []
+      },
+      pie: {
+        chartType: 'pie',
+        chartName: '',
+        chartUpdateTime: '',
+        chartUpdateTakesTime: '',
+        showLabel: false
+      },
+      interval: {
+        chartType: 'interval',
+        chartName: '',
+        chartUpdateTime: '',
+        chartUpdateTakesTime: '',
+        displayMode: 'normal',
+        showPercentage: false,
+        showLabel: false,
+        horizontalDisplay: false,
+        horizontalBar: false
       }
-    }),
+    },
+    commonChartConfig: {
+      limit: 1000,
+      description: '',
+      suggest: false,
+      mixStrategy: '',
+      shareStrategy: ''
+    }
+  }),
 
-    getters: {
-      getCommonChartConfig: (state) =>
-        state.commonChartConfig
+  getters: {
+    getChartConfigDrawer: (state) =>
+      state.chartConfigDrawer,
+    getChartConfig: (state) => state.chartConfig,
+    getCommonChartConfig: (state) => state.commonChartConfig
+  },
+  actions: {
+    setChartConfigDrawer(value: boolean) {
+      this.chartConfigDrawer = value
+    },
+    setCommonChartConfig(
+      value: ChartConfigStore.CommonChartConfig
+    ) {
+      this.commonChartConfig = value
+    },
+    setChartConfig(value: ChartConfigStore.ChartConfig) {
+      this.chartConfig = value
+    },
+    setTableChartConditions(
+      conditions: ChartConfigStore.TableChartConfigConditionOption[]
+    ) {
+      this.chartConfig.table.conditions = conditions
     }
   }
-)
+})

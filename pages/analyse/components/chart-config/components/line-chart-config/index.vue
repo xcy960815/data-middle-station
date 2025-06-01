@@ -3,7 +3,7 @@
   <el-form
     label-position="top"
     label-width="auto"
-    class="line-charts-config relative h-full w-full"
+    class="line-chart-config relative h-full w-full"
     :model="lineChartsConfigData"
   >
     <el-form-item label="是否画圆点">
@@ -55,9 +55,9 @@
 </template>
 
 <script setup lang="ts">
-const chartsConfigStore = useChartConfigStore()
+const chartConfigStore = useChartConfigStore()
 const lineChartsConfigData = computed(() => {
-  return chartsConfigStore.chartConfig.line
+  return chartConfigStore.chartConfig.line
 })
 </script>
 

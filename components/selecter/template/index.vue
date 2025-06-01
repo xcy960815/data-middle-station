@@ -2,7 +2,7 @@
   <!-- selecter 公共模版 -->
   <el-popover
     class="chart-selecter relative"
-    :visible="selecterVisible"
+    v-model:visible="selecterVisible"
     trigger="click"
     popper-class="chart-selecter-template-popover"
     placement="bottom"
@@ -12,8 +12,6 @@
       <div
         class="chart-selecter-container"
         :class="invalidClass"
-        @click="selecterVisible = true"
-        v-click-outside="onClickOutside"
       >
         <span class="chart-selecter-name mr-1">{{
           displayName
@@ -51,11 +49,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  ClickOutside as vClickOutside,
-  ElTooltip,
-  ElPopover
-} from 'element-plus'
+import { ElTooltip, ElPopover } from 'element-plus'
 
 const props = defineProps({
   // 通用参数
@@ -116,13 +110,6 @@ const invalidContent = computed(() => {
 const hasInvalidIcon = computed(() => () => {
   return props.invalid
 })
-/**
- * @desc 点击外部隐藏 TODO 不知道为什么触发了两次
- */
-const onClickOutside = () => {
-  if (props.cast === 'filter') return
-  selecterVisible.value = false
-}
 
 /**
  * @desc 删除标签
