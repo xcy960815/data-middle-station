@@ -6,30 +6,30 @@
     <template #cloumn>
       <Column></Column>
     </template>
-    <!-- <template #filter>
+    <template #filter>
       <Filter></Filter>
-    </template> -->
-    <!-- <template #order>
+    </template>
+    <template #order>
       <Order></Order>
-    </template> -->
-    <!-- <template #dimension>
+    </template>
+    <template #dimension>
       <DimensionOption></DimensionOption>
-    </template> -->
-    <!-- <template #group>
+    </template>
+    <template #group>
       <GroupOption></GroupOption>
-    </template> -->
-    <!-- <template #bar>
+    </template>
+    <template #bar>
       <Bar></Bar>
-    </template> -->
-    <!-- <template #chart>
+    </template>
+    <template #chart>
       <Chart></Chart>
-    </template> -->
-    <!-- <template #chart-type>
-        <ChartType></ChartType>
-      </template> -->
-    <!-- <template #chart-config>
+    </template>
+    <template #chart-type>
+      <ChartType></ChartType>
+    </template>
+    <template #chart-config>
       <ChartConfig></ChartConfig>
-    </template> -->
+    </template>
   </NuxtLayout>
 </template>
 

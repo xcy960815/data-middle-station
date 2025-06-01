@@ -5,7 +5,7 @@
     @drop="dropHandler"
   >
     <!-- 数据源 -->
-    <TableSelecter />
+    <DataSourceSelecter />
     <div class="column__title py-2">维度</div>
     <div class="column__content">
       <div
@@ -33,7 +33,7 @@
     </div>
     <!-- v-contextmenu:contextmenu -->
     <!-- 字段的操作选项 -->
-    <context-menu ref="contextmenu">
+    <!-- <context-menu ref="contextmenu">
       <context-menu-item @click="setDataModel">
         商家ID
       </context-menu-item>
@@ -79,12 +79,12 @@
           >关联值</context-menu-item
         >
       </context-menu-submenu>
-    </context-menu>
+    </context-menu> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import TableSelecter from '@/components/selecter/table/index.vue'
+import DataSourceSelecter from '@/components/selecter/dataSource/index.vue'
 import ContextMenu from '@/components/context-menu/index.vue'
 import { ref, computed } from 'vue'
 import { useColumnStore } from '@/stores/analyse/column'

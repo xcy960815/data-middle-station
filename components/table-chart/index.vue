@@ -7,7 +7,7 @@
             <th
               v-for="header in tableHeaderState.tableHeader"
               :key="header.columnName"
-              class="table-header"
+              class="table-header-item"
               @click="handleEmitOrder(header)"
             >
               <span :class="getTableHeaderClass(header)">
@@ -17,6 +17,12 @@
                   header.columnName
                 }}
               </span>
+              <!-- <icon-park
+                class="mx-1"
+                type="sort-amount-down"
+                size="12"
+                fill="#333"
+              ></icon-park> -->
             </th>
           </tr>
         </thead>
@@ -322,15 +328,15 @@ const getComparedStyle = (
       ConditionSymbol,
       () => boolean
     > = {
-      gt: () => currentValue > (conditionValue || 0),
-      lt: () => currentValue < (conditionValue || 0),
-      eq: () => currentValue == conditionValue,
-      ne: () => currentValue != conditionValue,
-      ge: () => currentValue >= (conditionValue || 0),
-      le: () => currentValue <= (conditionValue || 0),
+      gt: () => currentValue > Number(conditionValue || 0),
+      lt: () => currentValue < Number(conditionValue || 0),
+      eq: () => currentValue === Number(conditionValue),
+      ne: () => currentValue !== Number(conditionValue),
+      ge: () => currentValue >= Number(conditionValue || 0),
+      le: () => currentValue <= Number(conditionValue || 0),
       between: () =>
-        currentValue >= (conditionMinValue || 0) &&
-        currentValue <= (conditionMaxValue || 0)
+        currentValue >= Number(conditionMinValue || 0) &&
+        currentValue <= Number(conditionMaxValue || 0)
     }
 
     return conditions[
@@ -550,7 +556,7 @@ onMounted(async () => {
             &::after {
               content: '';
               position: absolute;
-              right: -16px;
+              right: 0px;
               top: 50%;
               transform: translateY(-50%);
               font-size: 16px;

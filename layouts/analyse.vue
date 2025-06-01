@@ -37,7 +37,7 @@
       </div>
 
       <div
-        class="layout-analyse-content !flex flex-1 flex-col overflow-hidden"
+        class="layout-analyse-content my-[14px] !flex flex-1 flex-col overflow-hidden"
       >
         <div class="layout-analyse-bar">
           <slot name="bar"></slot>
@@ -56,7 +56,7 @@
         </div>
       </div>
       <div
-        class="layout-analyse-chart-type !w-[140px] pt-[18px] bg-[#f5f5f5]"
+        class="layout-analyse-chart-type !w-[140px] bg-[#f5f5f5]"
       >
         <slot name="chart-type"></slot>
       </div>
@@ -192,10 +192,6 @@ const handleOrderMouseDown = (mouseEvent: MouseEvent) => {
           pointer-events: auto;
         }
       }
-    }
-
-    .layout-analyse-content {
-      padding: 18px 0;
     }
   }
 }
