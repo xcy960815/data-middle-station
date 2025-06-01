@@ -12,7 +12,6 @@
         <el-option label="平级展示" value="levelDisplay" />
         <el-option label="叠加展示" value="stackDisplay" />
       </el-select>
-     
     </el-form-item>
     <el-form-item label="是否百分比显示">
       <el-switch

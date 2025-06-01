@@ -1,8 +1,11 @@
 <template>
   <NuxtLayout :name="layoutName">
     <canvas id="cvs"></canvas>
-    <div class="start-button">
-      <button @click="navigateToHome">开始使用</button>
+    <div class="welcome-content">
+      <h1 class="title">数据分析平台</h1>
+      <div class="start-button">
+        <button @click="navigateToHome">开始使用</button>
+      </div>
     </div>
   </NuxtLayout>
 </template>
@@ -155,13 +158,27 @@ onMounted(() => {
   background-color: #000;
 }
 
-.start-button {
+.welcome-content {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
+  text-align: center;
 
+  .title {
+    font-size: 48px;
+    color: #fff;
+    margin-bottom: 40px;
+    text-shadow: 0 0 10px rgba(51, 181, 229, 0.5);
+    background: linear-gradient(45deg, #33b5e5, #aa66cc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+  }
+}
+
+.start-button {
   button {
     padding: 15px 40px;
     font-size: 20px;

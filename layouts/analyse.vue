@@ -44,9 +44,9 @@
         </div>
 
         <div
-          class="layout-analyse-charts flex-1 overflow-hidden"
+          class="layout-analyse-chart flex-1 overflow-hidden"
         >
-          <slot name="charts"></slot>
+          <slot name="chart"></slot>
         </div>
 
         <div
@@ -56,11 +56,11 @@
         </div>
       </div>
       <div
-        class="layout-analyse-charts-type !w-[140px] pt-[18px] bg-[#f5f5f5]"
+        class="layout-analyse-chart-type !w-[140px] pt-[18px] bg-[#f5f5f5]"
       >
-        <slot name="charts-type"></slot>
+        <slot name="chart-type"></slot>
       </div>
-      <slot name="charts-config"></slot>
+      <slot name="chart-config"></slot>
     </div>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <template>
-  <div class="charts-type-container">
-    <ul class="charts-type">
+  <div class="chart-type-container">
+    <ul class="chart-type">
       <li
         v-for="(i, index) in chartsType"
         :key="i.name"
@@ -90,14 +90,14 @@ const getChartName = (
 </script>
 
 <style lang="scss" scoped>
-.charts-type-container {
+.chart-type-container {
   padding: 12px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.charts-type {
+.chart-type {
   display: flex;
   flex-direction: column;
   gap: 12px;

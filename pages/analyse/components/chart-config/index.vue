@@ -2,7 +2,7 @@
   <!-- 图表📈配置项 -->
   <ClientOnly>
     <el-drawer
-      modal-class="charts-config-drawer"
+      modal-class="chart-config-drawer"
       v-model="chartConfigDrawer"
       :with-header="false"
       size="320px"
@@ -87,17 +87,52 @@
 </template>
 
 <script setup lang="ts">
-import { initData } from './init-data'
-const {
-  chartConfigTab,
-  chartConfigDrawer,
-  chartConfigComponent,
-  commonChartConfig
-} = initData()
+import TableChartConfig from './components/table-chart-config/index.vue'
+import LineChartConfig from './components/line-chart-config/index.vue'
+import IntervalChartConfig from './components/interval-chart-config/index.vue'
+import PieChartConfig from './components/pie-chart-config/index.vue'
+
+const chartsConfigStore = useChartConfigStore()
+const chartStore = useChartStore()
+const chartConfigTab = ref('common')
+/**
+ * @desc 图表配置抽屉 状态
+ */
+const chartConfigDrawer = computed({
+  get: () => {
+    return chartsConfigStore.chartConfigDrawer
+  },
+  set: (value) =>
+    chartsConfigStore.setChartConfigDrawer(value)
+})
+/**
+ * @desc 图表配置组件
+ */
+const chartConfigComponent = computed(() => {
+  const chartType = chartStore.getChartType
+  switch (chartType) {
+    case 'table':
+      return TableChartConfig
+    case 'line':
+      return LineChartConfig
+    case 'interval':
+      return IntervalChartConfig
+    case 'pie':
+      return PieChartConfig
+    default:
+      return LineChartConfig
+  }
+})
+/**
+ * @desc 图表公共配置
+ */
+const commonChartConfig = computed(() => {
+  return chartsConfigStore.commonChartConfig
+})
 </script>
 
 <style lang="scss" scoped>
-:deep(.charts-config-drawer) {
+:deep(.chart-config-drawer) {
   :deep(.el-drawer) {
     margin-top: 60px !important;
     background-color: #f5f7fa;

@@ -5,7 +5,6 @@
     :model="pieChartConfigData"
   >
     <el-form-item label="显示说明文字">
-     
       <el-switch
         v-model="pieChartConfigData.showLabel"
         style="
