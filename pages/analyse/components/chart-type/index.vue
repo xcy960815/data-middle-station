@@ -1,5 +1,5 @@
 <template>
-  <div class="chart-type-container">
+  <div class="chart-type-container h-[100%]">
     <ul class="chart-type">
       <li
         v-for="(i, index) in chartsType"
