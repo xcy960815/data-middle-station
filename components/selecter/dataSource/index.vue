@@ -1,61 +1,63 @@
 <!-- 数据库表选择器 -->
 <template>
-  <el-popover
-    placement="bottom-start"
-    :width="800"
-    trigger="click"
-    popper-class="table-select-popover"
-    v-model:visible="isPopoverVisible"
-  >
-    <template #reference>
-      <div
-        class="select-trigger"
-        :class="{ 'is-active': isPopoverVisible }"
-      >
-        <span class="selected-value">{{
-          dataSource || '请选择数据库表'
-        }}</span>
-      </div>
-    </template>
-
-    <div class="search-row">
-      <el-input
-        v-model="searchKeyword"
-        placeholder="搜索表名/备注"
-        clearable
-        :prefix-icon="Search"
-        style="margin-bottom: 8px; width: 220px"
-      />
-      <el-button
-        type="primary"
-        style="margin-left: 8px; margin-bottom: 8px"
-        @click="handleSearch"
-        >搜索</el-button
-      >
-    </div>
-
-    <el-table
-      :data="dataSourceOptions"
-      border
-      style="width: 100%"
-      @row-click="handleSelectTable"
-      highlight-current-row
-      max-height="300"
-      :row-class-name="rowClassName"
-      empty-text="暂无数据"
+  <client-only>
+    <el-popover
+      placement="bottom-start"
+      :width="800"
+      trigger="click"
+      popper-class="table-select-popover"
+      v-model:visible="isPopoverVisible"
     >
-      <el-table-column
-        prop="tableName"
-        label="表名"
-        min-width="120"
-      />
-      <el-table-column
-        prop="tableComment"
-        label="备注"
-        min-width="120"
-      />
-    </el-table>
-  </el-popover>
+      <template #reference>
+        <div
+          class="select-trigger"
+          :class="{ 'is-active': isPopoverVisible }"
+        >
+          <span class="selected-value">{{
+            dataSource || '请选择数据库表'
+          }}</span>
+        </div>
+      </template>
+
+      <div class="search-row">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索表名/备注"
+          clearable
+          :prefix-icon="Search"
+          style="margin-bottom: 8px; width: 220px"
+        />
+        <el-button
+          type="primary"
+          style="margin-left: 8px; margin-bottom: 8px"
+          @click="handleSearch"
+          >搜索</el-button
+        >
+      </div>
+
+      <el-table
+        :data="dataSourceOptions"
+        border
+        style="width: 100%"
+        @row-click="handleSelectTable"
+        highlight-current-row
+        max-height="300"
+        :row-class-name="rowClassName"
+        empty-text="暂无数据"
+      >
+        <el-table-column
+          prop="tableName"
+          label="表名"
+          min-width="120"
+        />
+        <el-table-column
+          prop="tableComment"
+          label="备注"
+          min-width="120"
+        />
+      </el-table>
+    </el-popover>
+  </client-only>
 </template>
 
 <script setup lang="ts">
