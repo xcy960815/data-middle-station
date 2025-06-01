@@ -1,51 +1,52 @@
 <template>
   <!-- selecter 公共模版 -->
-  <el-popover
-    class="chart-selecter relative"
-    v-model:visible="selecterVisible"
-    trigger="click"
-    popper-class="chart-selecter-template-popover"
-    placement="bottom"
-    width="100px"
-  >
-    <template #reference>
-      <div
-        class="chart-selecter-container"
-        :class="invalidClass"
-      >
-        <span class="chart-selecter-name mr-1">{{
-          displayName
-        }}</span>
-        <slot
-          class="chart-selecter-order-icon"
-          name="order-icon"
-        ></slot>
-        <!-- 无效字段标志 -->
-        <el-tooltip
-          class="box-item"
-          effect="dark"
-          :content="invalidContent"
-          placement="top"
+  <client-only>
+    <el-popover
+      class="chart-selecter relative"
+      v-model:visible="selecterVisible"
+      trigger="click"
+      popper-class="chart-selecter-template-popover"
+      placement="bottom"
+      width="100px"
+    >
+      <template #reference>
+        <div
+          class="chart-selecter-container"
+          :class="invalidClass"
         >
-          <iconify-icon
+          <span class="chart-selecter-name mr-1">{{
+            displayName
+          }}</span>
+          <slot
+            class="chart-selecter-order-icon"
+            name="order-icon"
+          ></slot>
+          <el-tooltip
+            class="box-item"
+            effect="dark"
+            :content="invalidContent"
+            placement="top"
             v-if="hasInvalidIcon()"
-            class="chart-selecterinvalid-icon"
-            icon="mingcute:warning-fill"
+          >
+            <iconify-icon
+              class="chart-selecterinvalid-icon"
+              icon="mingcute:warning-fill"
+            />
+          </el-tooltip>
+          <icon-park
+            class="chart-selecter-delete"
+            type="DeleteTwo"
+            size="14"
+            fill="#333"
+            @click.stop="handleDeleteSelecter"
           />
-        </el-tooltip>
-        <icon-park
-          class="chart-selecter-delete"
-          type="DeleteTwo"
-          size="14"
-          fill="#333"
-          @click.stop="handleDeleteSelecter"
-        />
-      </div>
-    </template>
-    <template #default>
-      <slot></slot>
-    </template>
-  </el-popover>
+        </div>
+      </template>
+      <template #default>
+        <slot></slot>
+      </template>
+    </el-popover>
+  </client-only>
 </template>
 
 <script lang="ts" setup>
