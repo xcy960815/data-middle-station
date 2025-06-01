@@ -4,10 +4,7 @@ import {
   Mapping,
   BaseMapper
 } from './baseMapper'
-import {
-  toHump,
-  toLine
-} from '../utils/string-case-converter'
+
 import dayjs from 'dayjs'
 
 // 表列表映射
