@@ -4,7 +4,7 @@ import {
   Mapping,
   BaseMapper
 } from './baseMapper'
-import { convertToSqlProperties } from '../../utils/databaseHelpper.server'
+import { convertToSqlProperties } from '../utils/databaseHelpper'
 import { ResultSetHeader } from 'mysql2'
 
 export class ChartConfigMapping

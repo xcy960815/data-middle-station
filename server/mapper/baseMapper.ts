@@ -1,11 +1,9 @@
 import mysql from 'mysql2/promise'
-// import { useLogger } from '@nuxt/kit';
-/* 初始化logger */
-// const logger = new Logger({
-//   fileName: 'database',
-//   folderName: 'database'
-// })
-// const logger = useLogger('database')
+import chalk from 'chalk'
+const logger = new Logger({
+  fileName: 'database',
+  folderName: 'database'
+})
 /**
  * @desc ts 装饰器
  * @link  https://www.cnblogs.com/winfred/p/8216650.html
@@ -152,16 +150,11 @@ export class BaseMapper {
   private poolMap: Map<string, mysql.Pool> = new Map()
   // 查找线程池
   private getPool(dataSourceName: string): mysql.Pool {
-    // if (!this.poolMap) {
-    //   this.poolMap = new Map();
-    // }
     let pool = this.poolMap.get(dataSourceName)
     if (!pool) {
-      const dataSourceConfig = getProcessEnvProperties(
-        'dataSourceConfig'
-      )
+      const dataSourceConfig = getDatasourceConfig()
       const currentDataSourceConfig: mysql.PoolOptions =
-        JSON.parse(dataSourceConfig)[dataSourceName]
+        dataSourceConfig[dataSourceName]
       // 创建连接池
       pool = mysql.createPool(currentDataSourceConfig)
       this.poolMap.set(dataSourceName, pool)
@@ -185,26 +178,26 @@ export class BaseMapper {
     // 获取连接
     const sqlContainer = await pool.getConnection()
     const startTime = Date.now()
+    logger.info(
+      `${chalk.green('请求')} ${sql} 请求参数 ${chalk.blue(params ? params : '无')} `
+    )
     const queryResult = await sqlContainer
       .query(sql, params)
       .then(([result]) => {
         const duration = Date.now() - startTime
-        // logger.info(
-        //   `${sql} 请求参数 ${params ? params : '无'} 耗时 ${duration} ms`
-        // )
-        // 处理查询结果
-        // const [rows, fields] = result
-        // return {
-        //   data: rows,
-        //   fields,
-        //   insertId:rows.insertId,
-        // }
+        logger.info(
+          `${chalk.green('耗时')} ${chalk.blue(duration)} ms`
+        )
+        // 请求结果
+        logger.info(
+          `${chalk.green('结果')} ${chalk.blue(JSON.stringify(result, null, 2))}`
+        )
         return result
       })
       .catch((error) => {
-        // logger.error(
-        //   `${sql} 请求参数 ${params ? params : '无'} error ${error}`
-        // )
+        logger.error(
+          `${sql} 请求参数 ${params ? params : '无'} error ${error}`
+        )
         throw error
       })
       .finally(() => {

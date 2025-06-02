@@ -1,4 +1,3 @@
-import { CustomResponse } from '../../utils/customResponse'
 import { DatabaseService } from '../service/databaseService'
 const databaseService = new DatabaseService()
 /**

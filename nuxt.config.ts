@@ -3,7 +3,7 @@ import { resolve } from 'path'
 export default defineNuxtConfig({
   app: {
     head: {
-      title: '数据分析平台',
+      title: process.env.APP_NAME,
       link: [
         // 要放在public中
         {
@@ -90,23 +90,22 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // TODO
     // 私有键（仅在服务器端可用）
-    dbHost: process.env.DB_HOST,
-    // dbPort: process.env.DB_PORT,
-    dbUser: process.env.DB_USER,
-    dbPassword: process.env.DB_PASSWORD,
-    dbName: process.env.DB_NAME,
-    redisHost: process.env.REDIS_HOST,
-    // redisPort: process.env.REDIS_PORT,
-    redisPassword: process.env.REDIS_PASSWORD,
-    // redisDb: process.env.REDIS_DB,
-    jwtSecret: process.env.JWT_SECRET,
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN,
-
-    // 公共键（在客户端和服务器端都可用）
-    public: {
-      apiBaseUrl: process.env.API_BASE_URL,
-      apiTimeout: process.env.API_TIMEOUT,
-      corsOrigin: process.env.CORS_ORIGIN
-    }
+    // dbHost: process.env.DB_HOST,
+    // // dbPort: process.env.DB_PORT,
+    // dbUser: process.env.DB_USER,
+    // dbPassword: process.env.DB_PASSWORD,
+    // dbName: process.env.DB_NAME,
+    // redisHost: process.env.REDIS_HOST,
+    // // redisPort: process.env.REDIS_PORT,
+    // redisPassword: process.env.REDIS_PASSWORD,
+    // // redisDb: process.env.REDIS_DB,
+    // jwtSecret: process.env.JWT_SECRET,
+    // jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+    // // 公共键（在客户端和服务器端都可用）
+    // public: {
+    //   apiBaseUrl: process.env.API_BASE_URL,
+    //   apiTimeout: process.env.API_TIMEOUT,
+    //   corsOrigin: process.env.CORS_ORIGIN
+    // }
   }
 })
