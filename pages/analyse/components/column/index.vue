@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+// import { IconPark } from '@icon-park/vue-next/es/all';
 import DataSourceSelecter from '@/components/selecter/dataSource/index.vue'
 import ContextMenu from '@/components/context-menu/index.vue'
 import { ref, computed } from 'vue'
@@ -100,7 +101,7 @@ const NUMBER_ICON_NAME = 'ListNumbers'
 const DATE_ICON_NAME = 'calendar-thirty'
 
 // 字符串图标
-const STRING_ICON_NAME = 'FieldString'
+const STRING_ICON_NAME = 'text'
 
 const columnDisplayNames = (
   column: ColumnStore.ColumnOption

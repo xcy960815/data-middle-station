@@ -46,6 +46,13 @@ export function getDatasourceConfig() {
   const kanbanDbPassword = getProcessEnvProperties(
     'KANBAN_DB_PASSWORD'
   )
+  const kanbanDbTimezone =
+    getProcessEnvProperties('KANBAN_DB_TIMEZONE') ||
+    '+08:00'
+  const kanbanDbDateStrings =
+    getProcessEnvProperties('KANBAN_DB_DATE_STRINGS') ||
+    true
+
   const dataSourceConfig: NodeJS.DataSourceConfig = {
     [configDbName]: {
       password: configDbPassword,
@@ -61,7 +68,9 @@ export function getDatasourceConfig() {
       host: kanbanDbHost,
       port: kanbanDbPort,
       user: kanbanDbUser,
-      database: kanbanDbName
+      database: kanbanDbName,
+      timezone: kanbanDbTimezone,
+      dateStrings: kanbanDbDateStrings
     }
   }
   return dataSourceConfig

@@ -2,8 +2,8 @@ import { ChartsService } from '../service/chartService'
 
 const chartsService = new ChartsService()
 /**
- * @api {post} /analyse/saveChartById
- * @apiName saveChartById
+ * @api {post} /analyse/updateChartConfig
+ * @apiName updateChartConfig
  * @apiGroup analyse
  * @apiDescription 保存图表
  * @returns {Promise<ResponseModule.Response<number>>}
@@ -15,7 +15,7 @@ export default defineEventHandler<
     const chartsConfigDto =
       await readBody<ChartsConfigDto.ChartsConfig>(event)
     const data =
-      await chartsService.updateChart(chartsConfigDto)
+      await chartsService.updateChartConfig(chartsConfigDto)
     return CustomResponse.success(data)
   } catch (error: any) {
     return CustomResponse.error(error.message)

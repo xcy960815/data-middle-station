@@ -21,22 +21,35 @@ export class ChartDataService {
     groups: GroupStore.GroupOption[]
   ): string {
     let sql = 'select'
-    dimensions.forEach(
-      (item: DimensionStore.DimensionOption) => {
+
+    // 合并 dimensions 和 groups 中的列
+    const allColumns = [
+      ...dimensions,
+      ...groups.filter(
+        (group) =>
+          !dimensions.some(
+            (dim) => dim.columnName === group.columnName
+          )
+      )
+    ]
+
+    allColumns.forEach(
+      (
+        item:
+          | DimensionStore.DimensionOption
+          | GroupStore.GroupOption
+      ) => {
         const columnName = toLine(item.columnName)
         const alias = item.alias
           ? item.alias
           : item.columnName
-        const needAggregation =
-          groups.length > 0 &&
-          !groups.some(
-            (group) => group.columnName === item.columnName
+        // 检查是否是日期时间类型的列
+        const isDateTimeColumn =
+          /date|time|created_at|updated_at/i.test(
+            columnName
           )
-        const aggregationFunction = needAggregation
-          ? 'MAX'
-          : ''
-        const fieldExpression = aggregationFunction
-          ? `${aggregationFunction}(${columnName})`
+        const fieldExpression = isDateTimeColumn
+          ? `DATE_FORMAT(${columnName}, '%Y-%m-%d %H:%i:%s')`
           : columnName
         sql += ` ${fieldExpression} as \`${alias}\`,`
       }
@@ -87,13 +100,20 @@ export class ChartDataService {
   /**
    * @desc 构建groupBy语句
    * @param groups {GroupStore.GroupOption[]} 分组条件
+   * @param dimensions {DimensionStore.DimensionOption[]} 维度
    * @returns {string} groupBy语句
    */
   private buildGroupByClause(
-    groups: GroupStore.GroupOption[]
+    groups: GroupStore.GroupOption[],
+    dimensions: DimensionStore.DimensionOption[]
   ): string {
     if (groups.length === 0) return ''
-    return ` group by ${groups.map((item) => toLine(item.columnName)).join(',')}`
+    // 合并 groups 和 dimensions 中的列名
+    const allGroupColumns = [
+      ...groups.map((item) => toLine(item.columnName)),
+      ...dimensions.map((item) => toLine(item.columnName))
+    ]
+    return ` group by ${allGroupColumns.join(',')}`
   }
 
   /**
@@ -120,7 +140,10 @@ export class ChartDataService {
     )
     const whereClause = this.buildWhereClause(filters)
     const orderByClause = this.buildOrderByClause(orders)
-    const groupByClause = this.buildGroupByClause(groups)
+    const groupByClause = this.buildGroupByClause(
+      groups,
+      dimensions
+    )
 
     const sql = `${selectClause} from ${toLine(dataSource)}${whereClause}${groupByClause}${orderByClause} limit ${limit}`
 

@@ -2,18 +2,22 @@
  * 前端传入的图表配置
  */
 declare namespace ChartsConfigDto {
-  type ChartsConfig = {
+  type ChartsConfig = Partial<ChartDao.ChartOptionDao> & {
     id: number
-    chartName: string
-    chartType: string
-    chartConfigId: number
-    chartConfig: {
-      dataSource: string
-      column: ChartConfigVo.ColumnOption[]
-      dimension: ChartConfigVo.DimensionOption[]
-      filter: ChartConfigVo.FilterOption[]
-      group: ChartConfigVo.GroupOption[]
-      order: ChartConfigVo.OrderOption[]
-    }
   }
+  // {
+  //   id: number
+  //   chartName: string
+  //   chartType: string
+  //   chartDesc: string
+  //   chartConfigId: number
+  //   chartConfig: {
+  //     dataSource: string
+  //     column: ChartConfigVo.ColumnOption[]
+  //     dimension: ChartConfigVo.DimensionOption[]
+  //     filter: ChartConfigVo.FilterOption[]
+  //     group: ChartConfigVo.GroupOption[]
+  //     order: ChartConfigVo.OrderOption[]
+  //   }
+  // }
 }
