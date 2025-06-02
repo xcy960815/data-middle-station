@@ -1,8 +1,4 @@
 /**
- * @desc 用于服务端的工具函数
- */
-
-/**
  * @desc 休眠函数
  * @param {number} timer
  * @returns Promise<void>

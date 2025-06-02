@@ -6,7 +6,7 @@ import {
   BaseMapper
 } from './baseMapper'
 
-import { convertToSqlProperties } from '../../utils/databaseHelpper.server'
+import { convertToSqlProperties } from '../utils/databaseHelpper'
 
 // 基础字段字典
 export const CHART_BASE_FIELDS = [

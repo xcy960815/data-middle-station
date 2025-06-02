@@ -1,4 +1,3 @@
-import { CustomResponse } from '../../utils/customResponse'
 import { ChartsService } from '../service/chartService'
 
 const chartsService = new ChartsService()

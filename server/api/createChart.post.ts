@@ -1,5 +1,4 @@
 import { ChartsService } from '../service/chartService'
-import { CustomResponse } from '../../utils/customResponse'
 const chartsService = new ChartsService()
 
 /**

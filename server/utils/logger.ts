@@ -1,7 +1,7 @@
 import { createLogger, format, transports } from 'winston'
 import type { Logger as LoggerType } from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
-import { getProcessEnvProperties } from '~/utils/envProperties'
+import { getProcessEnvProperties } from '~/server/utils/envProperties'
 
 /**
  * @description 日志类
@@ -130,5 +130,3 @@ export class Logger {
     this.logger?.debug(message)
   }
 }
-
-export default Logger
