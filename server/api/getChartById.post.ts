@@ -1,6 +1,6 @@
-import { ChartsService } from '../service/chartService'
+import { ChartService } from '../service/chartService'
 
-const chartsService = new ChartsService()
+const chartService = new ChartService()
 
 export default defineEventHandler<
   Promise<
@@ -9,7 +9,7 @@ export default defineEventHandler<
 >(async (event) => {
   try {
     const { id } = await readBody(event)
-    const data = await chartsService.getChartById(id)
+    const data = await chartService.getChartById(id)
     return CustomResponse.success(data)
   } catch (error: any) {
     console.log(error)

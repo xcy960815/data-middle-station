@@ -6,7 +6,7 @@ declare namespace ChartDao {
     [key: string]: string | number
   }>
 
-  type ChartOptionDao = {
+  type ChartOption = {
     id: number
     chartName: string
     chartType: string
@@ -17,6 +17,6 @@ declare namespace ChartDao {
     createdBy: string
     updatedBy: string
     chartConfigId: number | null
-    chartConfig: ChartConfigDao.ChartConfig | null
+    chartConfig?: ChartConfigDao.ChartConfig | null
   }
 }

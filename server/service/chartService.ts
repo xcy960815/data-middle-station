@@ -1,27 +1,26 @@
-import { ChartsMapper } from '../mapper/chartMapper'
-import dayjs from 'dayjs'
+import { ChartMapper } from '../mapper/chartMapper'
 import { ChartConfigMapper } from '../mapper/chartConfigMapper'
-
+import dayjs from 'dayjs'
 /**
  * @desc 分析服务
  */
-export class ChartsService {
-  private chartsMapper: ChartsMapper
+export class ChartService {
+  private chartsMapper: ChartMapper
 
   private chartConfigMapper: ChartConfigMapper
 
   constructor() {
-    this.chartsMapper = new ChartsMapper()
+    this.chartsMapper = new ChartMapper()
     this.chartConfigMapper = new ChartConfigMapper()
   }
 
   /**
    * @desc 格式化图表
-   * @param chart {ChartDao.ChartOptionDao} 图表
+   * @param chart {ChartDao.ChartOption} 图表
    * @returns {ChartsVo.ChartsOptionVo}
    */
   private formatChart(
-    chart: ChartDao.ChartOptionDao
+    chart: ChartDao.ChartOption
   ): ChartsVo.ChartsOptionVo {
     const chartConfig = chart.chartConfig || {
       dataSource: '',
@@ -192,17 +191,19 @@ export class ChartsService {
 
   /**
    * @desc 保存图表
-   * @param chart {ChartsConfigDto.ChartsConfig} 图表
+   * @param chart {ChartDto.ChartOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateChartConfig(
-    chartsConfigDto: ChartsConfigDto.ChartsConfig
+  public async updateChart(
+    chartOptionDto: ChartDto.ChartOption
   ): Promise<boolean> {
-    const { chartConfig, ...chartOption } = chartsConfigDto
+    const { chartConfig, ...chartOption } = chartOptionDto
+
     let chartConfigId = chartOption.chartConfigId
 
     if (!chartConfigId) {
-      const defaultConfig = {
+      // 如果图表配置不存在，则创建默认图表配置
+      const defaultChartConfig = {
         dataSource: '',
         column: [],
         dimension: [],
@@ -210,10 +211,9 @@ export class ChartsService {
         group: [],
         order: []
       }
-      const config = chartConfig || defaultConfig
+      const config = chartConfig || defaultChartConfig
       chartConfigId =
         await this.chartConfigMapper.createChartConfig({
-          id: 0,
           dataSource: config.dataSource,
           column: config.column,
           dimension: config.dimension,
@@ -231,24 +231,27 @@ export class ChartsService {
         order: []
       }
       const config = chartConfig || defaultConfig
-      await this.chartConfigMapper.updateChartConfig({
-        id: chartConfigId,
-        dataSource: config.dataSource,
-        column: config.column,
-        dimension: config.dimension,
-        filter: config.filter,
-        group: config.group,
-        order: config.order
-      })
+
+      const updateChartResult =
+        await this.chartConfigMapper.updateChart({
+          id: chartConfigId,
+          dataSource: config.dataSource,
+          column: config.column,
+          dimension: config.dimension,
+          filter: config.filter,
+          group: config.group,
+          order: config.order
+        })
     }
+
     const updateChartConfigResult =
-      await this.chartsMapper.updateChartConfig({
-        id: chartOption.id || 0,
-        chartName: chartOption.chartName || '',
-        chartType: chartOption.chartType || '',
+      await this.chartsMapper.updateChart({
+        id: chartOption.id,
+        chartName: chartOption.chartName,
+        chartType: chartOption.chartType,
         chartConfigId,
-        chartDesc: chartOption.chartDesc || '',
-        chartConfig: null,
+        chartDesc: chartOption.chartDesc,
+        chartConfig: undefined,
         viewCount: 0,
         createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
         updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
@@ -260,21 +263,20 @@ export class ChartsService {
 
   /**
    * @desc 创建图表
-   * @param chart {ChartsConfigDto.ChartsConfig} 图表
+   * @param chart {ChartDto.ChartOption} 图表
    * @returns {Promise<boolean>}
    */
   public async createChart(
-    chartsConfigDto: ChartsConfigDto.ChartsConfig
+    chartsConfigDto: ChartDto.ChartOption
   ): Promise<boolean> {
     const currentTime = dayjs().format(
       'YYYY-MM-DD HH:mm:ss'
     )
-    const chartOptionDao: ChartDao.ChartOptionDao = {
-      id: 0,
-      chartName: chartsConfigDto.chartName || '',
-      chartType: chartsConfigDto.chartType || '',
+    const chartOption: ChartDto.ChartOption = {
+      chartName: chartsConfigDto.chartName,
+      chartType: chartsConfigDto.chartType,
       chartConfigId: chartsConfigDto.chartConfigId || null,
-      chartDesc: chartsConfigDto.chartDesc || '',
+      chartDesc: chartsConfigDto.chartDesc,
       chartConfig: chartsConfigDto.chartConfig || null,
       viewCount: 0,
       createTime: currentTime,
@@ -283,6 +285,28 @@ export class ChartsService {
       updatedBy: 'system'
     }
 
-    return this.chartsMapper.createChart(chartOptionDao)
+    return this.chartsMapper.createChart(chartOption)
+  }
+
+  /**
+   * @desc 更新图表名称
+   * @param chartOption {ChartDto.ChartOption} 图表
+   * @returns {Promise<boolean>}
+   */
+  public async updateChartName(
+    chartOption: ChartDto.ChartOption
+  ): Promise<boolean> {
+    return this.chartsMapper.updateChart(chartOption)
+  }
+
+  /**
+   * @desc 更新图表描述
+   * @param chartOption {ChartDto.ChartOption} 图表
+   * @returns {Promise<boolean>}
+   */
+  public async updateChartDesc(
+    chartOption: ChartDto.ChartOption
+  ): Promise<boolean> {
+    return this.chartsMapper.updateChart(chartOption)
   }
 }

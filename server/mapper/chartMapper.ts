@@ -22,9 +22,7 @@ export const CHART_BASE_FIELDS = [
   'chart_config_id'
 ]
 
-export class ChartMapping
-  implements ChartDao.ChartOptionDao
-{
+export class ChartMapping implements ChartDao.ChartOption {
   // 表名
   @Column('id')
   id: number = 0
@@ -74,7 +72,7 @@ const CHART_TABLE_NAME = 'chart'
 const DATA_SOURCE_NAME = 'data_middle_station'
 
 @BindDataSource(DATA_SOURCE_NAME)
-export class ChartsMapper extends BaseMapper {
+export class ChartMapper extends BaseMapper {
   /**
    * @desc 执行sql
    * @param sql {string} sql语句
@@ -94,7 +92,7 @@ export class ChartsMapper extends BaseMapper {
    * @returns {Promise<number>}
    */
   public async createChart(
-    chartOption: ChartDao.ChartOptionDao
+    chartOption: ChartDto.ChartOption
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartOption)
@@ -108,18 +106,18 @@ export class ChartsMapper extends BaseMapper {
 
   /**
    * @desc 更新图表
-   * @param chartOptionDao {ChartOptionDao} 图表
+   * @param chartOptionDto {ChartDto.ChartOption} 图表
    * @returns {Promise<void>}
    */
-  public async updateChartConfig(
-    chartOptionDao: ChartDao.ChartOptionDao
+  public async updateChart(
+    chartOptionDto: ChartDto.ChartOption
   ): Promise<boolean> {
     const {
       viewCount,
       createTime,
       createdBy,
       ...chartOption
-    } = chartOptionDao
+    } = chartOptionDto
     const {
       keys: chartOptionKeys,
       values: chartOptionValues
@@ -153,12 +151,12 @@ export class ChartsMapper extends BaseMapper {
   /**
    * @desc 获取图表
    * @param id {number} 图表id
-   * @returns {Promise<ChartDao.ChartOptionDao>}
+   * @returns {Promise<ChartDao.ChartOption>}
    */
   @Mapping(ChartMapping)
-  public async getChartById<
-    T extends ChartDao.ChartOptionDao
-  >(id: number): Promise<T> {
+  public async getChartById<T extends ChartDao.ChartOption>(
+    id: number
+  ): Promise<T> {
     // 更新访问次数 不知道为什么报错
     await this.updateViewCount(id)
     const sql = `select 
@@ -181,11 +179,11 @@ export class ChartsMapper extends BaseMapper {
 
   /**
    * @desc 获取所有的图表
-   * @returns {Promise<Array<ChartDao.ChartOptionDao>>}
+   * @returns {Promise<Array<ChartDao.ChartOption>>}
    */
   @Mapping(ChartMapping)
   public async getCharts<
-    T extends ChartDao.ChartOptionDao
+    T extends ChartDao.ChartOption
   >(): Promise<Array<T>> {
     const sql = `
     select 

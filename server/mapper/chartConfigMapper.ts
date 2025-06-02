@@ -110,7 +110,7 @@ export class ChartConfigMapper extends BaseMapper {
    * @param chartConfig {ChartConfigDao.ChartConfig} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
-  public async updateChartConfig(
+  public async updateChart(
     chartConfig: ChartConfigDao.ChartConfig
   ): Promise<boolean> {
     const { keys, values } =
