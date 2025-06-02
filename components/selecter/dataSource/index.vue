@@ -133,7 +133,7 @@ const rowClassName = ({
  * @returns {Promise<void>}
  */
 const queryTable = async () => {
-  const result = await $fetch('/api/analyse/queryTable', {
+  const result = await $fetch('/api/queryTable', {
     method: 'GET',
     params: {
       tableName: searchKeyword.value

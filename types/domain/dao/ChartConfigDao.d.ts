@@ -1,10 +1,9 @@
 declare namespace ChartConfigDao {
-  type ColumnOption = DatabaseDao.TableColumnOptionDao
+  type ColumnOption = DatabaseDao.TableColumnOption
 
-  type DimensionOption =
-    DatabaseDao.TableColumnOptionDao & {
-      __invalid?: boolean
-    }
+  type DimensionOption = DatabaseDao.TableColumnOption & {
+    __invalid?: boolean
+  }
 
   const FilterAggregationsEnum = {
     原始值: 'raw',
@@ -43,7 +42,7 @@ declare namespace ChartConfigDao {
     aggregationType: FilterAggregationsType
   }
 
-  type GroupOption = DatabaseDao.TableColumnOptionDao & {
+  type GroupOption = DatabaseDao.TableColumnOption & {
     __invalid?: boolean
   }
 
@@ -72,7 +71,7 @@ declare namespace ChartConfigDao {
     aggregationType: OrderAggregationsType
   }
 
-  interface ChartConfigOptionDao {
+  interface ChartConfig {
     id: number
     dataSource: string
     column: ColumnOption[]

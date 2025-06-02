@@ -9,7 +9,7 @@ import dayjs from 'dayjs'
 
 // 表列表映射
 export class QueryTableMapping
-  implements DatabaseDao.TableOptionDao
+  implements DatabaseDao.TableOption
 {
   @Column('TABLE_NAME')
   tableName(value: string) {
@@ -79,7 +79,7 @@ export class QueryTableMapping
 
 // 表列映射
 export class TableColumnMapping
-  implements DatabaseDao.TableColumnOptionDao
+  implements DatabaseDao.TableColumnOption
 {
   @Column('COLUMN_NAME')
   columnName(value: string) {
@@ -118,7 +118,7 @@ export class DatabaseMapper extends BaseMapper {
    */
   @Mapping(QueryTableMapping)
   public async queryTable<
-    T extends DatabaseDao.TableOptionDao
+    T extends DatabaseDao.TableOption
   >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         table_name,
@@ -145,11 +145,11 @@ export class DatabaseMapper extends BaseMapper {
   /**
    * @desc 查询表的所有列
    * @param tableName {string} 表名
-   * @returns {Promise<Array<TableInfoDao.TableColumnOptionDao>>}
+   * @returns {Promise<Array<TableInfoDao.TableColumnOption>>}
    */
   @Mapping(TableColumnMapping)
   public async queryTableColumns<
-    T extends DatabaseDao.TableColumnOptionDao
+    T extends DatabaseDao.TableColumnOption
   >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         column_name, 

@@ -1,7 +1,7 @@
 import { createLogger, format, transports } from 'winston'
 import type { Logger as LoggerType } from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
-import { getProcessEnvProperties } from '~/utils/utils.server'
+import { getProcessEnvProperties } from '~/utils/envProperties'
 
 /**
  * @description 日志类
@@ -45,10 +45,10 @@ export class Logger {
             format.printf((info) => {
               const { timestamp, level, message, ...args } =
                 info
-              // @ts-ignore
               const ts =
-                timestamp?.slice(0, 19).replace('T', ' ') ||
-                ''
+                typeof timestamp === 'string'
+                  ? timestamp.slice(0, 19).replace('T', ' ')
+                  : ''
               return `${ts} [${level}]: ${message} ${
                 Object.keys(args).length
                   ? JSON.stringify(args, null, 2)
@@ -130,3 +130,5 @@ export class Logger {
     this.logger?.debug(message)
   }
 }
+
+export default Logger

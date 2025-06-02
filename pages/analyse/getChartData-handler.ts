@@ -101,16 +101,13 @@ export const getChartDataHandler = () => {
 
     const startTime = dayjs().valueOf()
     chartStore.setChartLoading(true)
-    const result = await $fetch(
-      '/api/analyse/getChartData',
-      {
-        method: 'POST',
-        // 请求参数
-        body: {
-          ...queryChartDataParams.value
-        }
+    const result = await $fetch('/api/getChartData', {
+      method: 'POST',
+      // 请求参数
+      body: {
+        ...queryChartDataParams.value
       }
-    )
+    })
     const endTime = dayjs().valueOf()
     if (result.code === 200) {
       chartStore.setChartData(result.data || [])

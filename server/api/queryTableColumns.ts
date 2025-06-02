@@ -1,5 +1,5 @@
-import { DatabaseService } from '../../service/databaseService'
-import { Response } from '../../utils/response'
+import { CustomResponse } from '../../utils/customResponse'
+import { DatabaseService } from '../service/databaseService'
 const databaseService = new DatabaseService()
 /**
  * @desc 根据表名查询数据
@@ -7,7 +7,7 @@ const databaseService = new DatabaseService()
  */
 export default defineEventHandler<
   Promise<
-    ResponseModule.Response<
+    CustomResponseModule.Response<
       Array<DatabaseVo.TableColumnOptionVo>
     >
   >
@@ -18,8 +18,8 @@ export default defineEventHandler<
     )
     const data =
       await databaseService.queryTableColumns(tableName)
-    return Response.success(data)
+    return CustomResponse.success(data)
   } catch (error: any) {
-    return Response.error(error.message)
+    return CustomResponse.error(error.message)
   }
 })
