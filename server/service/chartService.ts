@@ -191,11 +191,11 @@ export class ChartsService {
 
   /**
    * @desc 保存图表
-   * @param chart {ChartsConfigDto.ChartsConfigDto} 图表
+   * @param chart {ChartsConfigDto.ChartsConfig} 图表
    * @returns {Promise<boolean>}
    */
   public async updateChart(
-    chartsConfigDto: ChartsConfigDto.ChartsConfigDto
+    chartsConfigDto: ChartsConfigDto.ChartsConfig
   ): Promise<boolean> {
     const { chartConfig, ...chartOption } = chartsConfigDto
     let chartConfigId = chartOption.chartConfigId
@@ -223,5 +223,31 @@ export class ChartsService {
       updatedBy: 'system'
     })
     return chart
+  }
+
+  /**
+   * @desc 创建图表
+   * @param chart {ChartsConfigDto.ChartsConfig} 图表
+   * @returns {Promise<boolean>}
+   */
+  public async createChart(
+    chartsConfigDto: ChartsConfigDto.ChartsConfig
+  ): Promise<boolean> {
+    const currentTime = dayjs().format(
+      'YYYY-MM-DD HH:mm:ss'
+    )
+    const chartOptionDao: ChartDao.ChartOptionDao = {
+      chartName: chartsConfigDto.chartName,
+      chartType: chartsConfigDto.chartType,
+      chartConfigId: chartsConfigDto.chartConfigId,
+      chartConfig: chartsConfigDto.chartConfig || null,
+      viewCount: 0,
+      createTime: currentTime,
+      updateTime: currentTime,
+      createdBy: 'system',
+      updatedBy: 'system'
+    }
+
+    return this.chartsMapper.createChart(chartOptionDao)
   }
 }

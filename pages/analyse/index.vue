@@ -62,15 +62,12 @@ const chartStore = useChartStore()
  * @returns {Promise<void>}
  */
 const queryTableColumns = async (tableName: string) => {
-  const result = await $fetch(
-    '/api/analyse/queryTableColumns',
-    {
-      method: 'GET',
-      params: {
-        tableName
-      }
+  const result = await $fetch('/api/queryTableColumns', {
+    method: 'GET',
+    params: {
+      tableName
     }
-  )
+  })
   if (result.code === 200) {
     const cloumns = result.data?.map((item) => {
       return {
@@ -133,7 +130,7 @@ const getChartById = async () => {
   const router = useRouter()
   const id = router.currentRoute.value.query.id
   if (!id) return
-  const result = await $fetch('/api/analyse/getChartById', {
+  const result = await $fetch('/api/getChartById', {
     method: 'post',
     body: {
       id

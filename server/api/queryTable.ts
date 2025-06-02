@@ -1,7 +1,6 @@
-import { Response } from '../../utils/response'
-// import { AnalyseService } from '../../service/analyseService'
-import { DatabaseService } from '../../service/databaseService'
-// const analyseService = new AnalyseService()
+import { CustomResponse } from '../../utils/customResponse'
+import { DatabaseService } from '../service/databaseService'
+
 const databaseService = new DatabaseService()
 
 /**
@@ -10,7 +9,9 @@ const databaseService = new DatabaseService()
  */
 export default defineEventHandler<
   Promise<
-    ResponseModule.Response<Array<DatabaseVo.TableOptionVo>>
+    CustomResponseModule.Response<
+      Array<DatabaseVo.TableOptionVo>
+    >
   >
 >(async (event) => {
   try {
@@ -19,8 +20,8 @@ export default defineEventHandler<
     )
     const tableList =
       await databaseService.queryTable(tableName)
-    return Response.success(tableList)
+    return CustomResponse.success(tableList)
   } catch (error: any) {
-    return Response.error(error.message)
+    return CustomResponse.error(error.message)
   }
 })

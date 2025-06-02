@@ -1,5 +1,5 @@
-import { Response } from '../../utils/response'
-import { ChartsService } from '../../service/chartService'
+import { CustomResponse } from '../../utils/customResponse'
+import { ChartsService } from '../service/chartService'
 
 const chartsService = new ChartsService()
 /**
@@ -10,15 +10,15 @@ const chartsService = new ChartsService()
  * @returns {Promise<ResponseModule.Response<number>>}
  */
 export default defineEventHandler<
-  Promise<ResponseModule.Response<boolean>>
+  Promise<CustomResponseModule.Response<boolean>>
 >(async (event) => {
   try {
     const chartsConfigDto =
-      await readBody<ChartsConfigDto.ChartsConfigDto>(event)
+      await readBody<ChartsConfigDto.ChartsConfig>(event)
     const data =
       await chartsService.updateChart(chartsConfigDto)
-    return Response.success(data)
+    return CustomResponse.success(data)
   } catch (error: any) {
-    return Response.error(error.message)
+    return CustomResponse.error(error.message)
   }
 })

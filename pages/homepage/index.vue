@@ -40,9 +40,7 @@ const container = ref<HTMLDivElement>()
  * @description 获取所有的图表
  */
 const getCharts = async () => {
-  const res = await $fetch<
-    ResponseModule.Response<HomePageStore.ChartOption[]>
-  >('/api/homepage/getCharts', {
+  const res = await $fetch('/api/getCharts', {
     method: 'POST'
   })
   if (res.code === 200) {
