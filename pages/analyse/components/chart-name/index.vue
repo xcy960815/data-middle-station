@@ -47,7 +47,7 @@ const updateChartName = async (value: string) => {
   const result = await $fetch('/api/updateChartName', {
     method: 'POST',
     body: {
-      chartId: chartId.value,
+      id: chartId.value,
       chartName: value
     }
   })
@@ -85,7 +85,7 @@ const updateChartDesc = async (value: string) => {
   const result = await $fetch('/api/updateChartDesc', {
     method: 'POST',
     body: {
-      chartId: chartId.value,
+      id: chartId.value,
       chartDesc: value
     }
   })

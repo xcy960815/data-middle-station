@@ -1,3 +1,6 @@
+/**
+ * 图表配置
+ */
 declare namespace ChartConfigDao {
   type ColumnOption = DatabaseDao.TableColumnOption
 
