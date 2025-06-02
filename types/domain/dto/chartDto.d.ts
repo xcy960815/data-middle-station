@@ -1,10 +1,8 @@
 /**
  * 前端传入的图表配置
  */
-declare namespace ChartsConfigDto {
-  type ChartsConfig = Partial<ChartDao.ChartOptionDao> & {
-    id: number
-  }
+declare namespace ChartDto {
+  type ChartOption = Partial<ChartDao.ChartOption>
   // {
   //   id: number
   //   chartName: string

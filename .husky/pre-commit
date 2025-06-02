@@ -1,4 +1,99 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+# 获取当前时间戳
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# 创建备份目录
+BACKUP_DIR="sql"
+mkdir -p $BACKUP_DIR
+
+# 检查 MySQL 是否在远程 Docker 中运行
+check_mysql_in_remote_docker() {
+    local ssh_host=$1
+    local container_name=$2
+    ssh $ssh_host "docker ps | grep -q $container_name"
+    return $?
+}
+
+# 从远程 Docker 容器中导出数据库
+export_from_remote_docker() {
+    local ssh_host=$1
+    local container_name=$2
+    local db_name=$3
+    local output_file=$4
+    
+    echo "正在从远程 Docker 容器 $container_name 导出 $db_name 数据库..."
+    ssh $ssh_host "docker exec $container_name mysqldump -u$CONFIG_DB_USER -p$CONFIG_DB_PASSWORD $db_name" > "$output_file"
+}
+
+# 检查 MySQL 是否在本地 Docker 中运行
+check_mysql_in_local_docker() {
+    local container_name=$1
+    docker ps | grep -q $container_name
+    return $?
+}
+
+# 从本地 Docker 容器中导出数据库
+export_from_local_docker() {
+    local container_name=$1
+    local db_name=$2
+    local output_file=$3
+    
+    echo "正在从本地 Docker 容器 $container_name 导出 $db_name 数据库..."
+    docker exec $container_name mysqldump -u$CONFIG_DB_USER -p$CONFIG_DB_PASSWORD $db_name > "$output_file"
+}
+
+# 从本地 MySQL 导出数据库
+export_from_local() {
+    local db_name=$1
+    local output_file=$2
+    local host=$3
+    local port=$4
+    
+    echo "正在从本地 MySQL 导出 $db_name 数据库..."
+    mysqldump -h$host -P$port -u$CONFIG_DB_USER -p$CONFIG_DB_PASSWORD $db_name > "$output_file"
+}
+
+# 导出 data_middle_station 数据库
+if [ ! -z "$DOCKER_SSH_HOST" ]; then
+    # 远程 Docker
+    if check_mysql_in_remote_docker "$DOCKER_SSH_HOST" "mysql"; then
+        export_from_remote_docker "$DOCKER_SSH_HOST" "mysql" "$CONFIG_DB_NAME" "$BACKUP_DIR/data_middle_station_$TIMESTAMP.sql"
+    else
+        echo "错误：远程 Docker 容器未找到"
+        exit 1
+    fi
+elif check_mysql_in_local_docker "mysql"; then
+    # 本地 Docker
+    export_from_local_docker "mysql" "$CONFIG_DB_NAME" "$BACKUP_DIR/data_middle_station_$TIMESTAMP.sql"
+else
+    # 本地 MySQL
+    export_from_local "$CONFIG_DB_NAME" "$BACKUP_DIR/data_middle_station_$TIMESTAMP.sql" "$CONFIG_DB_HOST" "$CONFIG_DB_PORT"
+fi
+
+# 导出 kanban_data 数据库
+if [ ! -z "$DOCKER_SSH_HOST" ]; then
+    # 远程 Docker
+    if check_mysql_in_remote_docker "$DOCKER_SSH_HOST" "mysql"; then
+        export_from_remote_docker "$DOCKER_SSH_HOST" "mysql" "$KANBAN_DB_NAME" "$BACKUP_DIR/kanban_data_$TIMESTAMP.sql"
+    else
+        echo "错误：远程 Docker 容器未找到"
+        exit 1
+    fi
+elif check_mysql_in_local_docker "mysql"; then
+    # 本地 Docker
+    export_from_local_docker "mysql" "$KANBAN_DB_NAME" "$BACKUP_DIR/kanban_data_$TIMESTAMP.sql"
+else
+    # 本地 MySQL
+    export_from_local "$KANBAN_DB_NAME" "$BACKUP_DIR/kanban_data_$TIMESTAMP.sql" "$KANBAN_DB_HOST" "$KANBAN_DB_PORT"
+fi
+
+# 将备份文件添加到 git
+git add "$BACKUP_DIR/data_middle_station_$TIMESTAMP.sql"
+git add "$BACKUP_DIR/kanban_data_$TIMESTAMP.sql"
+
+echo "数据库备份完成！"
+
+# 运行 lint-staged
 npx lint-staged

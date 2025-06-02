@@ -268,7 +268,7 @@ const handleSaveChart = async () => {
   const chartName = chartStore.getChartName
   const chartType = chartStore.getChartType
   const dataSource = columnStore.getDataSource
-  const result = await $fetch('/api/updateChartConfig', {
+  const result = await $fetch('/api/updateChart', {
     method: 'POST',
     body: {
       id,

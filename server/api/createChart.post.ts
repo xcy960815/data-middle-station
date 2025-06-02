@@ -1,5 +1,5 @@
-import { ChartsService } from '../service/chartService'
-const chartsService = new ChartsService()
+import { ChartService } from '../service/chartService'
+const chartService = new ChartService()
 
 /**
  * @Desc 创建或者更新图表
@@ -11,8 +11,8 @@ export default defineEventHandler<
 >(async (event) => {
   try {
     const chartsParamsOption =
-      await readBody<ChartsConfigDto.ChartsConfig>(event)
-    const chart = await chartsService.createChart(
+      await readBody<ChartDto.ChartOption>(event)
+    const chart = await chartService.createChart(
       chartsParamsOption
     )
     return CustomResponse.success(chart)
