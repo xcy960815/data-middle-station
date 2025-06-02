@@ -8,20 +8,14 @@ import {
 import dayjs from 'dayjs'
 
 // 表列表映射
-export class QueryTableMapping
+export class TableOptionMapping
   implements DatabaseDao.TableOption
 {
   @Column('TABLE_NAME')
-  tableName(value: string) {
-    if (!value) return ''
-    return toHump(value.toLowerCase())
-  }
+  tableName: string = ''
 
   @Column('TABLE_TYPE')
-  tableType(value: string) {
-    if (!value) return ''
-    return value.toLowerCase()
-  }
+  tableType: string = ''
 
   @Column('TABLE_COMMENT')
   tableComment: string = ''
@@ -82,26 +76,10 @@ export class TableColumnMapping
   implements DatabaseDao.TableColumnOption
 {
   @Column('COLUMN_NAME')
-  columnName(value: string) {
-    if (!value) return ''
-    return toHump(value)
-  }
+  columnName: string = ''
 
   @Column('COLUMN_TYPE')
   columnType: string = ''
-  // columnType = (value: string) => {
-  //   if (!value) return ''
-  //   const type = value.toLowerCase()
-  //   if (NUMBER_TYPE_ENUM.includes(type)) {
-  //     return 'number'
-  //   } else if (STRING_TYPE_ENUM.includes(type)) {
-  //     return 'string'
-  //   } else if (DATE_TYPE_ENUM.includes(type)) {
-  //     return 'date'
-  //   } else {
-  //     return type
-  //   }
-  // }
 
   @Column('COLUMN_COMMENT')
   columnComment: string = ''
@@ -116,7 +94,7 @@ export class DatabaseMapper extends BaseMapper {
    * @datasource ${tableSchema}
    * @returns {Promise<Array<T>>}
    */
-  @Mapping(QueryTableMapping)
+  @Mapping(TableOptionMapping)
   public async queryTable<
     T extends DatabaseDao.TableOption
   >(tableName: string): Promise<Array<T>> {

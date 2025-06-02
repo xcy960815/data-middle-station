@@ -1,5 +1,4 @@
 import { ChartDataService } from '../service/chartDataService'
-import { CustomResponse } from '../../utils/customResponse'
 const chartDataService = new ChartDataService()
 
 /**

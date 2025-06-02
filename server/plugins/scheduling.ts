@@ -1,7 +1,7 @@
 // import chalk from 'chalk';
 import cron from 'node-cron'
 import dayjs from 'dayjs'
-import { Logger } from './logger'
+import { Logger } from '../utils/logger'
 
 const logger = new Logger({
   fileName: 'scheduling',

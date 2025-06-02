@@ -1,5 +1,5 @@
 import { DatabaseMapper } from '../mapper/databaseMapper'
-import { toLine } from '../../utils/databaseHelpper.server'
+import { toLine } from '../utils/databaseHelpper'
 
 /** 将数据库所有的类型罗列出来在前端统一展示成 number */
 const NUMBER_TYPE_ENUM = [
