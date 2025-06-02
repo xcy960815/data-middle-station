@@ -1,5 +1,5 @@
 /**
- * @desc  表结构
+ * @desc  图表表结构
  */
 declare namespace ChartDao {
   type ChartDataDao = Array<{
@@ -7,15 +7,16 @@ declare namespace ChartDao {
   }>
 
   type ChartOptionDao = {
-    id?: number
+    id: number
     chartName: string
     chartType: string
+    chartDesc: string
     viewCount: number
     createTime: string
     updateTime: string
     createdBy: string
     updatedBy: string
-    chartConfigId: number
-    chartConfig?: ChartConfigDao.ChartConfig
+    chartConfigId: number | null
+    chartConfig: ChartConfigDao.ChartConfig | null
   }
 }
