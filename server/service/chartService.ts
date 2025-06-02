@@ -34,6 +34,7 @@ export class ChartsService {
 
     return {
       ...chart,
+      chartConfigId: chart.chartConfigId || 0,
       createTime: dayjs(chart.createTime).format(
         'YYYY-MM-DD HH:mm:ss'
       ),
@@ -170,7 +171,7 @@ export class ChartsService {
       await this.chartsMapper.getChartById(id)
     const chartConfig =
       await this.chartConfigMapper.getChartConfigById(
-        chartOption.chartConfigId
+        chartOption.chartConfigId || 0
       )
     return this.formatChart({
       ...chartOption,
@@ -194,35 +195,67 @@ export class ChartsService {
    * @param chart {ChartsConfigDto.ChartsConfig} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateChart(
+  public async updateChartConfig(
     chartsConfigDto: ChartsConfigDto.ChartsConfig
   ): Promise<boolean> {
     const { chartConfig, ...chartOption } = chartsConfigDto
     let chartConfigId = chartOption.chartConfigId
+
     if (!chartConfigId) {
+      const defaultConfig = {
+        dataSource: '',
+        column: [],
+        dimension: [],
+        filter: [],
+        group: [],
+        order: []
+      }
+      const config = chartConfig || defaultConfig
       chartConfigId =
         await this.chartConfigMapper.createChartConfig({
           id: 0,
-          ...chartConfig
+          dataSource: config.dataSource,
+          column: config.column,
+          dimension: config.dimension,
+          filter: config.filter,
+          group: config.group,
+          order: config.order
         })
     } else {
+      const defaultConfig = {
+        dataSource: '',
+        column: [],
+        dimension: [],
+        filter: [],
+        group: [],
+        order: []
+      }
+      const config = chartConfig || defaultConfig
       await this.chartConfigMapper.updateChartConfig({
         id: chartConfigId,
-        ...chartConfig
+        dataSource: config.dataSource,
+        column: config.column,
+        dimension: config.dimension,
+        filter: config.filter,
+        group: config.group,
+        order: config.order
       })
     }
-    const chart = await this.chartsMapper.updateChart({
-      id: chartOption.id,
-      chartName: chartOption.chartName,
-      chartType: chartOption.chartType,
-      chartConfigId,
-      viewCount: 0,
-      createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-      updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-      createdBy: 'system',
-      updatedBy: 'system'
-    })
-    return chart
+    const updateChartConfigResult =
+      await this.chartsMapper.updateChartConfig({
+        id: chartOption.id || 0,
+        chartName: chartOption.chartName || '',
+        chartType: chartOption.chartType || '',
+        chartConfigId,
+        chartDesc: chartOption.chartDesc || '',
+        chartConfig: null,
+        viewCount: 0,
+        createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+        updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+        createdBy: 'system',
+        updatedBy: 'system'
+      })
+    return updateChartConfigResult
   }
 
   /**
@@ -237,9 +270,11 @@ export class ChartsService {
       'YYYY-MM-DD HH:mm:ss'
     )
     const chartOptionDao: ChartDao.ChartOptionDao = {
-      chartName: chartsConfigDto.chartName,
-      chartType: chartsConfigDto.chartType,
-      chartConfigId: chartsConfigDto.chartConfigId,
+      id: 0,
+      chartName: chartsConfigDto.chartName || '',
+      chartType: chartsConfigDto.chartType || '',
+      chartConfigId: chartsConfigDto.chartConfigId || null,
+      chartDesc: chartsConfigDto.chartDesc || '',
       chartConfig: chartsConfigDto.chartConfig || null,
       viewCount: 0,
       createTime: currentTime,

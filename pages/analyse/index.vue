@@ -1,7 +1,11 @@
 <template>
   <NuxtLayout :name="layoutName">
     <template #header>
-      <custom-header></custom-header>
+      <custom-header>
+        <template #chartName>
+          <ChartName></ChartName>
+        </template>
+      </custom-header>
     </template>
     <template #cloumn>
       <Column></Column>
@@ -34,6 +38,7 @@
 </template>
 
 <script setup lang="ts">
+import ChartName from './components/chart-name/index.vue'
 import Column from './components/column/index.vue'
 import DimensionOption from './components/dimension/index.vue'
 import Filter from './components/filter/index.vue'
@@ -55,7 +60,9 @@ const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
 const chartConfigStore = useChartConfigStore()
 const chartStore = useChartStore()
-
+const chartName = computed(() => {
+  return chartStore.getChartName
+})
 /**
  * @desc 查询表格列
  * @param tableName

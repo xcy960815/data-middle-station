@@ -13,6 +13,7 @@ export const CHART_BASE_FIELDS = [
   'id',
   'chart_name',
   'chart_type',
+  'chart_desc',
   'create_time',
   'update_time',
   'view_count',
@@ -35,6 +36,10 @@ export class ChartMapping
   // 图表类型
   @Column('chart_type')
   chartType: string = ''
+
+  // 图表描述
+  @Column('chart_desc')
+  chartDesc: string = ''
 
   // 访问次数
   @Column('view_count')
@@ -106,7 +111,7 @@ export class ChartsMapper extends BaseMapper {
    * @param chartOptionDao {ChartOptionDao} 图表
    * @returns {Promise<void>}
    */
-  public async updateChart(
+  public async updateChartConfig(
     chartOptionDao: ChartDao.ChartOptionDao
   ): Promise<boolean> {
     const {
@@ -124,10 +129,10 @@ export class ChartsMapper extends BaseMapper {
       .join(', ')
 
     // 更新 chart 表
-    const updateChartSql = `UPDATE ${CHART_TABLE_NAME} SET ${chartOptionSetClause} WHERE id = ?`
+    const updateChartConfigSql = `UPDATE ${CHART_TABLE_NAME} SET ${chartOptionSetClause} WHERE id = ?`
 
     const chartResult = await this.exe<ResultSetHeader>(
-      updateChartSql,
+      updateChartConfigSql,
       [...chartOptionValues, chartOption.id]
     )
 
@@ -156,28 +161,6 @@ export class ChartsMapper extends BaseMapper {
   >(id: number): Promise<T> {
     // 更新访问次数 不知道为什么报错
     await this.updateViewCount(id)
-    // const sql = `select
-    //   c.id,
-    //   c.chart_name,
-    //   c.chart_type,
-    //   c.create_time,
-    //   c.update_time,
-    //   c.view_count,
-    //   c.created_by,
-    //   c.updated_by,
-    //   c.chart_config_id,
-    //   JSON_OBJECT(
-    //     'chart_config_id', cc.id,
-    //     'data_source', cc.data_source,
-    //     'column', cc.column,
-    //     'dimension', cc.dimension,
-    //     'filter', cc.filter,
-    //     'group', cc.group,
-    //     'order', cc.order
-    //   ) as chart_config
-    // from ${CHART_TABLE_NAME} c
-    // left join ${CHART_CONFIG_TABLE_NAME} cc on c.chart_config_id = cc.id
-    // where c.id = ?`
     const sql = `select 
       ${CHART_BASE_FIELDS.join(',\n    ')}
     from ${CHART_TABLE_NAME} where id = ?`
