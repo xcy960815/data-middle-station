@@ -1,6 +1,8 @@
 import chalk from 'chalk'
 import { serverSleep } from '../../utils/utils.server'
 import dayjs from 'dayjs'
+import { Logger } from './logger'
+
 const logger = new Logger({
   fileName: 'rotation',
   folderName: 'plugins'

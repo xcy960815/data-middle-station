@@ -6,7 +6,7 @@ import {
   BaseMapper
 } from './baseMapper'
 
-import { convertToSqlProperties } from '../utils/string-case-converter'
+import { convertToSqlProperties } from '../../utils/databaseHelpper.server'
 
 // 基础字段字典
 export const CHART_BASE_FIELDS = [
@@ -59,24 +59,13 @@ export class ChartMapping
   // 图表配置ID
   @Column('chart_config_id')
   chartConfigId: number = 0
-
-  // // 图表配置
-  // @Column('chart_config')
-  // chartConfig: ChartDao.ChartOptionDao['chartConfig'] = {
-  //   dataSource: '',
-  //   column: [],
-  //   dimension: [],
-  //   filter: [],
-  //   group: [],
-  //   order: []
-  // }
 }
 
 /**
  * @desc 本页面使用到的表
  */
 const CHART_TABLE_NAME = 'chart'
-const CHART_CONFIG_TABLE_NAME = 'chart_config'
+// const CHART_CONFIG_TABLE_NAME = 'chart_config'
 const DATA_SOURCE_NAME = 'data_middle_station'
 
 @BindDataSource(DATA_SOURCE_NAME)
@@ -220,16 +209,5 @@ export class ChartsMapper extends BaseMapper {
       ${CHART_BASE_FIELDS.join(',\n    ')}
     from ${CHART_TABLE_NAME}`
     return await this.exe<Array<T>>(sql)
-  }
-
-  /**
-   * @desc 获取图表数据
-   * @param sql {string} sql语句
-   * @returns {Promise<GetAnswerDao.ChartDataDao>}
-   */
-  public async getChartData(
-    sql: string
-  ): Promise<GetAnswerDao.ChartDataDao> {
-    return await this.exe<GetAnswerDao.ChartDataDao>(sql)
   }
 }

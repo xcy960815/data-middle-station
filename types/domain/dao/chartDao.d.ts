@@ -7,7 +7,7 @@ declare namespace ChartDao {
   }>
 
   type ChartOptionDao = {
-    id: number
+    id?: number
     chartName: string
     chartType: string
     viewCount: number
@@ -16,6 +16,6 @@ declare namespace ChartDao {
     createdBy: string
     updatedBy: string
     chartConfigId: number
-    chartConfig?: ChartConfigDao.ChartConfigOptionDao
+    chartConfig?: ChartConfigDao.ChartConfig
   }
 }

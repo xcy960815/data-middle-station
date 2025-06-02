@@ -268,27 +268,24 @@ const handleSaveChart = async () => {
   const chartName = chartStore.getChartName
   const chartType = chartStore.getChartType
   const dataSource = columnStore.getDataSource
-  const result = await $fetch(
-    '/api/analyse/saveChartById',
-    {
-      method: 'POST',
-      body: {
-        id,
-        chartName,
-        chartType,
-        chartConfigId,
-        chartConfig: {
-          dataSource,
-          column,
-          dimension,
-          group,
-          order,
-          filter
-          // commonChartConfig
-        }
+  const result = await $fetch('/api/saveChartById', {
+    method: 'POST',
+    body: {
+      id,
+      chartName,
+      chartType,
+      chartConfigId,
+      chartConfig: {
+        dataSource,
+        column,
+        dimension,
+        group,
+        order,
+        filter
+        // commonChartConfig
       }
     }
-  )
+  })
   console.log('result', result)
   if (result.code === 200) {
     ElMessage.success('保存成功')

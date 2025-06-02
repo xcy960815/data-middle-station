@@ -1,9 +1,5 @@
 import chalk from 'chalk'
-// import mysql from 'mysql2/promise';
-import {
-  setProcessEnvProperties,
-  getProcessEnvProperties
-} from '~/utils/utils.server'
+import { Logger } from './logger'
 
 const logger = new Logger({
   fileName: 'database',
@@ -16,11 +12,6 @@ const logger = new Logger({
 async function getDatasourceList() {
   return new Promise<NodeJS.DataSourceConfig>((resolve) => {
     setTimeout(() => {
-      console.log(
-        'getProcessEnvProperties',
-        getProcessEnvProperties(undefined)
-      )
-
       // const password = getProcessEnvProperties('DB_PASSWORD') as mysql.PoolOptions['password'];
       // const host = getProcessEnvProperties('DB_HOST') as mysql.PoolOptions['host'];
       // const port = getProcessEnvProperties('DB_PORT') as mysql.PoolOptions['port'];

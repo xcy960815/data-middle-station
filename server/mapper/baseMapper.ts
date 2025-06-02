@@ -1,12 +1,11 @@
 import mysql from 'mysql2/promise'
-
-import { getProcessEnvProperties } from '~/utils/utils.server'
-
+// import { useLogger } from '@nuxt/kit';
 /* 初始化logger */
-const logger = new Logger({
-  fileName: 'database',
-  folderName: 'database'
-})
+// const logger = new Logger({
+//   fileName: 'database',
+//   folderName: 'database'
+// })
+// const logger = useLogger('database')
 /**
  * @desc ts 装饰器
  * @link  https://www.cnblogs.com/winfred/p/8216650.html
@@ -17,7 +16,7 @@ const logger = new Logger({
  * @returns  {ClassDecorator}
  */
 export function BindDataSource(
-  dataSourceName: keyof NodeJS.DataSourceConfig
+  dataSourceName: string
 ): ClassDecorator {
   return function (target) {
     target.prototype.dataSourceName = dataSourceName
@@ -190,9 +189,9 @@ export class BaseMapper {
       .query(sql, params)
       .then(([result]) => {
         const duration = Date.now() - startTime
-        logger.info(
-          `${sql} 请求参数 ${params ? params : '无'} 耗时 ${duration} ms`
-        )
+        // logger.info(
+        //   `${sql} 请求参数 ${params ? params : '无'} 耗时 ${duration} ms`
+        // )
         // 处理查询结果
         // const [rows, fields] = result
         // return {
@@ -203,9 +202,9 @@ export class BaseMapper {
         return result
       })
       .catch((error) => {
-        logger.error(
-          `${sql} 请求参数 ${params ? params : '无'} error ${error}`
-        )
+        // logger.error(
+        //   `${sql} 请求参数 ${params ? params : '无'} error ${error}`
+        // )
         throw error
       })
       .finally(() => {

@@ -1,6 +1,6 @@
-import { ChartsService } from '../../service/chartService'
-import { Response } from '../../utils/response'
-const chartsService = new ChartsService()
+import { ChartDataService } from '../service/chartDataService'
+import { CustomResponse } from '../../utils/customResponse'
+const chartDataService = new ChartDataService()
 
 /**
  * @desc 查询图表数据
@@ -9,20 +9,20 @@ const chartsService = new ChartsService()
  */
 export default defineEventHandler<
   Promise<
-    ResponseModule.Response<GetAnswerDao.ChartDataDao>
+    CustomResponseModule.Response<ChartDataDao.ChartData>
   >
 >(async (event) => {
   try {
     const getAnswerParamsDto =
       await readBody<GetAnswerDto.GetAnswerParamsDto>(event)
 
-    const data = await chartsService.getChartData(
+    const data = await chartDataService.getChartData(
       getAnswerParamsDto
     )
 
-    return Response.success(data)
+    return CustomResponse.success(data)
   } catch (error: any) {
     console.error(error)
-    return Response.error(error.message)
+    return CustomResponse.error(error.message)
   }
 })

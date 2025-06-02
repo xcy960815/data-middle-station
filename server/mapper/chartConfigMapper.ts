@@ -4,11 +4,11 @@ import {
   Mapping,
   BaseMapper
 } from './baseMapper'
-import { convertToSqlProperties } from '../utils/string-case-converter'
+import { convertToSqlProperties } from '../../utils/databaseHelpper.server'
 import { ResultSetHeader } from 'mysql2'
 
 export class ChartConfigMapping
-  implements ChartConfigDao.ChartConfigOptionDao
+  implements ChartConfigDao.ChartConfig
 {
   @Column('id')
   id: number = 0
@@ -49,11 +49,11 @@ export class ChartConfigMapper extends BaseMapper {
   /**
    * @desc 获取图表配置
    * @param id {number} 图表配置ID
-   * @returns {Promise<ChartConfigDao.ChartConfigOptionDao>} 图表配置
+   * @returns {Promise<ChartConfigDao.ChartConfig>} 图表配置
    */
   @Mapping(ChartConfigMapping)
   public async getChartConfigById<
-    T extends ChartConfigDao.ChartConfigOptionDao
+    T extends ChartConfigDao.ChartConfig
   >(id: number): Promise<T> {
     const sql = `select 
             id,
@@ -69,11 +69,11 @@ export class ChartConfigMapper extends BaseMapper {
   }
   /**
    * @desc 创建图表配置
-   * @param chartConfig {ChartConfigDao.ChartConfigOptionDao} 图表配置
+   * @param chartConfig {ChartConfigDao.ChartConfig} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
   public async createChartConfig(
-    chartConfig: ChartConfigDao.ChartConfigOptionDao
+    chartConfig: ChartConfigDao.ChartConfig
   ): Promise<number> {
     const { keys, values } =
       convertToSqlProperties(chartConfig)
@@ -107,11 +107,11 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 更新图表配置
-   * @param chartConfig {ChartConfigDao.ChartConfigOptionDao} 图表配置
+   * @param chartConfig {ChartConfigDao.ChartConfig} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
   public async updateChartConfig(
-    chartConfig: ChartConfigDao.ChartConfigOptionDao
+    chartConfig: ChartConfigDao.ChartConfig
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartConfig)

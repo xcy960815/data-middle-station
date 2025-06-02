@@ -5,12 +5,11 @@
  * @param {string} message 响应消息
  * @return {Response}
  */
-declare namespace ResponseModule {
+declare namespace CustomResponseModule {
   interface Response<D = any> {
-    code: 200 | 404 | 500;
-    data: D | null;
-    message: string;
-    success?: boolean;
+    code: 200 | 404 | 500
+    data: D | null
+    message: string
+    success?: boolean
   }
 }
-
