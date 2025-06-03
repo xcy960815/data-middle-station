@@ -154,7 +154,7 @@ export class ChartMapper extends BaseMapper {
    * @returns {Promise<ChartDao.ChartOption>}
    */
   @Mapping(ChartMapping)
-  public async getChartById<T extends ChartDao.ChartOption>(
+  public async getChart<T extends ChartDao.ChartOption>(
     id: number
   ): Promise<T> {
     // 更新访问次数 不知道为什么报错

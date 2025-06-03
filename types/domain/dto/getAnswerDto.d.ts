@@ -1,5 +1,5 @@
-declare namespace GetAnswerDto {
-  interface GetAnswerParamsDto {
+declare namespace ChartDataDto {
+  interface ChartData {
     dataSource: string
     filters: Array<FilterStore.FilterOption>
     orders: Array<OrderStore.OrderOption>

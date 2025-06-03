@@ -52,7 +52,7 @@ export class ChartConfigMapper extends BaseMapper {
    * @returns {Promise<ChartConfigDao.ChartConfig>} 图表配置
    */
   @Mapping(ChartConfigMapping)
-  public async getChartConfigById<
+  public async getChartConfig<
     T extends ChartConfigDao.ChartConfig
   >(id: number): Promise<T> {
     const sql = `select 
@@ -69,11 +69,11 @@ export class ChartConfigMapper extends BaseMapper {
   }
   /**
    * @desc 创建图表配置
-   * @param chartConfig {ChartConfigDao.ChartConfig} 图表配置
+   * @param chartConfig {ChartConfigDto.ChartConfig} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
   public async createChartConfig(
-    chartConfig: ChartConfigDao.ChartConfig
+    chartConfig: ChartConfigDto.ChartConfig
   ): Promise<number> {
     const { keys, values } =
       convertToSqlProperties(chartConfig)
@@ -107,11 +107,11 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 更新图表配置
-   * @param chartConfig {ChartConfigDao.ChartConfig} 图表配置
+   * @param chartConfig {ChartConfigDto.ChartConfig} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
   public async updateChart(
-    chartConfig: ChartConfigDao.ChartConfig
+    chartConfig: ChartConfigDto.ChartConfig
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartConfig)

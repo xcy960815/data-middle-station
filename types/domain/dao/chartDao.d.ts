@@ -9,8 +9,8 @@ declare namespace ChartDao {
   type ChartOption = {
     id: number
     chartName: string
-    chartType: string
     chartDesc: string
+    chartType: string
     viewCount: number
     createTime: string
     updateTime: string

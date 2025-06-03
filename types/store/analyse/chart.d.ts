@@ -17,6 +17,8 @@ declare namespace ChartStore {
   type ChartState = {
     // 图表名称
     chartName: string
+    // 图表描述
+    chartDesc: string
     // 更新时间
     chartUpdateTime: string
     // 更新耗时

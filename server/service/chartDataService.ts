@@ -118,12 +118,12 @@ export class ChartDataService {
 
   /**
    * @desc 获取答案
-   * @param requestParams {GetAnswerDto.GetAnswerParamsDto} 请求参数
+   * @param requestParams {ChartDataDto.ChartData} 请求参数
    * @returns {Promise<ChartDataDao.ChartData>} 答案
    */
 
   public async getChartData(
-    requestParams: GetAnswerDto.GetAnswerParamsDto
+    requestParams: ChartDataDto.ChartData
   ): Promise<ChartDataDao.ChartData> {
     const {
       filters,
