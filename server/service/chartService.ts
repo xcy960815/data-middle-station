@@ -1,6 +1,8 @@
 import { ChartMapper } from '../mapper/chartMapper'
+import { ChartConfigService } from './chartConfigService'
 import { ChartConfigMapper } from '../mapper/chartConfigMapper'
 import dayjs from 'dayjs'
+
 const logger = new Logger({
   fileName: 'chartService',
   folderName: 'chartService'
@@ -9,23 +11,24 @@ const logger = new Logger({
  * @desc 分析服务
  */
 export class ChartService {
-  private chartsMapper: ChartMapper
+  private chartMapper: ChartMapper
 
-  private chartConfigMapper: ChartConfigMapper
+  // private chartConfigMapper: ChartConfigMapper
+  private chartConfigService: ChartConfigService
 
   constructor() {
-    this.chartsMapper = new ChartMapper()
-    this.chartConfigMapper = new ChartConfigMapper()
+    this.chartMapper = new ChartMapper()
+    this.chartConfigService = new ChartConfigService()
   }
 
   /**
    * @desc 格式化图表
    * @param chart {ChartDao.ChartOption} 图表
-   * @returns {ChartsVo.ChartsOptionVo}
+   * @returns {ChartVo.ChartOption}
    */
   private formatChart(
     chart: ChartDao.ChartOption
-  ): ChartsVo.ChartsOptionVo {
+  ): ChartVo.ChartOption {
     const chartConfig = chart.chartConfig || {
       dataSource: null,
       column: [],
@@ -166,12 +169,12 @@ export class ChartService {
   /**
    * @desc 获取图表
    * @param id {number} 图表id
-   * @returns {Promise<ChartsVo.ChartsOption>}
+   * @returns {Promise<ChartVo.ChartsOption>}
    */
   public async getChart(
     id: number
-  ): Promise<ChartsVo.ChartsOptionVo> {
-    const chartOption = await this.chartsMapper.getChart(id)
+  ): Promise<ChartVo.ChartOption> {
+    const chartOption = await this.chartMapper.getChart(id)
     if (!chartOption) {
       throw new Error('图表不存在')
     } else if (chartOption.chartConfigId) {
@@ -180,7 +183,7 @@ export class ChartService {
         `获取图表配置: ${chartOption.chartConfigId}`
       )
       const chartConfig =
-        await this.chartConfigMapper.getChartConfig(
+        await this.chartConfigService.getChartConfig(
           chartOption.chartConfigId
         )
       return this.formatChart({
@@ -194,12 +197,10 @@ export class ChartService {
 
   /**
    * @desc 获取所有图表
-   * @returns {Promise<ChartsVo.ChartsOption[]>}
+   * @returns {Promise<ChartVo.ChartsOption[]>}
    */
-  public async getCharts(): Promise<
-    ChartsVo.ChartsOptionVo[]
-  > {
-    const chart = await this.chartsMapper.getCharts()
+  public async getCharts(): Promise<ChartVo.ChartOption[]> {
+    const chart = await this.chartMapper.getCharts()
     return chart.map(this.formatChart)
   }
 
@@ -218,7 +219,7 @@ export class ChartService {
     if (!chartConfigId) {
       // 如果图表配置不存在，则创建默认图表配置
       chartConfigId =
-        await this.chartConfigMapper.createChartConfig({
+        await this.chartConfigService.createChartConfig({
           dataSource: chartConfig?.dataSource,
           column: chartConfig?.column,
           dimension: chartConfig?.dimension,
@@ -228,7 +229,7 @@ export class ChartService {
         })
     } else {
       const updateChartResult =
-        await this.chartConfigMapper.updateChart({
+        await this.chartConfigService.updateChartConfig({
           id: chartConfigId,
           dataSource: chartConfig?.dataSource,
           column: chartConfig?.column,
@@ -240,7 +241,7 @@ export class ChartService {
     }
 
     const updateChartConfigResult =
-      await this.chartsMapper.updateChart({
+      await this.chartMapper.updateChart({
         id: chartOption.id,
         chartName: chartOption.chartName,
         chartType: chartOption.chartType,
@@ -273,7 +274,7 @@ export class ChartService {
     if (chartsOptionDto.chartConfig) {
       // 如果图表配置不存在，则创建默认图表配置
       chartConfigId =
-        await this.chartConfigMapper.createChartConfig({
+        await this.chartConfigService.createChartConfig({
           dataSource:
             chartsOptionDto.chartConfig?.dataSource,
           column: chartsOptionDto.chartConfig?.column,
@@ -295,7 +296,7 @@ export class ChartService {
       updatedBy: 'system'
     }
 
-    return this.chartsMapper.createChart(chartOption)
+    return this.chartMapper.createChart(chartOption)
   }
 
   /**
@@ -306,7 +307,7 @@ export class ChartService {
   public async updateChartName(
     chartOption: ChartDto.ChartOption
   ): Promise<boolean> {
-    return this.chartsMapper.updateChart(chartOption)
+    return this.chartMapper.updateChart(chartOption)
   }
 
   /**
@@ -317,6 +318,6 @@ export class ChartService {
   public async updateChartDesc(
     chartOption: ChartDto.ChartOption
   ): Promise<boolean> {
-    return this.chartsMapper.updateChart(chartOption)
+    return this.chartMapper.updateChart(chartOption)
   }
 }

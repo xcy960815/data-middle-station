@@ -5,7 +5,7 @@ const chartService = new ChartService()
 export default defineEventHandler<
   Promise<
     CustomResponseModule.Response<
-      Array<ChartsVo.ChartsOptionVo>
+      Array<ChartVo.ChartOption>
     >
   >
 >(async () => {

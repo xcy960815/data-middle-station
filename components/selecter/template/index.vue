@@ -51,7 +51,7 @@
 
 <script lang="ts" setup>
 import { ElTooltip, ElPopover } from 'element-plus'
-
+import { IconPark } from '@icon-park/vue-next/es/all'
 const props = defineProps({
   // 通用参数
   invalid: {

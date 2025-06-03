@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { clearAllHandler } from '../clearAll'
 import SelecterDimension from '@/components/selecter/dimension/index.vue'
-
+import { IconPark } from '@icon-park/vue-next/es/all'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 // 初始化数据

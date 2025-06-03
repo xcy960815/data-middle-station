@@ -126,7 +126,7 @@ export class DatabaseMapper extends BaseMapper {
    * @returns {Promise<Array<TableInfoDao.TableColumnOption>>}
    */
   @Mapping(TableColumnMapping)
-  public async queryTableColumns<
+  public async queryTableColumn<
     T extends DatabaseDao.TableColumnOption
   >(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 

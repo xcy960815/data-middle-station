@@ -82,5 +82,8 @@ declare namespace ChartConfigDao {
     filter: FilterOption[]
     group: GroupOption[]
     order: OrderOption[]
+    limit: number
+    createTime: string
+    updateTime: string
   }
 }

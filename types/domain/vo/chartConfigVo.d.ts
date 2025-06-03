@@ -76,4 +76,17 @@ declare namespace ChartConfigVo {
     orderType: OrderType
     aggregationType: OrderAggregationsType
   }
+
+  interface ChartConfig {
+    id: number
+    dataSource: string
+    column: ColumnOption[]
+    dimension: DimensionOption[]
+    filter: FilterOption[]
+    group: GroupOption[]
+    order: OrderOption[]
+    limit: number
+    createTime: string
+    updateTime: string
+  }
 }
