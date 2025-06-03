@@ -32,7 +32,6 @@ export const updateChartConfigHandler = () => {
         id,
         chartName,
         chartDesc,
-        chartType,
         chartConfigId,
         chartConfig: {
           dataSource,
@@ -41,7 +40,8 @@ export const updateChartConfigHandler = () => {
           group,
           order,
           filter,
-          limit: commonChartConfig.limit
+          limit: commonChartConfig.limit,
+          chartType
         }
       }
     })

@@ -9,7 +9,6 @@ declare namespace ChartVo {
   type ChartOption = {
     id: number
     chartName: string
-    chartType: string
     chartDesc: string
     viewCount: number
     createTime: string
@@ -18,12 +17,14 @@ declare namespace ChartVo {
     updatedBy: string
     chartConfigId: number | null
     chartConfig: {
+      chartType: string
       dataSource: string | null
       column: ChartConfigVo.ColumnOption[]
       dimension: ChartConfigVo.DimensionOption[]
       filter: ChartConfigVo.FilterOption[]
       group: ChartConfigVo.GroupOption[]
       order: ChartConfigVo.OrderOption[]
-    }
+      limit: number
+    } | null
   }
 }
