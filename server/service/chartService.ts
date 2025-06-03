@@ -1,6 +1,10 @@
 import { ChartMapper } from '../mapper/chartMapper'
 import { ChartConfigMapper } from '../mapper/chartConfigMapper'
 import dayjs from 'dayjs'
+const logger = new Logger({
+  fileName: 'chartService',
+  folderName: 'chartService'
+})
 /**
  * @desc 分析服务
  */
@@ -23,7 +27,7 @@ export class ChartService {
     chart: ChartDao.ChartOption
   ): ChartsVo.ChartsOptionVo {
     const chartConfig = chart.chartConfig || {
-      dataSource: '',
+      dataSource: null,
       column: [],
       dimension: [],
       filter: [],
@@ -33,7 +37,7 @@ export class ChartService {
 
     return {
       ...chart,
-      chartConfigId: chart.chartConfigId || 0,
+      chartConfigId: chart.chartConfigId || null,
       createTime: dayjs(chart.createTime).format(
         'YYYY-MM-DD HH:mm:ss'
       ),
@@ -41,7 +45,8 @@ export class ChartService {
         'YYYY-MM-DD HH:mm:ss'
       ),
       chartConfig: {
-        dataSource: chartConfig.dataSource || '',
+        dataSource: chartConfig.dataSource || null,
+
         column: Array.isArray(chartConfig.column)
           ? chartConfig.column.map((col) => ({
               columnName:
@@ -163,19 +168,28 @@ export class ChartService {
    * @param id {number} 图表id
    * @returns {Promise<ChartsVo.ChartsOption>}
    */
-  public async getChartById(
+  public async getChart(
     id: number
   ): Promise<ChartsVo.ChartsOptionVo> {
-    const chartOption =
-      await this.chartsMapper.getChartById(id)
-    const chartConfig =
-      await this.chartConfigMapper.getChartConfigById(
-        chartOption.chartConfigId || 0
+    const chartOption = await this.chartsMapper.getChart(id)
+    if (!chartOption) {
+      throw new Error('图表不存在')
+    } else if (chartOption.chartConfigId) {
+      // throw new Error('图表配置不存在')
+      logger.info(
+        `获取图表配置: ${chartOption.chartConfigId}`
       )
-    return this.formatChart({
-      ...chartOption,
-      chartConfig
-    })
+      const chartConfig =
+        await this.chartConfigMapper.getChartConfig(
+          chartOption.chartConfigId
+        )
+      return this.formatChart({
+        ...chartOption,
+        chartConfig
+      })
+    } else {
+      return this.formatChart(chartOption)
+    }
   }
 
   /**
@@ -203,44 +217,25 @@ export class ChartService {
 
     if (!chartConfigId) {
       // 如果图表配置不存在，则创建默认图表配置
-      const defaultChartConfig = {
-        dataSource: '',
-        column: [],
-        dimension: [],
-        filter: [],
-        group: [],
-        order: []
-      }
-      const config = chartConfig || defaultChartConfig
       chartConfigId =
         await this.chartConfigMapper.createChartConfig({
-          dataSource: config.dataSource,
-          column: config.column,
-          dimension: config.dimension,
-          filter: config.filter,
-          group: config.group,
-          order: config.order
+          dataSource: chartConfig?.dataSource,
+          column: chartConfig?.column,
+          dimension: chartConfig?.dimension,
+          filter: chartConfig?.filter,
+          group: chartConfig?.group,
+          order: chartConfig?.order
         })
     } else {
-      const defaultConfig = {
-        dataSource: '',
-        column: [],
-        dimension: [],
-        filter: [],
-        group: [],
-        order: []
-      }
-      const config = chartConfig || defaultConfig
-
       const updateChartResult =
         await this.chartConfigMapper.updateChart({
           id: chartConfigId,
-          dataSource: config.dataSource,
-          column: config.column,
-          dimension: config.dimension,
-          filter: config.filter,
-          group: config.group,
-          order: config.order
+          dataSource: chartConfig?.dataSource,
+          column: chartConfig?.column,
+          dimension: chartConfig?.dimension,
+          filter: chartConfig?.filter,
+          group: chartConfig?.group,
+          order: chartConfig?.order
         })
     }
 
@@ -258,6 +253,7 @@ export class ChartService {
         createdBy: 'system',
         updatedBy: 'system'
       })
+
     return updateChartConfigResult
   }
 
@@ -267,17 +263,31 @@ export class ChartService {
    * @returns {Promise<boolean>}
    */
   public async createChart(
-    chartsConfigDto: ChartDto.ChartOption
+    chartsOptionDto: ChartDto.ChartOption
   ): Promise<boolean> {
     const currentTime = dayjs().format(
       'YYYY-MM-DD HH:mm:ss'
     )
+    let chartConfigId =
+      chartsOptionDto.chartConfigId || null
+    if (chartsOptionDto.chartConfig) {
+      // 如果图表配置不存在，则创建默认图表配置
+      chartConfigId =
+        await this.chartConfigMapper.createChartConfig({
+          dataSource:
+            chartsOptionDto.chartConfig?.dataSource,
+          column: chartsOptionDto.chartConfig?.column,
+          dimension: chartsOptionDto.chartConfig?.dimension,
+          filter: chartsOptionDto.chartConfig?.filter,
+          group: chartsOptionDto.chartConfig?.group,
+          order: chartsOptionDto.chartConfig?.order
+        })
+    }
     const chartOption: ChartDto.ChartOption = {
-      chartName: chartsConfigDto.chartName,
-      chartType: chartsConfigDto.chartType,
-      chartConfigId: chartsConfigDto.chartConfigId || null,
-      chartDesc: chartsConfigDto.chartDesc,
-      chartConfig: chartsConfigDto.chartConfig || null,
+      chartName: chartsOptionDto.chartName,
+      chartType: chartsOptionDto.chartType,
+      chartConfigId: chartConfigId,
+      chartDesc: chartsOptionDto.chartDesc,
       viewCount: 0,
       createTime: currentTime,
       updateTime: currentTime,

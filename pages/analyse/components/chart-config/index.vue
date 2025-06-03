@@ -120,7 +120,7 @@ const chartConfigComponent = computed(() => {
     case 'pie':
       return PieChartConfig
     default:
-      return LineChartConfig
+      return TableChartConfig
   }
 })
 /**

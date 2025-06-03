@@ -2,7 +2,7 @@
   <NuxtLayout :name="layoutName">
     <template #header>
       <custom-header>
-        <template #chartName>
+        <template #chart-name>
           <ChartName></ChartName>
         </template>
       </custom-header>
@@ -133,11 +133,11 @@ watch(
 /**
  * @desc 获取图表
  */
-const getChartById = async () => {
+const getChart = async () => {
   const router = useRouter()
   const id = router.currentRoute.value.query.id
   if (!id) return
-  const result = await $fetch('/api/getChartById', {
+  const result = await $fetch('/api/getChart', {
     method: 'post',
     body: {
       id
@@ -147,6 +147,8 @@ const getChartById = async () => {
     const data = result.data!
     const chartName = data.chartName
     chartStore.setChartName(chartName)
+    const chartDesc = data.chartDesc
+    chartStore.setChartDesc(chartDesc)
     const id = data.id
     chartStore.setChartId(id)
     const chartConfigId = data.chartConfigId
@@ -165,7 +167,7 @@ const getChartById = async () => {
     filterStore.setFilters(filter || [])
     groupStore.setGroups(group || [])
     orderStore.setOrders(order || [])
-    columnStore.setDataSource(dataSource)
+    columnStore.setDataSource(dataSource || '')
     dimensionStore.setDimensions(dimension || [])
     filterStore.setFilters(filter || [])
     groupStore.setGroups(group || [])
@@ -174,7 +176,7 @@ const getChartById = async () => {
 }
 
 onMounted(() => {
-  getChartById()
+  getChart()
 })
 </script>
 

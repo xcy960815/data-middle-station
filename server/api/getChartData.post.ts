@@ -13,7 +13,7 @@ export default defineEventHandler<
 >(async (event) => {
   try {
     const getAnswerParamsDto =
-      await readBody<GetAnswerDto.GetAnswerParamsDto>(event)
+      await readBody<ChartDataDto.ChartData>(event)
 
     const data = await chartDataService.getChartData(
       getAnswerParamsDto

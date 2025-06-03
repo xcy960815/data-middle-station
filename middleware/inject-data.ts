@@ -11,7 +11,7 @@ export default defineNuxtRouteMiddleware(
     // TODO 可以在中间键中提前获取chart数据 然后注入到页面的props中
     // const id = to.query.id;
     // if (!id) return
-    // const result = await $fetch('/api/getChartById', {
+    // const result = await $fetch('/api/getChart', {
     //   method: 'post',
     //   body: {
     //     id
