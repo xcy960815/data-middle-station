@@ -7,5 +7,5 @@ import { IconPark } from '@icon-park/vue-next/es/all'
  * @param {NuxtApp} nuxtApp
  */
 export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.vueApp.component('icon-park', IconPark)
+  // nuxtApp.vueApp.component('icon-park', IconPark)
 })
