@@ -11,7 +11,7 @@
  Target Server Version : 80402 (8.4.2)
  File Encoding         : 65001
 
- Date: 30/05/2025 22:59:13
+ Date: 03/06/2025 17:32:43
 */
 
 SET NAMES utf8mb4;
@@ -31,6 +31,7 @@ CREATE TABLE `chart` (
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `updated_by` varchar(100) DEFAULT NULL COMMENT '更新人',
   `chart_config_id` bigint DEFAULT NULL COMMENT '图表配置ID',
+  `chart_desc` varchar(255) DEFAULT NULL COMMENT '图表描述',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='图表信息表';
 
@@ -38,11 +39,11 @@ CREATE TABLE `chart` (
 -- Records of chart
 -- ----------------------------
 BEGIN;
-INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`) VALUES (1, '销售数据看板', 'table', 255, '2025-05-30 02:19:10', 'Alice', '2025-05-30 14:58:31', 'system', 5);
-INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`) VALUES (2, '运营分析图表', 'bar', 230, '2025-05-30 02:19:10', 'Bob', '2025-05-30 02:19:37', 'Bob', NULL);
-INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`) VALUES (3, '用户行为统计', 'pie', 95, '2025-05-30 02:19:10', 'Charlie', '2025-05-30 02:19:40', 'Charlie', NULL);
-INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`) VALUES (4, '库存监控图表', 'table', 45, '2025-05-30 02:19:10', 'David', '2025-05-30 02:19:43', 'David', NULL);
-INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`) VALUES (5, '收入趋势图表', 'line', 320, '2025-05-30 02:19:10', 'Eve', '2025-05-30 02:19:46', 'Eve', NULL);
+INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (1, '销售数据看板', 'table', 404, '2025-05-30 02:19:10', 'Alice', '2025-06-03 14:59:35', 'system', 5, '销售数据看板的描述');
+INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (2, '运营分析图表', 'bar', 230, '2025-05-30 02:19:10', 'Bob', '2025-05-30 02:19:37', 'Bob', NULL, NULL);
+INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (3, '用户行为统计', 'pie', 95, '2025-05-30 02:19:10', 'Charlie', '2025-05-30 02:19:40', 'Charlie', NULL, NULL);
+INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (4, '库存监控图表', 'table', 45, '2025-05-30 02:19:10', 'David', '2025-05-30 02:19:43', 'David', NULL, NULL);
+INSERT INTO `chart` (`id`, `chart_name`, `chart_type`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (5, '收入趋势图表', 'line', 320, '2025-05-30 02:19:10', 'Eve', '2025-05-30 02:19:46', 'Eve', NULL, NULL);
 COMMIT;
 
 -- ----------------------------
@@ -59,6 +60,7 @@ CREATE TABLE `chart_config` (
   `order` json DEFAULT NULL COMMENT '排序配置(JSON格式)',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `limit` bigint DEFAULT NULL COMMENT 'sql limit条数',
   PRIMARY KEY (`id`),
   KEY `idx_data_source` (`data_source`),
   KEY `idx_create_time` (`create_time`)
@@ -68,7 +70,7 @@ CREATE TABLE `chart_config` (
 -- Records of chart_config
 -- ----------------------------
 BEGIN;
-INSERT INTO `chart_config` (`id`, `data_source`, `column`, `dimension`, `filter`, `group`, `order`, `create_time`, `update_time`) VALUES (5, 'operationAnalysis', '[{\"alias\": \"id\", \"columnName\": \"id\", \"columnType\": \"number\", \"displayName\": \"id\", \"columnComment\": \"主键ID\"}, {\"alias\": \"date\", \"columnName\": \"date\", \"columnType\": \"date\", \"displayName\": \"date\", \"columnComment\": \"统计日期\"}, {\"alias\": \"newUsers\", \"columnName\": \"newUsers\", \"columnType\": \"number\", \"displayName\": \"newUsers\", \"columnComment\": \"新增用户数\"}, {\"alias\": \"activeUsers\", \"columnName\": \"activeUsers\", \"columnType\": \"number\", \"displayName\": \"activeUsers\", \"columnComment\": \"活跃用户数\"}, {\"alias\": \"totalUsers\", \"columnName\": \"totalUsers\", \"columnType\": \"number\", \"displayName\": \"totalUsers\", \"columnComment\": \"累计用户数\"}, {\"alias\": \"retentionRate\", \"columnName\": \"retentionRate\", \"columnType\": \"decimal(5,2)\", \"displayName\": \"retentionRate\", \"columnComment\": \"次日留存率(%)\"}, {\"alias\": \"conversionRate\", \"columnName\": \"conversionRate\", \"columnType\": \"decimal(5,2)\", \"displayName\": \"conversionRate\", \"columnComment\": \"转化率(%)\"}, {\"alias\": \"avgOnlineTime\", \"columnName\": \"avgOnlineTime\", \"columnType\": \"number\", \"displayName\": \"avgOnlineTime\", \"columnComment\": \"平均在线时长(分钟)\"}, {\"alias\": \"pv\", \"__invalid\": true, \"columnName\": \"pv\", \"columnType\": \"number\", \"displayName\": \"pv\", \"columnComment\": \"页面访问量\"}, {\"alias\": \"uv\", \"columnName\": \"uv\", \"columnType\": \"number\", \"displayName\": \"uv\", \"columnComment\": \"独立访客数\"}, {\"alias\": \"bounceRate\", \"columnName\": \"bounceRate\", \"columnType\": \"decimal(5,2)\", \"displayName\": \"bounceRate\", \"columnComment\": \"跳出率(%)\"}, {\"alias\": \"revenue\", \"columnName\": \"revenue\", \"columnType\": \"decimal(10,2)\", \"displayName\": \"revenue\", \"columnComment\": \"收入(元)\"}, {\"alias\": \"cost\", \"columnName\": \"cost\", \"columnType\": \"decimal(10,2)\", \"displayName\": \"cost\", \"columnComment\": \"成本(元)\"}, {\"alias\": \"roi\", \"columnName\": \"roi\", \"columnType\": \"decimal(5,2)\", \"displayName\": \"roi\", \"columnComment\": \"投资回报率(%)\"}, {\"alias\": \"createTime\", \"columnName\": \"createTime\", \"columnType\": \"date\", \"displayName\": \"createTime\", \"columnComment\": \"创建时间\"}, {\"alias\": \"updateTime\", \"columnName\": \"updateTime\", \"columnType\": \"date\", \"displayName\": \"updateTime\", \"columnComment\": \"更新时间\"}]', '[{\"alias\": \"pv\", \"__invalid\": true, \"columnName\": \"pv\", \"columnType\": \"number\", \"displayName\": \"pv\", \"columnComment\": \"页面访问量\"}]', '[]', '[{\"alias\": \"date\", \"columnName\": \"date\", \"columnType\": \"date\", \"displayName\": \"date\", \"columnComment\": \"统计日期\"}]', '[]', '2025-05-30 14:29:11', '2025-05-30 14:57:51');
+INSERT INTO `chart_config` (`id`, `data_source`, `column`, `dimension`, `filter`, `group`, `order`, `create_time`, `update_time`, `limit`) VALUES (5, 'operationAnalysis', '[{\"alias\": \"主键ID\", \"columnName\": \"id\", \"columnType\": \"number\", \"displayName\": \"主键ID\", \"columnComment\": \"主键ID\"}, {\"alias\": \"统计日期\", \"columnName\": \"date\", \"columnType\": \"date\", \"displayName\": \"统计日期\", \"columnComment\": \"统计日期\"}, {\"alias\": \"地区\", \"columnName\": \"region\", \"columnType\": \"string\", \"displayName\": \"地区\", \"columnComment\": \"地区\"}, {\"alias\": \"平台\", \"columnName\": \"platform\", \"columnType\": \"string\", \"displayName\": \"平台\", \"columnComment\": \"平台\"}, {\"alias\": \"产品类别\", \"columnName\": \"product_category\", \"columnType\": \"string\", \"displayName\": \"产品类别\", \"columnComment\": \"产品类别\"}, {\"alias\": \"新增用户数\", \"columnName\": \"new_users\", \"columnType\": \"number\", \"displayName\": \"新增用户数\", \"columnComment\": \"新增用户数\"}, {\"alias\": \"活跃用户数\", \"columnName\": \"active_users\", \"columnType\": \"number\", \"displayName\": \"活跃用户数\", \"columnComment\": \"活跃用户数\"}, {\"alias\": \"累计用户数\", \"columnName\": \"total_users\", \"columnType\": \"number\", \"displayName\": \"累计用户数\", \"columnComment\": \"累计用户数\"}, {\"alias\": \"次日留存率(%)\", \"columnName\": \"retention_rate\", \"columnType\": \"number\", \"displayName\": \"次日留存率(%)\", \"columnComment\": \"次日留存率(%)\"}, {\"alias\": \"转化率(%)\", \"columnName\": \"conversion_rate\", \"columnType\": \"number\", \"displayName\": \"转化率(%)\", \"columnComment\": \"转化率(%)\"}, {\"alias\": \"平均在线时长(分钟)\", \"columnName\": \"avg_online_time\", \"columnType\": \"number\", \"displayName\": \"平均在线时长(分钟)\", \"columnComment\": \"平均在线时长(分钟)\"}, {\"alias\": \"页面访问量\", \"columnName\": \"pv\", \"columnType\": \"number\", \"displayName\": \"页面访问量\", \"columnComment\": \"页面访问量\"}, {\"alias\": \"独立访客数\", \"columnName\": \"uv\", \"columnType\": \"number\", \"displayName\": \"独立访客数\", \"columnComment\": \"独立访客数\"}, {\"alias\": \"跳出率(%)\", \"columnName\": \"bounce_rate\", \"columnType\": \"number\", \"displayName\": \"跳出率(%)\", \"columnComment\": \"跳出率(%)\"}, {\"alias\": \"收入(元)\", \"columnName\": \"revenue\", \"columnType\": \"number\", \"displayName\": \"收入(元)\", \"columnComment\": \"收入(元)\"}, {\"alias\": \"成本(元)\", \"columnName\": \"cost\", \"columnType\": \"number\", \"displayName\": \"成本(元)\", \"columnComment\": \"成本(元)\"}, {\"alias\": \"投资回报率(%)\", \"columnName\": \"roi\", \"columnType\": \"number\", \"displayName\": \"投资回报率(%)\", \"columnComment\": \"投资回报率(%)\"}, {\"alias\": \"创建时间\", \"columnName\": \"create_time\", \"columnType\": \"date\", \"displayName\": \"创建时间\", \"columnComment\": \"创建时间\"}, {\"alias\": \"更新时间\", \"columnName\": \"update_time\", \"columnType\": \"date\", \"displayName\": \"更新时间\", \"columnComment\": \"更新时间\"}]', '[{\"alias\": \"product_category\", \"__invalid\": false, \"columnName\": \"product_category\", \"columnType\": \"string\", \"displayName\": \"product_category\", \"columnComment\": \"产品类别\"}]', '[]', '[{\"alias\": \"region\", \"columnName\": \"region\", \"columnType\": \"string\", \"displayName\": \"region\", \"columnComment\": \"地区\"}]', '[]', '2025-05-30 14:29:11', '2025-06-03 06:54:41', 1000);
 COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
