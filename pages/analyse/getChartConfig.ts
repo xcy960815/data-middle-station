@@ -29,24 +29,25 @@ export const getChartConfigHandler = () => {
       const chartConfigId = data.chartConfigId
       chartStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
-      const {
-        column,
-        dimension,
-        filter,
-        group,
-        order,
-        dataSource
-      } = chartConfig
-      columnStore.setColumns(column || [])
-      dimensionStore.setDimensions(dimension || [])
-      filterStore.setFilters(filter || [])
-      groupStore.setGroups(group || [])
-      orderStore.setOrders(order || [])
-      columnStore.setDataSource(dataSource || '')
-      dimensionStore.setDimensions(dimension || [])
-      filterStore.setFilters(filter || [])
-      groupStore.setGroups(group || [])
-      orderStore.setOrders(order || [])
+      chartStore.setChartType(
+        chartConfig?.chartType as ChartStore.ChartType
+      )
+      columnStore.setColumns(chartConfig?.column || [])
+      dimensionStore.setDimensions(
+        chartConfig?.dimension || []
+      )
+      filterStore.setFilters(chartConfig?.filter || [])
+      groupStore.setGroups(chartConfig?.group || [])
+      orderStore.setOrders(chartConfig?.order || [])
+      columnStore.setDataSource(
+        chartConfig?.dataSource || ''
+      )
+      dimensionStore.setDimensions(
+        chartConfig?.dimension || []
+      )
+      filterStore.setFilters(chartConfig?.filter || [])
+      groupStore.setGroups(chartConfig?.group || [])
+      orderStore.setOrders(chartConfig?.order || [])
     }
   }
 

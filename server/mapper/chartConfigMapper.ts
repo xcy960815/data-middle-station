@@ -16,6 +16,9 @@ export class ChartConfigMapping
   @Column('data_source')
   dataSource: string = ''
 
+  @Column('chart_type')
+  chartType: string = ''
+
   @Column('column')
   column: ChartConfigDao.ColumnOption[] = []
 
@@ -49,18 +52,50 @@ export class ChartConfigMapping
 
 const CHART_CONFIG_BASE_FIELDS = [
   'id',
+  'chart_type',
   'data_source',
   'column',
   'dimension',
   'filter',
   'group',
-  'order'
+  'order',
+  'limit',
+  'create_time',
+  'update_time'
 ]
 const CHART_CONFIG_TABLE_NAME = 'chart_config'
 const DATA_SOURCE_NAME = 'data_middle_station'
+const kewwordColumns = ['group', 'order', 'column', 'limit']
+// 工具函数：格式化 SQL 字段名
+function formatSqlKey(key: string) {
+  if (kewwordColumns.includes(key)) {
+    return `\`${key}\``
+  }
+  return key
+}
+/**
+ * @desc 批量格式化 SQL 字段名
+ * @param keys {string[]} 字段名数组
+ * @returns {string} 格式化后的字段名
+ */
+function batchFormatSqlKey(keys: string[]) {
+  return keys.map(formatSqlKey).join(',')
+}
+/**
+ * @desc 批量格式化 SQL set 语句
+ * @param keys {string[]} 字段名数组
+ * @returns {string} 形如 key1 = ?, key2 = ?
+ */
+function batchFormatSqlSet(keys: string[]) {
+  return keys
+    .map(formatSqlKey)
+    .map((key) => `${key} = ?`)
+    .join(', ')
+}
 
 @BindDataSource(DATA_SOURCE_NAME)
 export class ChartConfigMapper extends BaseMapper {
+  // private
   /**
    * @desc 获取图表配置
    * @param id {number} 图表配置ID
@@ -71,16 +106,7 @@ export class ChartConfigMapper extends BaseMapper {
     T extends ChartConfigDao.ChartConfig
   >(id: number): Promise<T> {
     const sql = `select 
-            id,
-            data_source,
-            \`column\`,
-            dimension,
-            filter,
-            \`group\`,
-            \`order\`,
-            \`limit\`,
-            create_time,
-            update_time
+           ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
             from ${CHART_CONFIG_TABLE_NAME} where id = ?`
     const result = await this.exe<Array<T>>(sql, [id])
     return result?.[0]
@@ -102,20 +128,7 @@ export class ChartConfigMapper extends BaseMapper {
     const validValues = validKeys.map(
       (key) => values[keys.indexOf(key)]
     )
-    const sql = `insert into ${CHART_CONFIG_TABLE_NAME} (${validKeys
-      .map((key) => {
-        if (
-          key === 'group' ||
-          key === 'order' ||
-          key === 'column'
-        ) {
-          return `\`${key}\``
-        }
-        return key
-      })
-      .join(
-        ','
-      )}) values (${validKeys.map(() => '?').join(',')})`
+    const sql = `insert into ${CHART_CONFIG_TABLE_NAME} (${batchFormatSqlKey(validKeys)}) values (${validKeys.map(() => '?').join(',')})`
     const result = await this.exe<ResultSetHeader>(
       sql,
       validValues
@@ -133,18 +146,7 @@ export class ChartConfigMapper extends BaseMapper {
   ): Promise<boolean> {
     const { keys, values } =
       convertToSqlProperties(chartConfig)
-    const sql = `update ${CHART_CONFIG_TABLE_NAME} set ${keys
-      .map((field) => {
-        if (
-          field === 'group' ||
-          field === 'order' ||
-          field === 'column'
-        ) {
-          return `\`${field}\` = ?`
-        }
-        return `${field} = ?`
-      })
-      .join(',')} where id = ?`
+    const sql = `update ${CHART_CONFIG_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ?`
     return (
       (await this.exe<number>(sql, [
         ...values,

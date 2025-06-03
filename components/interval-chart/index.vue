@@ -7,14 +7,14 @@
 import { Chart } from '@antv/g2'
 
 const props = defineProps({
-  title: {
-    type: String,
-    default: () => '我是柱状图标题'
-  },
-  subtitle: {
-    type: String,
-    default: () => '我是柱状图副标题'
-  },
+  // title: {
+  //   type: String,
+  //   default: () => '我是柱状图标题'
+  // },
+  // subtitle: {
+  //   type: String,
+  //   default: () => '我是柱状图副标题'
+  // },
   data: {
     type: Array as PropType<Array<Chart.ChartData>>,
     default: () => []
@@ -61,26 +61,26 @@ const initChart = () => {
     autoFit: true
   })
 
-  chart.title({
-    title: props.title,
-    subtitle: props.subtitle
-  })
+  // chart.title({
+  //   title: props.title,
+  //   subtitle: props.subtitle
+  // })
 
-  const fields = props.yAxisFields.map(
-    (item) => item.alias || item.columnName
+  const yAxisFieldNames = props.yAxisFields.map(
+    (item) =>
+      item.alias || item.displayName || item.columnName
   )
-
-
+  const chartData = props.data
 
   const intervalChart = chart
     .interval()
     .data({
       type: 'inline',
-      value: props.data,
+      value: chartData,
       transform: [
         {
           type: 'fold',
-          fields: fields,
+          fields: yAxisFieldNames,
           key: 'type',
           value: 'value'
         }
@@ -91,9 +91,13 @@ const initChart = () => {
       by: 'y',
       reverse: true
     })
+
     .encode(
       'x',
-      props.xAxisFields.map((item) => item.alias || item.columnName)
+      props.xAxisFields.map(
+        (item) =>
+          item.alias || item.displayName || item.columnName
+      )
     )
     .encode('y', 'value')
     .encode('color', 'type')

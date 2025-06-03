@@ -1,17 +1,17 @@
 /*
- Navicat Premium Dump SQL
+ Navicat Premium Data Transfer
 
- Source Server         : study-java-container-docker
+ Source Server         : study-java-docker-container
  Source Server Type    : MySQL
  Source Server Version : 80402 (8.4.2)
- Source Host           : localhost:3308
+ Source Host           : 192.168.100.1:3308
  Source Schema         : kanban_data
 
  Target Server Type    : MySQL
  Target Server Version : 80402 (8.4.2)
  File Encoding         : 65001
 
- Date: 03/06/2025 17:32:59
+ Date: 03/06/2025 22:31:53
 */
 
 SET NAMES utf8mb4;

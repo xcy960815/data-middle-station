@@ -6,14 +6,14 @@
 import { Chart } from '@antv/g2'
 
 const props = defineProps({
-  title: {
-    type: String,
-    default: () => '我是折线图标题'
-  },
-  subtitle: {
-    type: String,
-    default: () => '我是折线图副标题'
-  },
+  // title: {
+  //   type: String,
+  //   default: () => '我是折线图标题'
+  // },
+  // subtitle: {
+  //   type: String,
+  //   default: () => '我是折线图副标题'
+  // },
   data: {
     type: Array as PropType<Array<Chart.ChartData>>,
     default: () => []
@@ -54,17 +54,18 @@ watch(
 const initChart = () => {
   emits('renderChartStart')
   const fields = props.yAxisFields.map(
-    (item) => item.alias || item.columnName
+    (item) =>
+      item.alias || item.displayName || item.columnName
   )
   const chart = new Chart({
     container: 'container-line',
     theme: 'classic',
     autoFit: true
   })
-  chart.title({
-    title: props.title,
-    subtitle: props.subtitle
-  })
+  // chart.title({
+  //   title: props.title,
+  //   subtitle: props.subtitle
+  // })
   const lineChart = chart
     .line()
     .data({

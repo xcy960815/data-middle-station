@@ -12,7 +12,6 @@ import { convertToSqlProperties } from '../utils/databaseHelpper'
 export const CHART_BASE_FIELDS = [
   'id',
   'chart_name',
-  'chart_type',
   'chart_desc',
   'create_time',
   'update_time',
@@ -30,10 +29,6 @@ export class ChartMapping implements ChartDao.ChartOption {
   // 图表名称
   @Column('chart_name')
   chartName: string = ''
-
-  // 图表类型
-  @Column('chart_type')
-  chartType: string = ''
 
   // 图表描述
   @Column('chart_desc')

@@ -10,13 +10,11 @@ declare namespace ChartDao {
     id: number
     chartName: string
     chartDesc: string
-    chartType: string
     viewCount: number
     createTime: string
     updateTime: string
     createdBy: string
     updatedBy: string
     chartConfigId: number | null
-    chartConfig?: ChartConfigDao.ChartConfig | null
   }
 }
