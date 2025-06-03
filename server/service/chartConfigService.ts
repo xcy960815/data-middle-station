@@ -35,8 +35,8 @@ export class ChartConfigService {
             ? item.columnType('')
             : item.columnType,
         columnComment: item.columnComment,
-        alias: item.columnComment,
-        displayName: item.columnComment
+        alias: item.alias || item.columnComment,
+        displayName: item.displayName || item.columnComment
       })),
       dimension: chartConfigOption.dimension.map(
         (item) => ({
@@ -50,8 +50,9 @@ export class ChartConfigService {
               ? item.columnType('')
               : item.columnType,
           columnComment: item.columnComment,
-          alias: item.columnComment,
-          displayName: item.columnComment
+          alias: item.alias || item.columnComment,
+          displayName:
+            item.displayName || item.columnComment
         })
       ),
       filter: chartConfigOption.filter.map((item) => ({
@@ -79,8 +80,8 @@ export class ChartConfigService {
             ? item.columnType('')
             : item.columnType,
         columnComment: item.columnComment,
-        alias: item.columnComment,
-        displayName: item.columnComment
+        alias: item.alias || item.columnComment,
+        displayName: item.displayName || item.columnComment
       })),
       order: chartConfigOption.order.map((item) => ({
         ...item,
@@ -120,15 +121,20 @@ export class ChartConfigService {
   public async updateChartConfig(
     chartConfigDto: ChartConfigDto.ChartConfig
   ): Promise<boolean> {
+    const currentTime = dayjs().format(
+      'YYYY-MM-DD HH:mm:ss'
+    )
     const updateChartResult =
       await this.chartConfigMapper.updateChart({
         id: chartConfigDto.id,
+        chartType: chartConfigDto.chartType,
         dataSource: chartConfigDto?.dataSource,
         column: chartConfigDto?.column,
         dimension: chartConfigDto?.dimension,
         filter: chartConfigDto?.filter,
         group: chartConfigDto?.group,
-        order: chartConfigDto?.order
+        order: chartConfigDto?.order,
+        updateTime: currentTime
       })
     return updateChartResult
   }
@@ -146,6 +152,7 @@ export class ChartConfigService {
     )
     const chartConfigId =
       await this.chartConfigMapper.createChartConfig({
+        chartType: chartConfigDto.chartType,
         dataSource: chartConfigDto.dataSource,
         column: chartConfigDto.column,
         dimension: chartConfigDto.dimension,

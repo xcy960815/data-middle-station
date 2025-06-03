@@ -28,5 +28,7 @@ declare namespace DatabaseDao {
     columnName: string | ((value: string) => string)
     columnType: string | ((value: string) => string)
     columnComment: string
+    alias?: string
+    displayName?: string
   }
 }

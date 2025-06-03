@@ -47,7 +47,7 @@ export const useChartConfigStore = defineStore<
         chartName: '',
         chartUpdateTime: '',
         chartUpdateTakesTime: '',
-        displayMode: 'normal',
+        displayMode: 'levelDisplay',
         showPercentage: false,
         showLabel: false,
         horizontalDisplay: false,

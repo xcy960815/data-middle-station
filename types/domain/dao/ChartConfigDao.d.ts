@@ -4,7 +4,7 @@
 declare namespace ChartConfigDao {
   type ColumnOption = DatabaseDao.TableColumnOption
 
-  type DimensionOption = DatabaseDao.TableColumnOption & {
+  type DimensionOption = ColumnOption & {
     __invalid?: boolean
   }
 
@@ -77,6 +77,7 @@ declare namespace ChartConfigDao {
   interface ChartConfig {
     id: number
     dataSource: string
+    chartType: string
     column: ColumnOption[]
     dimension: DimensionOption[]
     filter: FilterOption[]

@@ -80,6 +80,7 @@ declare namespace ChartConfigVo {
   interface ChartConfig {
     id: number
     dataSource: string
+    chartType: string
     column: ColumnOption[]
     dimension: DimensionOption[]
     filter: FilterOption[]
