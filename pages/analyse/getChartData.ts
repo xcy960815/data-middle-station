@@ -88,7 +88,6 @@ export const getChartDataHandler = () => {
    * @returns {Promise<void>}
    */
   const queryChartData = async () => {
-    console.log('queryChartData')
     const chartType = chartStore.getChartType
     const errorMessage = chartSuggestStrategies(chartType)
     chartStore.setChartErrorMessage(errorMessage)

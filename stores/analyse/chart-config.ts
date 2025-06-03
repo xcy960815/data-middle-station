@@ -56,7 +56,7 @@ export const useChartConfigStore = defineStore<
     },
     commonChartConfig: {
       limit: 1000,
-      description: '',
+      chartDesc: '',
       suggest: false,
       mixStrategy: '',
       shareStrategy: ''

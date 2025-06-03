@@ -40,8 +40,8 @@ export const updateChartConfigHandler = () => {
           dimension,
           group,
           order,
-          filter
-          // commonChartConfig
+          filter,
+          limit: commonChartConfig.limit
         }
       }
     })
