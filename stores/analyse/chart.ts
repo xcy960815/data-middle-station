@@ -14,6 +14,7 @@ export const useChartStore = defineStore<
 >('chart', {
   state: () => ({
     chartName: '',
+    chartDesc: '',
     chartUpdateTime: '',
     chartUpdateTakesTime: '',
     chartErrorMessage: '',
@@ -29,6 +30,12 @@ export const useChartStore = defineStore<
      */
     getChartName(state) {
       return state.chartName
+    },
+    /**
+     * @desc 获取图表描述
+     */
+    getChartDesc(state) {
+      return state.chartDesc
     },
     /**
      * @desc 获取图表更新时间
@@ -87,15 +94,23 @@ export const useChartStore = defineStore<
      * @param chartName {string}
      * @returns {void}
      */
-    setChartName(chartName: string) {
+    setChartName(chartName) {
       this.chartName = chartName
+    },
+    /**
+     * @desc 设置图表描述
+     * @param chartDesc {string}
+     * @returns {void}
+     */
+    setChartDesc(chartDesc) {
+      this.chartDesc = chartDesc
     },
     /**
      * @desc 设置图表更新时间
      * @param chartUpdateTime {string}
      * @returns {void}
      */
-    setChartUpdateTime(chartUpdateTime: string) {
+    setChartUpdateTime(chartUpdateTime) {
       this.chartUpdateTime = chartUpdateTime
     },
     /**
@@ -103,7 +118,7 @@ export const useChartStore = defineStore<
      * @param chartUpdateTakesTime {string}
      * @returns {void}
      */
-    setChartUpdateTakesTime(chartUpdateTakesTime: string) {
+    setChartUpdateTakesTime(chartUpdateTakesTime) {
       this.chartUpdateTakesTime = chartUpdateTakesTime
     },
     /**
@@ -119,7 +134,7 @@ export const useChartStore = defineStore<
      * @param chartLoading {boolean}
      * @returns {void}
      */
-    setChartLoading(chartLoading: boolean) {
+    setChartLoading(chartLoading) {
       this.chartLoading = chartLoading
     },
     /**

@@ -4,18 +4,12 @@
   >
     <div
       class="header-left flex items-center cursor-pointer"
-      @click="handleClickTitle"
+      @click="handleClickAppName"
     >
       <h4 class="app-name">{{ appName }}</h4>
     </div>
     <div class="flex-1 flex items-center justify-center">
-      <h4
-        class="chart-name cursor-pointer"
-        v-if="props.chartName"
-        @click="handleClickTitle"
-      >
-        {{ props.chartName }}
-      </h4>
+      <slot name="chart-name"></slot>
     </div>
     <header-right
       class="header-right w-[190px] flex items-center justify-between"
@@ -33,7 +27,7 @@ const props = defineProps({
   }
 })
 const router = useRouter()
-const handleClickTitle = () => {
+const handleClickAppName = () => {
   router.push('/homepage')
 }
 </script>

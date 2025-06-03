@@ -1,12 +1,12 @@
 <template>
-  <div class="chart-name">
-    <h4
-      @click="handleUpdateChartName"
-      @contextmenu="handleUpdateChartDesc"
-    >
-      {{ chartName }}
-    </h4>
-  </div>
+  <h4
+    :title="chartDesc"
+    class="chart-name cursor-pointer"
+    @click="handleUpdateChartName"
+    @contextmenu="handleUpdateChartDesc"
+  >
+    {{ chartName }}
+  </h4>
 </template>
 
 <script setup lang="ts">
@@ -18,26 +18,37 @@ const chartId = computed(() => {
 const chartName = computed(() => {
   return chartStore.getChartName
 })
+const chartDesc = computed(() => {
+  return chartStore.getChartDesc
+})
+
+const props = defineProps({
+  chartName: {
+    type: String,
+    default: ''
+  }
+})
+
 /**
  * 更新图表名称
  * @param {string} value 图表名称
  */
 const handleUpdateChartName = () => {
-  ElMessageBox.prompt('请输入图表名称', '提示', {
+  ElMessageBox.prompt('请输入分析名称', '编辑分析名称', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
-    inputPattern: /^[a-zA-Z0-9]+$/,
-    inputErrorMessage: '无效的图表名称'
+    inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
+    inputErrorMessage:
+      '分析名称仅支持中英文、数字、下划线，且不能为空',
+    inputValue: chartName.value || '未命名分析',
+    autofocus: true
+  }).then(({ value }) => {
+    if (!value.trim()) {
+      ElMessage.error('分析名称不能为空')
+      return
+    }
+    updateChartName(value.trim())
   })
-    .then(({ value }) => {
-      updateChartName(value)
-    })
-    .catch(() => {
-      ElMessage({
-        type: 'info',
-        message: '取消操作'
-      })
-    })
 }
 /**
  * 更新图表名称
@@ -56,26 +67,30 @@ const updateChartName = async (value: string) => {
       type: 'success',
       message: '更新成功'
     })
+    chartStore.setChartName(value)
   }
 }
 /**
  * 更新图表描述
  * @param {string} value 图表描述
  */
-const handleUpdateChartDesc = () => {
-  ElMessageBox.prompt('请输入图表描述', '提示', {
+const handleUpdateChartDesc = (event: MouseEvent) => {
+  // 阻止右键菜单
+  event.preventDefault()
+  ElMessageBox.prompt('请输入图表描述', '编辑分析描述', {
     confirmButtonText: '确定',
-    cancelButtonText: '取消'
+    cancelButtonText: '取消',
+    inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{0,100}$/,
+    inputErrorMessage: '描述仅支持中英文、数字、下划线',
+    inputValue: chartDesc.value || '未填写描述',
+    autofocus: true
+  }).then(({ value }) => {
+    if (!value.trim()) {
+      ElMessage.error('描述不能为空')
+      return
+    }
+    updateChartDesc(value.trim())
   })
-    .then(({ value }) => {
-      updateChartDesc(value)
-    })
-    .catch(() => {
-      ElMessage({
-        type: 'info',
-        message: '取消操作'
-      })
-    })
 }
 /**
  * 更新图表描述
@@ -94,15 +109,9 @@ const updateChartDesc = async (value: string) => {
       type: 'success',
       message: '更新成功'
     })
+    chartStore.setChartDesc(value)
   }
 }
 </script>
 
-<style lang="scss" scoped>
-.chart-name {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-</style>
+<style lang="scss" scoped></style>

@@ -9,7 +9,7 @@ export default defineEventHandler<
 >(async (event) => {
   try {
     const { id } = await readBody(event)
-    const data = await chartService.getChartById(id)
+    const data = await chartService.getChart(id)
     return CustomResponse.success(data)
   } catch (error: any) {
     console.log(error)
