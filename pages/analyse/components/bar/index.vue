@@ -19,7 +19,7 @@
     <el-button link @click="handleClickDownload"
       >下载</el-button
     >
-    <el-button link @click="handleSaveChart"
+    <el-button link @click="handleUpdateChartConfig"
       >保存</el-button
     >
     <el-tag
@@ -49,8 +49,11 @@ import {
   ElCheckboxGroup
 } from 'element-plus'
 import * as XLSX from 'xlsx'
-import { getChartDataHandler } from '../../getChartData-handler'
+import { updateChartConfigHandler } from '../../updateChartConfig'
+import { getChartDataHandler } from '../../getChartData'
 const { queryChartData } = getChartDataHandler()
+const { handleUpdateChartConfig } =
+  updateChartConfigHandler()
 const chartStore = useChartStore()
 const columnStore = useColumnStore()
 const filterStore = useFilterStore()
@@ -70,7 +73,6 @@ const name = ref('')
  * @returns void
  */
 const handleClickRefresh = () => {
-  console.log('handleClickRefresh')
   queryChartData()
 }
 /**
@@ -252,47 +254,57 @@ const handleClickDownload = () => {
 }
 
 /**
- * @desc 点击保存
+ * @desc 查询表格列
+ * @param tableName
+ * @returns {Promise<void>}
  */
-const handleSaveChart = async () => {
-  const chartConfig = chartConfigStore.getChartConfig
-  const chartConfigId = chartStore.getChartConfigId
-  const column = columnStore.getColumns
-  const dimension = dimensionStore.getDimensions
-  const group = groupStore.getGroups
-  const order = orderStore.getOrders
-  const filter = filterStore.getFilters
-  const commonChartConfig =
-    chartConfigStore.getCommonChartConfig
-  const id = chartStore.getChartId
-  const chartName = chartStore.getChartName
-  const chartType = chartStore.getChartType
-  const dataSource = columnStore.getDataSource
-  const result = await $fetch('/api/updateChart', {
-    method: 'POST',
-    body: {
-      id,
-      chartName,
-      chartType,
-      chartConfigId,
-      chartConfig: {
-        dataSource,
-        column,
-        dimension,
-        group,
-        order,
-        filter
-        // commonChartConfig
-      }
+const queryTableColumn = async (tableName: string) => {
+  const result = await $fetch('/api/queryTableColumn', {
+    method: 'GET',
+    params: {
+      tableName
     }
   })
-  console.log('result', result)
   if (result.code === 200) {
-    ElMessage.success('保存成功')
+    const cloumns = result.data?.map((item) => {
+      return {
+        ...item,
+        columnName: item.columnName || '',
+        columnType: item.columnType || '',
+        columnComment: item.columnComment || '',
+        displayName: item.displayName || '',
+        alias: item.alias || ''
+      }
+    })
+    columnStore.setColumns(cloumns || [])
   } else {
-    ElMessage.error('保存失败')
+    columnStore.setDataSourceOptions([])
   }
 }
+/**
+ * @desc 监听表格数据源变化
+ */
+watch(
+  () => columnStore.getDataSource,
+  (newDataSource, oldDataSource) => {
+    if (!newDataSource) return
+    queryTableColumn(newDataSource)
+    // 如果手动变更数据源，清空图表数据
+    if (oldDataSource) {
+      // 如果数据源变化，清空筛选条件
+      filterStore.setFilters([])
+      // 如果数据源变化，清空排序条件
+      orderStore.setOrders([])
+      // 如果数据源变化，清空分组条件
+      groupStore.setGroups([])
+      // 如果数据源变化，清空维度条件
+      dimensionStore.setDimensions([])
+    }
+  },
+  {
+    // immediate: true
+  }
+)
 </script>
 
 <style lang="scss" scoped>

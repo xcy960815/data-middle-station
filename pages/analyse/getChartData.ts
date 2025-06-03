@@ -1,13 +1,17 @@
-import { useChartStore } from '@/stores/analyse/chart'
-import { useDimensionStore } from '@/stores/analyse/dimension'
-import { useGroupStore } from '@/stores/analyse/group'
-import { useColumnStore } from '@/stores/analyse/column'
-import { useFilterStore } from '@/stores/analyse/filter'
-import { useOrderStore } from '@/stores/analyse/order'
-import { useChartConfigStore } from '@/stores/analyse/chart-config'
+// import { useChartStore } from '@/stores/analyse/chart'
+// import { useDimensionStore } from '@/stores/analyse/dimension'
+// import { useGroupStore } from '@/stores/analyse/group'
+// import { useColumnStore } from '@/stores/analyse/column'
+// import { useFilterStore } from '@/stores/analyse/filter'
+// import { useOrderStore } from '@/stores/analyse/order'
+// import { useChartConfigStore } from '@/stores/analyse/chart-config'
 import { computed } from 'vue'
 import dayjs from 'dayjs'
 
+/**
+ * @desc 获取图表数据
+ * @returns {Promise<void>}
+ */
 export const getChartDataHandler = () => {
   const chartStore = useChartStore()
   const dimensionStore = useDimensionStore()
@@ -84,6 +88,7 @@ export const getChartDataHandler = () => {
    * @returns {Promise<void>}
    */
   const queryChartData = async () => {
+    console.log('queryChartData')
     const chartType = chartStore.getChartType
     const errorMessage = chartSuggestStrategies(chartType)
     chartStore.setChartErrorMessage(errorMessage)
@@ -133,6 +138,20 @@ export const getChartDataHandler = () => {
         : `${remainingSeconds}秒`
     )
   }
+
+  /**
+   * @desc 监听查询表格数据的参数变化
+   */
+  watch(
+    () => queryChartDataParams.value,
+    () => {
+      queryChartData()
+    },
+    {
+      deep: true,
+      immediate: true
+    }
+  )
   return {
     queryChartDataParams,
     queryChartData

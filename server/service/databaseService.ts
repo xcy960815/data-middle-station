@@ -105,11 +105,11 @@ export class DatabaseService {
    * @param tableName {string} 表名
    * @returns {Promise<Array<DatabaseVo.TableColumnOptionVo>>}
    */
-  public async queryTableColumns(
+  public async queryTableColumn(
     tableName: string
   ): Promise<Array<DatabaseVo.TableColumnOptionVo>> {
     const result =
-      await this.databaseMapper.queryTableColumns(
+      await this.databaseMapper.queryTableColumn(
         toLine(tableName)
       )
     return result.map((item) => {
