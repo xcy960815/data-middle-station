@@ -27,7 +27,7 @@
             <el-form-item label="备注">
               <el-input
                 type="textarea"
-                v-model="commonChartConfig.description"
+                v-model="commonChartConfig.chartDesc"
                 :rows="3"
                 placeholder="请输入图表备注信息"
               />

@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { resolve } from 'path'
 export default defineNuxtConfig({
+  experimental: {
+    renderJsonPayloads: false
+  },
   app: {
     head: {
       title: process.env.APP_NAME,

@@ -16,7 +16,7 @@ export default defineEventHandler<
       event
     )
     const data =
-      await databaseService.queryTableColumns(tableName)
+      await databaseService.queryTableColumn(tableName)
     return CustomResponse.success(data)
   } catch (error: any) {
     return CustomResponse.error(error.message)

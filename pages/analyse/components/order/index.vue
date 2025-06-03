@@ -42,7 +42,7 @@
 </template>
 <script setup lang="ts">
 import { clearAllHandler } from '../clearAll'
-
+import { IconPark } from '@icon-park/vue-next/es/all'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const orderStore = useOrderStore()

@@ -30,6 +30,21 @@ export class ChartConfigMapping
 
   @Column('order')
   order: ChartConfigDao.OrderOption[] = []
+
+  @Column('create_time')
+  createTime: string = ''
+
+  @Column('update_time')
+  updateTime: string = ''
+
+  @Column('limit')
+  limit: number = 0
+
+  // @Column('suggest')
+  // suggest: boolean = false
+
+  // @Column('share_strategy')
+  // shareStrategy: string = ''
 }
 
 const CHART_CONFIG_BASE_FIELDS = [
@@ -62,7 +77,10 @@ export class ChartConfigMapper extends BaseMapper {
             dimension,
             filter,
             \`group\`,
-            \`order\`
+            \`order\`,
+            \`limit\`,
+            create_time,
+            update_time
             from ${CHART_CONFIG_TABLE_NAME} where id = ?`
     const result = await this.exe<Array<T>>(sql, [id])
     return result?.[0]

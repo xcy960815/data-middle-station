@@ -12,7 +12,7 @@ declare namespace ChartConfigStore {
    */
   type CommonChartConfig = {
     // 描述
-    description: string
+    chartDesc: string
     // 数据量
     limit: number
     // 智能作图建议
