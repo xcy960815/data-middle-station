@@ -225,7 +225,8 @@ export class ChartService {
           dimension: chartConfig?.dimension,
           filter: chartConfig?.filter,
           group: chartConfig?.group,
-          order: chartConfig?.order
+          order: chartConfig?.order,
+          limit: chartConfig?.limit
         })
     } else {
       const updateChartResult =
@@ -236,7 +237,8 @@ export class ChartService {
           dimension: chartConfig?.dimension,
           filter: chartConfig?.filter,
           group: chartConfig?.group,
-          order: chartConfig?.order
+          order: chartConfig?.order,
+          limit: chartConfig?.limit
         })
     }
 

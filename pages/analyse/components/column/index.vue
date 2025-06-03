@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-// import { IconPark } from '@icon-park/vue-next/es/all';
+import { IconPark } from '@icon-park/vue-next/es/all'
 import DataSourceSelecter from '@/components/selecter/dataSource/index.vue'
 import ContextMenu from '@/components/context-menu/index.vue'
 import { ref, computed } from 'vue'
