@@ -30,7 +30,8 @@ export const getChartConfigHandler = () => {
       chartStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
       chartStore.setChartType(
-        chartConfig?.chartType as ChartStore.ChartType
+        (chartConfig?.chartType as ChartStore.ChartType) ||
+          'table'
       )
       columnStore.setColumns(chartConfig?.column || [])
       dimensionStore.setDimensions(

@@ -1,13 +1,14 @@
 <template>
   <div class="bar relative flex">
-    <el-button link @click="handleClickRefresh">
-      刷新
-    </el-button>
-    <el-checkbox label="查询条件变化时自动刷新" />
     <el-button
       link
-      @click="handleClickAlarm"
-      class="ml-auto"
+      @click="handleClickRefresh"
+      class="mr-auto"
+    >
+      刷新
+    </el-button>
+
+    <el-button link @click="handleClickAlarm"
       >报警</el-button
     >
     <el-button link @click="handleClickSetting"
