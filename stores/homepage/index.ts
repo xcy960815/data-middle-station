@@ -1,28 +1,23 @@
+import { StoreNames } from '../store-names'
+
 /**
  * @desc homepage Store
  */
-
 import { defineStore } from 'pinia'
 
 export const useHomepageStore = defineStore<
   HomePageStore.HomePageKey,
   BaseStore.State<HomePageStore.HomePageState>,
-  BaseStore.Getters<
-    HomePageStore.HomePageState,
-    HomePageStore.HomePageGetters
-  >,
-  BaseStore.Actions<
-    HomePageStore.HomePageState,
-    HomePageStore.HomePageActions
-  >
->('homepage', {
+  BaseStore.Getters<HomePageStore.HomePageState, HomePageStore.HomePageGetters>,
+  BaseStore.Actions<HomePageStore.HomePageState, HomePageStore.HomePageActions>
+>(StoreNames.HOMEPAGE, {
   state: () => ({
-    charts: []
+    charts: [],
   }),
   getters: {
     getCharts(state) {
       return state.charts
-    }
+    },
   },
   actions: {
     /**
@@ -30,6 +25,6 @@ export const useHomepageStore = defineStore<
      */
     setCharts(value) {
       this.charts = value
-    }
-  }
+    },
+  },
 })

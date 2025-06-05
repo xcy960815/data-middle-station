@@ -1,3 +1,5 @@
+import { StoreNames } from '../store-names'
+
 /**
  * @desc 过滤器 store
  */
@@ -5,22 +7,16 @@ import { defineStore } from 'pinia'
 export const useFilterStore = defineStore<
   FilterStore.FilterKey,
   BaseStore.State<FilterStore.FilterState>,
-  BaseStore.Getters<
-    FilterStore.FilterState,
-    FilterStore.FilterGetters
-  >,
-  BaseStore.Actions<
-    FilterStore.FilterState,
-    FilterStore.FilterActions
-  >
->('filter', {
+  BaseStore.Getters<FilterStore.FilterState, FilterStore.FilterGetters>,
+  BaseStore.Actions<FilterStore.FilterState, FilterStore.FilterActions>
+>(StoreNames.FILTER, {
   state: () => ({
-    filters: []
+    filters: [],
   }),
   getters: {
     getFilters(state) {
       return state.filters
-    }
+    },
   },
   actions: {
     /**
@@ -46,6 +42,6 @@ export const useFilterStore = defineStore<
      */
     removeFilter(index: number) {
       this.filters.splice(index, 1)
-    }
-  }
+    },
+  },
 })

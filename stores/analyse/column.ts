@@ -1,26 +1,20 @@
-import { defineStore } from 'pinia'
+import { StoreNames } from '../store-names'
 /**
  * @desc 列 store
  */
 export const useColumnStore = defineStore<
   ColumnStore.ColumnKey,
   BaseStore.State<ColumnStore.ColumnState>,
-  BaseStore.Getters<
-    ColumnStore.ColumnState,
-    ColumnStore.ColumnGetters
-  >,
-  BaseStore.Actions<
-    ColumnStore.ColumnState,
-    ColumnStore.ColumnActions
-  >
->('column', {
+  BaseStore.Getters<ColumnStore.ColumnState, ColumnStore.ColumnGetters>,
+  BaseStore.Actions<ColumnStore.ColumnState, ColumnStore.ColumnActions>
+>(StoreNames.COLUMN, {
   /**
    * @desc 关于列所哟的数据字段
    */
   state: () => ({
     dataSource: '',
     dataSourceOptions: [],
-    columns: []
+    columns: [],
   }),
 
   getters: {
@@ -47,7 +41,7 @@ export const useColumnStore = defineStore<
      */
     getDataSourceOptions(state) {
       return state.dataSourceOptions
-    }
+    },
   },
 
   actions: {
@@ -62,8 +56,7 @@ export const useColumnStore = defineStore<
      */
     removeColumns(columns) {
       this.columns = this.columns.filter(
-        (column: ColumnStore.ColumnOption) =>
-          !columns.includes(column)
+        (column: ColumnStore.ColumnOption) => !columns.includes(column)
       )
     },
     /**
@@ -103,6 +96,6 @@ export const useColumnStore = defineStore<
      */
     removeDataSourceOptions(dataSourceOptions) {
       this.dataSourceOptions = dataSourceOptions
-    }
-  }
+    },
+  },
 })
