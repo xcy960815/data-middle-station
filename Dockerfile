@@ -5,7 +5,7 @@ FROM node:18 AS builder
 WORKDIR /data-middle-station
 
 # 设置环境变量
-ENV NODE_ENV=pre
+ENV NODE_ENV=prod
 ENV PNPM_HOME="/root/.local/share/pnpm"
 ENV PATH="${PNPM_HOME}:${PATH}"
 
@@ -30,17 +30,17 @@ RUN pnpm install
 COPY . .
 
 # 构建应用
-RUN pnpm run build:pre
+RUN pnpm run build:prod
 
 # 安装pm2
 RUN pnpm install -g pm2
 
 # 暴露端口
-EXPOSE 12582
+EXPOSE 12583
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:12582/ || exit 1
+    CMD curl -f http://localhost:12583/ || exit 1
 
 # 启动命令
-CMD ["sh", "-c", "ls -la /data-middle-station/.output/server/ && pm2 start ecosystem.config.js --env pre --no-daemon"]
+CMD ["sh", "-c", "ls -la /data-middle-station/.output/server/ && pm2 start ecosystem.config.js --env prod --no-daemon"]

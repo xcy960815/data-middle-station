@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8'
 
 services:
   # nuxt3
@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile
     container_name: data-middle-station-container
     ports:
-      - '12582:12582'
+      - '12583:12583'
     volumes:
       - ./logs:/data-middle-station-container/logs
     environment:
@@ -62,3 +62,4 @@ volumes:
 
 
 # docker-compose down && docker-compose up --build -d
+# docker-compose.yml up -d 
