@@ -2,14 +2,17 @@ import {
   Column,
   BindDataSource,
   Mapping,
-  BaseMapper
+  BaseMapper,
+  IColumnTarget,
+  ColumnMapper,
 } from './baseMapper'
 import { convertToSqlProperties } from '../utils/databaseHelpper'
 import { ResultSetHeader } from 'mysql2'
 
-export class ChartConfigMapping
-  implements ChartConfigDao.ChartConfig
-{
+export class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTarget {
+  public columnsMap?: Map<string, string>
+  public columnsMapper?: ColumnMapper
+
   @Column('id')
   id: number = 0
 
@@ -61,7 +64,7 @@ const CHART_CONFIG_BASE_FIELDS = [
   'order',
   'limit',
   'create_time',
-  'update_time'
+  'update_time',
 ]
 const CHART_CONFIG_TABLE_NAME = 'chart_config'
 const DATA_SOURCE_NAME = 'data_middle_station'
@@ -89,12 +92,13 @@ function batchFormatSqlKey(keys: string[]) {
 function batchFormatSqlSet(keys: string[]) {
   return keys
     .map(formatSqlKey)
-    .map((key) => `${key} = ?`)
+    .map(key => `${key} = ?`)
     .join(', ')
 }
 
 @BindDataSource(DATA_SOURCE_NAME)
 export class ChartConfigMapper extends BaseMapper {
+  public dataSourceName = DATA_SOURCE_NAME
   // private
   /**
    * @desc 获取图表配置
@@ -102,11 +106,9 @@ export class ChartConfigMapper extends BaseMapper {
    * @returns {Promise<ChartConfigDao.ChartConfig>} 图表配置
    */
   @Mapping(ChartConfigMapping)
-  public async getChartConfig<
-    T extends ChartConfigDao.ChartConfig
-  >(id: number): Promise<T> {
+  public async getChartConfig<T extends ChartConfigDao.ChartConfig>(id: number): Promise<T> {
     const sql = `select 
-           ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
+          ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
             from ${CHART_CONFIG_TABLE_NAME} where id = ?`
     const result = await this.exe<Array<T>>(sql, [id])
     return result?.[0]
@@ -116,23 +118,13 @@ export class ChartConfigMapper extends BaseMapper {
    * @param chartConfig {ChartConfigDto.ChartConfig} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
-  public async createChartConfig(
-    chartConfig: ChartConfigDto.ChartConfig
-  ): Promise<number> {
-    const { keys, values } =
-      convertToSqlProperties(chartConfig)
+  public async createChartConfig(chartConfig: ChartConfigDto.ChartConfig): Promise<number> {
+    const { keys, values } = convertToSqlProperties(chartConfig)
     // 只使用数据库表中存在的字段
-    const validKeys = keys.filter((key) =>
-      CHART_CONFIG_BASE_FIELDS.includes(key)
-    )
-    const validValues = validKeys.map(
-      (key) => values[keys.indexOf(key)]
-    )
+    const validKeys = keys.filter(key => CHART_CONFIG_BASE_FIELDS.includes(key))
+    const validValues = validKeys.map(key => values[keys.indexOf(key)])
     const sql = `insert into ${CHART_CONFIG_TABLE_NAME} (${batchFormatSqlKey(validKeys)}) values (${validKeys.map(() => '?').join(',')})`
-    const result = await this.exe<ResultSetHeader>(
-      sql,
-      validValues
-    )
+    const result = await this.exe<ResultSetHeader>(sql, validValues)
     return result.insertId || 0
   }
 
@@ -141,17 +133,9 @@ export class ChartConfigMapper extends BaseMapper {
    * @param chartConfig {ChartConfigDto.ChartConfig} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
-  public async updateChart(
-    chartConfig: ChartConfigDto.ChartConfig
-  ): Promise<boolean> {
-    const { keys, values } =
-      convertToSqlProperties(chartConfig)
+  public async updateChart(chartConfig: ChartConfigDto.ChartConfig): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(chartConfig)
     const sql = `update ${CHART_CONFIG_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ?`
-    return (
-      (await this.exe<number>(sql, [
-        ...values,
-        chartConfig.id
-      ])) > 0
-    )
+    return (await this.exe<number>(sql, [...values, chartConfig.id])) > 0
   }
 }

@@ -2,15 +2,18 @@ import {
   Column,
   BindDataSource,
   Mapping,
-  BaseMapper
+  BaseMapper,
+  IColumnTarget,
+  ColumnMapper,
 } from './baseMapper'
 
 import dayjs from 'dayjs'
 
 // 表列表映射
-export class TableOptionMapping
-  implements DatabaseDao.TableOption
-{
+export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarget {
+  public columnsMap?: Map<string, string>
+  public columnsMapper?: ColumnMapper
+
   @Column('TABLE_NAME')
   tableName: string = ''
 
@@ -61,20 +64,15 @@ export class TableOptionMapping
 
   // 计算属性：表大小（MB）
   get tableSize(): number {
-    return Number(
-      (
-        (this.dataLength + this.indexLength) /
-        1024 /
-        1024
-      ).toFixed(2)
-    )
+    return Number(((this.dataLength + this.indexLength) / 1024 / 1024).toFixed(2))
   }
 }
 
 // 表列映射
-export class TableColumnMapping
-  implements DatabaseDao.TableColumnOption
-{
+export class TableColumnMapping implements DatabaseDao.TableColumnOption, IColumnTarget {
+  public columnsMap?: Map<string, string>
+  public columnsMapper?: ColumnMapper
+
   @Column('COLUMN_NAME')
   columnName: string = ''
 
@@ -89,15 +87,15 @@ const tableSchema = 'kanban_data'
 
 @BindDataSource(tableSchema)
 export class DatabaseMapper extends BaseMapper {
+  public dataSourceName = tableSchema
+
   /**
    * @desc 查询所有的表名
    * @datasource ${tableSchema}
    * @returns {Promise<Array<T>>}
    */
   @Mapping(TableOptionMapping)
-  public async queryTable<
-    T extends DatabaseDao.TableOption
-  >(tableName: string): Promise<Array<T>> {
+  public async queryTable<T extends DatabaseDao.TableOption>(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         table_name,
         table_type,
@@ -126,9 +124,9 @@ export class DatabaseMapper extends BaseMapper {
    * @returns {Promise<Array<TableInfoDao.TableColumnOption>>}
    */
   @Mapping(TableColumnMapping)
-  public async queryTableColumn<
-    T extends DatabaseDao.TableColumnOption
-  >(tableName: string): Promise<Array<T>> {
+  public async queryTableColumn<T extends DatabaseDao.TableColumnOption>(
+    tableName: string
+  ): Promise<Array<T>> {
     const sql = `SELECT 
         column_name, 
         column_type,
@@ -138,9 +136,7 @@ export class DatabaseMapper extends BaseMapper {
       WHERE 
         table_name = ? 
         AND table_schema = '${tableSchema}';`
-    const result = await this.exe<Array<T>>(sql, [
-      tableName
-    ])
+    const result = await this.exe<Array<T>>(sql, [tableName])
     return result
   }
 }
