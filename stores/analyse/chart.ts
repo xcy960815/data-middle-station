@@ -1,17 +1,11 @@
-import { defineStore } from 'pinia'
+import { StoreNames } from '../store-names'
 
 export const useChartStore = defineStore<
   ChartStore.ChartKey,
   BaseStore.State<ChartStore.ChartState>,
-  BaseStore.Getters<
-    ChartStore.ChartState,
-    ChartStore.ChartGetters
-  >,
-  BaseStore.Actions<
-    ChartStore.ChartState,
-    ChartStore.ChartActions
-  >
->('chart', {
+  BaseStore.Getters<ChartStore.ChartState, ChartStore.ChartGetters>,
+  BaseStore.Actions<ChartStore.ChartState, ChartStore.ChartActions>
+>(StoreNames.CHART, {
   state: () => ({
     chartName: '',
     chartDesc: '',
@@ -22,7 +16,7 @@ export const useChartStore = defineStore<
     chartId: null,
     chartConfigId: null,
     chartLoading: false,
-    chartData: []
+    chartData: [],
   }),
   getters: {
     /**
@@ -86,7 +80,7 @@ export const useChartStore = defineStore<
      */
     getChartData(state) {
       return state.chartData
-    }
+    },
   },
   actions: {
     /**
@@ -164,6 +158,6 @@ export const useChartStore = defineStore<
      */
     setChartData(chartData) {
       this.chartData = chartData
-    }
-  }
+    },
+  },
 })

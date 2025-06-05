@@ -1,32 +1,23 @@
+import { StoreNames } from '../store-names'
 /**
  * @desc 排序 store
  */
-interface OrderOption {
-  label: string
-  value: string
-}
 
 import { defineStore } from 'pinia'
 
 export const useOrderStore = defineStore<
   OrderStore.OrderKey,
   BaseStore.State<OrderStore.OrderState>,
-  BaseStore.Getters<
-    OrderStore.OrderState,
-    OrderStore.OrderGetters
-  >,
-  BaseStore.Actions<
-    OrderStore.OrderState,
-    OrderStore.OrderActions
-  >
->('order', {
+  BaseStore.Getters<OrderStore.OrderState, OrderStore.OrderGetters>,
+  BaseStore.Actions<OrderStore.OrderState, OrderStore.OrderActions>
+>(StoreNames.ORDER, {
   state: () => ({
-    orders: []
+    orders: [],
   }),
   getters: {
     getOrders(state) {
       return state.orders
-    }
+    },
   },
   actions: {
     setOrders(orders) {
@@ -37,7 +28,7 @@ export const useOrderStore = defineStore<
      * @param orders {OrderOption[]}
      * @returns {void}
      */
-    addOrders(orders: OrderOption[]) {
+    addOrders(orders) {
       this.orders.push(...orders)
     },
     /**
@@ -46,7 +37,7 @@ export const useOrderStore = defineStore<
      * @param index {number}
      * @returns {void}
      */
-    updateOrder(order: OrderOption, index: number) {
+    updateOrder({ order, index }) {
       this.orders[index] = order
     },
     /**
@@ -56,6 +47,6 @@ export const useOrderStore = defineStore<
      */
     removeOrder(index: number) {
       this.orders.splice(index, 1)
-    }
-  }
+    },
+  },
 })

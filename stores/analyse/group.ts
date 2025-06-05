@@ -1,3 +1,4 @@
+import { StoreNames } from '../store-names'
 /**
  * @desc 分组 store
  */
@@ -5,22 +6,16 @@ import { defineStore } from 'pinia'
 export const useGroupStore = defineStore<
   GroupStore.GroupKey,
   BaseStore.State<GroupStore.GroupState>,
-  BaseStore.Getters<
-    GroupStore.GroupState,
-    GroupStore.GroupGetters
-  >,
-  BaseStore.Actions<
-    GroupStore.GroupState,
-    GroupStore.GroupActions
-  >
->('group', {
+  BaseStore.Getters<GroupStore.GroupState, GroupStore.GroupGetters>,
+  BaseStore.Actions<GroupStore.GroupState, GroupStore.GroupActions>
+>(StoreNames.GROUP, {
   state: () => ({
-    groups: []
+    groups: [],
   }),
   getters: {
     getGroups(state) {
       return state.groups
-    }
+    },
   },
   actions: {
     /**
@@ -46,6 +41,6 @@ export const useGroupStore = defineStore<
      */
     removeGroup(index: number) {
       this.groups.splice(index, 1)
-    }
-  }
+    },
+  },
 })
