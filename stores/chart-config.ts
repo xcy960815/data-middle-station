@@ -1,4 +1,4 @@
-import { StoreNames } from '../store-names'
+import { StoreNames } from './store-names'
 
 export const useChartConfigStore = defineStore<
   ChartConfigStore.ChartConfigKey,
