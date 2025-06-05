@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: data-middle-station
+    ports:
+      - '12581:12581'
+    volumes:
+      - ./logs:/data-middle-station/logs
+    environment:
+      - NODE_ENV=production
+      - CONFIG_DB_HOST=host.docker.internal
+      - CONFIG_DB_PORT=3306
+      - CONFIG_DB_USER=root
+      - CONFIG_DB_PASSWORD=123456
+      - CONFIG_DB_NAME=data_middle_station
+      - CONFIG_DB_TIMEZONE=+08:00
+      - CONFIG_DB_DATE_STRINGS=true
+      - KANBAN_DB_HOST=host.docker.internal
+      - KANBAN_DB_PORT=3306
+      - KANBAN_DB_USER=root
+      - KANBAN_DB_PASSWORD=123456
+      - KANBAN_DB_NAME=data_middle_station
+      - KANBAN_DB_TIMEZONE=+08:00
+      - KANBAN_DB_DATE_STRINGS=true
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:8.4.2
+    container_name: data-middle-station-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=data_middle_station
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

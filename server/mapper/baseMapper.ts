@@ -146,9 +146,7 @@ export function Mapping(mapping: {
   ) {
     const originalMethod = descriptor.value as AsyncMethod
     if (!originalMethod) {
-      throw new Error(
-        'Method decorator must be applied to a method'
-      )
+      throw new Error('方法装饰器必须应用于方法')
     }
     descriptor.value = async function (...args: any[]) {
       const originValue = await originalMethod.apply(

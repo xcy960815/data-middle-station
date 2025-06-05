@@ -4,6 +4,11 @@ FROM node:18 AS builder
 # 设置工作目录
 WORKDIR /data-middle-station
 
+# 设置环境变量
+ENV NODE_ENV=production
+ENV PNPM_HOME="/root/.local/share/pnpm"
+ENV PATH="${PNPM_HOME}:${PATH}"
+
 # 设置 npm 镜像源
 RUN npm config set registry https://registry.npmmirror.com
 
@@ -33,7 +38,10 @@ RUN pnpm run build
 RUN pnpm install -g pm2
 
 # 暴露端口
-EXPOSE 80
+EXPOSE 12581
 
-# 启动 Nginx
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:12581/ || exit 1
+
 CMD ["pm2", "start", "ecosystem.config.js", "--env", "dev"]
