@@ -11,48 +11,26 @@ const logger = new Logger({
  */
 export function getDatasourceConfig() {
   logger.info(chalk.green('开始加载数据库配置'))
-  const configDbHost = getProcessEnvProperties(
-    'CONFIG_DB_HOST'
-  )
-  const configDbPort = getProcessEnvProperties(
-    'CONFIG_DB_PORT'
-  )
-  const configDbUser = getProcessEnvProperties(
-    'CONFIG_DB_USER'
-  )
+  const configDbHost = useRuntimeConfig().configDbHost
+  const configDbPort = useRuntimeConfig().configDbPort
+  const configDbUser = useRuntimeConfig().configDbUser
   const configDbPassword =
-    getProcessEnvProperties('CONFIG_DB_PASSWORD') || ''
-  const configDbName = getProcessEnvProperties(
-    'CONFIG_DB_NAME'
-  ) as string
-  const configDbTimezone = getProcessEnvProperties(
-    'CONFIG_DB_TIMEZONE'
-  )
-  const configDbDateStrings = getProcessEnvProperties(
-    'CONFIG_DB_DATE_STRINGS'
-  )
-  const kanbanDbName = getProcessEnvProperties(
-    'KANBAN_DB_NAME'
-  ) as string
-  const kanbanDbHost = getProcessEnvProperties(
-    'KANBAN_DB_HOST'
-  )
-  const kanbanDbPort = getProcessEnvProperties(
-    'KANBAN_DB_PORT'
-  )
-  const kanbanDbUser = getProcessEnvProperties(
-    'KANBAN_DB_USER'
-  )
-  const kanbanDbPassword = getProcessEnvProperties(
-    'KANBAN_DB_PASSWORD'
-  )
+    useRuntimeConfig().configDbPassword
+  const configDbName = useRuntimeConfig().configDbName
+  const configDbTimezone =
+    useRuntimeConfig().configDbTimezone
+  const configDbDateStrings =
+    useRuntimeConfig().configDbDateStrings
+  const kanbanDbName = useRuntimeConfig().kanbanDbName
+  const kanbanDbHost = useRuntimeConfig().kanbanDbHost
+  const kanbanDbPort = useRuntimeConfig().kanbanDbPort
+  const kanbanDbUser = useRuntimeConfig().kanbanDbUser
+  const kanbanDbPassword =
+    useRuntimeConfig().kanbanDbPassword
   const kanbanDbTimezone =
-    getProcessEnvProperties('KANBAN_DB_TIMEZONE') ||
-    '+08:00'
+    useRuntimeConfig().kanbanDbTimezone
   const kanbanDbDateStrings =
-    getProcessEnvProperties('KANBAN_DB_DATE_STRINGS') ||
-    true
-
+    useRuntimeConfig().kanbanDbDateStrings
   const dataSourceConfig: NodeJS.DataSourceConfig = {
     [configDbName]: {
       password: configDbPassword,
@@ -73,5 +51,11 @@ export function getDatasourceConfig() {
       dateStrings: kanbanDbDateStrings
     }
   }
+  logger.info(
+    chalk.bgBlackBright(
+      JSON.stringify(dataSourceConfig, null, 2)
+    )
+  )
+  logger.info(chalk.green('数据库配置加载完成'))
   return dataSourceConfig
 }
