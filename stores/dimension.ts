@@ -1,4 +1,4 @@
-import { StoreNames } from '../store-names'
+import { StoreNames } from './store-names'
 /**
  * @desc 维度 store
  */
