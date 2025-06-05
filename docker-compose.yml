@@ -1,57 +1,64 @@
 version: '3.8'
 
 services:
-  app:
+  # nuxt3
+  nuxt3:
+    image: xcy960815/data-middle-station:latest
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: data-middle-station
+    container_name: data-middle-station-container
     ports:
-      - '12581:12581'
+      - '12582:12582'
     volumes:
-      - ./logs:/data-middle-station/logs
+      - ./logs:/data-middle-station-container/logs
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=pre
       - CONFIG_DB_HOST=host.docker.internal
-      - CONFIG_DB_PORT=3306
+      - CONFIG_DB_PORT=3310
       - CONFIG_DB_USER=root
-      - CONFIG_DB_PASSWORD=123456
+      - CONFIG_DB_PASSWORD=root
       - CONFIG_DB_NAME=data_middle_station
       - CONFIG_DB_TIMEZONE=+08:00
       - CONFIG_DB_DATE_STRINGS=true
+      - KANBAN_DB_NAME=kanban_data
       - KANBAN_DB_HOST=host.docker.internal
-      - KANBAN_DB_PORT=3306
+      - KANBAN_DB_PORT=3310
       - KANBAN_DB_USER=root
-      - KANBAN_DB_PASSWORD=123456
-      - KANBAN_DB_NAME=data_middle_station
+      - KANBAN_DB_PASSWORD=root
       - KANBAN_DB_TIMEZONE=+08:00
       - KANBAN_DB_DATE_STRINGS=true
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     restart: unless-stopped
     networks:
-      - app-network
+      - data-middle-station-network
 
+  # mysql配置
   mysql:
     image: mysql:8.4.2
-    container_name: data-middle-station-mysql
-    restart: unless-stopped
+    container_name: data-middle-station-mysql-container
+    command: [
+      "--bind-address=0.0.0.0"
+    ]
     environment:
-      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=data_middle_station
     ports:
-      - '3306:3306'
+      - "3310:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mysql/init:/docker-entrypoint-initdb.d
-    command: --default-authentication-plugin=mysql_native_password
+      - mysql-data:/var/lib/mysql
     networks:
-      - app-network
-
-volumes:
-  mysql_data:
-    driver: local
+      - data-middle-station-network
 
 networks:
-  app-network:
+  data-middle-station-network:
     driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
+
+
+
+# docker-compose down && docker-compose up --build -d

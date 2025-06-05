@@ -37,10 +37,13 @@
     "@commitlint/cli": "^17.8.1",
     "@commitlint/config-conventional": "^17.8.1",
     "@nuxt/devtools": "latest",
+    "@nuxtjs/eslint-config-typescript": "^12.1.0",
     "@types/node": "^18.19.103",
     "@types/node-cron": "^3.0.11",
     "commitlint": "^17.8.1",
     "conventional-changelog-cli": "^5.0.0",
+    "eslint": "^9.28.0",
+    "eslint-plugin-vue": "^10.1.0",
     "globals": "^16.2.0",
     "husky": "^8.0.3",
     "less": "^4.3.0",
@@ -58,14 +61,15 @@
     "@icon-park/vue-next": "^1.4.2",
     "@iconify/vue": "^4.3.0",
     "@pinia/nuxt": "^0.5.1",
-    "nuxt": "^3.17.4",
+    "@popperjs/core": "npm:@sxzz/popperjs-es@^2.11.7",
     "chalk": "^5.4.1",
     "common-watermark": "^0.0.1",
     "dayjs": "^1.11.13",
-    "element-plus": "^2.9.11",
+    "element-plus": "^2.9.2",
     "monaco-editor": "^0.52.2",
     "mysql2": "^3.14.1",
     "node-cron": "^3.0.3",
+    "nuxt": "^3.17.4",
     "pinia": "^2.1.7",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
@@ -79,7 +83,7 @@
   },
   "lint-staged": {
     "*.{js,vue,ts}": [
-      "pretty-quick --staged"
+      "prettier --write"
     ]
   }
 }

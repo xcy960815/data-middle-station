@@ -3,7 +3,9 @@ import {
   Column,
   BindDataSource,
   Mapping,
-  BaseMapper
+  BaseMapper,
+  IColumnTarget,
+  ColumnMapper,
 } from './baseMapper'
 
 import { convertToSqlProperties } from '../utils/databaseHelpper'
@@ -18,10 +20,13 @@ export const CHART_BASE_FIELDS = [
   'view_count',
   'created_by',
   'updated_by',
-  'chart_config_id'
+  'chart_config_id',
 ]
 
-export class ChartMapping implements ChartDao.ChartOption {
+export class ChartMapping implements ChartDao.ChartOption, IColumnTarget {
+  public columnsMap?: Map<string, string>
+  public columnsMapper?: ColumnMapper
+
   // 表名
   @Column('id')
   id: number = 0
@@ -68,16 +73,15 @@ const DATA_SOURCE_NAME = 'data_middle_station'
 
 @BindDataSource(DATA_SOURCE_NAME)
 export class ChartMapper extends BaseMapper {
+  public dataSourceName = DATA_SOURCE_NAME
+
   /**
    * @desc 执行sql
    * @param sql {string} sql语句
    * @param params {Array<any>} 参数
    * @returns {Promise<T>}
    */
-  protected async exe<T>(
-    sql: string,
-    params?: Array<any>
-  ): Promise<T> {
+  public async exe<T>(sql: string, params?: Array<any>): Promise<T> {
     return await super.exe<T>(sql, params)
   }
 
@@ -86,16 +90,10 @@ export class ChartMapper extends BaseMapper {
    * @param chart {ChartsOption} 图表
    * @returns {Promise<number>}
    */
-  public async createChart(
-    chartOption: ChartDto.ChartOption
-  ): Promise<boolean> {
-    const { keys, values } =
-      convertToSqlProperties(chartOption)
+  public async createChart(chartOption: ChartDto.ChartOption): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(chartOption)
     const sql = `INSERT INTO ${CHART_TABLE_NAME} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`
-    const result = await this.exe<ResultSetHeader>(
-      sql,
-      values
-    )
+    const result = await this.exe<ResultSetHeader>(sql, values)
     return result.affectedRows > 0
   }
 
@@ -104,30 +102,18 @@ export class ChartMapper extends BaseMapper {
    * @param chartOptionDto {ChartDto.ChartOption} 图表
    * @returns {Promise<void>}
    */
-  public async updateChart(
-    chartOptionDto: ChartDto.ChartOption
-  ): Promise<boolean> {
-    const {
-      viewCount,
-      createTime,
-      createdBy,
-      ...chartOption
-    } = chartOptionDto
-    const {
-      keys: chartOptionKeys,
-      values: chartOptionValues
-    } = convertToSqlProperties(chartOption)
-    const chartOptionSetClause = chartOptionKeys
-      .map((key) => `${key} = ?`)
-      .join(', ')
+  public async updateChart(chartOptionDto: ChartDto.ChartOption): Promise<boolean> {
+    const { viewCount, createTime, createdBy, ...chartOption } = chartOptionDto
+    const { keys: chartOptionKeys, values: chartOptionValues } = convertToSqlProperties(chartOption)
+    const chartOptionSetClause = chartOptionKeys.map(key => `${key} = ?`).join(', ')
 
     // 更新 chart 表
     const updateChartConfigSql = `UPDATE ${CHART_TABLE_NAME} SET ${chartOptionSetClause} WHERE id = ?`
 
-    const chartResult = await this.exe<ResultSetHeader>(
-      updateChartConfigSql,
-      [...chartOptionValues, chartOption.id]
-    )
+    const chartResult = await this.exe<ResultSetHeader>(updateChartConfigSql, [
+      ...chartOptionValues,
+      chartOption.id,
+    ])
 
     return chartResult.affectedRows > 0
   }
@@ -136,9 +122,7 @@ export class ChartMapper extends BaseMapper {
    * @desc 更新图表的访问次数
    * @param id {number} 图表id
    */
-  public async updateViewCount(
-    id: number
-  ): Promise<number> {
+  public async updateViewCount(id: number): Promise<number> {
     const sql = `UPDATE ${CHART_TABLE_NAME} SET view_count = view_count + 1 WHERE id = ?`
     return await this.exe<number>(sql, [id])
   }
@@ -149,9 +133,7 @@ export class ChartMapper extends BaseMapper {
    * @returns {Promise<ChartDao.ChartOption>}
    */
   @Mapping(ChartMapping)
-  public async getChart<T extends ChartDao.ChartOption>(
-    id: number
-  ): Promise<T> {
+  public async getChart<T extends ChartDao.ChartOption>(id: number): Promise<T> {
     // 更新访问次数 不知道为什么报错
     await this.updateViewCount(id)
     const sql = `select 
@@ -177,9 +159,7 @@ export class ChartMapper extends BaseMapper {
    * @returns {Promise<Array<ChartDao.ChartOption>>}
    */
   @Mapping(ChartMapping)
-  public async getCharts<
-    T extends ChartDao.ChartOption
-  >(): Promise<Array<T>> {
+  public async getCharts<T extends ChartDao.ChartOption>(): Promise<Array<T>> {
     const sql = `
     select 
       ${CHART_BASE_FIELDS.join(',\n    ')}
