@@ -12,7 +12,7 @@ module.exports = {
       autorestart: true, // 默认为 true, 发生异常的情况下自动重启
       max_memory_restart: '1G',
       error_file: './logs/pm2/error.log', // 错误日志文件
-      out_file: './logs/pm2/out.log', // 正常日志文件
+      // out_file: './logs/pm2/out.log', // 正常日志文件
       startup_file: './logs/pm2/startup.log', // 启动日志文件
       merge_logs: true, // 设置追加日志而不是新建日志
       log_date_format: 'YYYY-MM-DD HH:mm:ss', // 指定日志文件的时间格式
@@ -20,44 +20,24 @@ module.exports = {
       max_restarts: 30, // 最大异常重启次数
       restart_delay: 60, // 异常重启情况下，延时重启时间
       env: {
-        // 环境参数，当前指定为开发环境
-        NODE_ENV: 'dev', // 使用dev模式 pm2 start ecosystem.config.js --env dev
-        PORT: '12581',
-        MYSQL_HOST: 'localhost',
-        MYSQL_PORT: '3306',
-        MYSQL_USER: 'root',
-        MYSQL_PASSWORD: '123456',
-        MYSQL_DATABASE: 'data_middle_station'
-      },
-      env_production: {
-        // 环境参数,当前指定为生产环境
-        NODE_ENV: 'prod', // 使用production模式 pm2 start ecosystem.config.js --env prod
-        PORT: '12581',
-        MYSQL_HOST: 'localhost',
-        MYSQL_PORT: '3306',
-        MYSQL_USER: 'root',
-        MYSQL_PASSWORD: '123456',
-        MYSQL_DATABASE: 'data_middle_station'
-      },
-      env_pre: {
-        // 环境参数,当前为测试环境
-        NODE_ENV: 'pre', // 使用pre模式 pm2 start ecosystem.config.js --env pre
-        PORT: '12581',
-        MYSQL_HOST: 'localhost',
-        MYSQL_PORT: '3306',
-        MYSQL_USER: 'root',
-        MYSQL_PASSWORD: '123456',
-        MYSQL_DATABASE: 'data_middle_station'
+        // 默认环境参数
+        NODE_ENV: 'development',
+        PORT: '3000'
       },
       env_daily: {
-        // 环境参数,当前为日常环境
-        NODE_ENV: 'daily', // 使用daily模式 pm2 start ecosystem.config.js --env daily
-        PORT: '12581',
-        MYSQL_HOST: 'localhost',
-        MYSQL_PORT: '3306',
-        MYSQL_USER: 'root',
-        MYSQL_PASSWORD: '123456',
-        MYSQL_DATABASE: 'data_middle_station'
+        // 日常环境参数
+        NODE_ENV: 'daily',
+        PORT: '12581'
+      },
+      env_pre: {
+        // 预发环境参数
+        NODE_ENV: 'pre',
+        PORT: '12581'
+      },
+      env_prod: {
+        // 生产环境参数
+        NODE_ENV: 'prod',
+        PORT: '12581'
       }
     }
   ]

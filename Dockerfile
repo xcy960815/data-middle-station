@@ -5,7 +5,7 @@ FROM node:18 AS builder
 WORKDIR /data-middle-station
 
 # 设置环境变量
-ENV NODE_ENV=production
+ENV NODE_ENV=pre
 ENV PNPM_HOME="/root/.local/share/pnpm"
 ENV PATH="${PNPM_HOME}:${PATH}"
 
@@ -31,7 +31,7 @@ RUN pnpm install
 COPY . .
 
 # 构建应用
-RUN pnpm run build
+RUN pnpm run build:pre
 
 
 # 安装pm2
@@ -44,4 +44,4 @@ EXPOSE 12581
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:12581/ || exit 1
 
-CMD ["pm2", "start", "ecosystem.config.js", "--env", "dev"]
+CMD ["pm2", "start", "ecosystem.config.js", "--env", "pre"]
