@@ -1,4 +1,4 @@
-import { StoreNames } from '../store-names'
+import { StoreNames } from './store-names'
 /**
  * @desc 分组 store
  */

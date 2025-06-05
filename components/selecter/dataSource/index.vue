@@ -9,13 +9,8 @@
       v-model:visible="isPopoverVisible"
     >
       <template #reference>
-        <div
-          class="select-trigger"
-          :class="{ 'is-active': isPopoverVisible }"
-        >
-          <span class="selected-value">{{
-            dataSource || '请选择数据库表'
-          }}</span>
+        <div class="select-trigger" :class="{ 'is-active': isPopoverVisible }">
+          <span class="selected-value">{{ dataSource || '请选择数据库表' }}</span>
         </div>
       </template>
 
@@ -27,10 +22,7 @@
           :prefix-icon="Search"
           style="margin-bottom: 8px; width: 220px"
         />
-        <el-button
-          type="primary"
-          style="margin-left: 8px; margin-bottom: 8px"
-          @click="handleSearch"
+        <el-button type="primary" style="margin-left: 8px; margin-bottom: 8px" @click="handleSearch"
           >搜索</el-button
         >
       </div>
@@ -45,16 +37,8 @@
         :row-class-name="rowClassName"
         empty-text="暂无数据"
       >
-        <el-table-column
-          prop="tableName"
-          label="表名"
-          min-width="120"
-        />
-        <el-table-column
-          prop="tableComment"
-          label="备注"
-          min-width="120"
-        />
+        <el-table-column prop="tableName" label="表名" min-width="120" />
+        <el-table-column prop="tableComment" label="备注" min-width="120" />
       </el-table>
     </el-popover>
   </client-only>
@@ -63,15 +47,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
-import { useColumnStore } from '@/stores/analyse/column'
-import {
-  ElPopover,
-  ElTable,
-  ElTableColumn,
-  ElInput,
-  ElButton,
-  ElMessage
-} from 'element-plus'
+import { useColumnStore } from '~/stores/column'
+import { ElPopover, ElTable, ElTableColumn, ElInput, ElButton, ElMessage } from 'element-plus'
 
 const columnStore = useColumnStore()
 const searchKeyword = ref('')
@@ -85,18 +62,16 @@ const dataSource = computed({
   get: () => {
     return columnStore.getDataSource
   },
-  set: (val) => {
+  set: val => {
     columnStore.setDataSource(val)
-  }
+  },
 })
 
 /**
  * @desc 数据源选项
  * @returns {ColumnStore.dataSourceOption[]}
  */
-const dataSourceOptions = computed(
-  () => columnStore.getDataSourceOptions
-)
+const dataSourceOptions = computed(() => columnStore.getDataSourceOptions)
 
 /**
  * @desc 搜索按钮点击（目前只做UI，实际过滤仍为输入框实时过滤）
@@ -108,9 +83,7 @@ const handleSearch = () => {
 /**
  * @desc 选择表
  */
-const handleSelectTable = (
-  row: ColumnStore.DataSourceOption
-) => {
+const handleSelectTable = (row: ColumnStore.DataSourceOption) => {
   dataSource.value = row.tableName
   isPopoverVisible.value = false
 }
@@ -118,14 +91,8 @@ const handleSelectTable = (
 /**
  * @desc 高亮当前选中行
  */
-const rowClassName = ({
-  row
-}: {
-  row: DatabaseVo.TableOptionVo
-}) => {
-  return row.tableName === dataSource.value
-    ? 'is-selected'
-    : ''
+const rowClassName = ({ row }: { row: DatabaseVo.TableOptionVo }) => {
+  return row.tableName === dataSource.value ? 'is-selected' : ''
 }
 
 /**
@@ -136,8 +103,8 @@ const queryTable = async () => {
   const result = await $fetch('/api/queryTable', {
     method: 'GET',
     params: {
-      tableName: searchKeyword.value
-    }
+      tableName: searchKeyword.value,
+    },
   })
   if (result.code === 200) {
     columnStore.setDataSourceOptions(result.data || [])
@@ -149,7 +116,7 @@ const queryTable = async () => {
 
 watch(
   () => isPopoverVisible.value,
-  (visible) => {
+  visible => {
     if (visible) {
       queryTable()
     }
