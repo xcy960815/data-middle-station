@@ -1,11 +1,10 @@
-import { BaseMapper, BindDataSource } from './baseMapper'
+import { BaseMapper } from './baseMapper'
 
 const DATA_SOURCE_NAME = 'kanban_data'
 
 /**
  * @desc 图表数据mapper
  */
-@BindDataSource(DATA_SOURCE_NAME)
 export class ChartDataMapper extends BaseMapper {
   public dataSourceName = DATA_SOURCE_NAME
 
