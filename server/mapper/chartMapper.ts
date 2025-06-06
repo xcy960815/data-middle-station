@@ -9,8 +9,6 @@ import {
   IColumnTarget,
 } from './baseMapper'
 
-import { convertToSqlProperties } from '../utils/databaseHelpper'
-
 // 基础字段字典
 export const CHART_BASE_FIELDS = [
   'id',
@@ -110,7 +108,6 @@ export class ChartMapper extends BaseMapper {
 
     // 更新 chart 表
     const updateChartConfigSql = `UPDATE ${CHART_TABLE_NAME} SET ${chartOptionSetClause} WHERE id = ?`
-
     const chartResult = await this.exe<ResultSetHeader>(updateChartConfigSql, [
       ...chartOptionValues,
       chartOption.id,
