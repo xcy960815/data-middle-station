@@ -1,4 +1,4 @@
-export { useChartStore } from './chart'
+export { useAnalyseStore } from './analyse'
 export { useDimensionStore } from './dimension'
 export { useGroupStore } from './group'
 export { useColumnStore } from './column'
