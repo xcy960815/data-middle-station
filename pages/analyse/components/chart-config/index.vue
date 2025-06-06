@@ -12,11 +12,7 @@
         <h3 class="config-title">图表配置</h3>
       </div>
 
-      <el-tabs
-        v-model="chartConfigTab"
-        type="card"
-        class="config-tabs"
-      >
+      <el-tabs v-model="chartConfigTab" type="card" class="config-tabs">
         <el-tab-pane label="通用" name="common">
           <el-form
             label-position="top"
@@ -27,7 +23,7 @@
             <el-form-item label="备注">
               <el-input
                 type="textarea"
-                v-model="commonChartConfig.chartDesc"
+                v-model="commonChartConfig.analyseDesc"
                 :rows="3"
                 placeholder="请输入图表备注信息"
               />
@@ -49,10 +45,7 @@
                 class="ml-2"
                 active-text="开启"
                 inactive-text="关闭"
-                style="
-                  --el-switch-on-color: #13ce66;
-                  --el-switch-off-color: #ff4949;
-                "
+                style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
               />
             </el-form-item>
 
@@ -93,7 +86,7 @@ import IntervalChartConfig from './components/interval-chart-config/index.vue'
 import PieChartConfig from './components/pie-chart-config/index.vue'
 
 const chartsConfigStore = useChartConfigStore()
-const chartStore = useChartStore()
+const chartStore = useAnalyseStore()
 const chartConfigTab = ref('common')
 /**
  * @desc 图表配置抽屉 状态
@@ -102,8 +95,7 @@ const chartConfigDrawer = computed({
   get: () => {
     return chartsConfigStore.chartConfigDrawer
   },
-  set: (value) =>
-    chartsConfigStore.setChartConfigDrawer(value)
+  set: value => chartsConfigStore.setChartConfigDrawer(value),
 })
 /**
  * @desc 图表配置组件

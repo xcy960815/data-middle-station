@@ -1,12 +1,12 @@
 /**
  * @desc  表结构
  */
-declare namespace ChartVo {
+declare namespace AnalyseVo {
   type ChartDataVo = Array<{
     [key: string]: string | number
   }>
 
-  type ChartOption = {
+  type AnalyseOption = {
     id: number
     chartName: string
     chartDesc: string

@@ -1,8 +1,8 @@
 import { ElMessage } from 'element-plus'
 
-export const updateChartConfigHandler = () => {
+export const updateAnalyseHandler = () => {
   const chartConfigStore = useChartConfigStore()
-  const chartStore = useChartStore()
+  const chartStore = useAnalyseStore()
   const columnStore = useColumnStore()
   const dimensionStore = useDimensionStore()
   const groupStore = useGroupStore()
@@ -11,7 +11,7 @@ export const updateChartConfigHandler = () => {
   /**
    * @desc 点击保存
    */
-  const handleUpdateChartConfig = async () => {
+  const handleUpdateAnalyse = async () => {
     const chartConfig = chartConfigStore.getChartConfig
     const chartConfigId = chartStore.getChartConfigId
     const column = columnStore.getColumns
@@ -19,19 +19,18 @@ export const updateChartConfigHandler = () => {
     const group = groupStore.getGroups
     const order = orderStore.getOrders
     const filter = filterStore.getFilters
-    const commonChartConfig =
-      chartConfigStore.getCommonChartConfig
+    const commonChartConfig = chartConfigStore.getCommonChartConfig
     const id = chartStore.getChartId
-    const chartName = chartStore.getChartName
-    const chartDesc = chartStore.getChartDesc
+    const analyseName = chartStore.getAnalyseName
+    const analyseDesc = chartStore.getAnalyseDesc
     const chartType = chartStore.getChartType
     const dataSource = columnStore.getDataSource
-    const result = await $fetch('/api/updateChart', {
+    const result = await $fetch('/api/updateAnalyse', {
       method: 'POST',
       body: {
         id,
-        chartName,
-        chartDesc,
+        analyseName,
+        analyseDesc,
         chartConfigId,
         chartConfig: {
           dataSource,
@@ -41,9 +40,9 @@ export const updateChartConfigHandler = () => {
           order,
           filter,
           limit: commonChartConfig.limit,
-          chartType
-        }
-      }
+          chartType,
+        },
+      },
     })
     if (result.code === 200) {
       ElMessage.success('保存成功')
@@ -52,6 +51,6 @@ export const updateChartConfigHandler = () => {
     }
   }
   return {
-    handleUpdateChartConfig
+    handleUpdateAnalyse,
   }
 }

@@ -2,8 +2,8 @@ import { ChartConfigMapper } from '../mapper/chartConfigMapper'
 import dayjs from 'dayjs'
 
 const logger = new Logger({
-  fileName: 'chartService',
-  folderName: 'chartService'
+  fileName: 'analyseService',
+  folderName: 'analyseService',
 })
 /**
  * @desc 分析服务
@@ -20,83 +20,48 @@ export class ChartConfigService {
    * @param chartConfigOption {ChartConfigDao.ChartConfig} 图表配置
    * @returns {ChartConfigVo.ChartConfig} 图表配置
    */
-  private dao2Vo(
-    chartConfigOption: ChartConfigDao.ChartConfig
-  ): ChartConfigVo.ChartConfig {
+  private dao2Vo(chartConfigOption: ChartConfigDao.ChartConfig): ChartConfigVo.ChartConfig {
     return {
       ...chartConfigOption,
-      column: chartConfigOption.column.map((item) => ({
-        columnName:
-          typeof item.columnName === 'function'
-            ? item.columnName('')
-            : item.columnName,
-        columnType:
-          typeof item.columnType === 'function'
-            ? item.columnType('')
-            : item.columnType,
+      column: chartConfigOption.column.map(item => ({
+        columnName: typeof item.columnName === 'function' ? item.columnName('') : item.columnName,
+        columnType: typeof item.columnType === 'function' ? item.columnType('') : item.columnType,
         columnComment: item.columnComment,
         alias: item.alias || item.columnComment,
-        displayName: item.displayName || item.columnComment
+        displayName: item.displayName || item.columnComment,
       })),
-      dimension: chartConfigOption.dimension.map(
-        (item) => ({
-          ...item,
-          columnName:
-            typeof item.columnName === 'function'
-              ? item.columnName('')
-              : item.columnName,
-          columnType:
-            typeof item.columnType === 'function'
-              ? item.columnType('')
-              : item.columnType,
-          columnComment: item.columnComment,
-          alias: item.alias || item.columnComment,
-          displayName:
-            item.displayName || item.columnComment
-        })
-      ),
-      filter: chartConfigOption.filter.map((item) => ({
+      dimension: chartConfigOption.dimension.map(item => ({
         ...item,
-        columnName:
-          typeof item.columnName === 'function'
-            ? item.columnName('')
-            : item.columnName,
-        columnType:
-          typeof item.columnType === 'function'
-            ? item.columnType('')
-            : item.columnType,
-        columnComment: item.columnComment,
-        alias: item.columnComment,
-        displayName: item.columnComment
-      })),
-      group: chartConfigOption.group.map((item) => ({
-        ...item,
-        columnName:
-          typeof item.columnName === 'function'
-            ? item.columnName('')
-            : item.columnName,
-        columnType:
-          typeof item.columnType === 'function'
-            ? item.columnType('')
-            : item.columnType,
+        columnName: typeof item.columnName === 'function' ? item.columnName('') : item.columnName,
+        columnType: typeof item.columnType === 'function' ? item.columnType('') : item.columnType,
         columnComment: item.columnComment,
         alias: item.alias || item.columnComment,
-        displayName: item.displayName || item.columnComment
+        displayName: item.displayName || item.columnComment,
       })),
-      order: chartConfigOption.order.map((item) => ({
+      filter: chartConfigOption.filter.map(item => ({
         ...item,
-        columnName:
-          typeof item.columnName === 'function'
-            ? item.columnName('')
-            : item.columnName,
-        columnType:
-          typeof item.columnType === 'function'
-            ? item.columnType('')
-            : item.columnType,
+        columnName: typeof item.columnName === 'function' ? item.columnName('') : item.columnName,
+        columnType: typeof item.columnType === 'function' ? item.columnType('') : item.columnType,
         columnComment: item.columnComment,
         alias: item.columnComment,
-        displayName: item.columnComment
-      }))
+        displayName: item.columnComment,
+      })),
+      group: chartConfigOption.group.map(item => ({
+        ...item,
+        columnName: typeof item.columnName === 'function' ? item.columnName('') : item.columnName,
+        columnType: typeof item.columnType === 'function' ? item.columnType('') : item.columnType,
+        columnComment: item.columnComment,
+        alias: item.alias || item.columnComment,
+        displayName: item.displayName || item.columnComment,
+      })),
+      order: chartConfigOption.order.map(item => ({
+        ...item,
+        columnName: typeof item.columnName === 'function' ? item.columnName('') : item.columnName,
+        columnType: typeof item.columnType === 'function' ? item.columnType('') : item.columnType,
+        columnComment: item.columnComment,
+        alias: item.columnComment,
+        displayName: item.columnComment,
+      })),
     }
   }
 
@@ -105,11 +70,8 @@ export class ChartConfigService {
    * @param id {number} 图表id
    * @returns {Promise<ChartConfigVo.ChartConfig>}
    */
-  public async getChartConfig(
-    id: number
-  ): Promise<ChartConfigVo.ChartConfig> {
-    const chartConfigOption =
-      await this.chartConfigMapper.getChartConfig(id)
+  public async getChartConfig(id: number): Promise<ChartConfigVo.ChartConfig> {
+    const chartConfigOption = await this.chartConfigMapper.getChartConfig(id)
     return this.dao2Vo(chartConfigOption)
   }
 
@@ -118,24 +80,19 @@ export class ChartConfigService {
    * @param chartConfig {ChartConfigDto.ChartConfig} 图表配置
    * @returns {Promise<boolean>}
    */
-  public async updateChartConfig(
-    chartConfigDto: ChartConfigDto.ChartConfig
-  ): Promise<boolean> {
-    const currentTime = dayjs().format(
-      'YYYY-MM-DD HH:mm:ss'
-    )
-    const updateChartResult =
-      await this.chartConfigMapper.updateChart({
-        id: chartConfigDto.id,
-        chartType: chartConfigDto.chartType,
-        dataSource: chartConfigDto?.dataSource,
-        column: chartConfigDto?.column,
-        dimension: chartConfigDto?.dimension,
-        filter: chartConfigDto?.filter,
-        group: chartConfigDto?.group,
-        order: chartConfigDto?.order,
-        updateTime: currentTime
-      })
+  public async updateChartConfig(chartConfigDto: ChartConfigDto.ChartConfig): Promise<boolean> {
+    const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    const updateChartResult = await this.chartConfigMapper.updateChart({
+      id: chartConfigDto.id,
+      chartType: chartConfigDto.chartType,
+      dataSource: chartConfigDto?.dataSource,
+      column: chartConfigDto?.column,
+      dimension: chartConfigDto?.dimension,
+      filter: chartConfigDto?.filter,
+      group: chartConfigDto?.group,
+      order: chartConfigDto?.order,
+      updateTime: currentTime,
+    })
     return updateChartResult
   }
 
@@ -144,25 +101,20 @@ export class ChartConfigService {
    * @param chartConfigDto {ChartConfigDto.ChartConfig} 图表配置
    * @returns {Promise<number>}
    */
-  public async createChartConfig(
-    chartConfigDto: ChartConfigDto.ChartConfig
-  ): Promise<number> {
-    const currentTime = dayjs().format(
-      'YYYY-MM-DD HH:mm:ss'
-    )
-    const chartConfigId =
-      await this.chartConfigMapper.createChartConfig({
-        chartType: chartConfigDto.chartType,
-        dataSource: chartConfigDto.dataSource,
-        column: chartConfigDto.column,
-        dimension: chartConfigDto.dimension,
-        filter: chartConfigDto.filter,
-        group: chartConfigDto.group,
-        order: chartConfigDto.order,
-        limit: chartConfigDto.limit,
-        createTime: currentTime,
-        updateTime: currentTime
-      })
+  public async createChartConfig(chartConfigDto: ChartConfigDto.ChartConfig): Promise<number> {
+    const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    const chartConfigId = await this.chartConfigMapper.createChartConfig({
+      chartType: chartConfigDto.chartType,
+      dataSource: chartConfigDto.dataSource,
+      column: chartConfigDto.column,
+      dimension: chartConfigDto.dimension,
+      filter: chartConfigDto.filter,
+      group: chartConfigDto.group,
+      order: chartConfigDto.order,
+      limit: chartConfigDto.limit,
+      createTime: currentTime,
+      updateTime: currentTime,
+    })
 
     return chartConfigId
   }

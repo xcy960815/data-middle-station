@@ -3,7 +3,7 @@
     <template #header>
       <custom-header>
         <template #chart-name>
-          <ChartName></ChartName>
+          <analyseName></analyseName>
         </template>
       </custom-header>
     </template>
@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import ChartName from './components/chart-name/index.vue'
+import analyseName from './components/chart-name/index.vue'
 import Column from './components/column/index.vue'
 import DimensionOption from './components/dimension/index.vue'
 import Filter from './components/filter/index.vue'
@@ -49,9 +49,9 @@ import Chart from './components/chart/index.vue'
 import ChartType from './components/chart-type/index.vue'
 import ChartConfig from './components/chart-config/index.vue'
 import { getChartDataHandler } from './getChartData'
-import { getChartConfigHandler } from './getChartConfig'
+import { getAnalyseHandler } from './getAnalyse'
 const layoutName = 'analyse'
-getChartConfigHandler()
+getAnalyseHandler()
 getChartDataHandler()
 </script>
 

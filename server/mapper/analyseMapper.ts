@@ -22,7 +22,7 @@ export const CHART_BASE_FIELDS = [
   'chart_config_id',
 ]
 
-export class ChartMapping implements ChartDao.ChartOption, IColumnTarget {
+export class ChartMapping implements AnalyseDao.AnalyseOption, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -33,11 +33,11 @@ export class ChartMapping implements ChartDao.ChartOption, IColumnTarget {
 
   // 图表名称
   @Column('chart_name')
-  chartName!: string
+  analyseName!: string
 
   // 图表描述
   @Column('chart_desc')
-  chartDesc!: string
+  analyseDesc!: string
 
   // 访问次数
   @Column('view_count')
@@ -71,7 +71,7 @@ const CHART_TABLE_NAME = 'chart'
 // const CHART_CONFIG_TABLE_NAME = 'chart_config'
 const DATA_SOURCE_NAME = 'data_middle_station'
 
-export class ChartMapper extends BaseMapper {
+export class AnalyseMapper extends BaseMapper {
   public dataSourceName = DATA_SOURCE_NAME
 
   /**
@@ -85,32 +85,31 @@ export class ChartMapper extends BaseMapper {
   }
 
   /**
-   * @desc 新建图表
-   * @param chart {ChartsOption} 图表
+   * @desc 新建分析
+   * @param analyseOption {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<number>}
    */
-  public async createChart(chartOption: ChartDto.ChartOption): Promise<boolean> {
-    const { keys, values } = convertToSqlProperties(chartOption)
+  public async createAnalyse(analyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(analyseOption)
     const sql = `INSERT INTO ${CHART_TABLE_NAME} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`
     const result = await this.exe<ResultSetHeader>(sql, values)
     return result.affectedRows > 0
   }
 
   /**
-   * @desc 更新图表
-   * @param chartOptionDto {ChartDto.ChartOption} 图表
+   * @desc 更新分析
+   * @param AnalyseOptionDto {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<void>}
    */
-  public async updateChart(chartOptionDto: ChartDto.ChartOption): Promise<boolean> {
-    const { viewCount, createTime, createdBy, ...chartOption } = chartOptionDto
-    const { keys: chartOptionKeys, values: chartOptionValues } = convertToSqlProperties(chartOption)
-    const chartOptionSetClause = chartOptionKeys.map(key => `${key} = ?`).join(', ')
-
-    // 更新 chart 表
-    const updateChartConfigSql = `UPDATE ${CHART_TABLE_NAME} SET ${chartOptionSetClause} WHERE id = ?`
+  public async updateAnalyse(AnalyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
+    const { viewCount, createTime, createdBy, ...AnalyseOption } = AnalyseOptionDto
+    const { keys: AnalyseOptionKeys, values: AnalyseOptionValues } =
+      convertToSqlProperties(AnalyseOption)
+    const AnalyseOptionSetClause = AnalyseOptionKeys.map(key => `${key} = ?`).join(', ')
+    const updateChartConfigSql = `UPDATE ${CHART_TABLE_NAME} SET ${AnalyseOptionSetClause} WHERE id = ?`
     const chartResult = await this.exe<ResultSetHeader>(updateChartConfigSql, [
-      ...chartOptionValues,
-      chartOption.id,
+      ...AnalyseOptionValues,
+      AnalyseOption.id,
     ])
 
     return chartResult.affectedRows > 0
@@ -126,12 +125,12 @@ export class ChartMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取图表
+   * @desc 获取分析
    * @param id {number} 图表id
-   * @returns {Promise<ChartDao.ChartOption>}
+   * @returns {Promise<AnalyseDao.AnalyseOption>}
    */
   @Mapping(ChartMapping)
-  public async getChart<T extends ChartDao.ChartOption>(id: number): Promise<T> {
+  public async getAnalyse<T extends AnalyseDao.AnalyseOption>(id: number): Promise<T> {
     // 更新访问次数 不知道为什么报错
     await this.updateViewCount(id)
     const sql = `select 
@@ -154,10 +153,10 @@ export class ChartMapper extends BaseMapper {
 
   /**
    * @desc 获取所有的图表
-   * @returns {Promise<Array<ChartDao.ChartOption>>}
+   * @returns {Promise<Array<AnalyseDao.AnalyseOption>>}
    */
   @Mapping(ChartMapping)
-  public async getCharts<T extends ChartDao.ChartOption>(): Promise<Array<T>> {
+  public async getCharts<T extends AnalyseDao.AnalyseOption>(): Promise<Array<T>> {
     const sql = `
     select 
       ${CHART_BASE_FIELDS.join(',\n    ')}

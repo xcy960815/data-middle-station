@@ -4,10 +4,7 @@
       <custom-header></custom-header>
     </template>
     <template #content>
-      <div
-        class="homepage-container relative"
-        ref="container"
-      >
+      <div class="homepage-container relative" ref="container">
         <chart-card
           ref="cards"
           class="card-chart"
@@ -16,8 +13,7 @@
           :update-time="chart.updateTime"
           :created-by="chart.createdBy"
           :updated-by="chart.updatedBy"
-          :chart-name="chart.chartName"
-          :chart-type="chart.chartType"
+          :analyse-name="chart.analyseName"
           :id="chart.id"
           :key="chart.id"
           :view-count="chart.viewCount"
@@ -40,19 +36,16 @@ const container = ref<HTMLDivElement>()
  * @description 获取所有的图表
  */
 const getCharts = async () => {
-  const res = await $fetch('/api/getCharts', {
-    method: 'POST'
+  const res = await $fetch('/api/getAnalyses', {
+    method: 'POST',
   })
   if (res.code === 200) {
     HomePageStore.setCharts(res.data || [])
     nextTick(() => {
       // 添加window 日历效果
-      const cards =
-        container.value!.querySelectorAll<HTMLDivElement>(
-          '.card-chart'
-        )
+      const cards = container.value!.querySelectorAll<HTMLDivElement>('.card-chart')
 
-      container.value!.onmousemove = (e) => {
+      container.value!.onmousemove = e => {
         for (const card of cards) {
           const rect = card.getBoundingClientRect()
           const x = e.clientX - rect.left - rect.width / 2

@@ -1,73 +1,72 @@
 <template>
   <h4
-    :title="chartDesc"
+    :title="analyseDesc"
     class="chart-name cursor-pointer"
-    @click="handleUpdateChartName"
+    @click="handleUpdateAnalyseName"
     @contextmenu="handleUpdateChartDesc"
   >
-    {{ chartName }}
+    {{ analyseName }}
   </h4>
 </template>
 
 <script setup lang="ts">
 import { ElMessageBox, ElMessage } from 'element-plus'
-const chartStore = useChartStore()
+const chartStore = useAnalyseStore()
 const chartId = computed(() => {
   return chartStore.getChartId
 })
-const chartName = computed(() => {
-  return chartStore.getChartName
+const analyseName = computed(() => {
+  return chartStore.getAnalyseName
 })
-const chartDesc = computed(() => {
-  return chartStore.getChartDesc
+const analyseDesc = computed(() => {
+  return chartStore.getAnalyseDesc
 })
 
 const props = defineProps({
-  chartName: {
+  analyseName: {
     type: String,
-    default: ''
-  }
+    default: '',
+  },
 })
 
 /**
  * 更新图表名称
  * @param {string} value 图表名称
  */
-const handleUpdateChartName = () => {
+const handleUpdateAnalyseName = () => {
   ElMessageBox.prompt('请输入分析名称', '编辑分析名称', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
-    inputErrorMessage:
-      '分析名称仅支持中英文、数字、下划线，且不能为空',
-    inputValue: chartName.value || '未命名分析',
-    autofocus: true
+    inputErrorMessage: '分析名称仅支持中英文、数字、下划线，且不能为空',
+    inputValue: analyseName.value || '未命名分析',
+    autofocus: true,
   }).then(({ value }) => {
     if (!value.trim()) {
       ElMessage.error('分析名称不能为空')
       return
     }
-    updateChartName(value.trim())
+    updateAnalyseName(value.trim())
   })
 }
 /**
  * 更新图表名称
  * @param {string} value 图表名称
  */
-const updateChartName = async (value: string) => {
-  const result = await $fetch('/api/updateChartName', {
+const updateAnalyseName = async (value: string) => {
+  const result = await $fetch('/api/updateAnalyseName', {
     method: 'POST',
     body: {
       id: chartId.value,
-      chartName: value
-    }
+      analyseName: value,
+    },
   })
   if (result.code === 200) {
     ElMessage({
       type: 'success',
-      message: '更新成功'
+      message: '更新成功',
     })
-    chartStore.setChartName(value)
+    chartStore.setAnalyseName(value)
   }
 }
 /**
@@ -82,8 +81,8 @@ const handleUpdateChartDesc = (event: MouseEvent) => {
     cancelButtonText: '取消',
     inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{0,100}$/,
     inputErrorMessage: '描述仅支持中英文、数字、下划线',
-    inputValue: chartDesc.value || '未填写描述',
-    autofocus: true
+    inputValue: analyseDesc.value || '未填写描述',
+    autofocus: true,
   }).then(({ value }) => {
     if (!value.trim()) {
       ElMessage.error('描述不能为空')
@@ -97,19 +96,19 @@ const handleUpdateChartDesc = (event: MouseEvent) => {
  * @param {string} value 图表描述
  */
 const updateChartDesc = async (value: string) => {
-  const result = await $fetch('/api/updateChartDesc', {
+  const result = await $fetch('/api/updateAnalyseDesc', {
     method: 'POST',
     body: {
       id: chartId.value,
-      chartDesc: value
-    }
+      analyseDesc: value,
+    },
   })
   if (result.code === 200) {
     ElMessage({
       type: 'success',
-      message: '更新成功'
+      message: '更新成功',
     })
-    chartStore.setChartDesc(value)
+    chartStore.setAnalyseDesc(value)
   }
 }
 </script>

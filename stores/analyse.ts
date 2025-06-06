@@ -1,14 +1,14 @@
 import { StoreNames } from './store-names'
 
-export const useChartStore = defineStore<
-  ChartStore.ChartKey,
-  BaseStore.State<ChartStore.ChartState>,
-  BaseStore.Getters<ChartStore.ChartState, ChartStore.ChartGetters>,
-  BaseStore.Actions<ChartStore.ChartState, ChartStore.ChartActions>
+export const useAnalyseStore = defineStore<
+  AnalyseStore.AnalyseKey,
+  BaseStore.State<AnalyseStore.AnalyseState>,
+  BaseStore.Getters<AnalyseStore.AnalyseState, AnalyseStore.AnalyseGetters>,
+  BaseStore.Actions<AnalyseStore.AnalyseState, AnalyseStore.AnalyseActions>
 >(StoreNames.CHART, {
   state: () => ({
-    chartName: '',
-    chartDesc: '',
+    analyseName: '',
+    analyseDesc: '',
     chartUpdateTime: '',
     chartUpdateTakesTime: '',
     chartErrorMessage: '',
@@ -22,14 +22,14 @@ export const useChartStore = defineStore<
     /**
      * @desc 获取图表名称
      */
-    getChartName(state) {
-      return state.chartName
+    getAnalyseName(state) {
+      return state.analyseName
     },
     /**
      * @desc 获取图表描述
      */
-    getChartDesc(state) {
-      return state.chartDesc
+    getAnalyseDesc(state) {
+      return state.analyseDesc
     },
     /**
      * @desc 获取图表更新时间
@@ -51,7 +51,7 @@ export const useChartStore = defineStore<
     },
     /**
      * @desc 获取图表加载状态
-     * @param state {ChartState}
+     * @param state {AnalyseState}
      * @returns {boolean}
      */
     getChartLoading(state): boolean {
@@ -85,19 +85,19 @@ export const useChartStore = defineStore<
   actions: {
     /**
      * @desc 设置图表名称
-     * @param chartName {string}
+     * @param analyseName {string}
      * @returns {void}
      */
-    setChartName(chartName) {
-      this.chartName = chartName
+    setAnalyseName(analyseName) {
+      this.analyseName = analyseName
     },
     /**
      * @desc 设置图表描述
-     * @param chartDesc {string}
+     * @param analyseDesc {string}
      * @returns {void}
      */
-    setChartDesc(chartDesc) {
-      this.chartDesc = chartDesc
+    setAnalyseDesc(analyseDesc) {
+      this.analyseDesc = analyseDesc
     },
     /**
      * @desc 设置图表更新时间

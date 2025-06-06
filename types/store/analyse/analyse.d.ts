@@ -1,24 +1,23 @@
 /**
  * @description: 图表 store
  */
-declare namespace ChartStore {
+declare namespace AnalyseStore {
   const ChartTypesEnums = {
     table: 'table',
     line: 'line',
     pie: 'pie',
-    interval: 'interval'
+    interval: 'interval',
   } as const
 
-  type ChartKey = 'chart'
+  type AnalyseKey = 'chart'
 
-  type ChartType =
-    (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
+  type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
 
-  type ChartState = {
+  type AnalyseState = {
     // 图表名称
-    chartName: string
+    analyseName: string
     // 图表描述
-    chartDesc: string
+    analyseDesc: string
     // 更新时间
     chartUpdateTime: string
     // 更新耗时
@@ -39,10 +38,10 @@ declare namespace ChartStore {
   /**
    * @desc getter
    */
-  type ChartGetters = {}
+  type AnalyseGetters = {}
 
   /**
    * @desc action
    */
-  type ChartActions = {}
+  type AnalyseActions = {}
 }

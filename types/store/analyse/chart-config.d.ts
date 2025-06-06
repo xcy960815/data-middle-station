@@ -12,7 +12,7 @@ declare namespace ChartConfigStore {
    */
   type CommonChartConfig = {
     // 描述
-    chartDesc: string
+    analyseDesc: string
     // 数据量
     limit: number
     // 智能作图建议
@@ -143,8 +143,6 @@ declare namespace ChartConfigStore {
     setChartConfigDrawer: (value: boolean) => void
     setCommonChartConfig: (value: CommonChartConfig) => void
     setChartConfig: (value: ChartConfig) => void
-    setTableChartConditions: (
-      conditions: TableChartConfigConditionOption[]
-    ) => void
+    setTableChartConditions: (conditions: TableChartConfigConditionOption[]) => void
   }
 }

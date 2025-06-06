@@ -1,5 +1,5 @@
-export const getChartConfigHandler = () => {
-  const chartStore = useChartStore()
+export const getAnalyseHandler = () => {
+  const chartStore = useAnalyseStore()
   const columnStore = useColumnStore()
   const dimensionStore = useDimensionStore()
   const filterStore = useFilterStore()
@@ -8,44 +8,35 @@ export const getChartConfigHandler = () => {
   /**
    * @desc 获取图表
    */
-  const getChart = async () => {
+  const getAnalyse = async () => {
     const router = useRouter()
     const id = router.currentRoute.value.query.id
     if (!id) return
-    const result = await $fetch('/api/getChart', {
+    const result = await $fetch('/api/getAnalyse', {
       method: 'post',
       body: {
-        id
-      }
+        id,
+      },
     })
     if (result.code === 200) {
       const data = result.data!
-      const chartName = data.chartName
-      chartStore.setChartName(chartName)
-      const chartDesc = data.chartDesc
-      chartStore.setChartDesc(chartDesc)
+      const analyseName = data.analyseName
+      chartStore.setAnalyseName(analyseName)
+      const analyseDesc = data.analyseDesc
+      chartStore.setAnalyseDesc(analyseDesc)
       const id = data.id
       chartStore.setChartId(id)
       const chartConfigId = data.chartConfigId
       chartStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
-      chartStore.setChartType(
-        (chartConfig?.chartType as ChartStore.ChartType) ||
-          'table'
-      )
+      chartStore.setChartType((chartConfig?.chartType as AnalyseStore.ChartType) || 'table')
       columnStore.setColumns(chartConfig?.column || [])
-      dimensionStore.setDimensions(
-        chartConfig?.dimension || []
-      )
+      dimensionStore.setDimensions(chartConfig?.dimension || [])
       filterStore.setFilters(chartConfig?.filter || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])
-      columnStore.setDataSource(
-        chartConfig?.dataSource || ''
-      )
-      dimensionStore.setDimensions(
-        chartConfig?.dimension || []
-      )
+      columnStore.setDataSource(chartConfig?.dataSource || '')
+      dimensionStore.setDimensions(chartConfig?.dimension || [])
       filterStore.setFilters(chartConfig?.filter || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])
@@ -54,6 +45,6 @@ export const getChartConfigHandler = () => {
 
   onMounted(() => {
     // console.log('getChartConfigHandler')
-    getChart()
+    getAnalyse()
   })
 }

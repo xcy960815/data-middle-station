@@ -11,7 +11,7 @@ export const useChartConfigStore = defineStore<
     chartConfig: {
       line: {
         chartType: 'line',
-        chartName: '',
+        analyseName: '',
         chartUpdateTime: '',
         chartUpdateTakesTime: '',
         showPoint: false,
@@ -22,7 +22,7 @@ export const useChartConfigStore = defineStore<
       },
       table: {
         chartType: 'table',
-        chartName: '',
+        analyseName: '',
         chartUpdateTime: '',
         chartUpdateTakesTime: '',
         displayMode: 'normal',
@@ -31,14 +31,14 @@ export const useChartConfigStore = defineStore<
       },
       pie: {
         chartType: 'pie',
-        chartName: '',
+        analyseName: '',
         chartUpdateTime: '',
         chartUpdateTakesTime: '',
         showLabel: false,
       },
       interval: {
         chartType: 'interval',
-        chartName: '',
+        analyseName: '',
         chartUpdateTime: '',
         chartUpdateTakesTime: '',
         displayMode: 'levelDisplay',
@@ -50,7 +50,7 @@ export const useChartConfigStore = defineStore<
     },
     commonChartConfig: {
       limit: 1000,
-      chartDesc: '',
+      analyseDesc: '',
       suggest: false,
       mixStrategy: '',
       shareStrategy: '',

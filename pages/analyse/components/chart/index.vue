@@ -1,9 +1,7 @@
 <template>
   <div class="chart relative h-full w-full overflow-hidden">
     <template v-if="chartErrorMessage">
-      <div
-        class="absolute inset-0 flex justify-center items-center"
-      >
+      <div class="absolute inset-0 flex justify-center items-center">
         <div class="text-red-500 text-[14px]">
           {{ chartErrorMessage }}
         </div>
@@ -34,7 +32,7 @@ import LineChart from '~/components/line-chart/index.vue'
 // 表格
 import TableChart from '~/components/table-chart/index.vue'
 
-const chartStore = useChartStore()
+const chartStore = useAnalyseStore()
 const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
 
@@ -88,12 +86,9 @@ const chartComponentMap = {
   table: TableChart,
   line: LineChart,
   interval: IntervalChart,
-  pie: PieChart
+  pie: PieChart,
 }
-const chartComponent = computed(
-  () =>
-    chartComponentMap[chartStore.getChartType] || TableChart
-)
+const chartComponent = computed(() => chartComponentMap[chartStore.getChartType] || TableChart)
 
 /**
  * @desc 图表开始渲染
