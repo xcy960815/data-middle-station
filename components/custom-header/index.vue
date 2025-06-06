@@ -1,19 +1,12 @@
 <template>
-  <div
-    class="header h-[50px] min-h-[50px] w-full flex items-center box-border pl-5 pr-5"
-  >
-    <div
-      class="header-left flex items-center cursor-pointer"
-      @click="handleClickAppName"
-    >
+  <div class="header h-[50px] min-h-[50px] w-full flex items-center box-border pl-5 pr-5">
+    <div class="header-left flex items-center cursor-pointer" @click="handleClickAppName">
       <h4 class="app-name">{{ appName }}</h4>
     </div>
     <div class="flex-1 flex items-center justify-center">
       <slot name="chart-name"></slot>
     </div>
-    <header-right
-      class="header-right w-[190px] flex items-center justify-between"
-    ></header-right>
+    <header-right class="header-right w-[190px] flex items-center justify-between"></header-right>
   </div>
 </template>
 
@@ -21,10 +14,10 @@
 import HeaderRight from './header-right/index.vue'
 const appName = process.env.APP_NAME
 const props = defineProps({
-  chartName: {
+  analyseName: {
     type: String,
-    default: ''
-  }
+    default: '',
+  },
 })
 const router = useRouter()
 const handleClickAppName = () => {
@@ -79,12 +72,7 @@ const handleClickAppName = () => {
       left: 0;
       width: 100%;
       height: 2px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        theme.getVar('primaryColor'),
-        transparent
-      );
+      background: linear-gradient(90deg, transparent, theme.getVar('primaryColor'), transparent);
       opacity: 0;
       transition: opacity 0.3s ease;
     }

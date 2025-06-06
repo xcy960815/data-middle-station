@@ -1,9 +1,7 @@
-
 /**
  * @desc table-chart 组件的数据类型定义
  */
 declare namespace TableChart {
- 
   type PageNum = Ref<number>
 
   type PageSize = Ref<number>
@@ -15,7 +13,7 @@ declare namespace TableChart {
   type EndIndex = ComputedRef<number>
 
   type TotalPage = ComputedRef<number>
-  
+
   type Props = {
     readonly data: Chart.ChartData[]
     readonly xAxisFields: Chart.XAxisFields[]
@@ -33,7 +31,10 @@ declare namespace TableChart {
    * @property {string} displayName 字段显示名
    * @property {OrderStore.OrderType} orderType 排序类型
    */
-  type TableHeaderOption = DimensionStore.DimensionOption & GroupStore.GroupOption & OrderStore.OrderOption & FilterStore.FilterOption 
+  type TableHeaderOption = DimensionStore.DimensionOption &
+    GroupStore.GroupOption &
+    OrderStore.OrderOption &
+    FilterStore.FilterOption
 
   type TableHeaderState = {
     tableHeader: Array<TableHeaderOption>

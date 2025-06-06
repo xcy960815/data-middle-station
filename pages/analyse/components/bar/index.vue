@@ -1,74 +1,37 @@
 <template>
   <div class="bar relative flex">
-    <el-button
-      link
-      @click="handleClickRefresh"
-      class="mr-auto"
-    >
-      刷新
-    </el-button>
+    <el-button link @click="handleClickRefresh" class="mr-auto"> 刷新 </el-button>
 
-    <el-button link @click="handleClickAlarm"
-      >报警</el-button
-    >
-    <el-button link @click="handleClickSetting"
-      >设置</el-button
-    >
-    <el-button link @click="handleClickFullScreen"
-      >全屏</el-button
-    >
-    <el-button link @click="handleClickDownload"
-      >下载</el-button
-    >
-    <el-button link @click="handleUpdateChartConfig"
-      >保存</el-button
-    >
-    <el-tag
-      v-show="chartUpdateTakesTime"
-      size="small"
-      class="pr-[10px] ml-[10px]"
-      type="info"
+    <el-button link @click="handleClickAlarm">报警</el-button>
+    <el-button link @click="handleClickSetting">设置</el-button>
+    <el-button link @click="handleClickFullScreen">全屏</el-button>
+    <el-button link @click="handleClickDownload">下载</el-button>
+    <el-button link @click="handleUpdateAnalyse">保存</el-button>
+    <el-tag v-show="chartUpdateTakesTime" size="small" class="pr-[10px] ml-[10px]" type="info"
       >更新耗时 ：{{ chartUpdateTakesTime }}</el-tag
     >
-    <el-tag
-      v-show="chartUpdateTime"
-      size="small"
-      class="pr-[10px] ml-[10px]"
-      type="info"
+    <el-tag v-show="chartUpdateTime" size="small" class="pr-[10px] ml-[10px]" type="info"
       >更新时间 ：{{ chartUpdateTime }}</el-tag
     >
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  ElCheckbox,
-  ElButton,
-  ElTag,
-  ElMessage,
-  ElMessageBox,
-  ElCheckboxGroup
-} from 'element-plus'
+import { ElCheckbox, ElButton, ElTag, ElMessage, ElMessageBox, ElCheckboxGroup } from 'element-plus'
 import * as XLSX from 'xlsx'
-import { updateChartConfigHandler } from '../../updateChartConfig'
+import { updateAnalyseHandler } from '../../updateAnalyse'
 import { getChartDataHandler } from '../../getChartData'
 const { queryChartData } = getChartDataHandler()
-const { handleUpdateChartConfig } =
-  updateChartConfigHandler()
-const chartStore = useChartStore()
+const { handleUpdateAnalyse } = updateAnalyseHandler()
+const chartStore = useAnalyseStore()
 const columnStore = useColumnStore()
 const filterStore = useFilterStore()
 const orderStore = useOrderStore()
 const chartConfigStore = useChartConfigStore()
 const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
-const chartUpdateTime = computed(
-  () => chartStore.getChartUpdateTime
-)
-const chartUpdateTakesTime = computed(
-  () => chartStore.getChartUpdateTakesTime
-)
-const name = ref('')
+const chartUpdateTime = computed(() => chartStore.getChartUpdateTime)
+const chartUpdateTakesTime = computed(() => chartStore.getChartUpdateTakesTime)
 /**
  * @desc 点刷新按钮
  * @returns void
@@ -104,9 +67,7 @@ const handleClickFullScreen = () => {
  */
 const handleClickDownload = () => {
   // 获取所有的维度和分组
-  const feilds = dimensionStore.getDimensions.concat(
-    groupStore.getGroups
-  )
+  const feilds = dimensionStore.getDimensions.concat(groupStore.getGroups)
   if (feilds.length === 0) {
     ElMessage.warning('请先选择维度或分组')
     return
@@ -116,9 +77,9 @@ const handleClickDownload = () => {
   const selectFeildsState = reactive<{
     selectFeilds: string[]
   }>({
-    selectFeilds: feilds.map((feild) => {
+    selectFeilds: feilds.map(feild => {
       return feild.columnName || ''
-    })
+    }),
   })
 
   /**
@@ -131,27 +92,25 @@ const handleClickDownload = () => {
         ElCheckboxGroup,
         {
           modelValue: selectFeildsState.selectFeilds,
-          'onUpdate:modelValue': (value) => {
-            selectFeildsState.selectFeilds = value.map(
-              (item) => item.toString()
-            )
+          'onUpdate:modelValue': value => {
+            selectFeildsState.selectFeilds = value.map(item => item.toString())
           },
-          style: 'width: 100%;display: grid;'
+          style: 'width: 100%;display: grid;',
         },
         () => {
-          return feilds.map((feild) => {
+          return feilds.map(feild => {
             return h(ElCheckbox, {
               label: feild.displayName || feild.columnName,
-              value: feild.columnName || ''
+              value: feild.columnName || '',
             })
           })
         }
       ),
     showCancelButton: false,
     confirmButtonText: '下载',
-    cancelButtonText: '取消'
+    cancelButtonText: '取消',
   })
-    .then(async (action) => {
+    .then(async action => {
       // const { $webworker } = useNuxtApp()
       // const webworker = new $webworker()
       // const result = await webworker.run(() => {
@@ -172,18 +131,13 @@ const handleClickDownload = () => {
       ): void {
         let worksheet: XLSX.WorkSheet | null = null
         if (Array.isArray(columns) && columns.length > 0) {
-          const filteredData = data.map(
-            (item: DataOption) => {
-              const filteredItem = {} as Record<
-                keyof DataOption,
-                string | number
-              >
-              columns.forEach((column) => {
-                filteredItem[column] = item[column]
-              })
-              return filteredItem
-            }
-          )
+          const filteredData = data.map((item: DataOption) => {
+            const filteredItem = {} as Record<keyof DataOption, string | number>
+            columns.forEach(column => {
+              filteredItem[column] = item[column]
+            })
+            return filteredItem
+          })
 
           worksheet = XLSX.utils.json_to_sheet(filteredData)
         } else {
@@ -210,31 +164,23 @@ const handleClickDownload = () => {
         }
 
         // 设置每列的宽度
-        worksheet['!cols'] = Object.keys(maxWidthMap).map(
-          (colIndex) => ({
-            width: maxWidthMap[colIndex] + 2
-          })
-        )
+        worksheet['!cols'] = Object.keys(maxWidthMap).map(colIndex => ({
+          width: maxWidthMap[colIndex] + 2,
+        }))
 
         const workbook: XLSX.WorkBook = {
           Sheets: { [sheetName]: worksheet },
-          SheetNames: [sheetName]
+          SheetNames: [sheetName],
         }
 
-        const excelBuffer: ArrayBuffer = XLSX.write(
-          workbook,
-          { bookType: 'xlsx', type: 'array' }
-        )
+        const excelBuffer: ArrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
 
         saveExcelFile(excelBuffer, fileName)
       }
 
-      function saveExcelFile(
-        buffer: ArrayBuffer,
-        fileName: string
-      ): void {
+      function saveExcelFile(buffer: ArrayBuffer, fileName: string): void {
         const data: Blob = new Blob([buffer], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         })
         const url = window.URL.createObjectURL(data)
         const link = document.createElement('a')
@@ -249,7 +195,7 @@ const handleClickDownload = () => {
         selectFeildsState.selectFeilds
       )
     })
-    .catch((e) => {
+    .catch(e => {
       ElMessage.info('取消下载')
     })
 }
@@ -263,18 +209,18 @@ const queryTableColumn = async (tableName: string) => {
   const result = await $fetch('/api/queryTableColumn', {
     method: 'GET',
     params: {
-      tableName
-    }
+      tableName,
+    },
   })
   if (result.code === 200) {
-    const cloumns = result.data?.map((item) => {
+    const cloumns = result.data?.map(item => {
       return {
         ...item,
         columnName: item.columnName || '',
         columnType: item.columnType || '',
         columnComment: item.columnComment || '',
         displayName: item.displayName || '',
-        alias: item.alias || ''
+        alias: item.alias || '',
       }
     })
     columnStore.setColumns(cloumns || [])

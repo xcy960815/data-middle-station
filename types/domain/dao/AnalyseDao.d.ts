@@ -1,12 +1,12 @@
 /**
  * @desc  图表表结构
  */
-declare namespace ChartDao {
+declare namespace AnalyseDao {
   type ChartDataDao = Array<{
     [key: string]: string | number
   }>
 
-  type ChartOption = {
+  type AnalyseOption = {
     id: number
     chartName: string
     chartDesc: string

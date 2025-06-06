@@ -17,21 +17,18 @@ const props = defineProps({
   // },
   data: {
     type: Array as PropType<Array<Chart.ChartData>>,
-    default: () => []
+    default: () => [],
   },
   xAxisFields: {
     type: Array as PropType<Array<Chart.XAxisFields>>,
-    default: () => []
+    default: () => [],
   },
   yAxisFields: {
     type: Array as PropType<Array<Chart.YAxisFields>>,
-    default: () => []
-  }
+    default: () => [],
+  },
 })
-const emits = defineEmits([
-  'renderChartStart',
-  'renderChartEnd'
-])
+const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
 const chartConfigStore = useChartConfigStore()
 const intervalChartConfig = computed(() => {
@@ -46,7 +43,7 @@ watch(
     initChart()
   },
   {
-    deep: true
+    deep: true,
   }
 )
 /**
@@ -58,7 +55,7 @@ const initChart = () => {
   const chart = new Chart({
     container: 'container-interval',
     theme: 'classic',
-    autoFit: true
+    autoFit: true,
   })
 
   // chart.title({
@@ -67,8 +64,7 @@ const initChart = () => {
   // })
 
   const yAxisFieldNames = props.yAxisFields.map(
-    (item) =>
-      item.alias || item.displayName || item.columnName
+    item => item.alias || item.displayName || item.columnName
   )
   const chartData = props.data
 
@@ -82,29 +78,26 @@ const initChart = () => {
           type: 'fold',
           fields: yAxisFieldNames,
           key: 'type',
-          value: 'value'
-        }
-      ]
+          value: 'value',
+        },
+      ],
     })
     .transform({
       type: 'sortX',
       by: 'y',
-      reverse: true
+      reverse: true,
     })
 
     .encode(
       'x',
-      props.xAxisFields.map(
-        (item) =>
-          item.alias || item.displayName || item.columnName
-      )
+      props.xAxisFields.map(item => item.alias || item.displayName || item.columnName)
     )
     .encode('y', 'value')
     .encode('color', 'type')
     .scale('y', { nice: true })
     .axis('y', { labelFormatter: '~s' })
     .scale('color', {
-      range: getChartColors()
+      range: getChartColors(),
     })
 
   // 是否显示百分比
@@ -113,40 +106,36 @@ const initChart = () => {
     intervalChart.axis({
       y: {
         labelFormatter: (d: number) => `${d / 100}%`,
-        transform: [{ type: 'hide' }]
-      }
+        transform: [{ type: 'hide' }],
+      },
     })
   }
   // 平级展示
-  if (
-    intervalChartConfig.value.displayMode === 'levelDisplay'
-  ) {
+  if (intervalChartConfig.value.displayMode === 'levelDisplay') {
     intervalChart.transform({ type: 'dodgeX' })
   }
   // 叠加展示
-  if (
-    intervalChartConfig.value.displayMode === 'stackDisplay'
-  ) {
+  if (intervalChartConfig.value.displayMode === 'stackDisplay') {
     intervalChart.transform({ type: 'stackY' })
   }
 
   // 是否显示标题
   if (intervalChartConfig.value.showLabel) {
     intervalChart.label({
-      text: 'value',
+      text: '标题',
       render: (text: string) => {
         return `
         <div style="left:-50%;top:-20px;position:relative;font-size:14px;">
           <span>${text}</span>
         </div>`
-      }
+      },
     })
   }
 
   // 是否水平展示
   if (intervalChartConfig.value.horizontalDisplay) {
     intervalChart.coordinate({
-      transform: [{ type: 'transpose' }]
+      transform: [{ type: 'transpose' }],
     })
   }
 
@@ -178,7 +167,7 @@ watch(
     initChart()
   },
   {
-    deep: true
+    deep: true,
   }
 )
 watch(
@@ -187,7 +176,7 @@ watch(
     initChart()
   },
   {
-    deep: true
+    deep: true,
   }
 )
 </script>

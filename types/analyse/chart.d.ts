@@ -1,4 +1,3 @@
-
 /**
  * @file chart.d.ts
  * @desc chart 组件的类型声明文件

@@ -1,4 +1,4 @@
-// import { useChartStore } from '@/stores/analyse/chart'
+// import { useAnalyseStore } from '@/stores/analyse/chart'
 // import { useDimensionStore } from '@/stores/analyse/dimension'
 // import { useGroupStore } from '@/stores/analyse/group'
 // import { useColumnStore } from '@/stores/analyse/column'
@@ -13,7 +13,7 @@ import dayjs from 'dayjs'
  * @returns {Promise<void>}
  */
 export const getChartDataHandler = () => {
-  const chartStore = useChartStore()
+  const chartStore = useAnalyseStore()
   const dimensionStore = useDimensionStore()
   const groupStore = useGroupStore()
   const columnStore = useColumnStore()
@@ -22,19 +22,17 @@ export const getChartDataHandler = () => {
   const chartConfigStore = useChartConfigStore()
   /**
    * @desc 图表推荐策略类
-   * @param {ChartStore.ChartState['chartType']} chartType
+   * @param {AnalyseStore.AnalyseState['chartType']} chartType
    * @returns {string}
    */
-  const chartSuggestStrategies = (
-    chartType: ChartStore.ChartType
-  ) => {
+  const chartSuggestStrategies = (chartType: AnalyseStore.ChartType) => {
     const dimensions = dimensionStore.getDimensions
     const groups = groupStore.getGroups
     const chartNames = {
       table: '表格',
       interval: '柱状图',
       line: '折线图',
-      pie: '饼图'
+      pie: '饼图',
     }
     switch (chartType) {
       case 'table':
@@ -51,10 +49,7 @@ export const getChartDataHandler = () => {
           return `${chartNames[chartType]}至少需要一个值和一个分组`
         }
       case 'pie':
-        if (
-          dimensions.length === 1 &&
-          groups.length === 1
-        ) {
+        if (dimensions.length === 1 && groups.length === 1) {
           return ''
         } else {
           return `${chartNames[chartType]}只需要一个值和一个分组`
@@ -71,16 +66,12 @@ export const getChartDataHandler = () => {
       dataSource: columnStore.getDataSource,
       // 这样做可以避免条件没有选完就进行查询的情况 good
       filters: filterStore.getFilters.filter(
-        (item) =>
-          item.aggregationType &&
-          (item.filterType || item.filterValue)
+        item => item.aggregationType && (item.filterType || item.filterValue)
       ),
-      orders: orderStore.getOrders.filter(
-        (item) => item.aggregationType && item.orderType
-      ),
+      orders: orderStore.getOrders.filter(item => item.aggregationType && item.orderType),
       groups: groupStore.getGroups,
       dimensions: dimensionStore.getDimensions,
-      limit: chartConfigStore.getCommonChartConfig.limit
+      limit: chartConfigStore.getCommonChartConfig.limit,
     }
   })
   /**
@@ -109,8 +100,8 @@ export const getChartDataHandler = () => {
       method: 'POST',
       // 请求参数
       body: {
-        ...queryChartDataParams.value
-      }
+        ...queryChartDataParams.value,
+      },
     })
     const endTime = dayjs().valueOf()
     if (result.code === 200) {
@@ -124,17 +115,13 @@ export const getChartDataHandler = () => {
      * 统一处理的逻辑
      */
     chartStore.setChartLoading(false)
-    chartStore.setChartUpdateTime(
-      dayjs().format('YYYY-MM-DD HH:mm:ss')
-    )
+    chartStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
     const duration = endTime - startTime
     const seconds = Math.floor(duration / 1000)
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
     chartStore.setChartUpdateTakesTime(
-      minutes > 0
-        ? `${minutes}分${remainingSeconds}秒`
-        : `${remainingSeconds}秒`
+      minutes > 0 ? `${minutes}分${remainingSeconds}秒` : `${remainingSeconds}秒`
     )
   }
 
@@ -148,11 +135,11 @@ export const getChartDataHandler = () => {
     },
     {
       deep: true,
-      immediate: true
+      immediate: true,
     }
   )
   return {
     queryChartDataParams,
-    queryChartData
+    queryChartData,
   }
 }
