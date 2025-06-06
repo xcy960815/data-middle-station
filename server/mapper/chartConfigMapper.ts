@@ -1,23 +1,25 @@
 import {
   Column,
-  BindDataSource,
   Mapping,
   BaseMapper,
+  Row,
   IColumnTarget,
-  ColumnMapper,
+  mapToTarget,
+  entityColumnsMap,
 } from './baseMapper'
-import { convertToSqlProperties } from '../utils/databaseHelpper'
+
 import { ResultSetHeader } from 'mysql2'
 
 export class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTarget {
-  public columnsMap?: Map<string, string>
-  public columnsMapper?: ColumnMapper
+  columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
+    return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
+  }
 
   @Column('id')
-  id: number = 0
+  id!: number
 
   @Column('data_source')
-  dataSource: string = ''
+  dataSource!: string
 
   @Column('chart_type')
   chartType: string = ''
@@ -44,15 +46,11 @@ export class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTa
   updateTime: string = ''
 
   @Column('limit')
-  limit: number = 0
-
-  // @Column('suggest')
-  // suggest: boolean = false
-
-  // @Column('share_strategy')
-  // shareStrategy: string = ''
+  limit!: number
 }
-
+/**
+ * @desc 图表配置基础字段
+ */
 const CHART_CONFIG_BASE_FIELDS = [
   'id',
   'chart_type',
@@ -66,40 +64,17 @@ const CHART_CONFIG_BASE_FIELDS = [
   'create_time',
   'update_time',
 ]
+/**
+ * @desc 图表配置表名
+ */
 const CHART_CONFIG_TABLE_NAME = 'chart_config'
+/**
+ * @desc 数据源名称
+ */
 const DATA_SOURCE_NAME = 'data_middle_station'
-const kewwordColumns = ['group', 'order', 'column', 'limit']
-// 工具函数：格式化 SQL 字段名
-function formatSqlKey(key: string) {
-  if (kewwordColumns.includes(key)) {
-    return `\`${key}\``
-  }
-  return key
-}
-/**
- * @desc 批量格式化 SQL 字段名
- * @param keys {string[]} 字段名数组
- * @returns {string} 格式化后的字段名
- */
-function batchFormatSqlKey(keys: string[]) {
-  return keys.map(formatSqlKey).join(',')
-}
-/**
- * @desc 批量格式化 SQL set 语句
- * @param keys {string[]} 字段名数组
- * @returns {string} 形如 key1 = ?, key2 = ?
- */
-function batchFormatSqlSet(keys: string[]) {
-  return keys
-    .map(formatSqlKey)
-    .map(key => `${key} = ?`)
-    .join(', ')
-}
 
-@BindDataSource(DATA_SOURCE_NAME)
 export class ChartConfigMapper extends BaseMapper {
   public dataSourceName = DATA_SOURCE_NAME
-  // private
   /**
    * @desc 获取图表配置
    * @param id {number} 图表配置ID
