@@ -1,27 +1,25 @@
 import {
   Column,
-  BindDataSource,
   Mapping,
   BaseMapper,
+  Row,
   IColumnTarget,
-  ColumnMapper,
+  mapToTarget,
+  entityColumnsMap,
 } from './baseMapper'
 
 import dayjs from 'dayjs'
 
 // 表列表映射
 export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarget {
-  public columnsMap?: Map<string, string>
-  public columnsMapper?: ColumnMapper
-
   @Column('TABLE_NAME')
-  tableName: string = ''
+  tableName!: string
 
   @Column('TABLE_TYPE')
-  tableType: string = ''
+  tableType!: string
 
   @Column('TABLE_COMMENT')
-  tableComment: string = ''
+  tableComment!: string
 
   @Column('CREATE_TIME')
   createTime(value: string) {
@@ -36,19 +34,19 @@ export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarge
   }
 
   @Column('TABLE_ROWS')
-  tableRows: number = 0
+  tableRows!: number
 
   @Column('AVG_ROW_LENGTH')
-  avgRowLength: number = 0
+  avgRowLength!: number
 
   @Column('DATA_LENGTH')
-  dataLength: number = 0
+  dataLength!: number
 
   @Column('INDEX_LENGTH')
-  indexLength: number = 0
+  indexLength!: number
 
   @Column('AUTO_INCREMENT')
-  autoIncrement: number = 0
+  autoIncrement!: number
 
   @Column('ENGINE')
   engine(value: string) {
@@ -66,29 +64,32 @@ export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarge
   get tableSize(): number {
     return Number(((this.dataLength + this.indexLength) / 1024 / 1024).toFixed(2))
   }
+
+  columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
+    return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
+  }
 }
 
 // 表列映射
 export class TableColumnMapping implements DatabaseDao.TableColumnOption, IColumnTarget {
-  public columnsMap?: Map<string, string>
-  public columnsMapper?: ColumnMapper
-
   @Column('COLUMN_NAME')
-  columnName: string = ''
+  columnName!: string
 
   @Column('COLUMN_TYPE')
-  columnType: string = ''
+  columnType!: string
 
   @Column('COLUMN_COMMENT')
-  columnComment: string = ''
+  columnComment!: string
+
+  columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
+    return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
+  }
 }
 
 const tableSchema = 'kanban_data'
 
-@BindDataSource(tableSchema)
 export class DatabaseMapper extends BaseMapper {
   public dataSourceName = tableSchema
-
   /**
    * @desc 查询所有的表名
    * @datasource ${tableSchema}

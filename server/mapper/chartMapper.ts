@@ -1,11 +1,12 @@
 import type { ResultSetHeader } from 'mysql2'
 import {
   Column,
-  BindDataSource,
   Mapping,
   BaseMapper,
+  Row,
+  entityColumnsMap,
+  mapToTarget,
   IColumnTarget,
-  ColumnMapper,
 } from './baseMapper'
 
 import { convertToSqlProperties } from '../utils/databaseHelpper'
@@ -24,44 +25,45 @@ export const CHART_BASE_FIELDS = [
 ]
 
 export class ChartMapping implements ChartDao.ChartOption, IColumnTarget {
-  public columnsMap?: Map<string, string>
-  public columnsMapper?: ColumnMapper
+  columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
+    return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
+  }
 
   // 表名
   @Column('id')
-  id: number = 0
+  id!: number
 
   // 图表名称
   @Column('chart_name')
-  chartName: string = ''
+  chartName!: string
 
   // 图表描述
   @Column('chart_desc')
-  chartDesc: string = ''
+  chartDesc!: string
 
   // 访问次数
   @Column('view_count')
-  viewCount: number = 0
+  viewCount!: number
 
   // 创建时间
   @Column('create_time')
-  createTime: string = ''
+  createTime!: string
 
   // 更新时间
   @Column('update_time')
-  updateTime: string = ''
+  updateTime!: string
 
   // 创建人
   @Column('created_by')
-  createdBy: string = ''
+  createdBy!: string
 
   // 更新人
   @Column('updated_by')
-  updatedBy: string = ''
+  updatedBy!: string
 
   // 图表配置ID
   @Column('chart_config_id')
-  chartConfigId: number = 0
+  chartConfigId!: number
 }
 
 /**
@@ -71,7 +73,6 @@ const CHART_TABLE_NAME = 'chart'
 // const CHART_CONFIG_TABLE_NAME = 'chart_config'
 const DATA_SOURCE_NAME = 'data_middle_station'
 
-@BindDataSource(DATA_SOURCE_NAME)
 export class ChartMapper extends BaseMapper {
   public dataSourceName = DATA_SOURCE_NAME
 

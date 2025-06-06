@@ -6,7 +6,9 @@ WORKDIR /data-middle-station
 
 # 设置环境变量
 ENV NODE_ENV=prod
+
 ENV PNPM_HOME="/root/.local/share/pnpm"
+
 ENV PATH="${PNPM_HOME}:${PATH}"
 
 # 设置 npm 镜像源
