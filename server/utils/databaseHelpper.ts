@@ -1,26 +1,4 @@
 /**
- * @desc 将对象中的key转换为下划线格式 用于数据库新建、更新的时候使用
- * @param inputRecord { Record<string, any> }
- * @returns { keys: string[], values: any[] }
- */
-export function transformObjectIntoSet(inputRecord: Record<string, any>) {
-  const entries = Object.entries(inputRecord)
-    .filter(([, value]) => typeof value !== 'undefined')
-    .map(([key, value]) => {
-      const transformedKey = key.replace(/([A-Z])/g, (_, c) => `_${c.toLowerCase()}`)
-      return {
-        key: `${transformedKey} = ?`,
-        value,
-      }
-    })
-
-  return {
-    keys: entries.map(entry => entry.key),
-    values: entries.map(entry => entry.value),
-  }
-}
-
-/**
  * @desc 下划线转驼峰
  * @param name {string} 下划线字符串
  * @returns {string}
