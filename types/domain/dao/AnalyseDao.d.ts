@@ -8,8 +8,8 @@ declare namespace AnalyseDao {
 
   type AnalyseOption = {
     id: number
-    chartName: string
-    chartDesc: string
+    analyseName: string
+    analyseDesc: string
     viewCount: number
     createTime: string
     updateTime: string
