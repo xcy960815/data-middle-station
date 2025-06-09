@@ -46,3 +46,8 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 
 # 启动命令
 CMD ["sh", "-c", "ls -la /data-middle-station/.output/server/ && pm2 start ecosystem.config.js --env prod --no-daemon"]
+
+
+
+# 1. 构建镜像
+# docker build -t xcy960815/data-middle-station:1.0 .
