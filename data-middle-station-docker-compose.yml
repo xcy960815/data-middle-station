@@ -9,22 +9,8 @@ services:
       - '12583:12583'
     volumes:
       - ./logs:/data-middle-station-container/logs
-    environment:
-      - NODE_ENV=pre
-      - CONFIG_DB_HOST=host.docker.internal
-      - CONFIG_DB_PORT=3310
-      - CONFIG_DB_USER=root
-      - CONFIG_DB_PASSWORD=root
-      - CONFIG_DB_NAME=data_middle_station
-      - CONFIG_DB_TIMEZONE=+08:00
-      - CONFIG_DB_DATE_STRINGS=true
-      - KANBAN_DB_NAME=kanban_data
-      - KANBAN_DB_HOST=host.docker.internal
-      - KANBAN_DB_PORT=3310
-      - KANBAN_DB_USER=root
-      - KANBAN_DB_PASSWORD=root
-      - KANBAN_DB_TIMEZONE=+08:00
-      - KANBAN_DB_DATE_STRINGS=true
+    env_file:
+      - ./env/.env.prod
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     restart: unless-stopped
@@ -46,17 +32,16 @@ services:
       "--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION",
       "--default-time-zone=+8:00"
     ]
-    environment:
-      - MYSQL_ROOT_PASSWORD=123456
-      - MYSQL_DATABASE=data_middle_station
+    env_file:
+      - ./env/.env.prod
     ports:
-      - "3310:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
       - data-middle-station-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       timeout: 20s
       retries: 10
       interval: 5s
@@ -75,6 +60,6 @@ volumes:
 
 # docker-compose down && docker-compose up --build -d
 # docker-compose -f data-middle-station-docker-compose.yml up -d --remove-orphans
-
+# docker-compose -f data-middle-station-docker-compose.yml --env-file ./env/.env.prod up -d --remove-orphans
 # 停止 data-middle-station 项目的容器
 # docker-compose -f data-middle-station-docker-compose.yml down
