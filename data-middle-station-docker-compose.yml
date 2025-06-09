@@ -4,15 +4,15 @@ services:
   # nuxt3
   nuxt3:
     image: xcy960815/data-middle-station:1.0
-    container_name: data-middle-station-container
+    container_name: ${CONTAINER_NAME}
     ports:
-      - '12583:12583'
+      - '${PORT}:12583'
     volumes:
       - ./logs:/data-middle-station-container/logs
     env_file:
       - ./env/.env.prod
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - '${HOST_DOCKER_INTERNAL}:host-gateway'
     restart: unless-stopped
     networks:
       - data-middle-station-network
@@ -23,7 +23,7 @@ services:
   # mysql配置
   mysql:
     image: mysql:8.4.2
-    container_name: data-middle-station-mysql-container
+    container_name: ${MYSQL_CONTAINER_NAME}
     command: [
       "--bind-address=0.0.0.0",
       "--character-set-server=utf8mb4",
@@ -53,13 +53,12 @@ networks:
 
 volumes:
   mysql-data:
-    name: data-middle-station-mysql-data
+    name: ${MYSQL_DATA_VOLUME_NAME}
     driver: local
 
 
 
-# docker-compose down && docker-compose up --build -d
-# docker-compose -f data-middle-station-docker-compose.yml up -d --remove-orphans
+
 # docker-compose -f data-middle-station-docker-compose.yml --env-file ./env/.env.prod up -d --remove-orphans
 # 停止 data-middle-station 项目的容器
 # docker-compose -f data-middle-station-docker-compose.yml down
