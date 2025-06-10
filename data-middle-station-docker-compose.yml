@@ -1,7 +1,4 @@
-# version: '3.8'
-
 services:
-  # nuxt3
   nuxt3:
     image: xcy960815/data-middle-station:1.0
     container_name: ${CONTAINER_NAME}
@@ -22,30 +19,30 @@ services:
 
   # mysql配置
   mysql:
-    image: mysql:8.4.2
-    container_name: ${MYSQL_CONTAINER_NAME}
+    image: mysql:8.4.2 # 镜像
+    container_name: ${MYSQL_CONTAINER_NAME} # 容器名称
     command: [
-      "--bind-address=0.0.0.0",
-      "--character-set-server=utf8mb4",
-      "--collation-server=utf8mb4_unicode_ci",
-      "--max_allowed_packet=128M",
-      "--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION",
-      "--default-time-zone=+8:00"
+      "--bind-address=0.0.0.0", # 绑定地址
+      "--character-set-server=utf8mb4", # 字符集
+      "--collation-server=utf8mb4_unicode_ci", # 排序规则
+      "--max_allowed_packet=128M", # 最大允许包
+      "--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION", # sql模式
+      "--default-time-zone=+8:00" # 时区
     ]
     env_file:
       - ./env/.env.prod
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "${MYSQL_PORT}:3306" # 端口
     volumes:
-      - mysql-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql # 挂载卷
     networks:
       - data-middle-station-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      timeout: 20s
-      retries: 10
-      interval: 5s
-      start_period: 30s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"] # 健康检查
+      timeout: 20s # 超时
+      retries: 10 # 重试次数
+      interval: 5s # 间隔
+      start_period: 30s # 启动时间
 
 networks:
   data-middle-station-network:
