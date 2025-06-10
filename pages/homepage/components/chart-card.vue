@@ -12,16 +12,18 @@
           <span class="creator">{{ createdBy || '未知' }}</span>
           <span class="create-time">{{ createTime ? createTime.split('T')[0] : '' }}</span>
         </div>
-        <!-- <div class="info-row">
-          <span class="update-time">{{ updateTime ? updateTime.split('T')[0] : '' }}</span>
-        </div> -->
+      </div>
+      <div class="delete-icon" @click.stop="handleDeleteAnalyse">
+        <icon-park type="DeleteOne" size="14" fill="#333" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { IconPark } from '@icon-park/vue-next/es/all'
 const router = useRouter()
+const emit = defineEmits(['delete'])
 const props = defineProps({
   id: {
     type: Number,
@@ -71,6 +73,12 @@ const handleClickCard = () => {
     },
   })
 }
+/**
+ * @desc 删除分析
+ */
+const handleDeleteAnalyse = () => {
+  emit('delete', props.id, props.analyseName)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -94,6 +102,9 @@ const handleClickCard = () => {
       0 6px 24px 0 rgba(0, 0, 0, 0.13),
       0 2px 8px 0 rgba(0, 0, 0, 0.08);
     cursor: pointer;
+    .delete-icon {
+      display: flex;
+    }
   }
 
   .card-inset {
@@ -106,6 +117,25 @@ const handleClickCard = () => {
     flex-direction: column;
     height: calc(100% - 4px);
     justify-content: space-between;
+  }
+
+  .delete-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    transition: background 0.2s;
+    display: none;
+    &:hover {
+      background: #ffeaea;
+    }
   }
 
   .card-title {

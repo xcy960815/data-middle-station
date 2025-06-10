@@ -4,7 +4,7 @@ declare namespace HomePageStore {
   type AnalyseOption = AnalyseVo.AnalyseOption
 
   type HomePageState = {
-    charts: AnalyseOption[]
+    analyses: AnalyseOption[]
   }
 
   type HomePageGetters = {}
