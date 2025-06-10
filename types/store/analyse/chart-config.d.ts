@@ -128,7 +128,7 @@ declare namespace ChartConfigStore {
     /**
      * @desc 图表配置
      */
-    chartConfig: ChartConfig
+    chartConfig: ChartConfig | null
   }
 
   /**
@@ -140,9 +140,6 @@ declare namespace ChartConfigStore {
    * @desc action
    */
   type ChartConfigActions = {
-    setChartConfigDrawer: (value: boolean) => void
-    setCommonChartConfig: (value: CommonChartConfig) => void
-    setChartConfig: (value: ChartConfig) => void
-    setTableChartConditions: (conditions: TableChartConfigConditionOption[]) => void
+    setTableChartConditions(conditions: TableChartConfigConditionOption[]): void
   }
 }

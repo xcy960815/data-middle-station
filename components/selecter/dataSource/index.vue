@@ -11,6 +11,22 @@
       <template #reference>
         <div class="select-trigger" :class="{ 'is-active': isPopoverVisible }">
           <span class="selected-value">{{ dataSource || '请选择数据库表' }}</span>
+          <!-- <el-icon
+            v-if="dataSource"
+            class="clear-icon"
+            @click.stop="clearDataSource"
+            style="margin-left: 8px; cursor: pointer;"
+          >
+            <Close />
+          </el-icon> -->
+          <icon-park
+            v-if="dataSource"
+            class="clear-icon"
+            type="CloseOne"
+            @click.stop="clearDataSource"
+            style="margin-left: 8px; cursor: pointer"
+          >
+          </icon-park>
         </div>
       </template>
 
@@ -46,10 +62,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Search } from '@element-plus/icons-vue'
+import { Search, Close } from '@element-plus/icons-vue'
 import { useColumnStore } from '~/stores/column'
 import { ElPopover, ElTable, ElTableColumn, ElInput, ElButton, ElMessage } from 'element-plus'
-
+import { IconPark } from '@icon-park/vue-next/es/all'
 const columnStore = useColumnStore()
 const searchKeyword = ref('')
 const isPopoverVisible = ref(false)
@@ -112,6 +128,13 @@ const queryTable = async () => {
     ElMessage.error(result.message || '获取表列表失败')
     columnStore.setDataSourceOptions([])
   }
+}
+
+/**
+ * @desc 清空数据源
+ */
+const clearDataSource = () => {
+  dataSource.value = ''
 }
 
 watch(
@@ -213,5 +236,15 @@ watch(
 
 :deep(.el-input__wrapper) {
   border-radius: 6px;
+}
+
+.clear-icon {
+  color: #bfcbd9;
+  font-size: 16px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #409eff;
+  }
 }
 </style>

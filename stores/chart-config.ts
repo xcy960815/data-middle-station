@@ -9,6 +9,9 @@ export const useChartConfigStore = defineStore<
   state: () => ({
     chartConfigDrawer: false,
     chartConfig: {
+      /**
+       * @desc 折线图配置
+       */
       line: {
         chartType: 'line',
         analyseName: '',
@@ -20,6 +23,9 @@ export const useChartConfigStore = defineStore<
         autoDualAxis: false,
         horizontalBar: false,
       },
+      /**
+       * @desc 表格图配置
+       */
       table: {
         chartType: 'table',
         analyseName: '',
@@ -29,6 +35,9 @@ export const useChartConfigStore = defineStore<
         showCompare: false,
         conditions: [],
       },
+      /**
+       * @desc 饼图配置
+       */
       pie: {
         chartType: 'pie',
         analyseName: '',
@@ -36,6 +45,9 @@ export const useChartConfigStore = defineStore<
         chartUpdateTakesTime: '',
         showLabel: false,
       },
+      /**
+       * @desc 柱状图配置
+       */
       interval: {
         chartType: 'interval',
         analyseName: '',
@@ -63,17 +75,19 @@ export const useChartConfigStore = defineStore<
     getCommonChartConfig: state => state.commonChartConfig,
   },
   actions: {
-    setChartConfigDrawer(value: boolean) {
+    setChartConfigDrawer(value) {
       this.chartConfigDrawer = value
     },
-    setCommonChartConfig(value: ChartConfigStore.CommonChartConfig) {
+    setCommonChartConfig(value) {
       this.commonChartConfig = value
     },
-    setChartConfig(value: ChartConfigStore.ChartConfig) {
+    setChartConfig(value) {
       this.chartConfig = value
     },
-    setTableChartConditions(conditions: ChartConfigStore.TableChartConfigConditionOption[]) {
-      this.chartConfig.table.conditions = conditions
+    setTableChartConditions(conditions) {
+      if (this.chartConfig) {
+        this.chartConfig.table.conditions = conditions
+      }
     },
   },
 })

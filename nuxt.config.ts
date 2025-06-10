@@ -2,7 +2,7 @@
 import { resolve } from 'path'
 export default defineNuxtConfig({
   experimental: {
-    renderJsonPayloads: false
+    renderJsonPayloads: false,
   },
   app: {
     head: {
@@ -12,31 +12,31 @@ export default defineNuxtConfig({
         {
           rel: 'icon',
           type: 'image/x-icon',
-          href: '/data-middle-station.ico'
-        }
+          href: '/data-middle-station.ico',
+        },
         // { rel: 'icon', type: 'image/png', href: '/logos/favicon-32x32.png' },
-      ]
-    }
+      ],
+    },
   },
   css: [
     // 加载全局 css
     '~/assets/styles/main.css',
     // 加载全局 scss
-    '~/assets/styles/theme-util.scss'
+    '~/assets/styles/theme-util.scss',
   ],
 
   postcss: {
     plugins: {
       tailwindcss: {},
-      autoprefixer: {}
-    }
+      autoprefixer: {},
+    },
   },
   imports: {
     // 自动加载 引入自定义模块
-    dirs: ['utils', 'stores']
+    dirs: ['utils', 'stores'],
   },
   alias: {
-    '@': resolve(__dirname, '.')
+    '@': resolve(__dirname, '.'),
   },
   // 引入 pinia
   modules: ['@pinia/nuxt'],
@@ -44,11 +44,11 @@ export default defineNuxtConfig({
     {
       path: '~/components',
       // 只把 `~/components/` 目录下的 `.vue` 文件列为组件
-      extensions: ['.vue']
-    }
+      extensions: ['.vue'],
+    },
   ],
   pinia: {
-    disableVuex: true
+    disableVuex: true,
   },
   vite: {
     // publicPath: ''
@@ -56,14 +56,14 @@ export default defineNuxtConfig({
       preprocessorOptions: {
         scss: {
           // 引入全局scss 变量
-          additionalData: `@use "./assets/styles/theme-variables.scss" as *;`
-        }
-      }
+          additionalData: `@use "./assets/styles/theme-variables.scss" as *;`,
+        },
+      },
     },
     server: {
       hmr: {
-        overlay: false
-      }
+        overlay: false,
+      },
     },
     build: {
       rollupOptions: {
@@ -73,9 +73,22 @@ export default defineNuxtConfig({
             return
           }
           warn(warning)
-        }
-      }
-    }
+        },
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('vue')) return 'vue'
+              if (id.includes('element-plus')) return 'element-plus'
+              if (id.includes('pinia')) return 'pinia'
+              if (id.includes('echarts')) return 'echarts'
+              if (id.includes('icon-park')) return 'icon-park'
+              if (id.includes('xlsx')) return 'xlsx'
+              return 'vendor'
+            }
+          },
+        },
+      },
+    },
   },
   nitro: {
     compatibilityDate: '2024-05-27',
@@ -83,12 +96,12 @@ export default defineNuxtConfig({
       options: {
         tsconfigRaw: {
           compilerOptions: {
-            experimentalDecorators: true
-          }
-        }
-      }
+            experimentalDecorators: true,
+          },
+        },
+      },
     },
-    moduleSideEffects: ['node-cron']
+    moduleSideEffects: ['node-cron'],
   },
   runtimeConfig: {
     // 私有键（仅在服务器端可用）
@@ -108,7 +121,7 @@ export default defineNuxtConfig({
     kanbanDbDateStrings: process.env.KANBAN_DB_DATE_STRINGS,
     // 公共键（在客户端和服务器端都可用）
     public: {
-      apiBase: '/api'
-    }
-  }
+      apiBase: '/api',
+    },
+  },
 })

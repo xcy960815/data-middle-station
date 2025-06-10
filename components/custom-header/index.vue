@@ -6,7 +6,11 @@
     <div class="flex-1 flex items-center justify-center">
       <slot name="chart-name"></slot>
     </div>
-    <header-right class="header-right w-[190px] flex items-center justify-between"></header-right>
+    <header-right class="header-right w-[190px] flex items-center justify-between">
+      <template #header-right>
+        <slot name="header-right"></slot>
+      </template>
+    </header-right>
   </div>
 </template>
 

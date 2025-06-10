@@ -36,9 +36,17 @@ export class AnalyseService {
   }
 
   /**
-   * @desc 获取图表
-   * @param id {number} 图表id
-   * @returns {Promise<AnalyseVo.ChartsOption>}
+   * @desc 删除分析
+   * @param id {number} 分析id
+   * @returns {Promise<boolean>}
+   */
+  public async deleteAnalyse(id: number): Promise<boolean> {
+    return this.analyseMapper.deleteAnalyse(id)
+  }
+  /**
+   * @desc 获取分析
+   * @param id {number} 分析id
+   * @returns {Promise<AnalyseVo.AnalyseOption>}
    */
   public async getAnalyse(id: number): Promise<AnalyseVo.AnalyseOption> {
     const AnalyseOption = await this.analyseMapper.getAnalyse(id)
@@ -59,8 +67,8 @@ export class AnalyseService {
    * @returns {Promise<AnalyseVo.ChartsOption[]>}
    */
   public async getAnalyses(): Promise<AnalyseVo.AnalyseOption[]> {
-    const chart = await this.analyseMapper.getCharts()
-    return chart.map(item => this.dao2Vo(item, null))
+    const analysesDao = await this.analyseMapper.getAnalyses()
+    return analysesDao.map(item => this.dao2Vo(item, null))
   }
 
   /**
@@ -70,6 +78,7 @@ export class AnalyseService {
    */
   public async updateAnalyse(AnalyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
     const { chartConfig, ...AnalyseOption } = AnalyseOptionDto
+
     let chartConfigId = AnalyseOption.chartConfigId
 
     if (!chartConfigId) {
@@ -98,7 +107,7 @@ export class AnalyseService {
       })
     }
 
-    const updateChartResult = await this.analyseMapper.updateAnalyse({
+    const updateAnalyseResult = await this.analyseMapper.updateAnalyse({
       id: AnalyseOption.id,
       analyseName: AnalyseOption.analyseName,
       chartConfigId,
@@ -110,7 +119,7 @@ export class AnalyseService {
       updatedBy: 'system',
     })
 
-    return updateChartResult
+    return updateAnalyseResult
   }
 
   /**
