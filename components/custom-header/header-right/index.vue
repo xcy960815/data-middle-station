@@ -1,49 +1,17 @@
 <template>
   <ClientOnly>
     <div class="user-info">
+      <slot name="header-right"></slot>
       <!-- 全屏退出全屏 -->
-      <el-tooltip
-        effect="dark"
-        :content="fullscreen ? `退出全屏` : `全屏`"
-        placement="bottom"
-      >
-        <span
-          @click="handleFullscreen"
-          class="tooltip-sapn fullscreen-tooltip"
-        >
-          <iconify-icon
-            v-if="!fullscreen"
-            icon="material-symbols:pinch-zoom-out-sharp"
-            class="icon-pinch-zoom-out-sharp"
-            width="30"
-            height="30"
-            :rotate="2"
-            :horizontalFlip="true"
-            :verticalFlip="true"
-          />
-          <iconify-icon
-            v-if="fullscreen"
-            icon="material-symbols:pinch-zoom-in-sharp"
-            class="icon-pinch-zoom-in-sharp"
-            width="30"
-            height="30"
-            :rotate="2"
-            :horizontalFlip="true"
-            :verticalFlip="true"
-          />
+      <el-tooltip effect="dark" :content="fullscreen ? `退出全屏` : `全屏`" placement="bottom">
+        <span @click="handleFullscreen" class="tooltip-sapn fullscreen-tooltip">
+          <icon-park size="30" v-if="!fullscreen" type="FullScreen" fill="#333"></icon-park>
+          <icon-park size="30" v-if="fullscreen" type="OffScreen" fill="#333"></icon-park>
         </span>
       </el-tooltip>
       <!-- 主题 -->
-      <el-tooltip
-        effect="dark"
-        content="设置主题"
-        placement="bottom"
-      >
-        <el-select
-          v-model="theme"
-          style="width: 75px"
-          class="mr-2"
-        >
+      <el-tooltip effect="dark" content="设置主题" placement="bottom">
+        <el-select v-model="theme" style="width: 75px" class="mr-2">
           <el-option label="高亮" value="light"></el-option>
           <el-option label="暗黑" value="dark"></el-option>
           <el-option label="自动" value="auto"></el-option>
@@ -54,21 +22,11 @@
         <el-avatar :size="30" :src="userInfo.avatar" />
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item>{{
-              userInfo.name
-            }}</el-dropdown-item>
-            <el-dropdown-item
-              v-if="!userInfo.name"
-              command="login"
-              class="logout"
-            >
+            <el-dropdown-item>{{ userInfo.name }}</el-dropdown-item>
+            <el-dropdown-item v-if="!userInfo.name" command="login" class="logout">
               登 录
             </el-dropdown-item>
-            <el-dropdown-item
-              v-if="userInfo.name"
-              command="logout"
-              class="logout"
-            >
+            <el-dropdown-item v-if="userInfo.name" command="logout" class="logout">
               登 出
             </el-dropdown-item>
           </el-dropdown-menu>
@@ -78,6 +36,7 @@
   </ClientOnly>
 </template>
 <script lang="ts" setup>
+import { IconPark } from '@icon-park/vue-next/es/all'
 import {
   ElDropdown,
   ElDropdownMenu,
@@ -85,8 +44,9 @@ import {
   ElAvatar,
   ElTooltip,
   ElSelect,
-  ElOption
+  ElOption,
 } from 'element-plus'
+
 type Theme = 'light' | 'dark' | 'auto'
 /**
  * @desc 主题选项
@@ -116,13 +76,10 @@ const fullscreen = ref<boolean>(false)
 
 onMounted(() => {
   // 在非Mounted 中找不到 localStorage 所以在这里初始化
-  theme.value =
-    (localStorage.getItem(THEME_KEY) as Theme) || 'light'
+  theme.value = (localStorage.getItem(THEME_KEY) as Theme) || 'light'
 
   // 在非Mounted 中找不到 matchMedia 所以在这里初始化
-  mediaQuery.value = matchMedia(
-    '(prefers-color-scheme: dark)'
-  )
+  mediaQuery.value = matchMedia('(prefers-color-scheme: dark)')
 })
 /**
  * @desc 展开全屏和关闭全屏
@@ -162,52 +119,40 @@ const handleFullscreen = async function () {
  */
 const handleWathFullscreen = function () {
   // 全局（document）上监听全屏状态变化
-  document.addEventListener(
-    'fullscreenchange',
-    function () {
-      if (document.fullscreenElement) {
-        fullscreen.value = true
-      } else {
-        fullscreen.value = false
-      }
+  document.addEventListener('fullscreenchange', function () {
+    if (document.fullscreenElement) {
+      fullscreen.value = true
+    } else {
+      fullscreen.value = false
     }
-  )
+  })
   // 对于一些特定的浏览器你需要添加带有前缀的事件监听器
   //Firefox
-  document.addEventListener(
-    'mozfullscreenchange',
-    function () {
-      if (document.mozFullScreenElement) {
-        fullscreen.value = true
-      } else {
-        fullscreen.value = false
-      }
+  document.addEventListener('mozfullscreenchange', function () {
+    if (document.mozFullScreenElement) {
+      fullscreen.value = true
+    } else {
+      fullscreen.value = false
     }
-  )
+  })
 
   // Chrome, Safari and Opera
-  document.addEventListener(
-    'webkitfullscreenchange',
-    function () {
-      if (document.webkitFullscreenElement) {
-        fullscreen.value = true
-      } else {
-        fullscreen.value = false
-      }
+  document.addEventListener('webkitfullscreenchange', function () {
+    if (document.webkitFullscreenElement) {
+      fullscreen.value = true
+    } else {
+      fullscreen.value = false
     }
-  )
+  })
 
   //Microsoft Internet Explorer
-  document.addEventListener(
-    'MSFullscreenChange',
-    function () {
-      if (document.webkitFullscreenElement) {
-        fullscreen.value = true
-      } else {
-        fullscreen.value = false
-      }
+  document.addEventListener('MSFullscreenChange', function () {
+    if (document.webkitFullscreenElement) {
+      fullscreen.value = true
+    } else {
+      fullscreen.value = false
     }
-  )
+  })
 }
 
 // 登录登出
@@ -248,19 +193,13 @@ watch(
       if (theme.value === 'auto') {
         fllowSystemTheme()
         // 根据系统主题切换
-        mediaQuery.value?.addEventListener(
-          'change',
-          fllowSystemTheme
-        )
+        mediaQuery.value?.addEventListener('change', fllowSystemTheme)
       } else {
         // 给html标签添加class
         // document.documentElement.className = theme.value;
         setTheme(theme.value)
         // 移除监听
-        mediaQuery.value?.removeEventListener(
-          'change',
-          fllowSystemTheme
-        )
+        mediaQuery.value?.removeEventListener('change', fllowSystemTheme)
       }
     }
   }

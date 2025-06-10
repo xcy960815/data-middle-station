@@ -24,9 +24,6 @@ import { getChartDataHandler } from '../../getChartData'
 const { queryChartData } = getChartDataHandler()
 const { handleUpdateAnalyse } = updateAnalyseHandler()
 const chartStore = useAnalyseStore()
-const columnStore = useColumnStore()
-const filterStore = useFilterStore()
-const orderStore = useOrderStore()
 const chartConfigStore = useChartConfigStore()
 const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
@@ -199,59 +196,6 @@ const handleClickDownload = () => {
       ElMessage.info('取消下载')
     })
 }
-
-/**
- * @desc 查询表格列
- * @param tableName
- * @returns {Promise<void>}
- */
-const queryTableColumn = async (tableName: string) => {
-  const result = await $fetch('/api/queryTableColumn', {
-    method: 'GET',
-    params: {
-      tableName,
-    },
-  })
-  if (result.code === 200) {
-    const cloumns = result.data?.map(item => {
-      return {
-        ...item,
-        columnName: item.columnName || '',
-        columnType: item.columnType || '',
-        columnComment: item.columnComment || '',
-        displayName: item.displayName || '',
-        alias: item.alias || '',
-      }
-    })
-    columnStore.setColumns(cloumns || [])
-  } else {
-    columnStore.setDataSourceOptions([])
-  }
-}
-/**
- * @desc 监听表格数据源变化
- */
-watch(
-  () => columnStore.getDataSource,
-  (newDataSource, oldDataSource) => {
-    if (!newDataSource) return
-    queryTableColumn(newDataSource)
-    // 如果手动变更数据源，清空图表数据
-    if (oldDataSource) {
-      // 如果数据源变化，清空筛选条件
-      filterStore.setFilters([])
-      // 如果数据源变化，清空排序条件
-      orderStore.setOrders([])
-      // 如果数据源变化，清空分组条件
-      groupStore.setGroups([])
-      // 如果数据源变化，清空维度条件
-      dimensionStore.setDimensions([])
-    }
-  },
-  {
-    // immediate: true
-  }
-)
 </script>
 
 <style lang="scss" scoped>
