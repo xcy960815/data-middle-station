@@ -18,31 +18,32 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for chart
+-- Table structure for analyse
 -- ----------------------------
-DROP TABLE IF EXISTS `chart`;
-CREATE TABLE `chart` (
+DROP TABLE IF EXISTS `analyse`;
+CREATE TABLE `analyse` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `chart_name` varchar(255) DEFAULT NULL COMMENT '图表名称',
+  `analyse_name` varchar(255) DEFAULT NULL COMMENT '分析名称',
   `view_count` int unsigned DEFAULT '0' COMMENT '访问次数',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `created_by` varchar(100) DEFAULT NULL COMMENT '创建人',
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `updated_by` varchar(100) DEFAULT NULL COMMENT '更新人',
   `chart_config_id` bigint DEFAULT NULL COMMENT '图表配置ID',
-  `chart_desc` varchar(255) DEFAULT NULL COMMENT '图表描述',
+  `analyse_desc` varchar(255) DEFAULT NULL COMMENT '分析描述',
+  `is_deleted` tinyint(1) DEFAULT '1' COMMENT '是否删除：0-已删除，1-未删除',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='图表信息表';
 
 -- ----------------------------
--- Records of chart
+-- Records of analyse
 -- ----------------------------
 BEGIN;
-INSERT INTO `chart` (`id`, `chart_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (1, '销售数据看板', 445, '2025-05-30 02:19:10', 'Alice', '2025-06-03 14:31:14', 'system', 5, '销售数据看板的描述');
-INSERT INTO `chart` (`id`, `chart_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (2, '运营分析图表', 230, '2025-05-30 02:19:10', 'Bob', '2025-05-30 02:19:37', 'Bob', NULL, NULL);
-INSERT INTO `chart` (`id`, `chart_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (3, '用户行为统计', 95, '2025-05-30 02:19:10', 'Charlie', '2025-05-30 02:19:40', 'Charlie', NULL, NULL);
-INSERT INTO `chart` (`id`, `chart_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (4, '库存监控图表', 45, '2025-05-30 02:19:10', 'David', '2025-05-30 02:19:43', 'David', NULL, NULL);
-INSERT INTO `chart` (`id`, `chart_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `chart_desc`) VALUES (5, '收入趋势图表', 320, '2025-05-30 02:19:10', 'Eve', '2025-05-30 02:19:46', 'Eve', NULL, NULL);
+INSERT INTO `analyse` (`id`, `analyse_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `analyse_desc`, `is_deleted`) VALUES (1, '销售数据看板', 445, '2025-05-30 02:19:10', 'Alice', '2025-06-03 14:31:14', 'system', 5, '销售数据看板的描述', 1);
+INSERT INTO `analyse` (`id`, `analyse_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `analyse_desc`, `is_deleted`) VALUES (2, '运营分析图表', 230, '2025-05-30 02:19:10', 'Bob', '2025-05-30 02:19:37', 'Bob', NULL, NULL, 1);
+INSERT INTO `analyse` (`id`, `analyse_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `analyse_desc`, `is_deleted`) VALUES (3, '用户行为统计', 95, '2025-05-30 02:19:10', 'Charlie', '2025-05-30 02:19:40', 'Charlie', NULL, NULL, 1);
+INSERT INTO `analyse` (`id`, `analyse_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `analyse_desc`, `is_deleted`) VALUES (4, '库存监控图表', 45, '2025-05-30 02:19:10', 'David', '2025-05-30 02:19:43', 'David', NULL, NULL, 1);
+INSERT INTO `analyse` (`id`, `analyse_name`, `view_count`, `create_time`, `created_by`, `update_time`, `updated_by`, `chart_config_id`, `analyse_desc`, `is_deleted`) VALUES (5, '收入趋势图表', 320, '2025-05-30 02:19:10', 'Eve', '2025-05-30 02:19:46', 'Eve', NULL, NULL, 1);
 COMMIT;
 
 -- ----------------------------
