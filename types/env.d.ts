@@ -1,14 +1,10 @@
 /**
  * @desc 为 process.env 添加自定义属性
- * @example process.env.NODE_ENV
- * @example process.env.VUE_APP_BASE_API
- * @example process.env.VUE_APP_BASE_URL
  */
 declare namespace NodeJS {
   type PoolOptions = import('mysql2/promise').PoolOptions
 
-  type RedisOptions =
-    import('unstorage/drivers/redis').RedisOptions
+  type RedisOptions = import('unstorage/drivers/redis').RedisOptions
 
   type DB_HOST = PoolOptions['host']
   type DB_PORT = PoolOptions['port']
@@ -33,18 +29,66 @@ declare namespace NodeJS {
     LOG_TIME_FORMAT: string
     // 项目标题
     APP_NAME: string
-    // 数据库主机
-    DB_HOST: DB_HOST
-    // 数据库端口
-    DB_PORT: DB_PORT
-    // 数据库用户
-    DB_USER: DB_USER
-    // 数据库密码
-    DB_PASSWORD: DB_PASSWORD
-    // 配置数据库名称
-    CONFIG_DB_NAME: DB_DATABASE
-    // 图表数据数据库名称
-    CHART_DATA_DB_NAME: DB_DATABASE
+    // 服务数据库配置
+    /**
+     * 服务数据库主机
+     */
+    SERVICE_DB_HOST: DB_HOST
+    /**
+     * 服务数据库端口
+     */
+    SERVICE_DB_PORT: DB_PORT
+    /**
+     * 服务数据库用户
+     */
+    SERVICE_DB_USER: DB_USER
+    /**
+     * 服务数据库密码
+     */
+    SERVICE_DB_PASSWORD: DB_PASSWORD
+    /**
+     * 服务数据库名称
+     */
+    SERVICE_DB_NAME: DB_DATABASE
+    /**
+     * 服务数据库时区
+     */
+    SERVICE_DB_TIMEZONE: DB_TIMEZONE
+    /**
+     * 服务数据库日期字符串
+     */
+    SERVICE_DB_DATE_STRINGS: DB_DATE_STRINGS
+
+    // 所需数据分析数据库配置
+    /**
+     * 所需数据分析数据库名称
+     */
+    DATA_DB_NAME: DB_DATABASE
+    /**
+     * 所需数据分析数据库主机
+     */
+    DATA_DB_HOST: DB_HOST
+    /**
+     * 所需数据分析数据库端口
+     */
+    DATA_DB_PORT: DB_PORT
+    /**
+     * 所需数据分析数据库用户
+     */
+    DATA_DB_USER: DB_USER
+    /**
+     * 所需数据分析数据库密码
+     */
+    DATA_DB_PASSWORD: DB_PASSWORD
+    /**
+     * 所需数据分析数据库时区
+     */
+    DATA_DB_TIMEZONE: DB_TIMEZONE
+    /**
+     * 所需数据分析数据库日期字符串
+     */
+    DATA_DB_DATE_STRINGS: DB_DATE_STRINGS
+
     // Redis主机
     REDIS_HOST: REDIS_HOST
     // Redis端口

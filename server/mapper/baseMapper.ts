@@ -95,6 +95,7 @@ export abstract class BaseMapper {
 
   protected async exe<R = Row[]>(sql: string, params?: any[]): Promise<R> {
     const dataSourceConfig = getDatasourceConfig()
+
     const config = dataSourceConfig[this.dataSourceName]
 
     if (!config) {

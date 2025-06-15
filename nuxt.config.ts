@@ -104,21 +104,22 @@ export default defineNuxtConfig({
     moduleSideEffects: ['node-cron'],
   },
   runtimeConfig: {
-    // 私有键（仅在服务器端可用）
-    configDbHost: process.env.CONFIG_DB_HOST,
-    configDbPort: process.env.CONFIG_DB_PORT,
-    configDbUser: process.env.CONFIG_DB_USER,
-    configDbPassword: process.env.CONFIG_DB_PASSWORD,
-    configDbName: process.env.CONFIG_DB_NAME,
-    configDbTimezone: process.env.CONFIG_DB_TIMEZONE,
-    configDbDateStrings: process.env.CONFIG_DB_DATE_STRINGS,
-    kanbanDbName: process.env.KANBAN_DB_NAME,
-    kanbanDbHost: process.env.KANBAN_DB_HOST,
-    kanbanDbPort: process.env.KANBAN_DB_PORT,
-    kanbanDbUser: process.env.KANBAN_DB_USER,
-    kanbanDbPassword: process.env.KANBAN_DB_PASSWORD,
-    kanbanDbTimezone: process.env.KANBAN_DB_TIMEZONE,
-    kanbanDbDateStrings: process.env.KANBAN_DB_DATE_STRINGS,
+    // 服务数据库配置
+    serviceDbHost: process.env.SERVICE_DB_HOST,
+    serviceDbPort: String(process.env.SERVICE_DB_PORT),
+    serviceDbUser: process.env.SERVICE_DB_USER,
+    serviceDbPwd: process.env.SERVICE_DB_PASSWORD,
+    serviceDbName: process.env.SERVICE_DB_NAME,
+    serviceDbTimezone: process.env.SERVICE_DB_TIMEZONE,
+    serviceDbStrings: String(process.env.SERVICE_DB_DATE_STRINGS),
+    // 所需数据分析数据库配置
+    dataDbName: process.env.DATA_DB_NAME,
+    dataDbHost: process.env.DATA_DB_HOST,
+    dataDbPort: String(process.env.DATA_DB_PORT),
+    dataDbUser: process.env.DATA_DB_USER,
+    dataDbPwd: process.env.DATA_DB_PASSWORD,
+    dataDbTimezone: process.env.DATA_DB_TIMEZONE,
+    dataDbStrings: String(process.env.DATA_DB_DATE_STRINGS),
     // 公共键（在客户端和服务器端都可用）
     public: {
       apiBase: '/api',

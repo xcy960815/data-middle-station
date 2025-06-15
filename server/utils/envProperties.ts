@@ -4,9 +4,9 @@
  * @param { NodeJS.ProcessEnv[keyof NodeJS.ProcessEnv] } propertieValue - 环境变量值
  * @returns {void}
  */
-export const setProcessEnvProperties = (
-  propertieKey: keyof NodeJS.ProcessEnv,
-  propertieValue: NodeJS.ProcessEnv[keyof NodeJS.ProcessEnv]
+export const setProcessEnvProperties = <T extends keyof NodeJS.ProcessEnv>(
+  propertieKey: T,
+  propertieValue: NodeJS.ProcessEnv[T]
 ): void => {
   const env: NodeJS.ProcessEnv = process.env || {}
   env[propertieKey] = propertieValue
@@ -18,9 +18,9 @@ export const setProcessEnvProperties = (
  * @param { keyof NodeJS.ProcessEnv } propertieKey - 环境变量键名
  * @returns { NodeJS.ProcessEnv[keyof NodeJS.ProcessEnv] } 环境变量值
  */
-export const getProcessEnvProperties = (
-  propertieKey: keyof NodeJS.ProcessEnv
-): NodeJS.ProcessEnv[keyof NodeJS.ProcessEnv] => {
+export const getProcessEnvProperties = <T extends keyof NodeJS.ProcessEnv>(
+  propertieKey: T
+): NodeJS.ProcessEnv[T] => {
   const env = process.env
   return env[propertieKey]
 }
