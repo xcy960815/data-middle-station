@@ -2,7 +2,7 @@ import chalk from 'chalk'
 
 const logger = new Logger({
   fileName: 'database',
-  folderName: 'database'
+  folderName: 'database',
 })
 
 /**
@@ -10,52 +10,45 @@ const logger = new Logger({
  * @returns {Promise<Array<NodeJS.DataSourceItem>>}
  */
 export function getDatasourceConfig() {
-  logger.info(chalk.green('开始加载数据库配置'))
-  const configDbHost = useRuntimeConfig().configDbHost
-  const configDbPort = useRuntimeConfig().configDbPort
-  const configDbUser = useRuntimeConfig().configDbUser
-  const configDbPassword =
-    useRuntimeConfig().configDbPassword
-  const configDbName = useRuntimeConfig().configDbName
-  const configDbTimezone =
-    useRuntimeConfig().configDbTimezone
-  const configDbDateStrings =
-    useRuntimeConfig().configDbDateStrings
-  const kanbanDbName = useRuntimeConfig().kanbanDbName
-  const kanbanDbHost = useRuntimeConfig().kanbanDbHost
-  const kanbanDbPort = useRuntimeConfig().kanbanDbPort
-  const kanbanDbUser = useRuntimeConfig().kanbanDbUser
-  const kanbanDbPassword =
-    useRuntimeConfig().kanbanDbPassword
-  const kanbanDbTimezone =
-    useRuntimeConfig().kanbanDbTimezone
-  const kanbanDbDateStrings =
-    useRuntimeConfig().kanbanDbDateStrings
+  logger.info(chalk.green('开始加载数据库配置-------'))
+
+  const serviceDbName = useRuntimeConfig().serviceDbName
+  const serviceDbHost = useRuntimeConfig().serviceDbHost
+  const serviceDbPort = useRuntimeConfig().serviceDbPort
+  const serviceDbUser = useRuntimeConfig().serviceDbUser
+  const serviceDbPwd = useRuntimeConfig().serviceDbPwd
+
+  const serviceDbTimezone = useRuntimeConfig().serviceDbTimezone
+  const serviceDbStrings = useRuntimeConfig().serviceDbStrings
+  const dataDbName = useRuntimeConfig().dataDbName
+  const dataDbHost = useRuntimeConfig().dataDbHost
+  const dataDbPort = useRuntimeConfig().dataDbPort
+  const dataDbUser = useRuntimeConfig().dataDbUser
+  const dataDbPwd = useRuntimeConfig().dataDbPwd
+  const dataDbTimezone = useRuntimeConfig().dataDbTimezone
+  const dataDbStrings = useRuntimeConfig().dataDbStrings
+
   const dataSourceConfig: NodeJS.DataSourceConfig = {
-    [configDbName]: {
-      password: configDbPassword,
-      host: configDbHost,
-      port: configDbPort,
-      user: configDbUser,
-      database: configDbName,
-      timezone: configDbTimezone,
-      dateStrings: configDbDateStrings
+    [serviceDbName]: {
+      password: serviceDbPwd,
+      host: serviceDbHost,
+      port: serviceDbPort,
+      user: serviceDbUser,
+      database: serviceDbName,
+      timezone: serviceDbTimezone,
+      dateStrings: serviceDbStrings,
     },
-    [kanbanDbName]: {
-      password: kanbanDbPassword,
-      host: kanbanDbHost,
-      port: kanbanDbPort,
-      user: kanbanDbUser,
-      database: kanbanDbName,
-      timezone: kanbanDbTimezone,
-      dateStrings: kanbanDbDateStrings
-    }
+    [dataDbName]: {
+      password: dataDbPwd,
+      host: dataDbHost,
+      port: dataDbPort,
+      user: dataDbUser,
+      database: dataDbName,
+      timezone: dataDbTimezone,
+      dateStrings: dataDbStrings,
+    },
   }
-  logger.info(
-    chalk.bgBlackBright(
-      JSON.stringify(dataSourceConfig, null, 2)
-    )
-  )
-  logger.info(chalk.green('数据库配置加载完成'))
+  logger.info(chalk.bgBlackBright(JSON.stringify(dataSourceConfig, null, 2)))
+  logger.info(chalk.green('数据库配置加载完成-------'))
   return dataSourceConfig
 }
