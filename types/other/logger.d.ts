@@ -1,9 +1,7 @@
 /**
  * Logger module
  */
-declare module LoggerModule {
-  interface LoggerOptions {
-    fileName: string;
-    folderName: string;
-  }
+declare interface LoggerOptions {
+  fileName: string
+  folderName: string
 }
