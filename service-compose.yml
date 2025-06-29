@@ -2,15 +2,15 @@ services:
   nuxt3:
     image: xcy960815/data-middle-station:1.0
     # 容器名称
-    container_name: ${SERVICE_CONTAINER_NAME}
+    container_name: dms-container
     ports:
-      - '${PORT}:12583'
+      - '12583:12583'
     volumes:
       - ./logs:/data-middle-station-container/logs
-    env_file:
-      - ./env/.env.prod
+    # env_file:
+    #   - ./env/.env.prod # 替换变量，注释掉的
     extra_hosts:
-      - '${HOST_DOCKER_INTERNAL}:host-gateway'
+      - 'host.docker.internal:host-gateway'
     restart: unless-stopped
     networks:
       - dms-service-network
@@ -21,10 +21,10 @@ services:
   # mysql配置
   mysql:
     image: mysql:8.4.2 # 镜像
-    container_name: ${SERVICE_MYSQL_CONTAINER_NAME} # 容器名称
+    container_name: dms-mysql-container # 容器名称
     environment:
-      - MYSQL_ROOT_PASSWORD=${SERVICE_MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${SERVICE_MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=data_middle_station
     command: [
       "--bind-address=0.0.0.0", # 绑定地址
       "--character-set-server=utf8mb4", # 字符集
@@ -33,16 +33,16 @@ services:
       "--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION", # sql模式
       "--default-time-zone=+8:00" # 时区
     ]
-    env_file:
-      - ./env/.env.prod
+    # env_file:
+    #   - ./env/.env.prod # 替换变量，注释掉的
     ports:
-      - "${SERVICE_MYSQL_PORT}:3306" # 端口
+      - "3310:3306" # 端口
     volumes:
       - mysql-data:/var/lib/mysql # 挂载卷
     networks:
       - dms-service-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${SERVICE_MYSQL_ROOT_PASSWORD}"] # 健康检查
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"] # 健康检查
       timeout: 20s # 超时
       retries: 10 # 重试次数
       interval: 5s # 间隔
@@ -54,7 +54,7 @@ networks:
 
 volumes:
   mysql-data:
-    name: ${SERVICE_VOLUME_NAME}
+    name: dms-service-mysql-data
     driver: local
 
 
