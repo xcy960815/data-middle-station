@@ -6,7 +6,7 @@
     "build:daily": "nuxt build --dotenv env/.env.daily",
     "build:pre": "nuxt build --dotenv env/.env.pre",
     "build:prod": "nuxt build --dotenv env/.env.prod",
-    "dev:daily": "nuxt dev --dotenv env/.env.daily",
+    "dev": "nuxt dev --dotenv env/.env.daily",
     "dev:pre": "nuxt dev --dotenv env/.env.pre",
     "dev:prod": "nuxt dev --dotenv env/.env.prod",
     "postinstall": "nuxt prepare",
