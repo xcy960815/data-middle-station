@@ -19,8 +19,8 @@ declare namespace NodeJS {
   type REDIS_PORT = RedisOptions['port']
   type REDIS_PASSWORD = RedisOptions['password']
   type REDIS_DB = RedisOptions['db']
-
   type REDIS_USERNAME = RedisOptions['username']
+  type REDIS_BASE = RedisOptions['base']
 
   interface ProcessEnv {
     // 给 ProcessEnv 添加自定义属性
@@ -90,16 +90,31 @@ declare namespace NodeJS {
      */
     SERVICE_DATA_MYSQL_DATE_STRINGS: DB_DATE_STRINGS
 
-    // Redis主机
-    REDIS_HOST: REDIS_HOST
-    // Redis端口
-    REDIS_PORT: REDIS_PORT
-    // Redis密码
-    REDIS_PASSWORD: REDIS_PASSWORD
-    // Redis数据库
-    REDIS_DB: REDIS_DB
-    // Redis用户名
-    REDIS_USERNAME: REDIS_USERNAME
+    // 服务redis配置
+    /**
+     * 服务redis主机
+     */
+    SERVICE_REDIS_HOST: REDIS_HOST
+    /**
+     * 服务redis端口
+     */
+    SERVICE_REDIS_PORT: REDIS_PORT
+    /**
+     * 服务redis密码
+     */
+    SERVICE_REDIS_PASSWORD: REDIS_PASSWORD
+    /**
+     * 服务redis数据库
+     */
+    SERVICE_REDIS_DB: REDIS_DB
+    /**
+     * 服务redis用户名
+     */
+    SERVICE_REDIS_USERNAME: REDIS_USERNAME
+    /**
+     * 服务redis基础
+     */
+    SERVICE_REDIS_BASE: REDIS_BASE
   }
 
   /**

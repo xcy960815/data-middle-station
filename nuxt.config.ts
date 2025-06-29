@@ -132,6 +132,20 @@ export default defineNuxtConfig({
     serviceDataDbStrings: String(
       process.env.SERVICE_DATA_MYSQL_DATE_STRINGS
     ),
+    // 服务redis配置
+    serviceRedisBase: process.env.SERVICE_REDIS_BASE,
+    serviceRedisHost: process.env.SERVICE_REDIS_HOST,
+    serviceRedisPort: String(
+      process.env.SERVICE_REDIS_PORT || ''
+    ),
+    serviceRedisUsername:
+      process.env.SERVICE_REDIS_USERNAME,
+    serviceRedisPassword:
+      process.env.SERVICE_REDIS_PASSWORD,
+    serviceRedisDb: String(
+      process.env.SERVICE_REDIS_DB || ''
+    ),
+
     // 公共键（在客户端和服务器端都可用）
     public: {
       apiBase: '/api'

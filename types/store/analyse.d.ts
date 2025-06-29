@@ -6,12 +6,13 @@ declare namespace AnalyseStore {
     table: 'table',
     line: 'line',
     pie: 'pie',
-    interval: 'interval',
+    interval: 'interval'
   } as const
 
   type AnalyseKey = 'chart'
 
-  type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
+  type ChartType =
+    (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
 
   type AnalyseState = {
     // 图表名称

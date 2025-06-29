@@ -12,10 +12,7 @@ export class Logger {
    */
   private logger: LoggerType | null = null
 
-  constructor({
-    fileName,
-    folderName
-  }: LoggerModule.LoggerOptions) {
+  constructor({ fileName, folderName }: LoggerOptions) {
     this._createLogger(fileName, folderName)
   }
 

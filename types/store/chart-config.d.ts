@@ -140,6 +140,8 @@ declare namespace ChartConfigStore {
    * @desc action
    */
   type ChartConfigActions = {
-    setTableChartConditions(conditions: TableChartConfigConditionOption[]): void
+    setTableChartConditions(
+      conditions: TableChartConfigConditionOption[]
+    ): void
   }
 }
