@@ -1,9 +1,11 @@
 <template>
-  <div class="test-commonfetch">
-    <button class="btn btn-primary" @click="getData">
-      test-commonfetch
-    </button>
-  </div>
+  <NuxtLayout>
+    <div class="test-commonfetch">
+      <button class="btn btn-primary" @click="getData">
+        test-commonfetch
+      </button>
+    </div>
+  </NuxtLayout>
 </template>
 
 <script lang="ts" setup>

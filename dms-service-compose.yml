@@ -1,11 +1,30 @@
 services:
+  nuxt3:
+    image: xcy960815/data-middle-station:1.0
+    # 容器名称
+    container_name: dms-container
+    ports:
+      - '12583:12583'
+    volumes:
+      - ./logs:/data-middle-station-container/logs
+    # env_file:
+    #   - ./env/.env.prod # 替换变量，注释掉的
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    restart: unless-stopped
+    networks:
+      - dms-service-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   # mysql配置
   mysql:
     image: mysql:8.4.2 # 镜像
-    container_name: dms-data-mysql-container # 容器名称
+    container_name: dms-mysql-container # 容器名称
     environment:
       - MYSQL_ROOT_PASSWORD=123456
-      - MYSQL_DATABASE=kanban_data
+      - MYSQL_DATABASE=data_middle_station
     command: [
       "--bind-address=0.0.0.0", # 绑定地址
       "--character-set-server=utf8mb4", # 字符集
@@ -17,11 +36,11 @@ services:
     # env_file:
     #   - ./env/.env.prod # 替换变量，注释掉的
     ports:
-      - "3311:3306" # 端口
+      - "3310:3306" # 端口
     volumes:
       - mysql-data:/var/lib/mysql # 挂载卷
     networks:
-      - dms-service-data-network
+      - dms-service-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"] # 健康检查
       timeout: 20s # 超时
@@ -30,16 +49,17 @@ services:
       start_period: 30s # 启动时间
 
 networks:
-  dms-service-data-network:
+  dms-service-network:
     driver: bridge
 
 volumes:
   mysql-data:
-    name: dms-service-data-mysql-data
+    name: dms-service-mysql-data
     driver: local
 
 
 
-# docker-compose -p dms-data-service -f service-data-compose.yml --env-file ./env/.env.prod up -d --remove-orphans
-# 停止 service-data 项目的容器
-# docker-compose -p dms-data-service -f service-data-compose.yml down
+# docker-compose -p dms-service -f dms-service-compose.yml --env-file ./env/.env.prod up -d --remove-orphans
+# docker-compose -p dms-service -f dms-service-compose.yml up -d --remove-orphans
+# 停止 service-compose 项目的容器
+# docker-compose -p dms-service -f dms-service-compose.yml down

@@ -1,8 +1,10 @@
 <template>
-  <div
-    class="eventsource-container"
-    ref="eventsourceBox"
-  ></div>
+  <NuxtLayout>
+    <div
+      class="eventsource-container"
+      ref="eventsourceBox"
+    ></div>
+  </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
