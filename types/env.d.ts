@@ -4,7 +4,8 @@
 declare namespace NodeJS {
   type PoolOptions = import('mysql2/promise').PoolOptions
 
-  type RedisOptions = import('unstorage/drivers/redis').RedisOptions
+  type RedisOptions =
+    import('unstorage/drivers/redis').RedisOptions
 
   type DB_HOST = PoolOptions['host']
   type DB_PORT = PoolOptions['port']
@@ -63,31 +64,31 @@ declare namespace NodeJS {
     /**
      * 所需数据分析数据库名称
      */
-    DATA_DB_NAME: DB_DATABASE
+    SERVICE_DATA_MYSQL_DATABASE: DB_DATABASE
     /**
      * 所需数据分析数据库主机
      */
-    DATA_DB_HOST: DB_HOST
+    SERVICE_DATA_MYSQL_HOST: DB_HOST
     /**
      * 所需数据分析数据库端口
      */
-    DATA_DB_PORT: DB_PORT
+    SERVICE_DATA_MYSQL_PORT: DB_PORT
     /**
      * 所需数据分析数据库用户
      */
-    DATA_DB_USER: DB_USER
+    SERVICE_DATA_MYSQL_ROOT_USER: DB_USER
     /**
      * 所需数据分析数据库密码
      */
-    DATA_DB_PASSWORD: DB_PASSWORD
+    SERVICE_DATA_MYSQL_ROOT_PASSWORD: DB_PASSWORD
     /**
      * 所需数据分析数据库时区
      */
-    DATA_DB_TIMEZONE: DB_TIMEZONE
+    SERVICE_DATA_MYSQL_TIMEZONE: DB_TIMEZONE
     /**
      * 所需数据分析数据库日期字符串
      */
-    DATA_DB_DATE_STRINGS: DB_DATE_STRINGS
+    SERVICE_DATA_MYSQL_DATE_STRINGS: DB_DATE_STRINGS
 
     // Redis主机
     REDIS_HOST: REDIS_HOST

@@ -92,11 +92,17 @@ const setCanvasSize = () => {
 
 // 初始化字符
 const initChars = () => {
-  if (!canvas.value) return
-  chars.value = []
-  const charCount = Math.floor(canvas.value.width / 20)
-  for (let i = 0; i < charCount; i++) {
-    chars.value.push(new Char(canvas.value.width))
+  canvas.value = document.getElementById(
+    'cvs'
+  ) as HTMLCanvasElement
+  ctx.value = canvas.value.getContext('2d')
+  if (canvas.value && ctx.value) {
+    window.addEventListener('resize', setCanvasSize)
+    chars.value = []
+    const charCount = Math.floor(canvas.value.width / 20)
+    for (let i = 0; i < charCount; i++) {
+      chars.value.push(new Char(canvas.value.width))
+    }
   }
 }
 
@@ -134,17 +140,9 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
-  console.log('onMounted')
-  canvas.value = document.getElementById(
-    'cvs'
-  ) as HTMLCanvasElement
-  ctx.value = canvas.value.getContext('2d')
-
-  if (canvas.value && ctx.value) {
-    setCanvasSize()
-    window.addEventListener('resize', setCanvasSize)
-    animate()
-  }
+  initChars()
+  setCanvasSize()
+  animate()
 })
 </script>
 

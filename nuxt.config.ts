@@ -2,7 +2,7 @@
 import { resolve } from 'path'
 export default defineNuxtConfig({
   experimental: {
-    renderJsonPayloads: false,
+    renderJsonPayloads: false
   },
   app: {
     head: {
@@ -12,31 +12,31 @@ export default defineNuxtConfig({
         {
           rel: 'icon',
           type: 'image/x-icon',
-          href: '/data-middle-station.ico',
-        },
+          href: '/data-middle-station.ico'
+        }
         // { rel: 'icon', type: 'image/png', href: '/logos/favicon-32x32.png' },
-      ],
-    },
+      ]
+    }
   },
   css: [
     // 加载全局 css
     '~/assets/styles/main.css',
     // 加载全局 scss
-    '~/assets/styles/theme-util.scss',
+    '~/assets/styles/theme-util.scss'
   ],
 
   postcss: {
     plugins: {
       tailwindcss: {},
-      autoprefixer: {},
-    },
+      autoprefixer: {}
+    }
   },
   imports: {
     // 自动加载 引入自定义模块
-    dirs: ['utils', 'stores'],
+    dirs: ['utils', 'stores']
   },
   alias: {
-    '@': resolve(__dirname, '.'),
+    '@': resolve(__dirname, '.')
   },
   // 引入 pinia
   modules: ['@pinia/nuxt'],
@@ -44,11 +44,11 @@ export default defineNuxtConfig({
     {
       path: '~/components',
       // 只把 `~/components/` 目录下的 `.vue` 文件列为组件
-      extensions: ['.vue'],
-    },
+      extensions: ['.vue']
+    }
   ],
   pinia: {
-    disableVuex: true,
+    disableVuex: true
   },
   vite: {
     // publicPath: ''
@@ -56,14 +56,14 @@ export default defineNuxtConfig({
       preprocessorOptions: {
         scss: {
           // 引入全局scss 变量
-          additionalData: `@use "./assets/styles/theme-variables.scss" as *;`,
-        },
-      },
+          additionalData: `@use "./assets/styles/theme-variables.scss" as *;`
+        }
+      }
     },
     server: {
       hmr: {
-        overlay: false,
-      },
+        overlay: false
+      }
     },
     build: {
       rollupOptions: {
@@ -78,17 +78,19 @@ export default defineNuxtConfig({
           manualChunks(id) {
             if (id.includes('node_modules')) {
               if (id.includes('vue')) return 'vue'
-              if (id.includes('element-plus')) return 'element-plus'
+              if (id.includes('element-plus'))
+                return 'element-plus'
               if (id.includes('pinia')) return 'pinia'
               if (id.includes('echarts')) return 'echarts'
-              if (id.includes('icon-park')) return 'icon-park'
+              if (id.includes('icon-park'))
+                return 'icon-park'
               if (id.includes('xlsx')) return 'xlsx'
               return 'vendor'
             }
-          },
-        },
-      },
-    },
+          }
+        }
+      }
+    }
   },
   nitro: {
     compatibilityDate: '2024-05-27',
@@ -96,12 +98,12 @@ export default defineNuxtConfig({
       options: {
         tsconfigRaw: {
           compilerOptions: {
-            experimentalDecorators: true,
-          },
-        },
-      },
+            experimentalDecorators: true
+          }
+        }
+      }
     },
-    moduleSideEffects: ['node-cron'],
+    moduleSideEffects: ['node-cron']
   },
   runtimeConfig: {
     // 服务数据库配置
@@ -111,18 +113,28 @@ export default defineNuxtConfig({
     serviceDbPwd: process.env.SERVICE_DB_PASSWORD,
     serviceDbName: process.env.SERVICE_DB_NAME,
     serviceDbTimezone: process.env.SERVICE_DB_TIMEZONE,
-    serviceDbStrings: String(process.env.SERVICE_DB_DATE_STRINGS),
+    serviceDbStrings: String(
+      process.env.SERVICE_DB_DATE_STRINGS
+    ),
     // 所需数据分析数据库配置
-    dataDbName: process.env.DATA_DB_NAME,
-    dataDbHost: process.env.DATA_DB_HOST,
-    dataDbPort: String(process.env.DATA_DB_PORT),
-    dataDbUser: process.env.DATA_DB_USER,
-    dataDbPwd: process.env.DATA_DB_PASSWORD,
-    dataDbTimezone: process.env.DATA_DB_TIMEZONE,
-    dataDbStrings: String(process.env.DATA_DB_DATE_STRINGS),
+    serviceDataDbName:
+      process.env.SERVICE_DATA_MYSQL_DATABASE,
+    serviceDataDbHost: process.env.SERVICE_DATA_MYSQL_HOST,
+    serviceDataDbPort: String(
+      process.env.SERVICE_DATA_MYSQL_PORT
+    ),
+    serviceDataDbUser:
+      process.env.SERVICE_DATA_MYSQL_ROOT_USER,
+    serviceDataDbPwd:
+      process.env.SERVICE_DATA_MYSQL_ROOT_PASSWORD,
+    serviceDataDbTimezone:
+      process.env.SERVICE_DATA_MYSQL_TIMEZONE,
+    serviceDataDbStrings: String(
+      process.env.SERVICE_DATA_MYSQL_DATE_STRINGS
+    ),
     // 公共键（在客户端和服务器端都可用）
     public: {
-      apiBase: '/api',
-    },
-  },
+      apiBase: '/api'
+    }
+  }
 })
