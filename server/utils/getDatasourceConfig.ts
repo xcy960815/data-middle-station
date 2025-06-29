@@ -62,6 +62,6 @@ export function getDatasourceConfig() {
       JSON.stringify(dataSourceConfig, null, 2)
     )
   )
-  logger.info(chalk.green('数据库配置加载完成-------'))
+  logger.info(chalk.green('数据库配置加载完成'))
   return dataSourceConfig
 }
