@@ -130,23 +130,20 @@ onUnmounted(() => {
   if (setIntervalId.value) {
     cancelAnimationFrame(setIntervalId.value)
   }
-  if (process.client) {
-    window.removeEventListener('resize', setCanvasSize)
-  }
+  window.removeEventListener('resize', setCanvasSize)
 })
 
 onMounted(() => {
-  if (process.client) {
-    canvas.value = document.getElementById(
-      'cvs'
-    ) as HTMLCanvasElement
-    ctx.value = canvas.value.getContext('2d')
+  console.log('onMounted')
+  canvas.value = document.getElementById(
+    'cvs'
+  ) as HTMLCanvasElement
+  ctx.value = canvas.value.getContext('2d')
 
-    if (canvas.value && ctx.value) {
-      setCanvasSize()
-      window.addEventListener('resize', setCanvasSize)
-      animate()
-    }
+  if (canvas.value && ctx.value) {
+    setCanvasSize()
+    window.addEventListener('resize', setCanvasSize)
+    animate()
   }
 })
 </script>
@@ -172,6 +169,7 @@ onMounted(() => {
     margin-bottom: 40px;
     text-shadow: 0 0 10px rgba(51, 181, 229, 0.5);
     background: linear-gradient(45deg, #33b5e5, #aa66cc);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: bold;

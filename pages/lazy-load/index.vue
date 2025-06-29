@@ -1,7 +1,9 @@
 <template>
-  <div class="lazy-load-container">
-    <div class="lazy-load-item" v-for="item in 100"></div>
-  </div>
+  <NuxtLayout>
+    <div class="lazy-load-container">
+      <div class="lazy-load-item" v-for="item in 100"></div>
+    </div>
+  </NuxtLayout>
 </template>
 
 <script setup lang="ts">

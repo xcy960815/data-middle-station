@@ -1,22 +1,24 @@
 <template>
-  <div class="web-worker-container">
-    <div class="animated-node"></div>
-    <div style="margin-top: 200px">
-      0到1000000000 的总和 {{ useWebworkerCount }}
+  <NuxtLayout>
+    <div class="web-worker-container">
+      <div class="animated-node"></div>
+      <div style="margin-top: 200px">
+        0到1000000000 的总和 {{ useWebworkerCount }}
+      </div>
+      <el-button
+        type="primary"
+        @click="notUseWebworkerComputeCount"
+      >
+        不使用webworker计算 0到1000000000 的总和
+      </el-button>
+      <el-button
+        type="primary"
+        @click="useWebworkerComputeCount"
+      >
+        使用webworker计算 0到1000000000 的总和
+      </el-button>
     </div>
-    <el-button
-      type="primary"
-      @click="notUseWebworkerComputeCount"
-    >
-      不使用webworker计算 0到1000000000 的总和
-    </el-button>
-    <el-button
-      type="primary"
-      @click="useWebworkerComputeCount"
-    >
-      使用webworker计算 0到1000000000 的总和
-    </el-button>
-  </div>
+  </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
