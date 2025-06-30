@@ -6,9 +6,7 @@ const databaseService = new DatabaseService()
  */
 export default defineEventHandler<
   Promise<
-    CustomResponseModule.Response<
-      Array<DatabaseVo.TableColumnOptionVo>
-    >
+    ICustomResponse<Array<DatabaseVo.TableColumnOptionVo>>
   >
 >(async (event) => {
   try {

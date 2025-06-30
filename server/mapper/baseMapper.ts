@@ -109,6 +109,9 @@ export function Mapping(
   }
 }
 
+/**
+ * 基础映射器
+ */
 export abstract class BaseMapper {
   /**
    * 数据源名称

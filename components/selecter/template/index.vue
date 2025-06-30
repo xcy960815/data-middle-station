@@ -28,9 +28,11 @@
             placement="top"
             v-if="hasInvalidIcon()"
           >
-            <iconify-icon
+            <icon-park
               class="chart-selecterinvalid-icon"
-              icon="mingcute:warning-fill"
+              type="caution"
+              size="14"
+              fill="#333"
             />
           </el-tooltip>
           <icon-park
