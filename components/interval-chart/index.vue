@@ -7,32 +7,45 @@
 import { Chart } from '@antv/g2'
 
 const props = defineProps({
-  // title: {
-  //   type: String,
-  //   default: () => '我是柱状图标题'
-  // },
+  title: {
+    type: String,
+    default: () => '我是柱状图标题'
+  },
   // subtitle: {
   //   type: String,
   //   default: () => '我是柱状图副标题'
   // },
   data: {
     type: Array as PropType<Array<Chart.ChartData>>,
-    default: () => [],
+    default: () => []
   },
   xAxisFields: {
     type: Array as PropType<Array<Chart.XAxisFields>>,
-    default: () => [],
+    default: () => []
   },
   yAxisFields: {
     type: Array as PropType<Array<Chart.YAxisFields>>,
-    default: () => [],
-  },
+    default: () => []
+  }
 })
-const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
+const emits = defineEmits([
+  'renderChartStart',
+  'renderChartEnd'
+])
 
 const chartConfigStore = useChartConfigStore()
+const defaultIntervalConfig = {
+  showPercentage: false,
+  displayMode: 'levelDisplay',
+  showLabel: false,
+  horizontalDisplay: false,
+  horizontalBar: false
+}
 const intervalChartConfig = computed(() => {
-  return chartConfigStore.chartConfig.interval
+  return (
+    chartConfigStore.chartConfig?.interval ||
+    defaultIntervalConfig
+  )
 })
 /**
  * 监听配置变化
@@ -43,7 +56,7 @@ watch(
     initChart()
   },
   {
-    deep: true,
+    deep: true
   }
 )
 /**
@@ -55,19 +68,20 @@ const initChart = () => {
   const chart = new Chart({
     container: 'container-interval',
     theme: 'classic',
-    autoFit: true,
+    autoFit: true
   })
 
-  // chart.title({
-  //   title: props.title,
-  //   subtitle: props.subtitle
-  // })
+  chart.title({
+    title: props.title
+    // subtitle: props.subtitle
+  })
 
   const yAxisFieldNames = props.yAxisFields.map(
-    item => item.alias || item.displayName || item.columnName
+    (item) =>
+      item.alias || item.displayName || item.columnName
   )
   const chartData = props.data
-
+  console.log('chartData', chartData)
   const intervalChart = chart
     .interval()
     .data({
@@ -77,27 +91,36 @@ const initChart = () => {
         {
           type: 'fold',
           fields: yAxisFieldNames,
-          key: 'type',
-          value: 'value',
-        },
-      ],
+          key:
+            props.xAxisFields[0].alias ||
+            props.xAxisFields[0].displayName ||
+            props.xAxisFields[0].columnName,
+          value:
+            props.yAxisFields[0].alias ||
+            props.yAxisFields[0].displayName ||
+            props.yAxisFields[0].columnName
+        }
+      ]
     })
     .transform({
       type: 'sortX',
       by: 'y',
-      reverse: true,
+      reverse: true
     })
 
     .encode(
       'x',
-      props.xAxisFields.map(item => item.alias || item.displayName || item.columnName)
+      props.xAxisFields.map(
+        (item) =>
+          item.alias || item.displayName || item.columnName
+      )
     )
     .encode('y', 'value')
     .encode('color', 'type')
     .scale('y', { nice: true })
     .axis('y', { labelFormatter: '~s' })
     .scale('color', {
-      range: getChartColors(),
+      range: getChartColors()
     })
 
   // 是否显示百分比
@@ -106,16 +129,20 @@ const initChart = () => {
     intervalChart.axis({
       y: {
         labelFormatter: (d: number) => `${d / 100}%`,
-        transform: [{ type: 'hide' }],
-      },
+        transform: [{ type: 'hide' }]
+      }
     })
   }
   // 平级展示
-  if (intervalChartConfig.value.displayMode === 'levelDisplay') {
+  if (
+    intervalChartConfig.value.displayMode === 'levelDisplay'
+  ) {
     intervalChart.transform({ type: 'dodgeX' })
   }
   // 叠加展示
-  if (intervalChartConfig.value.displayMode === 'stackDisplay') {
+  if (
+    intervalChartConfig.value.displayMode === 'stackDisplay'
+  ) {
     intervalChart.transform({ type: 'stackY' })
   }
 
@@ -128,25 +155,46 @@ const initChart = () => {
         <div style="left:-50%;top:-20px;position:relative;font-size:14px;">
           <span>${text}</span>
         </div>`
-      },
+      }
     })
   }
 
   // 是否水平展示
   if (intervalChartConfig.value.horizontalDisplay) {
     intervalChart.coordinate({
-      transform: [{ type: 'transpose' }],
+      transform: [{ type: 'transpose' }]
     })
   }
 
   if (intervalChartConfig.value.horizontalBar) {
     intervalChart.slider('x', true)
   }
-  // chart
-  //   .interaction('tooltip', { shared: true })
-  //   .interaction('elementHighlightByColor', {
-  //     background: true
-  //   })
+
+  // 配置图表交互
+  chart
+    .interaction('tooltip', {
+      shared: false,
+      // 自定义tooltip内容
+      customContent: (title: string, data: any[]) => {
+        if (!data || data.length === 0) return ''
+
+        // 只取第一项（当前悬停的项）
+        const item = data[0]
+        return `
+        <div style="padding: 8px;">
+          <div style="display: flex; align-items: center; padding: 4px 0;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
+            <span style="margin-right: 12px;">${item.name}</span>
+            <span style="font-weight: bold;">${item.value}</span>
+          </div>
+        </div>
+      `
+      }
+    })
+    .interaction('elementHighlightByColor', {
+      background: true
+    })
+
   chart.render()
   emits('renderChartEnd')
 }
@@ -167,7 +215,7 @@ watch(
     initChart()
   },
   {
-    deep: true,
+    deep: true
   }
 )
 watch(
@@ -176,7 +224,7 @@ watch(
     initChart()
   },
   {
-    deep: true,
+    deep: true
   }
 )
 </script>

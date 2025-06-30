@@ -1,9 +1,7 @@
 <template>
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+  <NuxtPage />
 </template>
 
 <script lang="ts" setup>
-import InitialLoading from '~/components/InitialLoading.vue'
+// import InitialLoading from '~/components/InitialLoading.vue'
 </script>
