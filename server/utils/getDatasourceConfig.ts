@@ -57,11 +57,7 @@ export function getDatasourceConfig() {
       dateStrings: serviceDataDbStrings
     }
   }
-  logger.info(
-    chalk.bgBlackBright(
-      JSON.stringify(dataSourceConfig, null, 2)
-    )
-  )
+  console.table(dataSourceConfig)
   logger.info(chalk.green('数据库配置加载完成'))
   return dataSourceConfig
 }

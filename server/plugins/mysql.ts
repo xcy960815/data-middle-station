@@ -1,11 +1,35 @@
-// import mysql from 'mysql2/promise'
-// /* ========== 连接池缓存 ========== */
-// const pools = new Map<string, mysql.Pool>()
+import mysql from 'mysql2/promise'
+import chalk from 'chalk'
 
-// function getPool(name: string, config: mysql.PoolOptions): mysql.Pool {
-//     return pools.get(name) ?? pools.set(name, mysql.createPool(config)).get(name)!
-// }
+// 扩展NitroApp类型，使用any绕过类型检查
+declare module 'nitropack' {
+  export interface NitroApp {
+    mysqlPools: Map<string, mysql.Pool>
+  }
+}
 
-export default defineNitroPlugin(() => {
-  // 这里可以放你的插件逻辑
+const logger = new Logger({
+  fileName: 'database',
+  folderName: 'database'
+})
+
+/**
+ * 注册mysql插件
+ */
+export default defineNitroPlugin((nitroApp) => {
+  const dataSourceConfig = getDatasourceConfig()
+  const pools = new Map<string, mysql.Pool>()
+  for (const [name, config] of Object.entries(
+    dataSourceConfig
+  )) {
+    pools.set(name, mysql.createPool(config))
+  }
+  nitroApp.mysqlPools = pools
+  logger.info(chalk.green('mysql插件注册成功'))
+  nitroApp.hooks.hook('close', () => {
+    console.log('close')
+    for (const pool of pools.values()) {
+      pool.end()
+    }
+  })
 })

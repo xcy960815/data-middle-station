@@ -64,31 +64,31 @@ declare namespace NodeJS {
     /**
      * 所需数据分析数据库名称
      */
-    SERVICE_DATA_MYSQL_DATABASE: DB_DATABASE
+    SERVICE_DATA_DB_NAME: DB_DATABASE
     /**
      * 所需数据分析数据库主机
      */
-    SERVICE_DATA_MYSQL_HOST: DB_HOST
+    SERVICE_DATA_DB_HOST: DB_HOST
     /**
      * 所需数据分析数据库端口
      */
-    SERVICE_DATA_MYSQL_PORT: DB_PORT
+    SERVICE_DATA_DB_PORT: DB_PORT
     /**
      * 所需数据分析数据库用户
      */
-    SERVICE_DATA_MYSQL_ROOT_USER: DB_USER
+    SERVICE_DATA_DB_USER: DB_USER
     /**
      * 所需数据分析数据库密码
      */
-    SERVICE_DATA_MYSQL_ROOT_PASSWORD: DB_PASSWORD
+    SERVICE_DATA_DB_PASSWORD: DB_PASSWORD
     /**
      * 所需数据分析数据库时区
      */
-    SERVICE_DATA_MYSQL_TIMEZONE: DB_TIMEZONE
+    SERVICE_DATA_DB_TIMEZONE: DB_TIMEZONE
     /**
      * 所需数据分析数据库日期字符串
      */
-    SERVICE_DATA_MYSQL_DATE_STRINGS: DB_DATE_STRINGS
+    SERVICE_DATA_DB_DATE_STRINGS: DB_DATE_STRINGS
 
     // 服务redis配置
     /**

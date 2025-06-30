@@ -1,5 +1,5 @@
 import redisDriver from 'unstorage/drivers/redis'
-import { Logger } from '../utils/logger'
+import chalk from 'chalk'
 
 const logger = new Logger({
   fileName: 'redis',
@@ -7,16 +7,57 @@ const logger = new Logger({
 })
 
 /**
- * @desc 初始化Redis 驱动
- * @returns {void}
+ * 检测Redis连接状态
+ * @param storage 存储实例
+ * @returns {Promise<boolean>} 连接是否成功
  */
-export default defineNitroPlugin(() => {
+async function checkRedisConnection(
+  storage: any
+): Promise<boolean> {
+  try {
+    const testKey = 'redis:connection:test'
+    const testValue = 'ping'
+
+    // 尝试写入数据
+    await storage.setItem(testKey, testValue)
+    // 尝试读取数据
+    const value = await storage.getItem(testKey)
+    // 清理测试数据
+    await storage.removeItem(testKey)
+
+    if (value === testValue) {
+      logger.info(chalk.green('Redis连接测试成功'))
+      return true
+    } else {
+      logger.error(
+        chalk.red('Redis连接测试失败：数据验证不匹配')
+      )
+      return false
+    }
+  } catch (error) {
+    logger.error(
+      chalk.red(
+        'Redis连接测试失败：' + (error as Error).message
+      )
+    )
+    return false
+  }
+}
+
+/**
+ * @desc 初始化Redis 驱动
+ * @returns {Promise<void>}
+ */
+export default defineNitroPlugin(async () => {
   const storage = useStorage()
   // 判断是否已经挂载
   if (storage.getMount('redis')) {
-    logger.info('redis 已经挂载')
+    logger.info(chalk.green('redis 已经挂载'))
+    // 检测连接状态
+    await checkRedisConnection(storage)
     return
   }
+
   const serviceRedisBase =
     useRuntimeConfig().serviceRedisBase
   const serviceRedisHost =
@@ -35,12 +76,13 @@ export default defineNitroPlugin(() => {
           serviceRedisHost,
           serviceRedisPort,
           serviceRedisUsername,
-          serviceRedisPassword
+          serviceRedisPassword: '******' // 隐藏密码
         },
         null,
         2
       )
   )
+
   logger.info('redis 开始挂载')
   const driver = redisDriver({
     base: serviceRedisBase,
@@ -49,6 +91,14 @@ export default defineNitroPlugin(() => {
     username: serviceRedisUsername,
     password: serviceRedisPassword
   })
+
   storage.mount('redis', driver)
-  logger.info('redis 挂载成功')
+
+  // 检测新建连接是否成功
+  const isConnected = await checkRedisConnection(storage)
+  if (isConnected) {
+    logger.info('redis 挂载成功且连接正常')
+  } else {
+    logger.error('redis 挂载成功但连接异常，请检查配置')
+  }
 })
