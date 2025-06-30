@@ -1,7 +1,9 @@
 <template>
   <div class="chart relative h-full w-full overflow-hidden">
     <template v-if="chartErrorMessage">
-      <div class="absolute inset-0 flex justify-center items-center">
+      <div
+        class="absolute inset-0 flex justify-center items-center"
+      >
         <div class="text-red-500 text-[14px]">
           {{ chartErrorMessage }}
         </div>
@@ -13,6 +15,7 @@
         :xAxisFields="xAxisFields"
         :yAxisFields="yAxisFields"
         :data="data"
+        :title="chartTitle"
         :chart-width="chartWidth"
         :chart-height="chartHeight"
         @renderChartStart="handleRenderChartStart"
@@ -46,6 +49,10 @@ const chartResizeObserver = ref<ResizeObserver>()
  */
 const chartLoading = computed(() => {
   return chartStore.getChartLoading
+})
+
+const chartTitle = computed(() => {
+  return chartStore.getAnalyseName
 })
 
 /**
@@ -86,25 +93,24 @@ const chartComponentMap = {
   table: TableChart,
   line: LineChart,
   interval: IntervalChart,
-  pie: PieChart,
+  pie: PieChart
 }
-const chartComponent = computed(() => chartComponentMap[chartStore.getChartType] || TableChart)
+const chartComponent = computed(
+  () =>
+    chartComponentMap[chartStore.getChartType] || TableChart
+)
 
 /**
  * @desc 图表开始渲染
  * @returns {void}
  */
-const handleRenderChartStart = () => {
-  console.log('handleRenderChartStart')
-}
+const handleRenderChartStart = () => {}
 
 /**
  * @desc 图表结束渲染
  * @returns {void}
  */
-const handleRenderChartEnd = () => {
-  console.log('handleRenderChartEnd')
-}
+const handleRenderChartEnd = () => {}
 
 /**
  * @desc 监听图表容器变化

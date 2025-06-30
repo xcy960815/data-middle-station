@@ -1,3 +1,6 @@
+/**
+ * @desc 获取图表配置 handler
+ */
 export const getAnalyseHandler = () => {
   const chartStore = useAnalyseStore()
   const columnStore = useColumnStore()
@@ -6,7 +9,7 @@ export const getAnalyseHandler = () => {
   const groupStore = useGroupStore()
   const orderStore = useOrderStore()
   /**
-   * @desc 获取图表
+   * @desc 获取图表配置
    */
   const getAnalyse = async () => {
     const router = useRouter()
@@ -15,10 +18,11 @@ export const getAnalyseHandler = () => {
     const result = await $fetch('/api/getAnalyse', {
       method: 'post',
       body: {
-        id,
-      },
+        id
+      }
     })
     if (result.code === 200) {
+      console.log('result', result)
       const data = result.data!
       const analyseName = data.analyseName
       chartStore.setAnalyseName(analyseName)
@@ -29,14 +33,24 @@ export const getAnalyseHandler = () => {
       const chartConfigId = data.chartConfigId
       chartStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
-      chartStore.setChartType((chartConfig?.chartType as AnalyseStore.ChartType) || 'table')
+      chartStore.setChartType(
+        (chartConfig?.chartType as AnalyseStore.ChartType) ||
+          'table'
+      )
       columnStore.setColumns(chartConfig?.column || [])
-      dimensionStore.setDimensions(chartConfig?.dimension || [])
+      dimensionStore.setDimensions(
+        chartConfig?.dimension || []
+      )
+      console.log(
+        '从后端获取数据',
+        dimensionStore.getDimensions
+      )
       filterStore.setFilters(chartConfig?.filter || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])
-      columnStore.setDataSource(chartConfig?.dataSource || '')
-      dimensionStore.setDimensions(chartConfig?.dimension || [])
+      columnStore.setDataSource(
+        chartConfig?.dataSource || ''
+      )
       filterStore.setFilters(chartConfig?.filter || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])

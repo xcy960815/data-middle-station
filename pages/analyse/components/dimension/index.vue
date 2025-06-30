@@ -21,7 +21,7 @@
       <div
         data-action="drag"
         class="dimension__item my-1"
-        v-for="(item, index) in dimensionList"
+        v-for="(item, index) in dimensions"
         :key="index"
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
@@ -78,10 +78,10 @@ const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
 
 /**
- * @desc dimensionList
+ * @desc dimensions
  * @returns {ComputedRef<DimensionStore.DimensionOption[]>}
  */
-const dimensionList = computed(() => {
+const dimensions = computed(() => {
   return dimensionStore.getDimensions
 })
 
@@ -170,7 +170,7 @@ const dragstartHandler = (
     JSON.stringify({
       from: 'dimension',
       index,
-      value: dimensionList.value[index]
+      value: dimensions.value[index]
     })
   )
 }
