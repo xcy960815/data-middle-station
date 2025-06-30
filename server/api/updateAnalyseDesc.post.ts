@@ -9,10 +9,14 @@ const analyseService = new AnalyseService()
  * @apiDescription 更新图表描述
  * @returns {Promise<ResponseModule.Response<boolean>>}
  */
-export default defineEventHandler<Promise<CustomResponseModule.Response<boolean>>>(async event => {
+export default defineEventHandler<
+  Promise<ICustomResponse<boolean>>
+>(async (event) => {
   try {
-    const analyseOption = await readBody<AnalyseDto.AnalyseOption>(event)
-    const data = await analyseService.updateAnalyseDesc(analyseOption)
+    const analyseOption =
+      await readBody<AnalyseDto.AnalyseOption>(event)
+    const data =
+      await analyseService.updateAnalyseDesc(analyseOption)
     return CustomResponse.success(data)
   } catch (error: any) {
     return CustomResponse.error(error.message)

@@ -2,7 +2,7 @@
  * @desc webworker 实现类
  */
 export class Webworker {
-  private _actions: WebworkerModule.Action[] = []
+  private _actions: Webworker.Action[] = []
   /**
    * @desc 移除actions中的action
    * @param {string} messageName
@@ -17,20 +17,20 @@ export class Webworker {
 
   /**
    * @desc 判断action是否已经存在
-   * @param {WebworkerModule.Action} newAction
+   * @param {Webworker.Action} newAction
    * @returns {boolean}
    */
-  private _inActions(newAction: WebworkerModule.Action) {
+  private _inActions(newAction: Webworker.Action) {
     return this._actions.some(
       (action) => action.message === newAction.message
     )
   }
   /**
    * @desc 向actions中添加action
-   * @param { WebworkerModule.Action } action
+   * @param { Webworker.Action } action
    * @returns {number}
    */
-  private _addAction(action: WebworkerModule.Action): void {
+  private _addAction(action: Webworker.Action): void {
     if (!this._inActions(action)) {
       this._actions.push(action)
     }
@@ -43,7 +43,7 @@ export class Webworker {
    */
   private _createDisposableWorker(
     workerScript: string
-  ): Worker {
+  ): Webworker.Worker {
     const URL = window.URL || window.webkitURL
     const workerScriptBlob = new Blob([workerScript], {
       type: 'application/javascript'
@@ -116,19 +116,19 @@ export class Webworker {
   }
   /**
    * @desc 创建webworker任务
-   * @param {WebworkerModule.Action[]} actions
+   * @param {Webworker.Action[]} actions
    * @returns
    */
-  constructor(actions?: WebworkerModule.Action[]) {
+  constructor(actions?: Webworker.Action[]) {
     this._actions = actions || []
   }
   /**
    * @desc 执行所有webworker任务
-   * @param { WebworkerModule.PostAllParams } postParams
+   * @param { Webworker.PostAllParams } postParams
    * @returns { Promise<T[]>}
    */
   public postMessageAll<T>(
-    postParams?: WebworkerModule.PostAllParams
+    postParams?: Webworker.PostAllParams
   ): Promise<T[]> {
     if (
       Array.isArray(postParams) &&
@@ -143,14 +143,14 @@ export class Webworker {
       )
     } else if (
       Array.isArray(postParams) &&
-      (postParams as WebworkerModule.Action[]).every(
+      (postParams as Webworker.Action[]).every(
         (item) =>
           typeof item === 'object' && !Array.isArray(item)
       )
     ) {
       return Promise.all<T>(
-        (postParams as WebworkerModule.Action[]).map(
-          ({ message }: WebworkerModule.Action) =>
+        (postParams as Webworker.Action[]).map(
+          ({ message }: Webworker.Action) =>
             this.postMessage<T>(message)
         )
       )
@@ -168,13 +168,11 @@ export class Webworker {
 
   /**
    * @desc 注册webworker
-   * @param {WebworkerModule.Action | WebworkerModule.Action[]} action
+   * @param {Webworker.Action | Webworker.Action[]} action
    * @returns {number}
    */
   public addAction(
-    action:
-      | WebworkerModule.Action
-      | WebworkerModule.Action[]
+    action: Webworker.Action | Webworker.Action[]
   ): number {
     if (Array.isArray(action)) {
       action.forEach((action) => {

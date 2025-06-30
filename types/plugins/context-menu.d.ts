@@ -2,46 +2,48 @@
  * @desc contextmenu directive and component definition
  */
 
-import type { DirectiveBinding } from 'vue';
+import type { DirectiveBinding } from 'vue'
 
 declare global {
-  namespace ContextMenuModule {
+  namespace ContextMenu {
     /**
      * @desc 右键菜单元素
      */
     export interface ContextMenuElement extends Element {
-      $contextmenuRefName?: string;
+      $contextmenuRefName?: string
     }
     /**
      * @desc 触发方式
      */
-    export type TriggerType = 'contextmenu' | 'click';
+    export type TriggerType = 'contextmenu' | 'click'
     /**
      * @desc 右键菜单配置项
      */
     export interface ContextMenuOtions {
-      triggerTypes: TriggerType[];
-      triggerEventHandler: (evt: Event) => void;
+      triggerTypes: TriggerType[]
+      triggerEventHandler: (evt: Event) => void
     }
 
     export interface ContextMenuBinding
       extends DirectiveBinding<{
-        triggerTypes: TriggerType[];
+        triggerTypes: TriggerType[]
       }> {}
 
     export interface ContextMenuInstance {
       initContextMenuEvent(
         contextMenuElement: ContextMenuElement,
-        options?: InitContextMenuOptions,
-      ): void;
+        options?: InitContextMenuOptions
+      ): void
 
-      removeContextMenuEvent(contextMenuElement: ContextMenuElement): void;
+      removeContextMenuEvent(
+        contextMenuElement: ContextMenuElement
+      ): void
     }
 
     export interface InitContextMenuOptions {
-      triggerTypes?: TriggerType | TriggerType[];
+      triggerTypes?: TriggerType | TriggerType[]
     }
   }
 }
 
-export {};
+export {}

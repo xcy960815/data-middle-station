@@ -6,17 +6,19 @@ const chartDataService = new ChartDataService()
  * @param {QueryChartDataParams} params
  * @returns {Promise<ResponseModule.Response<ChartDataDao>>}
  */
-export default defineEventHandler<Promise<CustomResponseModule.Response<ChartDataDao.ChartData>>>(
-  async event => {
-    try {
-      const chartDataParams = await readBody<ChartDataDto.ChartData>(event)
+export default defineEventHandler<
+  Promise<ICustomResponse<ChartDataDao.ChartData>>
+>(async (event) => {
+  try {
+    const chartDataParams =
+      await readBody<ChartDataDto.ChartData>(event)
 
-      const data = await chartDataService.getChartData(chartDataParams)
+    const data =
+      await chartDataService.getChartData(chartDataParams)
 
-      return CustomResponse.success(data)
-    } catch (error: any) {
-      console.error(error)
-      return CustomResponse.error(error.message)
-    }
+    return CustomResponse.success(data)
+  } catch (error: any) {
+    console.error(error)
+    return CustomResponse.error(error.message)
   }
-)
+})
