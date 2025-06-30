@@ -18,6 +18,21 @@ services:
       mysql:
         condition: service_healthy
 
+  # redis配置
+  redis:
+    image: redis:7.2.5
+    container_name: dms-redis-container
+    command: redis-server --bind 0.0.0.0 --requirepass 123456 --user dms on >123456 allkeys allcommands
+    ports:
+      - "6383:6379"
+    networks:
+      - dms-service-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "123456", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
   # mysql配置
   mysql:
     image: mysql:8.4.2 # 镜像

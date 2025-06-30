@@ -11,7 +11,7 @@ const logger = new Logger({
  */
 async function queryTasks() {
   logger.info(
-    chalk.bgCyanBright(
+    chalk.green(
       `queryAlarms ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`
     )
   )
@@ -23,6 +23,6 @@ async function queryTasks() {
  * @returns {Promise<void>}
  */
 export default defineNitroPlugin(() => {
-  logger.info('开启轮询任务')
+  logger.info(chalk.green('开启轮询任务'))
   queryTasks()
 })

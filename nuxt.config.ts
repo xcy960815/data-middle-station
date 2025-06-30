@@ -116,32 +116,66 @@ export default defineNuxtConfig({
     serviceDbStrings: String(
       process.env.SERVICE_DB_DATE_STRINGS
     ),
-    // 所需数据分析数据库配置
-    serviceDataDbName:
-      process.env.SERVICE_DATA_MYSQL_DATABASE,
-    serviceDataDbHost: process.env.SERVICE_DATA_MYSQL_HOST,
+    /**
+     * 所需数据分析数据库名称
+     */
+    serviceDataDbName: process.env.SERVICE_DATA_DB_NAME,
+    /**
+     * 所需数据分析数据库主机
+     */
+    serviceDataDbHost: process.env.SERVICE_DATA_DB_HOST,
+    /**
+     * 所需数据分析数据库端口
+     */
     serviceDataDbPort: String(
-      process.env.SERVICE_DATA_MYSQL_PORT
+      process.env.SERVICE_DATA_DB_PORT
     ),
-    serviceDataDbUser:
-      process.env.SERVICE_DATA_MYSQL_ROOT_USER,
-    serviceDataDbPwd:
-      process.env.SERVICE_DATA_MYSQL_ROOT_PASSWORD,
+    /**
+     * 所需数据分析数据库用户
+     */
+    serviceDataDbUser: process.env.SERVICE_DATA_DB_USER,
+    /**
+     * 所需数据分析数据库密码
+     */
+    serviceDataDbPwd: process.env.SERVICE_DATA_DB_PASSWORD,
+    /**
+     * 所需数据分析数据库时区
+     */
     serviceDataDbTimezone:
-      process.env.SERVICE_DATA_MYSQL_TIMEZONE,
+      process.env.SERVICE_DATA_DB_TIMEZONE,
+    /**
+     * 所需数据分析数据库字符串
+     */
     serviceDataDbStrings: String(
-      process.env.SERVICE_DATA_MYSQL_DATE_STRINGS
+      process.env.SERVICE_DATA_DB_DATE_STRINGS
     ),
-    // 服务redis配置
+    /**
+     * 服务redis配置
+     */
     serviceRedisBase: process.env.SERVICE_REDIS_BASE,
+    /**
+     * 服务redis主机
+     */
     serviceRedisHost: process.env.SERVICE_REDIS_HOST,
+    /**
+     * 服务redis端口
+     */
     serviceRedisPort: String(
       process.env.SERVICE_REDIS_PORT || ''
     ),
+    /**
+     * 服务redis用户
+     */
     serviceRedisUsername:
       process.env.SERVICE_REDIS_USERNAME,
+    /**
+     * 服务redis密码
+     */
     serviceRedisPassword:
       process.env.SERVICE_REDIS_PASSWORD,
+    /**
+     * 服务redis数据库
+     */
     serviceRedisDb: String(
       process.env.SERVICE_REDIS_DB || ''
     ),
