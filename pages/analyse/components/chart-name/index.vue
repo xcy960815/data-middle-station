@@ -1,12 +1,24 @@
 <template>
-  <h4
-    :title="analyseDesc"
-    class="chart-name cursor-pointer"
-    @click="handleUpdateAnalyseName"
-    @contextmenu="handleUpdateChartDesc"
-  >
-    {{ analyseName }}
-  </h4>
+  <div class="chart-info">
+    <h4
+      class="chart-name cursor-pointer"
+      @click="handleUpdateAnalyseName"
+    >
+      {{ analyseName }}
+      <span class="edit-icon"
+        ><i class="icon-park-outline-edit"></i
+      ></span>
+    </h4>
+    <p
+      class="chart-desc cursor-pointer"
+      @click="handleUpdateChartDesc"
+    >
+      {{ analyseDesc || '' }}
+      <span class="edit-icon"
+        ><i class="icon-park-outline-edit"></i
+      ></span>
+    </p>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -25,8 +37,8 @@ const analyseDesc = computed(() => {
 const props = defineProps({
   analyseName: {
     type: String,
-    default: '',
-  },
+    default: ''
+  }
 })
 
 /**
@@ -38,9 +50,10 @@ const handleUpdateAnalyseName = () => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
-    inputErrorMessage: '分析名称仅支持中英文、数字、下划线，且不能为空',
+    inputErrorMessage:
+      '分析名称仅支持中英文、数字、下划线，且不能为空',
     inputValue: analyseName.value || '未命名分析',
-    autofocus: true,
+    autofocus: true
   }).then(({ value }) => {
     if (!value.trim()) {
       ElMessage.error('分析名称不能为空')
@@ -58,13 +71,13 @@ const updateAnalyseName = async (value: string) => {
     method: 'POST',
     body: {
       id: chartId.value,
-      analyseName: value,
-    },
+      analyseName: value
+    }
   })
   if (result.code === 200) {
     ElMessage({
       type: 'success',
-      message: '更新成功',
+      message: '更新成功'
     })
     chartStore.setAnalyseName(value)
   }
@@ -73,16 +86,14 @@ const updateAnalyseName = async (value: string) => {
  * 更新图表描述
  * @param {string} value 图表描述
  */
-const handleUpdateChartDesc = (event: MouseEvent) => {
-  // 阻止右键菜单
-  event.preventDefault()
+const handleUpdateChartDesc = () => {
   ElMessageBox.prompt('请输入图表描述', '编辑分析描述', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{0,100}$/,
     inputErrorMessage: '描述仅支持中英文、数字、下划线',
     inputValue: analyseDesc.value || '未填写描述',
-    autofocus: true,
+    autofocus: true
   }).then(({ value }) => {
     if (!value.trim()) {
       ElMessage.error('描述不能为空')
@@ -100,17 +111,64 @@ const updateChartDesc = async (value: string) => {
     method: 'POST',
     body: {
       id: chartId.value,
-      analyseDesc: value,
-    },
+      analyseDesc: value
+    }
   })
   if (result.code === 200) {
     ElMessage({
       type: 'success',
-      message: '更新成功',
+      message: '更新成功'
     })
     chartStore.setAnalyseDesc(value)
   }
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.chart-info {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.chart-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover .edit-icon {
+    opacity: 1;
+  }
+}
+
+.chart-desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #606266;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover .edit-icon {
+    opacity: 1;
+  }
+}
+
+.edit-icon {
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #909399;
+  font-size: 14px;
+
+  &:hover {
+    color: #409eff;
+  }
+}
+</style>

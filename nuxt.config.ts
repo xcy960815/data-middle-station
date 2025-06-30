@@ -182,7 +182,8 @@ export default defineNuxtConfig({
 
     // 公共键（在客户端和服务器端都可用）
     public: {
-      apiBase: '/api'
+      apiBase: '/api',
+      appName: process.env.APP_NAME
     }
   }
 })

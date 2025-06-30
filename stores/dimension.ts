@@ -1,4 +1,5 @@
 import { StoreNames } from './store-names'
+import cloneDeep from 'lodash/cloneDeep'
 /**
  * @desc 维度 store
  */
@@ -6,16 +7,22 @@ import { defineStore } from 'pinia'
 export const useDimensionStore = defineStore<
   DimensionStore.DimensionKey,
   BaseStore.State<DimensionStore.DimensionState>,
-  BaseStore.Getters<DimensionStore.DimensionState, DimensionStore.DimensionGetters>,
-  BaseStore.Actions<DimensionStore.DimensionState, DimensionStore.DimensionActions>
+  BaseStore.Getters<
+    DimensionStore.DimensionState,
+    DimensionStore.DimensionGetters
+  >,
+  BaseStore.Actions<
+    DimensionStore.DimensionState,
+    DimensionStore.DimensionActions
+  >
 >(StoreNames.DIMENSION, {
   state: () => ({
-    dimensions: [],
+    dimensions: []
   }),
   getters: {
     getDimensions(state) {
       return state.dimensions
-    },
+    }
   },
   actions: {
     /**
@@ -41,6 +48,6 @@ export const useDimensionStore = defineStore<
      */
     removeDimension(index: number) {
       this.dimensions.splice(index, 1)
-    },
-  },
+    }
+  }
 })
