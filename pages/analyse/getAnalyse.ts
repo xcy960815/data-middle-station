@@ -22,7 +22,6 @@ export const getAnalyseHandler = () => {
       }
     })
     if (result.code === 200) {
-      console.log('result', result)
       const data = result.data!
       const analyseName = data.analyseName
       chartStore.setAnalyseName(analyseName)
@@ -40,10 +39,6 @@ export const getAnalyseHandler = () => {
       columnStore.setColumns(chartConfig?.column || [])
       dimensionStore.setDimensions(
         chartConfig?.dimension || []
-      )
-      console.log(
-        '从后端获取数据',
-        dimensionStore.getDimensions
       )
       filterStore.setFilters(chartConfig?.filter || [])
       groupStore.setGroups(chartConfig?.group || [])
