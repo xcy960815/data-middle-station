@@ -7,11 +7,7 @@ const databaseService = new DatabaseService()
  * @returns {Promise<ResponseModule.Response<Array<TableOption>>>}
  */
 export default defineEventHandler<
-  Promise<
-    CustomResponseModule.Response<
-      Array<DatabaseVo.TableOptionVo>
-    >
-  >
+  Promise<ICustomResponse<Array<DatabaseVo.TableOptionVo>>>
 >(async (event) => {
   try {
     const { tableName } = getQuery<{ tableName: string }>(

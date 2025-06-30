@@ -14,9 +14,11 @@
         "
         v-for="filterAggregation in filterAggregations"
       >
-        <iconify-icon
+        <icon-park
           class="aggregation-mark"
-          icon="icon-park-solid:correct"
+          type="correct"
+          size="14"
+          fill="#333"
           v-if="filterAggregation.value === aggregationType"
         />
         <span>{{ filterAggregation.label }}</span>
@@ -36,6 +38,7 @@
 </template>
 
 <script lang="ts" setup>
+import { IconPark } from '@icon-park/vue-next/es/all'
 const props = defineProps({
   name: {
     type: String,

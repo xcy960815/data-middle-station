@@ -3,6 +3,10 @@ import type { Logger as LoggerType } from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
 import { getProcessEnvProperties } from '~/server/utils/envProperties'
 
+interface LoggerOptions {
+  fileName: string
+  folderName: string
+}
 /**
  * @description 日志类
  */

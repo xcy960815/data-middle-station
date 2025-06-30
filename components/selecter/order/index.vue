@@ -6,12 +6,21 @@
     :index="index"
   >
     <template #order-icon>
-      <iconify-icon
+      <icon-park
         class="chart-selecter-order-icon"
-        width="1.2em"
-        height="1.2em"
+        v-if="orderType === 'asc'"
+        type="arrow-circle-down"
+        size="14"
+        fill="#333"
         @click="handleClickOrder"
-        :icon="orderIconName(orderType)"
+      />
+      <icon-park
+        class="chart-selecter-order-icon"
+        v-else
+        type="arrow-circle-up"
+        size="14"
+        fill="#333"
+        @click="handleClickOrder"
       />
     </template>
     <template #default>
@@ -25,9 +34,11 @@
         v-for="orderAggregation in orderAggregations"
       >
         <!-- 复现用户选择的聚合条件 -->
-        <iconify-icon
+        <icon-park
           class="aggregation-mark"
-          icon="icon-park-solid:correct"
+          type="correct"
+          size="14"
+          fill="#333"
           v-if="orderAggregation.value === aggregationType"
         />
         <span>{{ orderAggregation.label }}</span>
@@ -37,6 +48,7 @@
 </template>
 
 <script lang="ts" setup>
+import { IconPark } from '@icon-park/vue-next/es/all'
 const props = defineProps({
   name: {
     type: String,
@@ -114,8 +126,8 @@ const orderAggregations = ref([
 const orderIconName = computed(
   () => (orderType: OrderStore.OrderType) => {
     return orderType === 'asc'
-      ? 'mdi:arrow-top-bold'
-      : 'mdi:arrow-bottom-bold'
+      ? 'arrow-circle-down'
+      : 'arrow-circle-up'
   }
 )
 

@@ -167,17 +167,17 @@ const handleAfterEnter = (el: Element) => {
  * @desc 触发元素的配置
  */
 const contextMenuOptions = reactive<
-  Map<Element, ContextMenuModule.ContextMenuOtions>
+  Map<Element, ContextMenu.ContextMenuOtions>
 >(new Map())
 /**
  * @desc 当前触发元素
- * @type {Ref<ContextMenuModule.ContextMenuElement>}
+ * @type {Ref<ContextMenu.ContextMenuElement>}
  */
 const currentReferenceElement =
-  ref<ContextMenuModule.ContextMenuElement>()
+  ref<ContextMenu.ContextMenuElement>()
 /**
  * @desc 当前触发元素的配置
- * @type {ComputedRef<ContextMenuModule.ContextMenuOptions>}
+ * @type {ComputedRef<ContextMenu.ContextMenuOptions>}
  */
 const currentTriggerOptions = computed(
   () =>
@@ -186,16 +186,16 @@ const currentTriggerOptions = computed(
 )
 /**
  * @desc 添加触发元素
- * @param {ContextMenuModule.ContextMenuElement} contextMenuElement
- * @param {ContextMenuModule.InitContextMenuOptions} options
+ * @param {ContextMenu.ContextMenuElement} contextMenuElement
+ * @param {ContextMenu.InitContextMenuOptions} options
  * @returns {void}
  */
 const initContextMenuEvent = (
-  contextMenuElement: ContextMenuModule.ContextMenuElement,
-  options?: ContextMenuModule.InitContextMenuOptions
+  contextMenuElement: ContextMenu.ContextMenuElement,
+  options?: ContextMenu.InitContextMenuOptions
 ): void => {
   // 获取用户的触发方式
-  const triggerTypes: ContextMenuModule.TriggerType[] =
+  const triggerTypes: ContextMenu.TriggerType[] =
     options?.triggerTypes
       ? Array.isArray(options.triggerTypes)
         ? options.triggerTypes
@@ -213,7 +213,7 @@ const initContextMenuEvent = (
   }
   /**
    * @desc 循环绑定事件
-   * @param {ContextMenuModule.TriggerType} triggerType
+   * @param {ContextMenu.TriggerType} triggerType
    * @returns {void}
    */
   triggerTypes.forEach((triggerType) => {
@@ -232,11 +232,11 @@ const initContextMenuEvent = (
 }
 /**
  * @desc 移除触发元素
- * @param {ContextMenuModule.ContextMenuElement} contextMenuElement
+ * @param {ContextMenu.ContextMenuElement} contextMenuElement
  * @returns {void}
  */
 const removeContextMenuEvent = (
-  contextMenuElement: ContextMenuModule.ContextMenuElement
+  contextMenuElement: ContextMenu.ContextMenuElement
 ): void => {
   const options = contextMenuOptions.get(contextMenuElement)
   if (!options) return
