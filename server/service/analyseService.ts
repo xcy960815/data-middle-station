@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 
 const logger = new Logger({
   fileName: 'analyseService',
-  folderName: 'analyseService',
+  folderName: 'analyseService'
 })
 /**
  * @desc 分析服务
@@ -31,7 +31,7 @@ export class AnalyseService {
   ): AnalyseVo.AnalyseOption {
     return {
       ...chart,
-      chartConfig: chartConfig,
+      chartConfig: chartConfig
     }
   }
 
@@ -48,14 +48,19 @@ export class AnalyseService {
    * @param id {number} 分析id
    * @returns {Promise<AnalyseVo.AnalyseOption>}
    */
-  public async getAnalyse(id: number): Promise<AnalyseVo.AnalyseOption> {
-    const AnalyseOption = await this.analyseMapper.getAnalyse(id)
+  public async getAnalyse(
+    id: number
+  ): Promise<AnalyseVo.AnalyseOption> {
+    const AnalyseOption =
+      await this.analyseMapper.getAnalyse(id)
     if (!AnalyseOption) {
       throw new Error('图表不存在')
     } else if (AnalyseOption.chartConfigId) {
       // throw new Error('图表配置不存在')
-      logger.info(`获取图表配置: ${AnalyseOption.chartConfigId}`)
-      const chartConfig = await this.chartConfigService.getChartConfig(AnalyseOption.chartConfigId)
+      const chartConfig =
+        await this.chartConfigService.getChartConfig(
+          AnalyseOption.chartConfigId
+        )
       return this.dao2Vo(AnalyseOption, chartConfig)
     } else {
       return this.dao2Vo(AnalyseOption, null)
@@ -66,9 +71,14 @@ export class AnalyseService {
    * @desc 获取所有图表
    * @returns {Promise<AnalyseVo.ChartsOption[]>}
    */
-  public async getAnalyses(): Promise<AnalyseVo.AnalyseOption[]> {
-    const analysesDao = await this.analyseMapper.getAnalyses()
-    return analysesDao.map(item => this.dao2Vo(item, null))
+  public async getAnalyses(): Promise<
+    AnalyseVo.AnalyseOption[]
+  > {
+    const analysesDao =
+      await this.analyseMapper.getAnalyses()
+    return analysesDao.map((item) =>
+      this.dao2Vo(item, null)
+    )
   }
 
   /**
@@ -76,23 +86,27 @@ export class AnalyseService {
    * @param chart {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyse(AnalyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
-    const { chartConfig, ...AnalyseOption } = AnalyseOptionDto
+  public async updateAnalyse(
+    AnalyseOptionDto: AnalyseDto.AnalyseOption
+  ): Promise<boolean> {
+    const { chartConfig, ...AnalyseOption } =
+      AnalyseOptionDto
 
     let chartConfigId = AnalyseOption.chartConfigId
 
     if (!chartConfigId) {
       // 如果图表配置不存在，则创建默认图表配置
-      chartConfigId = await this.chartConfigService.createChartConfig({
-        chartType: chartConfig?.chartType || '',
-        dataSource: chartConfig?.dataSource || '',
-        column: chartConfig?.column,
-        dimension: chartConfig?.dimension,
-        filter: chartConfig?.filter,
-        group: chartConfig?.group,
-        order: chartConfig?.order,
-        limit: chartConfig?.limit,
-      })
+      chartConfigId =
+        await this.chartConfigService.createChartConfig({
+          chartType: chartConfig?.chartType || '',
+          dataSource: chartConfig?.dataSource || '',
+          column: chartConfig?.column,
+          dimension: chartConfig?.dimension,
+          filter: chartConfig?.filter,
+          group: chartConfig?.group,
+          order: chartConfig?.order,
+          limit: chartConfig?.limit
+        })
     } else {
       await this.chartConfigService.updateChartConfig({
         id: chartConfigId,
@@ -103,21 +117,22 @@ export class AnalyseService {
         filter: chartConfig?.filter,
         group: chartConfig?.group,
         order: chartConfig?.order,
-        limit: chartConfig?.limit,
+        limit: chartConfig?.limit
       })
     }
 
-    const updateAnalyseResult = await this.analyseMapper.updateAnalyse({
-      id: AnalyseOption.id,
-      analyseName: AnalyseOption.analyseName,
-      chartConfigId,
-      analyseDesc: AnalyseOption.analyseDesc,
-      viewCount: 0,
-      createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-      updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-      createdBy: 'system',
-      updatedBy: 'system',
-    })
+    const updateAnalyseResult =
+      await this.analyseMapper.updateAnalyse({
+        id: AnalyseOption.id,
+        analyseName: AnalyseOption.analyseName,
+        chartConfigId,
+        analyseDesc: AnalyseOption.analyseDesc,
+        viewCount: 0,
+        createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+        updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+        createdBy: 'system',
+        updatedBy: 'system'
+      })
 
     return updateAnalyseResult
   }
@@ -127,19 +142,27 @@ export class AnalyseService {
    * @param chart {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async createAnalyse(analyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
-    const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    let chartConfigId = analyseOptionDto.chartConfigId || null
+  public async createAnalyse(
+    analyseOptionDto: AnalyseDto.AnalyseOption
+  ): Promise<boolean> {
+    const currentTime = dayjs().format(
+      'YYYY-MM-DD HH:mm:ss'
+    )
+    let chartConfigId =
+      analyseOptionDto.chartConfigId || null
     if (analyseOptionDto.chartConfig) {
       // 如果图表配置不存在，则创建默认图表配置
-      chartConfigId = await this.chartConfigService.createChartConfig({
-        dataSource: analyseOptionDto.chartConfig?.dataSource || '',
-        column: analyseOptionDto.chartConfig?.column,
-        dimension: analyseOptionDto.chartConfig?.dimension,
-        filter: analyseOptionDto.chartConfig?.filter,
-        group: analyseOptionDto.chartConfig?.group,
-        order: analyseOptionDto.chartConfig?.order,
-      })
+      chartConfigId =
+        await this.chartConfigService.createChartConfig({
+          dataSource:
+            analyseOptionDto.chartConfig?.dataSource || '',
+          column: analyseOptionDto.chartConfig?.column,
+          dimension:
+            analyseOptionDto.chartConfig?.dimension,
+          filter: analyseOptionDto.chartConfig?.filter,
+          group: analyseOptionDto.chartConfig?.group,
+          order: analyseOptionDto.chartConfig?.order
+        })
     }
     const analyseOption: AnalyseDto.AnalyseOption = {
       analyseName: analyseOptionDto.analyseName,
@@ -149,7 +172,7 @@ export class AnalyseService {
       createTime: currentTime,
       updateTime: currentTime,
       createdBy: 'system',
-      updatedBy: 'system',
+      updatedBy: 'system'
     }
 
     return this.analyseMapper.createAnalyse(analyseOption)
@@ -160,7 +183,9 @@ export class AnalyseService {
    * @param AnalyseOption {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyseName(AnalyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
+  public async updateAnalyseName(
+    AnalyseOption: AnalyseDto.AnalyseOption
+  ): Promise<boolean> {
     return this.analyseMapper.updateAnalyse(AnalyseOption)
   }
 
@@ -169,7 +194,9 @@ export class AnalyseService {
    * @param AnalyseOption {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyseDesc(AnalyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
+  public async updateAnalyseDesc(
+    AnalyseOption: AnalyseDto.AnalyseOption
+  ): Promise<boolean> {
     return this.analyseMapper.updateAnalyse(AnalyseOption)
   }
 }
