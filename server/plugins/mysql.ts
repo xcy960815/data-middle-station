@@ -14,6 +14,28 @@ const logger = new Logger({
 })
 
 /**
+ * 检查所有 MySQL 连接池是否可用
+ */
+export async function checkMysqlConnection(
+  pools: Map<string, mysql.Pool>
+) {
+  for (const [name, pool] of pools.entries()) {
+    try {
+      const conn = await pool.getConnection()
+      await conn.ping()
+      conn.release()
+      logger.info(
+        chalk.green(`MySQL 数据源 [${name}] 连接成功`)
+      )
+    } catch (err) {
+      logger.error(
+        chalk.red(`MySQL 数据源 [${name}] 连接失败: ${err}`)
+      )
+    }
+  }
+}
+
+/**
  * 注册mysql插件
  */
 export default defineNitroPlugin((nitroApp) => {
@@ -26,6 +48,10 @@ export default defineNitroPlugin((nitroApp) => {
   }
   nitroApp.mysqlPools = pools
   logger.info(chalk.green('mysql插件注册成功'))
+
+  // 检查连接
+  checkMysqlConnection(pools)
+
   nitroApp.hooks.hook('close', () => {
     console.log('close')
     for (const pool of pools.values()) {

@@ -81,7 +81,10 @@ const initChart = () => {
       item.alias || item.displayName || item.columnName
   )
   const chartData = props.data
-  console.log('chartData', chartData)
+  // console.log(
+  //   'chartData',
+  //   JSON.stringify(chartData, null, 2)
+  // )
   const intervalChart = chart
     .interval()
     .data({
@@ -91,14 +94,8 @@ const initChart = () => {
         {
           type: 'fold',
           fields: yAxisFieldNames,
-          key:
-            props.xAxisFields[0].alias ||
-            props.xAxisFields[0].displayName ||
-            props.xAxisFields[0].columnName,
-          value:
-            props.yAxisFields[0].alias ||
-            props.yAxisFields[0].displayName ||
-            props.yAxisFields[0].columnName
+          key: 'type',
+          value: 'value'
         }
       ]
     })
@@ -177,14 +174,18 @@ const initChart = () => {
       // 自定义tooltip内容
       customContent: (title: string, data: any[]) => {
         if (!data || data.length === 0) return ''
-
-        // 只取第一项（当前悬停的项）
         const item = data[0]
+        // 打印 item 看看结构
+        console.log('tooltip item:', item)
+        const fieldName =
+          item.type ||
+          (item.data && item.data.type) ||
+          item.name
         return `
         <div style="padding: 8px;">
           <div style="display: flex; align-items: center; padding: 4px 0;">
             <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
-            <span style="margin-right: 12px;">${item.name}</span>
+            <span style="margin-right: 12px;">${fieldName}</span>
             <span style="font-weight: bold;">${item.value}</span>
           </div>
         </div>
