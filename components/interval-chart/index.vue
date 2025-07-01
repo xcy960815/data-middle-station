@@ -81,10 +81,10 @@ const initChart = () => {
       item.alias || item.displayName || item.columnName
   )
   const chartData = props.data
-  // console.log(
-  //   'chartData',
-  //   JSON.stringify(chartData, null, 2)
-  // )
+  console.log(
+    'chartData',
+    JSON.stringify(chartData, null, 2)
+  )
   const intervalChart = chart
     .interval()
     .data({
@@ -95,7 +95,7 @@ const initChart = () => {
           type: 'fold',
           fields: yAxisFieldNames,
           key: 'type',
-          value: 'value'
+          value: '活跃用户数'
         }
       ]
     })
@@ -112,7 +112,7 @@ const initChart = () => {
           item.alias || item.displayName || item.columnName
       )
     )
-    .encode('y', 'value')
+    .encode('y', '活跃用户数')
     .encode('color', 'type')
     .scale('y', { nice: true })
     .axis('y', { labelFormatter: '~s' })
@@ -168,33 +168,33 @@ const initChart = () => {
   }
 
   // 配置图表交互
-  chart
-    .interaction('tooltip', {
-      shared: false,
-      // 自定义tooltip内容
-      customContent: (title: string, data: any[]) => {
-        if (!data || data.length === 0) return ''
-        const item = data[0]
-        // 打印 item 看看结构
-        console.log('tooltip item:', item)
-        const fieldName =
-          item.type ||
-          (item.data && item.data.type) ||
-          item.name
-        return `
-        <div style="padding: 8px;">
-          <div style="display: flex; align-items: center; padding: 4px 0;">
-            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
-            <span style="margin-right: 12px;">${fieldName}</span>
-            <span style="font-weight: bold;">${item.value}</span>
-          </div>
-        </div>
-      `
-      }
-    })
-    .interaction('elementHighlightByColor', {
-      background: true
-    })
+  // chart
+  //   .interaction('tooltip', {
+  //     shared: false,
+  //     // 自定义tooltip内容
+  //     customContent: (title: string, data: any[]) => {
+  //       if (!data || data.length === 0) return ''
+  //       const item = data[0]
+  //       // 打印 item 看看结构
+  //       console.log('tooltip item:', item)
+  //       const fieldName =
+  //         item.type ||
+  //         (item.data && item.data.type) ||
+  //         item.name
+  //       return `
+  //       <div style="padding: 8px;">
+  //         <div style="display: flex; align-items: center; padding: 4px 0;">
+  //           <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
+  //           <span style="margin-right: 12px;">${fieldName}</span>
+  //           <span style="font-weight: bold;">${item['活跃用户数']}</span>
+  //         </div>
+  //       </div>
+  //     `
+  //     }
+  //   })
+  //   .interaction('elementHighlightByColor', {
+  //     background: true
+  //   })
 
   chart.render()
   emits('renderChartEnd')
