@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise'
+import chalk from 'chalk'
 
 /* ========== 工具类型 & 日志 ========== */
 export type Row = Record<
@@ -13,10 +13,10 @@ export interface IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row
 }
 
-// const logger = new Logger({
-//   fileName: 'database',
-//   folderName: 'database',
-// })
+const logger = new Logger({
+  fileName: 'database',
+  folderName: 'database'
+})
 
 /* ========== 装饰器：字段映射 & 数据源绑定 ========== */
 export const entityColumnsMap = new WeakMap<
@@ -133,6 +133,9 @@ export abstract class BaseMapper {
         `数据源 ${this.dataSourceName} 未配置`
       )
     }
+    logger.info(
+      chalk.bgRed('执行sql:') + chalk.green(` ${sql}`)
+    )
     const [rows] = await pool.query(sql, params)
     return rows as R
   }
