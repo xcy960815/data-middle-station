@@ -22,6 +22,7 @@ services:
       - mysql-data:/var/lib/mysql # 挂载卷
     networks:
       - dms-service-data-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"] # 健康检查
       timeout: 20s # 超时
