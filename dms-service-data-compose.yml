@@ -1,3 +1,8 @@
+# restart 策略可选值：
+#   no              - 不自动重启（默认）
+#   always          - 总是自动重启
+#   on-failure[:N]  - 失败时自动重启，最多N次
+#   unless-stopped  - 除非手动停止，否则总是重启
 services:
   # mysql配置
   mysql:
@@ -22,7 +27,7 @@ services:
       - mysql-data:/var/lib/mysql # 挂载卷
     networks:
       - dms-service-data-network
-    restart: unless-stopped
+    restart: on-failure:5
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"] # 健康检查
       timeout: 20s # 超时
