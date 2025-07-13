@@ -27,6 +27,7 @@ services:
       - "6383:6379"
     networks:
       - dms-service-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "123456", "ping"]
       interval: 5s
@@ -56,6 +57,7 @@ services:
       - mysql-data:/var/lib/mysql # 挂载卷
     networks:
       - dms-service-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"] # 健康检查
       timeout: 20s # 超时
