@@ -1,7 +1,10 @@
-import jwt, {
+import pkg from 'jsonwebtoken'
+const {
+  sign,
+  verify,
   TokenExpiredError,
   JsonWebTokenError
-} from 'jsonwebtoken'
+} = pkg
 import type { Secret } from 'jsonwebtoken'
 import chalk from 'chalk'
 import type { H3Event, EventHandlerRequest } from 'h3'
@@ -16,6 +19,10 @@ interface JwtPayload {
   userId: string | number
   username: string
 }
+console.log(
+  'TokenExpiredError--TokenExpiredError',
+  TokenExpiredError
+)
 
 /**
  * JWT工具类
@@ -50,7 +57,7 @@ export class JwtUtils {
       const options = {
         expiresIn: this.EXPIRES_IN
       }
-      const token = jwt.sign(payload, secretKey, options)
+      const token = sign(payload, secretKey, options)
       logger.info(`生成token成功: ${payload.username}`)
       return token
     } catch (error) {
@@ -72,10 +79,7 @@ export class JwtUtils {
       const secretKey: Secret = Buffer.from(
         String(this.SECRET_KEY)
       )
-      const decoded = jwt.verify(
-        token,
-        secretKey
-      ) as JwtPayload
+      const decoded = verify(token, secretKey) as JwtPayload
       return decoded
     } catch (error) {
       if (error instanceof TokenExpiredError) {
