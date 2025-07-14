@@ -1,13 +1,6 @@
 import mysql from 'mysql2/promise'
 import chalk from 'chalk'
 
-// 扩展NitroApp类型，使用any绕过类型检查
-// declare module 'nitropack' {
-//   export interface NitroApp {
-//     mysqlPools: Map<string, mysql.Pool>
-//   }
-// }
-
 const logger = new Logger({
   fileName: 'database',
   folderName: 'database'
@@ -27,9 +20,11 @@ export async function checkMysqlConnection(
       logger.info(
         chalk.green(`MySQL 数据源 [${name}] 连接成功`)
       )
-    } catch (err) {
+    } catch (error) {
       logger.error(
-        chalk.red(`MySQL 数据源 [${name}] 连接失败: ${err}`)
+        chalk.red(
+          `MySQL 数据源 [${name}] 连接失败: ${error}`
+        )
       )
     }
   }
