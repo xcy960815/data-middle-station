@@ -3,18 +3,27 @@
     <template #header>
       <custom-header>
         <template #header-right>
-          <icon-park
-            type="newlybuild"
-            size="30"
-            fill="#333"
-            class="cursor-pointer"
-            @click="handleCreateAnalyse"
-          ></icon-park>
+          <el-tooltip
+            effect="dark"
+            content="创建分析"
+            placement="bottom"
+          >
+            <icon-park
+              type="newlybuild"
+              size="30"
+              fill="#333"
+              class="cursor-pointer"
+              @click="handleCreateAnalyse"
+            ></icon-park>
+          </el-tooltip>
         </template>
       </custom-header>
     </template>
     <template #content>
-      <div class="homepage-container relative" ref="container">
+      <div
+        class="homepage-container relative"
+        ref="container"
+      >
         <chart-card
           ref="cards"
           class="card-chart"
@@ -31,16 +40,69 @@
         >
         </chart-card>
       </div>
+      <!-- 创建&编辑分析 -->
+      <el-dialog
+        v-model="addOrEditAnalyseDialogVisible"
+        title="创建分析"
+        width="30%"
+      >
+        <el-form
+          :model="addOrEditAnalyseFormData"
+          ref="addOrEditAnalyseFormRef"
+          label-width="auto"
+          :rules="addOrEditAnalyseFormRules"
+        >
+          <el-form-item label="分析名称" prop="analyseName">
+            <el-input
+              v-model="addOrEditAnalyseFormData.analyseName"
+            />
+          </el-form-item>
+          <el-form-item label="分析描述" prop="analyseDesc">
+            <el-input
+              v-model="addOrEditAnalyseFormData.analyseDesc"
+            />
+          </el-form-item>
+        </el-form>
+      </el-dialog>
     </template>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import {
+  ElMessageBox,
+  ElMessage,
+  type FormInstance,
+  type FormRules
+} from 'element-plus'
 const layoutName = 'homepage'
 import ChartCard from './components/chart-card.vue'
 const HomePageStore = useHomepageStore()
+
+const addOrEditAnalyseFormRef = ref<FormInstance>()
+const addOrEditAnalyseDialogVisible = ref(false)
+const addOrEditAnalyseFormData = reactive({
+  analyseName: '',
+  analyseDesc: ''
+})
+
+const addOrEditAnalyseFormRules: FormRules = {
+  analyseName: [
+    {
+      required: true,
+      message: '请输入分析名称',
+      trigger: 'blur'
+    }
+  ],
+  analyseDesc: [
+    {
+      required: true,
+      message: '请输入分析描述',
+      trigger: 'blur'
+    }
+  ]
+}
 
 /**
  * @desc 分析列表
@@ -54,15 +116,18 @@ const container = ref<HTMLDivElement>()
  */
 const getAnalyses = async () => {
   const res = await $fetch('/api/getAnalyses', {
-    method: 'POST',
+    method: 'POST'
   })
   if (res.code === 200) {
     HomePageStore.setAnalyses(res.data || [])
     nextTick(() => {
       // 添加window 日历效果
-      const cards = container.value!.querySelectorAll<HTMLDivElement>('.card-chart')
+      const cards =
+        container.value!.querySelectorAll<HTMLDivElement>(
+          '.card-chart'
+        )
 
-      container.value!.onmousemove = e => {
+      container.value!.onmousemove = (e) => {
         for (const card of cards) {
           const rect = card.getBoundingClientRect()
           const x = e.clientX - rect.left - rect.width / 2
@@ -78,17 +143,24 @@ const getAnalyses = async () => {
 /**
  * @desc 删除分析
  */
-const handleDeleteAnalyse = (id: number, analyseName: string) => {
+const handleDeleteAnalyse = (
+  id: number,
+  analyseName: string
+) => {
   console.log('删除分析', id, analyseName)
-  ElMessageBox.confirm(`确定删除【${analyseName}】吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-  }).then(async () => {
+  ElMessageBox.confirm(
+    `确定删除【${analyseName}】吗？`,
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消'
+    }
+  ).then(async () => {
     const res = await $fetch('/api/deleteAnalyse', {
       method: 'DELETE',
       body: {
-        id,
-      },
+        id
+      }
     })
     if (res.code === 200) {
       ElMessage.success('删除成功')
@@ -104,6 +176,10 @@ const handleDeleteAnalyse = (id: number, analyseName: string) => {
  */
 const handleCreateAnalyse = () => {
   console.log('创建分析')
+  addOrEditAnalyseDialogVisible.value = true
+  nextTick(() => {
+    addOrEditAnalyseFormRef.value?.resetFields()
+  })
 }
 
 onMounted(() => {

@@ -1,4 +1,3 @@
-// export { }
 import 'nitropack'
 import type { Pool } from 'mysql2/promise'
 
