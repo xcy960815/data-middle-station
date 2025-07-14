@@ -2,11 +2,11 @@ import mysql from 'mysql2/promise'
 import chalk from 'chalk'
 
 // 扩展NitroApp类型，使用any绕过类型检查
-declare module 'nitropack' {
-  export interface NitroApp {
-    mysqlPools: Map<string, mysql.Pool>
-  }
-}
+// declare module 'nitropack' {
+//   export interface NitroApp {
+//     mysqlPools: Map<string, mysql.Pool>
+//   }
+// }
 
 const logger = new Logger({
   fileName: 'database',
@@ -49,7 +49,9 @@ export default defineNitroPlugin((nitroApp) => {
   nitroApp.mysqlPools = pools
   logger.info(chalk.green('mysql插件注册成功'))
 
-  // 检查连接
+  /**
+   * 检查所有 MySQL 连接池是否可用
+   */
   checkMysqlConnection(pools)
 
   nitroApp.hooks.hook('close', () => {
