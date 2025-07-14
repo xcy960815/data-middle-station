@@ -7,7 +7,10 @@ const logger = new Logger({
  * @desc 打印日志中间件
  */
 export default defineEventHandler(async (event) => {
-  logger.info(
-    chalk.greenBright(getRequestURL(event).toString())
-  )
+  const requestUrl = getRequestURL(event).toString()
+  if (requestUrl.includes('api')) {
+    logger.info(
+      chalk.greenBright('访问的接口' + requestUrl)
+    )
+  }
 })
