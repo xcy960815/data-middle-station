@@ -6,14 +6,20 @@
   >
     <div class="card-inset">
       <div class="card-title">{{ analyseName }}</div>
-      <div class="card-type-middle">{{ chartType }}</div>
       <div class="card-info">
         <div class="info-row">
-          <span class="creator">{{ createdBy || '未知' }}</span>
-          <span class="create-time">{{ createTime ? createTime.split('T')[0] : '' }}</span>
+          <span class="creator">{{
+            createdBy || '未知'
+          }}</span>
+          <span class="create-time">{{
+            createTime ? createTime.split('T')[0] : ''
+          }}</span>
         </div>
       </div>
-      <div class="delete-icon" @click.stop="handleDeleteAnalyse">
+      <div
+        class="delete-icon"
+        @click.stop="handleDeleteAnalyse"
+      >
         <icon-park type="DeleteOne" size="14" fill="#333" />
       </div>
     </div>
@@ -28,39 +34,34 @@ const props = defineProps({
   id: {
     type: Number,
     required: true,
-    default: '',
+    default: ''
   },
   analyseName: {
     type: String,
     required: true,
-    default: '',
+    default: ''
   },
   viewCount: {
     type: Number,
     required: true,
-    default: 0,
-  },
-  chartType: {
-    type: String,
-    required: true,
-    default: '',
+    default: 0
   },
   createdBy: {
     type: String,
-    default: '',
+    default: ''
   },
   updatedBy: {
     type: String,
-    default: '',
+    default: ''
   },
   createTime: {
     type: String,
-    default: '',
+    default: ''
   },
   updateTime: {
     type: String,
-    default: '',
-  },
+    default: ''
+  }
 })
 /**
  * @desc 点击卡片跳转到对应的分析页面
@@ -69,8 +70,8 @@ const handleClickCard = () => {
   router.push({
     path: '/analyse',
     query: {
-      id: props.id,
-    },
+      id: props.id
+    }
   })
 }
 /**

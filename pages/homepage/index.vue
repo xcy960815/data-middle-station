@@ -78,7 +78,8 @@ import {
 } from 'element-plus'
 const layoutName = 'homepage'
 import ChartCard from './components/chart-card.vue'
-const HomePageStore = useHomepageStore()
+
+const homePageStore = useHomepageStore()
 
 const addOrEditAnalyseFormRef = ref<FormInstance>()
 const addOrEditAnalyseDialogVisible = ref(false)
@@ -108,7 +109,7 @@ const addOrEditAnalyseFormRules: FormRules = {
  * @desc 分析列表
  */
 const analyseList = computed(() => {
-  return HomePageStore.getAnalyses
+  return homePageStore.getAnalyses
 })
 const container = ref<HTMLDivElement>()
 /**
@@ -119,24 +120,24 @@ const getAnalyses = async () => {
     method: 'POST'
   })
   if (res.code === 200) {
-    HomePageStore.setAnalyses(res.data || [])
-    nextTick(() => {
-      // 添加window 日历效果
-      const cards =
-        container.value!.querySelectorAll<HTMLDivElement>(
-          '.card-chart'
-        )
+    homePageStore.setAnalyses(res.data || [])
+    // nextTick(() => {
+    //   // 添加window 日历效果
+    //   const cards =
+    //     container.value!.querySelectorAll<HTMLDivElement>(
+    //       '.card-chart'
+    //     )
 
-      container.value!.onmousemove = (e) => {
-        for (const card of cards) {
-          const rect = card.getBoundingClientRect()
-          const x = e.clientX - rect.left - rect.width / 2
-          const y = e.clientY - rect.top - rect.height / 2
-          card.style.setProperty('--x', `${x}px`)
-          card.style.setProperty('--y', `${y}px`)
-        }
-      }
-    })
+    //   container.value!.onmousemove = (e) => {
+    //     for (const card of cards) {
+    //       const rect = card.getBoundingClientRect()
+    //       const x = e.clientX - rect.left - rect.width / 2
+    //       const y = e.clientY - rect.top - rect.height / 2
+    //       card.style.setProperty('--x', `${x}px`)
+    //       card.style.setProperty('--y', `${y}px`)
+    //     }
+    //   }
+    // })
   }
 }
 
@@ -147,7 +148,6 @@ const handleDeleteAnalyse = (
   id: number,
   analyseName: string
 ) => {
-  console.log('删除分析', id, analyseName)
   ElMessageBox.confirm(
     `确定删除【${analyseName}】吗？`,
     '提示',
