@@ -1,4 +1,7 @@
 import chalk from 'chalk'
+import gradient from 'gradient-string'
+import boxen from 'boxen'
+import figlet from 'figlet'
 
 const logger = new Logger({
   fileName: 'database',
@@ -10,8 +13,6 @@ const logger = new Logger({
  * @returns {Promise<Array<NodeJS.DataSourceItem>>}
  */
 export function getDatasourceConfig() {
-  logger.info(chalk.green('开始加载数据库配置'))
-
   const serviceDbName = useRuntimeConfig().serviceDbName
   const serviceDbHost = useRuntimeConfig().serviceDbHost
   const serviceDbPort = useRuntimeConfig().serviceDbPort
@@ -57,7 +58,78 @@ export function getDatasourceConfig() {
       dateStrings: serviceDataDbStrings
     }
   }
-  console.table(dataSourceConfig)
-  logger.info(chalk.green('数据库配置加载完成'))
+
+  // 使用超级炫酷的彩色输出替代console.table
+  console.log('\n')
+
+  // 使用figlet生成大字体标题
+  const title = figlet.textSync('Database', {
+    font: 'ANSI Shadow',
+    horizontalLayout: 'default',
+    verticalLayout: 'default'
+  })
+
+  // 使用自定义渐变色输出标题，替代已弃用的pastel
+  const customGradient = gradient([
+    '#12c2e9',
+    '#c471ed',
+    '#f64f59'
+  ])
+  console.log(customGradient.multiline(title))
+  console.log('\n')
+
+  Object.entries(dataSourceConfig).forEach(
+    ([dbName, config]) => {
+      // 添加类型断言解决类型错误
+      const typedConfig = config as {
+        host: string
+        port: string
+        user: string
+        password: string
+        timezone: string
+        dateStrings: string
+      }
+
+      const items = [
+        {
+          key: '🌐 地址',
+          value: `${typedConfig.host}:${typedConfig.port}`
+        },
+        { key: '👤 用户', value: typedConfig.user },
+        { key: '🔑 密码', value: '******' },
+        { key: '🕒 时区', value: typedConfig.timezone },
+        {
+          key: '📅 日期格式化',
+          value: typedConfig.dateStrings
+        }
+      ]
+
+      // 构建内容字符串，使用自定义渐变色
+      const dbGradient = gradient(['#00F260', '#0575E6'])
+      let content = dbGradient(
+        `✨ 数据库: ${dbName} ✨\n\n`
+      )
+
+      items.forEach((item) => {
+        content +=
+          chalk.cyan(`${item.key}: `) +
+          chalk.bold.white(item.value) +
+          '\n'
+      })
+
+      // 使用boxen创建一个漂亮的框
+      const boxContent = boxen(content, {
+        padding: 1,
+        margin: 1,
+        borderStyle: 'round',
+        borderColor: 'cyan',
+        backgroundColor: '#000',
+        title: '💾 数据库配置',
+        titleAlignment: 'center'
+      })
+
+      console.log(boxContent)
+    }
+  )
   return dataSourceConfig
 }
