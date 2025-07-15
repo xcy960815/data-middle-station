@@ -19,10 +19,6 @@ interface JwtPayload {
   userId: string | number
   username: string
 }
-console.log(
-  'TokenExpiredError--TokenExpiredError',
-  TokenExpiredError
-)
 
 /**
  * JWT工具类

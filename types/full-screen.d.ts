@@ -15,27 +15,27 @@
 declare global {
   interface Document {
     // 给 document 添加自定义属性
-    mozFullScreenElement?: Element;
-    msFullscreenElement?: Element;
-    webkitFullscreenElement?: Element;
-    mozCancelFullScreen?: () => void;
-    msExitFullscreen?: () => void;
+    mozFullScreenElement?: Element
+    msFullscreenElement?: Element
+    webkitFullscreenElement?: Element
+    mozCancelFullScreen?: () => void
+    msExitFullscreen?: () => void
     // chrome 全屏
-    webkitExitFullscreen?: () => void;
+    webkitExitFullscreen?: () => void
     // ie11 全屏
-    msRequestFullscreen?: () => void;
+    msRequestFullscreen?: () => void
     // 火狐 全屏
-    mozRequestFullScreen?: () => void;
+    mozRequestFullScreen?: () => void
   }
   interface HTMLElement {
     // 给 HTMLElement 添加自定义属性
     // opera
-    mozRequestFullscreen?: () => void;
+    mozRequestFullscreen?: () => void
     // ie11
-    msRequestFullscreen?: () => void;
+    msRequestFullscreen?: () => void
     // chrome
-    webkitRequestFullscreen?: () => void;
+    webkitRequestFullscreen?: () => void
   }
 }
 
-export {};
+export {}
