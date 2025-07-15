@@ -2,11 +2,20 @@
  * @desc 为 process.env 添加自定义属性
  */
 declare namespace NodeJS {
+  /**
+   * @desc 数据库配置
+   */
   type PoolOptions = import('mysql2/promise').PoolOptions
 
+  /**
+   * @desc redis配置
+   */
   type RedisOptions =
     import('unstorage/drivers/redis').RedisOptions
 
+  /**
+   * @desc 数据库配置
+   */
   type DB_HOST = PoolOptions['host']
   type DB_PORT = PoolOptions['port']
   type DB_USER = PoolOptions['user']
@@ -15,6 +24,9 @@ declare namespace NodeJS {
   type DB_TIMEZONE = PoolOptions['timezone']
   type DB_DATE_STRINGS = PoolOptions['dateStrings']
 
+  /**
+   * @desc redis配置
+   */
   type REDIS_HOST = RedisOptions['host']
   type REDIS_PORT = RedisOptions['port']
   type REDIS_PASSWORD = RedisOptions['password']
@@ -24,11 +36,17 @@ declare namespace NodeJS {
 
   interface ProcessEnv {
     // 给 ProcessEnv 添加自定义属性
-    // 日志存放路径
+    /**
+     * 日志存放路径
+     */
     LOG_PATH: string
-    // 日志时间格式
+    /**
+     * 日志时间格式
+     */
     LOG_TIME_FORMAT: string
-    // 项目标题
+    /**
+     * 项目标题
+     */
     APP_NAME: string
     // 服务数据库配置
     /**

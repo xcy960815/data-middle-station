@@ -99,6 +99,10 @@ export default defineNuxtConfig({
       process.env.SERVICE_REDIS_PASSWORD,
     serviceRedisDb: String(process.env.SERVICE_REDIS_DB),
 
+    // 日志路径
+    logPath: process.env.LOG_PATH,
+    logTimeFormat: process.env.LOG_TIME_FORMAT,
+
     // JWT配置
     jwtSecretKey: process.env.JWT_SECRET_KEY,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN,

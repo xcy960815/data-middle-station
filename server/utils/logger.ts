@@ -1,7 +1,6 @@
 import { createLogger, format, transports } from 'winston'
 import type { Logger as LoggerType } from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
-import { getProcessEnvProperties } from '~/server/utils/envProperties'
 import chalk from 'chalk'
 import gradient from 'gradient-string'
 import boxen from 'boxen'
@@ -28,6 +27,19 @@ export class Logger {
    */
   private logger: LoggerType | null = null
 
+  /**
+   * @description 日志路径
+   */
+  private logPath: string =
+    useRuntimeConfig().logPath || 'logs'
+
+  /**
+   * @description 日志时间格式
+   */
+  private logTimeFormat: string =
+    useRuntimeConfig().logTimeFormat ||
+    'YYYY-MM-DD HH:mm:ss'
+
   constructor({ fileName, folderName }: LoggerOptions) {
     this._createLogger(fileName, folderName)
   }
@@ -42,16 +54,13 @@ export class Logger {
     fileName: string,
     folderName: string
   ): void {
-    const logTimeFormat =
-      getProcessEnvProperties('LOG_TIME_FORMAT') ||
-      'YYYY-MM-DD HH:mm:ss'
     this.logger = createLogger({
       transports: [
         new transports.Console({
           // 禁用winston默认的colorize，我们将使用自定义的颜色处理
           format: format.combine(
             format.timestamp({
-              format: logTimeFormat
+              format: this.logTimeFormat
             }),
             format.align(),
             format.printf((info) => {
@@ -91,9 +100,7 @@ export class Logger {
         })
       ]
     })
-    const logPath =
-      getProcessEnvProperties('LOG_PATH') || 'logs'
-    const dirname = `${logPath}/${folderName}`
+    const dirname = `${this.logPath}/${folderName}`
     // 添加自定义配置
     this.logger.add(
       new DailyRotateFile({
@@ -110,7 +117,7 @@ export class Logger {
         zippedArchive: true,
         format: format.combine(
           format.timestamp({
-            format: logTimeFormat
+            format: this.logTimeFormat
           }),
           format.align(),
           format.printf((info: any) => {
