@@ -1,12 +1,11 @@
-import { JwtUtils } from '../utils/jwt'
-import { Logger } from '../utils/logger'
+// import { JwtUtils } from '../utils/jwt'
 import { RequestCodeEnum } from '~/utils/request-enmu'
 import type { H3Event, EventHandlerRequest } from 'h3'
 import dayjs from 'dayjs'
 
 // 创建认证中间件专用的日志实例
 const logger = new Logger({
-  fileName: 'auth',
+  fileName: 'check-auth',
   folderName: 'middleware'
 })
 
