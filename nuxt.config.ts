@@ -45,7 +45,6 @@ export default defineNuxtConfig({
     }
   },
   nitro: {
-    compatibilityDate: '2025-07-14',
     esbuild: {
       options: {
         tsconfigRaw: {
@@ -54,14 +53,7 @@ export default defineNuxtConfig({
           }
         }
       }
-    },
-    moduleSideEffects: ['node-cron'],
-    plugins: [
-      '~/server/plugins/mysql.ts',
-      '~/server/plugins/redis.ts',
-      '~/server/plugins/cron.ts',
-      '~/server/plugins/socket.ts'
-    ]
+    }
   },
   runtimeConfig: {
     // 服务端私有键（仅在服务器端可用）
