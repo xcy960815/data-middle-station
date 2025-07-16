@@ -3,7 +3,6 @@ import { Logger } from '../utils/logger'
 import { RequestCodeEnum } from '~/utils/request-enmu'
 import type { H3Event, EventHandlerRequest } from 'h3'
 import dayjs from 'dayjs'
-import { navigateTo } from 'nuxt/app'
 
 // 创建认证中间件专用的日志实例
 const logger = new Logger({
@@ -140,7 +139,7 @@ export default defineEventHandler(
         logger.warn(
           `${errorMsg}: ${method} ${pathname} - IP: ${clientIP}`
         )
-        navigateTo('/welcome')
+        // navigateTo('/welcome')
         return
       }
       // 验证token
