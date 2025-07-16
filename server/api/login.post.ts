@@ -10,12 +10,11 @@ const logger = new Logger({
  * 登录API
  */
 export default defineEventHandler<
-  Promise<ICustomResponse<LoginVo.Login>>
+  Promise<ICustomResponse<boolean>>
 >(async (event) => {
   try {
     // 获取请求体数据
     const body = await readBody<LoginDto.Login>(event)
-
     if (!body.username || !body.password) {
       return CustomResponse.error('用户名和密码不能为空')
     }
@@ -25,22 +24,22 @@ export default defineEventHandler<
     ) {
       // 生成JWT token
       const token = JwtUtils.generateToken({
-        userId: 1,
+        userId: '1',
         username: body.username
       })
 
       logger.info(
         chalk.green(`用户 ${body.username} 登录成功`)
       )
-
-      return CustomResponse.success({
-        token,
-        user: {
-          userId: 1,
-          username: body.username,
-          role: 'admin'
-        }
+      setCookie(event, 'token', token, {
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7
       })
+      setCookie(event, 'username', body.username, {
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7
+      })
+      return CustomResponse.success(true)
     } else {
       logger.warn(
         chalk.yellow(
