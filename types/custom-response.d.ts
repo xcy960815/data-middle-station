@@ -6,7 +6,7 @@
  * @return {Response}
  */
 declare interface ICustomResponse<D = any> {
-  code: 200 | 404 | 500
+  code: 200 | 404 | 500 | 401 | 403
   data: D | null
   message: string
   success?: boolean
