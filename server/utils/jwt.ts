@@ -6,7 +6,6 @@ const {
   JsonWebTokenError
 } = pkg
 import type { Secret, SignOptions } from 'jsonwebtoken'
-import chalk from 'chalk'
 import type { H3Event, EventHandlerRequest } from 'h3'
 import { Logger } from './logger'
 
@@ -16,7 +15,7 @@ const logger = new Logger({
 })
 
 interface JwtPayload {
-  userId: string | number
+  userId: string
   username: string
 }
 
@@ -84,7 +83,6 @@ export class JwtUtils {
         logger.error(`token验证失败: ${error.message}`)
         throw new Error('Token无效')
       } else {
-        // logger.error(`token验证失败: ${error.message}`)
         throw new Error('Token验证失败')
       }
     }
