@@ -5,7 +5,7 @@ const {
   TokenExpiredError,
   JsonWebTokenError
 } = pkg
-import type { Secret } from 'jsonwebtoken'
+import type { Secret, SignOptions } from 'jsonwebtoken'
 import chalk from 'chalk'
 import type { H3Event, EventHandlerRequest } from 'h3'
 import { Logger } from './logger'
@@ -33,9 +33,8 @@ export class JwtUtils {
   /**
    * token过期时间（默认24小时）
    */
-  private static readonly EXPIRES_IN = Number(
+  private static readonly EXPIRES_IN =
     useRuntimeConfig().jwtExpiresIn
-  )
 
   /**
    * 生成token
@@ -49,9 +48,9 @@ export class JwtUtils {
         String(this.SECRET_KEY)
       )
 
-      // 使用any类型断言解决类型问题
-      const options = {
-        expiresIn: this.EXPIRES_IN
+      // 配置签名选项
+      const options: SignOptions = {
+        // expiresIn: this.EXPIRES_IN
       }
       const token = sign(payload, secretKey, options)
       logger.info(`生成token成功: ${payload.username}`)

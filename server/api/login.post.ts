@@ -9,17 +9,16 @@ const logger = new Logger({
 /**
  * 登录API
  */
-export default defineEventHandler(async (event) => {
+export default defineEventHandler<
+  Promise<ICustomResponse<LoginVo.Login>>
+>(async (event) => {
   try {
     // 获取请求体数据
-    const body = await readBody<LoginVo>(event)
+    const body = await readBody<LoginDto.Login>(event)
 
     if (!body.username || !body.password) {
       return CustomResponse.error('用户名和密码不能为空')
     }
-
-    // 这里应该是从数据库查询用户信息并验证密码
-    // 为了演示，我们使用一个硬编码的用户
     if (
       body.username === 'admin' &&
       body.password === '123456'
