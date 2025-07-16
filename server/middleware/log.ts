@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+
 const logger = new Logger({
   fileName: 'log',
   folderName: 'middleware'

@@ -13,6 +13,8 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from '~/composables/common-fetch'
+import { RequestCodeEnum } from '~/utils/request-enmu'
 
 /**
  * 字符配置接口，定义了字符动画所需的所有配置参数
@@ -253,7 +255,25 @@ onUnmounted(() => {
 /**
  * 导航到主页的处理函数
  */
-const navigateToHome = () => router.push('/homepage')
+const navigateToHome = async () => {
+  // 使用 api 函数，TypeScript 应该能推导出 ICustomResponse<LoginVo.Login> 类型
+  const loginResult = await api('/api/login', {
+    method: 'POST',
+    body: {
+      username: 'admin',
+      password: '123456'
+    }
+  })
+  // 根据你的 API 返回结构处理
+  if (loginResult.code === 200 && loginResult.data) {
+    const { token, user } = loginResult.data
+    localStorage.setItem('token', token)
+    // console.log('登录成功:', user)
+    router.push('/homepage')
+  } else {
+    console.error('登录失败:', loginResult.message)
+  }
+}
 </script>
 
 <style scoped lang="scss">
