@@ -26,12 +26,10 @@ async function checkRedisConnection(
     await storage.removeItem(testKey)
 
     if (value === testValue) {
-      logger.info(chalk.green('Redis连接测试成功'))
+      logger.info('Redis连接测试成功')
       return true
     } else {
-      logger.error(
-        chalk.red('Redis连接测试失败：数据验证不匹配')
-      )
+      logger.error('Redis连接测试失败：数据验证不匹配')
       return false
     }
   } catch (error) {

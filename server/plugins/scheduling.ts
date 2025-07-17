@@ -22,11 +22,6 @@ export default defineNitroPlugin(() => {
   // │ │ │ │ │ │
   // * * * * * *
   cron.schedule('0 * * * *', () => {
-    logger.info(
-      `${chalk.green('每分钟执行一次调度任务')}${
-        '当前时间为' +
-        dayjs(Date.now()).format('YYYY-MM-DD HH:mm:ss')
-      }`
-    )
+    logger.info('每分钟执行一次调度任务')
   })
 })
