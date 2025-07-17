@@ -1,5 +1,3 @@
-import chalk from 'chalk'
-
 /* ========== 工具类型 & 日志 ========== */
 export type Row = Record<
   string,
@@ -133,9 +131,7 @@ export abstract class BaseMapper {
         `数据源 ${this.dataSourceName} 未配置`
       )
     }
-    logger.info(
-      chalk.bgRed('执行sql:') + chalk.green(` ${sql}`)
-    )
+    logger.info(sql)
     const [rows] = await pool.query(sql, params)
     return rows as R
   }
