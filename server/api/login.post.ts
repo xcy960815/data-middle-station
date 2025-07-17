@@ -1,4 +1,3 @@
-import { JwtUtils } from '../utils/jwt'
 import chalk from 'chalk'
 
 const logger = new Logger({
@@ -22,20 +21,13 @@ export default defineEventHandler<
       body.username === 'admin' &&
       body.password === '123456'
     ) {
-      // 生成JWT token
       const token = JwtUtils.generateToken({
         userId: '1',
         username: body.username
       })
 
-      logger.info(
-        chalk.green(`用户 ${body.username} 登录成功`)
-      )
-      setCookie(event, 'token', token, {
-        httpOnly: true,
-        maxAge: 60 * 60 * 24 * 7
-      })
-      setCookie(event, 'username', body.username, {
+      logger.info(`用户 ${body.username} 登录成功`)
+      setCookie(event, JwtUtils.TOKEN_NAME, token, {
         httpOnly: true,
         maxAge: 60 * 60 * 24 * 7
       })
@@ -46,7 +38,6 @@ export default defineEventHandler<
           `用户 ${body.username} 登录失败: 用户名或密码错误`
         )
       )
-
       return CustomResponse.error('用户名或密码错误')
     }
   } catch (error) {
