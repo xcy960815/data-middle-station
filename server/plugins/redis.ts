@@ -55,7 +55,7 @@ export default defineNitroPlugin(async () => {
     await checkRedisConnection(storage)
     return
   }
-
+  //
   const serviceRedisBase =
     useRuntimeConfig().serviceRedisBase
   const serviceRedisHost =
@@ -82,6 +82,7 @@ export default defineNitroPlugin(async () => {
   )
 
   logger.info('redis 开始挂载')
+
   const driver = redisDriver({
     base: serviceRedisBase,
     host: serviceRedisHost,
@@ -90,7 +91,7 @@ export default defineNitroPlugin(async () => {
     password: serviceRedisPassword
   })
 
-  storage.mount('redis', driver)
+  storage.mount(serviceRedisBase, driver)
 
   // 检测新建连接是否成功
   const isConnected = await checkRedisConnection(storage)

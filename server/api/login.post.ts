@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+// import { useStorage } from '#imports'
 
 const logger = new Logger({
   fileName: 'login',
@@ -25,6 +26,16 @@ export default defineEventHandler<
         userId: '1',
         username: body.username
       })
+      // 存放到 redis中
+      const redisStorage = useStorage('redis')
+      const tokenKey = `user:token:${body.username}`
+      redisStorage.setItem(tokenKey, token, {
+        ttl: 60 * 60 * 24 * 7 // 设置过期时间为7天，与cookie保持一致
+      })
+      console.log(
+        12345,
+        await redisStorage.getItem(tokenKey)
+      )
 
       logger.info(`用户 ${body.username} 登录成功`)
       setCookie(event, JwtUtils.TOKEN_NAME, token, {

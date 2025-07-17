@@ -135,7 +135,9 @@ export default defineEventHandler(
         logger.warn(
           `${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`
         )
-        // 跳转到  /welcome 页面
+        // 跳转到  /welcome 页面 后端进行重定向
+        setResponseStatus(event, 302)
+        setHeader(event, 'Location', '/welcome')
         return
       }
       // 验证token
