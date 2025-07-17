@@ -66,21 +66,12 @@ export default defineEventHandler(
     try {
       // 尝试从请求头获取 token
       const token = JwtUtils.getTokenFromCookie(event)
-
       if (token) {
-        try {
-          // 验证并解析 token
-          const payload = JwtUtils.verifyToken(token)
-
-          // 记录已认证用户的访问日志
-          logger.info(
-            `用户 ${payload.username} (ID: ${payload.userId}) 访问接口: ${method} ${pathname} - IP: ${clientIP}`
-          )
-        } catch (tokenError) {
-          logger.error(
-            `匿名用户(Token无效) 访问接口: ${method} ${pathname} - IP: ${clientIP}`
-          )
-        }
+        const payload = JwtUtils.verifyToken(token)
+        // 记录已认证用户的访问日志
+        logger.info(
+          `用户 ${payload.username} (ID: ${payload.userId}) 访问接口: ${method} ${pathname} - IP: ${clientIP}`
+        )
       } else {
         // 没有 token，记录匿名访问
         logger.info(
@@ -89,7 +80,7 @@ export default defineEventHandler(
       }
     } catch (error) {
       // 发生其他错误时的兜底日志
-      logger.info(
+      logger.error(
         `访问接口: ${method} ${pathname} - IP: ${clientIP} (日志记录异常: ${(error as Error).message})`
       )
     }

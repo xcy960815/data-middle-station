@@ -78,15 +78,17 @@ export class JwtUtils {
       const secretKey: Secret = Buffer.from(
         String(this.SECRET_KEY)
       )
-      const decoded = verify(token, secretKey) as JwtPayload
-      return decoded
+      return verify(token, secretKey) as JwtPayload
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         logger.warn(`token已过期: ${error.message}`)
-        throw new Error('Token已过期')
+        throw new TokenExpiredError(
+          'Token已过期',
+          new Date()
+        )
       } else if (error instanceof JsonWebTokenError) {
         logger.error(`token验证失败: ${error.message}`)
-        throw new Error('Token无效')
+        throw new JsonWebTokenError('Token无效')
       } else {
         throw new Error('Token验证失败')
       }
