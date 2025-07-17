@@ -1,7 +1,8 @@
 import { RequestCodeEnum } from '~/utils/request-enmu'
 import type { H3Event, EventHandlerRequest } from 'h3'
 import dayjs from 'dayjs'
-
+import pkg from 'jsonwebtoken'
+const { TokenExpiredError, JsonWebTokenError } = pkg
 // 创建认证中间件专用的日志实例
 const logger = new Logger({
   fileName: 'check-auth',
@@ -115,7 +116,6 @@ export default defineEventHandler(
     const pathname = url.pathname
     const method = event.method || 'GET'
     const clientIP = getRealClientIP(event)
-
     // 只对 /api 开头的请求进行权限校验
     if (!pathname.startsWith('/api')) {
       return
@@ -128,7 +128,6 @@ export default defineEventHandler(
       )
       return
     }
-
     try {
       // 从请求头获取token
       const token = getCookie(event, JwtUtils.TOKEN_NAME)
@@ -136,43 +135,27 @@ export default defineEventHandler(
         logger.warn(
           `${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`
         )
-        // navigateTo('/welcome')
+        // 跳转到  /welcome 页面
         return
       }
       // 验证token
       const payload = JwtUtils.verifyToken(token)
-
       // 记录成功的认证日志
       logger.info(
         `认证成功: ${payload.username} (ID: ${payload.userId}) ${method} ${pathname} - IP: ${clientIP}`
       )
     } catch (error) {
-      // 如果已经是 H3Error，直接抛出
-      if (
-        error &&
-        typeof error === 'object' &&
-        'statusCode' in error
-      ) {
-        throw error
+      let errorMsg = ''
+      if (error instanceof TokenExpiredError) {
+        errorMsg = `token已过期: ${error.message}`
+      } else if (error instanceof JsonWebTokenError) {
+        errorMsg = `token验证失败: ${error.message}`
+      } else {
+        errorMsg = `认证失败: ${error}`
       }
-
-      // 处理其他类型的错误
-      const err = error as Error
-      const errorMsg = err.message || '认证失败'
-
       logger.error(
-        `认证失败: ${errorMsg} - ${method} ${pathname} - IP: ${clientIP}`
+        `${errorMsg} - ${method} ${pathname} - IP: ${clientIP}`
       )
-
-      throw createError({
-        statusCode: RequestCodeEnum.Unauthorized,
-        message: '认证失败',
-        data: createAuthError(
-          RequestCodeEnum.Unauthorized,
-          errorMsg,
-          pathname
-        )
-      })
     }
   }
 )
