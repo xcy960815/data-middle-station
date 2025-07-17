@@ -37,7 +37,7 @@ export class JwtUtils {
   /**
    * token过期时间（默认24小时）
    */
-  private static readonly EXPIRES_IN =
+  private static readonly JWT_EXPIRES_IN =
     useRuntimeConfig().jwtExpiresIn
 
   /**
@@ -54,7 +54,8 @@ export class JwtUtils {
 
       // 配置签名选项
       const options: SignOptions = {
-        // expiresIn: this.EXPIRES_IN
+        expiresIn: this
+          .JWT_EXPIRES_IN as SignOptions['expiresIn']
       }
       const token = sign(payload, secretKey, options)
       logger.info(`生成token成功: ${payload.username}`)
@@ -103,7 +104,6 @@ export class JwtUtils {
   public static getTokenFromCookie(
     event: H3Event<EventHandlerRequest>
   ): string | null {
-    const authHeader = getCookie(event, 'authorization')
-    return ''
+    return getCookie(event, this.TOKEN_NAME) || null
   }
 }

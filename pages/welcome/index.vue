@@ -266,9 +266,7 @@ const navigateToHome = async () => {
     loginResult.code === RequestCodeEnum.Success &&
     loginResult.data
   ) {
-    const { token } = loginResult.data
-    localStorage.setItem('token', token)
-    router.push('/homepage')
+    // router.push('/homepage')
   } else {
     console.error('登录失败:', loginResult.message)
   }
