@@ -3,7 +3,7 @@ import type { Logger as LoggerType } from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
 import chalk from 'chalk'
 import gradient from 'gradient-string'
-import boxen from 'boxen'
+// import boxen from 'boxen'
 
 interface LoggerOptions {
   fileName: string
@@ -139,7 +139,7 @@ export class Logger {
    * @returns {void}
    */
   public info(message: string): void {
-    this.logger?.info(message)
+    this.logger?.info(chalk.green(message))
   }
 
   /**
@@ -148,7 +148,7 @@ export class Logger {
    * @returns {void}
    */
   public error(message: string): void {
-    this.logger?.error(message)
+    this.logger?.error(chalk.red(message))
   }
 
   /**
@@ -157,7 +157,7 @@ export class Logger {
    * @returns {void}
    */
   public warn(message: string): void {
-    this.logger?.warn(message)
+    this.logger?.warn(chalk.yellow(message))
   }
 
   /**
@@ -166,6 +166,6 @@ export class Logger {
    * @returns {void}
    */
   public debug(message: string): void {
-    this.logger?.debug(message)
+    this.logger?.debug(chalk.gray(message))
   }
 }

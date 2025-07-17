@@ -14,7 +14,7 @@ const logger = new Logger({
   folderName: 'auth'
 })
 
-interface JwtPayload {
+export interface JwtPayload {
   userId: string
   username: string
 }
@@ -24,9 +24,14 @@ interface JwtPayload {
  */
 export class JwtUtils {
   /**
+   * token 名称
+   */
+  public static readonly TOKEN_NAME: string = 'BearToken'
+
+  /**
    * 密钥
    */
-  private static readonly SECRET_KEY =
+  private static readonly SECRET_KEY: string =
     useRuntimeConfig().jwtSecretKey
 
   /**
@@ -93,12 +98,10 @@ export class JwtUtils {
    * @param event H3事件对象
    * @returns token字符串或null
    */
-  public static getTokenFromHeader(
+  public static getTokenFromCookie(
     event: H3Event<EventHandlerRequest>
   ): string | null {
-    const authHeader = getHeader(event, 'authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer '))
-      return null
-    return authHeader.substring(7) // 去掉'Bearer '前缀
+    const authHeader = getCookie(event, 'authorization')
+    return ''
   }
 }

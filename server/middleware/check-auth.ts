@@ -1,4 +1,3 @@
-// import { JwtUtils } from '../utils/jwt'
 import { RequestCodeEnum } from '~/utils/request-enmu'
 import type { H3Event, EventHandlerRequest } from 'h3'
 import dayjs from 'dayjs'
@@ -76,7 +75,7 @@ function getRealClientIP(
   const cfConnectingIP = getHeader(
     event,
     'cf-connecting-ip'
-  ) // Cloudflare
+  )
 
   if (forwarded) {
     // x-forwarded-for 可能包含多个IP，取第一个
@@ -132,11 +131,10 @@ export default defineEventHandler(
 
     try {
       // 从请求头获取token
-      const token = getCookie(event, 'token')
+      const token = getCookie(event, JwtUtils.TOKEN_NAME)
       if (!token) {
-        const errorMsg = '未提供认证Token'
         logger.warn(
-          `${errorMsg}: ${method} ${pathname} - IP: ${clientIP}`
+          `${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`
         )
         // navigateTo('/welcome')
         return
