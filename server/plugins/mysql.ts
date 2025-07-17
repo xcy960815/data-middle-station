@@ -42,7 +42,7 @@ export default defineNitroPlugin((nitroApp) => {
     pools.set(name, mysql.createPool(config))
   }
   nitroApp.mysqlPools = pools
-  logger.info(chalk.green('mysql插件注册成功'))
+  logger.info('mysql插件注册成功')
 
   /**
    * 检查所有 MySQL 连接池是否可用
