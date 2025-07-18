@@ -57,9 +57,7 @@ export class JwtUtils {
         expiresIn: this
           .JWT_EXPIRES_IN as SignOptions['expiresIn']
       }
-      const token = sign(payload, secretKey, options)
-      logger.info(`生成token成功: ${payload.username}`)
-      return token
+      return sign(payload, secretKey, options)
     } catch (error) {
       logger.error(
         `生成token失败: ${(error as Error).message}`
