@@ -1,4 +1,3 @@
-import { JwtUtils, type JwtPayload } from '../utils/jwt'
 import { Logger } from '../utils/logger'
 import type { H3Event, EventHandlerRequest } from 'h3'
 
