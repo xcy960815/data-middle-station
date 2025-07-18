@@ -1,4 +1,4 @@
-import redisDriver from 'unstorage/drivers/redis'
+import RedisDriver from 'unstorage/drivers/redis'
 
 const logger = new Logger({
   fileName: 'redis',
@@ -20,13 +20,28 @@ const serviceRedisPort = useRuntimeConfig().serviceRedisPort // Redis服务器�
 /**
  * Redis用户名
  */
-const serviceRedisUsername =
-  useRuntimeConfig().serviceRedisUsername // Redis用户名
+const serviceRedisUsername = useRuntimeConfig().serviceRedisUsername // Redis用户名
 /**
  * Redis密码
  */
-const serviceRedisPassword =
-  useRuntimeConfig().serviceRedisPassword // Redis密码
+const serviceRedisPassword = useRuntimeConfig().serviceRedisPassword // Redis密码
+
+/**
+ * 测试redis是否连接成功
+ */
+export const isConnectedRedis = async () => {
+  const storage = useStorage()
+  await storage.setItem(`${RedisStorage.REDIS_DRIVER}:test`, 'test1234', { ttl: 60_000 })
+  const testValue = await storage.getItem(`${RedisStorage.REDIS_DRIVER}:test`)
+  if (testValue) {
+    logger.info(`redis 测试通过`)
+    // await storage.removeItem(`${RedisStorage.REDIS_DRIVER}:test`)
+    return true
+  } else {
+    logger.error(`redis 测试失败`)
+    return false
+  }
+}
 
 /**
  * @desc 初始化Redis 驱动
@@ -34,31 +49,10 @@ const serviceRedisPassword =
  */
 export default defineNitroPlugin(async () => {
   const storage = useStorage()
-  // const redis = storage.getMount(serviceRedisBase)
-
-  // // 判断是否已经挂载
-  // if (redis) {
-  //   logger.info(chalk.green('redis 已经挂载'))
-  //   return
-  // }
-
-  // logger.info(
-  //   'redis 配置' +
-  //     JSON.stringify(
-  //       {
-  //         serviceRedisHost,
-  //         serviceRedisPort,
-  //         serviceRedisUsername,
-  //         serviceRedisPassword: '******' // 隐藏密码
-  //       },
-  //       null,
-  //       2
-  //     )
-  // )
-
-  // logger.info('redis 开始挂载')
-
-  const driver = redisDriver({
+  // 判断是否已经挂载
+  // if (!storage.getMount(RedisStorage.REDIS_DRIVER)) {
+  //   logger.info(`redis 未挂载，开始挂载`)
+  const redisDriver = RedisDriver({
     name: serviceRedisBase,
     base: serviceRedisBase,
     host: serviceRedisHost,
@@ -66,31 +60,14 @@ export default defineNitroPlugin(async () => {
     username: serviceRedisUsername,
     password: serviceRedisPassword
   })
-
-  // 确保driver是一个对象，并且有setItem和getItem方法
-  if (
-    driver &&
-    typeof driver.setItem === 'function' &&
-    typeof driver.getItem === 'function'
-  ) {
-    await driver.setItem('test', 'test', {
-      ttl: 1000 * 60
-    })
-    const value = await driver.getItem('test', {})
-    console.log(value)
-  } else {
-    console.error(
-      'Redis driver is not properly initialized'
-    )
-  }
-
-  // storage.mount(serviceRedisBase, driver)
-
-  // // 检测新建连接是否成功
-  // const isConnected = await checkRedisConnection()
-  // if (isConnected) {
-  //   logger.info('redis 挂载成功且连接正常')
-  // } else {
-  //   logger.error('redis 挂载成功但连接异常，请检查配置')
+  // redisDriver.setItem(`${RedisStorage.REDIS_DRIVER}:test`, 'test1234', { ttl: 60_000 })
+  // const testValue = await redisDriver.getItem(`${RedisStorage.REDIS_DRIVER}:test`)
+  // logger.info(`redis 测试通过，test 值为: ${testValue}`)
+  storage.mount(RedisStorage.REDIS_DRIVER, redisDriver)
   // }
+  // await isConnectedRedis()
+  await storage.setItem(`${RedisStorage.REDIS_DRIVER}:xuc`, 'xuc', { ttl: 60_000 })
+  const testValue = await storage.getItem(`${RedisStorage.REDIS_DRIVER}:xuc`)
+  logger.info(`redis 测试通过，xuc 值为: ${testValue}`)
+  await storage.removeItem(`${RedisStorage.REDIS_DRIVER}:xuc`)
 })
