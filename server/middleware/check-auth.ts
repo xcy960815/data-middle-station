@@ -43,26 +43,6 @@ function isWhitelisted(url: string): boolean {
 }
 
 /**
- * 创建统一的认证错误响应
- * @param code 错误码
- * @param message 错误消息
- * @param path 请求路径
- * @returns 错误响应对象
- */
-function createAuthError(
-  code: RequestCodeEnum,
-  message: string,
-  path: string
-): AuthErrorResponse {
-  return {
-    code,
-    message,
-    timestamp: dayjs().format(),
-    path
-  }
-}
-
-/**
  * 获取客户端真实IP地址
  * @param event H3事件对象
  * @returns 客户端IP地址
@@ -135,9 +115,7 @@ export default defineEventHandler(
         logger.warn(
           `${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`
         )
-        // 跳转到  /welcome 页面 后端进行重定向
-        setResponseStatus(event, 302)
-        setHeader(event, 'Location', '/welcome')
+        // todo 重定向到 /welcome 页面
         return
       }
       // 验证token
