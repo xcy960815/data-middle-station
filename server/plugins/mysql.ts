@@ -9,23 +9,15 @@ const logger = new Logger({
 /**
  * 检查所有 MySQL 连接池是否可用
  */
-export async function checkMysqlConnection(
-  pools: Map<string, mysql.Pool>
-) {
+export async function checkMysqlConnection(pools: Map<string, mysql.Pool>) {
   for (const [name, pool] of pools.entries()) {
     try {
       const conn = await pool.getConnection()
       await conn.ping()
       conn.release()
-      logger.info(
-        chalk.green(`MySQL 数据源 [${name}] 连接成功`)
-      )
+      logger.info(chalk.green(`MySQL 数据源 [${name}] 连接成功`))
     } catch (error) {
-      logger.error(
-        chalk.red(
-          `MySQL 数据源 [${name}] 连接失败: ${error}`
-        )
-      )
+      logger.error(chalk.red(`MySQL 数据源 [${name}] 连接失败: ${error}`))
     }
   }
 }
@@ -36,9 +28,7 @@ export async function checkMysqlConnection(
 export default defineNitroPlugin((nitroApp) => {
   const dataSourceConfig = getDatasourceConfig()
   const pools = new Map<string, mysql.Pool>()
-  for (const [name, config] of Object.entries(
-    dataSourceConfig
-  )) {
+  for (const [name, config] of Object.entries(dataSourceConfig)) {
     pools.set(name, mysql.createPool(config))
   }
   nitroApp.mysqlPools = pools
@@ -50,7 +40,7 @@ export default defineNitroPlugin((nitroApp) => {
   checkMysqlConnection(pools)
 
   nitroApp.hooks.hook('close', () => {
-    console.log('close')
+    logger.info('mysql 插件关闭')
     for (const pool of pools.values()) {
       pool.end()
     }
