@@ -10,9 +10,14 @@ const logger = new Logger({
  * @desc 分析服务
  */
 export class AnalyseService {
+  /**
+   * 图表mapper
+   */
   private analyseMapper: AnalyseMapper
 
-  // private chartConfigMapper: ChartConfigMapper
+  /**
+   * 图表配置服务
+   */
   private chartConfigService: ChartConfigService
 
   constructor() {
@@ -21,7 +26,7 @@ export class AnalyseService {
   }
 
   /**
-   * @desc 格式化图表
+   * @desc dao 转 vo
    * @param chart {AnalyseDao.AnalyseOption} 图表
    * @returns {AnalyseVo.AnalyseOption}
    */
@@ -48,19 +53,13 @@ export class AnalyseService {
    * @param id {number} 分析id
    * @returns {Promise<AnalyseVo.AnalyseOption>}
    */
-  public async getAnalyse(
-    id: number
-  ): Promise<AnalyseVo.AnalyseOption> {
-    const AnalyseOption =
-      await this.analyseMapper.getAnalyse(id)
+  public async getAnalyse(id: number): Promise<AnalyseVo.AnalyseOption> {
+    const AnalyseOption = await this.analyseMapper.getAnalyse(id)
     if (!AnalyseOption) {
       throw new Error('图表不存在')
     } else if (AnalyseOption.chartConfigId) {
       // throw new Error('图表配置不存在')
-      const chartConfig =
-        await this.chartConfigService.getChartConfig(
-          AnalyseOption.chartConfigId
-        )
+      const chartConfig = await this.chartConfigService.getChartConfig(AnalyseOption.chartConfigId)
       return this.dao2Vo(AnalyseOption, chartConfig)
     } else {
       return this.dao2Vo(AnalyseOption, null)
@@ -71,14 +70,9 @@ export class AnalyseService {
    * @desc 获取所有图表
    * @returns {Promise<AnalyseVo.ChartsOption[]>}
    */
-  public async getAnalyses(): Promise<
-    AnalyseVo.AnalyseOption[]
-  > {
-    const analysesDao =
-      await this.analyseMapper.getAnalyses()
-    return analysesDao.map((item) =>
-      this.dao2Vo(item, null)
-    )
+  public async getAnalyses(): Promise<AnalyseVo.AnalyseOption[]> {
+    const analysesDao = await this.analyseMapper.getAnalyses()
+    return analysesDao.map((item) => this.dao2Vo(item, null))
   }
 
   /**
@@ -86,53 +80,42 @@ export class AnalyseService {
    * @param chart {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyse(
-    AnalyseOptionDto: AnalyseDto.AnalyseOption
-  ): Promise<boolean> {
-    const { chartConfig, ...AnalyseOption } =
-      AnalyseOptionDto
+  public async updateAnalyse(AnalyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
+    // 解构图表配置，剩余的为图表配置
+    const { chartConfig, ...AnalyseOption } = AnalyseOptionDto
 
     let chartConfigId = AnalyseOption.chartConfigId
+    if (chartConfig) {
+      // 将 null 转换为 undefined
+      const safeChartConfig = {
+        ...chartConfig,
+        dataSource: chartConfig.dataSource === null ? undefined : chartConfig.dataSource
+      }
 
-    if (!chartConfigId) {
-      // 如果图表配置不存在，则创建默认图表配置
-      chartConfigId =
-        await this.chartConfigService.createChartConfig({
-          chartType: chartConfig?.chartType || '',
-          dataSource: chartConfig?.dataSource || '',
-          column: chartConfig?.column,
-          dimension: chartConfig?.dimension,
-          filter: chartConfig?.filter,
-          group: chartConfig?.group,
-          order: chartConfig?.order,
-          limit: chartConfig?.limit
-        })
-    } else {
-      await this.chartConfigService.updateChartConfig({
-        id: chartConfigId,
-        chartType: chartConfig?.chartType || '',
-        dataSource: chartConfig?.dataSource || '',
-        column: chartConfig?.column,
-        dimension: chartConfig?.dimension,
-        filter: chartConfig?.filter,
-        group: chartConfig?.group,
-        order: chartConfig?.order,
-        limit: chartConfig?.limit
-      })
+      if (!chartConfigId) {
+        // 如果图表配置不存在，则创建默认图表配置
+        chartConfigId = await this.chartConfigService.createChartConfig(safeChartConfig)
+      } else {
+        // 如果图表配置存在，则更新图表配置
+        await this.chartConfigService.updateChartConfig(safeChartConfig)
+      }
     }
 
-    const updateAnalyseResult =
-      await this.analyseMapper.updateAnalyse({
-        id: AnalyseOption.id,
-        analyseName: AnalyseOption.analyseName,
-        chartConfigId,
-        analyseDesc: AnalyseOption.analyseDesc,
-        viewCount: 0,
-        createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-        updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-        createdBy: 'system',
-        updatedBy: 'system'
-      })
+    // 更新图表
+    const createdBy = await RedisStorage.getItem<string>(`username`)
+    const updatedBy = await RedisStorage.getItem<string>(`username`)
+    const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    const updateAnalyseResult = await this.analyseMapper.updateAnalyse({
+      id: AnalyseOption.id,
+      analyseName: AnalyseOption.analyseName,
+      chartConfigId,
+      analyseDesc: AnalyseOption.analyseDesc,
+      viewCount: 0,
+      createTime: AnalyseOption.createTime,
+      updateTime: updateTime,
+      createdBy: createdBy ?? 'system',
+      updatedBy: updatedBy ?? 'system'
+    })
 
     return updateAnalyseResult
   }
@@ -142,37 +125,32 @@ export class AnalyseService {
    * @param chart {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async createAnalyse(
-    analyseOptionDto: AnalyseDto.AnalyseOption
-  ): Promise<boolean> {
-    const currentTime = dayjs().format(
-      'YYYY-MM-DD HH:mm:ss'
-    )
-    let chartConfigId =
-      analyseOptionDto.chartConfigId || null
+  public async createAnalyse(analyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
+    const currentTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    let chartConfigId = analyseOptionDto.chartConfigId || null
     if (analyseOptionDto.chartConfig) {
       // 如果图表配置不存在，则创建默认图表配置
-      chartConfigId =
-        await this.chartConfigService.createChartConfig({
-          dataSource:
-            analyseOptionDto.chartConfig?.dataSource || '',
-          column: analyseOptionDto.chartConfig?.column,
-          dimension:
-            analyseOptionDto.chartConfig?.dimension,
-          filter: analyseOptionDto.chartConfig?.filter,
-          group: analyseOptionDto.chartConfig?.group,
-          order: analyseOptionDto.chartConfig?.order
-        })
+      chartConfigId = await this.chartConfigService.createChartConfig({
+        dataSource: analyseOptionDto.chartConfig?.dataSource || undefined,
+        column: analyseOptionDto.chartConfig?.column,
+        dimension: analyseOptionDto.chartConfig?.dimension,
+        filter: analyseOptionDto.chartConfig?.filter,
+        group: analyseOptionDto.chartConfig?.group,
+        order: analyseOptionDto.chartConfig?.order
+      })
     }
+    const createdBy = await RedisStorage.getItem<string>(`username`)
+    const updatedBy = await RedisStorage.getItem<string>(`username`)
+    const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const analyseOption: AnalyseDto.AnalyseOption = {
       analyseName: analyseOptionDto.analyseName,
       chartConfigId: chartConfigId,
       analyseDesc: analyseOptionDto.analyseDesc,
       viewCount: 0,
       createTime: currentTime,
-      updateTime: currentTime,
-      createdBy: 'system',
-      updatedBy: 'system'
+      updateTime: updateTime,
+      createdBy: createdBy || 'system',
+      updatedBy: updatedBy || 'system'
     }
 
     return this.analyseMapper.createAnalyse(analyseOption)
@@ -183,9 +161,9 @@ export class AnalyseService {
    * @param AnalyseOption {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyseName(
-    AnalyseOption: AnalyseDto.AnalyseOption
-  ): Promise<boolean> {
+  public async updateAnalyseName(AnalyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
+    const updatedBy = await RedisStorage.getItem<string>(`username`)
+    AnalyseOption.updatedBy = updatedBy ?? 'system'
     return this.analyseMapper.updateAnalyse(AnalyseOption)
   }
 
@@ -194,9 +172,10 @@ export class AnalyseService {
    * @param AnalyseOption {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyseDesc(
-    AnalyseOption: AnalyseDto.AnalyseOption
-  ): Promise<boolean> {
+  public async updateAnalyseDesc(AnalyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
+    const updatedBy = await RedisStorage.getItem<string>(`username`)
+    AnalyseOption.updatedBy = updatedBy ?? 'system'
+    AnalyseOption.updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     return this.analyseMapper.updateAnalyse(AnalyseOption)
   }
 }
