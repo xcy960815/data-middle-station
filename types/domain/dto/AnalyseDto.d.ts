@@ -2,5 +2,8 @@
  * 前端传入的图表配置
  */
 declare namespace AnalyseDto {
-  type AnalyseOption = Partial<AnalyseVo.AnalyseOption>
+  /**
+   * 图表配置
+   */
+  type AnalyseOption = AnalyseVo.AnalyseOption
 }

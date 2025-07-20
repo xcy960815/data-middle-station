@@ -28,11 +28,9 @@ declare namespace ChartConfigVo {
     不为空: 'isNotNull'
   } as const
 
-  type FilterType =
-    (typeof FilterTypeEnums)[keyof typeof FilterTypeEnums]
+  type FilterType = (typeof FilterTypeEnums)[keyof typeof FilterTypeEnums]
 
-  type FilterAggregationsType =
-    (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
+  type FilterAggregationsType = (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
 
   interface FilterOption extends ColumnOption {
     filterType?: FilterType
@@ -51,8 +49,7 @@ declare namespace ChartConfigVo {
     降序: 'desc'
   } as const
 
-  type OrderType =
-    (typeof OrderTypeEnums)[keyof typeof OrderTypeEnums]
+  type OrderType = (typeof OrderTypeEnums)[keyof typeof OrderTypeEnums]
 
   const OrderAggregationsEnum = {
     原始值: 'raw',
@@ -63,8 +60,7 @@ declare namespace ChartConfigVo {
     最小值: 'min'
   } as const
 
-  type OrderAggregationsType =
-    (typeof OrderAggregationsEnum)[keyof typeof OrderAggregationsEnum]
+  type OrderAggregationsType = (typeof OrderAggregationsEnum)[keyof typeof OrderAggregationsEnum]
   /**
    * @desc 左侧列字段
    * @interface OrderOption
@@ -79,7 +75,7 @@ declare namespace ChartConfigVo {
 
   interface ChartConfig {
     id: number
-    dataSource: string
+    dataSource: string | null
     chartType: string
     column: ColumnOption[]
     dimension: DimensionOption[]

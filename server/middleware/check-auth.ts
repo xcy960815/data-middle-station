@@ -1,6 +1,5 @@
 import { RequestCodeEnum } from '~/utils/request-enmu'
 import type { H3Event, EventHandlerRequest } from 'h3'
-import dayjs from 'dayjs'
 import pkg from 'jsonwebtoken'
 const { TokenExpiredError, JsonWebTokenError } = pkg
 // 创建认证中间件专用的日志实例
@@ -23,12 +22,7 @@ interface AuthErrorResponse {
  * 不需要验证token的路由白名单
  * 支持精确匹配和前缀匹配
  */
-const whiteList = [
-  '/api/login',
-  '/api/register',
-  '/api/health',
-  '/api/public'
-]
+const whiteList = ['/api/login', '/api/register', '/api/health', '/api/public']
 
 /**
  * 检查路径是否在白名单中
@@ -47,16 +41,11 @@ function isWhitelisted(url: string): boolean {
  * @param event H3事件对象
  * @returns 客户端IP地址
  */
-function getRealClientIP(
-  event: H3Event<EventHandlerRequest>
-): string {
+function getRealClientIP(event: H3Event<EventHandlerRequest>): string {
   // 优先从代理头中获取真实IP
   const forwarded = getHeader(event, 'x-forwarded-for')
   const realIP = getHeader(event, 'x-real-ip')
-  const cfConnectingIP = getHeader(
-    event,
-    'cf-connecting-ip'
-  )
+  const cfConnectingIP = getHeader(event, 'cf-connecting-ip')
 
   if (forwarded) {
     // x-forwarded-for 可能包含多个IP，取第一个
@@ -90,52 +79,42 @@ function getRealClientIP(
  * JWT认证中间件
  * 对所有 /api 开头的请求进行权限校验（白名单除外）
  */
-export default defineEventHandler(
-  async (event: H3Event<EventHandlerRequest>) => {
-    const url = getRequestURL(event)
-    const pathname = url.pathname
-    const method = event.method || 'GET'
-    const clientIP = getRealClientIP(event)
-    // 只对 /api 开头的请求进行权限校验
-    if (!pathname.startsWith('/api')) {
-      return
-    }
-
-    // 白名单路径不需要验证
-    if (isWhitelisted(pathname)) {
-      logger.info(
-        `白名单路径访问: ${method} ${pathname} - IP: ${clientIP}`
-      )
-      return
-    }
-    try {
-      // 从请求头获取token
-      const token = getCookie(event, JwtUtils.TOKEN_NAME)
-      if (!token) {
-        logger.warn(
-          `${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`
-        )
-        // todo 重定向到 /welcome 页面
-        return
-      }
-      // 验证token
-      const payload = JwtUtils.verifyToken(token)
-      // 记录成功的认证日志
-      logger.info(
-        `认证成功: ${payload.username} (ID: ${payload.userId}) ${method} ${pathname} - IP: ${clientIP}`
-      )
-    } catch (error) {
-      let errorMsg = ''
-      if (error instanceof TokenExpiredError) {
-        errorMsg = `token已过期: ${error.message}`
-      } else if (error instanceof JsonWebTokenError) {
-        errorMsg = `token验证失败: ${error.message}`
-      } else {
-        errorMsg = `认证失败: ${error}`
-      }
-      logger.error(
-        `${errorMsg} - ${method} ${pathname} - IP: ${clientIP}`
-      )
-    }
+export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) => {
+  const url = getRequestURL(event)
+  const pathname = url.pathname
+  const method = event.method || 'GET'
+  const clientIP = getRealClientIP(event)
+  // 只对 /api 开头的请求进行权限校验
+  if (!pathname.startsWith('/api')) {
+    return
   }
-)
+
+  // 白名单路径不需要验证
+  if (isWhitelisted(pathname)) {
+    logger.info(`白名单路径访问: ${method} ${pathname} - IP: ${clientIP}`)
+    return
+  }
+  try {
+    // 从请求头获取token
+    const token = getCookie(event, JwtUtils.TOKEN_NAME)
+    if (!token) {
+      logger.warn(`${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`)
+      // todo 重定向到 /welcome 页面
+      return
+    }
+    // 验证token
+    const payload = JwtUtils.verifyToken(token)
+    // 记录成功的认证日志
+    logger.info(`认证成功: ${payload.username} (ID: ${payload.userId}) ${method} ${pathname} - IP: ${clientIP}`)
+  } catch (error) {
+    let errorMsg = ''
+    if (error instanceof TokenExpiredError) {
+      errorMsg = `token已过期: ${error.message}`
+    } else if (error instanceof JsonWebTokenError) {
+      errorMsg = `token验证失败: ${error.message}`
+    } else {
+      errorMsg = `认证失败: ${error}`
+    }
+    logger.error(`${errorMsg} - ${method} ${pathname} - IP: ${clientIP}`)
+  }
+})

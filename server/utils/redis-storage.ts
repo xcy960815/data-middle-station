@@ -21,10 +21,9 @@ export class RedisStorage {
    * @param key 键
    * @returns 键
    */
-  public static getItem(key: string) {
+  public static async getItem<T>(key: string): Promise<T | null> {
     const storage = useStorage()
-
-    return storage.getItem(this.getKey(key))
+    return await storage.getItem<T>(this.getKey(key))
   }
 
   /**
