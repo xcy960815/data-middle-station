@@ -2,10 +2,15 @@
  * @desc  表结构
  */
 declare namespace AnalyseVo {
+  /**
+   * 图表数据
+   */
   type ChartDataVo = Array<{
     [key: string]: string | number
   }>
-
+  /**
+   * 图表配置
+   */
   type AnalyseOption = {
     id: number
     analyseName: string
@@ -17,6 +22,7 @@ declare namespace AnalyseVo {
     updatedBy: string
     chartConfigId: number | null
     chartConfig: {
+      id: number
       chartType: string
       dataSource: string | null
       column: ChartConfigVo.ColumnOption[]
@@ -25,6 +31,8 @@ declare namespace AnalyseVo {
       group: ChartConfigVo.GroupOption[]
       order: ChartConfigVo.OrderOption[]
       limit: number
+      createTime: string
+      updateTime: string
     } | null
   }
 }
