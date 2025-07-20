@@ -86,18 +86,12 @@ export class AnalyseService {
 
     let chartConfigId = AnalyseOption.chartConfigId
     if (chartConfig) {
-      // 将 null 转换为 undefined
-      const safeChartConfig = {
-        ...chartConfig,
-        dataSource: chartConfig.dataSource === null ? undefined : chartConfig.dataSource
-      }
-
       if (!chartConfigId) {
         // 如果图表配置不存在，则创建默认图表配置
-        chartConfigId = await this.chartConfigService.createChartConfig(safeChartConfig)
+        chartConfigId = await this.chartConfigService.createChartConfig(chartConfig)
       } else {
         // 如果图表配置存在，则更新图表配置
-        await this.chartConfigService.updateChartConfig(safeChartConfig)
+        await this.chartConfigService.updateChartConfig(chartConfig)
       }
     }
 
