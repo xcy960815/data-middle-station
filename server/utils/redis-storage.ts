@@ -6,7 +6,7 @@ export class RedisStorage {
   /**
    * 驱动名称
    */
-  public static readonly REDIS_DRIVER = 'redis'
+  public static readonly REDIS_DRIVER = 'dms_redis'
 
   /**
    * 获取键
