@@ -11,7 +11,7 @@ const logger = new Logger({
 export default defineEventHandler<Promise<ICustomResponse<boolean>>>(async (event) => {
   try {
     // 获取请求体数据
-    const body = await readBody<LoginDto.Login>(event)
+    const body = await readBody<LoginDto.LoginOption>(event)
     if (!body.username || !body.password) {
       return CustomResponse.error('用户名和密码不能为空')
     }

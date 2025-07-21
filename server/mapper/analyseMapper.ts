@@ -1,13 +1,5 @@
 import type { ResultSetHeader } from 'mysql2'
-import {
-  Column,
-  Mapping,
-  BaseMapper,
-  Row,
-  entityColumnsMap,
-  mapToTarget,
-  type IColumnTarget,
-} from './baseMapper'
+import { Column, Mapping, BaseMapper, Row, entityColumnsMap, mapToTarget, type IColumnTarget } from './baseMapper'
 
 // 基础字段字典
 export const ANALYSE_BASE_FIELDS = [
@@ -20,7 +12,7 @@ export const ANALYSE_BASE_FIELDS = [
   'created_by',
   'updated_by',
   'chart_config_id',
-  'is_deleted',
+  'is_deleted'
 ]
 
 export class AnalyzeMapping implements AnalyseDao.AnalyseOption, IColumnTarget {
@@ -70,12 +62,18 @@ export class AnalyzeMapping implements AnalyseDao.AnalyseOption, IColumnTarget {
 }
 
 /**
- * @desc 本页面使用到的表
+ * @desc 本文件使用到的表
  */
 const ANALYSE_TABLE_NAME = 'analyse'
 
+/**
+ * 本文件使用到的数据源
+ */
 const DATA_SOURCE_NAME = 'data_middle_station'
 
+/**
+ * 分析mapper
+ */
 export class AnalyseMapper extends BaseMapper {
   /**
    * @desc 数据源名称
@@ -94,10 +92,10 @@ export class AnalyseMapper extends BaseMapper {
 
   /**
    * @desc 新建分析
-   * @param analyseOption {AnalyseDto.AnalyseOption} 图表
+   * @param analyseOption {AnalyseDao.AnalyseOption} 图表
    * @returns {Promise<number>}
    */
-  public async createAnalyse(analyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
+  public async createAnalyse(analyseOption: AnalyseDao.AnalyseOption): Promise<boolean> {
     const { keys, values } = convertToSqlProperties(analyseOption)
     const sql = `INSERT INTO ${ANALYSE_TABLE_NAME} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`
     const result = await this.exe<ResultSetHeader>(sql, values)
@@ -106,19 +104,15 @@ export class AnalyseMapper extends BaseMapper {
 
   /**
    * @desc 更新分析
-   * @param AnalyseOptionDto {AnalyseDto.AnalyseOption} 图表
+   * @param AnalyseOptionDto {AnalyseDao.AnalyseOption} 图表
    * @returns {Promise<void>}
    */
-  public async updateAnalyse(AnalyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
-    const { viewCount, createTime, createdBy, ...AnalyseOption } = AnalyseOptionDto
-    const { keys: AnalyseOptionKeys, values: AnalyseOptionValues } =
-      convertToSqlProperties(AnalyseOption)
-    const AnalyseOptionSetClause = AnalyseOptionKeys.map(key => `${key} = ?`).join(', ')
+  public async updateAnalyse(AnalyseOptionDto: AnalyseDao.AnalyseOption): Promise<boolean> {
+    const { viewCount, createTime, createdBy, updatedBy, ...AnalyseOption } = AnalyseOptionDto
+    const { keys: AnalyseOptionKeys, values: AnalyseOptionValues } = convertToSqlProperties(AnalyseOption)
+    const AnalyseOptionSetClause = AnalyseOptionKeys.map((key) => `${key} = ?`).join(', ')
     const updateAnalyseSql = `UPDATE ${ANALYSE_TABLE_NAME} SET ${AnalyseOptionSetClause} WHERE id = ?`
-    const analyseResult = await this.exe<ResultSetHeader>(updateAnalyseSql, [
-      ...AnalyseOptionValues,
-      AnalyseOption.id,
-    ])
+    const analyseResult = await this.exe<ResultSetHeader>(updateAnalyseSql, [...AnalyseOptionValues, AnalyseOption.id])
 
     return analyseResult.affectedRows > 0
   }
@@ -149,12 +143,17 @@ export class AnalyseMapper extends BaseMapper {
 
   /**
    * @desc 删除图表(逻辑删除)
-   * @param id {number} 图表id
+   * @param analyseOption {
+   *  id: number;
+   *  updatedBy: string;
+   *  updateTime: string;
+   * } 删除参数
    * @returns {Promise<number>}
    */
-  public async deleteAnalyse(id: number): Promise<boolean> {
-    const sql = `update ${ANALYSE_TABLE_NAME} set is_deleted = 0 where id = ?`
-    const result = await this.exe<ResultSetHeader>(sql, [id])
+  public async deleteAnalyse(analyseOption: { id: number; updatedBy: string; updateTime: string }): Promise<boolean> {
+    const { id, updatedBy, updateTime } = analyseOption
+    const sql = `update ${ANALYSE_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
+    const result = await this.exe<ResultSetHeader>(sql, [updatedBy, updateTime, id])
     return result.affectedRows > 0
   }
 
@@ -163,7 +162,7 @@ export class AnalyseMapper extends BaseMapper {
    * @returns {Promise<Array<AnalyseDao.AnalyseOption>>}
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyses<T extends AnalyseDao.AnalyseOption>(): Promise<Array<T>> {
+  public async getAnalyses<T extends AnalyseDao.AnalyseOption = AnalyseDao.AnalyseOption>(): Promise<Array<T>> {
     const sql = `
     select 
       ${ANALYSE_BASE_FIELDS.join(',\n    ')}
