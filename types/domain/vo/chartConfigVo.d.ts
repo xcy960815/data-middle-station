@@ -5,12 +5,12 @@ declare namespace ChartConfigVo {
   /**
    * 列配置
    */
-  type ColumnOption = DatabaseVo.TableColumnOptionVo
+  type ColumnOption = DatabaseVo.TableColumnOption
 
   /**
    * 维度配置
    */
-  type DimensionOption = DatabaseVo.TableColumnOptionVo & {
+  type DimensionOption = DatabaseVo.TableColumnOption & {
     __invalid?: boolean
   }
 
@@ -53,6 +53,9 @@ declare namespace ChartConfigVo {
    */
   type FilterAggregationsType = (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
 
+  /**
+   * 过滤配置
+   */
   interface FilterOption extends ColumnOption {
     filterType?: FilterType
     filterValue?: string
@@ -155,5 +158,13 @@ declare namespace ChartConfigVo {
      * 更新时间
      */
     updateTime: string
+    /**
+     * 创建人
+     */
+    createdBy: string
+    /**
+     * 更新人
+     */
+    updatedBy: string
   }
 }

@@ -2,8 +2,14 @@
  * @description: 过滤器 store
  */
 declare namespace FilterStore {
+  /**
+   * @desc 过滤器key
+   */
   type FilterKey = 'filter'
 
+  /**
+   * @desc 过滤器聚合方式
+   */
   const FilterAggregationsEnum = {
     原始值: 'raw',
     计数: 'count',
@@ -14,6 +20,9 @@ declare namespace FilterStore {
     最小值: 'min'
   } as const
 
+  /**
+   * @desc 过滤器类型
+   */
   const FilterTypeEnums = {
     等于: 'eq',
     不等于: 'neq',
@@ -27,20 +36,32 @@ declare namespace FilterStore {
     不为空: 'isNotNull'
   } as const
 
-  type FilterType =
-    (typeof FilterTypeEnums)[keyof typeof FilterTypeEnums]
+  /**
+   * @desc 过滤器类型
+   */
+  type FilterType = (typeof FilterTypeEnums)[keyof typeof FilterTypeEnums]
 
-  type FilterAggregationsType =
-    (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
+  /**
+   * @desc 过滤器聚合方式
+   */
+  type FilterAggregationType = (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
 
-  interface FilterOption extends ColumnStore.ColumnOption {
+  /**
+   * @desc 过滤器选项
+   */
+  type FilterOption = ColumnStore.ColumnOption & {
     filterType?: FilterType
     filterValue?: string
     displayName?: string
-    // 聚合方式
-    aggregationType: FilterAggregationsType
+    /**
+     * 聚合方式
+     */
+    aggregationType: FilterAggregationType
   }
 
+  /**
+   * @desc 过滤器状态
+   */
   type FilterState = {
     filters: Array<FilterOption>
   }
@@ -49,8 +70,11 @@ declare namespace FilterStore {
    */
   type FilterGetters = {}
 
+  /**
+   * @desc 过滤器操作
+   */
   type FilterActions = {
-    addFilters: (filters: FilterOptionDto[]) => void
+    addFilters: (filters: FilterOption[]) => void
     removeFilter: (index: number) => void
   }
 }

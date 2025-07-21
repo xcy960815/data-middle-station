@@ -1,13 +1,34 @@
 declare namespace ColumnStore {
+  /**
+   * @desc 列key
+   */
   type ColumnKey = 'column'
 
+  /**
+   * @desc 列选项
+   */
   type ColumnOption = DatabaseVo.TableColumnOptionVo
 
+  /**
+   * @desc 数据源选项
+   */
   type DataSourceOption = DatabaseVo.TableOptionVo
 
+  /**
+   * @desc 列状态
+   */
   type ColumnState = {
+    /**
+     * @desc 数据源
+     */
     dataSource: string
+    /**
+     * @desc 数据源选项
+     */
     dataSourceOptions: Array<DataSourceOption>
+    /**
+     * @desc 列
+     */
     columns: Array<ColumnOption>
   }
 
@@ -19,18 +40,29 @@ declare namespace ColumnStore {
    * @desc action
    */
   type ColumnActions = {
+    /**
+     * @desc 删除列
+     */
     removeColumns: (columns: ColumnOption[]) => void
+    /**
+     * @desc 设置数据源
+     */
     setDataSource: (dataSource: string) => void
-    setDataSourceOptions: (
-      dataSourceOptions: DataSourceOption[]
-    ) => void
+    /**
+     * @desc 设置数据源选项
+     */
+    setDataSourceOptions: (dataSourceOptions: DataSourceOption[]) => void
+    /**
+     * @desc 删除数据源
+     */
     removeDataSource: (dataSource: string) => void
-    removeDataSourceOptions: (
-      dataSourceOptions: DataSourceOption[]
-    ) => void
-    updateColumn: (params: {
-      column: ColumnOption
-      index: number
-    }) => void
+    /**
+     * @desc 删除数据源选项
+     */
+    removeDataSourceOptions: (dataSourceOptions: DataSourceOption[]) => void
+    /**
+     * @desc 更新列
+     */
+    updateColumn: (params: { column: ColumnOption; index: number }) => void
   }
 }

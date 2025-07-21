@@ -3,13 +3,13 @@
  */
 declare namespace AnalyseVo {
   /**
-   * 图表数据
+   * 分析数据
    */
   type ChartDataVo = Array<{
     [key: string]: string | number
   }>
   /**
-   * 图表配置
+   * 分析配置
    */
   type AnalyseOption = {
     id: number

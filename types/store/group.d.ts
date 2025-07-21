@@ -3,6 +3,9 @@
  * @desc 左侧列字段
  */
 declare namespace GroupStore {
+  /**
+   * @desc 分组key
+   */
   type GroupKey = 'group'
   /**
    * @desc 左侧列字段
@@ -11,11 +14,14 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface GroupOption extends ColumnStore.ColumnOption {
+  type GroupOption = ColumnStore.ColumnOption & {
     // 无效的字段
     __invalid?: boolean
   }
 
+  /**
+   * @desc 分组状态
+   */
   type GroupState = {
     groups: GroupOption[]
   }

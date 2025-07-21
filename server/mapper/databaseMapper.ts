@@ -1,16 +1,10 @@
-import {
-  Column,
-  Mapping,
-  BaseMapper,
-  Row,
-  IColumnTarget,
-  mapToTarget,
-  entityColumnsMap,
-} from './baseMapper'
+import { Column, Mapping, BaseMapper, Row, IColumnTarget, mapToTarget, entityColumnsMap } from './baseMapper'
 
 import dayjs from 'dayjs'
 
-// 表列表映射
+/**
+ * @desc 表列表映射
+ */
 export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarget {
   @Column('TABLE_NAME')
   tableName!: string
@@ -22,16 +16,10 @@ export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarge
   tableComment!: string
 
   @Column('CREATE_TIME')
-  createTime(value: string) {
-    if (!value) return ''
-    return dayjs(value).format('YYYY-MM-DD HH:mm:ss')
-  }
+  createTime!: string
 
   @Column('UPDATE_TIME')
-  updateTime(value: string) {
-    if (!value) return ''
-    return dayjs(value).format('YYYY-MM-DD HH:mm:ss')
-  }
+  updateTime!: string
 
   @Column('TABLE_ROWS')
   tableRows!: number
@@ -49,45 +37,64 @@ export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarge
   autoIncrement!: number
 
   @Column('ENGINE')
-  engine(value: string) {
-    if (!value) return ''
-    return value.toLowerCase()
-  }
+  engine!: string
 
   @Column('TABLE_COLLATION')
-  tableCollation(value: string) {
-    if (!value) return ''
-    return value.toLowerCase()
-  }
+  tableCollation!: string
 
   // 计算属性：表大小（MB）
   get tableSize(): number {
     return Number(((this.dataLength + this.indexLength) / 1024 / 1024).toFixed(2))
   }
 
+  /**
+   * @desc 列映射
+   * @param data {Array<Row> | Row} 数据
+   * @returns {Array<Row> | Row}
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 }
 
-// 表列映射
+/**
+ * @desc 表列映射
+ */
 export class TableColumnMapping implements DatabaseDao.TableColumnOption, IColumnTarget {
+  /**
+   * @desc 列名
+   */
   @Column('COLUMN_NAME')
   columnName!: string
 
+  /**
+   * @desc 列类型
+   */
   @Column('COLUMN_TYPE')
   columnType!: string
 
+  /**
+   * @desc 列注释
+   */
   @Column('COLUMN_COMMENT')
   columnComment!: string
 
+  /**
+   * @desc 列映射
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 }
 
+/**
+ * @desc 数据库表名
+ */
 const tableSchema = 'kanban_data'
 
+/**
+ * @desc 数据库mapper
+ */
 export class DatabaseMapper extends BaseMapper {
   public dataSourceName = tableSchema
   /**
@@ -96,7 +103,9 @@ export class DatabaseMapper extends BaseMapper {
    * @returns {Promise<Array<T>>}
    */
   @Mapping(TableOptionMapping)
-  public async queryTable<T extends DatabaseDao.TableOption>(tableName: string): Promise<Array<T>> {
+  public async queryTable<T extends DatabaseDao.TableOption = DatabaseDao.TableOption>(
+    tableName: string
+  ): Promise<Array<T>> {
     const sql = `SELECT 
         table_name,
         table_type,
@@ -125,9 +134,7 @@ export class DatabaseMapper extends BaseMapper {
    * @returns {Promise<Array<TableInfoDao.TableColumnOption>>}
    */
   @Mapping(TableColumnMapping)
-  public async queryTableColumn<T extends DatabaseDao.TableColumnOption>(
-    tableName: string
-  ): Promise<Array<T>> {
+  public async queryTableColumn<T extends DatabaseDao.TableColumnOption>(tableName: string): Promise<Array<T>> {
     const sql = `SELECT 
         column_name, 
         column_type,

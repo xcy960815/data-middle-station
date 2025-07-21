@@ -9,4 +9,5 @@ export enum StoreNames {
   COLUMN = 'column',
   CHART = 'chart',
   CHART_CONFIG = 'chartConfig',
+  USER = 'user'
 }
