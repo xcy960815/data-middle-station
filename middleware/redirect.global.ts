@@ -1,5 +1,8 @@
+/**
+ * @desc 全局重定向中间件
+ * @parameter {RouteLocationNormalized} to
+ */
 export default defineNuxtRouteMiddleware((to) => {
-  // console.log('to', to)
   if (to.path === '/') {
     return navigateTo('/welcome')
   }

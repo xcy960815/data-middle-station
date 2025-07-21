@@ -5,7 +5,7 @@ declare namespace DatabaseVo {
   /**
    * @desc 表配置
    */
-  type TableOptionVo = {
+  type TableOption = {
     autoIncrement: number
     avgRowLength: number
     createTime: string
@@ -23,7 +23,7 @@ declare namespace DatabaseVo {
   /**
    * @desc 左侧数据源字段类型 刚从数据库出来的字段
    */
-  type TableColumnOptionVo = {
+  type TableColumnOption = {
     columnName: string
     columnType: string
     columnComment: string

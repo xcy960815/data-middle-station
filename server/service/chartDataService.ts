@@ -4,10 +4,28 @@ import { ChartDataMapper } from '../mapper/chartDataMapper'
  * @desc 图表数据服务
  */
 export class ChartDataService {
+  /**
+   * @desc 图表数据mapper
+   */
   private chartDataMapper: ChartDataMapper
 
+  /**
+   * @desc 构造函数
+   */
   constructor() {
     this.chartDataMapper = new ChartDataMapper()
+  }
+
+  /**
+   * @desc 将dao对象转换为vo对象
+   * @param chartData {ChartDataDao.ChartData} 图表数据
+   * @returns {ChartDataVo.ChartData}
+   */
+  private dao2Vo(chartData: ChartDataDao.ChartData): ChartDataVo.ChartData {
+    return chartData.map((item) => ({
+      ...item,
+      [item.columnName]: item.columnValue
+    }))
   }
 
   /**
@@ -89,22 +107,43 @@ export class ChartDataService {
   }
 
   /**
-   * @desc 获取答案
-   * @param requestParams {ChartDataDto.ChartData} 请求参数
-   * @returns {Promise<AnalyseDao.ChartData>} 答案
+   * @desc 获取图表数据
+   * @param requestParams {ChartDataDao.RequestParams} 请求参数
+   * @returns {Promise<AnalyseDao.ChartData>}
    */
 
-  public async getChartData(requestParams: ChartDataDto.ChartData): Promise<AnalyseDao.ChartData> {
+  public async getChartData(requestParams: ChartDataDao.RequestParams): Promise<ChartDataVo.ChartData> {
+    /**
+     * @desc 获取请求参数
+     */
     const { filters, orders, groups, dimensions, limit, dataSource } = requestParams
-
+    /**
+     * @desc 构建select语句
+     */
     const selectClause = this.buildSelectClause(dimensions, groups)
+    /**
+     * @desc 构建where语句
+     */
     const whereClause = this.buildWhereClause(filters)
+    /**
+     * @desc 构建orderBy语句
+     */
     const orderByClause = this.buildOrderByClause(orders)
+    /**
+     * @desc 构建groupBy语句
+     */
     const groupByClause = this.buildGroupByClause(groups, dimensions)
 
+    /**
+     * @desc 构建sql语句
+     */
     const sql = `${selectClause} from ${toLine(dataSource)}${whereClause}${groupByClause}${orderByClause} limit ${limit}`
 
+    /**
+     * @desc 获取图表数据
+     */
     const data = await this.chartDataMapper.getChartData(sql)
-    return data
+
+    return this.dao2Vo(data)
   }
 }

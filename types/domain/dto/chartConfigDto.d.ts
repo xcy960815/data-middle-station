@@ -5,5 +5,7 @@ declare namespace ChartConfigDto {
   /**
    * 图表配置
    */
-  type ChartConfig = ChartConfigVo.ChartConfig
+  type ChartConfig = ChartConfigVo.ChartConfig & {
+    id?: number
+  }
 }

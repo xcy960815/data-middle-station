@@ -111,7 +111,7 @@ export class AnalyseMapper extends BaseMapper {
     const { viewCount, createTime, createdBy, updatedBy, ...AnalyseOption } = AnalyseOptionDto
     const { keys: AnalyseOptionKeys, values: AnalyseOptionValues } = convertToSqlProperties(AnalyseOption)
     const AnalyseOptionSetClause = AnalyseOptionKeys.map((key) => `${key} = ?`).join(', ')
-    const updateAnalyseSql = `UPDATE ${ANALYSE_TABLE_NAME} SET ${AnalyseOptionSetClause} WHERE id = ?`
+    const updateAnalyseSql = `UPDATE ${ANALYSE_TABLE_NAME} SET ${AnalyseOptionSetClause} WHERE id = ? and is_deleted = 0`
     const analyseResult = await this.exe<ResultSetHeader>(updateAnalyseSql, [...AnalyseOptionValues, AnalyseOption.id])
 
     return analyseResult.affectedRows > 0
@@ -136,7 +136,7 @@ export class AnalyseMapper extends BaseMapper {
     await this.updateViewCount(id)
     const sql = `select 
       ${ANALYSE_BASE_FIELDS.join(',\n    ')}
-    from ${ANALYSE_TABLE_NAME} where id = ?`
+    from ${ANALYSE_TABLE_NAME} where id = ? and is_deleted = 0`
     const result = await this.exe<Array<T>>(sql, [id])
     return result?.[0]
   }
@@ -167,7 +167,7 @@ export class AnalyseMapper extends BaseMapper {
     select 
       ${ANALYSE_BASE_FIELDS.join(',\n    ')}
     from ${ANALYSE_TABLE_NAME} 
-    where is_deleted = 1`
+    where is_deleted = 0`
     return await this.exe<Array<T>>(sql)
   }
 }

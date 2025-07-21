@@ -43,8 +43,7 @@ class Char {
     private y: number = -20,
     private char: string = getRandomChar(),
     private color: string = getRandomColor(),
-    private fontSize: number = 14 *
-      CONFIG.FONT_SIZE_MULTIPLIER,
+    private fontSize: number = 14 * CONFIG.FONT_SIZE_MULTIPLIER,
     private speed: number = 1 + Math.random() * 2
   ) {}
 
@@ -125,9 +124,7 @@ const CONFIG: CharConfig = {
  * @returns 随机字符
  */
 function getRandomChar(): string {
-  return CONFIG.CHAR_SET[
-    Math.floor(Math.random() * CONFIG.CHAR_SET.length)
-  ]
+  return CONFIG.CHAR_SET[Math.floor(Math.random() * CONFIG.CHAR_SET.length)]
 }
 
 /**
@@ -135,17 +132,33 @@ function getRandomChar(): string {
  * @returns 随机颜色代码
  */
 function getRandomColor(): string {
-  return CONFIG.FONT_COLORS[
-    Math.floor(Math.random() * CONFIG.FONT_COLORS.length)
-  ]
+  return CONFIG.FONT_COLORS[Math.floor(Math.random() * CONFIG.FONT_COLORS.length)]
 }
 
+/**
+ * @desc 路由
+ */
 const router = useRouter()
+
+/**
+ * @desc 布局名称
+ */
 const layoutName = 'welcome'
+
+/**
+ * @desc 定义组件名称
+ */
 defineOptions({ name: 'WelcomePage' })
 
+/**
+ * @desc 画布引用
+ */
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const animationFrameId = ref<number | null>(null)
+
+/**
+ * @desc 字符数组
+ */
 const chars = ref<Char[]>([])
 
 /**
@@ -155,10 +168,7 @@ const chars = ref<Char[]>([])
  * @returns 字符实例数组
  */
 function createChars(width: number, count: number): Char[] {
-  return Array.from(
-    { length: count },
-    () => new Char(Math.random() * width)
-  )
+  return Array.from({ length: count }, () => new Char(Math.random() * width))
 }
 
 /**
@@ -179,22 +189,12 @@ const setCanvasSize = () => {
 
   chars.value.forEach((char) => {
     const pos = char.getPosition()
-    char.setPosition(
-      pos.x * widthRatio,
-      pos.y * heightRatio
-    )
+    char.setPosition(pos.x * widthRatio, pos.y * heightRatio)
   })
 
-  const targetCharCount = Math.floor(
-    canvas.width / CONFIG.CHAR_DENSITY
-  )
+  const targetCharCount = Math.floor(canvas.width / CONFIG.CHAR_DENSITY)
   if (targetCharCount > chars.value.length) {
-    chars.value.push(
-      ...createChars(
-        canvas.width,
-        targetCharCount - chars.value.length
-      )
-    )
+    chars.value.push(...createChars(canvas.width, targetCharCount - chars.value.length))
   } else if (targetCharCount < chars.value.length) {
     chars.value.splice(targetCharCount)
   }
@@ -230,10 +230,7 @@ onMounted(() => {
 
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
-  chars.value = createChars(
-    canvas.width,
-    Math.floor(canvas.width / CONFIG.CHAR_DENSITY)
-  )
+  chars.value = createChars(canvas.width, Math.floor(canvas.width / CONFIG.CHAR_DENSITY))
 
   window.addEventListener('resize', setCanvasSize)
   animate()
@@ -250,6 +247,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', setCanvasSize)
 })
 
+const userStore = useUserStore()
 /**
  * 导航到主页的处理函数
  */
@@ -262,11 +260,13 @@ const navigateToHome = async () => {
     }
   })
   // 根据你的 API 返回结构处理
-  if (
-    loginResult.code === RequestCodeEnum.Success &&
-    loginResult.data
-  ) {
-    // router.push('/homepage')
+  if (loginResult.code === RequestCodeEnum.Success) {
+    const { username, avatar, userId } = loginResult.data as LoginVo.LoginOption
+    userStore.setName(username)
+    userStore.setAvatar(avatar)
+    userStore.setUserId(userId)
+    // userStore.
+    router.push('/homepage')
   } else {
     console.error('登录失败:', loginResult.message)
   }

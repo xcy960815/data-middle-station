@@ -5,7 +5,7 @@ declare namespace LoginDto {
   /**
    * @desc 登录
    */
-  type Login = {
+  type LoginOption = {
     username: string
     password: string
   }

@@ -2,17 +2,25 @@
  * @desc 左侧列字段
  */
 declare namespace OrderStore {
+  /**
+   * @desc 排序key
+   */
   type OrderKey = 'order'
 
+  /**
+   * @desc 排序类型
+   */
   const OrderTypeEnums = {
     升序: 'asc',
     降序: 'desc',
     无: null
   } as const
 
-  type OrderType =
-    (typeof OrderTypeEnums)[keyof typeof OrderTypeEnums]
+  type OrderType = (typeof OrderTypeEnums)[keyof typeof OrderTypeEnums]
 
+  /**
+   * @desc 排序聚合方式
+   */
   const OrderAggregationsEnum = {
     原始值: 'raw',
     计数: 'count',
@@ -22,8 +30,10 @@ declare namespace OrderStore {
     最小值: 'min'
   } as const
 
-  type OrderAggregationsType =
-    (typeof OrderAggregationsEnum)[keyof typeof OrderAggregationsEnum]
+  /**
+   * @desc 排序聚合方式
+   */
+  type OrderAggregationsType = (typeof OrderAggregationsEnum)[keyof typeof OrderAggregationsEnum]
   /**
    * @desc 左侧列字段
    * @interface OrderOption
@@ -31,11 +41,14 @@ declare namespace OrderStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  interface OrderOption extends ColumnStore.ColumnOption {
+  type OrderOption = ColumnStore.ColumnOption & {
     orderType: OrderType
     aggregationType: OrderAggregationsType
   }
 
+  /**
+   * @desc 排序状态
+   */
   type OrderState = {
     orders: OrderOption[]
   }
@@ -44,11 +57,11 @@ declare namespace OrderStore {
    */
   type OrderGetters = {}
 
+  /**
+   * @desc 排序操作
+   */
   type OrderActions = {
-    updateOrder: ({
-      order: OrderOption,
-      index: number
-    }) => void
+    updateOrder: ({ order: OrderOption, index: number }) => void
   } & {
     addOrders: (orders: OrderOption[]) => void
     removeOrder: (index: number) => void

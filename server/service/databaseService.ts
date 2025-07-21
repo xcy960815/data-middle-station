@@ -53,97 +53,63 @@ const DATE_TYPE_ENUM = [
   'datetimeoffset',
   'smalldatetime'
 ] as const
+
+/**
+ * @desc 数据库服务
+ */
 export class DatabaseService {
+  /**
+   * @desc 数据库映射器
+   */
   private databaseMapper: DatabaseMapper
 
+  /**
+   * @desc 构造函数
+   */
   constructor() {
     this.databaseMapper = new DatabaseMapper()
   }
 
   /**
-   * @desc 查询表
+   * @desc 查询当前数据库中所有表
    * @param tableName {string} 表名
    * @returns {Promise<Array<DatabaseVo.TableOptionVo>>}
    */
-  public async queryTable(
-    tableName: string
-  ): Promise<Array<DatabaseVo.TableOptionVo>> {
-    const result =
-      await this.databaseMapper.queryTable(tableName)
+  public async queryTable(tableName: string): Promise<Array<DatabaseVo.TableOption>> {
+    const result = await this.databaseMapper.queryTable(tableName)
     return result.map((item) => ({
       ...item,
-      createTime:
-        typeof item.createTime === 'function'
-          ? item.createTime('')
-          : item.createTime,
-      updateTime:
-        typeof item.updateTime === 'function'
-          ? item.updateTime('')
-          : item.updateTime,
-      tableName:
-        typeof item.tableName === 'function'
-          ? item.tableName('')
-          : item.tableName,
-      tableType:
-        typeof item.tableType === 'function'
-          ? item.tableType('')
-          : item.tableType,
+      createTime: item.createTime,
+      updateTime: item.updateTime,
+      tableName: item.tableName,
+      tableType: item.tableType,
       tableComment: item.tableComment,
-      engine:
-        typeof item.engine === 'function'
-          ? item.engine('')
-          : item.engine,
-      tableCollation:
-        typeof item.tableCollation === 'function'
-          ? item.tableCollation('')
-          : item.tableCollation
+      engine: item.engine,
+      tableCollation: item.tableCollation
     }))
   }
 
   /**
-   * @desc 查询表的列
+   * @desc 查询当前数据库中表的列
    * @param tableName {string} 表名
-   * @returns {Promise<Array<DatabaseVo.TableColumnOptionVo>>}
+   * @returns {Promise<Array<DatabaseVo.TableColumnOption>>}
    */
-  public async queryTableColumn(
-    tableName: string
-  ): Promise<Array<DatabaseVo.TableColumnOptionVo>> {
-    const result =
-      await this.databaseMapper.queryTableColumn(
-        toLine(tableName)
-      )
+  public async queryTableColumn(tableName: string): Promise<Array<DatabaseVo.TableColumnOption>> {
+    const result = await this.databaseMapper.queryTableColumn(toLine(tableName))
     return result.map((item) => {
-      const columnTypeValue =
-        typeof item.columnType === 'function'
-          ? item.columnType('')
-          : item.columnType
+      const columnTypeValue = item.columnType
       let columnType = ''
-      if (
-        NUMBER_TYPE_ENUM.some((type) =>
-          columnTypeValue.includes(type)
-        )
-      ) {
+      if (NUMBER_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
         columnType = 'number'
-      } else if (
-        STRING_TYPE_ENUM.some((type) =>
-          columnTypeValue.includes(type)
-        )
-      ) {
+      } else if (STRING_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
         columnType = 'string'
-      } else if (
-        DATE_TYPE_ENUM.some((type) =>
-          columnTypeValue.includes(type)
-        )
-      ) {
+      } else if (DATE_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
         columnType = 'date'
       } else {
         columnType = columnTypeValue
       }
       return {
-        columnName:
-          typeof item.columnName === 'function'
-            ? item.columnName('')
-            : item.columnName,
+        columnName: item.columnName,
         columnType: columnType,
         columnComment: item.columnComment,
         alias: item.columnComment,
