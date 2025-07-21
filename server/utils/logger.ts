@@ -19,6 +19,38 @@ const LOG_LEVELS = {
 }
 
 /**
+ * 获取调用位置信息
+ * @returns {string} 调用位置信息
+ */
+function getCallerInfo(): string {
+  // const stackLines = new Error().stack?.split('\n') || []
+  // // 跳过前三行 (Error, getCallerInfo, 当前日志方法)
+  // const callerLine = stackLines[3] || ''
+  // // 提取文件路径和行号
+  // const match = callerLine.match(/at\s+(.+)\s+\((.+):(\d+):(\d+)\)/) ||
+  //   callerLine.match(/at\s+(.+):(\d+):(\d+)/)
+
+  // if (match) {
+  //   if (match.length === 5) {
+  //     // 格式: at functionName (filePath:line:column)
+  //     const [, fnName, filePath, line] = match
+  //     const filePathParts = filePath.split('/')
+  //     const fileName = filePathParts[filePathParts.length - 1]
+  //     return `${fnName} (${fileName}:${line})`
+  //   } else if (match.length === 4) {
+  //     // 格式: at filePath:line:column
+  //     const [, filePath, line] = match
+  //     const filePathParts = filePath.split('/')
+  //     const fileName = filePathParts[filePathParts.length - 1]
+  //     return `${fileName}:${line}`
+  //   }
+  // }
+
+  // return 'unknown location'
+  return ''
+}
+
+/**
  * @description 日志类
  */
 export class Logger {
@@ -30,15 +62,12 @@ export class Logger {
   /**
    * @description 日志路径
    */
-  private logPath: string =
-    useRuntimeConfig().logPath || 'logs'
+  private logPath: string = useRuntimeConfig().logPath || 'logs'
 
   /**
    * @description 日志时间格式
    */
-  private logTimeFormat: string =
-    useRuntimeConfig().logTimeFormat ||
-    'YYYY-MM-DD HH:mm:ss'
+  private logTimeFormat: string = useRuntimeConfig().logTimeFormat || 'YYYY-MM-DD HH:mm:ss'
 
   constructor({ fileName, folderName }: LoggerOptions) {
     this._createLogger(fileName, folderName)
@@ -50,10 +79,7 @@ export class Logger {
    * @param {string} folderName
    * @returns {void}
    */
-  private _createLogger(
-    fileName: string,
-    folderName: string
-  ): void {
+  private _createLogger(fileName: string, folderName: string): void {
     this.logger = createLogger({
       transports: [
         new transports.Console({
@@ -64,17 +90,11 @@ export class Logger {
             }),
             format.align(),
             format.printf((info) => {
-              const { timestamp, level, message, ...args } =
-                info
-              const ts =
-                typeof timestamp === 'string'
-                  ? timestamp.slice(0, 19).replace('T', ' ')
-                  : ''
+              const { timestamp, level, message, caller, ...args } = info
+              const ts = typeof timestamp === 'string' ? timestamp.slice(0, 19).replace('T', ' ') : ''
 
               // 获取日志级别对应的样式
-              const levelInfo = LOG_LEVELS[
-                level as keyof typeof LOG_LEVELS
-              ] || { emoji: '📝', color: '#2196F3' }
+              const levelInfo = LOG_LEVELS[level as keyof typeof LOG_LEVELS] || { emoji: '📝', color: '#2196F3' }
 
               // 确保message是字符串类型
               const messageStr = String(message)
@@ -82,18 +102,15 @@ export class Logger {
               // 使用渐变色处理消息，但只处理纯文本消息，跳过已经包含颜色代码的消息
               let formattedMessage = messageStr
               if (!messageStr.includes('\u001b[')) {
-                const customGradient = gradient([
-                  levelInfo.color,
-                  '#2196F3'
-                ])
-                formattedMessage =
-                  customGradient(messageStr)
+                const customGradient = gradient([levelInfo.color, '#2196F3'])
+                formattedMessage = customGradient(messageStr)
               }
 
-              return `${chalk.gray(ts)} ${levelInfo.emoji} [${level}]: ${formattedMessage} ${
-                Object.keys(args).length
-                  ? JSON.stringify(args, null, 2)
-                  : ''
+              // 添加调用位置信息
+              const callerInfo = caller ? chalk.gray(`[${caller}]`) : ''
+
+              return `${chalk.gray(ts)} ${levelInfo.emoji} [${level}]: ${formattedMessage} ${callerInfo} ${
+                Object.keys(args).length ? JSON.stringify(args, null, 2) : ''
               }`
             })
           )
@@ -122,11 +139,10 @@ export class Logger {
           format.align(),
           format.printf((info: any) => {
             // 这里可以自定义你的输出格式
-            const { timestamp, level, message } = info
-            const ts =
-              timestamp?.slice(0, 19).replace('T', ' ') ||
-              ''
-            return `${ts} [${folderName} ${level}]: ${message}`
+            const { timestamp, level, message, caller } = info
+            const ts = timestamp?.slice(0, 19).replace('T', ' ') || ''
+            const callerInfo = caller ? `[${caller}]` : ''
+            return `${ts} [${folderName} ${level}]: ${message} ${callerInfo}`
           })
         )
       })
@@ -139,7 +155,8 @@ export class Logger {
    * @returns {void}
    */
   public info(message: string): void {
-    this.logger?.info(chalk.green(message))
+    const caller = getCallerInfo()
+    this.logger?.info({ message: chalk.green(message), caller })
   }
 
   /**
@@ -148,7 +165,8 @@ export class Logger {
    * @returns {void}
    */
   public error(message: string): void {
-    this.logger?.error(chalk.red(message))
+    const caller = getCallerInfo()
+    this.logger?.error({ message: chalk.red(message), caller })
   }
 
   /**
@@ -157,7 +175,8 @@ export class Logger {
    * @returns {void}
    */
   public warn(message: string): void {
-    this.logger?.warn(chalk.yellow(message))
+    const caller = getCallerInfo()
+    this.logger?.warn({ message: chalk.yellow(message), caller })
   }
 
   /**
@@ -166,6 +185,7 @@ export class Logger {
    * @returns {void}
    */
   public debug(message: string): void {
-    this.logger?.debug(chalk.gray(message))
+    const caller = getCallerInfo()
+    this.logger?.debug({ message: chalk.gray(message), caller })
   }
 }
