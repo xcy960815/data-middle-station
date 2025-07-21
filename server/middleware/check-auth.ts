@@ -9,16 +9,6 @@ const logger = new Logger({
 })
 
 /**
- * 认证错误响应接口
- */
-interface AuthErrorResponse {
-  code: RequestCodeEnum
-  message: string
-  timestamp: string
-  path: string
-}
-
-/**
  * 不需要验证token的路由白名单
  * 支持精确匹配和前缀匹配
  */
@@ -99,12 +89,12 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
     const token = JwtUtils.getTokenFromCookie(event)
     if (!token) {
       logger.warn(`${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`)
-      // todo 重定向到 /welcome 页面
-      event.node.res.writeHead(302, {
-        Location: '/welcome'
+      // 重定向到 /welcome 页面
+      // sendRedirect(event, '/welcome')
+      return createError({
+        statusCode: 401,
+        statusMessage: '未提供认证Token'
       })
-      event.node.res.end()
-      return
     }
     // 验证token
     const payload = JwtUtils.verifyToken(token)
@@ -113,11 +103,11 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
      */
     if (JwtUtils.checkTokenExpired(token)) {
       logger.warn(`token已过期: ${method} ${pathname} - IP: ${clientIP}`)
-      event.node.res.writeHead(302, {
-        Location: '/welcome'
+      // sendRedirect(event, '/welcome')
+      return createError({
+        statusCode: 401,
+        statusMessage: 'token已过期'
       })
-      event.node.res.end()
-      return
     }
     // 记录成功的认证日志
     logger.info(`认证成功: ${payload.username} (ID: ${payload.userId}) ${method} ${pathname} - IP: ${clientIP}`)

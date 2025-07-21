@@ -102,7 +102,13 @@ declare namespace ChartConfigDao {
    * 排序配置
    */
   type OrderOption = ColumnOption & {
+    /**
+     * 排序类型
+     */
     orderType: OrderType
+    /**
+     * 聚合方式
+     */
     aggregationType: OrderAggregationsType
   }
 
