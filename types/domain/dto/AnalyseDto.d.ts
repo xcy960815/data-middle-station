@@ -3,7 +3,7 @@
  */
 declare namespace AnalyseDto {
   /**
-   * 图表配置
+   * 分析配置
    */
   type AnalyseOption = AnalyseVo.AnalyseOption
 }

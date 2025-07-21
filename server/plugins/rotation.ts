@@ -10,11 +10,7 @@ const logger = new Logger({
  * @returns Promise<void>
  */
 async function queryTasks() {
-  logger.info(
-    chalk.green(
-      `queryAlarms ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`
-    )
-  )
+  logger.info(`queryTasks ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`)
   await serverSleep(3000000)
   queryTasks()
 }

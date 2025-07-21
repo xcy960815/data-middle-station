@@ -6,15 +6,11 @@ const chartDataService = new ChartDataService()
  * @param {QueryChartDataParams} params
  * @returns {Promise<ResponseModule.Response<ChartDataDao>>}
  */
-export default defineEventHandler<
-  Promise<ICustomResponse<ChartDataDao.ChartData>>
->(async (event) => {
+export default defineEventHandler<Promise<ICustomResponse<AnalyseDao.ChartData>>>(async (event) => {
   try {
-    const chartDataParams =
-      await readBody<ChartDataDto.ChartData>(event)
+    const chartDataParams = await readBody<ChartDataDto.ChartData>(event)
 
-    const data =
-      await chartDataService.getChartData(chartDataParams)
+    const data = await chartDataService.getChartData(chartDataParams)
 
     return CustomResponse.success(data)
   } catch (error: any) {

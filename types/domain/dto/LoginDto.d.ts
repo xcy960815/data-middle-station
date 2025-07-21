@@ -1,5 +1,11 @@
+/**
+ * @desc 登录
+ */
 declare namespace LoginDto {
-  export type Login = {
+  /**
+   * @desc 登录
+   */
+  type Login = {
     username: string
     password: string
   }

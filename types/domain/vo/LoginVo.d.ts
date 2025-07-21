@@ -1,5 +1,11 @@
+/**
+ * @desc 登录
+ */
 declare namespace LoginVo {
-  export type Login = {
+  /**
+   * @desc 登录
+   */
+  type Login = {
     token: string
   }
 }

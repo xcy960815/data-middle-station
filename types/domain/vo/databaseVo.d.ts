@@ -2,7 +2,10 @@
  * @desc 返还给前端的数据
  */
 declare namespace DatabaseVo {
-  export type TableOptionVo = {
+  /**
+   * @desc 表配置
+   */
+  type TableOptionVo = {
     autoIncrement: number
     avgRowLength: number
     createTime: string
@@ -20,7 +23,7 @@ declare namespace DatabaseVo {
   /**
    * @desc 左侧数据源字段类型 刚从数据库出来的字段
    */
-  export type TableColumnOptionVo = {
+  type TableColumnOptionVo = {
     columnName: string
     columnType: string
     columnComment: string

@@ -21,18 +21,6 @@ declare namespace AnalyseVo {
     createdBy: string
     updatedBy: string
     chartConfigId: number | null
-    chartConfig: {
-      id: number
-      chartType: string
-      dataSource: string | null
-      column: ChartConfigVo.ColumnOption[]
-      dimension: ChartConfigVo.DimensionOption[]
-      filter: ChartConfigVo.FilterOption[]
-      group: ChartConfigVo.GroupOption[]
-      order: ChartConfigVo.OrderOption[]
-      limit: number
-      createTime: string
-      updateTime: string
-    } | null
+    chartConfig: ChartConfigVo.ChartConfig | null
   }
 }
