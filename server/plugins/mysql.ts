@@ -135,6 +135,7 @@ export async function checkMysqlConnection(pools: Map<string, mysql.Pool>) {
  * 注册mysql插件
  */
 export default defineNitroPlugin((nitroApp) => {
+  // 获取数据库配置
   const dataSourceConfig = getDatasourceConfig()
 
   logger.info(`开始初始化mysql 插件`)
@@ -152,7 +153,7 @@ export default defineNitroPlugin((nitroApp) => {
   checkMysqlConnection(pools)
 
   nitroApp.hooks.hook('close', () => {
-    logger.info('mysql 插件卸载')
+    logger.info('项目关闭或者重启，卸载mysql插件')
     for (const pool of pools.values()) {
       pool.end()
     }

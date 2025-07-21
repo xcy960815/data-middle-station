@@ -1,6 +1,4 @@
-import chalk from 'chalk'
 import cron from 'node-cron'
-import dayjs from 'dayjs'
 
 const logger = new Logger({
   fileName: 'scheduling',

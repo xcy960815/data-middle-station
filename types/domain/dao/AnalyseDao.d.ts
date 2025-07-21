@@ -1,52 +1,52 @@
 /**
- * @desc  图表表结构
+ * @desc  分析表结构
  */
 declare namespace AnalyseDao {
   /**
-   * 图表数据
+   * 分析数据
    */
-  type ChartDataDao = Array<{
+  type ChartData = Array<{
     [key: string]: string | number
   }>
 
   /**
-   * 图表配置
+   * 分析配置
    */
   type AnalyseOption = {
     /**
-     * 图表id
+     * 分析id
      */
     id: number
     /**
-     * 图表名称
+     * 分析名称
      */
     analyseName: string
     /**
-     * 图表描述
+     * 分析描述
      */
     analyseDesc: string
     /**
-     * 图表浏览量
+     * 分析浏览量
      */
     viewCount: number
     /**
-     * 创建时间
+     * 分析创建时间
      */
     createTime: string
     /**
-     * 更新时间
+     * 分析更新时间
      */
     updateTime: string
     /**
-     * 创建人
+     * 分析创建人
      */
     createdBy: string
     /**
-     * 更新人
+     * 分析更新人
      */
     updatedBy: string
     /**
-     * 图表配置id
+     * 分析配置id
      */
     chartConfigId: number | null
   }

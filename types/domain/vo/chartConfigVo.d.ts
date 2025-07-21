@@ -1,10 +1,22 @@
+/**
+ * @desc 图表配置
+ */
 declare namespace ChartConfigVo {
+  /**
+   * 列配置
+   */
   type ColumnOption = DatabaseVo.TableColumnOptionVo
 
+  /**
+   * 维度配置
+   */
   type DimensionOption = DatabaseVo.TableColumnOptionVo & {
     __invalid?: boolean
   }
 
+  /**
+   * 过滤聚合方式
+   */
   const FilterAggregationsEnum = {
     原始值: 'raw',
     计数: 'count',
@@ -15,6 +27,9 @@ declare namespace ChartConfigVo {
     最小值: 'min'
   } as const
 
+  /**
+   * 过滤类型
+   */
   const FilterTypeEnums = {
     等于: 'eq',
     不等于: 'neq',
@@ -28,8 +43,14 @@ declare namespace ChartConfigVo {
     不为空: 'isNotNull'
   } as const
 
+  /**
+   * 过滤类型
+   */
   type FilterType = (typeof FilterTypeEnums)[keyof typeof FilterTypeEnums]
 
+  /**
+   * 过滤聚合方式
+   */
   type FilterAggregationsType = (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
 
   interface FilterOption extends ColumnOption {
@@ -40,10 +61,16 @@ declare namespace ChartConfigVo {
     aggregationType: FilterAggregationsType
   }
 
+  /**
+   * 分组配置
+   */
   type GroupOption = DatabaseVo.TableColumnOptionVo & {
     __invalid?: boolean
   }
 
+  /**
+   * 排序类型
+   */
   const OrderTypeEnums = {
     升序: 'asc',
     降序: 'desc'
@@ -51,6 +78,9 @@ declare namespace ChartConfigVo {
 
   type OrderType = (typeof OrderTypeEnums)[keyof typeof OrderTypeEnums]
 
+  /**
+   * 排序聚合方式
+   */
   const OrderAggregationsEnum = {
     原始值: 'raw',
     计数: 'count',
@@ -60,7 +90,11 @@ declare namespace ChartConfigVo {
     最小值: 'min'
   } as const
 
+  /**
+   * 排序聚合方式
+   */
   type OrderAggregationsType = (typeof OrderAggregationsEnum)[keyof typeof OrderAggregationsEnum]
+
   /**
    * @desc 左侧列字段
    * @interface OrderOption
@@ -73,17 +107,53 @@ declare namespace ChartConfigVo {
     aggregationType: OrderAggregationsType
   }
 
-  interface ChartConfig {
+  /**
+   * 图表配置
+   */
+  type ChartConfig = {
+    /**
+     * 图表id
+     */
     id: number
+    /**
+     * 数据源
+     */
     dataSource: string | null
+    /**
+     * 图表类型
+     */
     chartType: string
+    /**
+     * 列配置
+     */
     column: ColumnOption[]
+    /**
+     * 维度配置
+     */
     dimension: DimensionOption[]
+    /**
+     * 过滤配置
+     */
     filter: FilterOption[]
+    /**
+     * 分组配置
+     */
     group: GroupOption[]
+    /**
+     * 排序配置
+     */
     order: OrderOption[]
+    /**
+     * 限制
+     */
     limit: number
+    /**
+     * 创建时间
+     */
     createTime: string
+    /**
+     * 更新时间
+     */
     updateTime: string
   }
 }

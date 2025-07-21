@@ -13,7 +13,7 @@ export class ChartDataMapper extends BaseMapper {
    * @param sql {string} sql语句
    * @returns {Promise<GetAnswerDao.ChartDataDao>}
    */
-  public async getChartData<T extends ChartDataDao.ChartData>(sql: string): Promise<T> {
+  public async getChartData<T extends AnalyseDao.ChartData>(sql: string): Promise<T> {
     const data = await this.exe<T>(sql)
     return data
   }

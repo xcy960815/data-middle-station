@@ -16,44 +16,23 @@ export class ChartDataService {
    * @param groups {GroupStore.GroupOption[]} 分组
    * @returns {string} select语句
    */
-  private buildSelectClause(
-    dimensions: DimensionStore.DimensionOption[],
-    groups: GroupStore.GroupOption[]
-  ): string {
+  private buildSelectClause(dimensions: DimensionStore.DimensionOption[], groups: GroupStore.GroupOption[]): string {
     let sql = 'select'
 
     // 合并 dimensions 和 groups 中的列
     const allColumns = [
       ...dimensions,
-      ...groups.filter(
-        (group) =>
-          !dimensions.some(
-            (dim) => dim.columnName === group.columnName
-          )
-      )
+      ...groups.filter((group) => !dimensions.some((dim) => dim.columnName === group.columnName))
     ]
 
-    allColumns.forEach(
-      (
-        item:
-          | DimensionStore.DimensionOption
-          | GroupStore.GroupOption
-      ) => {
-        const columnName = toLine(item.columnName)
-        const alias = item.alias
-          ? item.alias
-          : item.columnName
-        // 检查是否是日期时间类型的列
-        const isDateTimeColumn =
-          /date|time|created_at|updated_at/i.test(
-            columnName
-          )
-        const fieldExpression = isDateTimeColumn
-          ? `DATE_FORMAT(${columnName}, '%Y-%m-%d %H:%i:%s')`
-          : columnName
-        sql += ` ${fieldExpression} as \`${alias}\`,`
-      }
-    )
+    allColumns.forEach((item: DimensionStore.DimensionOption | GroupStore.GroupOption) => {
+      const columnName = toLine(item.columnName)
+      const alias = item.alias ? item.alias : item.columnName
+      // 检查是否是日期时间类型的列
+      const isDateTimeColumn = /date|time|created_at|updated_at/i.test(columnName)
+      const fieldExpression = isDateTimeColumn ? `DATE_FORMAT(${columnName}, '%Y-%m-%d %H:%i:%s')` : columnName
+      sql += ` ${fieldExpression} as \`${alias}\`,`
+    })
     return sql.slice(0, sql.length - 1)
   }
 
@@ -62,9 +41,7 @@ export class ChartDataService {
    * @param filters {FilterStore.FilterOption[]} 过滤条件
    * @returns {string} where语句
    */
-  private buildWhereClause(
-    filters: FilterStore.FilterOption[]
-  ): string {
+  private buildWhereClause(filters: FilterStore.FilterOption[]): string {
     if (filters.length === 0) return ''
     const whereClause = filters
       .map((item) => {
@@ -81,9 +58,7 @@ export class ChartDataService {
    * @param orders {OrderStore.OrderOption[]} 排序条件
    * @returns {string} orderBy语句
    */
-  private buildOrderByClause(
-    orders: OrderStore.OrderOption[]
-  ): string {
+  private buildOrderByClause(orders: OrderStore.OrderOption[]): string {
     if (orders.length === 0) return ''
     const orderClause = orders
       .map((item) => {
@@ -103,10 +78,7 @@ export class ChartDataService {
    * @param dimensions {DimensionStore.DimensionOption[]} 维度
    * @returns {string} groupBy语句
    */
-  private buildGroupByClause(
-    groups: GroupStore.GroupOption[],
-    dimensions: DimensionStore.DimensionOption[]
-  ): string {
+  private buildGroupByClause(groups: GroupStore.GroupOption[], dimensions: DimensionStore.DimensionOption[]): string {
     if (groups.length === 0) return ''
     // 合并 groups 和 dimensions 中的列名
     const allGroupColumns = [
@@ -119,36 +91,20 @@ export class ChartDataService {
   /**
    * @desc 获取答案
    * @param requestParams {ChartDataDto.ChartData} 请求参数
-   * @returns {Promise<ChartDataDao.ChartData>} 答案
+   * @returns {Promise<AnalyseDao.ChartData>} 答案
    */
 
-  public async getChartData(
-    requestParams: ChartDataDto.ChartData
-  ): Promise<ChartDataDao.ChartData> {
-    const {
-      filters,
-      orders,
-      groups,
-      dimensions,
-      limit,
-      dataSource
-    } = requestParams
+  public async getChartData(requestParams: ChartDataDto.ChartData): Promise<AnalyseDao.ChartData> {
+    const { filters, orders, groups, dimensions, limit, dataSource } = requestParams
 
-    const selectClause = this.buildSelectClause(
-      dimensions,
-      groups
-    )
+    const selectClause = this.buildSelectClause(dimensions, groups)
     const whereClause = this.buildWhereClause(filters)
     const orderByClause = this.buildOrderByClause(orders)
-    const groupByClause = this.buildGroupByClause(
-      groups,
-      dimensions
-    )
+    const groupByClause = this.buildGroupByClause(groups, dimensions)
 
     const sql = `${selectClause} from ${toLine(dataSource)}${whereClause}${groupByClause}${orderByClause} limit ${limit}`
 
-    const data =
-      await this.chartDataMapper.getChartData(sql)
+    const data = await this.chartDataMapper.getChartData(sql)
     return data
   }
 }

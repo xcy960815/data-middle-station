@@ -1,4 +1,3 @@
-import { info } from 'console'
 import RedisDriver from 'unstorage/drivers/redis'
 
 const logger = new Logger({
@@ -60,11 +59,13 @@ export default defineNitroPlugin(async (nitroApp) => {
   })
   storage.mount(RedisStorage.REDIS_DRIVER, redisDriver)
   logger.info(`redis 插件初始化成功`)
+
   // 测试redis是否连接成功
   await isConnectedRedis()
+
   // 关闭时卸载redis驱动
   nitroApp.hooks.hook('close', () => {
-    logger.info('redis 插件卸载')
+    logger.info('项目关闭或者重启，卸载redis插件')
     storage.unmount(RedisStorage.REDIS_DRIVER)
   })
 })
