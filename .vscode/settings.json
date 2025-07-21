@@ -2,7 +2,6 @@
   "vue.codeActions.enabled": false,
   // 保存的时候自动格式化
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSaveMode": "file",
   "editor.formatOnSaveOptions": {
     "tabSize": 2,

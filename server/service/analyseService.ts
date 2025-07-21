@@ -35,6 +35,19 @@ export class AnalyseService {
       chartConfig: chartConfig
     }
   }
+
+  /**
+   * @desc 将vo对象转换为dao对象
+   * @param chart {AnalyseVo.AnalyseOption} 图表
+   * @returns {AnalyseDao.AnalyseOption}
+   */
+  private dto2Dao(chart: Omit<AnalyseDto.AnalyseOption, 'chartConfig'>): AnalyseDao.AnalyseOption {
+    return {
+      ...chart,
+      isDeleted: 0
+    }
+  }
+
   /**
    * @desc 获取默认信息
    * @returns {Promise<{createdBy: string, updatedBy: string, createTime: string, updateTime: string}>}
@@ -82,8 +95,16 @@ export class AnalyseService {
    * @returns {Promise<AnalyseVo.ChartsOption[]>}
    */
   public async getAnalyses(): Promise<AnalyseVo.AnalyseOption[]> {
-    const analysesDao = await this.analyseMapper.getAnalyses()
-    return analysesDao.map((item) => this.dao2Vo(item, null))
+    const analyseOptions = await this.analyseMapper.getAnalyses()
+    const promises = analyseOptions.map(async (item) => {
+      if (item.chartConfigId) {
+        const chartConfig = await this.chartConfigService.getChartConfig(item.chartConfigId)
+        return this.dao2Vo(item, chartConfig)
+      } else {
+        return this.dao2Vo(item, null)
+      }
+    })
+    return Promise.all(promises)
   }
 
   /**
@@ -109,7 +130,7 @@ export class AnalyseService {
     AnalyseOption.updateTime = updateTime
     AnalyseOption.updatedBy = updatedBy
     AnalyseOption.chartConfigId = chartConfigId
-    const updateAnalyseResult = await this.analyseMapper.updateAnalyse(AnalyseOption)
+    const updateAnalyseResult = await this.analyseMapper.updateAnalyse(this.dto2Dao(AnalyseOption))
 
     return updateAnalyseResult
   }
@@ -120,44 +141,45 @@ export class AnalyseService {
    * @returns {Promise<boolean>}
    */
   public async createAnalyse(analyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
-    const { chartConfig, ...AnalyseOption } = analyseOptionDto
+    const { chartConfig, ...restOption } = analyseOptionDto
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
     let chartConfigId = analyseOptionDto.chartConfigId || null
     if (chartConfig) {
-      chartConfig.createTime = createTime
-      chartConfig.updateTime = updateTime
       // 如果图表配置不存在，则创建默认图表配置
       chartConfigId = await this.chartConfigService.createChartConfig(chartConfig)
     }
-    AnalyseOption.chartConfigId = chartConfigId
-    AnalyseOption.createTime = createTime
-    AnalyseOption.updateTime = updateTime
-    AnalyseOption.createdBy = createdBy
-    AnalyseOption.updatedBy = updatedBy
-    const createAnalyseResult = await this.analyseMapper.createAnalyse(AnalyseOption)
+    restOption.chartConfigId = chartConfigId
+    restOption.createdBy = createdBy
+    restOption.updatedBy = updatedBy
+    restOption.createTime = createTime
+    restOption.updateTime = updateTime
+    const createAnalyseResult = await this.analyseMapper.createAnalyse(this.dto2Dao(restOption))
     return createAnalyseResult
   }
 
   /**
    * @desc 更新图表名称
-   * @param AnalyseOption {AnalyseDto.AnalyseOption} 图表
+   * @param analyseOption {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyseName(AnalyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
-    const { updatedBy } = await this.getDefaultInfo()
-    AnalyseOption.updatedBy = updatedBy
-    return this.analyseMapper.updateAnalyse(AnalyseOption)
+  public async updateAnalyseName(analyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
+    const { chartConfig, ...restOption } = analyseOption
+    const { updatedBy, updateTime } = await this.getDefaultInfo()
+    restOption.updatedBy = updatedBy
+    restOption.updateTime = updateTime
+    return this.analyseMapper.updateAnalyse(this.dto2Dao(restOption))
   }
 
   /**
    * @desc 更新图表描述
-   * @param AnalyseOption {AnalyseDto.AnalyseOption} 图表
+   * @param analyseOption {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyseDesc(AnalyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
-    const { updatedBy } = await this.getDefaultInfo()
-    AnalyseOption.updatedBy = updatedBy
-    AnalyseOption.updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    return this.analyseMapper.updateAnalyse(AnalyseOption)
+  public async updateAnalyseDesc(analyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
+    const { chartConfig, ...restOption } = analyseOption
+    const { updatedBy, updateTime } = await this.getDefaultInfo()
+    restOption.updatedBy = updatedBy
+    restOption.updateTime = updateTime
+    return this.analyseMapper.updateAnalyse(this.dto2Dao(restOption))
   }
 }

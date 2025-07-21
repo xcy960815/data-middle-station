@@ -96,14 +96,29 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
   }
   try {
     // 从请求头获取token
-    const token = getCookie(event, JwtUtils.TOKEN_NAME)
+    const token = JwtUtils.getTokenFromCookie(event)
     if (!token) {
       logger.warn(`${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`)
       // todo 重定向到 /welcome 页面
+      event.node.res.writeHead(302, {
+        Location: '/welcome'
+      })
+      event.node.res.end()
       return
     }
     // 验证token
     const payload = JwtUtils.verifyToken(token)
+    /**
+     * @desc 校验token是否过期
+     */
+    if (JwtUtils.checkTokenExpired(token)) {
+      logger.warn(`token已过期: ${method} ${pathname} - IP: ${clientIP}`)
+      event.node.res.writeHead(302, {
+        Location: '/welcome'
+      })
+      event.node.res.end()
+      return
+    }
     // 记录成功的认证日志
     logger.info(`认证成功: ${payload.username} (ID: ${payload.userId}) ${method} ${pathname} - IP: ${clientIP}`)
   } catch (error) {

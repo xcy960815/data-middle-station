@@ -49,5 +49,9 @@ declare namespace AnalyseDao {
      * 分析配置id
      */
     chartConfigId: number | null
+    /**
+     * 是否删除：0-未删除，1-已删除
+     */
+    isDeleted?: number
   }
 }

@@ -56,7 +56,7 @@ declare namespace ChartConfigDao {
   /**
    * 过滤配置
    */
-  interface FilterOption extends ColumnOption {
+  type FilterOption = ColumnOption & {
     filterType?: FilterType
     filterValue?: string
     displayName?: string
@@ -101,7 +101,7 @@ declare namespace ChartConfigDao {
   /**
    * 排序配置
    */
-  interface OrderOption extends ColumnOption {
+  type OrderOption = ColumnOption & {
     orderType: OrderType
     aggregationType: OrderAggregationsType
   }
@@ -117,7 +117,7 @@ declare namespace ChartConfigDao {
     /**
      * 数据源
      */
-    dataSource: string
+    dataSource: string | null
     /**
      * 图表类型
      */
@@ -154,5 +154,17 @@ declare namespace ChartConfigDao {
      * 创建时间
      */
     createTime: string
+    /**
+     * 创建人
+     */
+    createdBy: string
+    /**
+     * 更新人
+     */
+    updatedBy: string
+    /**
+     * 是否删除：0-未删除，1-已删除
+     */
+    isDeleted?: number
   }
 }
