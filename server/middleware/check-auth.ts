@@ -1,4 +1,3 @@
-import { RequestCodeEnum } from '~/utils/request-enmu'
 import type { H3Event, EventHandlerRequest } from 'h3'
 import pkg from 'jsonwebtoken'
 const { TokenExpiredError, JsonWebTokenError } = pkg
