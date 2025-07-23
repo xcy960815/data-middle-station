@@ -125,12 +125,20 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 删除图表配置(逻辑删除)
-   * @param id {number} 图表配置ID
+   * @param deleteParams {number} 图表配置删除参数
    * @returns {Promise<boolean>} 是否删除成功
    */
-  public async deleteChartConfig(id: number): Promise<boolean> {
-    const sql = `update ${CHART_CONFIG_TABLE_NAME} set is_deleted = 1 where id = ?`
-    const result = await this.exe<ResultSetHeader>(sql, [id])
+  public async deleteChartConfig(deleteParams: {
+    id: number
+    updatedBy: string
+    updateTime: string
+  }): Promise<boolean> {
+    const sql = `update ${CHART_CONFIG_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
+    const result = await this.exe<ResultSetHeader>(sql, [
+      deleteParams.updatedBy,
+      deleteParams.updateTime,
+      deleteParams.id
+    ])
     return result.affectedRows > 0
   }
 }

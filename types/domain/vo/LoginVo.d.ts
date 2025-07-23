@@ -5,7 +5,7 @@ declare namespace LoginVo {
   /**
    * @desc 登录
    */
-  type LoginOp = {
+  type LoginOption = {
     userId: string
     username: string
     avatar: string
