@@ -89,8 +89,6 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
     const token = JwtUtils.getTokenFromCookie(event)
     if (!token) {
       logger.warn(`${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`)
-      // 重定向到 /welcome 页面
-      // sendRedirect(event, '/welcome')
       return createError({
         statusCode: 401,
         statusMessage: '未提供认证Token'
@@ -103,7 +101,6 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
      */
     if (JwtUtils.checkTokenExpired(token)) {
       logger.warn(`token已过期: ${method} ${pathname} - IP: ${clientIP}`)
-      // sendRedirect(event, '/welcome')
       return createError({
         statusCode: 401,
         statusMessage: 'token已过期'
@@ -121,5 +118,9 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
       errorMsg = `认证失败: ${error}`
     }
     logger.error(`${errorMsg} - ${method} ${pathname} - IP: ${clientIP}`)
+    return createError({
+      statusCode: 401,
+      statusMessage: errorMsg
+    })
   }
 })

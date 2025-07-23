@@ -65,13 +65,18 @@ export class AnalyseService {
    * @returns {Promise<boolean>}
    */
   public async deleteAnalyse(id: number): Promise<boolean> {
+    const analyseOption = await this.getAnalyse(id)
+    if (analyseOption.chartConfigId) {
+      // 删除图表配置
+      await this.chartConfigService.deleteChartConfig(analyseOption.chartConfigId)
+    }
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    const analyseOption = {
+    const deleteParams = {
       id,
       updatedBy,
       updateTime
     }
-    return this.analyseMapper.deleteAnalyse(analyseOption)
+    return this.analyseMapper.deleteAnalyse(deleteParams)
   }
   /**
    * @desc 获取分析

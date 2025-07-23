@@ -134,4 +134,19 @@ export class ChartConfigService {
     const chartConfigId = await this.chartConfigMapper.createChartConfig(this.vo2Dao(chartConfigDto))
     return chartConfigId
   }
+
+  /**
+   * @desc 删除图表配置
+   * @param id {number} 图表配置id
+   * @returns {Promise<boolean>}
+   */
+  public async deleteChartConfig(id: number): Promise<boolean> {
+    const { updatedBy, updateTime } = await this.getDefaultInfo()
+    const deleteParams = {
+      id,
+      updatedBy,
+      updateTime
+    }
+    return await this.chartConfigMapper.deleteChartConfig(deleteParams)
+  }
 }
