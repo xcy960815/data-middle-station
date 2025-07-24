@@ -13,8 +13,7 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         {
           name: 'viewport',
-          content:
-            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'
+          content: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'
         },
         {
           name: 'description',
@@ -63,32 +62,21 @@ export default defineNuxtConfig({
     serviceDbUser: process.env.SERVICE_DB_USER,
     serviceDbPwd: process.env.SERVICE_DB_PASSWORD,
     serviceDbTimezone: process.env.SERVICE_DB_TIMEZONE,
-    serviceDbStrings: String(
-      process.env.SERVICE_DB_DATE_STRINGS
-    ),
+    serviceDbStrings: String(process.env.SERVICE_DB_DATE_STRINGS),
 
     serviceDataDbName: process.env.SERVICE_DATA_DB_NAME,
     serviceDataDbHost: process.env.SERVICE_DATA_DB_HOST,
-    serviceDataDbPort: String(
-      process.env.SERVICE_DATA_DB_PORT
-    ),
+    serviceDataDbPort: String(process.env.SERVICE_DATA_DB_PORT),
     serviceDataDbUser: process.env.SERVICE_DATA_DB_USER,
     serviceDataDbPwd: process.env.SERVICE_DATA_DB_PASSWORD,
-    serviceDataDbTimezone:
-      process.env.SERVICE_DATA_DB_TIMEZONE,
-    serviceDataDbStrings: String(
-      process.env.SERVICE_DATA_DB_DATE_STRINGS
-    ),
+    serviceDataDbTimezone: process.env.SERVICE_DATA_DB_TIMEZONE,
+    serviceDataDbStrings: String(process.env.SERVICE_DATA_DB_DATE_STRINGS),
 
     serviceRedisBase: process.env.SERVICE_REDIS_BASE,
     serviceRedisHost: process.env.SERVICE_REDIS_HOST,
-    serviceRedisPort: String(
-      process.env.SERVICE_REDIS_PORT
-    ),
-    serviceRedisUsername:
-      process.env.SERVICE_REDIS_USERNAME,
-    serviceRedisPassword:
-      process.env.SERVICE_REDIS_PASSWORD,
+    serviceRedisPort: String(process.env.SERVICE_REDIS_PORT),
+    serviceRedisUsername: process.env.SERVICE_REDIS_USERNAME,
+    serviceRedisPassword: process.env.SERVICE_REDIS_PASSWORD,
     serviceRedisDb: String(process.env.SERVICE_REDIS_DB),
 
     // 日志路径
@@ -101,7 +89,7 @@ export default defineNuxtConfig({
 
     // 公共键（在客户端和服务器端都可用）
     public: {
-      apiBase: '/api',
+      apiBase: process.env.API_BASE,
       appName: process.env.APP_NAME
     }
   }

@@ -3,14 +3,14 @@
  */
 
 export class CustomResponse {
-  static success<T>(data: T): ICustomResponse<T> {
+  static success<T>(data: T): ApiResponse<T> {
     return {
       code: 200,
       data,
       message: 'success'
     }
   }
-  static error<T>(message: string): ICustomResponse<T> {
+  static error<T>(message: string): ApiResponse<T> {
     return {
       code: 500,
       data: null,
