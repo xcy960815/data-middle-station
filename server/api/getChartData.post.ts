@@ -6,7 +6,7 @@ const chartDataService = new ChartDataService()
  * @param {QueryChartDataParams} params
  * @returns {Promise<ResponseModule.Response<ChartDataVo.ChartData>>}
  */
-export default defineEventHandler<Promise<ICustomResponse<ChartDataVo.ChartData>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponse<ChartDataVo.ChartData>>>(async (event) => {
   try {
     const chartDataParams = await readBody<ChartDataDao.RequestParams>(event)
 
