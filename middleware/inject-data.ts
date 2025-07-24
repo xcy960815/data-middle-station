@@ -5,8 +5,6 @@
  * @return {void | Promise<void>}
  */
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  console.log('inject-data')
-
   // TODO 可以在中间键中提前获取chart数据 然后注入到页面的props中
   // const id = to.query.id;
   // if (!id) return

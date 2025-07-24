@@ -4,11 +4,9 @@ const analyseService = new AnalyseService()
 /**
  * @Desc 删除分析
  * @param event
- * @returns {Promise<ICustomResponse<boolean>>}
+ * @returns {Promise<ApiResponse<boolean>>}
  */
-export default defineEventHandler<
-  Promise<ICustomResponse<boolean>>
->(async (event) => {
+export default defineEventHandler<Promise<ApiResponse<boolean>>>(async (event) => {
   try {
     const { id } = await readBody<{ id: number }>(event)
     const analyse = await analyseService.deleteAnalyse(id)

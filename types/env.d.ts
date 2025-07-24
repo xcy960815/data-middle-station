@@ -10,8 +10,7 @@ declare namespace NodeJS {
   /**
    * @desc redis配置
    */
-  type RedisOptions =
-    import('unstorage/drivers/redis').RedisOptions
+  type RedisOptions = import('unstorage/drivers/redis').RedisOptions
 
   /**
    * @desc 数据库配置
@@ -133,6 +132,11 @@ declare namespace NodeJS {
      * 服务redis基础
      */
     SERVICE_REDIS_BASE: REDIS_BASE
+
+    /**
+     * 接口基础路径
+     */
+    API_BASE: string
   }
 
   /**

@@ -27,10 +27,10 @@ export class AbortError extends Error {
 /**
  * 获取中止原因
  */
-const getAbortedReason = (signal: AbortSignal): Error => {
-  const reason = signal.reason ?? 'This operation was aborted'
-  return reason instanceof Error ? reason : new AbortError(reason)
-}
+// const getAbortedReason = (signal: AbortSignal): Error => {
+//   const reason = signal.reason ?? 'This operation was aborted'
+//   return reason instanceof Error ? reason : new AbortError(reason)
+// }
 
 /**
  * Promise 超时包装器
@@ -38,10 +38,7 @@ const getAbortedReason = (signal: AbortSignal): Error => {
  * @param options 配置选项
  * @returns 包装后的 Promise
  */
-export function promiseTimeout<T>(
-  inputPromise: PromiseLike<T>,
-  options: ClearablePromiseOptions
-): Promise<T> {
+export function promiseTimeout<T>(inputPromise: PromiseLike<T>, options: ClearablePromiseOptions): Promise<T> {
   const { milliseconds, message, abortController } = options
 
   if (milliseconds === Number.POSITIVE_INFINITY) {

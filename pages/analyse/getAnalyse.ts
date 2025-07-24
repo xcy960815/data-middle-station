@@ -1,3 +1,4 @@
+import { fetch } from '~/composables/request'
 /**
  * @desc 获取图表配置 handler
  */
@@ -15,12 +16,14 @@ export const getAnalyseHandler = () => {
     const router = useRouter()
     const id = router.currentRoute.value.query.id
     if (!id) return
-    const result = await $fetch('/api/getAnalyse', {
+    const result = await fetch('/api/getAnalyse', {
       method: 'post',
       body: {
         id
       }
     })
+    console.log('result-getAnalyse', result)
+
     if (result.code === 200) {
       const data = result.data!
       const analyseName = data.analyseName
@@ -32,20 +35,13 @@ export const getAnalyseHandler = () => {
       const chartConfigId = data.chartConfigId
       chartStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
-      chartStore.setChartType(
-        (chartConfig?.chartType as AnalyseStore.ChartType) ||
-          'table'
-      )
+      chartStore.setChartType((chartConfig?.chartType as AnalyseStore.ChartType) || 'table')
       columnStore.setColumns(chartConfig?.column || [])
-      dimensionStore.setDimensions(
-        chartConfig?.dimension || []
-      )
+      dimensionStore.setDimensions(chartConfig?.dimension || [])
       filterStore.setFilters(chartConfig?.filter || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])
-      columnStore.setDataSource(
-        chartConfig?.dataSource || ''
-      )
+      columnStore.setDataSource(chartConfig?.dataSource || '')
       filterStore.setFilters(chartConfig?.filter || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])

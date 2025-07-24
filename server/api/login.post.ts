@@ -10,7 +10,7 @@ const PASSWORD = '123456'
 /**
  * 登录API
  */
-export default defineEventHandler<Promise<ICustomResponse<LoginVo.LoginOption>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponse<LoginVo.LoginOption>>>(async (event) => {
   try {
     // 获取请求体数据
     const body = await readBody<LoginDto.LoginOption>(event)
