@@ -1,4 +1,6 @@
 import { fetch } from '~/composables/request'
+console.log('getAnalyseHandler', fetch)
+
 /**
  * @desc 获取图表配置 handler
  */
