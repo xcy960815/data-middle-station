@@ -43,6 +43,16 @@ export default defineNuxtConfig({
       autoprefixer: {}
     }
   },
+  // 添加对Less的支持
+  vite: {
+    css: {
+      preprocessorOptions: {
+        less: {
+          javascriptEnabled: true
+        }
+      }
+    }
+  },
   nitro: {
     esbuild: {
       options: {

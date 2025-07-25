@@ -3,11 +3,7 @@
     <template #header>
       <custom-header>
         <template #header-right>
-          <el-tooltip
-            effect="dark"
-            content="创建分析"
-            placement="bottom"
-          >
+          <el-tooltip effect="dark" content="创建分析" placement="bottom">
             <icon-park
               type="newlybuild"
               size="30"
@@ -20,10 +16,7 @@
       </custom-header>
     </template>
     <template #content>
-      <div
-        class="homepage-container relative"
-        ref="container"
-      >
+      <div class="homepage-container relative" ref="container">
         <chart-card
           ref="cards"
           class="card-chart"
@@ -41,11 +34,7 @@
         </chart-card>
       </div>
       <!-- 创建&编辑分析 -->
-      <el-dialog
-        v-model="addOrEditAnalyseDialogVisible"
-        title="创建分析"
-        width="30%"
-      >
+      <el-dialog v-model="addOrEditAnalyseDialogVisible" title="创建分析" width="30%">
         <el-form
           :model="addOrEditAnalyseFormData"
           ref="addOrEditAnalyseFormRef"
@@ -53,41 +42,46 @@
           :rules="addOrEditAnalyseFormRules"
         >
           <el-form-item label="分析名称" prop="analyseName">
-            <el-input
-              v-model="addOrEditAnalyseFormData.analyseName"
-            />
+            <el-input v-model="addOrEditAnalyseFormData.analyseName" />
           </el-form-item>
           <el-form-item label="分析描述" prop="analyseDesc">
-            <el-input
-              v-model="addOrEditAnalyseFormData.analyseDesc"
-            />
+            <el-input v-model="addOrEditAnalyseFormData.analyseDesc" />
           </el-form-item>
         </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="addOrEditAnalyseDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="handleSaveAnalyse">确定</el-button>
+          </span>
+        </template>
       </el-dialog>
     </template>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
+import { fetch } from '~/composables/request'
 import { IconPark } from '@icon-park/vue-next/es/all'
-import {
-  ElMessageBox,
-  ElMessage,
-  type FormInstance,
-  type FormRules
-} from 'element-plus'
+import { ElMessageBox, ElMessage, type FormInstance, type FormRules } from 'element-plus'
 const layoutName = 'homepage'
 import ChartCard from './components/chart-card.vue'
 
 const homePageStore = useHomepageStore()
-
+/**
+ * @desc 创建&编辑分析表单
+ */
 const addOrEditAnalyseFormRef = ref<FormInstance>()
 const addOrEditAnalyseDialogVisible = ref(false)
+/**
+ * @desc 创建&编辑分析表单数据
+ */
 const addOrEditAnalyseFormData = reactive({
   analyseName: '',
   analyseDesc: ''
 })
-
+/**
+ * @desc 创建&编辑分析表单验证规则
+ */
 const addOrEditAnalyseFormRules: FormRules = {
   analyseName: [
     {
@@ -116,7 +110,7 @@ const container = ref<HTMLDivElement>()
  * @description 获取所有的分析
  */
 const getAnalyses = async () => {
-  const res = await $fetch('/api/getAnalyses', {
+  const res = await fetch('/api/getAnalyses', {
     method: 'POST'
   })
   if (res.code === 200) {
@@ -144,19 +138,12 @@ const getAnalyses = async () => {
 /**
  * @desc 删除分析
  */
-const handleDeleteAnalyse = (
-  id: number,
-  analyseName: string
-) => {
-  ElMessageBox.confirm(
-    `确定删除【${analyseName}】吗？`,
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    }
-  ).then(async () => {
-    const res = await $fetch('/api/deleteAnalyse', {
+const handleDeleteAnalyse = (id: number, analyseName: string) => {
+  ElMessageBox.confirm(`确定删除【${analyseName}】吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  }).then(async () => {
+    const res = await fetch('/api/deleteAnalyse', {
       method: 'DELETE',
       body: {
         id
@@ -175,10 +162,38 @@ const handleDeleteAnalyse = (
  * @desc 创建分析
  */
 const handleCreateAnalyse = () => {
-  console.log('创建分析')
   addOrEditAnalyseDialogVisible.value = true
   nextTick(() => {
     addOrEditAnalyseFormRef.value?.resetFields()
+  })
+}
+
+/**
+ * @desc 保存分析
+ */
+const handleSaveAnalyse = async () => {
+  if (!addOrEditAnalyseFormRef.value) return
+  await addOrEditAnalyseFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const res = await fetch('/api/createAnalyse', {
+          method: 'POST',
+          body: {
+            analyseName: addOrEditAnalyseFormData.analyseName,
+            analyseDesc: addOrEditAnalyseFormData.analyseDesc
+          }
+        })
+        if (res.code === 200) {
+          ElMessage.success('创建成功')
+          addOrEditAnalyseDialogVisible.value = false
+          getAnalyses()
+        } else {
+          ElMessage.error(res.message || '创建失败')
+        }
+      } catch (error) {
+        ElMessage.error('创建失败')
+      }
+    }
   })
 }
 

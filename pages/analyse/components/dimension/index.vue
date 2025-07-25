@@ -1,12 +1,6 @@
 <template>
-  <div
-    class="dimension relative h-full flex flex-col"
-    @dragover="dragoverHandler"
-    @drop="dropHandler"
-  >
-    <div
-      class="dimension__header flex items-center justify-between"
-    >
+  <div class="dimension relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
+    <div class="dimension__header flex items-center justify-between">
       <span class="dimension__title">值</span>
       <icon-park
         class="cursor-pointer"
@@ -38,13 +32,12 @@
         ></selecter-dimension>
       </div>
     </div>
-    <!-- v-contextmenu:contextmenu -->
     <!-- 字段的操作选项 -->
-    <!-- <context-menu ref="contextmenu">
-        <context-menu-item @click="handleCreateComputedField">
-          创建计算字段
-        </context-menu-item>
-      </context-menu> -->
+    <client-only>
+      <context-menu v-contextmenu:contextmenu ref="contextmenu">
+        <context-menu-item @click="handleCreateComputedField"> 创建计算字段 </context-menu-item>
+      </context-menu>
+    </client-only>
     <!-- <client-only>
         <el-dialog
           v-model="createComputedFieldVisible"
@@ -70,6 +63,7 @@
 import { clearAllHandler } from '../clearAll'
 import SelecterDimension from '@/components/selecter/dimension/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
+import ContextMenuItem from '@/components/context-menu/Item.vue'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 // 初始化数据
@@ -88,11 +82,9 @@ const dimensions = computed(() => {
 /**
  * @desc groupList
  */
-const groupList = computed<GroupStore.GroupState['groups']>(
-  () => {
-    return groupStore.getGroups
-  }
-)
+const groupList = computed<GroupStore.GroupState['groups']>(() => {
+  return groupStore.getGroups
+})
 
 const createComputedFieldVisible = ref<boolean>(false)
 
@@ -100,14 +92,8 @@ const createComputedFieldVisible = ref<boolean>(false)
  * @desc addDimension
  * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
  */
-const addDimension = (
-  dimension:
-    | DimensionStore.DimensionOption
-    | Array<DimensionStore.DimensionOption>
-) => {
-  dimension = Array.isArray(dimension)
-    ? dimension
-    : [dimension]
+const addDimension = (dimension: DimensionStore.DimensionOption | Array<DimensionStore.DimensionOption>) => {
+  dimension = Array.isArray(dimension) ? dimension : [dimension]
   dimensionStore.addDimensions(dimension)
 }
 
@@ -115,11 +101,7 @@ const addDimension = (
  * @desc addGroup
  * @param {GroupStore.GroupOption|Array<GroupStore.GroupOption>} groups
  */
-const addGroup = (
-  group:
-    | GroupStore.GroupOption
-    | Array<GroupStore.GroupOption>
-) => {
+const addGroup = (group: GroupStore.GroupOption | Array<GroupStore.GroupOption>) => {
   group = Array.isArray(group) ? group : [group]
   groupStore.addGroups(group)
 }
@@ -130,22 +112,12 @@ const addGroup = (
  * @param {DragEvent} dragEvent
  * @returns {number}
  */
-const getTargetIndex = (
-  index: number,
-  dragEvent: DragEvent
-): number => {
+const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
   const dropY = dragEvent.clientY // 落点Y
   let ys = [].slice
-    .call(
-      document.querySelectorAll(
-        '.dimension__content > [data-action="drag"]'
-      )
-    )
+    .call(document.querySelectorAll('.dimension__content > [data-action="drag"]'))
     .map(
-      (element: HTMLDivElement) =>
-        (element.getBoundingClientRect().top +
-          element.getBoundingClientRect().bottom) /
-        2
+      (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
     )
   ys.splice(index, 1)
   let targetIndex = ys.findIndex((e) => dropY < e)
@@ -161,10 +133,7 @@ const getTargetIndex = (
  * @param {DragEvent} dragEvent
  * @returns {void}
  */
-const dragstartHandler = (
-  index: number,
-  dragEvent: DragEvent
-) => {
+const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
@@ -181,10 +150,7 @@ const dragstartHandler = (
  * @param {DragEvent} dragEvent
  * @returns {void}
  */
-const dragHandler = (
-  index: number,
-  dragEvent: DragEvent
-) => {
+const dragHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
 
@@ -205,25 +171,17 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   // get drag data
-  const data: DragData<
-    | DimensionStore.DimensionOption
-    | ColumnStore.ColumnOption
-  > = JSON.parse(
+  const data: DragData<DimensionStore.DimensionOption | ColumnStore.ColumnOption> = JSON.parse(
     dragEvent.dataTransfer?.getData('text') || '{}'
   )
-  const dimension =
-    data.value as DimensionStore.DimensionOption
-  const isSelected = dimensionStore.getDimensions.find(
-    (item) => item.columnName === dimension.columnName
-  )
+  const dimension = data.value as DimensionStore.DimensionOption
+  const isSelected = dimensionStore.getDimensions.find((item) => item.columnName === dimension.columnName)
   if (isSelected) {
     // 提示用户已经选中了
     return
   }
   // 判断是否跟groupList中的字段相同
-  const isGroup = groupList.value.find(
-    (item) => item.columnName === dimension.columnName
-  )
+  const isGroup = groupList.value.find((item) => item.columnName === dimension.columnName)
   if (isGroup) {
     return
   }
@@ -233,14 +191,9 @@ const dropHandler = (dragEvent: DragEvent) => {
   switch (data.from) {
     case 'dimension':
       // 移动位置
-      const targetIndex = getTargetIndex(
-        data.index,
-        dragEvent
-      )
+      const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
-      const dimensions = JSON.parse(
-        JSON.stringify(dimensionStore.dimensions)
-      )
+      const dimensions = JSON.parse(JSON.stringify(dimensionStore.dimensions))
       const target = dimensions.splice(data.index, 1)[0]
       dimensions.splice(targetIndex, 0, target)
       dimensionStore.setDimensions(dimensions)
@@ -266,9 +219,7 @@ const handleCreateComputedField = () => {
  * @desc 右键点击事件
  * @param {DimensionStore.DimensionOption} dimension
  */
-const contextmenuHandler = (
-  dimension: DimensionStore.DimensionOption
-) => {
+const contextmenuHandler = (dimension: DimensionStore.DimensionOption) => {
   console.log('dimension', dimension)
 }
 </script>

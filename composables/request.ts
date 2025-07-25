@@ -1,22 +1,24 @@
-const {
-  public: { apiBase }
-} = useRuntimeConfig()
-console.log('apiBase', apiBase)
+import { ElMessage } from 'element-plus'
 
 export const fetch = $fetch.create({
-  baseURL: apiBase,
   // 请求拦截器
   onRequest({ options }) {
-    console.log('onRequest', options)
+    // const {
+    //   public: { apiBase }
+    // } = useRuntimeConfig()
+    // options.baseURL = apiBase
   },
   // 响应拦截
   onResponse({ response }) {
-    console.log('onResponse', response)
     return response._data
   },
   // 错误处理
   onResponseError({ response }) {
-    console.log('onResponseError', response)
+    const _data = response._data
+    if (_data.statusCode === RequestCodeEnum.Unauthorized) {
+      ElMessage.error(_data.statusMessage)
+      navigateTo('/welcome')
+    }
   }
 })
 

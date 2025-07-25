@@ -7,11 +7,9 @@
       <h1>错误页面</h1>
       <h2>{{ error.message }}</h2>
       <ul class="error-list">
-        <li class="error-item">
-          您要查找的页面可能已被删除、名称已更改或暂时不可用。
-        </li>
+        <li class="error-item">您要查找的页面可能已被删除、名称已更改或暂时不可用。</li>
         <li class="error-item">请返回上一页或首页</li>
-        <li class="error-item">祝您好运。</li>
+        <li class="error-item">Good Luck!</li>
       </ul>
     </div>
   </div>
@@ -50,6 +48,7 @@ onMounted(() => {
   height: 100%;
   position: relative;
   overflow: hidden;
+
   .noise {
     height: 100%;
     pointer-events: none;
@@ -60,25 +59,23 @@ onMounted(() => {
     opacity: 0.02;
     z-index: 1;
   }
+
   @keyframes scan {
     0% {
       transform: translateY(-100%);
     }
+
     100% {
       transform: translateY(100%);
     }
   }
+
   .overlay {
     height: 100%;
     pointer-events: none;
     position: absolute;
     width: 100%;
-    background: repeating-linear-gradient(
-      180deg,
-      transparent,
-      rgba(0, 0, 0, 0.3) 50%,
-      transparent
-    );
+    background: repeating-linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.3) 50%, transparent);
     background-size: auto;
     background-size: auto 4px;
     z-index: 2;
@@ -103,6 +100,7 @@ onMounted(() => {
     position: absolute;
     width: 100%;
   }
+
   .terminal {
     background-color: rgb(7, 7, 9);
     font-size: 1.5rem;
@@ -120,11 +118,14 @@ onMounted(() => {
       0 0 1px rgba(51, 255, 51, 0.4),
       0 0 2px hsla(0, 0%, 100%, 0.8);
   }
+
   .error-list {
     margin-top: 2rem;
+
     .error-item {
       margin-bottom: 1rem;
     }
+
     .error-item::before {
       content: '>';
       margin-right: 0.5rem;
