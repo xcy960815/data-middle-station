@@ -1,10 +1,3 @@
-// import { useAnalyseStore } from '@/stores/analyse/chart'
-// import { useDimensionStore } from '@/stores/analyse/dimension'
-// import { useGroupStore } from '@/stores/analyse/group'
-// import { useColumnStore } from '@/stores/analyse/column'
-// import { useFilterStore } from '@/stores/analyse/filter'
-// import { useOrderStore } from '@/stores/analyse/order'
-// import { useChartConfigStore } from '@/stores/analyse/chart-config'
 import { computed } from 'vue'
 import dayjs from 'dayjs'
 
@@ -32,7 +25,7 @@ export const getChartDataHandler = () => {
       table: '表格',
       interval: '柱状图',
       line: '折线图',
-      pie: '饼图',
+      pie: '饼图'
     }
     switch (chartType) {
       case 'table':
@@ -65,13 +58,11 @@ export const getChartDataHandler = () => {
     return {
       dataSource: columnStore.getDataSource,
       // 这样做可以避免条件没有选完就进行查询的情况 good
-      filters: filterStore.getFilters.filter(
-        item => item.aggregationType && (item.filterType || item.filterValue)
-      ),
-      orders: orderStore.getOrders.filter(item => item.aggregationType && item.orderType),
+      filters: filterStore.getFilters.filter((item) => item.aggregationType && (item.filterType || item.filterValue)),
+      orders: orderStore.getOrders.filter((item) => item.aggregationType && item.orderType),
       groups: groupStore.getGroups,
       dimensions: dimensionStore.getDimensions,
-      limit: chartConfigStore.getCommonChartConfig.limit,
+      limit: chartConfigStore.getCommonChartConfig.limit
     }
   })
   /**
@@ -100,8 +91,8 @@ export const getChartDataHandler = () => {
       method: 'POST',
       // 请求参数
       body: {
-        ...queryChartDataParams.value,
-      },
+        ...queryChartDataParams.value
+      }
     })
     const endTime = dayjs().valueOf()
     if (result.code === 200) {
@@ -120,9 +111,7 @@ export const getChartDataHandler = () => {
     const seconds = Math.floor(duration / 1000)
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
-    chartStore.setChartUpdateTakesTime(
-      minutes > 0 ? `${minutes}分${remainingSeconds}秒` : `${remainingSeconds}秒`
-    )
+    chartStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${remainingSeconds}秒` : `${remainingSeconds}秒`)
   }
 
   /**
@@ -135,11 +124,11 @@ export const getChartDataHandler = () => {
     },
     {
       deep: true,
-      immediate: true,
+      immediate: true
     }
   )
   return {
     queryChartDataParams,
-    queryChartData,
+    queryChartData
   }
 }

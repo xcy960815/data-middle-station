@@ -1,4 +1,5 @@
 import type { H3Event, EventHandlerRequest } from 'h3'
+import { RequestCodeEnum } from '~/utils/request-enmu'
 import pkg from 'jsonwebtoken'
 const { TokenExpiredError, JsonWebTokenError } = pkg
 // 创建认证中间件专用的日志实例
@@ -90,8 +91,10 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
       logger.warn(`${'未提供认证Token'}: ${method} ${pathname} - IP: ${clientIP}`)
       // 返回401错误而不是重定向
       return createError({
-        statusCode: 401,
-        message: '未提供认证Token'
+        statusCode: RequestCodeEnum.Unauthorized,
+        message: '未提供认证Token',
+        statusText: '未提供认证Token',
+        statusMessage: 'Unauthorized'
       })
     }
     // 验证token
@@ -103,8 +106,10 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
       logger.warn(`token已过期: ${method} ${pathname} - IP: ${clientIP}`)
       // 返回401错误而不是重定向
       return createError({
-        statusCode: 401,
-        message: 'token已过期'
+        statusCode: RequestCodeEnum.Unauthorized,
+        message: 'token已过期',
+        statusMessage: 'Unauthorized',
+        statusText: 'token已过期'
       })
     }
     // 记录成功的认证日志
@@ -120,8 +125,10 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
     }
     logger.error(`${errorMsg} - ${method} ${pathname} - IP: ${clientIP}`)
     return createError({
-      statusCode: 401,
-      statusMessage: errorMsg
+      statusCode: RequestCodeEnum.Unauthorized,
+      message: errorMsg,
+      statusMessage: errorMsg,
+      statusText: errorMsg
     })
   }
 })

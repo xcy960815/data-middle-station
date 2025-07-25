@@ -1,7 +1,7 @@
 /* Path: assets/style/main.css */
 /* 引入element-plus css样式 */
 @import 'element-plus/dist/index.css';
-/* @import '../../components/context-menu/themes/default/index.less'; */
+@import '../../components/context-menu/themes/default/index.less';
 /* @import "../iconfont//iconfont.css"; */
 /* 加载 tailwind 样式 */
 @tailwind base;
@@ -16,11 +16,8 @@ body {
   height: 100%;
   width: 100%;
 }
+
 #__nuxt {
   height: 100%;
   width: 100%;
 }
-
-
-
-
