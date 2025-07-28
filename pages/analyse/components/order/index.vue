@@ -1,25 +1,13 @@
 <template>
-  <div
-    class="order relative h-full flex flex-col"
-    @dragover="dragoverHandler"
-    @drop="dropHandler"
-  >
-    <div
-      class="order__header flex items-center justify-between"
-    >
+  <div class="order relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
+    <div class="order__header flex items-center justify-between px-1">
       <span class="order__title">排序</span>
-      <icon-park
-        v-if="hasClearAll('order')"
-        type="clear"
-        size="12"
-        fill="#333"
-        @click="clearAll('order')"
-      />
+      <icon-park v-if="hasClearAll('order')" type="clear" size="12" fill="#333" @click="clearAll('order')" />
     </div>
     <div class="order__content flex-auto">
       <div
         data-action="drag"
-        class="order__item"
+        class="order__item my-1"
         v-for="(item, index) in orderList"
         :key="index"
         draggable="true"
@@ -49,21 +37,15 @@ const orderStore = useOrderStore()
 /**
  * @desc orderList
  */
-const orderList = computed<OrderStore.OrderState['orders']>(
-  () => {
-    return orderStore.getOrders
-  }
-)
+const orderList = computed<OrderStore.OrderState['orders']>(() => {
+  return orderStore.getOrders
+})
 
 /**
  * @desc addOrder
  * @param {OrderStore.OrderOption|Array<OrderStore.OrderOption>} orders
  */
-const addOrder = (
-  order:
-    | OrderStore.OrderOption
-    | Array<OrderStore.OrderOption>
-) => {
+const addOrder = (order: OrderStore.OrderOption | Array<OrderStore.OrderOption>) => {
   order = Array.isArray(order) ? order : [order]
   orderStore.addOrders(order)
 }
@@ -73,22 +55,12 @@ const addOrder = (
  * @param {DragEvent} dragEvent
  * @returns {number}
  */
-const getTargetIndex = (
-  index: number,
-  dragEvent: DragEvent
-): number => {
+const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
   const dropY = dragEvent.clientY // 落点Y
   let ys = [].slice
-    .call(
-      document.querySelectorAll(
-        '.sort__content > [data-action="drag"]'
-      )
-    )
+    .call(document.querySelectorAll('.sort__content > [data-action="drag"]'))
     .map(
-      (element: HTMLDivElement) =>
-        (element.getBoundingClientRect().top +
-          element.getBoundingClientRect().bottom) /
-        2
+      (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
     )
   ys.splice(index, 1)
   let targetIndex = ys.findIndex((e) => dropY < e)
@@ -104,10 +76,7 @@ const getTargetIndex = (
  * @param {DragEvent} dragEvent
  * @returns {void}
  */
-const dragstartHandler = (
-  index: number,
-  dragEvent: DragEvent
-) => {
+const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
@@ -123,10 +92,7 @@ const dragstartHandler = (
  * @param {DragEvent} dragEvent
  * @returns {void}
  */
-const dragHandler = (
-  index: number,
-  dragEvent: DragEvent
-) => {
+const dragHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
 /**
@@ -145,9 +111,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<OrderStore.OrderOption> = JSON.parse(
-    dragEvent.dataTransfer?.getData('text') || '{}'
-  )
+  const data: DragData<OrderStore.OrderOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const order: OrderStore.OrderOption = {
     ...data.value,
     // 默认降序
@@ -156,14 +120,9 @@ const dropHandler = (dragEvent: DragEvent) => {
   switch (data.from) {
     case 'order': {
       // 调整顺序
-      const targetIndex = getTargetIndex(
-        data.index,
-        dragEvent
-      )
+      const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
-      const orders = JSON.parse(
-        JSON.stringify(orderStore.orders)
-      )
+      const orders = JSON.parse(JSON.stringify(orderStore.orders))
       const target = orders.splice(data.index, 1)[0]
       orders.splice(targetIndex, 0, target)
       orderStore.setOrders(orders)
