@@ -1,6 +1,6 @@
 <template>
   <div class="dimension relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
-    <div class="dimension__header flex items-center justify-between">
+    <div class="dimension__header flex items-center justify-between px-1">
       <span class="dimension__title">值</span>
       <icon-park
         class="cursor-pointer"
@@ -33,11 +33,11 @@
       </div>
     </div>
     <!-- 字段的操作选项 -->
-    <client-only>
+    <!-- <client-only>
       <context-menu v-contextmenu:contextmenu ref="contextmenu">
         <context-menu-item @click="handleCreateComputedField"> 创建计算字段 </context-menu-item>
       </context-menu>
-    </client-only>
+    </client-only> -->
     <!-- <client-only>
         <el-dialog
           v-model="createComputedFieldVisible"

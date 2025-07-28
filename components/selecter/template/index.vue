@@ -10,31 +10,14 @@
       width="100px"
     >
       <template #reference>
-        <div
-          class="chart-selecter-container"
-          :class="invalidClass"
-        >
-          <span class="chart-selecter-name mr-1">{{
-            displayName
-          }}</span>
-          <slot
-            class="chart-selecter-order-icon"
-            name="order-icon"
-          ></slot>
-          <el-tooltip
-            class="box-item"
-            effect="dark"
-            :content="invalidContent"
-            placement="top"
-            v-if="hasInvalidIcon()"
-          >
-            <icon-park
-              class="chart-selecterinvalid-icon"
-              type="caution"
-              size="14"
-              fill="#333"
-            />
+        <div class="chart-selecter-container px-1" :class="invalidClass">
+          <span class="chart-selecter-name mr-1">{{ displayName }}</span>
+          <slot class="chart-selecter-order-icon" name="order-icon"></slot>
+          <!-- 无效排序图标 -->
+          <el-tooltip class="box-item" effect="dark" :content="invalidContent" placement="top" v-if="hasInvalidIcon()">
+            <icon-park class="chart-selecterinvalid-icon" type="caution" size="14" fill="#333" />
           </el-tooltip>
+          <!-- 删除图标 -->
           <icon-park
             class="chart-selecter-delete"
             type="DeleteTwo"
@@ -67,9 +50,7 @@ const props = defineProps({
   },
   // 通用参数
   cast: {
-    type: String as PropType<
-      'dimension' | 'group' | 'order' | 'filter'
-    >,
+    type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
     default: ''
   },
   // 通用参数
@@ -167,7 +148,6 @@ onMounted(() => {
 <style lang="scss" scoped>
 .chart-selecter-container {
   position: relative;
-  padding: 0 5px 0 5px;
   height: 26px;
   box-sizing: border-box;
   border: 1px solid #ddd;

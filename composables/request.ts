@@ -16,7 +16,7 @@ export const fetch = $fetch.create({
   onResponseError({ response }) {
     const _data = response._data
     if (_data.statusCode === RequestCodeEnum.Unauthorized) {
-      ElMessage.error(_data.statusMessage)
+      ElMessage.error(_data.message)
       navigateTo('/welcome')
     }
   }
