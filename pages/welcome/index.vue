@@ -255,14 +255,14 @@ const navigateToHome = async () => {
   const loginResult = await $fetch('/api/login', {
     method: 'POST',
     body: {
-      username: 'admin',
+      userName: 'admin',
       password: '123456'
     }
   })
   // 根据你的 API 返回结构处理
   if (loginResult.code === RequestCodeEnum.Success) {
-    const { username, avatar, userId } = loginResult.data as LoginVo.LoginOption
-    userStore.setName(username)
+    const { userName, avatar, userId } = loginResult.data as LoginVo.LoginOption
+    userStore.setName(userName)
     userStore.setAvatar(avatar)
     userStore.setUserId(userId)
     // userStore.

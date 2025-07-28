@@ -54,7 +54,7 @@ export default defineNitroPlugin(async (nitroApp) => {
     base: serviceRedisBase,
     host: serviceRedisHost,
     port: Number(serviceRedisPort),
-    username: serviceRedisUsername,
+    userName: serviceRedisUsername,
     password: serviceRedisPassword
   })
   storage.mount(RedisStorage.REDIS_DRIVER, redisDriver)

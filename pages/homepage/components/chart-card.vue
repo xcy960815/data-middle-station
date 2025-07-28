@@ -8,18 +8,18 @@
       <div class="card-title">{{ analyseName }}</div>
       <div class="card-info">
         <div class="info-row">
-          <span class="creator">{{
-            createdBy || '未知'
-          }}</span>
-          <span class="create-time">{{
-            createTime ? createTime.split('T')[0] : ''
-          }}</span>
+          <span class="creator">{{ createdBy || '未知' }}</span>
+          <span class="create-time">{{ createTime ? createTime.split('T')[0] : '' }}</span>
         </div>
       </div>
-      <div
-        class="delete-icon"
-        @click.stop="handleDeleteAnalyse"
-      >
+      <!-- 编辑图标 -->
+      <div class="edit-icon" @click.stop="handleEditAnalyse">
+        <!-- 编辑图标 -->
+        <icon-park type="Edit" size="14" fill="#333" />
+      </div>
+      <!-- 删除图标 -->
+      <div class="delete-icon" @click.stop="handleDeleteAnalyse">
+        <!-- 删除图标 -->
         <icon-park type="DeleteOne" size="14" fill="#333" />
       </div>
     </div>
@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
 const router = useRouter()
-const emit = defineEmits(['delete'])
+const emit = defineEmits(['delete', 'edit'])
 const props = defineProps({
   id: {
     type: Number,
@@ -75,6 +75,12 @@ const handleClickCard = () => {
   })
 }
 /**
+ * @desc 编辑分析
+ */
+const handleEditAnalyse = () => {
+  emit('edit', props.id)
+}
+/**
  * @desc 删除分析
  */
 const handleDeleteAnalyse = () => {
@@ -103,6 +109,11 @@ const handleDeleteAnalyse = () => {
       0 6px 24px 0 rgba(0, 0, 0, 0.13),
       0 2px 8px 0 rgba(0, 0, 0, 0.08);
     cursor: pointer;
+
+    .edit-icon {
+      display: flex;
+    }
+
     .delete-icon {
       display: flex;
     }
@@ -120,6 +131,22 @@ const handleDeleteAnalyse = () => {
     justify-content: space-between;
   }
 
+  .edit-icon {
+    position: absolute;
+    top: 10px;
+    right: 40px;
+    z-index: 10;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    transition: background 0.2s;
+    display: none;
+  }
+
   .delete-icon {
     position: absolute;
     top: 10px;
@@ -134,6 +161,7 @@ const handleDeleteAnalyse = () => {
     height: 28px;
     transition: background 0.2s;
     display: none;
+
     &:hover {
       background: #ffeaea;
     }
@@ -175,9 +203,11 @@ const handleDeleteAnalyse = () => {
       align-items: center;
       line-height: 1.8;
     }
+
     .creator {
       color: #666;
     }
+
     .create-time,
     .update-time {
       color: #999;

@@ -38,9 +38,7 @@
           :prefix-icon="Search"
           style="margin-bottom: 8px; width: 220px"
         />
-        <el-button type="primary" style="margin-left: 8px; margin-bottom: 8px" @click="handleSearch"
-          >搜索</el-button
-        >
+        <el-button type="primary" style="margin-left: 8px; margin-bottom: 8px" @click="handleSearch">搜索</el-button>
       </div>
 
       <el-table
@@ -62,14 +60,14 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Search, Close } from '@element-plus/icons-vue'
+import { Search } from '@element-plus/icons-vue'
 import { useColumnStore } from '~/stores/column'
 import { ElPopover, ElTable, ElTableColumn, ElInput, ElButton, ElMessage } from 'element-plus'
 import { IconPark } from '@icon-park/vue-next/es/all'
 const columnStore = useColumnStore()
 const searchKeyword = ref('')
 const isPopoverVisible = ref(false)
-
+const emit = defineEmits(['dataSource-change'])
 /**
  * @desc 数据源
  * @returns {string}
@@ -78,9 +76,9 @@ const dataSource = computed({
   get: () => {
     return columnStore.getDataSource
   },
-  set: val => {
+  set: (val) => {
     columnStore.setDataSource(val)
-  },
+  }
 })
 
 /**
@@ -102,12 +100,13 @@ const handleSearch = () => {
 const handleSelectTable = (row: ColumnStore.DataSourceOption) => {
   dataSource.value = row.tableName
   isPopoverVisible.value = false
+  emit('dataSource-change', row.tableName)
 }
 
 /**
  * @desc 高亮当前选中行
  */
-const rowClassName = ({ row }: { row: DatabaseVo.TableOptionVo }) => {
+const rowClassName = ({ row }: { row: DatabaseVo.TableOption }) => {
   return row.tableName === dataSource.value ? 'is-selected' : ''
 }
 
@@ -119,8 +118,8 @@ const queryTable = async () => {
   const result = await $fetch('/api/queryTable', {
     method: 'GET',
     params: {
-      tableName: searchKeyword.value,
-    },
+      tableName: searchKeyword.value
+    }
   })
   if (result.code === 200) {
     columnStore.setDataSourceOptions(result.data || [])
@@ -139,7 +138,7 @@ const clearDataSource = () => {
 
 watch(
   () => isPopoverVisible.value,
-  visible => {
+  (visible) => {
     if (visible) {
       queryTable()
     }

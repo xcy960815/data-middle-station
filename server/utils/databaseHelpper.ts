@@ -31,7 +31,7 @@ export function convertToSqlProperties<T extends Record<string, any>>(
   const keys: string[] = []
   const values: (string | number)[] = []
   for (let k in rowData) {
-    if (typeof rowData[k] !== 'undefined') {
+    if (typeof rowData[k] !== 'undefined' && rowData[k] !== null) {
       const value = rowData[k]
       // 将 k 由 驼峰 转为 下划线
       const underlineKey = k.replace(/([A-Z])/g, '_$1').toLowerCase()
@@ -50,7 +50,7 @@ export function convertToSqlProperties<T extends Record<string, any>>(
   }
   return {
     keys,
-    values,
+    values
   }
 }
 
@@ -79,6 +79,6 @@ export function batchFormatSqlKey(keys: string[]) {
 export function batchFormatSqlSet(keys: string[]) {
   return keys
     .map(formatSqlKey)
-    .map(key => `${key} = ?`)
+    .map((key) => `${key} = ?`)
     .join(', ')
 }

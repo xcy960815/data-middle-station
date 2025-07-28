@@ -17,28 +17,32 @@ export default defineEventHandler<Promise<ApiResponse<LoginVo.LoginOption>>>(asy
     /**
      * @desc 判断用户名和密码是否为空
      */
-    if (!body.username || !body.password) {
+    if (!body.userName || !body.password) {
       return CustomResponse.error('用户名和密码不能为空')
     }
     /**
      * @desc 判断用户名和密码是否正确
      */
-    if (body.username === USER_NAME && body.password === PASSWORD) {
+    if (body.userName === USER_NAME && body.password === PASSWORD) {
       /**
        * @desc 生成token
        */
       const token = JwtUtils.generateToken({
         userId: '1',
-        username: body.username
+        userName: body.userName
       })
       /**
-       * @desc 存放到 redis中
+       * @desc 设置用户id
        */
-      RedisStorage.setItem(`username:${body.username}`, token, 60 * 60 * 24 * 7)
+      RedisStorage.setItem(`userId`, '1', 60 * 60 * 24 * 7)
+      /**
+       * @desc 设置username
+       */
+      RedisStorage.setItem(`userName`, body.userName, 60 * 60 * 24 * 7)
       /**
        * @desc 设置token
        */
-      RedisStorage.setItem(`token:${body.username}`, token, 60 * 60 * 24 * 7)
+      RedisStorage.setItem(`token`, token, 60 * 60 * 24 * 7)
       /**
        * @desc 设置cookie
        */
@@ -48,11 +52,11 @@ export default defineEventHandler<Promise<ApiResponse<LoginVo.LoginOption>>>(asy
       })
       return CustomResponse.success({
         userId: '1',
-        username: body.username,
-        avatar: 'https://avatars.githubusercontent.com/u/18083515?v=4'
+        userName: body.userName,
+        avatar: 'https://64.media.tumblr.com/d15e5f21577f659a395d84e49f4d75dc/tumblr_oo4411ye0h1si8vfyo1_1280.gif'
       })
     } else {
-      logger.warn(chalk.yellow(`用户 ${body.username} 登录失败: 用户名或密码错误`))
+      logger.warn(chalk.yellow(`用户 ${body.userName} 登录失败: 用户名或密码错误`))
       return CustomResponse.error('用户名或密码错误')
     }
   } catch (error) {

@@ -62,7 +62,7 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
     if (token) {
       const payload = JwtUtils.verifyToken(token)
       // 记录已认证用户的访问日志
-      logger.info(`用户 ${payload.username} (ID: ${payload.userId}) 访问接口: ${method} ${pathname} - IP: ${clientIP}`)
+      logger.info(`用户 ${payload.userName} (ID: ${payload.userId}) 访问接口: ${method} ${pathname} - IP: ${clientIP}`)
     } else {
       // 没有 token，记录匿名访问
       // logger.info(

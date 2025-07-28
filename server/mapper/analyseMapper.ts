@@ -107,12 +107,12 @@ export class AnalyseMapper extends BaseMapper {
    * @param AnalyseOptionDto {AnalyseDao.AnalyseOption} 图表
    * @returns {Promise<void>}
    */
-  public async updateAnalyse(AnalyseOptionDto: AnalyseDao.AnalyseOption): Promise<boolean> {
-    const { viewCount, createTime, createdBy, updatedBy, ...AnalyseOption } = AnalyseOptionDto
-    const { keys: AnalyseOptionKeys, values: AnalyseOptionValues } = convertToSqlProperties(AnalyseOption)
-    const AnalyseOptionSetClause = AnalyseOptionKeys.map((key) => `${key} = ?`).join(', ')
-    const updateAnalyseSql = `UPDATE ${ANALYSE_TABLE_NAME} SET ${AnalyseOptionSetClause} WHERE id = ? and is_deleted = 0`
-    const analyseResult = await this.exe<ResultSetHeader>(updateAnalyseSql, [...AnalyseOptionValues, AnalyseOption.id])
+  public async updateAnalyse(analyseOptionDao: AnalyseDao.AnalyseOption): Promise<boolean> {
+    const { viewCount, createTime, createdBy, ...analyseOption } = analyseOptionDao
+    const { keys: analyseOptionKeys, values: analyseOptionValues } = convertToSqlProperties(analyseOption)
+    const analyseOptionSetClause = analyseOptionKeys.map((key) => `${key} = ?`).join(', ')
+    const updateAnalyseSql = `UPDATE ${ANALYSE_TABLE_NAME} SET ${analyseOptionSetClause} WHERE id = ? and is_deleted = 0`
+    const analyseResult = await this.exe<ResultSetHeader>(updateAnalyseSql, [...analyseOptionValues, analyseOption.id])
 
     return analyseResult.affectedRows > 0
   }

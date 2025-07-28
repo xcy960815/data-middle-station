@@ -38,13 +38,13 @@ export class AnalyseService {
 
   /**
    * @desc 将vo对象转换为dao对象
-   * @param chart {AnalyseVo.AnalyseOption} 图表
+   * @param analyseOption {AnalyseVo.AnalyseOption}
    * @returns {AnalyseDao.AnalyseOption}
    */
-  private dto2Dao(chart: Omit<AnalyseDto.AnalyseOption, 'chartConfig'>): AnalyseDao.AnalyseOption {
+  private dto2Dao(analyseOption: Omit<AnalyseDto.AnalyseOption, 'chartConfig'>): AnalyseDao.AnalyseOption {
     return {
-      ...chart,
-      isDeleted: 0
+      ...analyseOption,
+      isDeleted: null
     }
   }
 
@@ -53,8 +53,8 @@ export class AnalyseService {
    * @returns {Promise<{createdBy: string, updatedBy: string, createTime: string, updateTime: string}>}
    */
   private async getDefaultInfo() {
-    const createdBy = (await RedisStorage.getItem<string>(`username`)) || 'system'
-    const updatedBy = (await RedisStorage.getItem<string>(`username`)) || 'system'
+    const createdBy = (await RedisStorage.getItem<string>(`userName`)) || 'system'
+    const updatedBy = (await RedisStorage.getItem<string>(`userName`)) || 'system'
     const createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     return { createdBy, updatedBy, createTime, updateTime }
@@ -117,10 +117,10 @@ export class AnalyseService {
    * @param chart {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyse(AnalyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
+  public async updateAnalyse(analyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
     // 解构图表配置，剩余的为图表配置
-    const { chartConfig, ...AnalyseOption } = AnalyseOptionDto
-    let chartConfigId = AnalyseOption.chartConfigId
+    const { chartConfig, ...analyseOption } = analyseOptionDto
+    let chartConfigId = analyseOption.chartConfigId
     if (chartConfig) {
       if (!chartConfigId) {
         // 如果图表配置不存在，则创建默认图表配置
@@ -132,17 +132,17 @@ export class AnalyseService {
     }
     // 更新图表
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    AnalyseOption.updateTime = updateTime
-    AnalyseOption.updatedBy = updatedBy
-    AnalyseOption.chartConfigId = chartConfigId
-    const updateAnalyseResult = await this.analyseMapper.updateAnalyse(this.dto2Dao(AnalyseOption))
+    analyseOption.updateTime = updateTime
+    analyseOption.updatedBy = updatedBy
+    analyseOption.chartConfigId = chartConfigId
+    const updateAnalyseResult = await this.analyseMapper.updateAnalyse(this.dto2Dao(analyseOption))
 
     return updateAnalyseResult
   }
 
   /**
    * @desc 创建图表
-   * @param chart {AnalyseDto.AnalyseOption} 图表
+   * @param analyseOptionDto {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
   public async createAnalyse(analyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {

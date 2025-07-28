@@ -7,7 +7,7 @@ declare namespace LoginVo {
    */
   type LoginOption = {
     userId: string
-    username: string
+    userName: string
     avatar: string
   }
 }

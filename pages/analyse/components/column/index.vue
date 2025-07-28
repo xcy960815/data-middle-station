@@ -1,11 +1,7 @@
 <template>
-  <div
-    class="column"
-    @dragover="dragoverHandler"
-    @drop="dropHandler"
-  >
+  <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
     <!-- 数据源 -->
-    <DataSourceSelecter />
+    <DataSourceSelecter @dataSource-change="queryTableColumn" />
     <div class="column__title py-2">维度</div>
     <div class="column__content">
       <div
@@ -26,10 +22,9 @@
           size="14"
           fill="#333"
         ></icon-park>
-        <span
-          class="column__item__name text-ellipsis text-nowrap overflow-hidden"
-          >{{ columnDisplayNames(column) }}</span
-        >
+        <span class="column__item__name text-ellipsis text-nowrap overflow-hidden">{{
+          columnDisplayNames(column)
+        }}</span>
       </div>
     </div>
     <!-- v-contextmenu:contextmenu -->
@@ -104,12 +99,8 @@ const DATE_ICON_NAME = 'calendar-thirty'
 // 字符串图标
 const STRING_ICON_NAME = 'text'
 
-const columnDisplayNames = (
-  column: ColumnStore.ColumnOption
-) => {
-  return (
-    column.alias || column.displayName || column.columnName
-  )
+const columnDisplayNames = (column: ColumnStore.ColumnOption) => {
+  return column.alias || column.displayName || column.columnName
 }
 
 /**
@@ -117,44 +108,37 @@ const columnDisplayNames = (
  * @param column {ColumnStore.ColumnOption} 列选项
  * @returns {string} 类名
  */
-const columnClasses = computed(
-  () => (column: ColumnStore.ColumnOption) => {
-    const dimensionChoosed =
-      useDimensionStore().getDimensions.find(
-        (dimensionOption: DimensionStore.DimensionOption) =>
-          dimensionOption.columnName === column.columnName
-      )
-    const groupChoosed = useGroupStore().getGroups.find(
-      (groupOption: GroupStore.GroupOption) =>
-        groupOption.columnName === column.columnName
-    )
-    return {
-      column__item: true, // 默认类名
-      column__item_dimension_choosed: dimensionChoosed, // 维度选中
-      column__item_group_choosed: groupChoosed // 分组选中
-    }
+const columnClasses = computed(() => (column: ColumnStore.ColumnOption) => {
+  const dimensionChoosed = useDimensionStore().getDimensions.find(
+    (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
+  )
+  const groupChoosed = useGroupStore().getGroups.find(
+    (groupOption: GroupStore.GroupOption) => groupOption.columnName === column.columnName
+  )
+  return {
+    column__item: true, // 默认类名
+    column__item_dimension_choosed: dimensionChoosed, // 维度选中
+    column__item_group_choosed: groupChoosed // 分组选中
   }
-)
+})
 
 /**
  * @desc 根据列类型返回对应的图标名称
  * @param column {ColumnStore.ColumnOption} 列选项
  * @returns {string} 图标名称
  */
-const columnIconName = computed(
-  () => (column: ColumnStore.ColumnOption) => {
-    const { columnType } = column
-    if (columnType === 'number') {
-      return NUMBER_ICON_NAME
-    } else if (columnType === 'date') {
-      return DATE_ICON_NAME
-    } else if (columnType === 'string') {
-      return STRING_ICON_NAME
-    } else {
-      return ''
-    }
+const columnIconName = computed(() => (column: ColumnStore.ColumnOption) => {
+  const { columnType } = column
+  if (columnType === 'number') {
+    return NUMBER_ICON_NAME
+  } else if (columnType === 'date') {
+    return DATE_ICON_NAME
+  } else if (columnType === 'string') {
+    return STRING_ICON_NAME
+  } else {
+    return ''
   }
-)
+})
 
 const columnStore = useColumnStore()
 const chartStore = useAnalyseStore()
@@ -182,11 +166,7 @@ const currentColumn = ref<ColumnStore.ColumnOption>()
  * @param index {number} 列索引
  * @param event {DragEvent} 拖拽事件
  */
-const dragstartHandler = (
-  column: ColumnStore.ColumnOption,
-  index: number,
-  event: DragEvent
-) => {
+const dragstartHandler = (column: ColumnStore.ColumnOption, index: number, event: DragEvent) => {
   if (!event.dataTransfer) return
   event.dataTransfer.setData(
     'text/plain',
@@ -200,9 +180,7 @@ const dragstartHandler = (
   // 克隆.flex.items-center父级容器，保证拖影和原节点样式完全一致
   const target = event.target as HTMLElement
   if (target) {
-    const parent = target.closest(
-      '.flex.items-center'
-    ) as HTMLElement
+    const parent = target.closest('.flex.items-center') as HTMLElement
     if (parent) {
       const dragNode = parent.cloneNode(true) as HTMLElement
       // 复制所有 data-v-xxx 属性
@@ -224,22 +202,14 @@ const dragstartHandler = (
       const computedStyle = window.getComputedStyle(parent)
       dragNode.style.padding = computedStyle.padding
       dragNode.style.boxSizing = computedStyle.boxSizing
-      dragNode.style.borderRadius =
-        computedStyle.borderRadius
+      dragNode.style.borderRadius = computedStyle.borderRadius
       dragNode.style.boxShadow = computedStyle.boxShadow
       dragNode.style.height = computedStyle.height
       dragNode.style.lineHeight = computedStyle.lineHeight
       dragNode.style.fontSize = computedStyle.fontSize
       document.body.appendChild(dragNode)
-      event.dataTransfer.setDragImage(
-        dragNode,
-        dragNode.offsetWidth / 2,
-        dragNode.offsetHeight / 2
-      )
-      setTimeout(
-        () => document.body.removeChild(dragNode),
-        0
-      )
+      event.dataTransfer.setDragImage(dragNode, dragNode.offsetWidth / 2, dragNode.offsetHeight / 2)
+      setTimeout(() => document.body.removeChild(dragNode), 0)
     }
   }
 }
@@ -266,13 +236,9 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnStore.ColumnOption> =
-    JSON.parse(
-      dragEvent.dataTransfer?.getData('text') || '{}'
-    )
+  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const columnIndex = columnStore.getColumns.findIndex(
-    (column: ColumnStore.ColumnOption) =>
-      column.columnName === data.value.columnName
+    (column: ColumnStore.ColumnOption) => column.columnName === data.value.columnName
   )
 
   switch (data.from) {
@@ -308,9 +274,7 @@ const dropHandler = (dragEvent: DragEvent) => {
  * @desc 右键点击事件
  * @param column {ColumnStore.ColumnOption} 列选项
  */
-const contextmenuHandler = (
-  column: ColumnStore.ColumnOption
-) => {
+const contextmenuHandler = (column: ColumnStore.ColumnOption) => {
   currentColumn.value = column
 }
 
@@ -321,12 +285,12 @@ const setDataModel = () => {
   console.log('column', currentColumn.value)
 }
 
-// /**
-//  * @desc 监听表格数据源变化
-//  */
+/**
+ * @desc 监听表格数据源变化
+ */
 // watch(
 //   () => columnStore.getDataSource,
-//   (newDataSource, oldDataSource) => {
+//   async (newDataSource, oldDataSource) => {
 //     if (!newDataSource) {
 //       // 如果数据源为空，清空图表数据
 //       chartStore.setChartData([])
@@ -342,8 +306,10 @@ const setDataModel = () => {
 //       chartConfigStore.setChartConfig(null)
 //       // 如果数据源为空，清空图表配置条件
 //       columnStore.setColumns([])
+//       // 如果数据源为空，清空图表配置
+//       chartConfigStore.setChartConfig(null)
 //     } else {
-//       queryTableColumn(newDataSource)
+//       await queryTableColumn(newDataSource)
 //       const hasFilter = filterStore.getFilters.length > 0
 //       hasFilter && filterStore.setFilters([])
 //       const hasOrder = orderStore.getOrders.length > 0

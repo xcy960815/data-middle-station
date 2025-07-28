@@ -30,6 +30,7 @@
           :key="chart.id"
           :view-count="chart.viewCount"
           @delete="handleDeleteAnalyse"
+          @edit="handleEditAnalyse"
         >
         </chart-card>
       </div>
@@ -75,7 +76,12 @@ const addOrEditAnalyseDialogVisible = ref(false)
 /**
  * @desc 创建&编辑分析表单数据
  */
-const addOrEditAnalyseFormData = reactive({
+const addOrEditAnalyseFormData = reactive<{
+  id: number | null
+  analyseName: string
+  analyseDesc: string
+}>({
+  id: null,
   analyseName: '',
   analyseDesc: ''
 })
@@ -159,7 +165,28 @@ const handleDeleteAnalyse = (id: number, analyseName: string) => {
 }
 
 /**
- * @desc 创建分析
+ * @desc 编辑分析 打开弹窗
+ */
+const handleEditAnalyse = async (id: number) => {
+  const res = await fetch('/api/getAnalyse', {
+    method: 'POST',
+    body: {
+      id
+    }
+  })
+  if (res.code === 200) {
+    addOrEditAnalyseFormData.id = res.data?.id || null
+    addOrEditAnalyseFormData.analyseName = res.data?.analyseName || ''
+    addOrEditAnalyseFormData.analyseDesc = res.data?.analyseDesc || ''
+  }
+  addOrEditAnalyseDialogVisible.value = true
+  nextTick(() => {
+    addOrEditAnalyseFormRef.value?.resetFields()
+  })
+}
+
+/**
+ * @desc 创建分析 打开弹窗
  */
 const handleCreateAnalyse = () => {
   addOrEditAnalyseDialogVisible.value = true
@@ -173,28 +200,40 @@ const handleCreateAnalyse = () => {
  */
 const handleSaveAnalyse = async () => {
   if (!addOrEditAnalyseFormRef.value) return
-  await addOrEditAnalyseFormRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        const res = await fetch('/api/createAnalyse', {
-          method: 'POST',
-          body: {
-            analyseName: addOrEditAnalyseFormData.analyseName,
-            analyseDesc: addOrEditAnalyseFormData.analyseDesc
-          }
-        })
-        if (res.code === 200) {
-          ElMessage.success('创建成功')
-          addOrEditAnalyseDialogVisible.value = false
-          getAnalyses()
-        } else {
-          ElMessage.error(res.message || '创建失败')
-        }
-      } catch (error) {
-        ElMessage.error('创建失败')
+  const valid = await addOrEditAnalyseFormRef.value.validate().catch(() => false)
+  if (!valid) return
+  if (addOrEditAnalyseFormData.id) {
+    const res = await fetch('/api/updateAnalyse', {
+      method: 'POST',
+      body: {
+        id: addOrEditAnalyseFormData.id,
+        analyseName: addOrEditAnalyseFormData.analyseName,
+        analyseDesc: addOrEditAnalyseFormData.analyseDesc
       }
+    })
+    if (res.code === 200) {
+      ElMessage.success('更新成功')
+      addOrEditAnalyseDialogVisible.value = false
+      getAnalyses()
+    } else {
+      ElMessage.error(res.message || '更新失败')
     }
-  })
+  } else {
+    const res = await fetch('/api/createAnalyse', {
+      method: 'POST',
+      body: {
+        analyseName: addOrEditAnalyseFormData.analyseName,
+        analyseDesc: addOrEditAnalyseFormData.analyseDesc
+      }
+    })
+    if (res.code === 200) {
+      ElMessage.success('创建成功')
+      addOrEditAnalyseDialogVisible.value = false
+      getAnalyses()
+    } else {
+      ElMessage.error(res.message || '创建失败')
+    }
+  }
 }
 
 onMounted(() => {

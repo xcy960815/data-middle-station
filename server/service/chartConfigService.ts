@@ -15,8 +15,8 @@ export class ChartConfigService {
    * @returns {Promise<{createdBy: string, updatedBy: string, createTime: string, updateTime: string}>}
    */
   private async getDefaultInfo() {
-    const createdBy = (await RedisStorage.getItem<string>(`username`)) || 'system'
-    const updatedBy = (await RedisStorage.getItem<string>(`username`)) || 'system'
+    const createdBy = (await RedisStorage.getItem<string>(`userName`)) || 'system'
+    const updatedBy = (await RedisStorage.getItem<string>(`userName`)) || 'system'
     const createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     return { createdBy, updatedBy, createTime, updateTime }

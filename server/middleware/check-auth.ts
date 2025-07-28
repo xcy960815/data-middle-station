@@ -113,7 +113,7 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
       })
     }
     // 记录成功的认证日志
-    logger.info(`认证成功: ${payload.username} (ID: ${payload.userId}) ${method} ${pathname} - IP: ${clientIP}`)
+    logger.info(`认证成功: ${payload.userName} (ID: ${payload.userId}) ${method} ${pathname} - IP: ${clientIP}`)
   } catch (error) {
     let errorMsg = ''
     if (error instanceof TokenExpiredError) {
