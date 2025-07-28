@@ -1,12 +1,6 @@
 <template>
-  <div
-    class="filter relative h-full flex flex-col"
-    @dragover="dragoverHandler"
-    @drop="dropHandler"
-  >
-    <div
-      class="filter__header flex items-center justify-between"
-    >
+  <div class="filter relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
+    <div class="filter__header flex items-center justify-between px-1">
       <span class="filter__title">筛选</span>
       <icon-park
         class="cursor-pointer"
@@ -20,7 +14,7 @@
     <div class="filter__content flex-auto">
       <div
         data-action="drag"
-        class="filter__item"
+        class="filter__item my-1"
         v-for="(item, index) in filterList"
         :key="index"
         draggable="true"
@@ -57,11 +51,7 @@ const filterList = computed(() => filterStore.getFilters)
  * @param filter {FilterStore.FilterOption | Array<FilterStore.FilterOption>}
  * @returns {void}
  */
-const addFilter = (
-  filter:
-    | FilterStore.FilterOption
-    | Array<FilterStore.FilterOption>
-) => {
+const addFilter = (filter: FilterStore.FilterOption | Array<FilterStore.FilterOption>) => {
   filter = Array.isArray(filter) ? filter : [filter]
   filterStore.addFilters(filter)
 }
@@ -71,22 +61,12 @@ const addFilter = (
  * @param {DragEvent} dragEvent
  * @returns {number}
  */
-const getTargetIndex = (
-  index: number,
-  dragEvent: DragEvent
-): number => {
+const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
   const dropY = dragEvent.clientY // 落点Y
   let ys = [].slice
-    .call(
-      document.querySelectorAll(
-        '.filter__content > [data-action="drag"]'
-      )
-    )
+    .call(document.querySelectorAll('.filter__content > [data-action="drag"]'))
     .map(
-      (element: HTMLDivElement) =>
-        (element.getBoundingClientRect().top +
-          element.getBoundingClientRect().bottom) /
-        2
+      (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
     )
   ys.splice(index, 1)
   let targetIndex = ys.findIndex((e) => dropY < e)
@@ -102,10 +82,7 @@ const getTargetIndex = (
  * @param {DragEvent} dragEvent
  * @returns {void}
  */
-const dragstartHandler = (
-  index: number,
-  dragEvent: DragEvent
-) => {
+const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
@@ -121,10 +98,7 @@ const dragstartHandler = (
  * @param {DragEvent} dragEvent
  * @returns {void}
  */
-const dragHandler = (
-  _index: number,
-  dragEvent: DragEvent
-) => {
+const dragHandler = (_index: number, dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
 /**
@@ -143,24 +117,16 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<FilterStore.FilterOption> =
-    JSON.parse(
-      dragEvent.dataTransfer?.getData('text') || '{}'
-    )
+  const data: DragData<FilterStore.FilterOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   // 自己处理成自己需要的数据
   const filter = data.value
 
   switch (data.from) {
     case 'filter': {
       // 调整位置
-      const targetIndex = getTargetIndex(
-        data.index,
-        dragEvent
-      )
+      const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
-      const filters = JSON.parse(
-        JSON.stringify(filterStore.filters)
-      )
+      const filters = JSON.parse(JSON.stringify(filterStore.filters))
       const target = filters.splice(data.index, 1)[0]
       filters.splice(targetIndex, 0, target)
       filterStore.setFilters(filters)

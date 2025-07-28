@@ -1,6 +1,4 @@
 import { fetch } from '~/composables/request'
-console.log('getAnalyseHandler', fetch)
-
 /**
  * @desc 获取图表配置 handler
  */
@@ -24,8 +22,6 @@ export const getAnalyseHandler = () => {
         id
       }
     })
-    console.log('result-getAnalyse', result)
-
     if (result.code === 200) {
       const data = result.data!
       const analyseName = data.analyseName

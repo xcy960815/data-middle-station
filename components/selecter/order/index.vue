@@ -1,22 +1,19 @@
 <template>
-  <selecter-template
-    v-bind="$attrs"
-    :display-name="displayName"
-    :cast="cast"
-    :index="index"
-  >
+  <selecter-template v-bind="$attrs" :display-name="displayName" :cast="cast" :index="index">
     <template #order-icon>
+      <!-- 降序 -->
       <icon-park
-        class="chart-selecter-order-icon"
+        class="chart-selecter-order-icon mr-1"
         v-if="orderType === 'asc'"
         type="arrow-circle-down"
         size="14"
         fill="#333"
         @click="handleClickOrder"
       />
+      <!-- 升序 -->
       <icon-park
-        class="chart-selecter-order-icon"
-        v-else
+        class="chart-selecter-order-icon mr-1"
+        v-if="orderType === 'desc'"
         type="arrow-circle-up"
         size="14"
         fill="#333"
@@ -26,11 +23,7 @@
     <template #default>
       <div
         class="aggregation-option"
-        @click="
-          handleClickOrderAggregation(
-            orderAggregation.value as OrderStore.OrderAggregationsType
-          )
-        "
+        @click="handleClickOrderAggregation(orderAggregation.value as OrderStore.OrderAggregationsType)"
         v-for="orderAggregation in orderAggregations"
       >
         <!-- 复现用户选择的聚合条件 -->
@@ -61,9 +54,7 @@ const props = defineProps({
   },
   // 通用参数
   cast: {
-    type: String as PropType<
-      'dimension' | 'group' | 'order' | 'filter'
-    >,
+    type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
     default: ''
   },
   orderType: {
@@ -83,11 +74,7 @@ const props = defineProps({
   }
 })
 
-const emits = defineEmits([
-  'update:orderType',
-  'update:aggregationType',
-  'update:displayName'
-])
+const emits = defineEmits(['update:orderType', 'update:aggregationType', 'update:displayName'])
 
 const orderAggregations = ref([
   {
@@ -123,13 +110,9 @@ const orderAggregations = ref([
 /**
  * @desc 升降序icon图标
  */
-const orderIconName = computed(
-  () => (orderType: OrderStore.OrderType) => {
-    return orderType === 'asc'
-      ? 'arrow-circle-down'
-      : 'arrow-circle-up'
-  }
-)
+const orderIconName = computed(() => (orderType: OrderStore.OrderType) => {
+  return orderType === 'asc' ? 'arrow-circle-down' : 'arrow-circle-up'
+})
 
 /**
  * @desc 点击排序的升降序
@@ -138,10 +121,7 @@ const orderIconName = computed(
 const handleClickOrder = (e: Event) => {
   // 阻止冒泡
   e.stopPropagation()
-  emits(
-    'update:orderType',
-    props.orderType === 'desc' ? 'asc' : 'desc'
-  )
+  emits('update:orderType', props.orderType === 'desc' ? 'asc' : 'desc')
 }
 
 /**
@@ -149,20 +129,13 @@ const handleClickOrder = (e: Event) => {
  * @param orderAggregationValue {OrderStore.OrderAggregationsType}
  * @returns void
  */
-const handleClickOrderAggregation = (
-  orderAggregationValue: OrderStore.OrderAggregationsType
-) => {
+const handleClickOrderAggregation = (orderAggregationValue: OrderStore.OrderAggregationsType) => {
   emits('update:aggregationType', orderAggregationValue)
   // 默认降序
   emits('update:orderType', 'desc')
   // 重新计算displayName
-  const currentDisplayName = orderAggregations.value.find(
-    (item) => item.value === orderAggregationValue
-  )?.label
-  emits(
-    'update:displayName',
-    `${currentDisplayName}(${props.name})`
-  )
+  const currentDisplayName = orderAggregations.value.find((item) => item.value === orderAggregationValue)?.label
+  emits('update:displayName', `${currentDisplayName}(${props.name})`)
 }
 </script>
 <style lang="scss" scoped></style>

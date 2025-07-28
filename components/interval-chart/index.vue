@@ -28,10 +28,7 @@ const props = defineProps({
     default: () => []
   }
 })
-const emits = defineEmits([
-  'renderChartStart',
-  'renderChartEnd'
-])
+const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
 const chartConfigStore = useChartConfigStore()
 const defaultIntervalConfig = {
@@ -42,10 +39,7 @@ const defaultIntervalConfig = {
   horizontalBar: false
 }
 const intervalChartConfig = computed(() => {
-  return (
-    chartConfigStore.chartConfig?.interval ||
-    defaultIntervalConfig
-  )
+  return chartConfigStore.chartConfig?.interval || defaultIntervalConfig
 })
 /**
  * 监听配置变化
@@ -76,15 +70,9 @@ const initChart = () => {
     // subtitle: props.subtitle
   })
 
-  const yAxisFieldNames = props.yAxisFields.map(
-    (item) =>
-      item.alias || item.displayName || item.columnName
-  )
+  const yAxisFieldNames = props.yAxisFields.map((item) => item.alias || item.displayName || item.columnName)
   const chartData = props.data
-  console.log(
-    'chartData',
-    JSON.stringify(chartData, null, 2)
-  )
+
   const intervalChart = chart
     .interval()
     .data({
@@ -107,10 +95,7 @@ const initChart = () => {
 
     .encode(
       'x',
-      props.xAxisFields.map(
-        (item) =>
-          item.alias || item.displayName || item.columnName
-      )
+      props.xAxisFields.map((item) => item.alias || item.displayName || item.columnName)
     )
     .encode('y', '活跃用户数')
     .encode('color', 'type')
@@ -131,15 +116,11 @@ const initChart = () => {
     })
   }
   // 平级展示
-  if (
-    intervalChartConfig.value.displayMode === 'levelDisplay'
-  ) {
+  if (intervalChartConfig.value.displayMode === 'levelDisplay') {
     intervalChart.transform({ type: 'dodgeX' })
   }
   // 叠加展示
-  if (
-    intervalChartConfig.value.displayMode === 'stackDisplay'
-  ) {
+  if (intervalChartConfig.value.displayMode === 'stackDisplay') {
     intervalChart.transform({ type: 'stackY' })
   }
 
