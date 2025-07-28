@@ -11,7 +11,7 @@ const logger = new Logger({
 
 export interface JwtPayload {
   userId: string
-  username: string
+  userName: string
   exp?: number // JWT标准字段，表示过期时间戳（单位：秒）
   iat?: number // JWT标准字段，表示签发时间戳（单位：秒）
 }

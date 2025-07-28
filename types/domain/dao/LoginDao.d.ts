@@ -3,7 +3,7 @@ declare namespace LoginDao {
     token: string
     user: {
       userId: number
-      username: string
+      userName: string
     }
   }
 }

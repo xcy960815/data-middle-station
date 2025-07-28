@@ -1,3 +1,6 @@
+/**
+ * @desc 列存储类型
+ */
 declare namespace ColumnStore {
   /**
    * @desc 列key
@@ -7,12 +10,12 @@ declare namespace ColumnStore {
   /**
    * @desc 列选项
    */
-  type ColumnOption = DatabaseVo.TableColumnOptionVo
+  type ColumnOption = DatabaseVo.TableColumnOption
 
   /**
    * @desc 数据源选项
    */
-  type DataSourceOption = DatabaseVo.TableOptionVo
+  type DataSourceOption = DatabaseVo.TableOption
 
   /**
    * @desc 列状态
