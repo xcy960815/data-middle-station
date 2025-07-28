@@ -16,21 +16,27 @@ const props = defineProps({
   //   default: () => '我是柱状图副标题'
   // },
   data: {
-    type: Array as PropType<Array<Chart.ChartData>>,
+    type: Array as PropType<Array<ChartDataVo.ChartData>>,
     default: () => []
   },
   xAxisFields: {
-    type: Array as PropType<Array<Chart.XAxisFields>>,
+    type: Array as PropType<Array<GroupStore.GroupOption>>,
     default: () => []
   },
   yAxisFields: {
-    type: Array as PropType<Array<Chart.YAxisFields>>,
+    type: Array as PropType<Array<DimensionStore.DimensionOption>>,
     default: () => []
   }
 })
+/**
+ * 定义事件
+ */
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
 const chartConfigStore = useChartConfigStore()
+/**
+ * 默认配置
+ */
 const defaultIntervalConfig = {
   showPercentage: false,
   displayMode: 'levelDisplay',
@@ -38,11 +44,14 @@ const defaultIntervalConfig = {
   horizontalDisplay: false,
   horizontalBar: false
 }
+/**
+ * 属性配置
+ */
 const intervalChartConfig = computed(() => {
   return chartConfigStore.chartConfig?.interval || defaultIntervalConfig
 })
 /**
- * 监听配置变化
+ * 监听属性配置变化
  */
 watch(
   () => intervalChartConfig.value,
@@ -65,47 +74,39 @@ const initChart = () => {
     autoFit: true
   })
 
+  // 配置图表标题
   chart.title({
     title: props.title
     // subtitle: props.subtitle
   })
 
+  // 获取 y 轴字段名称
   const yAxisFieldNames = props.yAxisFields.map((item) => item.alias || item.displayName || item.columnName)
+  // 获取图表数据
   const chartData = props.data
+  // console.log("chartData", chartData);
 
+  // 配置图表
   const intervalChart = chart
     .interval()
-    .data({
-      type: 'inline',
-      value: chartData,
-      transform: [
-        {
-          type: 'fold',
-          fields: yAxisFieldNames,
-          key: 'type',
-          value: '活跃用户数'
-        }
-      ]
-    })
+    .data(chartData)
     .transform({
       type: 'sortX',
       by: 'y',
       reverse: true
     })
-
-    .encode(
-      'x',
-      props.xAxisFields.map((item) => item.alias || item.displayName || item.columnName)
-    )
-    .encode('y', '活跃用户数')
-    .encode('color', 'type')
+    .encode('x', '月份')
+    .encode('y', '月均降雨量')
+    .encode('color', '城市名称')
     .scale('y', { nice: true })
     .axis('y', { labelFormatter: '~s' })
     .scale('color', {
       range: getChartColors()
     })
 
-  // 是否显示百分比
+  /**
+   * 是否显示百分比
+   */
   if (intervalChartConfig.value.showPercentage) {
     // TODO 值也要 展示 百分比
     intervalChart.axis({
@@ -115,29 +116,32 @@ const initChart = () => {
       }
     })
   }
-  // 平级展示
+  /**
+   * 平级展示
+   */
   if (intervalChartConfig.value.displayMode === 'levelDisplay') {
     intervalChart.transform({ type: 'dodgeX' })
   }
-  // 叠加展示
+  /**
+   * 叠加展示
+   */
   if (intervalChartConfig.value.displayMode === 'stackDisplay') {
     intervalChart.transform({ type: 'stackY' })
   }
 
-  // 是否显示标题
+  /**
+   * 是否显示标题
+   */
   if (intervalChartConfig.value.showLabel) {
     intervalChart.label({
-      text: '标题',
-      render: (text: string) => {
-        return `
-        <div style="left:-50%;top:-20px;position:relative;font-size:14px;">
-          <span>${text}</span>
-        </div>`
-      }
+      text: (d: any) => d['月均降雨量'],
+      position: 'top'
     })
   }
 
-  // 是否水平展示
+  /**
+   * 是否水平展示
+   */
   if (intervalChartConfig.value.horizontalDisplay) {
     intervalChart.coordinate({
       transform: [{ type: 'transpose' }]
@@ -148,34 +152,36 @@ const initChart = () => {
     intervalChart.slider('x', true)
   }
 
-  // 配置图表交互
-  // chart
-  //   .interaction('tooltip', {
-  //     shared: false,
-  //     // 自定义tooltip内容
-  //     customContent: (title: string, data: any[]) => {
-  //       if (!data || data.length === 0) return ''
-  //       const item = data[0]
-  //       // 打印 item 看看结构
-  //       console.log('tooltip item:', item)
-  //       const fieldName =
-  //         item.type ||
-  //         (item.data && item.data.type) ||
-  //         item.name
-  //       return `
-  //       <div style="padding: 8px;">
-  //         <div style="display: flex; align-items: center; padding: 4px 0;">
-  //           <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
-  //           <span style="margin-right: 12px;">${fieldName}</span>
-  //           <span style="font-weight: bold;">${item['活跃用户数']}</span>
-  //         </div>
-  //       </div>
-  //     `
-  //     }
-  //   })
-  //   .interaction('elementHighlightByColor', {
-  //     background: true
-  //   })
+  /**
+   * 配置图表交互
+   */
+  chart
+    .interaction('tooltip', {
+      shared: true,
+      // 自定义tooltip内容
+      customContent: (title: string, data: any[]) => {
+        if (!data || data.length === 0) return ''
+        return `
+        <div style="padding: 8px;">
+          <div style="margin-bottom: 4px;font-weight:bold;">${title}</div>
+          ${data
+            .map(
+              (item) => `
+            <div style="display: flex; align-items: center; padding: 4px 0;">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
+              <span style="margin-right: 12px;">${item.data.name}</span>
+              <span style="font-weight: bold;">${item.data.月均降雨量}</span>
+            </div>
+          `
+            )
+            .join('')}
+        </div>
+      `
+      }
+    })
+    .interaction('elementHighlightByColor', {
+      background: true
+    })
 
   chart.render()
   emits('renderChartEnd')

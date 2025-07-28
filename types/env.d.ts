@@ -30,7 +30,7 @@ declare namespace NodeJS {
   type REDIS_PORT = RedisOptions['port']
   type REDIS_PASSWORD = RedisOptions['password']
   type REDIS_DB = RedisOptions['db']
-  type REDIS_USERNAME = RedisOptions['username']
+  type REDIS_USERNAME = RedisOptions['userName']
   type REDIS_BASE = RedisOptions['base']
 
   interface ProcessEnv {
