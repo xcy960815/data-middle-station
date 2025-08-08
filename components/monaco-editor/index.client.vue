@@ -1,13 +1,11 @@
 <template>
   <ClientOnly>
-    <div
-      ref="monacoEditorDom"
-      class="monaco-editor-dom"
-    ></div>
+    <div ref="monacoEditorDom" class="monaco-editor-dom"></div>
   </ClientOnly>
 </template>
 <script lang="ts" setup>
 import * as monaco from 'monaco-editor'
+import type * as MonacoNS from 'monaco-editor/esm/vs/editor/editor.api'
 // 拦截 command + f 快捷键
 // import "monaco-editor/esm/vs/editor/contrib/find/findController";
 // sql 语法高亮
@@ -40,7 +38,7 @@ const props = defineProps({
 
   /* 数据库数据 */
   databaseOptions: {
-    type: Array as PropType<Array<monaco.DatabaseOption>>,
+    type: Array as PropType<Array<MonacoNS.DatabaseOption>>,
     default: () => []
   },
 
@@ -58,7 +56,7 @@ const props = defineProps({
 
   /* 编译器配置项 */
   monacoEditorOption: {
-    type: Object as PropType<monaco.editor.IStandaloneEditorConstructionOptions>,
+    type: Object as PropType<MonacoNS.editor.IStandaloneEditorConstructionOptions>,
     default: {}
   },
 
@@ -74,31 +72,29 @@ const emits = defineEmits(['update:modelValue'])
 const monacoEditorDom = ref<HTMLDivElement>()
 
 /* monacoEditor 实例 */
-const monacoEditor =
-  ref<monaco.editor.IStandaloneCodeEditor | null>(null)
+const monacoEditor = ref<MonacoNS.editor.IStandaloneCodeEditor | null>(null)
 
-const completionItemProvider = ref<monaco.IDisposable>()
+const completionItemProvider = ref<MonacoNS.IDisposable>()
 
 // 编译器的默认配置
-const monacoEditorDefaultOption: monaco.editor.IStandaloneEditorConstructionOptions =
-  {
-    acceptSuggestionOnCommitCharacter: false,
-    suggestSelection: 'first',
-    fontFamily: 'MONACO',
-    lineHeight: 30,
-    value: props.modelValue,
-    language: 'sql',
-    theme: 'vs-dark',
-    selectOnLineNumbers: true,
-    contextmenu: false, //关闭右键
-    suggestOnTriggerCharacters: true,
-    fontSize: 14,
-    folding: false, // 是否折叠
-    // 是否启用小地图
-    minimap: {
-      enabled: false
-    }
+const monacoEditorDefaultOption: MonacoNS.editor.IStandaloneEditorConstructionOptions = {
+  acceptSuggestionOnCommitCharacter: false,
+  suggestSelection: 'first',
+  fontFamily: 'MONACO',
+  lineHeight: 30,
+  value: props.modelValue,
+  language: 'sql',
+  theme: 'vs-dark',
+  selectOnLineNumbers: true,
+  contextmenu: false, //关闭右键
+  suggestOnTriggerCharacters: true,
+  fontSize: 14,
+  folding: false, // 是否折叠
+  // 是否启用小地图
+  minimap: {
+    enabled: false
   }
+}
 
 /**
  * @desc 做组件的双向绑定
@@ -107,8 +103,7 @@ watch(
   () => props.modelValue,
   (newSql: string) => {
     const hasTextFocus = monacoEditor.value?.hasTextFocus()
-    if (!hasTextFocus)
-      toRaw(monacoEditor.value)?.setValue(newSql)
+    if (!hasTextFocus) toRaw(monacoEditor.value)?.setValue(newSql)
   }
 )
 /**
@@ -136,19 +131,10 @@ watch(
  */
 const setMonacoEditorStyle = () => {
   // 获取 monacoEditorDom 节点的父节点
-  const parentElementWidth = window.getComputedStyle(
-    (monacoEditorDom.value as HTMLDivElement).parentElement!
-  ).width
-  const parentElementWidthNumber = Number(
-    parentElementWidth.substring(
-      0,
-      parentElementWidth.length - 2
-    )
-  )
+  const parentElementWidth = window.getComputedStyle((monacoEditorDom.value as HTMLDivElement).parentElement!).width
+  const parentElementWidthNumber = Number(parentElementWidth.substring(0, parentElementWidth.length - 2))
   toRaw(monacoEditor.value)?.layout({
-    width: props.width
-      ? props.width
-      : parentElementWidthNumber,
+    width: props.width ? props.width : parentElementWidthNumber,
     height: props.height
   })
 }
@@ -157,49 +143,29 @@ const setMonacoEditorStyle = () => {
  * @desc 初始化 editor
  */
 const initEditor = () => {
-  const sqlSnippets = new SqlSnippets(
-    props.customKeywords,
-    props.databaseOptions
-  )
-  completionItemProvider.value =
-    monaco.languages.registerCompletionItemProvider('sql', {
-      // 提示的触发字符
-      triggerCharacters: [
-        ' ',
-        '.',
-        ...props.triggerCharacters
-      ],
-      // 因为在js代码中 range 属性不配置也可以正常显示  所以 在这里避免代码抛错  使用了一个 别名
-      provideCompletionItems: (
-        model: monaco.editor.ITextModel,
-        position: monaco.Position
-      ) =>
-        sqlSnippets.provideCompletionItems(
-          model,
-          position
-        ) as monaco.languages.ProviderResult<monaco.languages.CompletionList>
-    })
+  const sqlSnippets = new SqlSnippets(props.customKeywords, props.databaseOptions)
+  completionItemProvider.value = monaco.languages.registerCompletionItemProvider('sql', {
+    // 提示的触发字符
+    triggerCharacters: [' ', '.', ...props.triggerCharacters],
+    // 因为在js代码中 range 属性不配置也可以正常显示  所以 在这里避免代码抛错  使用了一个 别名
+    provideCompletionItems: (model: MonacoNS.editor.ITextModel, position: MonacoNS.Position) =>
+      sqlSnippets.provideCompletionItems(
+        model,
+        position
+      ) as monaco.languages.ProviderResult<monaco.languages.CompletionList>
+  })
 
   const monacoEditorOptionIsEmpty =
-    Object.keys(props.monacoEditorOption).length === 0 &&
-    props.monacoEditorOption.constructor === Object
-  const monacoEditorOption = monacoEditorOptionIsEmpty
-    ? monacoEditorDefaultOption
-    : props.monacoEditorOption
+    Object.keys(props.monacoEditorOption).length === 0 && props.monacoEditorOption.constructor === Object
+  const monacoEditorOption = monacoEditorOptionIsEmpty ? monacoEditorDefaultOption : props.monacoEditorOption
   /* 创建editor实例 */
-  monacoEditor.value = monaco.editor.create(
-    monacoEditorDom.value!,
-    monacoEditorOption
-  )
+  monacoEditor.value = monaco.editor.create(monacoEditorDom.value!, monacoEditorOption)
   /*  渲染 编译器 宽高 */
   if (props.height) setMonacoEditorStyle()
 
   /* 监听编译器里面的值的变化 */
   monacoEditor.value.onDidChangeModelContent(() => {
-    emits(
-      'update:modelValue',
-      toRaw(monacoEditor.value!).getValue()
-    )
+    emits('update:modelValue', toRaw(monacoEditor.value!).getValue())
   })
 }
 /* 重置 编译器 内容 */

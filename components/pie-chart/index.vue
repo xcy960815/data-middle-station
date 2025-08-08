@@ -16,26 +16,27 @@ const props = defineProps({
     default: () => '我是扇形图副标题'
   },
   data: {
-    type: Array as PropType<Array<Chart.ChartData>>,
+    type: Array as PropType<ChartDataDao.ChartData>,
     default: () => []
   },
   xAxisFields: {
-    type: Array as PropType<Array<Chart.XAxisFields>>,
+    type: Array as PropType<Array<GroupStore.GroupOption>>,
     default: () => []
   },
   yAxisFields: {
-    type: Array as PropType<Array<Chart.YAxisFields>>,
+    type: Array as PropType<Array<DimensionStore.DimensionOption>>,
     default: () => []
   }
 })
-const emits = defineEmits([
-  'renderChartStart',
-  'renderChartEnd'
-])
+const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 const chartConfigStore = useChartConfigStore()
-const pieChartConfigData = computed(() => {
-  return chartConfigStore.chartConfig.pie
-})
+const pieChartConfigData = computed(
+  () =>
+    chartConfigStore.getChartConfig?.pie ?? {
+      showLabel: false,
+      chartType: 'pie'
+    }
+)
 watch(
   () => pieChartConfigData.value,
   () => {
@@ -60,9 +61,7 @@ const initChart = () => {
     subtitle: props.subtitle
   })
   chart.coordinate({ type: 'theta', innerRadius: 0.6 })
-  const fields = props.yAxisFields.map(
-    (item) => item.alias || item.columnName
-  )
+  const fields = props.yAxisFields.map((item) => item.alias || item.columnName)
 
   const pieChart = chart
     .interval()
@@ -102,9 +101,7 @@ const initChart = () => {
   // 是否展示label
   if (pieChartConfigData.value.showLabel) {
     pieChart.label({
-      text: props.xAxisFields.map(
-        (item) => item.alias || item.columnName
-      ),
+      text: props.xAxisFields.map((item) => item.alias || item.columnName),
       position: 'spider',
       connectorDistance: 0,
       fontWeight: 'bold',
