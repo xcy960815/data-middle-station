@@ -261,11 +261,6 @@ const navigateToHome = async () => {
   })
   // 根据你的 API 返回结构处理
   if (loginResult.code === RequestCodeEnum.Success) {
-    const { userName, avatar, userId } = loginResult.data as LoginVo.LoginOption
-    userStore.setName(userName)
-    userStore.setAvatar(avatar)
-    userStore.setUserId(userId)
-    // userStore.
     router.push('/homepage')
   } else {
     console.error('登录失败:', loginResult.message)

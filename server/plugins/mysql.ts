@@ -55,10 +55,12 @@ const getDatasourceConfig = () => {
   console.log('\n')
 
   // 使用figlet生成大字体标题
-  const title = figlet.textSync('Database', {
-    font: 'ANSI Shadow',
+  const title = figlet.textSync('DataMiddleStation', {
+    font: 'Standard',
     horizontalLayout: 'default',
-    verticalLayout: 'default'
+    verticalLayout: 'default',
+    width: 100,
+    whitespaceBreak: true
   })
 
   // 使用自定义渐变色输出标题，替代已弃用的pastel
@@ -105,7 +107,6 @@ const getDatasourceConfig = () => {
       margin: 1,
       borderStyle: 'round',
       borderColor: 'cyan',
-      backgroundColor: '#000',
       title: '💾 数据库配置',
       titleAlignment: 'center'
     })
