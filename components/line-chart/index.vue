@@ -15,27 +15,31 @@ const props = defineProps({
   //   default: () => '我是折线图副标题'
   // },
   data: {
-    type: Array as PropType<Array<Chart.ChartData>>,
+    type: Array as PropType<ChartDataDao.ChartData>,
     default: () => []
   },
   xAxisFields: {
-    type: Array as PropType<Array<Chart.XAxisFields>>,
+    type: Array as PropType<Array<GroupStore.GroupOption>>,
     default: () => []
   },
   yAxisFields: {
-    type: Array as PropType<Array<Chart.YAxisFields>>,
+    type: Array as PropType<Array<DimensionStore.DimensionOption>>,
     default: () => []
   }
 })
-const emits = defineEmits([
-  'renderChartStart',
-  'renderChartEnd'
-])
+const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
 const chartConfigStore = useChartConfigStore()
-const lineChartConfig = computed(() => {
-  return chartConfigStore.chartConfig.line
-})
+const lineChartConfig = computed(
+  () =>
+    chartConfigStore.getChartConfig?.line ?? {
+      showPoint: false,
+      showLabel: false,
+      smooth: false,
+      autoDualAxis: false,
+      horizontalBar: false
+    }
+)
 /**
  * 监听配置变化
  */
@@ -53,10 +57,7 @@ watch(
  */
 const initChart = () => {
   emits('renderChartStart')
-  const fields = props.yAxisFields.map(
-    (item) =>
-      item.alias || item.displayName || item.columnName
-  )
+  const fields = props.yAxisFields.map((item) => item.alias || item.displayName || item.columnName)
   const chart = new Chart({
     container: 'container-line',
     theme: 'classic',
