@@ -35,7 +35,7 @@
         </chart-card>
       </div>
       <!-- 创建&编辑分析 -->
-      <el-dialog v-model="addOrEditAnalyseDialogVisible" title="创建分析" width="30%">
+      <el-dialog v-model="addOrEditAnalyseDialogVisible" :title="addOrEditAnalyseTitle" width="30%">
         <el-form
           :model="addOrEditAnalyseFormData"
           ref="addOrEditAnalyseFormRef"
@@ -72,6 +72,10 @@ const homePageStore = useHomepageStore()
  * @desc 创建&编辑分析表单
  */
 const addOrEditAnalyseFormRef = ref<FormInstance>()
+/**
+ * @desc 创建&编辑分析标题
+ */
+const addOrEditAnalyseTitle = ref('创建分析')
 const addOrEditAnalyseDialogVisible = ref(false)
 /**
  * @desc 创建&编辑分析表单数据
@@ -127,7 +131,6 @@ const getAnalyses = async () => {
     //     container.value!.querySelectorAll<HTMLDivElement>(
     //       '.card-chart'
     //     )
-
     //   container.value!.onmousemove = (e) => {
     //     for (const card of cards) {
     //       const rect = card.getBoundingClientRect()
@@ -179,6 +182,7 @@ const handleEditAnalyse = async (id: number) => {
     addOrEditAnalyseFormData.analyseName = res.data?.analyseName || ''
     addOrEditAnalyseFormData.analyseDesc = res.data?.analyseDesc || ''
   }
+  addOrEditAnalyseTitle.value = '编辑分析'
   addOrEditAnalyseDialogVisible.value = true
   nextTick(() => {
     addOrEditAnalyseFormRef.value?.resetFields()
@@ -190,6 +194,7 @@ const handleEditAnalyse = async (id: number) => {
  */
 const handleCreateAnalyse = () => {
   addOrEditAnalyseDialogVisible.value = true
+  addOrEditAnalyseTitle.value = '创建分析'
   nextTick(() => {
     addOrEditAnalyseFormRef.value?.resetFields()
   })
