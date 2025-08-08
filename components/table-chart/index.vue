@@ -11,11 +11,7 @@
               @click="handleEmitOrder(header)"
             >
               <span :class="getTableHeaderClass(header)">
-                {{
-                  header.displayName ||
-                  header.alias ||
-                  header.columnName
-                }}
+                {{ header.displayName || header.alias || header.columnName }}
               </span>
               <!-- <icon-park
                 class="mx-1"
@@ -27,18 +23,13 @@
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="(row, index) in paginatedData"
-            :key="index"
-          >
+          <tr v-for="(row, index) in paginatedData" :key="index">
             <td
               v-for="header in tableHeaderState.tableHeader"
               :key="header.columnName"
               :style="getComparedStyle(row, header)"
               :class="getComparedClass(row, header)"
-              v-html="
-                getComparedContent(row, header, index)
-              "
+              v-html="getComparedContent(row, header, index)"
             ></td>
           </tr>
         </tbody>
@@ -46,24 +37,12 @@
     </div>
 
     <div class="pagination">
-      <span class="pagination-info">
-        第{{ startIndex }}-{{ endIndex }}条，共{{
-          totalPage
-        }}页{{ total }}条
-      </span>
+      <span class="pagination-info"> 第{{ startIndex }}-{{ endIndex }}条，共{{ totalPage }}页{{ total }}条 </span>
       <div class="pagination-controls">
-        <el-icon
-          :size="12"
-          class="cursor-pointer"
-          @click="handlePreviousPage(1)"
-        >
+        <el-icon :size="12" class="cursor-pointer" @click="handlePreviousPage(1)">
           <DArrowLeft />
         </el-icon>
-        <el-icon
-          :size="12"
-          class="cursor-pointer"
-          @click="handlePreviousPage"
-        >
+        <el-icon :size="12" class="cursor-pointer" @click="handlePreviousPage">
           <ArrowLeft />
         </el-icon>
         <input
@@ -74,18 +53,10 @@
           :max="totalPage"
           @change="handlePageChange"
         />
-        <el-icon
-          :size="12"
-          class="cursor-pointer"
-          @click="handleNextPage"
-        >
+        <el-icon :size="12" class="cursor-pointer" @click="handleNextPage">
           <ArrowRight />
         </el-icon>
-        <el-icon
-          :size="12"
-          class="cursor-pointer"
-          @click="handleNextPage(totalPage)"
-        >
+        <el-icon :size="12" class="cursor-pointer" @click="handleNextPage(totalPage)">
           <DArrowRight />
         </el-icon>
       </div>
@@ -94,25 +65,19 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  ref,
-  computed,
-  reactive,
-  watch,
-  onMounted
-} from 'vue'
+import { ref, computed, reactive, watch, onMounted } from 'vue'
 
 const props = defineProps({
   data: {
-    type: Array as PropType<Array<Chart.ChartData>>,
+    type: Array as PropType<ChartDataDao.ChartData>,
     default: () => []
   },
   xAxisFields: {
-    type: Array as PropType<Array<Chart.XAxisFields>>,
+    type: Array as PropType<Array<GroupStore.GroupOption>>,
     default: () => []
   },
   yAxisFields: {
-    type: Array as PropType<Array<Chart.YAxisFields>>,
+    type: Array as PropType<Array<DimensionStore.DimensionOption>>,
     default: () => []
   },
   chartHeight: {
@@ -162,10 +127,9 @@ const chartsConfigStore = useChartConfigStore()
 /**
  * @desc 表格头状态
  */
-const tableHeaderState =
-  reactive<TableChart.TableHeaderState>({
-    tableHeader: []
-  })
+const tableHeaderState = reactive<TableChart.TableHeaderState>({
+  tableHeader: []
+})
 
 /**
  * @desc 表格数据状态
@@ -183,23 +147,17 @@ const total = computed(() => props.data.length)
 /**
  * @desc 开始索引
  */
-const startIndex = computed(
-  () => (pageNum.value - 1) * pageSize.value + 1
-)
+const startIndex = computed(() => (pageNum.value - 1) * pageSize.value + 1)
 
 /**
  * @desc 结束索引
  */
-const endIndex = computed(() =>
-  Math.min(pageNum.value * pageSize.value, total.value)
-)
+const endIndex = computed(() => Math.min(pageNum.value * pageSize.value, total.value))
 
 /**
  * @desc 总页数
  */
-const totalPage = computed(() =>
-  Math.ceil(total.value / pageSize.value)
-)
+const totalPage = computed(() => Math.ceil(total.value / pageSize.value))
 
 /**
  * @desc 分页数据
@@ -213,26 +171,15 @@ const paginatedData = computed(() => {
 /**
  * @desc 表格配置
  */
-const tableChartConfig = computed(
-  () => chartsConfigStore.chartConfig.table
-)
+const tableChartConfig = computed(() => chartsConfigStore.chartConfig?.table)
 
 // 方法
 /**
  * @desc 获取表格头类
  */
-const getTableHeaderClass = computed(
-  () => (item: TableChart.TableHeaderOption) => {
-    return [
-      'table-header-content',
-      item.orderType === 'desc'
-        ? 'icon-desc'
-        : item.orderType === 'asc'
-          ? 'icon-asc'
-          : ''
-    ]
-  }
-)
+const getTableHeaderClass = computed(() => (item: TableChart.TableHeaderOption) => {
+  return ['table-header-content', item.orderType === 'desc' ? 'icon-desc' : item.orderType === 'asc' ? 'icon-asc' : '']
+})
 
 /**
  * @desc 获取表格中的字段的样式
@@ -241,7 +188,7 @@ const getTableHeaderClass = computed(
  * @returns {string}
  */
 const getComparedClass = (
-  tableDataOption: Chart.ChartData,
+  tableDataOption: ChartDataDao.ChartData[number],
   tableHeaderOption: TableChart.TableHeaderOption
 ) => {
   return ''
@@ -250,26 +197,13 @@ const getComparedClass = (
 /**
  * @desc 处理排序
  */
-const handleEmitOrder = (
-  tableHeaderOption: TableChart.TableHeaderOption
-) => {
-  const orderTypes = [
-    'asc',
-    'desc',
-    null
-  ] as OrderStore.OrderType[]
-  const currentIndex = orderTypes.indexOf(
-    tableHeaderOption.orderType
-  )
-  tableHeaderOption.orderType =
-    orderTypes[(currentIndex + 1) % 3]
+const handleEmitOrder = (tableHeaderOption: TableChart.TableHeaderOption) => {
+  const orderTypes = ['asc', 'desc', null] as OrderStore.OrderType[]
+  const currentIndex = orderTypes.indexOf(tableHeaderOption.orderType)
+  tableHeaderOption.orderType = orderTypes[(currentIndex + 1) % 3]
 
-  const order = orderStore.getOrders.find(
-    (o) => o.columnName === tableHeaderOption.columnName
-  )
-  const orderIndex = orderStore.getOrders.findIndex(
-    (o) => o.columnName === tableHeaderOption.columnName
-  )
+  const order = orderStore.getOrders.find((o) => o.columnName === tableHeaderOption.columnName)
+  const orderIndex = orderStore.getOrders.findIndex((o) => o.columnName === tableHeaderOption.columnName)
 
   if (order && !tableHeaderOption.orderType) {
     orderStore.removeOrder(orderIndex)
@@ -291,65 +225,39 @@ const handleEmitOrder = (
  * @desc 获取比较样式
  */
 const getComparedStyle = (
-  tableDataOption: Chart.ChartData,
+  tableDataOption: ChartDataDao.ChartData[number],
   tableHeaderOption: TableChart.TableHeaderOption
 ): string => {
-  const conditions =
-    chartsConfigStore.getChartConfig.table.conditions
+  const conditions = chartsConfigStore.getChartConfig?.table?.conditions
   if (!conditions) return ''
 
-  const condition = conditions.find(
-    (c) => c.conditionField === tableHeaderOption.columnName
-  )
+  const condition = conditions.find((c) => c.conditionField === tableHeaderOption.columnName)
   if (!condition) return ''
 
-  const {
-    conditionType,
-    conditionSymbol,
-    conditionValue,
-    conditionColor,
-    conditionMinValue,
-    conditionMaxValue
-  } = condition
-  const currentValue = Number(
-    tableDataOption[tableHeaderOption.columnName || ''] ?? 0
-  )
+  const { conditionType, conditionSymbol, conditionValue, conditionColor, conditionMinValue, conditionMaxValue } =
+    condition
+
+  const keyForValue = (tableHeaderOption.alias || tableHeaderOption.columnName || '') as string
+  const currentValue = Number(tableDataOption[keyForValue] ?? 0)
 
   if (conditionType === '单色') {
-    type ConditionSymbol =
-      | 'gt'
-      | 'lt'
-      | 'eq'
-      | 'ne'
-      | 'ge'
-      | 'le'
-      | 'between'
-    const conditions: Record<
-      ConditionSymbol,
-      () => boolean
-    > = {
+    type ConditionSymbol = 'gt' | 'lt' | 'eq' | 'ne' | 'ge' | 'le' | 'between'
+    const conditions: Record<ConditionSymbol, () => boolean> = {
       gt: () => currentValue > Number(conditionValue || 0),
       lt: () => currentValue < Number(conditionValue || 0),
       eq: () => currentValue === Number(conditionValue),
       ne: () => currentValue !== Number(conditionValue),
       ge: () => currentValue >= Number(conditionValue || 0),
       le: () => currentValue <= Number(conditionValue || 0),
-      between: () =>
-        currentValue >= Number(conditionMinValue || 0) &&
-        currentValue <= Number(conditionMaxValue || 0)
+      between: () => currentValue >= Number(conditionMinValue || 0) && currentValue <= Number(conditionMaxValue || 0)
     }
 
-    return conditions[
-      conditionSymbol as ConditionSymbol
-    ]?.()
-      ? `color: ${conditionColor}`
-      : ''
+    return conditions[conditionSymbol as ConditionSymbol]?.() ? `color: ${conditionColor}` : ''
   }
 
   if (conditionType === '色阶') {
-    const currentRowValueList = props.data.map((t) =>
-      Number(t[tableHeaderOption.columnName || ''] ?? 0)
-    )
+    const keyForRow = (tableHeaderOption.alias || tableHeaderOption.columnName || '') as string
+    const currentRowValueList = props.data.map((t) => Number(t[keyForRow] ?? 0))
     const maxValue = Math.max(...currentRowValueList)
     const minValue = Math.min(...currentRowValueList)
     const valueDif = maxValue - minValue
@@ -360,15 +268,9 @@ const getComparedStyle = (
       .replace(/rgb\(|\)/g, '')
       .split(',')
       .map(Number) as [number, number, number]
-    const R =
-      256 -
-      (256 - r) * ((currentValue - minValue) / valueDif)
-    const G =
-      256 -
-      (256 - g) * ((currentValue - minValue) / valueDif)
-    const B =
-      256 -
-      (256 - b) * ((currentValue - minValue) / valueDif)
+    const R = 256 - (256 - r) * ((currentValue - minValue) / valueDif)
+    const G = 256 - (256 - g) * ((currentValue - minValue) / valueDif)
+    const B = 256 - (256 - b) * ((currentValue - minValue) / valueDif)
 
     return `background-color: rgb(${R},${G},${B})`
   }
@@ -380,15 +282,12 @@ const getComparedStyle = (
  * @desc 获取比较内容
  */
 const getComparedContent = (
-  tableDataOption: Chart.ChartData,
+  tableDataOption: ChartDataDao.ChartData[number],
   tableHeaderOption: TableChart.TableHeaderOption,
   index: number
 ): string => {
-  const key =
-    tableHeaderOption.alias || tableHeaderOption.columnName
-  return key != null && tableDataOption[key] != null
-    ? String(tableDataOption[key])
-    : ''
+  const key = (tableHeaderOption.alias || tableHeaderOption.columnName || '') as string
+  return key && tableDataOption[key] != null ? String(tableDataOption[key]) : ''
 }
 
 /**
@@ -396,8 +295,7 @@ const getComparedContent = (
  */
 const handlePageChange = () => {
   if (pageNum.value < 1) pageNum.value = 1
-  if (pageNum.value > totalPage.value)
-    pageNum.value = totalPage.value
+  if (pageNum.value > totalPage.value) pageNum.value = totalPage.value
 }
 
 /**
@@ -418,10 +316,7 @@ const handleNextPage = (page?: number) => {
   if (page && page === totalPage.value) {
     pageNum.value = page
   } else {
-    pageNum.value = Math.min(
-      totalPage.value,
-      pageNum.value + 1
-    )
+    pageNum.value = Math.min(totalPage.value, pageNum.value + 1)
   }
 }
 
@@ -429,11 +324,7 @@ const handleNextPage = (page?: number) => {
  * @desc 计算每页条数
  */
 const calculatePageSize = () => {
-  const availableHeight =
-    props.chartHeight -
-    TABLEHEADERHEIGHT -
-    PAGINATIONHEIGHT -
-    10
+  const availableHeight = props.chartHeight - TABLEHEADERHEIGHT - PAGINATIONHEIGHT - 10
   pageSize.value = Math.floor(availableHeight / ROWHEIGHT)
 }
 
@@ -441,19 +332,13 @@ const calculatePageSize = () => {
  * @desc 初始化表格头
  */
 const initTableHeader = () => {
-  const fields = [
-    ...props.xAxisFields,
-    ...props.yAxisFields
-  ]
+  const fields = [...props.xAxisFields, ...props.yAxisFields]
   tableHeaderState.tableHeader = fields.map((field) => {
-    const currentOrder = orderStore.getOrders.find(
-      (o) => o.columnName === field.columnName
-    )
+    const currentOrder = orderStore.getOrders.find((o) => o.columnName === field.columnName)
     return {
       ...field,
       orderType: currentOrder?.orderType || 'asc',
-      aggregationType:
-        currentOrder?.aggregationType || 'raw'
+      aggregationType: currentOrder?.aggregationType || 'raw'
     }
   })
 }
@@ -470,7 +355,7 @@ const initTableData = () => {
  * @desc 监听表格配置
  */
 watch(
-  () => tableChartConfig.value.conditions,
+  () => tableChartConfig.value?.conditions,
   () => {
     calculatePageSize()
   },

@@ -1,28 +1,26 @@
+import type { languages, IRange } from 'monaco-editor'
+
 declare module 'monaco-editor' {
-  import * as monaco from 'monaco-editor'
-  export interface Monaco {
-    languages: typeof monaco.languages
-  }
-  // 列选项
+  // 列选项（应用自定义扩展类型）
   export interface FieldOption {
-    fieldName: string // 字段名称
-    fieldType: string // 字段类型
-    fieldComment: string // 字段注释
-    databaseName: string // 数据库名称
-    tableName: string // 表名
+    fieldName: string
+    fieldType: string
+    fieldComment: string
+    databaseName: string
+    tableName: string
   }
 
-  // 表选项
+  // 表选项（应用自定义扩展类型）
   export interface TableOption {
-    tableName: string // 表名
-    tableComment: string //表备注
-    fieldOptions: Array
+    tableName: string
+    tableComment: string
+    fieldOptions: Array<FieldOption>
   }
 
-  // 数据库选项
+  // 数据库选项（应用自定义扩展类型）
   export interface DatabaseOption {
     databaseName: string
-    tableOptions: Array
+    tableOptions: Array<TableOption>
   }
 
   export interface SortText {
@@ -32,20 +30,13 @@ declare module 'monaco-editor' {
     Keyword: '3'
   }
 
-  // 重写monaco-editor建议声明
-  export interface SuggestOption
-    extends Pick<
-      monaco.languages.CompletionItem,
-      Exclude<
-        keyof monaco.languages.CompletionItem,
-        'range'
-      >
-    > {
+  // 自定义的 Suggest 项，兼容 monaco 的 CompletionItem
+  export interface SuggestOption extends Omit<languages.CompletionItem, 'range'> {
     range?:
-      | monaco.IRange
+      | IRange
       | {
-          insert: monaco.IRange
-          replace: monaco.IRange
+          insert: IRange
+          replace: IRange
         }
   }
 
