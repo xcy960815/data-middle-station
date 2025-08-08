@@ -4,9 +4,12 @@ const logger = new Logger({
   fileName: 'login',
   folderName: 'api'
 })
-
+/**
+ * 默认用户密码
+ */
 const USER_NAME = 'admin'
 const PASSWORD = '123456'
+export const AVATAR = 'https://64.media.tumblr.com/d15e5f21577f659a395d84e49f4d75dc/tumblr_oo4411ye0h1si8vfyo1_1280.gif'
 /**
  * 登录API
  */
@@ -50,10 +53,10 @@ export default defineEventHandler<Promise<ApiResponse<LoginVo.LoginOption>>>(asy
         httpOnly: true,
         maxAge: 60 * 60 * 24 * 7
       })
+
       return CustomResponse.success({
         userId: '1',
-        userName: body.userName,
-        avatar: 'https://64.media.tumblr.com/d15e5f21577f659a395d84e49f4d75dc/tumblr_oo4411ye0h1si8vfyo1_1280.gif'
+        userName: body.userName
       })
     } else {
       logger.warn(chalk.yellow(`用户 ${body.userName} 登录失败: 用户名或密码错误`))

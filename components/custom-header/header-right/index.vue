@@ -23,12 +23,8 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item>{{ userInfo.name }}</el-dropdown-item>
-            <el-dropdown-item v-if="!userInfo.name" command="login" class="logout">
-              登 录
-            </el-dropdown-item>
-            <el-dropdown-item v-if="userInfo.name" command="logout" class="logout">
-              登 出
-            </el-dropdown-item>
+            <el-dropdown-item v-if="!userInfo.name" command="login" class="logout"> 登 录 </el-dropdown-item>
+            <el-dropdown-item v-if="userInfo.name" command="logout" class="logout"> 登 出 </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -37,15 +33,7 @@
 </template>
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
-import {
-  ElDropdown,
-  ElDropdownMenu,
-  ElDropdownItem,
-  ElAvatar,
-  ElTooltip,
-  ElSelect,
-  ElOption,
-} from 'element-plus'
+import { ElDropdown, ElDropdownMenu, ElDropdownItem, ElAvatar, ElTooltip, ElSelect, ElOption } from 'element-plus'
 
 type Theme = 'light' | 'dark' | 'auto'
 /**
@@ -68,6 +56,18 @@ const theme = ref<Theme>('light')
  * @desc 用户信息
  */
 const userInfo = computed(() => userStore.userInfo)
+/**
+ * @desc 获取用户信息
+ */
+const getUserInfo = async () => {
+  const userInfoResult = await $fetch('/api/userInfo')
+  if (userInfoResult.code === RequestCodeEnum.Success) {
+    const { userId, userName, avatar } = userInfoResult.data as UserInfoVo.UserInfo
+    userStore.setUserId(userId)
+    userStore.setName(userName)
+    userStore.setAvatar(avatar)
+  }
+}
 
 /**
  * @desc 全屏状态
@@ -80,6 +80,8 @@ onMounted(() => {
 
   // 在非Mounted 中找不到 matchMedia 所以在这里初始化
   mediaQuery.value = matchMedia('(prefers-color-scheme: dark)')
+
+  getUserInfo()
 })
 /**
  * @desc 展开全屏和关闭全屏
