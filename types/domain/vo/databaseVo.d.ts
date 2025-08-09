@@ -29,5 +29,7 @@ declare namespace DatabaseVo {
     columnComment: string
     alias: string
     displayName: string
+    fixed?: 'left' | 'right'
+    width?: number
   }
 }
