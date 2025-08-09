@@ -1,1408 +1,1230 @@
 <template>
-  <div class="canvas-table-chart h-full">
-    <div class="table-layout">
-      <!-- 左侧固定列 -->
-      <div v-if="hasFixedColumns && leftFixedCount > 0" class="fixed-left" :style="{ width: leftFixedWidth + 'px' }">
-        <canvas ref="leftCanvasRef" class="fixed-canvas" @click="handleLeftCanvasClick"></canvas>
-      </div>
-
-      <!-- 中间滚动区域 -->
-      <div class="scroll-container" @scroll="handleScroll">
-        <div class="scroll-wrapper" :style="{ width: scrollableContainerWidth + 'px' }">
-          <canvas ref="centerCanvasRef" class="scroll-canvas" @click="handleCenterCanvasClick"></canvas>
-        </div>
-      </div>
-
-      <!-- 右侧固定列 -->
-      <div v-if="hasFixedColumns && rightFixedCount > 0" class="fixed-right" :style="{ width: rightFixedWidth + 'px' }">
-        <canvas ref="rightCanvasRef" class="fixed-canvas" @click="handleRightCanvasClick"></canvas>
-      </div>
-    </div>
-
-    <div class="pagination">
-      <span class="pagination-info"> 第{{ startIndex }}-{{ endIndex }}条，共{{ totalPage }}页{{ total }}条 </span>
-      <div class="pagination-controls">
-        <el-icon :size="12" class="cursor-pointer" @click="handlePreviousPage(1)">
-          <DArrowLeft />
-        </el-icon>
-        <el-icon :size="12" class="cursor-pointer" @click="handlePreviousPage">
-          <ArrowLeft />
-        </el-icon>
-        <input
-          class="page-input"
-          type="number"
-          v-model.number="pageNum"
-          min="1"
-          :max="totalPage"
-          @change="handlePageChange"
-        />
-        <el-icon :size="12" class="cursor-pointer" @click="handleNextPage">
-          <ArrowRight />
-        </el-icon>
-        <el-icon :size="12" class="cursor-pointer" @click="handleNextPage(totalPage)">
-          <DArrowRight />
-        </el-icon>
-      </div>
-    </div>
-  </div>
+  <div id="container-table" class="stage-container"></div>
 </template>
 
-<script lang="ts" setup>
-import { ref, computed, reactive, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { DArrowLeft, ArrowLeft, ArrowRight, DArrowRight } from '@element-plus/icons-vue'
-
-const props = defineProps({
-  data: {
-    type: Array as PropType<ChartDataDao.ChartData>,
-    default: () => []
-  },
-  xAxisFields: {
-    type: Array as PropType<Array<GroupStore.GroupOption>>,
-    default: () => []
-  },
-  yAxisFields: {
-    type: Array as PropType<Array<DimensionStore.DimensionOption>>,
-    default: () => []
-  },
-  chartHeight: {
-    type: Number,
-    default: () => 0
-  },
-  chartWidth: {
-    type: Number,
-    default: () => 0
-  },
-  // 是否启用列平均分剩余宽度
-  enableEqualWidth: {
-    type: Boolean,
-    default: false
-  },
-  // 固定列配置
-  fixedColumns: {
-    type: Object as PropType<{
-      left?: number // 左侧固定列数
-      right?: number // 右侧固定列数
-    }>,
-    default: () => ({})
-  },
-  // 图表配置
-  chartConfig: {
-    type: Object as PropType<{
-      conditions?: Array<{
-        conditionType: string
-        conditionField: string
-        conditionSymbol: string
-        conditionValue: number
-        conditionColor: string
-      }>
-    }>,
-    default: () => ({})
-  }
-})
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import Konva from 'konva'
+/**
+ * 默认宽度
+ */
+const DEFAULT_CLIENT_WIDTH = 800
+/**
+ * 默认高度
+ */
+const DEFAULT_CLIENT_HEIGHT = 420
+/**
+ * 运行时Konva引用（仅在客户端赋值）
+ */
+const konvaInstance = ref<typeof import('konva') | null>(null)
+/**
+ * 舞台实例
+ */
+const stage = ref<Konva.Stage | null>(null)
 
 /**
- * @desc 表格高度
+ * 列方向
  */
-const TABLEHEADERHEIGHT = 25
+type PinDirection = 'left' | 'right' | null
 
 /**
- * @desc 分页高度
+ * 列定义
  */
-const PAGINATIONHEIGHT = 25
-
-/**
- * @desc 行高
- */
-const ROWHEIGHT = 25
-
-/**
- * @desc 当前页码
- */
-const pageNum = ref(1)
-
-/**
- * @desc 每页条数
- */
-const pageSize = ref(0)
-
-/**
- * @desc Canvas引用
- */
-const canvasRef = ref<HTMLCanvasElement>()
-const leftCanvasRef = ref<HTMLCanvasElement>()
-const centerCanvasRef = ref<HTMLCanvasElement>()
-const rightCanvasRef = ref<HTMLCanvasElement>()
-
-/**
- * @desc Canvas上下文
- */
-const ctx = ref<CanvasRenderingContext2D | null>()
-const leftCtx = ref<CanvasRenderingContext2D | null>(null)
-const centerCtx = ref<CanvasRenderingContext2D | null>(null)
-const rightCtx = ref<CanvasRenderingContext2D | null>(null)
-
-/**
- * @desc 订单 store
- */
-const orderStore = useOrderStore()
-
-/**
- * @desc 图表配置 store
- */
-const chartsConfigStore = useChartConfigStore()
-
-/**
- * @desc 表格头状态
- */
-const tableHeaderState = reactive<TableChart.TableHeaderState>({
-  tableHeader: []
-})
-
-/**
- * @desc 表格数据状态
- */
-const tableDataState = reactive<TableChart.TableDataState>({
-  tableData: []
-})
-
-/**
- * @desc 鼠标位置
- */
-const mousePos = ref({ x: 0, y: 0 })
-
-/**
- * @desc 是否正在拖拽
- */
-const isDragging = ref(false)
-
-/**
- * @desc 滚动位置
- */
-const scrollPos = ref({ x: 0, y: 0 })
-
-/**
- * @desc 表格总宽度
- */
-const tableTotalWidth = ref(0)
-
-/**
- * @desc 可视区域宽度
- */
-const viewportWidth = ref(0)
-
-// 计算属性
-/**
- * @desc 总条数
- */
-const total = computed(() => props.data.length)
-
-/**
- * @desc 开始索引
- */
-const startIndex = computed(() => (pageNum.value - 1) * pageSize.value + 1)
-
-/**
- * @desc 结束索引
- */
-const endIndex = computed(() => Math.min(pageNum.value * pageSize.value, total.value))
-
-/**
- * @desc 总页数
- */
-const totalPage = computed(() => Math.ceil(total.value / pageSize.value))
-
-/**
- * @desc 分页数据
- */
-const paginatedData = computed(() => {
-  const start = (pageNum.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return tableDataState.tableData.slice(start, end)
-})
-
-/**
- * @desc 表格配置
- */
-const tableChartConfig = computed(() => chartsConfigStore.chartConfig?.table)
-
-/**
- * @desc 左侧固定列数
- */
-const leftFixedCount = computed(() => props.fixedColumns.left || 0)
-
-/**
- * @desc 右侧固定列数
- */
-const rightFixedCount = computed(() => props.fixedColumns.right || 0)
-
-/**
- * @desc 是否有固定列
- */
-const hasFixedColumns = computed(() => leftFixedCount.value > 0 || rightFixedCount.value > 0)
-
-/**
- * @desc 左侧固定列总宽度
- */
-const leftFixedWidth = computed(() => {
-  if (leftFixedCount.value === 0) return 0
-  const columnWidths = calculateColumnWidths(tableTotalWidth.value)
-  return columnWidths.slice(0, leftFixedCount.value).reduce((sum, width) => sum + width, 0)
-})
-
-/**
- * @desc 右侧固定列总宽度
- */
-const rightFixedWidth = computed(() => {
-  if (rightFixedCount.value === 0) return 0
-  const columnWidths = calculateColumnWidths(tableTotalWidth.value)
-  const startIndex = columnWidths.length - rightFixedCount.value
-  return columnWidths.slice(startIndex).reduce((sum, width) => sum + width, 0)
-})
-
-/**
- * @desc 中间可滚动区域宽度
- */
-const scrollableWidth = computed(() => {
-  // 计算所有列的总宽度
-  const allColumnWidths = calculateColumnWidths(viewportWidth.value)
-  const totalColumns = allColumnWidths.length
-  const scrollableStart = leftFixedCount.value
-  const scrollableEnd = totalColumns - rightFixedCount.value
-
-  // 计算中间列的总宽度
-  const scrollableColumnsWidth = allColumnWidths
-    .slice(scrollableStart, scrollableEnd)
-    .reduce((sum, width) => sum + width, 0)
-
-  // 计算可视区域中可用于中间列的宽度
-  const availableWidth = viewportWidth.value - leftFixedWidth.value - rightFixedWidth.value
-
-  // 如果中间列总宽度小于等于可用宽度，则不需要滚动，使用可用宽度
-  // 如果中间列总宽度大于可用宽度，则需要滚动，使用实际宽度
-  return Math.max(scrollableColumnsWidth, availableWidth)
-})
-
-/**
- * @desc 中间滚动容器的实际宽度
- */
-const scrollableContainerWidth = computed(() => {
-  return Math.max(scrollableWidth.value, viewportWidth.value - leftFixedWidth.value - rightFixedWidth.value)
-})
-
-/**
- * @desc 表格样式配置
- */
-const tableStyles = {
-  headerBg: '#f5f7fa',
-  headerBorder: '#e4e7ed',
-  headerText: '#606266',
-  rowBg: '#ffffff',
-  rowBgEven: '#fafafa',
-  rowHoverBg: '#f5f7fa',
-  border: '#ebeef5',
-  text: '#606266',
-  fontSize: 13,
-  padding: 12
+interface ColumnDef {
+  key: string
+  title: string
+  width: number
+  pin: PinDirection
+  align?: 'left' | 'center' | 'right'
 }
 
 /**
- * @desc 初始化Canvas
+ * 行数据
  */
-const initCanvas = () => {
-  // 初始化左侧固定列Canvas
-  if (leftCanvasRef.value && hasFixedColumns.value && leftFixedCount.value > 0) {
-    const leftCanvas = leftCanvasRef.value
-    leftCtx.value = leftCanvas.getContext('2d')
-    if (leftCtx.value) {
-      const container = leftCanvas.parentElement
-      if (container) {
-        // 直接计算左侧固定列宽度，避免循环依赖
-        const columnWidths = calculateColumnWidths(viewportWidth.value)
-        const width = columnWidths.slice(0, leftFixedCount.value).reduce((sum, w) => sum + w, 0)
-        const height = container.clientHeight || 600
-        const dpr = window.devicePixelRatio || 1
-        leftCanvas.width = width * dpr
-        leftCanvas.height = height * dpr
-        leftCtx.value.scale(dpr, dpr)
-        leftCanvas.style.width = width + 'px'
-        leftCanvas.style.height = height + 'px'
-      }
-    }
+interface RowData {
+  [key: string]: string | number
+}
+
+const props = withDefaults(
+  defineProps<{
+    columns?: ColumnDef[]
+    data?: RowData[]
+    height?: number | string
+  }>(),
+  {
+    columns: () => [],
+    data: () => [],
+    height: 'auto'
   }
+)
+const { columns, data, height } = props
 
-  // 初始化中间滚动区域Canvas
-  if (centerCanvasRef.value) {
-    const centerCanvas = centerCanvasRef.value
-    centerCtx.value = centerCanvas.getContext('2d')
-    if (centerCtx.value) {
-      const container = centerCanvas.parentElement
-      if (container) {
-        // 使用计算好的中间区域宽度
-        const columnWidths = calculateColumnWidths(viewportWidth.value)
-        const leftWidth =
-          leftFixedCount.value > 0 ? columnWidths.slice(0, leftFixedCount.value).reduce((sum, w) => sum + w, 0) : 0
-        const rightWidth =
-          rightFixedCount.value > 0
-            ? columnWidths.slice(columnWidths.length - rightFixedCount.value).reduce((sum, w) => sum + w, 0)
-            : 0
+/**
+ * 布局配置
+ */
+const headerHeight = 40
+/**
+ * 行高
+ */
+const rowHeight = 32
+/**
+ * 滚动条大小
+ */
+const scrollbarSize = 16
+/**
+ * 表格内边距
+ */
+const tablePadding = 0
+/**
+ * 表头背景色
+ */
+const headerBg = '#f7f7f9'
+/**
+ * 奇数行背景色
+ */
+const bodyBgOdd = '#ffffff'
+/**
+ * 偶数行背景色
+ */
+const bodyBgEven = '#fbfbfd'
 
-        const scrollableStart = leftFixedCount.value
-        const scrollableEnd = columnWidths.length - rightFixedCount.value
-        const scrollableColumnsWidth = columnWidths.slice(scrollableStart, scrollableEnd).reduce((sum, w) => sum + w, 0)
-        const availableWidth = viewportWidth.value - leftWidth - rightWidth
-        const width = Math.max(scrollableColumnsWidth, availableWidth)
+const borderColor = '#dcdfe6'
+/**
+ * 表头文本颜色
+ */
+const headerTextColor = '#303133'
+/**
+ * 内容文本颜色
+ */
+const bodyTextColor = '#303133'
+/**
+ * 滚动条背景色
+ */
+const scrollbarBg = '#f1f1f1'
+/**
+ * 滚动条滑块颜色
+ */
+const scrollbarThumb = '#c1c1c1'
+/**
+ * 滚动条滑块悬停颜色
+ */
+const scrollbarThumbHover = '#a8a8a8'
 
-        const height = container.clientHeight || 600
-        const dpr = window.devicePixelRatio || 1
-        centerCanvas.width = width * dpr
-        centerCanvas.height = height * dpr
-        centerCtx.value.scale(dpr, dpr)
-        centerCanvas.style.width = width + 'px'
-        centerCanvas.style.height = height + 'px'
-      }
-    }
-  }
+const headerLayer = ref<Konva.Layer | null>(null)
+const bodyLayer = ref<Konva.Layer | null>(null)
+const fixedLayer = ref<Konva.Layer | null>(null)
+const fixedHeaderLayer = ref<Konva.Layer | null>(null)
+const scrollbarLayer = ref<Konva.Layer | null>(null)
 
-  // 初始化右侧固定列Canvas
-  if (rightCanvasRef.value && hasFixedColumns.value && rightFixedCount.value > 0) {
-    const rightCanvas = rightCanvasRef.value
-    rightCtx.value = rightCanvas.getContext('2d')
-    if (rightCtx.value) {
-      const container = rightCanvas.parentElement
-      if (container) {
-        // 直接计算右侧固定列宽度，避免循环依赖
-        const columnWidths = calculateColumnWidths(viewportWidth.value)
-        const startIndex = columnWidths.length - rightFixedCount.value
-        const width = columnWidths.slice(startIndex).reduce((sum, w) => sum + w, 0)
-        const height = container.clientHeight || 600
-        const dpr = window.devicePixelRatio || 1
-        rightCanvas.width = width * dpr
-        rightCanvas.height = height * dpr
-        rightCtx.value.scale(dpr, dpr)
-        rightCanvas.style.width = width + 'px'
-        rightCanvas.style.height = height + 'px'
-      }
-    }
-  }
+const centerBodyClipGroup = ref<Konva.Group | null>(null)
 
-  // 保持向后兼容
-  if (canvasRef.value) {
-    const canvas = canvasRef.value
-    ctx.value = canvas.getContext('2d')
-    if (ctx.value) {
-      const container = canvas.parentElement
-      if (container) {
-        const width = container.clientWidth || 800
-        const height = container.clientHeight || 600
-        canvas.width = width
-        canvas.height = height
-      }
-      const dpr = window.devicePixelRatio || 1
-      const rect = canvas.getBoundingClientRect()
-      const finalWidth = rect.width || 800
-      const finalHeight = rect.height || 600
-      canvas.width = finalWidth * dpr
-      canvas.height = finalHeight * dpr
-      ctx.value.scale(dpr, dpr)
-      canvas.style.width = finalWidth + 'px'
-      canvas.style.height = finalHeight + 'px'
-    }
+const leftHeaderGroup = ref<Konva.Group | null>(null)
+const centerHeaderGroup = ref<Konva.Group | null>(null)
+const rightHeaderGroup = ref<Konva.Group | null>(null)
+
+const leftBodyGroup = ref<Konva.Group | null>(null)
+const centerBodyGroup = ref<Konva.Group | null>(null)
+const rightBodyGroup = ref<Konva.Group | null>(null)
+
+// Scrolling state
+const scrollY = ref(0)
+const scrollX = ref(0)
+
+// Scrollbar elements
+const vScrollbar = ref<Konva.Group | null>(null)
+const hScrollbar = ref<Konva.Group | null>(null)
+const vThumb = ref<Konva.Rect | null>(null)
+const hThumb = ref<Konva.Rect | null>(null)
+
+// Drag state
+let isDraggingVThumb = false
+let isDraggingHThumb = false
+let dragStartY = 0
+let dragStartX = 0
+let dragStartScrollY = 0
+let dragStartScrollX = 0
+
+// Cell selection state
+const selectedCell = ref<{ rowIndex: number; colIndex: number; colKey: string } | null>(null)
+const highlightRect = ref<Konva.Rect | null>(null)
+
+// Virtual scrolling state
+let virtualScrollTop = 0
+let visibleRowStart = 0
+let visibleRowEnd = 0
+let bufferRows = 5 // 上下缓冲行数
+let visibleRowCount = 0 // 可视区域行数
+
+// Object pools for performance optimization
+interface ObjectPools {
+  cellRects: Konva.Rect[]
+  textNodes: Konva.Text[]
+  backgroundRects: Konva.Rect[]
+}
+
+const leftBodyPools: ObjectPools = { cellRects: [], textNodes: [], backgroundRects: [] }
+const centerBodyPools: ObjectPools = { cellRects: [], textNodes: [], backgroundRects: [] }
+const rightBodyPools: ObjectPools = { cellRects: [], textNodes: [], backgroundRects: [] }
+
+/**
+ * 计算列的宽度
+ */
+function getSplitColumns() {
+  const leftCols = columns.filter((c) => c.pin === 'left')
+  const rightCols = columns.filter((c) => c.pin === 'right')
+  const centerCols = columns.filter((c) => !c.pin)
+  const sumWidth = (arr: ColumnDef[]) => arr.reduce((acc, c) => acc + c.width, 0)
+  return {
+    leftCols,
+    centerCols,
+    rightCols,
+    leftWidth: sumWidth(leftCols),
+    centerWidth: sumWidth(centerCols),
+    rightWidth: sumWidth(rightCols),
+    totalWidth: sumWidth(columns)
   }
 }
 
 /**
- * @desc 绘制文本
+ * 限制值在最小值和最大值之间
  */
-const drawText = (
-  text: string,
-  x: number,
-  y: number,
-  options: {
-    color?: string
-    fontSize?: number
-    fontWeight?: string
-    textAlign?: CanvasTextAlign
-    maxWidth?: number
-    context?: CanvasRenderingContext2D | null
-  } = {}
-) => {
-  const targetCtx = options.context || ctx.value
-  if (!targetCtx) return
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n))
+}
 
-  const {
-    color = tableStyles.text,
-    fontSize = tableStyles.fontSize,
-    fontWeight = 'normal',
-    textAlign = 'left',
-    maxWidth
-  } = options
+/**
+ * 获取文本的x坐标
+ */
+function getTextX(x: number) {
+  return x + 8
+}
 
-  targetCtx.fillStyle = color
-  targetCtx.font = `${fontWeight} ${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`
-  targetCtx.textAlign = textAlign
-  targetCtx.textBaseline = 'middle'
+/**
+ * 截断文本
+ */
+function truncateText(text: string, maxWidth: number, fontSize: number, fontFamily: string): string {
+  // Create a temporary text node to measure text width
+  const tempText = new Konva.Text({
+    text: text,
+    fontSize: fontSize,
+    fontFamily: fontFamily
+  })
 
-  if (maxWidth) {
-    // 文本截断
-    let truncatedText = text
-    while (targetCtx.measureText(truncatedText + '...').width > maxWidth && truncatedText.length > 0) {
-      truncatedText = truncatedText.slice(0, -1)
+  // If text fits within maxWidth, return as is
+  if (tempText.width() <= maxWidth) {
+    tempText.destroy()
+    return text
+  }
+
+  // Binary search to find the maximum number of characters that fit
+  let left = 0
+  let right = text.length
+  let result = ''
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+    const testText = text.substring(0, mid) + '...'
+
+    tempText.text(testText)
+
+    if (tempText.width() <= maxWidth) {
+      result = testText
+      left = mid + 1
+    } else {
+      right = mid - 1
     }
-    if (truncatedText !== text) {
-      truncatedText += '...'
-    }
-    targetCtx.fillText(truncatedText, x, y)
+  }
+
+  tempText.destroy()
+  return result || '...'
+}
+
+/**
+ * 创建高亮矩形
+ */
+function createHighlightRect(x: number, y: number, width: number, height: number, group: any) {
+  // Remove existing highlight
+  if (highlightRect.value) {
+    highlightRect.value.destroy()
+    highlightRect.value = null
+  }
+  // Create new highlight rectangle
+  highlightRect.value = new Konva.Rect({
+    x,
+    y,
+    width,
+    height,
+    fill: 'rgba(66, 165, 245, 0.3)', // Light blue highlight
+    stroke: '#1976d2',
+    strokeWidth: 2,
+    listening: false
+  })
+
+  // Add to the same group as the cell
+  if (highlightRect.value) {
+    ;(group as any).add(highlightRect.value)
+  }
+
+  // Move highlight to top within the group
+  if (highlightRect.value && typeof (highlightRect.value as any).moveToTop === 'function') {
+    highlightRect.value.moveToTop()
+  }
+
+  // Redraw the layer that contains this group
+  const layer = group.getLayer()
+  layer?.batchDraw()
+
+  // console.log('Highlight created at:', x, y, 'size:', width, height)
+}
+
+/**
+ * 处理单元格点击事件
+ */
+function handleCellClick(
+  rowIndex: number,
+  colIndex: number,
+  col: ColumnDef,
+  cellX: number,
+  cellY: number,
+  cellWidth: number,
+  cellHeight: number,
+  group: Konva.Group
+) {
+  // Update selected cell
+  selectedCell.value = { rowIndex, colIndex, colKey: col.key }
+
+  // 检查选中的行是否在当前可视区域内
+  if (rowIndex >= visibleRowStart && rowIndex <= visibleRowEnd) {
+    // 在可视区域内，直接创建高亮
+    createHighlightRect(cellX, cellY, cellWidth, cellHeight, group)
   } else {
-    targetCtx.fillText(text, x, y)
+    // 不在可视区域内，清除现有高亮，等待滚动到该位置时重新创建
+    if (highlightRect.value) {
+      highlightRect.value.destroy()
+      highlightRect.value = null
+    }
+    // 行不在可视区域内时不输出日志
   }
+
+  // 取消调试日志输出
 }
 
 /**
- * @desc 文本测量上下文与估算
+ * 获取滚动限制
  */
-let measureCtx: CanvasRenderingContext2D | null = null
-const getMeasureContext = (): CanvasRenderingContext2D | null => {
-  if (typeof document === 'undefined') return null
-  if (!measureCtx) {
-    const canvas = document.createElement('canvas')
-    measureCtx = canvas.getContext('2d')
-  }
-  if (measureCtx) {
-    measureCtx.font = `normal ${tableStyles.fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`
-  }
-  return measureCtx
-}
-const estimateTextWidth = (text: string): number => {
-  return (text?.length || 0) * tableStyles.fontSize * 0.6
-}
+function getScrollLimits() {
+  if (!stage.value) return { maxScrollX: 0, maxScrollY: 0 }
 
-/**
- * @desc 绘制矩形
- */
-const drawRect = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  options: {
-    fillColor?: string
-    strokeColor?: string
-    lineWidth?: number
-    context?: CanvasRenderingContext2D | null
-  } = {}
-) => {
-  const targetCtx = options.context || ctx.value
-  if (!targetCtx) return
+  const { totalWidth, leftWidth, rightWidth } = getSplitColumns()
+  const stageWidth = stage.value.width()
+  const stageHeight = stage.value.height()
+  const contentHeight = data.length * rowHeight
+  const visibleContentWidth = stageWidth - leftWidth - rightWidth - scrollbarSize
 
-  const { fillColor, strokeColor, lineWidth = 1 } = options
+  const maxScrollX = Math.max(0, totalWidth - leftWidth - rightWidth - visibleContentWidth)
+  const maxScrollY = Math.max(0, contentHeight - (stageHeight - headerHeight - scrollbarSize))
 
-  if (fillColor) {
-    targetCtx.fillStyle = fillColor
-    targetCtx.fillRect(x, y, width, height)
-  }
-
-  if (strokeColor) {
-    targetCtx.strokeStyle = strokeColor
-    targetCtx.lineWidth = lineWidth
-    targetCtx.strokeRect(x, y, width, height)
-  }
+  return { maxScrollX, maxScrollY }
 }
 
 /**
- * @desc 绘制表格
+ * 计算虚拟滚动的可视区域
+ * 根据当前滚动位置计算需要渲染的行范围
  */
-const drawTable = () => {
-  console.log('开始绘制表格')
-  console.log('表头数量:', tableHeaderState.tableHeader.length)
-  console.log('数据数量:', paginatedData.value.length)
+function calculateVisibleRows() {
+  if (!stage.value) return
 
-  if (tableHeaderState.tableHeader.length === 0 || paginatedData.value.length === 0) {
-    console.log('表头或数据为空，退出绘制')
+  const stageHeight = stage.value.height()
+  const contentHeight = stageHeight - headerHeight - scrollbarSize
+
+  // 计算可视区域能显示的行数
+  visibleRowCount = Math.ceil(contentHeight / rowHeight)
+
+  // 根据scrollY计算起始行
+  const startRow = Math.floor(scrollY.value / rowHeight)
+
+  // 添加缓冲区，确保滚动时有预渲染的行
+  visibleRowStart = Math.max(0, startRow - bufferRows)
+  visibleRowEnd = Math.min(data.length - 1, startRow + visibleRowCount + bufferRows)
+
+  // 取消调试日志输出
+}
+
+/**
+ * 从对象池获取或创建对象
+ */
+function getFromPool<T extends Konva.Node>(pool: T[], createFn: () => T): T {
+  let obj = pool.pop()
+  if (!obj) {
+    obj = createFn()
+  }
+  return obj
+}
+
+/**
+ * 将对象返回到池中
+ */
+function returnToPool<T extends Konva.Node>(pool: T[], obj: T) {
+  obj.remove() // 从场景中移除
+  pool.push(obj)
+}
+
+/**
+ * 为固定列添加右边缘阴影效果
+ * @param group 要添加阴影的组
+ * @param cols 列定义数组
+ * @param isHeader 是否为表头区域
+ */
+function createFixedColumnShadow() {
+  if (!stage.value || !bodyLayer.value || !headerLayer.value) return
+
+  // 移除旧的阴影
+  const existingBodyShadow = stage.value?.findOne('.fixedColumnBodyShadow')
+  const existingHeaderShadow = stage.value?.findOne('.fixedColumnHeaderShadow')
+  if (existingBodyShadow) existingBodyShadow.destroy()
+  if (existingHeaderShadow) existingHeaderShadow.destroy()
+
+  // 计算左侧固定列的总宽度
+  const { leftCols } = getSplitColumns()
+  const totalWidth = leftCols.reduce((acc, col) => acc + col.width, 0)
+
+  //
+
+  // 创建表头阴影
+  const headerShadowRect = new Konva.Rect({
+    x: totalWidth,
+    y: 0, // 从顶部开始
+    width: 4,
+    height: headerHeight, // 表头高度
+    fill: 'rgba(0, 0, 0, 0.1)',
+    listening: false,
+    name: 'fixedColumnHeaderShadow'
+  })
+
+  // 创建内容区域阴影
+  const stageHeight = stage.value.height()
+  const bodyShadowRect = new Konva.Rect({
+    x: totalWidth,
+    y: headerHeight, // 从表头下方开始
+    width: 4,
+    height: stageHeight - headerHeight - scrollbarSize, // 覆盖整个内容区域
+    fill: 'rgba(0, 0, 0, 0.1)',
+    listening: false,
+    name: 'fixedColumnBodyShadow'
+  })
+
+  // 将阴影添加到对应的层
+  headerLayer.value.add(headerShadowRect)
+  bodyLayer.value.add(bodyShadowRect)
+
+  headerLayer.value.batchDraw()
+  bodyLayer.value.batchDraw()
+
+  // 取消调试日志输出
+}
+
+/**
+ * 初始化表格
+ */
+const initTable = () => {
+  const tableContainer = document.querySelector<HTMLDivElement>('#container-table')
+  if (!tableContainer) return
+  const width = tableContainer.clientWidth || DEFAULT_CLIENT_WIDTH
+  const height = tableContainer.clientHeight || DEFAULT_CLIENT_HEIGHT
+
+  if (!stage.value) {
+    stage.value = new Konva.Stage({ container: tableContainer, width, height })
+  } else {
+    stage.value.size({ width, height })
+  }
+
+  if (!headerLayer.value) {
+    headerLayer.value = new Konva.Layer()
+    stage.value.add(headerLayer.value)
+  }
+
+  if (!bodyLayer.value) {
+    bodyLayer.value = new Konva.Layer()
+    stage.value.add(bodyLayer.value)
+  }
+
+  if (!fixedLayer.value) {
+    fixedLayer.value = new Konva.Layer()
+    stage.value.add(fixedLayer.value)
+  }
+
+  if (!fixedHeaderLayer.value) {
+    fixedHeaderLayer.value = new Konva.Layer()
+    stage.value.add(fixedHeaderLayer.value)
+  }
+
+  if (!scrollbarLayer.value) {
+    scrollbarLayer.value = new Konva.Layer()
+    stage.value.add(scrollbarLayer.value)
+  }
+
+  const { leftWidth, rightWidth } = getSplitColumns()
+  const contentHeight = height - headerHeight - scrollbarSize
+
+  // Always recreate clipping group for center scrollable content
+  centerBodyClipGroup.value = new Konva.Group({
+    x: leftWidth,
+    y: headerHeight,
+    clip: {
+      x: 0,
+      y: 0,
+      width: width - leftWidth - rightWidth - scrollbarSize,
+      height: contentHeight
+    }
+  })
+  bodyLayer.value.add(centerBodyClipGroup.value)
+}
+
+/**
+ * 清除组
+ */
+function clearGroups() {
+  headerLayer.value?.destroyChildren()
+  bodyLayer.value?.destroyChildren()
+  fixedLayer.value?.destroyChildren()
+  fixedHeaderLayer.value?.destroyChildren()
+  scrollbarLayer.value?.destroyChildren()
+
+  // 清理对象池
+  const clearPool = (pool: Konva.Node[]) => {
+    pool.forEach((obj) => obj.destroy())
+    pool.length = 0
+  }
+
+  clearPool(leftBodyPools.cellRects)
+  clearPool(leftBodyPools.textNodes)
+  clearPool(leftBodyPools.backgroundRects)
+  clearPool(centerBodyPools.cellRects)
+  clearPool(centerBodyPools.textNodes)
+  clearPool(centerBodyPools.backgroundRects)
+  clearPool(rightBodyPools.cellRects)
+  clearPool(rightBodyPools.textNodes)
+  clearPool(rightBodyPools.backgroundRects)
+
+  // Reset scrollbar references
+  vScrollbar.value = null
+  hScrollbar.value = null
+  vThumb.value = null
+  hThumb.value = null
+
+  // Reset centerBodyClipGroup.value reference
+  centerBodyClipGroup.value = null
+
+  // Reset cell selection
+  selectedCell.value = null
+  highlightRect.value = null
+
+  // Reset virtual scrolling state
+  visibleRowStart = 0
+  visibleRowEnd = 0
+  visibleRowCount = 0
+}
+
+function rebuildGroups() {
+  if (
+    !stage.value ||
+    !headerLayer.value ||
+    !bodyLayer.value ||
+    !fixedLayer.value ||
+    !fixedHeaderLayer.value ||
+    !scrollbarLayer.value
+  )
     return
-  }
 
-  // 获取容器宽度
-  const container = centerCanvasRef.value?.parentElement?.parentElement
-  if (!container) {
-    console.log('找不到容器元素，使用默认宽度')
-    viewportWidth.value = 800
-  } else {
-    const containerWidth = container.clientWidth || 800
-    viewportWidth.value = containerWidth
-    console.log('容器宽度:', containerWidth)
-  }
-
-  // 计算列宽
-  const columnWidths = calculateColumnWidths(viewportWidth.value)
-  const totalWidth = columnWidths.reduce((sum, width) => sum + width, 0)
-  console.log('列宽:', columnWidths)
-  console.log('总宽度:', totalWidth)
-
-  // 计算固定列宽度
-  const leftWidth =
-    leftFixedCount.value > 0 ? columnWidths.slice(0, leftFixedCount.value).reduce((sum, w) => sum + w, 0) : 0
-  const rightWidth =
-    rightFixedCount.value > 0
-      ? columnWidths.slice(columnWidths.length - rightFixedCount.value).reduce((sum, w) => sum + w, 0)
-      : 0
-
-  // 计算中间列宽度
-  const scrollableStart = leftFixedCount.value
-  const scrollableEnd = columnWidths.length - rightFixedCount.value
-  const scrollableColumnsWidth = columnWidths.slice(scrollableStart, scrollableEnd).reduce((sum, w) => sum + w, 0)
-
-  // 计算可视区域中可用于中间列的宽度
-  const availableWidth = viewportWidth.value - leftWidth - rightWidth
-
-  // 确定中间区域的实际宽度
-  const actualScrollableWidth = Math.max(scrollableColumnsWidth, availableWidth)
-
-  // 更新表格总宽度
-  tableTotalWidth.value = leftWidth + actualScrollableWidth + rightWidth
-
-  console.log('左侧宽度:', leftWidth)
-  console.log('右侧宽度:', rightWidth)
-  console.log('中间列宽度:', scrollableColumnsWidth)
-  console.log('可用宽度:', availableWidth)
-  console.log('实际中间宽度:', actualScrollableWidth)
-  console.log('表格总宽度:', tableTotalWidth.value)
-
-  // 初始化Canvas
-  initCanvas()
-
-  // 绘制左侧固定列
-  if (hasFixedColumns.value && leftFixedCount.value > 0 && leftCtx.value) {
-    console.log('绘制左侧固定列')
-    drawFixedColumns(columnWidths, 'left')
-  }
-
-  // 绘制中间滚动区域
-  if (centerCtx.value) {
-    console.log('绘制中间滚动区域')
-    drawScrollableArea(columnWidths)
-  }
-
-  // 绘制右侧固定列
-  if (hasFixedColumns.value && rightFixedCount.value > 0 && rightCtx.value) {
-    console.log('绘制右侧固定列')
-    drawFixedColumns(columnWidths, 'right')
-  }
-}
-
-/**
- * @desc 绘制固定列
- */
-const drawFixedColumns = (columnWidths: number[], position: 'left' | 'right') => {
-  const ctx = position === 'left' ? leftCtx.value : rightCtx.value
-  if (!ctx) return
-
-  const container = position === 'left' ? leftCanvasRef.value?.parentElement : rightCanvasRef.value?.parentElement
-  if (!container) return
-
-  const containerHeight = container.clientHeight || 600
-  const startIndex = position === 'left' ? 0 : columnWidths.length - rightFixedCount.value
-  const endIndex = position === 'left' ? leftFixedCount.value : columnWidths.length
-  const columns = tableHeaderState.tableHeader.slice(startIndex, endIndex)
-  const widths = columnWidths.slice(startIndex, endIndex)
-
-  // 清空画布
-  const canvasWidth =
-    position === 'left'
-      ? columnWidths.slice(0, leftFixedCount.value).reduce((sum, w) => sum + w, 0)
-      : columnWidths.slice(columnWidths.length - rightFixedCount.value).reduce((sum, w) => sum + w, 0)
-  ctx.clearRect(0, 0, canvasWidth, containerHeight)
-
-  // 绘制表头
-  let x = 0
-  columns.forEach((header, index) => {
-    const width = widths[index]
-    const headerText = header.displayName || header.alias || header.columnName
-
-    // 绘制表头背景
-    drawRect(x, 0, width, TABLEHEADERHEIGHT, {
-      fillColor: tableStyles.headerBg,
-      strokeColor: tableStyles.headerBorder,
-      lineWidth: 1,
-      context: ctx
-    })
-
-    // 绘制表头文本
-    drawText(headerText, x + tableStyles.padding, TABLEHEADERHEIGHT / 2, {
-      color: tableStyles.headerText,
-      fontWeight: '500',
-      maxWidth: width - tableStyles.padding * 2,
-      context: ctx
-    })
-
-    x += width
-  })
-
-  // 绘制表格内容
-  paginatedData.value.forEach((row: ChartDataDao.ChartData[number], rowIndex: number) => {
-    const y = TABLEHEADERHEIGHT + rowIndex * ROWHEIGHT
-    x = 0
-
-    columns.forEach((header, colIndex) => {
-      const width = widths[colIndex]
-      const key = (header.alias || header.columnName || '') as string
-      const cellText = key && row[key] != null ? String(row[key]) : ''
-
-      // 绘制单元格背景
-      const bgColor = rowIndex % 2 === 0 ? tableStyles.rowBg : tableStyles.rowBgEven
-      drawRect(x, y, width, ROWHEIGHT, {
-        fillColor: bgColor,
-        strokeColor: tableStyles.border,
-        lineWidth: 1,
-        context: ctx
-      })
-
-      // 绘制单元格文本
-      drawText(cellText, x + tableStyles.padding, y + ROWHEIGHT / 2, {
-        maxWidth: width - tableStyles.padding * 2,
-        context: ctx
-      })
-
-      x += width
-    })
-  })
-}
-
-/**
- * @desc 绘制可滚动区域
- */
-const drawScrollableArea = (columnWidths: number[]) => {
-  if (!centerCtx.value) return
-
-  const container = centerCanvasRef.value?.parentElement
-  if (!container) return
-
-  const containerHeight = container.clientHeight || 600
-  const startIndex = leftFixedCount.value
-  const endIndex = columnWidths.length - rightFixedCount.value
-  const columns = tableHeaderState.tableHeader.slice(startIndex, endIndex)
-  const widths = columnWidths.slice(startIndex, endIndex)
-
-  // 清空画布
-  const scrollableCanvasWidth = columnWidths.slice(startIndex, endIndex).reduce((sum, w) => sum + w, 0)
-  const leftWidth =
-    leftFixedCount.value > 0 ? columnWidths.slice(0, leftFixedCount.value).reduce((sum, w) => sum + w, 0) : 0
-  const rightWidth =
-    rightFixedCount.value > 0
-      ? columnWidths.slice(columnWidths.length - rightFixedCount.value).reduce((sum, w) => sum + w, 0)
-      : 0
-  const availableWidth = viewportWidth.value - leftWidth - rightWidth
-  const actualCanvasWidth = Math.max(scrollableCanvasWidth, availableWidth)
-
-  centerCtx.value.clearRect(0, 0, actualCanvasWidth, containerHeight)
-
-  // 绘制表头
-  let x = 0
-  columns.forEach((header, index) => {
-    const width = widths[index]
-    const headerText = header.displayName || header.alias || header.columnName
-
-    // 绘制表头背景
-    drawRect(x, 0, width, TABLEHEADERHEIGHT, {
-      fillColor: tableStyles.headerBg,
-      strokeColor: tableStyles.headerBorder,
-      lineWidth: 1,
-      context: centerCtx.value
-    })
-
-    // 绘制表头文本
-    drawText(headerText, x + tableStyles.padding, TABLEHEADERHEIGHT / 2, {
-      color: tableStyles.headerText,
-      fontWeight: '500',
-      maxWidth: width - tableStyles.padding * 2,
-      context: centerCtx.value
-    })
-
-    x += width
-  })
-
-  // 绘制表格内容
-  paginatedData.value.forEach((row: ChartDataDao.ChartData[number], rowIndex: number) => {
-    const y = TABLEHEADERHEIGHT + rowIndex * ROWHEIGHT
-    x = 0
-
-    columns.forEach((header, colIndex) => {
-      const width = widths[colIndex]
-      const key = (header.alias || header.columnName || '') as string
-      const cellText = key && row[key] != null ? String(row[key]) : ''
-
-      // 绘制单元格背景
-      const bgColor = rowIndex % 2 === 0 ? tableStyles.rowBg : tableStyles.rowBgEven
-      drawRect(x, y, width, ROWHEIGHT, {
-        fillColor: bgColor,
-        strokeColor: tableStyles.border,
-        lineWidth: 1,
-        context: centerCtx.value
-      })
-
-      // 绘制单元格文本
-      drawText(cellText, x + tableStyles.padding, y + ROWHEIGHT / 2, {
-        maxWidth: width - tableStyles.padding * 2,
-        context: centerCtx.value
-      })
-
-      x += width
-    })
-  })
-}
-
-/**
- * @desc 计算列宽
- */
-const calculateColumnWidths = (containerWidth: number): number[] => {
-  const columns = tableHeaderState.tableHeader
-  if (columns.length === 0) return []
-
-  // 如果容器宽度为0，使用默认宽度
-  const effectiveWidth = containerWidth || 800
-  console.log('计算列宽，容器宽度:', effectiveWidth, '列数:', columns.length)
-
-  // 如果启用平均分剩余宽度，则所有列宽度相等
-  if (props.enableEqualWidth) {
-    const equalWidth = effectiveWidth / columns.length
-    console.log('平均分宽度模式，每列宽度:', equalWidth)
-    return new Array(columns.length).fill(equalWidth)
-  }
-
-  // 计算每列的最小内容宽度
-  const measure = getMeasureContext()
-  const minContentWidths = columns.map((column) => {
-    const headerText = column.displayName || column.alias || column.columnName
-    const headerWidth = measure?.measureText(headerText).width ?? estimateTextWidth(headerText)
-
-    // 计算数据列的最大宽度
-    let maxDataWidth = headerWidth
-    // 使用全量数据，确保分页切换列宽稳定
-    tableDataState.tableData.forEach((row: ChartDataDao.ChartData[number]) => {
-      const key = (column.alias || column.columnName || '') as string
-      const cellText = key && row[key] != null ? String(row[key]) : ''
-      const cellWidth = measure?.measureText(cellText).width ?? estimateTextWidth(cellText)
-      maxDataWidth = Math.max(maxDataWidth, cellWidth)
-    })
-
-    return maxDataWidth + tableStyles.padding * 2
-  })
-
-  // 计算所有列的最小总宽度
-  const totalMinWidth = minContentWidths.reduce((sum, width) => sum + width, 0)
-
-  // 在内容自适应模式下，如果内容总宽度大于容器宽度，则使用内容宽度
-  // 如果内容总宽度小于容器宽度，则平均分配剩余宽度
-  const finalWidth = Math.max(effectiveWidth, totalMinWidth)
-
-  if (totalMinWidth < finalWidth) {
-    const remainingWidth = finalWidth - totalMinWidth
-    const extraWidthPerColumn = remainingWidth / columns.length
-
-    return minContentWidths.map((minWidth) => minWidth + extraWidthPerColumn)
-  }
-
-  // 如果最小总宽度等于有效宽度，直接返回
-  return minContentWidths
-}
-
-/**
- * @desc 绘制表头
- */
-const drawTableHeader = (columnWidths: number[], totalWidth: number) => {
-  let x = 0
-  const y = 0
-
-  tableHeaderState.tableHeader.forEach((header, index) => {
-    const width = columnWidths[index]
-    const headerText = header.displayName || header.alias || header.columnName
-
-    // 绘制表头背景
-    drawRect(x, y, width, TABLEHEADERHEIGHT, {
-      fillColor: tableStyles.headerBg,
-      strokeColor: tableStyles.headerBorder,
-      lineWidth: 1
-    })
-
-    // 绘制表头文本
-    drawText(headerText, x + tableStyles.padding, y + TABLEHEADERHEIGHT / 2, {
-      color: tableStyles.headerText,
-      fontWeight: '500',
-      maxWidth: width - tableStyles.padding * 2
-    })
-
-    // 绘制排序图标
-    if (header.orderType) {
-      const iconX = x + width - tableStyles.padding - 10
-      const iconY = y + TABLEHEADERHEIGHT / 2
-      const iconText = header.orderType === 'asc' ? '▲' : '▼'
-      drawText(iconText, iconX, iconY, {
-        color: tableStyles.headerText,
-        fontSize: 10
-      })
-    }
-
-    x += width
-  })
-}
-
-/**
- * @desc 绘制表格内容
- */
-const drawTableBody = (columnWidths: number[], totalWidth: number) => {
-  let x = 0
-  let y = TABLEHEADERHEIGHT
-
-  paginatedData.value.forEach((row: ChartDataDao.ChartData[number], rowIndex: number) => {
-    const rowY = y + rowIndex * ROWHEIGHT
-
-    // 绘制行背景
-    const rowBgColor = rowIndex % 2 === 0 ? tableStyles.rowBg : tableStyles.rowBgEven
-    drawRect(0, rowY, totalWidth, ROWHEIGHT, {
-      fillColor: rowBgColor
-    })
-
-    // 绘制单元格
-    x = 0
-    tableHeaderState.tableHeader.forEach((header, colIndex) => {
-      const width = columnWidths[colIndex]
-      const key = (header.alias || header.columnName || '') as string
-      const cellText = key && row[key] != null ? String(row[key]) : ''
-
-      // 获取单元格样式
-      const cellStyle = getComparedStyle(row, header)
-      const cellColor = cellStyle.includes('color:')
-        ? cellStyle.match(/color:\s*([^;]+)/)?.[1] || tableStyles.text
-        : tableStyles.text
-
-      // 绘制单元格文本
-      drawText(cellText, x + tableStyles.padding, rowY + ROWHEIGHT / 2, {
-        color: cellColor,
-        maxWidth: width - tableStyles.padding * 2
-      })
-
-      // 绘制单元格边框
-      drawRect(x, rowY, width, ROWHEIGHT, {
-        strokeColor: tableStyles.border,
-        lineWidth: 1
-      })
-
-      x += width
-    })
-  })
-}
-
-/**
- * @desc 绘制固定列阴影
- */
-const drawFixedColumnShadows = (columnWidths: number[], totalWidth: number) => {
-  if (!ctx.value || !canvasRef.value) return
-
-  const canvas = canvasRef.value
-  const height = canvas.height / (window.devicePixelRatio || 1)
-  const shadowWidth = 8
-  const shadowColor = 'rgba(0, 0, 0, 0.1)'
-
-  // 绘制左侧固定列阴影
-  if (leftFixedCount.value > 0) {
-    const leftFixedEndX = leftFixedWidth.value
-    const gradient = ctx.value.createLinearGradient(leftFixedEndX - shadowWidth, 0, leftFixedEndX, 0)
-    gradient.addColorStop(0, shadowColor)
-    gradient.addColorStop(1, 'transparent')
-
-    ctx.value.fillStyle = gradient
-    ctx.value.fillRect(leftFixedEndX - shadowWidth, 0, shadowWidth, height)
-  }
-
-  // 绘制右侧固定列阴影
-  if (rightFixedCount.value > 0) {
-    const rightFixedStartX = viewportWidth.value - rightFixedWidth.value
-    const gradient = ctx.value.createLinearGradient(rightFixedStartX, 0, rightFixedStartX + shadowWidth, 0)
-    gradient.addColorStop(0, 'transparent')
-    gradient.addColorStop(1, shadowColor)
-
-    ctx.value.fillStyle = gradient
-    ctx.value.fillRect(rightFixedStartX, 0, shadowWidth, height)
-  }
-}
-
-/**
- * @desc 获取比较样式
- */
-const getComparedStyle = (
-  tableDataOption: ChartDataDao.ChartData[number],
-  tableHeaderOption: TableChart.TableHeaderOption
-): string => {
-  const conditions = props.chartConfig?.conditions || chartsConfigStore.getChartConfig?.table?.conditions
-  if (!conditions) return ''
-
-  const condition = conditions.find((c) => c.conditionField === tableHeaderOption.columnName)
-  if (!condition) return ''
-
-  const { conditionType, conditionSymbol, conditionValue, conditionColor } = condition
-
-  const keyForValue = (tableHeaderOption.alias || tableHeaderOption.columnName || '') as string
-  const currentValue = Number(tableDataOption[keyForValue] ?? 0)
-
-  if (conditionType === '单色') {
-    type ConditionSymbol = 'gt' | 'lt' | 'eq' | 'ne' | 'ge' | 'le' | 'between'
-    const conditions: Record<ConditionSymbol, () => boolean> = {
-      gt: () => currentValue > Number(conditionValue || 0),
-      lt: () => currentValue < Number(conditionValue || 0),
-      eq: () => currentValue === Number(conditionValue),
-      ne: () => currentValue !== Number(conditionValue),
-      ge: () => currentValue >= Number(conditionValue || 0),
-      le: () => currentValue <= Number(conditionValue || 0),
-      between: () => false // 传入的chartConfig不支持between条件
-    }
-
-    return conditions[conditionSymbol as ConditionSymbol]?.() ? `color: ${conditionColor}` : ''
-  }
-
-  if (conditionType === '色阶') {
-    const keyForRow = (tableHeaderOption.alias || tableHeaderOption.columnName || '') as string
-    const currentRowValueList = props.data.map((t) => Number(t[keyForRow] ?? 0))
-    const maxValue = Math.max(...currentRowValueList)
-    const minValue = Math.min(...currentRowValueList)
-    const valueDif = maxValue - minValue
-
-    if (valueDif === 0) return ''
-
-    const [r, g, b] = conditionColor
-      .replace(/rgb\(|\)/g, '')
-      .split(',')
-      .map(Number) as [number, number, number]
-    const R = 256 - (256 - r) * ((currentValue - minValue) / valueDif)
-    const G = 256 - (256 - g) * ((currentValue - minValue) / valueDif)
-    const B = 256 - (256 - b) * ((currentValue - minValue) / valueDif)
-
-    return `background-color: rgb(${R},${G},${B})`
-  }
-
-  return ''
-}
-
-/**
- * @desc 处理排序
- */
-const handleEmitOrder = (tableHeaderOption: TableChart.TableHeaderOption) => {
-  const orderTypes = ['asc', 'desc', null] as OrderStore.OrderType[]
-  const currentIndex = orderTypes.indexOf(tableHeaderOption.orderType)
-  tableHeaderOption.orderType = orderTypes[(currentIndex + 1) % 3]
-
-  const order = orderStore.getOrders.find((o) => o.columnName === tableHeaderOption.columnName)
-  const orderIndex = orderStore.getOrders.findIndex((o) => o.columnName === tableHeaderOption.columnName)
-
-  if (order && !tableHeaderOption.orderType) {
-    orderStore.removeOrder(orderIndex)
-  } else if (order && tableHeaderOption.orderType) {
-    order.orderType = tableHeaderOption.orderType
-    orderStore.updateOrder({ order, index: orderIndex })
-  } else if (!order && tableHeaderOption.orderType) {
-    orderStore.addOrders([
-      {
-        ...tableHeaderOption,
-        orderType: tableHeaderOption.orderType,
-        aggregationType: 'raw'
+  const { leftCols, centerCols, rightCols, leftWidth, rightWidth } = getSplitColumns()
+  const stageWidth = stage.value.width()
+  const stageHeight = stage.value.height()
+
+  // Ensure centerBodyClipGroup.value exists
+  if (!centerBodyClipGroup.value) {
+    const contentHeight = stageHeight - headerHeight - scrollbarSize
+    centerBodyClipGroup.value = new Konva.Group({
+      x: leftWidth,
+      y: headerHeight,
+      clip: {
+        x: 0,
+        y: 0,
+        width: stageWidth - leftWidth - rightWidth - scrollbarSize,
+        height: contentHeight
       }
-    ])
+    })
+    bodyLayer.value.add(centerBodyClipGroup.value)
+  }
+
+  leftHeaderGroup.value = new Konva.Group({ x: 0, y: 0, name: 'leftHeader' })
+  centerHeaderGroup.value = new Konva.Group({ x: leftWidth - scrollX.value, y: 0, name: 'centerHeader' })
+  rightHeaderGroup.value = new Konva.Group({
+    x: stageWidth - rightWidth - scrollbarSize,
+    y: 0,
+    name: 'rightHeader'
+  })
+
+  leftBodyGroup.value = new Konva.Group({ x: 0, y: headerHeight - scrollY.value, name: 'leftBody' })
+  centerBodyGroup.value = new Konva.Group({ x: -scrollX.value, y: -scrollY.value, name: 'centerBody' })
+  rightBodyGroup.value = new Konva.Group({
+    x: stageWidth - rightWidth - scrollbarSize,
+    y: headerHeight - scrollY.value,
+    name: 'rightBody'
+  })
+
+  // Add center scrollable header to header layer (lower layer)
+  headerLayer.value.add(centerHeaderGroup.value)
+
+  // Add fixed headers to fixed header layer (top layer)
+  fixedHeaderLayer.value.add(leftHeaderGroup.value, rightHeaderGroup.value)
+
+  // Add center scrollable content to clipped group
+  if (centerBodyGroup.value) {
+    centerBodyClipGroup.value.add(centerBodyGroup.value)
+  }
+
+  // Add fixed columns to fixed layer (on top)
+  if (leftBodyGroup.value && rightBodyGroup.value) {
+    fixedLayer.value.add(leftBodyGroup.value, rightBodyGroup.value)
+  }
+  drawHeaderPart(leftHeaderGroup.value, leftCols, 0)
+  drawHeaderPart(centerHeaderGroup.value, centerCols, 0)
+  drawHeaderPart(rightHeaderGroup.value, rightCols, 0)
+
+  // 使用虚拟滚动渲染body部分
+  drawBodyPartVirtual(leftBodyGroup.value, leftCols, leftBodyPools)
+  drawBodyPartVirtual(centerBodyGroup.value, centerCols, centerBodyPools)
+  drawBodyPartVirtual(rightBodyGroup.value, rightCols, rightBodyPools)
+
+  createScrollbars()
+
+  headerLayer.value.batchDraw()
+  bodyLayer.value?.batchDraw()
+  fixedLayer.value?.batchDraw()
+  fixedHeaderLayer.value?.batchDraw()
+  scrollbarLayer.value?.batchDraw()
+}
+
+function createScrollbars() {
+  if (!stage.value || !scrollbarLayer.value) return
+
+  const stageWidth = stage.value.width()
+  const stageHeight = stage.value.height()
+  const { maxScrollX, maxScrollY } = getScrollLimits()
+
+  // Create mask for vertical scrollbar header area to hide overflowing content
+  const vScrollbarHeaderMask = new Konva.Rect({
+    x: stageWidth - scrollbarSize,
+    y: 0,
+    width: scrollbarSize,
+    height: headerHeight,
+    fill: headerBg,
+    stroke: borderColor,
+    strokeWidth: 1
+  })
+  scrollbarLayer.value.add(vScrollbarHeaderMask)
+
+  // Vertical scrollbar
+  if (maxScrollY > 0) {
+    vScrollbar.value = new Konva.Group()
+    scrollbarLayer.value.add(vScrollbar.value)
+
+    const vTrack = new Konva.Rect({
+      x: stageWidth - scrollbarSize,
+      y: headerHeight,
+      width: scrollbarSize,
+      height: stageHeight - headerHeight - scrollbarSize,
+      fill: scrollbarBg,
+      stroke: borderColor,
+      strokeWidth: 1
+    })
+    vScrollbar.value!.add(vTrack)
+
+    const thumbHeight = Math.max(
+      20,
+      ((stageHeight - headerHeight - scrollbarSize) * (stageHeight - headerHeight - scrollbarSize)) /
+        (data.length * rowHeight)
+    )
+    const thumbY =
+      headerHeight + (scrollY.value / maxScrollY) * (stageHeight - headerHeight - scrollbarSize - thumbHeight)
+
+    vThumb.value = new Konva.Rect({
+      x: stageWidth - scrollbarSize + 2,
+      y: thumbY,
+      width: scrollbarSize - 4,
+      height: thumbHeight,
+      fill: scrollbarThumb,
+      cornerRadius: 2,
+      draggable: false
+    })
+    vScrollbar.value!.add(vThumb.value)
+
+    setupVerticalScrollbarEvents()
+  }
+
+  // Horizontal scrollbar
+  if (maxScrollX > 0) {
+    hScrollbar.value = new Konva.Group()
+    scrollbarLayer.value.add(hScrollbar.value!)
+
+    const hTrack = new Konva.Rect({
+      x: 0,
+      y: stageHeight - scrollbarSize,
+      width: stageWidth - scrollbarSize,
+      height: scrollbarSize,
+      fill: scrollbarBg,
+      stroke: borderColor,
+      strokeWidth: 1
+    })
+    hScrollbar.value!.add(hTrack)
+
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
+    const visibleWidth = stageWidth - leftWidth - rightWidth - scrollbarSize
+    const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
+    const thumbX = leftWidth + (scrollX.value / maxScrollX) * (visibleWidth - thumbWidth)
+
+    hThumb.value = new Konva.Rect({
+      x: thumbX,
+      y: stageHeight - scrollbarSize + 2,
+      width: thumbWidth,
+      height: scrollbarSize - 4,
+      fill: scrollbarThumb,
+      cornerRadius: 2,
+      draggable: false
+    })
+    hScrollbar.value!.add(hThumb.value)
+
+    setupHorizontalScrollbarEvents()
   }
 }
 
 /**
- * @desc 处理页码变化
+ * 绘制表头部分
  */
-const handlePageChange = () => {
-  if (pageNum.value < 1) pageNum.value = 1
-  if (pageNum.value > totalPage.value) pageNum.value = totalPage.value
-}
+function drawHeaderPart(group: Konva.Group | null, cols: ColumnDef[], startX: number) {
+  if (!group) return
 
-/**
- * @desc 处理上一页
- */
-const handlePreviousPage = (page?: number) => {
-  if (page === 1) {
-    pageNum.value = 1
-  } else {
-    pageNum.value = Math.max(1, pageNum.value - 1)
+  // background
+  const totalWidth = cols.reduce((acc, c) => acc + c.width, 0)
+  const bg = new Konva.Rect({
+    x: startX + tablePadding,
+    y: 0,
+    width: totalWidth,
+    height: headerHeight,
+    fill: headerBg,
+    stroke: borderColor,
+    strokeWidth: 1
+  })
+  group.add(bg)
+
+  let x = startX
+  cols.forEach((col) => {
+    const cell = new Konva.Rect({
+      x,
+      y: 0,
+      width: col.width,
+      height: headerHeight,
+      stroke: borderColor,
+      strokeWidth: 1,
+      listening: false
+    })
+    group.add(cell)
+
+    const maxTextWidth = col.width - 16 // 8px padding on each side
+    const fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu'
+    const fontSize = 14
+    const truncatedTitle = truncateText(col.title, maxTextWidth, fontSize, fontFamily)
+
+    const label = new Konva.Text({
+      x: getTextX(x),
+      y: headerHeight / 2,
+      text: truncatedTitle,
+      fontSize: fontSize,
+      fontFamily: fontFamily,
+      fill: headerTextColor,
+      align: 'left',
+      verticalAlign: 'middle'
+    })
+    label.offsetY(label.height() / 2)
+    group.add(label)
+
+    x += col.width
+  })
+
+  // 表头渲染完成后，如果是左侧表头，创建固定列阴影
+  if (group && group.name() === 'leftHeader') {
+    // 延迟创建阴影，确保所有内容都已渲染
+    setTimeout(() => createFixedColumnShadow(), 0)
   }
 }
 
-/**
- * @desc 处理下一页
- */
-const handleNextPage = (page?: number) => {
-  if (page && page === totalPage.value) {
-    pageNum.value = page
-  } else {
-    pageNum.value = Math.min(totalPage.value, pageNum.value + 1)
-  }
+function setupVerticalScrollbarEvents() {
+  if (!vThumb.value || !stage.value) return
+
+  vThumb.value.on('mousedown', (e: any) => {
+    isDraggingVThumb = true
+    dragStartY = e.evt.clientY
+    dragStartScrollY = scrollY.value
+    stage.value!.container().style.cursor = 'grabbing'
+  })
+
+  vThumb.value.on('mouseenter', () => {
+    const vt: any = vThumb.value
+    if (vt && typeof vt.fill === 'function') vt.fill(scrollbarThumbHover)
+    scrollbarLayer.value?.batchDraw()
+  })
+
+  vThumb.value.on('mouseleave', () => {
+    const vt: any = vThumb.value
+    if (
+      vt &&
+      !isDraggingVThumb &&
+      typeof vt.fill === 'function' &&
+      typeof vt.getClassName === 'function' &&
+      vt.getClassName() === 'Rect'
+    )
+      vt.fill(scrollbarThumb)
+    scrollbarLayer.value?.batchDraw()
+  })
 }
 
 /**
- * @desc 计算每页条数
+ * 设置水平滚动条事件
  */
-const calculatePageSize = () => {
-  console.log('计算页面大小')
-  console.log('chartHeight:', props.chartHeight)
-  console.log('TABLEHEADERHEIGHT:', TABLEHEADERHEIGHT)
-  console.log('PAGINATIONHEIGHT:', PAGINATIONHEIGHT)
+function setupHorizontalScrollbarEvents() {
+  if (!hThumb.value || !stage.value) return
 
-  const availableHeight = props.chartHeight - TABLEHEADERHEIGHT - PAGINATIONHEIGHT - 10
-  console.log('可用高度:', availableHeight)
+  hThumb.value.on('mousedown', (e: any) => {
+    isDraggingHThumb = true
+    dragStartX = e.evt.clientX
+    dragStartScrollX = scrollX.value
+    stage.value!.container().style.cursor = 'grabbing'
+  })
 
-  pageSize.value = Math.max(1, Math.floor(availableHeight / ROWHEIGHT))
-  console.log('页面大小:', pageSize.value)
+  hThumb.value.on('mouseenter', () => {
+    const ht: any = hThumb.value
+    if (ht && typeof ht.fill === 'function') ht.fill(scrollbarThumbHover)
+    scrollbarLayer.value?.batchDraw()
+  })
+
+  hThumb.value.on('mouseleave', () => {
+    const ht: any = hThumb.value
+    if (
+      ht &&
+      !isDraggingHThumb &&
+      typeof ht.fill === 'function' &&
+      typeof ht.getClassName === 'function' &&
+      ht.getClassName() === 'Rect'
+    )
+      ht.fill(scrollbarThumb)
+    scrollbarLayer.value?.batchDraw()
+  })
 }
-
 /**
- * @desc 初始化表格头
+ * 虚拟滚动版本的drawBodyPart - 只渲染可视区域的行
  */
-const initTableHeader = () => {
-  console.log('初始化表格头')
-  console.log('xAxisFields:', props.xAxisFields)
-  console.log('yAxisFields:', props.yAxisFields)
+function drawBodyPartVirtual(group: Konva.Group | null, cols: ColumnDef[], pools: ObjectPools) {
+  if (!stage.value || !group) return
 
-  const fields = [...props.xAxisFields, ...props.yAxisFields]
-  console.log('合并后的字段:', fields)
+  // 计算可视区域
+  calculateVisibleRows()
 
-  tableHeaderState.tableHeader = fields.map((field) => {
-    const currentOrder = orderStore.getOrders.find((o) => o.columnName === field.columnName)
-    return {
-      ...field,
-      orderType: currentOrder?.orderType || 'asc',
-      aggregationType: currentOrder?.aggregationType || 'raw'
+  const totalWidth = cols.reduce((acc, c) => acc + c.width, 0)
+
+  // 清空当前组，将对象返回池中
+  const rawChildren: any = (group as any).getChildren ? (group as any).getChildren() : []
+  const children = Array.isArray(rawChildren)
+    ? rawChildren.slice()
+    : rawChildren && typeof rawChildren.toArray === 'function'
+      ? rawChildren.toArray()
+      : [] // 复制数组避免修改时的问题
+  children.forEach((child) => {
+    if ((child as any).getClassName && (child as any).getClassName() === 'Rect') {
+      // 检查是否为阴影元素
+      if (child.name() === 'fixedColumnShadow') {
+        child.destroy() // 阴影元素直接销毁，不回收到池中
+      } else if (
+        typeof (child as any).fill === 'function' &&
+        (child as any).fill() &&
+        (child as any).fill() !== 'transparent'
+      ) {
+        // 背景矩形
+        returnToPool(pools.backgroundRects as any, child as any)
+      } else {
+        // 单元格边框矩形
+        returnToPool(pools.cellRects as any, child as any)
+      }
+    } else if ((child as any).getClassName && (child as any).getClassName() === 'Text') {
+      returnToPool(pools.textNodes as any, child as any)
     }
   })
 
-  console.log('初始化后的表头:', tableHeaderState.tableHeader)
-}
+  // 渲染可视区域的行
+  for (let rowIndex = visibleRowStart; rowIndex <= visibleRowEnd; rowIndex++) {
+    const row = data[rowIndex]
+    const y = rowIndex * rowHeight
 
-/**
- * @desc 初始化表格数据
- */
-const initTableData = () => {
-  console.log('初始化表格数据')
-  console.log('props.data:', props.data)
-  tableDataState.tableData = props.data
-  console.log('初始化后的数据:', tableDataState.tableData)
-}
+    // 创建背景条纹
+    const bg = getFromPool(pools.backgroundRects, () => new Konva.Rect({ listening: false }))
 
-/**
- * @desc 处理左侧Canvas点击事件
- */
-const handleLeftCanvasClick = (event: MouseEvent) => {
-  handleCanvasClick(event, 'left')
-}
+    bg.x(0)
+    bg.y(y)
+    bg.width(totalWidth)
+    bg.height(rowHeight)
+    bg.fill(rowIndex % 2 === 0 ? bodyBgOdd : bodyBgEven)
+    bg.stroke('')
+    bg.strokeWidth(0)
+    group.add(bg)
 
-/**
- * @desc 处理中间Canvas点击事件
- */
-const handleCenterCanvasClick = (event: MouseEvent) => {
-  handleCanvasClick(event, 'center')
-}
+    // 渲染每列的单元格
+    let x = 0
+    cols.forEach((col, colIndex) => {
+      // 创建单元格边框
+      const cell = getFromPool(pools.cellRects, () => new Konva.Rect({ listening: true, cursor: 'pointer' }))
 
-/**
- * @desc 处理右侧Canvas点击事件
- */
-const handleRightCanvasClick = (event: MouseEvent) => {
-  handleCanvasClick(event, 'right')
-}
+      cell.x(x)
+      cell.y(y)
+      cell.width(col.width)
+      cell.height(rowHeight)
+      cell.stroke(borderColor)
+      cell.strokeWidth(1)
+      cell.fill('transparent')
 
-/**
- * @desc 处理Canvas点击事件
- */
-const handleCanvasClick = (event: MouseEvent, canvasType: 'left' | 'center' | 'right') => {
-  const canvas =
-    canvasType === 'left' ? leftCanvasRef.value : canvasType === 'center' ? centerCanvasRef.value : rightCanvasRef.value
+      // 清除之前的事件监听器
+      cell.off('click')
 
-  if (!canvas) return
+      // 添加点击事件
+      cell.on('click', () => {
+        handleCellClick(rowIndex, colIndex, col, cell.x(), cell.y(), col.width, rowHeight, group)
+      })
+      group.add(cell)
 
-  const rect = canvas.getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
+      // 创建文本
+      const value = String(row[col.key] ?? '')
+      const maxTextWidth = col.width - 16
+      const fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu'
+      const fontSize = 13
+      const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
 
-  // 检查是否点击了表头
-  if (y <= TABLEHEADERHEIGHT) {
-    const columnWidths = calculateColumnWidths(viewportWidth.value)
-    let currentX = 0
-    let startIndex = 0
+      const textNode = getFromPool(pools.textNodes, () => new Konva.Text({ listening: false }))
 
-    // 根据Canvas类型确定列的范围
-    if (canvasType === 'left') {
-      startIndex = 0
-    } else if (canvasType === 'center') {
-      startIndex = leftFixedCount.value
-    } else if (canvasType === 'right') {
-      startIndex = columnWidths.length - rightFixedCount.value
-    }
+      textNode.x(getTextX(x))
+      textNode.y(y + rowHeight / 2)
+      textNode.text(truncatedValue)
+      textNode.fontSize(fontSize)
+      textNode.fontFamily(fontFamily)
+      textNode.fill(bodyTextColor)
+      textNode.align('left')
+      textNode.verticalAlign('middle')
+      textNode.offsetY(textNode.height() / 2)
+      group.add(textNode)
 
-    const endIndex =
-      canvasType === 'left'
-        ? leftFixedCount.value
-        : canvasType === 'center'
-          ? columnWidths.length - rightFixedCount.value
-          : columnWidths.length
+      x += col.width
+    })
+  }
 
-    for (let i = startIndex; i < endIndex; i++) {
-      const width = columnWidths[i]
-      if (x >= currentX && x <= currentX + width) {
-        handleEmitOrder(tableHeaderState.tableHeader[i])
-        break
+  // 检查是否需要重新创建高亮（选中的单元格在当前可视区域内）
+  if (selectedCell && selectedCell.rowIndex >= visibleRowStart && selectedCell.rowIndex <= visibleRowEnd) {
+    // 找到选中的列在当前组中的位置
+    const selectedColIndex = cols.findIndex((col) => col.key === selectedCell!.colKey)
+    if (selectedColIndex >= 0) {
+      // 计算高亮位置
+      let highlightX = 0
+      for (let i = 0; i < selectedColIndex; i++) {
+        highlightX += cols[i].width
       }
-      currentX += width
+      const highlightY = selectedCell!.rowIndex * rowHeight
+      const highlightWidth = cols[selectedColIndex].width
+
+      // 重新创建高亮
+      createHighlightRect(highlightX, highlightY, highlightWidth, rowHeight, group)
     }
   }
+
+  // 阴影现在由createFixedColumnShadow()统一管理，不需要在这里添加
+
+  // 取消调试日志输出
+}
+
+function updateVerticalScroll(offsetY: number) {
+  if (!stage.value || !leftBodyGroup.value || !centerBodyGroup.value || !rightBodyGroup.value) return
+  const { maxScrollY } = getScrollLimits()
+  const oldScrollY = scrollY.value
+  scrollY.value = clamp(scrollY.value + offsetY, 0, maxScrollY)
+
+  // 检查是否需要重新渲染（滚动超过一定阈值或可视区域改变）
+  const oldVisibleStart = visibleRowStart
+  const oldVisibleEnd = visibleRowEnd
+  calculateVisibleRows()
+
+  const needsRerender =
+    visibleRowStart !== oldVisibleStart ||
+    visibleRowEnd !== oldVisibleEnd ||
+    Math.abs(scrollY.value - oldScrollY) > rowHeight * 2 // 滚动超过2行时强制重新渲染
+
+  if (needsRerender) {
+    // 重新渲染可视区域
+    const { leftCols, centerCols, rightCols } = getSplitColumns()
+    drawBodyPartVirtual(leftBodyGroup.value, leftCols, leftBodyPools)
+    drawBodyPartVirtual(centerBodyGroup.value, centerCols, centerBodyPools)
+    drawBodyPartVirtual(rightBodyGroup.value, rightCols, rightBodyPools)
+  }
+
+  const bodyY = headerHeight - scrollY.value
+  const centerY = -scrollY.value
+
+  // Only body content moves vertically, headers stay fixed
+  leftBodyGroup.value.y(bodyY)
+  rightBodyGroup.value.y(bodyY)
+  centerBodyGroup.value.y(centerY)
+
+  updateScrollbars()
+  bodyLayer.value?.batchDraw()
+  fixedLayer.value?.batchDraw()
 }
 
 /**
- * @desc 处理Canvas鼠标移动事件
+ * 更新水平滚动
+ * @param offsetX 水平滚动偏移量
  */
-const handleCanvasMouseMove = (event: MouseEvent) => {
-  if (!canvasRef.value) return
+function updateHorizontalScroll(offsetX: number) {
+  if (!stage.value || !centerHeaderGroup.value || !centerBodyGroup) return
+  const { maxScrollX } = getScrollLimits()
+  const { leftWidth } = getSplitColumns()
+  scrollX.value = clamp(scrollX.value + offsetX, 0, maxScrollX)
 
-  const rect = canvasRef.value.getBoundingClientRect()
-  mousePos.value = {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
+  const headerX = leftWidth - scrollX.value
+  const centerX = -scrollX.value
+
+  // Only center scrollable content moves horizontally
+  centerHeaderGroup.value.x(headerX)
+  centerBodyGroup.x(centerX)
+
+  updateScrollbars()
+  headerLayer.value?.batchDraw()
+  bodyLayer.value?.batchDraw()
+}
+
+/**
+ * 更新滚动条
+ */
+function updateScrollbars() {
+  if (!stage.value) return
+
+  const stageWidth = stage.value.width()
+  const stageHeight = stage.value.height()
+  const { maxScrollX, maxScrollY } = getScrollLimits()
+
+  // Update vertical thumb position
+  if (vThumb.value && maxScrollY > 0) {
+    const thumbHeight = Math.max(
+      20,
+      ((stageHeight - headerHeight - scrollbarSize) * (stageHeight - headerHeight - scrollbarSize)) /
+        (data.length * rowHeight)
+    )
+    const thumbY =
+      headerHeight + (scrollY.value / maxScrollY) * (stageHeight - headerHeight - scrollbarSize - thumbHeight)
+    vThumb.value.y(thumbY)
   }
 
-  // 更新鼠标样式
-  if (mousePos.value.y <= TABLEHEADERHEIGHT) {
-    canvasRef.value.style.cursor = 'pointer'
+  // Update horizontal thumb position
+  if (hThumb.value && maxScrollX > 0) {
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
+    const visibleWidth = stageWidth - leftWidth - rightWidth - scrollbarSize
+    const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
+    const thumbX = leftWidth + (scrollX.value / maxScrollX) * (visibleWidth - thumbWidth)
+    hThumb.value.x(thumbX)
+  }
+
+  scrollbarLayer.value?.batchDraw()
+}
+
+/**
+ * 处理鼠标滚轮事件
+ * @param e 鼠标滚轮事件
+ */
+function handleWheel(e: WheelEvent) {
+  e.preventDefault()
+  if (e.shiftKey) {
+    // Horizontal scroll with Shift+Wheel
+    updateHorizontalScroll(e.deltaY)
   } else {
-    canvasRef.value.style.cursor = 'default'
+    // Vertical scroll
+    updateVerticalScroll(e.deltaY)
+
+    // 取消调试日志输出
   }
 }
 
 /**
- * @desc 处理容器滚动事件
+ * 处理鼠标移动事件
+ * @param e 鼠标移动事件
  */
-const handleScroll = (event: Event) => {
-  const target = event.target as HTMLElement
-  scrollPos.value.x = target.scrollLeft
-  scrollPos.value.y = target.scrollTop
+function handleMouseMove(e: MouseEvent) {
+  if (!stage.value) return
 
-  // 重新绘制表格以更新固定列位置
-  nextTick(() => drawTable())
+  if (isDraggingVThumb) {
+    const deltaY = e.clientY - dragStartY
+    const { maxScrollY } = getScrollLimits()
+    const stageHeight = stage.value.height()
+    const trackHeight = stageHeight - headerHeight - scrollbarSize
+    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (data.length * rowHeight))
+    const scrollRatio = deltaY / (trackHeight - thumbHeight)
+    const newScrollY = dragStartScrollY + scrollRatio * maxScrollY
+
+    const oldScrollY = scrollY.value
+    scrollY.value = clamp(newScrollY, 0, maxScrollY)
+
+    // 检查是否需要重新渲染虚拟滚动内容
+    const oldVisibleStart = visibleRowStart
+    const oldVisibleEnd = visibleRowEnd
+    calculateVisibleRows()
+
+    const needsRerender =
+      visibleRowStart !== oldVisibleStart ||
+      visibleRowEnd !== oldVisibleEnd ||
+      Math.abs(scrollY.value - oldScrollY) > rowHeight * 2
+
+    if (needsRerender) {
+      // 重新渲染可视区域
+      const { leftCols, centerCols, rightCols } = getSplitColumns()
+      drawBodyPartVirtual(leftBodyGroup.value, leftCols, leftBodyPools)
+      drawBodyPartVirtual(centerBodyGroup.value, centerCols, centerBodyPools)
+      drawBodyPartVirtual(rightBodyGroup.value, rightCols, rightBodyPools)
+    }
+
+    updateScrollPositions()
+  }
+
+  if (isDraggingHThumb) {
+    const deltaX = e.clientX - dragStartX
+    const { maxScrollX } = getScrollLimits()
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
+    const stageWidth = stage.value.width()
+    const visibleWidth = stageWidth - leftWidth - rightWidth - scrollbarSize
+    const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
+    const scrollRatio = deltaX / (visibleWidth - thumbWidth)
+    const newScrollX = dragStartScrollX + scrollRatio * maxScrollX
+
+    scrollX.value = clamp(newScrollX, 0, maxScrollX)
+    updateScrollPositions()
+  }
 }
 
-// 监听器
 /**
- * @desc 监听表格配置
+ * 处理鼠标抬起事件
  */
-watch(
-  () => tableChartConfig.value?.conditions,
-  () => {
-    calculatePageSize()
-    nextTick(() => drawTable())
-  },
-  { deep: true }
-)
+function handleMouseUp() {
+  if (isDraggingVThumb || isDraggingHThumb) {
+    isDraggingVThumb = false
+    isDraggingHThumb = false
+    if (stage.value) stage.value.container().style.cursor = 'default'
 
-/**
- * @desc 监听数据
- */
-watch(
-  () => props.data,
-  async () => {
-    await initTableHeader()
-    await initTableData()
-    calculatePageSize()
-    nextTick(() => drawTable())
-  },
-  { deep: true }
-)
-
-/**
- * @desc 监听表格高度
- */
-watch(
-  () => props.chartHeight,
-  () => {
-    calculatePageSize()
-    nextTick(() => {
-      initCanvas()
-      drawTable()
-    })
+    {
+      const vt: any = vThumb.value
+      if (vt && !isDraggingVThumb && typeof vt.fill === 'function') vt.fill(scrollbarThumb)
+    }
+    {
+      const ht: any = hThumb.value
+      if (ht && !isDraggingHThumb && typeof ht.fill === 'function') ht.fill(scrollbarThumb)
+    }
+    scrollbarLayer.value?.batchDraw()
   }
-)
+}
 
 /**
- * @desc 监听表格宽度
+ * 更新滚动位置
  */
-watch(
-  () => props.chartWidth,
-  () => {
-    nextTick(() => {
-      initCanvas()
-      drawTable()
-    })
-  }
-)
+function updateScrollPositions() {
+  if (!leftBodyGroup.value || !centerBodyGroup.value || !rightBodyGroup.value || !centerHeaderGroup.value) return
+
+  const { leftWidth } = getSplitColumns()
+  const bodyY = headerHeight - scrollY.value
+  const centerX = -scrollX.value
+  const headerX = leftWidth - scrollX.value
+  leftBodyGroup.value.y(bodyY)
+  rightBodyGroup.value.y(bodyY)
+
+  // Update center scrollable content (both X and Y)
+  centerBodyGroup.value.x(centerX)
+  centerBodyGroup.value.y(-scrollY.value)
+
+  // Update center header (only X position changes)
+  centerHeaderGroup.value.x(headerX)
+
+  // Fixed headers (leftHeaderGroup.value and rightHeaderGroup.value) never move - they stay at (0,0) and fixed right position
+
+  updateScrollbars()
+  headerLayer.value?.batchDraw()
+  bodyLayer.value?.batchDraw()
+  fixedLayer.value?.batchDraw()
+  fixedHeaderLayer.value?.batchDraw()
+}
 
 /**
- * @desc 监听分页数据
+ * 处理窗口大小改变
  */
-watch(
-  () => paginatedData.value,
-  () => {
-    nextTick(() => drawTable())
-  }
-)
+function handleResize() {
+  initTable()
+
+  // 重新计算可视区域（窗口大小改变时）
+  calculateVisibleRows()
+
+  // Rebuild groups to adjust right pinned x position
+  clearGroups()
+  rebuildGroups()
+
+  // 重新创建固定列阴影
+  setTimeout(() => createFixedColumnShadow(), 0)
+}
 
 /**
- * @desc 监听表格头
- */
-watch(
-  () => tableHeaderState.tableHeader,
-  () => {
-    nextTick(() => drawTable())
-  },
-  { deep: true }
-)
-
-/**
- * @desc 监听平均分宽度配置
- */
-watch(
-  () => props.enableEqualWidth,
-  () => {
-    nextTick(() => drawTable())
-  }
-)
-
-/**
- * @desc 监听固定列配置
- */
-watch(
-  () => props.fixedColumns,
-  () => {
-    nextTick(() => drawTable())
-  },
-  { deep: true }
-)
-
-/**
- * @desc 初始化
+ * 初始化
  */
 onMounted(async () => {
-  await initTableHeader()
-  await initTableData()
-  calculatePageSize()
+  konvaInstance.value = Konva
+  initTable()
 
-  nextTick(() => {
-    initCanvas()
-    drawTable()
+  // 初始化虚拟滚动状态
+  calculateVisibleRows()
 
-    // Canvas已经通过Vue事件绑定处理点击事件
-  })
+  clearGroups()
+  rebuildGroups()
+
+  const tableContainer = document.querySelector<HTMLDivElement>('#container-table')
+  tableContainer?.addEventListener('wheel', handleWheel, { passive: false })
+  window.addEventListener('resize', handleResize)
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mouseup', handleMouseUp)
 })
 
 /**
- * @desc 清理 - Vue会自动处理事件清理
+ * 卸载
  */
-onUnmounted(() => {
-  // Vue会自动清理事件监听器
+onBeforeUnmount(() => {
+  const tableContainer = document.querySelector<HTMLDivElement>('#container-table')
+  tableContainer?.removeEventListener('wheel', handleWheel)
+  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+
+  stage.value?.destroy()
+  stage.value = null
+  headerLayer.value = null
+  bodyLayer.value = null
+  fixedLayer.value = null
+  fixedHeaderLayer.value = null
+  scrollbarLayer.value = null
+  centerBodyClipGroup.value = null
+  selectedCell.value = null
+  highlightRect.value = null
 })
 </script>
 
-<style scoped lang="scss">
-.canvas-table-chart {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-
-  .table-layout {
-    flex: 1;
-    display: flex;
-    position: relative;
-
-    .fixed-left {
-      position: relative;
-      z-index: 10;
-      background: white;
-      border-right: 1px solid #e4e7ed;
-    }
-
-    .scroll-container {
-      flex: 1;
-      overflow: auto;
-      position: relative;
-      min-width: 0; // 允许flex子项收缩
-
-      .scroll-wrapper {
-        position: relative;
-        height: 100%;
-        min-width: 100%; // 确保至少占满容器宽度
-      }
-
-      .scroll-canvas {
-        display: block;
-        height: 100%;
-      }
-    }
-
-    .fixed-right {
-      position: relative;
-      z-index: 10;
-      background: white;
-      border-left: 1px solid #e4e7ed;
-    }
-
-    .fixed-canvas {
-      display: block;
-      height: 100%;
-    }
-  }
-
-  .pagination {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 8px 0;
-    font-size: 13px;
-    color: #606266;
-
-    .pagination-info {
-      margin-right: 16px;
-    }
-
-    .pagination-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .el-icon {
-        cursor: pointer;
-        color: #606266;
-        transition: color 0.2s;
-
-        &:hover {
-          color: #409eff;
-        }
-      }
-
-      .page-input {
-        width: 40px;
-        height: 24px;
-        text-align: center;
-        border: 1px solid #dcdfe6;
-        border-radius: 4px;
-        color: #606266;
-        transition: all 0.2s;
-
-        &:focus {
-          border-color: #409eff;
-          outline: none;
-        }
-
-        &::-webkit-inner-spin-button,
-        &::-webkit-outer-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-      }
-    }
-  }
+<style scoped>
+.stage-container {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  background: #fff;
 }
 </style>
