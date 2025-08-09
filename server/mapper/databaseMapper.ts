@@ -142,9 +142,9 @@ export class DatabaseMapper extends BaseMapper {
       FROM 
         information_schema.columns  
       WHERE 
-        table_name = ? 
+        table_name = '${tableName}' 
         AND table_schema = '${tableSchema}';`
-    const result = await this.exe<Array<T>>(sql, [tableName])
+    const result = await this.exe<Array<T>>(sql)
     return result
   }
 }
