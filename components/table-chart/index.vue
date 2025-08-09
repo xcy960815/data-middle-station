@@ -75,7 +75,7 @@ const props = defineProps({
   // 是否启用列平均分剩余宽度
   enableEqualWidth: {
     type: Boolean,
-    default: true
+    default: false
   },
   // 固定列配置
   fixedColumns: {
@@ -458,6 +458,25 @@ const drawText = (
 }
 
 /**
+ * @desc 文本测量上下文与估算
+ */
+let measureCtx: CanvasRenderingContext2D | null = null
+const getMeasureContext = (): CanvasRenderingContext2D | null => {
+  if (typeof document === 'undefined') return null
+  if (!measureCtx) {
+    const canvas = document.createElement('canvas')
+    measureCtx = canvas.getContext('2d')
+  }
+  if (measureCtx) {
+    measureCtx.font = `normal ${tableStyles.fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`
+  }
+  return measureCtx
+}
+const estimateTextWidth = (text: string): number => {
+  return (text?.length || 0) * tableStyles.fontSize * 0.6
+}
+
+/**
  * @desc 绘制矩形
  */
 const drawRect = (
@@ -750,16 +769,18 @@ const calculateColumnWidths = (containerWidth: number): number[] => {
   }
 
   // 计算每列的最小内容宽度
+  const measure = getMeasureContext()
   const minContentWidths = columns.map((column) => {
     const headerText = column.displayName || column.alias || column.columnName
-    const headerWidth = ctx.value?.measureText(headerText).width || 0
+    const headerWidth = measure?.measureText(headerText).width ?? estimateTextWidth(headerText)
 
     // 计算数据列的最大宽度
     let maxDataWidth = headerWidth
-    paginatedData.value.forEach((row: ChartDataDao.ChartData[number]) => {
+    // 使用全量数据，确保分页切换列宽稳定
+    tableDataState.tableData.forEach((row: ChartDataDao.ChartData[number]) => {
       const key = (column.alias || column.columnName || '') as string
       const cellText = key && row[key] != null ? String(row[key]) : ''
-      const cellWidth = ctx.value?.measureText(cellText).width || 0
+      const cellWidth = measure?.measureText(cellText).width ?? estimateTextWidth(cellText)
       maxDataWidth = Math.max(maxDataWidth, cellWidth)
     })
 
