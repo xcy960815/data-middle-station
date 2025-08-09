@@ -11,10 +11,6 @@ const props = defineProps({
     type: String,
     default: () => '我是扇形图标题'
   },
-  subtitle: {
-    type: String,
-    default: () => '我是扇形图副标题'
-  },
   data: {
     type: Array as PropType<ChartDataDao.ChartData>,
     default: () => []
@@ -57,8 +53,7 @@ const initChart = () => {
     autoFit: true
   })
   chart.title({
-    title: props.title,
-    subtitle: props.subtitle
+    title: props.title
   })
   chart.coordinate({ type: 'theta', innerRadius: 0.6 })
   const fields = props.yAxisFields.map((item) => item.alias || item.columnName)
