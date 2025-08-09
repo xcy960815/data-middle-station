@@ -12,7 +12,7 @@ const logger = new Logger({
  * 不需要验证token的路由白名单
  * 支持精确匹配和前缀匹配
  */
-const whiteList = ['/api/login', '/api/register', '/api/health', '/api/public']
+const whiteList = ['/api/login', '/api/register', '/api/health', '/api/public', '/api/seedBigData']
 
 /**
  * 检查路径是否在白名单中
