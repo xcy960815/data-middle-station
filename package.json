@@ -73,6 +73,7 @@
     "figlet": "^1.8.2",
     "gradient-string": "^3.0.0",
     "jsonwebtoken": "^9.0.2",
+    "konva": "^9.3.22",
     "monaco-editor": "^0.52.2",
     "mysql2": "^3.14.1",
     "node-cron": "^3.0.3",

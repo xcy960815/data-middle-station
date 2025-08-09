@@ -56,6 +56,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      konva:
+        specifier: ^9.3.22
+        version: 9.3.22
       monaco-editor:
         specifier: ^0.52.2
         version: 0.52.2
@@ -89,10 +92,6 @@ importers:
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
-    optionalDependencies:
-      '@rollup/rollup-darwin-x64':
-        specifier: 4.12.0
-        version: 4.12.0
     devDependencies:
       '@commitlint/cli':
         specifier: ^17.8.1
@@ -157,6 +156,10 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@types/node@20.5.1)(typescript@5.8.3))
+    optionalDependencies:
+      '@rollup/rollup-darwin-x64':
+        specifier: 4.12.0
+        version: 4.12.0
 
 packages:
 
@@ -4273,6 +4276,9 @@ packages:
   knitwork@1.2.0:
     resolution: {integrity: sha512-xYSH7AvuQ6nXkq42x0v5S8/Iry+cfulBz/DJQzhIyESdLD7425jXsPy4vn5cCXU+HhRN2kVw51Vd1K6/By4BQg==}
 
+  konva@9.3.22:
+    resolution: {integrity: sha512-yQI5d1bmELlD/fowuyfOp9ff+oamg26WOCkyqUyc+nczD/lhRa3EvD2MZOoc4c1293TAubW9n34fSQLgSeEgSw==}
+
   kuler@2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
 
@@ -7234,7 +7240,7 @@ snapshots:
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
       resolve-from: 5.0.0
-      ts-node: 10.9.2(@types/node@18.19.110)(typescript@5.8.3)
+      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
       - '@swc/core'
@@ -9599,7 +9605,7 @@ snapshots:
     dependencies:
       '@types/node': 20.5.1
       cosmiconfig: 8.3.6(typescript@5.8.3)
-      ts-node: 10.9.2(@types/node@18.19.110)(typescript@5.8.3)
+      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.8.3)
       typescript: 5.8.3
 
   cosmiconfig@8.3.6(typescript@5.8.3):
@@ -11416,6 +11422,8 @@ snapshots:
 
   knitwork@1.2.0: {}
 
+  konva@9.3.22: {}
+
   kuler@2.0.0: {}
 
   lambda-local@2.2.0:
@@ -12584,7 +12592,7 @@ snapshots:
       yaml: 2.8.0
     optionalDependencies:
       postcss: 8.5.4
-      ts-node: 10.9.2(@types/node@18.19.110)(typescript@5.8.3)
+      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.8.3)
 
   postcss-merge-longhand@7.0.5(postcss@8.5.4):
     dependencies:
@@ -13623,14 +13631,14 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-node@10.9.2(@types/node@18.19.110)(typescript@5.8.3):
+  ts-node@10.9.2(@types/node@20.5.1)(typescript@5.8.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 18.19.110
+      '@types/node': 20.5.1
       acorn: 8.14.1
       acorn-walk: 8.3.4
       arg: 4.1.3
