@@ -1,58 +1,45 @@
 <template>
   <ClientOnly>
-    <table-chart :columns="columns" :data="data" />
+    <table-chart :columns="columns" :data="data" @cell-click="handleCellClick" />
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ ssr: false })
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-
-type PinDirection = 'left' | 'right' | null
-
-interface ColumnDef {
-  key: string
-  title: string
-  width: number
-  pin: PinDirection
-  align?: 'left' | 'center' | 'right'
-}
+type PinDirection = 'left' | 'right' | null | undefined
 
 interface RowData {
   [key: string]: string | number
 }
-
-const containerRef = ref<HTMLDivElement | null>(null)
 
 /**
  * 表头配置
  * key: 列的唯一标识
  * title: 列的标题
  * width: 列的宽度
- * pin: 列是否固定，固定在左侧或右侧
+ * fixed: 列是否固定，固定在左侧或右侧
  * align: 列的对齐方式
  */
-const columns: ColumnDef[] = [
-  { key: 'id', title: 'ID', width: 80, pin: 'left', align: 'right' },
-  { key: 'name', title: 'Name', width: 120, pin: null },
-  { key: 'age', title: 'Age', width: 80, pin: null, align: 'right' },
-  { key: 'gender', title: 'Gender', width: 80, pin: null },
-  { key: 'country', title: 'Country', width: 120, pin: null },
-  { key: 'city', title: 'City', width: 120, pin: null },
-  { key: 'state', title: 'State', width: 100, pin: null },
-  { key: 'zipcode', title: 'Zip Code', width: 100, pin: null },
-  { key: 'address', title: 'Address', width: 200, pin: null },
-  { key: 'phone', title: 'Phone', width: 140, pin: null },
-  { key: 'mobile', title: 'Mobile', width: 140, pin: null },
-  { key: 'company', title: 'Company', width: 150, pin: null },
-  { key: 'department', title: 'Department', width: 120, pin: null },
-  { key: 'position', title: 'Position', width: 130, pin: null },
-  { key: 'salary', title: 'Salary', width: 100, pin: null, align: 'right' },
-  { key: 'experience', title: 'Experience', width: 100, pin: null, align: 'right' },
-  { key: 'education', title: 'Education', width: 120, pin: null },
-  { key: 'skills', title: 'Skills', width: 180, pin: null },
-  { key: 'notes', title: 'Notes', width: 200, pin: 'right' },
-  { key: 'email', title: 'Email', width: 220, pin: 'right' }
+const columns = [
+  { key: 'id', title: 'ID', width: 80, fixed: 'left' as const, align: 'right' as const },
+  { key: 'name', title: 'Name' },
+  { key: 'age', title: 'Age', width: 80, align: 'right' as const },
+  { key: 'gender', title: 'Gender', width: 80 },
+  { key: 'country', title: 'Country' },
+  { key: 'city', title: 'City' },
+  { key: 'state', title: 'State', width: 100 },
+  { key: 'zipcode', title: 'Zip Code', width: 100 },
+  { key: 'address', title: 'Address', width: 200 },
+  { key: 'phone', title: 'Phone', width: 140 },
+  { key: 'mobile', title: 'Mobile', width: 140 },
+  { key: 'company', title: 'Company', width: 150 },
+  { key: 'department', title: 'Department' },
+  { key: 'position', title: 'Position', width: 130 },
+  { key: 'salary', title: 'Salary', width: 100, align: 'right' as const },
+  { key: 'experience', title: 'Experience', width: 100, align: 'right' as const },
+  { key: 'education', title: 'Education' },
+  { key: 'skills', title: 'Skills', width: 180 },
+  { key: 'notes', title: 'Notes', width: 200, fixed: 'right' as const },
+  { key: 'email', title: 'Email', width: 220, fixed: 'right' as const }
 ]
 
 /**
@@ -93,6 +80,10 @@ const data: RowData[] = Array.from({ length: 30000 }, (_, i) => ({
   notes: `Additional notes for user ${i + 1}. Lorem ipsum dolor sit amet.`,
   email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
 }))
+
+const handleCellClick = (cell: any) => {
+  console.log('Cell clicked:', cell)
+}
 </script>
 
 <style scoped>
