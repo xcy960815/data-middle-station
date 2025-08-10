@@ -1,51 +1,97 @@
 <template>
   <ClientOnly>
-    <table-chart :columns="columns" :data="data" @cell-click="handleCellClick" />
+    <table-chart
+      chart-height="1000px"
+      chart-width="100%"
+      :x-axis-fields="xAxisFields"
+      :y-axis-fields="yAxisFields"
+      :data="data"
+      @cell-click="handleCellClick"
+    />
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
-type PinDirection = 'left' | 'right' | null | undefined
-
-interface RowData {
-  [key: string]: string | number
-}
+/**
+ * 分组列
+ */
+const xAxisFields = ref<GroupStore.GroupOption[]>([])
 
 /**
- * 表头配置
- * key: 列的唯一标识
- * title: 列的标题
- * width: 列的宽度
- * fixed: 列是否固定，固定在左侧或右侧
- * align: 列的对齐方式
+ * 维度列
  */
-const columns = [
-  { key: 'id', title: 'ID', width: 80, fixed: 'left' as const, align: 'right' as const },
-  { key: 'name', title: 'Name' },
-  { key: 'age', title: 'Age', width: 80, align: 'right' as const },
-  { key: 'gender', title: 'Gender', width: 80 },
-  { key: 'country', title: 'Country' },
-  { key: 'city', title: 'City' },
-  { key: 'state', title: 'State', width: 100 },
-  { key: 'zipcode', title: 'Zip Code', width: 100 },
-  { key: 'address', title: 'Address', width: 200 },
-  { key: 'phone', title: 'Phone', width: 140 },
-  { key: 'mobile', title: 'Mobile', width: 140 },
-  { key: 'company', title: 'Company', width: 150 },
-  { key: 'department', title: 'Department' },
-  { key: 'position', title: 'Position', width: 130 },
-  { key: 'salary', title: 'Salary', width: 100, align: 'right' as const },
-  { key: 'experience', title: 'Experience', width: 100, align: 'right' as const },
-  { key: 'education', title: 'Education' },
-  { key: 'skills', title: 'Skills', width: 180 },
-  { key: 'notes', title: 'Notes', width: 200, fixed: 'right' as const },
-  { key: 'email', title: 'Email', width: 220, fixed: 'right' as const }
-]
+const yAxisFields = ref<DimensionStore.DimensionOption[]>([
+  {
+    columnName: 'id',
+    columnType: 'int',
+    columnComment: 'ID',
+    alias: 'id',
+    displayName: 'ID',
+    width: 200,
+    fixed: 'left' as const
+  },
+  {
+    columnName: 'name',
+    columnType: 'varchar',
+    columnComment: 'Name',
+    alias: 'name',
+    displayName: 'Name'
+  },
+  {
+    columnName: 'age',
+    columnType: 'int',
+    columnComment: 'Age',
+    alias: 'age',
+    displayName: 'Age',
+    fixed: 'left' as const
+  },
+  {
+    columnName: 'gender',
+    columnType: 'varchar',
+    columnComment: 'Gender',
+    alias: 'gender',
+    displayName: 'Gender'
+  },
+  {
+    columnName: 'country',
+    columnType: 'varchar',
+    columnComment: 'Country',
+    alias: 'country',
+    width: 200,
+    displayName: 'Country',
+    fixed: 'left' as const
+  },
+  {
+    columnName: 'city',
+    columnType: 'varchar',
+    columnComment: 'City',
+    alias: 'city',
+    width: 200,
+    displayName: 'City',
+    fixed: 'left' as const
+  },
+  {
+    columnName: 'state',
+    columnType: 'varchar',
+    columnComment: 'State',
+    alias: 'state',
+    displayName: '状态'
+  },
+  {
+    columnName: 'zipcode',
+    columnType: 'varchar',
+    columnComment: 'Zipcode',
+    alias: 'zipcode',
+    displayName: 'Zipcode',
+    width: 200,
+    fixed: 'right' as const
+  }
+])
 
 /**
  * 数据
  */
-const data: RowData[] = Array.from({ length: 30000 }, (_, i) => ({
+const data: ChartDataDao.ChartData = Array.from({ length: 3000 }, (_, i) => ({
   id: i + 1,
   name: `User ${i + 1}`,
   age: 18 + ((i * 7) % 40),
@@ -80,8 +126,10 @@ const data: RowData[] = Array.from({ length: 30000 }, (_, i) => ({
   notes: `Additional notes for user ${i + 1}. Lorem ipsum dolor sit amet.`,
   email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
 }))
-
-const handleCellClick = (cell: any) => {
+/**
+ * 单元格点击事件
+ */
+const handleCellClick = (cell: { rowIndex: number; columnIndex: number }) => {
   console.log('Cell clicked:', cell)
 }
 </script>
