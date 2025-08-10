@@ -1123,7 +1123,7 @@ const drawBodyPartVirtual = (
       // 检查是否为阴影元素
       if (child.name() === 'fixedColumnShadow') {
         child.destroy() // 阴影元素直接销毁，不回收到池中
-      } else if (child.name() && child.name().startsWith('hoverRect')) {
+      } else if (child.name() && (child.name().startsWith('hoverRect') || child.name().startsWith('hoverColRect'))) {
         // 保留 hover 高亮矩形，不回收到池中
         return
       } else if (child.fill() && child.fill() !== 'transparent') {
@@ -1406,14 +1406,16 @@ const createOrUpdateHoverRects = () => {
     }
 
     const shouldShow = hoveredColIndex === colIndex
-    const totalHeight = activeData.value.length * props.rowHeight
+    // 列高亮应该覆盖整个可视区域，包括缓冲区域
+    const visibleHeight = (visibleRowEnd - visibleRowStart + 1) * props.rowHeight
+    const startY = visibleRowStart * props.rowHeight
 
     if (!rectRef) {
       rectRef = new Konva.Rect({
         x: colX,
-        y: 0,
+        y: startY,
         width: colWidth,
-        height: totalHeight,
+        height: visibleHeight,
         fill: props.hoverFill,
         listening: false,
         visible: shouldShow,
@@ -1423,9 +1425,9 @@ const createOrUpdateHoverRects = () => {
       rectRef.moveToTop()
     } else {
       rectRef.x(colX)
-      rectRef.y(0)
+      rectRef.y(startY)
       rectRef.width(colWidth)
-      rectRef.height(totalHeight)
+      rectRef.height(visibleHeight)
       rectRef.visible(shouldShow)
       rectRef.moveToTop()
     }
@@ -1608,6 +1610,12 @@ const updateVerticalScroll = (offsetY: number) => {
   centerBodyGroup.y(centerY)
 
   updateScrollbars()
+
+  // 更新列高亮矩形位置（因为可视区域可能改变了）
+  if (hoveredColIndex !== null) {
+    createOrUpdateHoverRects()
+  }
+
   bodyLayer?.batchDraw()
   fixedLayer?.batchDraw()
 
@@ -1630,6 +1638,12 @@ const updateHorizontalScroll = (offsetX: number) => {
   centerBodyGroup.x(centerX)
 
   updateScrollbars()
+
+  // 更新列高亮矩形位置（因为可视区域可能改变了）
+  if (hoveredColIndex !== null) {
+    createOrUpdateHoverRects()
+  }
+
   headerLayer?.batchDraw()
   bodyLayer?.batchDraw()
 
