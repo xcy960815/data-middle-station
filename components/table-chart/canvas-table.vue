@@ -1062,6 +1062,9 @@ const setupVerticalScrollbarEvents = () => {
     dragStartY = e.evt.clientY
     dragStartScrollY = scrollY
     stage!.container().style.cursor = 'grabbing'
+
+    // 设置指针位置到 stage，避免 Konva 警告
+    stage!.setPointersPositions(e.evt)
   })
 
   vThumb.on('mouseenter', () => {
@@ -1086,6 +1089,9 @@ const setupHorizontalScrollbarEvents = () => {
     dragStartX = e.evt.clientX
     dragStartScrollX = scrollX
     stage!.container().style.cursor = 'grabbing'
+
+    // 设置指针位置到 stage，避免 Konva 警告
+    stage!.setPointersPositions(e.evt)
   })
 
   hThumb.on('mouseenter', () => {
@@ -1687,6 +1693,12 @@ const updateScrollbars = () => {
 
 const handleWheel = (e: WheelEvent) => {
   e.preventDefault()
+
+  // 设置指针位置到 stage，避免 Konva 警告
+  if (stage) {
+    stage.setPointersPositions(e)
+  }
+
   const hasDeltaX = Math.abs(e.deltaX) > 0
   const hasDeltaY = Math.abs(e.deltaY) > 0
   // 兼容 Shift + 滚轮用于横向滚动（常见于鼠标）
@@ -1701,6 +1713,9 @@ const handleWheel = (e: WheelEvent) => {
 
 const handleMouseMove = (e: MouseEvent) => {
   if (!stage) return
+
+  // 设置指针位置到 stage，避免 Konva 警告
+  stage.setPointersPositions(e)
 
   if (isDraggingVThumb) {
     const deltaY = e.clientY - dragStartY
@@ -1864,6 +1879,27 @@ onMounted(() => {
   window.addEventListener('resize', handleResize)
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('mouseup', handleMouseUp)
+
+  // 添加全局鼠标事件监听器来确保 Konva 指针位置始终正确
+  if (stage) {
+    const container = stage.container()
+
+    // 创建事件处理函数引用，以便后续可以移除
+    const updatePointerPositions = (e: MouseEvent) => {
+      if (stage) {
+        stage.setPointersPositions(e)
+      }
+    }
+
+    container.addEventListener('mousemove', updatePointerPositions)
+    container.addEventListener('mousedown', updatePointerPositions)
+    container.addEventListener('mouseup', updatePointerPositions)
+    container.addEventListener('mouseenter', updatePointerPositions)
+    container.addEventListener('mouseleave', updatePointerPositions)
+
+    // 将函数引用存储到 stage 对象上，以便卸载时使用
+    ;(stage as any)._pointerPositionHandler = updatePointerPositions
+  }
 })
 
 /**
@@ -1913,6 +1949,19 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('mouseup', handleMouseUp)
+
+  // 移除 stage 容器的事件监听器
+  if (stage) {
+    const container = stage.container()
+    const pointerHandler = (stage as any)._pointerPositionHandler
+    if (pointerHandler) {
+      container.removeEventListener('mousemove', pointerHandler)
+      container.removeEventListener('mousedown', pointerHandler)
+      container.removeEventListener('mouseup', pointerHandler)
+      container.removeEventListener('mouseenter', pointerHandler)
+      container.removeEventListener('mouseleave', pointerHandler)
+    }
+  }
 
   stage?.destroy()
   stage = null
