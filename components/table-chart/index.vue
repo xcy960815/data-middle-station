@@ -28,11 +28,11 @@ const props = defineProps({
     default: () => []
   },
   chartHeight: {
-    type: Number,
+    type: [Number, String],
     default: () => 0
   },
   chartWidth: {
-    type: Number,
+    type: [Number, String],
     default: () => 0
   },
   // 图表配置
