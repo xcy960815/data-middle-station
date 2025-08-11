@@ -1,6 +1,7 @@
 <template>
   <ClientOnly>
     <CanvasTable
+      :show-overflow-tooltip="true"
       chart-height="500px"
       chart-width="100%"
       :x-axis-fields="xAxisFields"
@@ -8,6 +9,7 @@
       :enable-row-hover-highlight="true"
       :enable-col-hover-highlight="true"
       :data="data"
+      :span-method="spanMethod"
       @cell-click="handleCellClick"
     />
   </ClientOnly>
@@ -15,6 +17,27 @@
 
 <script setup lang="ts">
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
+
+// 示例：第 0 列（ID）每两行纵向合并一次
+const spanMethod = ({
+  rowIndex,
+  colIndex
+}: {
+  row: ChartDataDao.ChartData[0]
+  column: GroupStore.GroupOption | DimensionStore.DimensionOption
+  rowIndex: number
+  colIndex: number
+}): { rowspan: number; colspan: number } => {
+  if (colIndex === 0) {
+    if (rowIndex % 2 === 0) {
+      const remaining = data.length - rowIndex
+      return { rowspan: remaining >= 2 ? 2 : 1, colspan: 1 }
+    } else {
+      return { rowspan: 0, colspan: 0 }
+    }
+  }
+  return { rowspan: 1, colspan: 1 }
+}
 /**
  * 分组列
  */
@@ -31,6 +54,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     alias: 'id',
     displayName: 'ID',
     width: 200,
+    filterable: true,
     fixed: 'left' as const
   },
   {
@@ -53,6 +77,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'varchar',
     columnComment: 'Gender',
     alias: 'gender',
+    filterable: true,
     displayName: 'Gender'
   },
   {
@@ -61,6 +86,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'Country',
     alias: 'country',
     width: 200,
+    filterable: true,
     displayName: 'Country',
     fixed: 'left' as const
   },
@@ -70,6 +96,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'City',
     alias: 'city',
     width: 200,
+    filterable: true,
     displayName: 'City',
     fixed: 'left' as const
   },
@@ -95,6 +122,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'Address',
     alias: 'address',
     displayName: 'Address',
+    showOverflowTooltip: true,
     width: 200
   },
   {
@@ -110,6 +138,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'varchar',
     columnComment: 'Mobile',
     alias: 'mobile',
+    // showOverflowTooltip: true,
     displayName: 'Mobile'
   }
 ])
