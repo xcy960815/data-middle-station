@@ -7,6 +7,9 @@
         :yAxisFields="yAxisFields"
         :chart-width="chartWidth"
         :chart-height="chartHeight"
+        :chart-config="chartConfig"
+        :enable-row-hover-highlight="enableRowHoverHighlight"
+        :enable-col-hover-highlight="enableColHoverHighlight"
       />
     </client-only>
   </div>
@@ -47,6 +50,14 @@ const props = defineProps({
       }>
     }>,
     default: () => ({})
+  },
+  enableRowHoverHighlight: {
+    type: Boolean,
+    default: () => true
+  },
+  enableColHoverHighlight: {
+    type: Boolean,
+    default: () => true
   }
 })
 </script>

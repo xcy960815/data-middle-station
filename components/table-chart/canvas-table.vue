@@ -142,10 +142,6 @@ const props = withDefaults(
      */
     bufferRows?: number
     /**
-     * 是否在内容溢出时显示悬浮提示
-     */
-    showOverflowTooltip?: boolean
-    /**
      * 自动列最小宽度（当列未指定width时，均分剩余宽度，但不小于该值）
      */
     minAutoColWidth?: number
@@ -157,10 +153,13 @@ const props = withDefaults(
      * 参与排序的表头高亮背景色
      */
     headerSortActiveBg?: string
-    // 已移除 multiSortMode 配置，统一为单列排序（再次点击循环升序/降序/清除）
-    /** 是否启用行高亮 */
+    /**
+     * 是否启用行高亮
+     */
     enableRowHoverHighlight?: boolean
-    /** 是否启用列高亮（含表头列） */
+    /**
+     * 是否启用列高亮（含表头列）
+     */
     enableColHoverHighlight?: boolean
     /**
      * 单元格合并方法：参考 Element Plus 的 span-method
@@ -172,7 +171,6 @@ const props = withDefaults(
       rowIndex: number
       colIndex: number
     }) => { rowspan: number; colspan: number } | [number, number] | null | undefined
-    // 表头过滤总是启用在列 filterable 为 true 的列上，不再提供组件级开关与颜色配置
   }>(),
   {
     chartWidth: '100%',
@@ -217,12 +215,16 @@ const emits = defineEmits<{
 
 /**
  * 所有列
+ * @returns {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>}
  */
 const allColumns = computed(
   () => props.xAxisFields.concat(props.yAxisFields) as Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
 )
 
-// columnName -> alias 映射，便于过滤时兼容别名字段
+/**
+ * columnName -> alias 映射，便于过滤时兼容别名字段
+ * @returns {Record<string, string>}
+ */
 const columnAliasMap = computed(() => {
   const map: Record<string, string> = {}
   allColumns.value.forEach((c: any) => {
@@ -239,18 +241,22 @@ const columnAliasMap = computed(() => {
 
 /**
  * 表格数据
+ * @returns {ChartDataDao.ChartData}
  */
 const tableData = computed<ChartDataDao.ChartData>(() => props.data)
 
 /**
  * 排序状态
+ * @returns {Array<{ columnName: string; order: 'asc' | 'desc' }>}
  */
-// 排序状态：支持多字段；按数组顺序依次比较；单字段循环 asc -> desc -> remove
 const sortState = reactive<{ columns: Array<{ columnName: string; order: 'asc' | 'desc' }> }>({
   columns: []
 })
 
-// 过滤状态：列名 -> 选中的离散值集合（使用 Set 便于判定）
+/**
+ * 过滤状态：列名 -> 选中的离散值集合（使用 Set 便于判定）
+ * @returns {Record<string, Set<string>>}
+ */
 const filterState = reactive<Record<string, Set<string>>>({})
 
 /**
@@ -273,7 +279,9 @@ const activeData = computed<ChartDataDao.ChartData>(() => {
       return true
     })
   }
-
+  /**
+   * 如果未排序，则直接返回原始数据
+   */
   if (!sortState.columns.length) return base
   const sorted = [...base]
   const toNum = (v: string | number) => {
@@ -300,65 +308,63 @@ const activeData = computed<ChartDataDao.ChartData>(() => {
   return sorted
 })
 
-// 合并单元格逻辑改为仅通过 spanMethod 控制
-
 /**
- * 舞台
+ * Stage 实例
  */
 let stage: Konva.Stage | null = null
 
 /**
- * 表头层
+ * 表头层（固定表头）
  */
 let headerLayer: Konva.Layer | null = null
 
 /**
- * 表格层
+ * 表格层（主体）
  */
 let bodyLayer: Konva.Layer | null = null
 
 /**
- * 固定列层
+ * 固定列层（固定列）
  */
 let fixedLayer: Konva.Layer | null = null
 
 /**
- * 固定表头层
+ * 固定表头层（固定表头）
  */
 let fixedHeaderLayer: Konva.Layer | null = null
 
 /**
- * 滚动条层
+ * 滚动条层（滚动条）
  */
 let scrollbarLayer: Konva.Layer | null = null
 
 /**
- * 中间区域剪辑组
+ * 中间区域剪辑组（中间区域）
  */
 let centerBodyClipGroup: Konva.Group | null = null
 
 /**
- * 左侧表头组
+ * 左侧表头组（左侧表头）
  */
 let leftHeaderGroup: Konva.Group | null = null
 
 /**
- * 中间表头组
+ * 中间表头组（中间表头）
  */
 let centerHeaderGroup: Konva.Group | null = null
 
 /**
- * 右侧表头组
+ * 右侧表头组（右侧表头）
  */
 let rightHeaderGroup: Konva.Group | null = null
 
 /**
- * 左侧主体组
+ * 左侧主体组（左侧主体）
  */
 let leftBodyGroup: Konva.Group | null = null
 
 /**
- * 中间主体组
+ * 中间主体组（中间主体）
  */
 let centerBodyGroup: Konva.Group | null = null
 
@@ -366,10 +372,6 @@ let centerBodyGroup: Konva.Group | null = null
  * 右侧主体组
  */
 let rightBodyGroup: Konva.Group | null = null
-
-/**
- * 滚动状态
- */
 
 /**
  * 垂直滚动状态
@@ -381,9 +383,6 @@ let scrollY = 0
  */
 let scrollX = 0
 
-/**
- * 滚动条元素
- */
 /**
  * 垂直滚动条组
  */
@@ -466,6 +465,9 @@ let leftHoverRect: Konva.Rect | null = null
  * 中间悬停矩形
  */
 let centerHoverRect: Konva.Rect | null = null
+/**
+ * 右侧悬停矩形（右侧主体）
+ */
 let rightHoverRect: Konva.Rect | null = null
 /**
  * 列悬停矩形（表头）
@@ -1052,7 +1054,9 @@ const rebuildGroups = () => {
   const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
   const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
 
-  // Ensure centerBodyClipGroup exists
+  /**
+   * 确保 centerBodyClipGroup 存在
+   */
   if (!centerBodyClipGroup) {
     const contentHeight = stageHeight - props.headerHeight - horizontalScrollbarSpace
     centerBodyClipGroup = new Konva.Group({
@@ -1103,16 +1107,30 @@ const rebuildGroups = () => {
    * 添加固定列到固定层（顶层）
    */
   fixedLayer.add(leftBodyGroup, rightBodyGroup)
-
+  /**
+   * 绘制左侧表头部分
+   */
   drawHeaderPart(leftHeaderGroup, leftCols, 0)
+  /**
+   * 绘制中间表头部分
+   */
   drawHeaderPart(centerHeaderGroup, centerCols, 0)
+  /**
+   * 绘制右侧表头部分
+   */
   drawHeaderPart(rightHeaderGroup, rightCols, 0)
 
   /**
-   * 使用虚拟滚动渲染body部分
+   * 绘制左侧主体部分
    */
   drawBodyPart(leftBodyGroup, leftCols, leftBodyPools)
+  /**
+   * 绘制中间主体部分
+   */
   drawBodyPart(centerBodyGroup, centerCols, centerBodyPools)
+  /**
+   * 绘制右侧主体部分
+   */
   drawBodyPart(rightBodyGroup, rightCols, rightBodyPools)
 
   createScrollbars()
@@ -1285,8 +1303,8 @@ const drawHeaderPart = (
     const maxTextWidth = (col.width || 0) - 40 // 预留约 40px 给右侧图标
     const fontFamily = props.headerFontFamily
     const fontSize = props.headerFontSize
-    const truncatedTitle = truncateText(col.displayName, maxTextWidth, fontSize, fontFamily)
-
+    const displayName = col.displayName || col.alias || col.columnName
+    const truncatedTitle = truncateText(displayName, maxTextWidth, fontSize, fontFamily)
     const label = new Konva.Text({
       x: getTextX(x),
       y: props.headerHeight / 2,
@@ -2440,6 +2458,7 @@ const handleMouseUp = () => {
 
 /**
  * 更新滚动位置
+ * @returns {void}
  */
 const updateScrollPositions = () => {
   if (!leftBodyGroup || !centerBodyGroup || !rightBodyGroup || !centerHeaderGroup) return
@@ -2449,11 +2468,15 @@ const updateScrollPositions = () => {
   const centerX = -scrollX
   const headerX = leftWidth - scrollX
 
-  // Update fixed columns (only Y position changes)
+  /**
+   * 更新左侧和右侧主体（只有 Y 位置变化）
+   */
   leftBodyGroup.y(bodyY)
   rightBodyGroup.y(bodyY)
 
-  // Update center scrollable content (both X and Y)
+  /**
+   * 更新中间主体（X 和 Y 位置变化）
+   */
   centerBodyGroup.x(centerX)
   centerBodyGroup.y(-scrollY)
 
@@ -2475,6 +2498,7 @@ const updateScrollPositions = () => {
 
 /**
  * 处理窗口大小改变
+ * @returns {void}
  */
 const handleResize = () => {
   initStage()
@@ -2486,6 +2510,8 @@ const handleResize = () => {
 
 /**
  * 从 props 初始化 初始化表格
+ * @param {boolean} resetScroll 是否重置滚动状态
+ * @returns {void}
  */
 const refreshTable = (resetScroll: boolean) => {
   /**
@@ -2518,6 +2544,7 @@ const refreshTable = (resetScroll: boolean) => {
 
 /**
  * 挂载
+ * @returns {void}
  */
 onMounted(() => {
   window.addEventListener('mousedown', onGlobalMousedown, true)
@@ -2533,7 +2560,6 @@ onMounted(() => {
   // 添加全局鼠标事件监听器来确保 Konva 指针位置始终正确
   if (stage) {
     const container = stage.container()
-
     // 创建事件处理函数引用，以便后续可以移除
     const updatePointerPositions = (e: MouseEvent) => {
       if (stage) {
@@ -2628,7 +2654,7 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .container-table {
   width: 100%;
   position: relative;
