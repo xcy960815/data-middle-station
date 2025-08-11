@@ -11,14 +11,6 @@
       <template #reference>
         <div class="select-trigger" :class="{ 'is-active': isPopoverVisible }">
           <span class="selected-value">{{ dataSource || '请选择数据库表' }}</span>
-          <!-- <el-icon
-            v-if="dataSource"
-            class="clear-icon"
-            @click.stop="clearDataSource"
-            style="margin-left: 8px; cursor: pointer;"
-          >
-            <Close />
-          </el-icon> -->
           <icon-park
             v-if="dataSource"
             class="clear-icon"
@@ -38,14 +30,16 @@
           :prefix-icon="Search"
           style="margin-bottom: 8px; width: 220px"
         />
-        <el-button type="primary" style="margin-left: 8px; margin-bottom: 8px" @click="handleSearch">搜索</el-button>
+        <el-button type="primary" style="margin-left: 8px; margin-bottom: 8px" @click="handleSearchTable"
+          >搜索</el-button
+        >
       </div>
 
       <el-table
         :data="dataSourceOptions"
         border
         style="width: 100%"
-        @row-click="handleSelectTable"
+        @row-click="handleSelectedTable"
         highlight-current-row
         max-height="300"
         :row-class-name="rowClassName"
@@ -61,12 +55,22 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
-import { useColumnStore } from '~/stores/column'
 import { ElPopover, ElTable, ElTableColumn, ElInput, ElButton, ElMessage } from 'element-plus'
 import { IconPark } from '@icon-park/vue-next/es/all'
+/**
+ * @desc 列存储
+ */
 const columnStore = useColumnStore()
 const searchKeyword = ref('')
+/**
+ * @desc 是否显示弹窗
+ * @returns {boolean}
+ */
 const isPopoverVisible = ref(false)
+/**
+ * @desc 事件
+ * @returns {void}
+ */
 const emit = defineEmits(['dataSource-change'])
 /**
  * @desc 数据源
@@ -90,21 +94,25 @@ const dataSourceOptions = computed(() => columnStore.getDataSourceOptions)
 /**
  * @desc 搜索按钮点击（目前只做UI，实际过滤仍为输入框实时过滤）
  */
-const handleSearch = () => {
+const handleSearchTable = () => {
   queryTable()
 }
 
 /**
  * @desc 选择表
+ * @param {ColumnStore.DataSourceOption} row 表数据
+ * @returns {void}
  */
-const handleSelectTable = (row: ColumnStore.DataSourceOption) => {
+const handleSelectedTable = (row: ColumnStore.DataSourceOption) => {
   dataSource.value = row.tableName
   isPopoverVisible.value = false
-  emit('dataSource-change', row.tableName)
+  if (row.tableName) emit('dataSource-change', row.tableName)
 }
 
 /**
  * @desc 高亮当前选中行
+ * @param {DatabaseVo.TableOption} row 表数据
+ * @returns {string}
  */
 const rowClassName = ({ row }: { row: DatabaseVo.TableOption }) => {
   return row.tableName === dataSource.value ? 'is-selected' : ''
@@ -131,6 +139,7 @@ const queryTable = async () => {
 
 /**
  * @desc 清空数据源
+ * @returns {void}
  */
 const clearDataSource = () => {
   dataSource.value = ''

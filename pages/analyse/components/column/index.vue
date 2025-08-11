@@ -288,39 +288,40 @@ const setDataModel = () => {
 /**
  * @desc 监听表格数据源变化
  */
-// watch(
-//   () => columnStore.getDataSource,
-//   async (newDataSource, oldDataSource) => {
-//     if (!newDataSource) {
-//       // 如果数据源为空，清空图表数据
-//       chartStore.setChartData([])
-//       // 如果数据源为空，清空筛选条件
-//       filterStore.setFilters([])
-//       // 如果数据源为空，清空排序条件
-//       orderStore.setOrders([])
-//       // 如果数据源为空，清空分组条件
-//       groupStore.setGroups([])
-//       // 如果数据源为空，清空维度条件
-//       dimensionStore.setDimensions([])
-//       // 如果数据源为空，清空图表配置
-//       chartConfigStore.setChartConfig(null)
-//       // 如果数据源为空，清空图表配置条件
-//       columnStore.setColumns([])
-//       // 如果数据源为空，清空图表配置
-//       chartConfigStore.setChartConfig(null)
-//     } else {
-//       await queryTableColumn(newDataSource)
-//       const hasFilter = filterStore.getFilters.length > 0
-//       hasFilter && filterStore.setFilters([])
-//       const hasOrder = orderStore.getOrders.length > 0
-//       hasOrder && orderStore.setOrders([])
-//       const hasGroup = groupStore.getGroups.length > 0
-//       hasGroup && groupStore.setGroups([])
-//       const hasDimension = dimensionStore.getDimensions.length > 0
-//       hasDimension && dimensionStore.setDimensions([])
-//     }
-//   }
-// )
+watch(
+  () => columnStore.getDataSource,
+  async (newDataSource, oldDataSource) => {
+    if (!newDataSource) {
+      // 如果数据源为空，清空图表数据
+      chartStore.setChartData([])
+      // 如果数据源为空，清空筛选条件
+      filterStore.setFilters([])
+      // 如果数据源为空，清空排序条件
+      orderStore.setOrders([])
+      // 如果数据源为空，清空分组条件
+      groupStore.setGroups([])
+      // 如果数据源为空，清空维度条件
+      dimensionStore.setDimensions([])
+      // 如果数据源为空，清空图表配置
+      chartConfigStore.setChartConfig(null)
+      // 如果数据源为空，清空图表配置条件
+      columnStore.setColumns([])
+      // 如果数据源为空，清空图表配置
+      chartConfigStore.setChartConfig(null)
+    }
+    // else {
+    //   await queryTableColumn(newDataSource)
+    //   const hasFilter = filterStore.getFilters.length > 0
+    //   hasFilter && filterStore.setFilters([])
+    //   const hasOrder = orderStore.getOrders.length > 0
+    //   hasOrder && orderStore.setOrders([])
+    //   const hasGroup = groupStore.getGroups.length > 0
+    //   hasGroup && groupStore.setGroups([])
+    //   const hasDimension = dimensionStore.getDimensions.length > 0
+    //   hasDimension && dimensionStore.setDimensions([])
+    // }
+  }
+)
 
 /**
  * @desc 查询表格列
