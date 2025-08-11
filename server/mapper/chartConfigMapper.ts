@@ -119,7 +119,7 @@ export class ChartConfigMapper extends BaseMapper {
    */
   public async updateChartConfig(chartConfig: ChartConfigDao.ChartConfig): Promise<boolean> {
     const { keys, values } = convertToSqlProperties(chartConfig)
-    const sql = `update ${CHART_CONFIG_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ? and is_deleted = 0`
+    const sql = `UPDATE ${CHART_CONFIG_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ? and is_deleted = 0`
     return (await this.exe<number>(sql, [...values, chartConfig.id])) > 0
   }
 
