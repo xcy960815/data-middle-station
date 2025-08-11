@@ -1854,10 +1854,6 @@ const handleWheel = (e: WheelEvent) => {
 const handleMouseMove = (e: MouseEvent) => {
   if (!stage) return
 
-<<<<<<< HEAD
-  // 设置指针位置到 stage，避免 Konva 警告
-  stage.setPointersPositions(e)
-=======
   // 列宽拖拽中：实时更新覆盖宽度并重建分组
   if (isResizingColumn && resizingColumnName) {
     const delta = e.clientX - resizeStartX
@@ -1871,7 +1867,9 @@ const handleMouseMove = (e: MouseEvent) => {
     rebuildGroups()
     return
   }
->>>>>>> 25e8ef9 (feat: canvas table)
+
+  // 设置指针位置到 stage，避免 Konva 警告
+  stage.setPointersPositions(e)
 
   if (isDraggingVThumb) {
     const deltaY = e.clientY - dragStartY
