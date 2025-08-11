@@ -13,7 +13,7 @@
         size="small"
         placeholder="选择过滤值"
         style="width: 180px"
-        @change="applyFilterFromDropdown"
+        @change="handleSelectedFilter"
         @blur="closeFilterDropdown"
         @keydown.stop
       >
@@ -250,12 +250,13 @@ const sortState = reactive<{ columns: Array<{ columnName: string; order: 'asc' |
   columns: []
 })
 
-/**
- * 应用排序后的数据视图
- */
 // 过滤状态：列名 -> 选中的离散值集合（使用 Set 便于判定）
 const filterState = reactive<Record<string, Set<string>>>({})
 
+/**
+ * 应用排序后的数据视图
+ * @returns {ChartDataDao.ChartData}
+ */
 const activeData = computed<ChartDataDao.ChartData>(() => {
   // 先按 filter 过滤
   let base = tableData.value
@@ -586,6 +587,7 @@ const openFilterDropdown = (
 
 /**
  * 关闭过滤下拉浮层
+ * @returns {void}
  */
 const closeFilterDropdown = () => {
   filterDropdown.visible = false
@@ -593,8 +595,9 @@ const closeFilterDropdown = () => {
 
 /**
  * 应用过滤下拉浮层选中的选项
+ * @returns {void}
  */
-const applyFilterFromDropdown = () => {
+const handleSelectedFilter = () => {
   const colName = filterDropdown.colName
   const selectedValues = filterDropdown.selectedValues
   if (!selectedValues || selectedValues.length === 0) {
@@ -606,24 +609,24 @@ const applyFilterFromDropdown = () => {
   rebuildGroups()
 }
 
-// 点击外部关闭
+/**
+ * 点击外部关闭（允许点击 Element Plus 下拉面板）
+ * @param e 鼠标事件
+ * @returns {void}
+ */
 const onGlobalMousedown = (e: MouseEvent) => {
   if (!filterDropdown.visible) return
-  const el = filterDropdownEl.value
-  if (!el) return (filterDropdown.visible = false)
-  const target = e.target as Node
-  if (!el.contains(target)) {
-    filterDropdown.visible = false
-  }
+  const panel = filterDropdownEl.value
+  const target = e.target as HTMLElement | null
+  if (!target) return
+  // 点击自身面板内：不关闭
+  if (panel && panel.contains(target)) return
+  // 点击 el-select 下拉面板：不关闭
+  const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
+  if (inElSelectDropdown) return
+  // 其它点击：关闭
+  filterDropdown.visible = false
 }
-
-onMounted(() => {
-  window.addEventListener('mousedown', onGlobalMousedown, true)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('mousedown', onGlobalMousedown, true)
-})
 
 /**
  * 计算左右固定列与中间列的分组与宽度汇总
@@ -821,7 +824,7 @@ const handleCellClick = (
 
 /**
  * 获取滚动限制
- * @returns 滚动限制
+ * @returns {{ maxScrollX: number, maxScrollY: number }}
  */
 const getScrollLimits = () => {
   if (!stage) return { maxScrollX: 0, maxScrollY: 0 }
@@ -2021,20 +2024,7 @@ const createOrUpdateHoverRects = () => {
   const rightTotal = rightCols.reduce((acc, c) => acc + (c.width || 0), 0)
 
   /**
-   * 更新行高亮
-   */
-  if (props.enableRowHoverHighlight) {
-    leftHoverRect = updateRowRect(leftHoverRect, leftBodyGroup, leftTotal, 'hoverRect-left')
-    centerHoverRect = updateRowRect(centerHoverRect, centerBodyGroup, centerTotal, 'hoverRect-center')
-    rightHoverRect = updateRowRect(rightHoverRect, rightBodyGroup, rightTotal, 'hoverRect-right')
-  } else {
-    if (leftHoverRect) leftHoverRect.visible(false)
-    if (centerHoverRect) centerHoverRect.visible(false)
-    if (rightHoverRect) rightHoverRect.visible(false)
-  }
-
-  /**
-   * 更新列高亮
+   * 先更新列高亮，再更新行高亮，让行高亮覆盖列高亮，避免交叉处叠色
    */
   if (hoveredColIndex !== null && props.enableColHoverHighlight) {
     leftColHoverRect = updateColRect(leftColHoverRect, leftBodyGroup, hoveredColIndex, leftCols, 'hoverColRect-left')
@@ -2057,6 +2047,19 @@ const createOrUpdateHoverRects = () => {
     if (leftColHoverRect) leftColHoverRect.visible(false)
     if (centerColHoverRect) centerColHoverRect.visible(false)
     if (rightColHoverRect) rightColHoverRect.visible(false)
+  }
+
+  /**
+   * 更新行高亮（后绘制，覆盖列高亮，保证交叉处只渲染一次）
+   */
+  if (props.enableRowHoverHighlight) {
+    leftHoverRect = updateRowRect(leftHoverRect, leftBodyGroup, leftTotal, 'hoverRect-left')
+    centerHoverRect = updateRowRect(centerHoverRect, centerBodyGroup, centerTotal, 'hoverRect-center')
+    rightHoverRect = updateRowRect(rightHoverRect, rightBodyGroup, rightTotal, 'hoverRect-right')
+  } else {
+    if (leftHoverRect) leftHoverRect.visible(false)
+    if (centerHoverRect) centerHoverRect.visible(false)
+    if (rightHoverRect) rightHoverRect.visible(false)
   }
 
   /**
@@ -2517,6 +2520,7 @@ const refreshTable = (resetScroll: boolean) => {
  * 挂载
  */
 onMounted(() => {
+  window.addEventListener('mousedown', onGlobalMousedown, true)
   initStage()
   refreshTable(true)
 
@@ -2590,6 +2594,7 @@ watch(
  * 卸载
  */
 onBeforeUnmount(() => {
+  window.removeEventListener('mousedown', onGlobalMousedown, true)
   const tableContainer = getContainerEl()
   tableContainer?.removeEventListener('wheel', handleWheel)
   window.removeEventListener('resize', handleResize)
