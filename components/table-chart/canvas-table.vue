@@ -342,6 +342,11 @@ let resizeNeighborColumnName: string | null = null
 let resizeNeighborStartWidth = 0
 
 /**
+ * stage 容器上用于同步指针位置的事件处理器引用
+ */
+let containerPointerPositionHandler: ((e: MouseEvent) => void) | null = null
+
+/**
  * 拖拽状态
  */
 let isDraggingVThumb = false
@@ -2066,8 +2071,8 @@ onMounted(() => {
     container.addEventListener('mouseenter', updatePointerPositions)
     container.addEventListener('mouseleave', updatePointerPositions)
 
-    // 将函数引用存储到 stage 对象上，以便卸载时使用
-    ;(stage as any)._pointerPositionHandler = updatePointerPositions
+    // 存储处理器引用，卸载时移除
+    containerPointerPositionHandler = updatePointerPositions
   }
 })
 
@@ -2122,7 +2127,7 @@ onBeforeUnmount(() => {
   // 移除 stage 容器的事件监听器
   if (stage) {
     const container = stage.container()
-    const pointerHandler = (stage as any)._pointerPositionHandler
+    const pointerHandler = containerPointerPositionHandler
     if (pointerHandler) {
       container.removeEventListener('mousemove', pointerHandler)
       container.removeEventListener('mousedown', pointerHandler)
@@ -2130,6 +2135,7 @@ onBeforeUnmount(() => {
       container.removeEventListener('mouseenter', pointerHandler)
       container.removeEventListener('mouseleave', pointerHandler)
     }
+    containerPointerPositionHandler = null
   }
 
   stage?.destroy()

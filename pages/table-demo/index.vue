@@ -88,6 +88,29 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     displayName: 'Zipcode',
     width: 200,
     fixed: 'right' as const
+  },
+  {
+    columnName: 'address',
+    columnType: 'varchar',
+    columnComment: 'Address',
+    alias: 'address',
+    displayName: 'Address',
+    width: 200
+  },
+  {
+    columnName: 'phone',
+    columnType: 'varchar',
+    columnComment: 'Phone',
+    alias: 'phone',
+    displayName: 'Phone',
+    width: 200
+  },
+  {
+    columnName: 'mobile',
+    columnType: 'varchar',
+    columnComment: 'Mobile',
+    alias: 'mobile',
+    displayName: 'Mobile'
   }
 ])
 
