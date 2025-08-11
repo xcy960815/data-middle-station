@@ -1484,6 +1484,7 @@ const drawHeaderPart = (
 }
 /**
  * 设置垂直滚动条事件
+ * @returns {void}
  */
 const setupVerticalScrollbarEvents = () => {
   if (!verticalScrollbarThumb || !stage) return
@@ -1511,6 +1512,7 @@ const setupVerticalScrollbarEvents = () => {
 
 /**
  * 设置水平滚动条事件
+ * @returns {void}
  */
 const setupHorizontalScrollbarEvents = () => {
   if (!horizontalScrollbarThumb || !stage) return
@@ -1629,7 +1631,6 @@ const drawBodyPart = (
       let shouldDraw = true
       let mergedDrawStart = rowIndex
       let mergedDrawEnd = rowIndex
-      // 由于已移除 mergeBySameValueColumns，这里不再执行默认合并
       if (hasSpanMethod) {
         if (coveredBySpanMethod) {
           shouldDraw = false
@@ -1691,7 +1692,7 @@ const drawBodyPart = (
       group.add(cell)
 
       // 创建文本
-      const rawValue = row[col.columnName]
+      const rawValue = row[col.displayName || col.alias || col.columnName]
       const value = String(rawValue ?? '')
       const maxTextWidth = cellWidth - 16
       const fontFamily = props.bodyFontFamily
@@ -1793,7 +1794,12 @@ const drawBodyPart = (
   }
 }
 
-// 基于当前指针位置重新计算 hoveredRowIndex 和 hoveredColIndex 并更新 hover 矩形
+/**
+ * 基于当前指针位置重新计算 hoveredRowIndex 和 hoveredColIndex 并更新 hover 矩形
+ * @param {number} localY 本地 Y 坐标
+ * @param {number} localX 本地 X 坐标
+ * @returns {void}
+ */
 const recomputeHoverIndexFromPointer = (localY?: number, localX?: number) => {
   if (!stage || (!props.enableRowHoverHighlight && !props.enableColHoverHighlight)) return
   if (filterDropdown.visible) return

@@ -127,7 +127,10 @@ export class AnalyseService {
         chartConfigId = await this.chartConfigService.createChartConfig(chartConfig)
       } else {
         // 如果图表配置存在，则更新图表配置
-        await this.chartConfigService.updateChartConfig(chartConfig)
+        await this.chartConfigService.updateChartConfig({
+          ...chartConfig,
+          id: chartConfigId
+        })
       }
     }
     // 更新图表

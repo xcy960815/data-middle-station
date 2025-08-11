@@ -1,6 +1,7 @@
 <template>
   <div class="canvas-table-chart h-full">
     <client-only>
+      123
       <CanvasTable
         :data="data"
         :xAxisFields="xAxisFields"
@@ -17,6 +18,7 @@
 
 <script lang="ts" setup>
 import CanvasTable from './canvas-table.vue'
+
 const props = defineProps({
   data: {
     type: Array as PropType<ChartDataDao.ChartData>,
@@ -60,6 +62,8 @@ const props = defineProps({
     default: () => true
   }
 })
+
+console.log(props.yAxisFields)
 </script>
 
 <style scoped lang="scss">
