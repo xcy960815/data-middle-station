@@ -1,10 +1,12 @@
 <template>
   <ClientOnly>
-    <table-chart
-      chart-height="1000px"
+    <CanvasTable
+      chart-height="500px"
       chart-width="100%"
       :x-axis-fields="xAxisFields"
       :y-axis-fields="yAxisFields"
+      :enable-row-hover-highlight="true"
+      :enable-col-hover-highlight="true"
       :data="data"
       @cell-click="handleCellClick"
     />
@@ -12,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+import CanvasTable from '@/components/table-chart/canvas-table.vue'
 /**
  * 分组列
  */
@@ -129,7 +132,7 @@ const data: ChartDataDao.ChartData = Array.from({ length: 3000 }, (_, i) => ({
 /**
  * 单元格点击事件
  */
-const handleCellClick = (cell: { rowIndex: number; columnIndex: number }) => {
+const handleCellClick = (cell: { rowIndex: number; colIndex: number }) => {
   console.log('Cell clicked:', cell)
 }
 </script>
