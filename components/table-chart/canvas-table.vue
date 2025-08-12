@@ -24,9 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, onMounted, onBeforeUnmount, ref } from 'vue'
-import { ElSelect, ElOption } from 'element-plus'
+import { ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 /**
  * 获取容器元素
