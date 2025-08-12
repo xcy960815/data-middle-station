@@ -106,7 +106,7 @@
     "workbench.editor.enablePreviewFromQuickOpen": false,
     "workbench.startupEditor": "newUntitledFile",
 
-    "workbench.colorTheme": "Default Dark+",
+
 
     // 文件资源管理器设置
     "explorer.confirmDelete": false,
