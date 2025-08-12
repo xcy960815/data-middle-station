@@ -1,0 +1,34 @@
+{
+    "recommendations": [
+        // Vue 和 Nuxt 开发
+        "Vue.volar",
+        "Vue.vscode-typescript-vue-plugin",
+        "nuxt.mdc",
+        "bradlc.vscode-tailwindcss",
+
+        // 代码质量和格式化
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+
+        // TypeScript 支持
+        "ms-vscode.vscode-typescript-next",
+
+        // 图标和主题
+        "PKief.material-icon-theme",
+        "zhuangtongfa.Material-theme",
+
+        // Git 支持
+        "eamodio.gitlens",
+
+        // 调试工具
+        "ms-vscode.js-debug",
+        "ms-vscode.js-debug-companion",
+
+        // 其他实用工具
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml"
+    ]
+}

@@ -1,0 +1,328 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Nuxt3: 开发模式启动",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["dev"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "NODE_ENV": "development",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 预发布环境启动",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["dev:pre"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "NODE_ENV": "development",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 生产环境启动",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["dev:prod"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "NODE_ENV": "development",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 构建 (daily)",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["build:daily"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "options": {
+                "env": {
+                    "NODE_ENV": "production",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 构建 (pre)",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["build:pre"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "options": {
+                "env": {
+                    "NODE_ENV": "production",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 构建 (prod)",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["build:prod"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "options": {
+                "env": {
+                    "NODE_ENV": "production",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 启动生产服务器 (daily)",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["start:daily"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "NODE_ENV": "production",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 启动生产服务器 (pre)",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["start:pre"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "NODE_ENV": "production",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 启动生产服务器 (prod)",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["start:prod"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "NODE_ENV": "production",
+                    "NUXT_DEBUG": "1"
+                }
+            }
+        },
+        {
+            "label": "Nuxt3: 安装依赖",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["install"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Nuxt3: 清理构建文件",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["nuxt", "clean"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Nuxt3: 类型检查",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["nuxt", "typecheck"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "label": "Nuxt3: 代码检查",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["lint"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$eslint-stylish"
+            ]
+        },
+        {
+            "label": "Nuxt3: 格式化代码",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["format"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Nuxt3: 停止PM2进程",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["stop"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Nuxt3: 重启PM2进程",
+            "type": "shell",
+            "command": "pnpm",
+            "args": ["restart"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        }
+    ]
+}
