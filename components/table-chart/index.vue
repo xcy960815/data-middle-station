@@ -1,7 +1,6 @@
 <template>
   <div class="canvas-table-chart h-full">
     <client-only>
-      123
       <CanvasTable
         :data="data"
         :xAxisFields="xAxisFields"

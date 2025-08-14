@@ -88,7 +88,7 @@ const props = withDefaults(
     /**
      * 表头背景色
      */
-    headerBg?: string
+    headerBackground?: string
     /**
      * 表格奇数行背景色
      */
@@ -181,7 +181,7 @@ const props = withDefaults(
     rowHeight: 32,
     scrollbarSize: 16,
     tablePadding: 0,
-    headerBg: '#f7f7f9',
+    headerBackground: '#f7f7f9',
     bodyBgOdd: '#ffffff',
     bodyBgEven: '#fbfbfd',
     borderColor: '#dcdfe6',
@@ -227,9 +227,9 @@ const allColumns = computed(
  */
 const columnAliasMap = computed(() => {
   const map: Record<string, string> = {}
-  allColumns.value.forEach((c: any) => {
+  allColumns.value.forEach((c: GroupStore.GroupOption | DimensionStore.DimensionOption) => {
     if (c && typeof c === 'object') {
-      const colName = c.columnName as string
+      const colName = c.columnName
       const alias = c.alias as string | undefined
       if (colName && alias && alias !== colName) {
         map[colName] = alias
@@ -265,7 +265,7 @@ const filterState = reactive<Record<string, Set<string>>>({})
  */
 const activeData = computed<ChartDataDao.ChartData>(() => {
   // 先按 filter 过滤
-  let base = tableData.value
+  let base = tableData.value.filter((row) => row && typeof row === 'object') // 过滤掉无效的行
   const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
   if (filterKeys.length) {
     const aliasMap = columnAliasMap.value
@@ -314,6 +314,16 @@ const activeData = computed<ChartDataDao.ChartData>(() => {
 let stage: Konva.Stage | null = null
 
 /**
+ * 滚动条层（滚动条）
+ */
+let scrollbarLayer: Konva.Layer | null = null
+
+/**
+ * 中间区域剪辑组（中间区域）
+ */
+let centerBodyClipGroup: Konva.Group | null = null
+
+/**
  * 表头层（固定表头）
  */
 let headerLayer: Konva.Layer | null = null
@@ -324,9 +334,9 @@ let headerLayer: Konva.Layer | null = null
 let bodyLayer: Konva.Layer | null = null
 
 /**
- * 固定列层（固定列）
+ * 表脚层（表脚）
  */
-let fixedLayer: Konva.Layer | null = null
+let footerLayer: Konva.Layer | null = null
 
 /**
  * 固定表头层（固定表头）
@@ -334,14 +344,14 @@ let fixedLayer: Konva.Layer | null = null
 let fixedHeaderLayer: Konva.Layer | null = null
 
 /**
- * 滚动条层（滚动条）
+ * 固定表body层（固定表body）
  */
-let scrollbarLayer: Konva.Layer | null = null
+let fixedBodyLayer: Konva.Layer | null = null
 
 /**
- * 中间区域剪辑组（中间区域）
+ * 固定表脚层（固定表脚）
  */
-let centerBodyClipGroup: Konva.Group | null = null
+let fixedFooterLayer: Konva.Layer | null = null
 
 /**
  * 左侧表头组（左侧表头）
@@ -372,6 +382,21 @@ let centerBodyGroup: Konva.Group | null = null
  * 右侧主体组
  */
 let rightBodyGroup: Konva.Group | null = null
+
+/**
+ * 左侧表脚组（左侧表脚）
+ */
+let leftFooterGroup: Konva.Group | null = null
+
+/**
+ * 中间表脚组（中间表脚）
+ */
+let centerFooterGroup: Konva.Group | null = null
+
+/**
+ * 右侧表脚组（右侧表脚）
+ */
+let rightFooterGroup: Konva.Group | null = null
 
 /**
  * 垂直滚动状态
@@ -542,10 +567,14 @@ const filterDropdown = reactive({
   options: [] as string[],
   selectedValues: [] as string[]
 })
+
+// 汇总行下拉菜单已移除
 /**
  * 过滤下拉浮层元素
  */
 const filterDropdownEl = ref<HTMLDivElement | null>(null)
+
+// 汇总行下拉菜单元素已移除
 
 /**
  * 过滤下拉浮层样式
@@ -558,6 +587,8 @@ const filterDropdownStyle = computed(() => {
     zIndex: String(3000)
   } as Record<string, string>
 })
+
+// 汇总行下拉菜单样式已移除
 
 /**
  * 打开过滤下拉浮层
@@ -588,12 +619,23 @@ const openFilterDropdown = (
 }
 
 /**
+ * 打开汇总行下拉菜单
+ * @param clientX 鼠标点击位置的 X 坐标
+ * @param clientY 鼠标点击位置的 Y 坐标
+ * @param colName 列名
+ * @param isNumberColumn 是否为数字列
+ */
+// 打开汇总行下拉菜单逻辑已移除
+
+/**
  * 关闭过滤下拉浮层
  * @returns {void}
  */
 const closeFilterDropdown = () => {
   filterDropdown.visible = false
 }
+
+// 关闭汇总行下拉菜单已移除
 
 /**
  * 应用过滤下拉浮层选中的选项
@@ -610,6 +652,8 @@ const handleSelectedFilter = () => {
   clearGroups()
   rebuildGroups()
 }
+
+// 应用汇总行下拉菜单选项逻辑已移除
 
 /**
  * 点击外部关闭（允许点击 Element Plus 下拉面板）
@@ -834,7 +878,10 @@ const getScrollLimits = () => {
   const { totalWidth, leftWidth, rightWidth } = getSplitColumns()
   const stageWidth = stage.width()
   const stageHeight = stage.height()
-  const contentHeight = activeData.value.length * props.rowHeight
+
+  // 计算内容高度
+  let contentHeight = activeData.value.length * props.rowHeight
+
   // 初步估算：不预留滚动条空间
   const visibleContentWidthNoV = stageWidth - leftWidth - rightWidth
   const contentHeightNoH = stageHeight - props.headerHeight
@@ -935,15 +982,17 @@ const initStage = () => {
     stage.add(bodyLayer)
   }
 
-  if (!fixedLayer) {
-    fixedLayer = new Konva.Layer()
-    stage.add(fixedLayer)
+  if (!fixedBodyLayer) {
+    fixedBodyLayer = new Konva.Layer()
+    stage.add(fixedBodyLayer)
   }
 
   if (!fixedHeaderLayer) {
     fixedHeaderLayer = new Konva.Layer()
     stage.add(fixedHeaderLayer)
   }
+
+  // 汇总行图层已移除
 
   if (!scrollbarLayer) {
     scrollbarLayer = new Konva.Layer()
@@ -978,8 +1027,9 @@ const initStage = () => {
 const clearGroups = () => {
   headerLayer?.destroyChildren()
   bodyLayer?.destroyChildren()
-  fixedLayer?.destroyChildren()
+  fixedBodyLayer?.destroyChildren()
   fixedHeaderLayer?.destroyChildren()
+
   scrollbarLayer?.destroyChildren()
 
   // 清理对象池
@@ -1045,7 +1095,7 @@ const clearGroups = () => {
  * @returns {void}
  */
 const rebuildGroups = () => {
-  if (!stage || !headerLayer || !bodyLayer || !fixedLayer || !fixedHeaderLayer || !scrollbarLayer) return
+  if (!stage || !headerLayer || !bodyLayer || !fixedBodyLayer || !fixedHeaderLayer || !scrollbarLayer) return
 
   const { leftCols, centerCols, rightCols, leftWidth, rightWidth } = getSplitColumns()
   const stageWidth = stage.width()
@@ -1054,11 +1104,14 @@ const rebuildGroups = () => {
   const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
   const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
 
+  // 计算内容高度（不包括汇总行）
+  const contentHeight = activeData.value.length * props.rowHeight
+
   /**
    * 确保 centerBodyClipGroup 存在
    */
   if (!centerBodyClipGroup) {
-    const contentHeight = stageHeight - props.headerHeight - horizontalScrollbarSpace
+    const clipHeight = stageHeight - props.headerHeight - horizontalScrollbarSpace
     centerBodyClipGroup = new Konva.Group({
       x: leftWidth,
       y: props.headerHeight,
@@ -1066,7 +1119,7 @@ const rebuildGroups = () => {
         x: 0,
         y: 0,
         width: stageWidth - leftWidth - rightWidth - verticalScrollbarSpace,
-        height: contentHeight
+        height: clipHeight
       }
     })
     bodyLayer.add(centerBodyClipGroup)
@@ -1088,6 +1141,8 @@ const rebuildGroups = () => {
     name: 'rightBody'
   })
 
+  // 汇总行分组已移除
+
   /**
    * 添加中心滚动表头到表头层（底层）
    */
@@ -1106,7 +1161,10 @@ const rebuildGroups = () => {
   /**
    * 添加固定列到固定层（顶层）
    */
-  fixedLayer.add(leftBodyGroup, rightBodyGroup)
+  fixedBodyLayer.add(leftBodyGroup, rightBodyGroup)
+
+  // 汇总行组添加已移除
+
   /**
    * 绘制左侧表头部分
    */
@@ -1133,11 +1191,13 @@ const rebuildGroups = () => {
    */
   drawBodyPart(rightBodyGroup, rightCols, rightBodyPools)
 
+  // 汇总行绘制已移除
+
   createScrollbars()
 
   headerLayer.batchDraw()
   bodyLayer?.batchDraw()
-  fixedLayer?.batchDraw()
+  fixedBodyLayer?.batchDraw()
   fixedHeaderLayer?.batchDraw()
   scrollbarLayer?.batchDraw()
   // 重新计算可视区与 hover after sort/resize
@@ -1163,7 +1223,7 @@ const createScrollbars = () => {
       y: 0,
       width: props.scrollbarSize,
       height: props.headerHeight,
-      fill: props.headerBg,
+      fill: props.headerBackground,
       stroke: props.borderColor,
       strokeWidth: 1
     })
@@ -1265,7 +1325,7 @@ const drawHeaderPart = (
     y: 0,
     width: totalWidth,
     height: props.headerHeight,
-    fill: props.headerBg,
+    fill: props.headerBackground,
     stroke: props.borderColor,
     strokeWidth: 1
   })
@@ -1280,18 +1340,10 @@ const drawHeaderPart = (
       height: props.headerHeight,
       stroke: props.borderColor,
       strokeWidth: 1,
-      listening: true,
-      cursor: 'pointer'
+      listening: false, // 不再需要监听事件
+      cursor: 'default' // 默认指针样式
     })
     group.add(cell)
-
-    // 强制指针样式为小手，避免被其他地方的默认样式覆盖
-    cell.on('mouseenter', () => {
-      if (!isResizingColumn && stage) stage.container().style.cursor = 'pointer'
-    })
-    cell.on('mouseleave', () => {
-      if (!isResizingColumn && stage) stage.container().style.cursor = 'default'
-    })
 
     // 如果该列当前参与排序，则给表头单元格一个高亮背景（多列排序）
     {
@@ -1359,10 +1411,49 @@ const drawHeaderPart = (
     }
     upTriangle.on('mouseenter', () => setPointer(true))
     upTriangle.on('mouseleave', () => setPointer(false))
-    upTriangle.on('click', (evt) => cell.fire('click', evt))
     downTriangle.on('mouseenter', () => setPointer(true))
     downTriangle.on('mouseleave', () => setPointer(false))
-    downTriangle.on('click', (evt) => cell.fire('click', evt))
+
+    // 排序箭头点击事件：只在点击箭头时触发排序
+    const handleSortClick = (evt: Konva.KonvaEventObject<MouseEvent>, order: 'asc' | 'desc') => {
+      if (isResizingColumn) return
+      const e = evt.evt
+      const hasModifier = !!(e && (e.shiftKey || e.ctrlKey || e.metaKey))
+      const idx = sortState.columns.findIndex((s) => s.columnName === col.columnName)
+
+      if (hasModifier) {
+        // 多列模式：在原序列中追加/切换/移除该列
+        if (idx === -1) {
+          sortState.columns = [...sortState.columns, { columnName: col.columnName, order }]
+        } else {
+          const next = [...sortState.columns]
+          if (next[idx].order === order) {
+            // 如果点击的是相同顺序，则移除该列
+            next.splice(idx, 1)
+          } else {
+            // 否则切换到新顺序
+            next[idx] = { columnName: col.columnName, order }
+          }
+          sortState.columns = next
+        }
+      } else {
+        // 单列模式：仅对当前列循环 asc -> desc -> remove
+        if (idx === -1) {
+          sortState.columns = [{ columnName: col.columnName, order }]
+        } else if (sortState.columns[idx].order === order) {
+          // 如果点击的是相同顺序，则移除该列
+          sortState.columns = []
+        } else {
+          // 否则切换到新顺序
+          sortState.columns = [{ columnName: col.columnName, order }]
+        }
+      }
+      clearGroups()
+      rebuildGroups()
+    }
+
+    upTriangle.on('click', (evt) => handleSortClick(evt, 'asc'))
+    downTriangle.on('click', (evt) => handleSortClick(evt, 'desc'))
 
     // 过滤图标（放大镜）
     if (col.filterable) {
@@ -1441,37 +1532,7 @@ const drawHeaderPart = (
       if (stage) stage.container().style.cursor = 'col-resize'
     })
 
-    // 点击表头切换排序（避免和拖拽冲突）
-    // 默认支持多列排序：按住 Shift/Ctrl/⌘ 点击可追加/切换该列；普通点击为独占该列
-    cell.on('click', (evt) => {
-      if (isResizingColumn) return
-      const e = evt.evt
-      const hasModifier = !!(e && (e.shiftKey || e.ctrlKey || e.metaKey))
-      const idx = sortState.columns.findIndex((s) => s.columnName === col.columnName)
-
-      if (hasModifier) {
-        // 多列模式：在原序列中追加/切换/移除该列
-        if (idx === -1) {
-          sortState.columns = [...sortState.columns, { columnName: col.columnName, order: 'asc' }]
-        } else {
-          const next = [...sortState.columns]
-          if (next[idx].order === 'asc') next[idx] = { columnName: col.columnName, order: 'desc' }
-          else if (next[idx].order === 'desc') next.splice(idx, 1)
-          sortState.columns = next
-        }
-      } else {
-        // 单列模式：仅对当前列循环 asc -> desc -> remove
-        if (idx === -1) {
-          sortState.columns = [{ columnName: col.columnName, order: 'asc' }]
-        } else if (sortState.columns[idx].order === 'asc') {
-          sortState.columns = [{ columnName: col.columnName, order: 'desc' }]
-        } else {
-          sortState.columns = []
-        }
-      }
-      clearGroups()
-      rebuildGroups()
-    })
+    // 表头单元格不再绑定排序事件，排序功能已移至排序箭头
 
     x += col.width || 0
   })
@@ -1482,6 +1543,15 @@ const drawHeaderPart = (
     setTimeout(() => createFixedColumnShadow(), 0)
   }
 }
+
+/**
+ * 绘制汇总行部分
+ * @param group 分组
+ * @param cols 列
+ * @param startX 起始 X 坐标
+ */
+// 汇总行绘制函数已移除
+
 /**
  * 设置垂直滚动条事件
  * @returns {void}
@@ -1686,13 +1756,13 @@ const drawBodyPart = (
       cell.on('click', () => {
         // 对于合并单元格，基于指针位置推断点击的是跨度内的哪一行
         let clickedRowIndex = rowIndex
-        // 默认不启用“相同值合并”，因此不需要基于跨度推断点击行
+        // 默认不启用"相同值合并"，因此不需要基于跨度推断点击行
         handleCellClick(clickedRowIndex, colIndex, col, cell.x(), cell.y(), cellWidth, cellHeight, group)
       })
       group.add(cell)
 
       // 创建文本
-      const rawValue = row[col.displayName || col.alias || col.columnName]
+      const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
       const value = String(rawValue ?? '')
       const maxTextWidth = cellWidth - 16
       const fontFamily = props.bodyFontFamily
@@ -1981,7 +2051,7 @@ const createOrUpdateHoverRects = () => {
     let colWidth = cols[targetColIndex].width || 0
 
     if (typeof props.spanMethod === 'function' && hoveredRowIndex !== null) {
-      // 从当前列向左回溯，寻找该 hover 行上覆盖当前列的“起始列”
+      // 从当前列向左回溯，寻找该 hover 行上覆盖当前列的"起始列"
       let startIdx = targetColIndex
       for (let i = targetColIndex; i >= 0; i--) {
         const res = props.spanMethod({
@@ -2193,9 +2263,10 @@ const createOrUpdateHoverRects = () => {
   }
 
   bodyLayer?.batchDraw()
-  fixedLayer?.batchDraw()
+  fixedBodyLayer?.batchDraw()
   headerLayer?.batchDraw()
   fixedHeaderLayer?.batchDraw()
+  scrollbarLayer?.batchDraw()
 }
 
 /**
@@ -2242,7 +2313,7 @@ const updateVerticalScroll = (offsetY: number) => {
   }
 
   bodyLayer?.batchDraw()
-  fixedLayer?.batchDraw()
+  fixedBodyLayer?.batchDraw()
 
   // 垂直滚动时同步 hover 矩形位置/显示：优先使用最近的指针坐标
   if (props.enableRowHoverHighlight || props.enableColHoverHighlight) {
@@ -2498,7 +2569,7 @@ const updateScrollPositions = () => {
   updateScrollbars()
   headerLayer?.batchDraw()
   bodyLayer?.batchDraw()
-  fixedLayer?.batchDraw()
+  fixedBodyLayer?.batchDraw()
   fixedHeaderLayer?.batchDraw()
 }
 
@@ -2604,7 +2675,7 @@ watch(
     props.rowHeight,
     props.scrollbarSize,
     props.tablePadding,
-    props.headerBg,
+    props.headerBackground,
     props.bodyBgOdd,
     props.bodyBgEven,
     props.borderColor,
@@ -2651,7 +2722,7 @@ onBeforeUnmount(() => {
   stage = null
   headerLayer = null
   bodyLayer = null
-  fixedLayer = null
+  fixedBodyLayer = null
   fixedHeaderLayer = null
   scrollbarLayer = null
   centerBodyClipGroup = null
@@ -2673,4 +2744,5 @@ onBeforeUnmount(() => {
   padding: 8px;
   border-radius: 4px;
 }
+/* 汇总行下拉已移除 */
 </style>
