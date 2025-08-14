@@ -49,97 +49,96 @@ const xAxisFields = ref<GroupStore.GroupOption[]>([])
 const yAxisFields = ref<DimensionStore.DimensionOption[]>([
   {
     columnName: 'id',
-    columnType: 'int',
-    columnComment: 'ID',
+    columnType: 'number',
+    columnComment: 'id',
     alias: 'id',
-    displayName: 'ID',
+    displayName: 'id',
     width: 200,
     filterable: true,
     fixed: 'left' as const
   },
   {
     columnName: 'name',
-    columnType: 'varchar',
-    columnComment: 'Name',
+    columnType: 'string',
+    columnComment: 'name',
     alias: 'name',
-    displayName: 'Name'
+    displayName: 'name'
   },
   {
     columnName: 'age',
-    columnType: 'int',
-    columnComment: 'Age',
+    columnType: 'number',
+    columnComment: 'age',
     alias: 'age',
-    displayName: 'Age',
+    displayName: 'age',
     fixed: 'left' as const
   },
   {
     columnName: 'gender',
-    columnType: 'varchar',
-    columnComment: 'Gender',
+    columnType: 'string',
+    columnComment: 'gender',
     alias: 'gender',
     filterable: true,
-    displayName: 'Gender'
+    displayName: 'gender'
   },
   {
     columnName: 'country',
-    columnType: 'varchar',
-    columnComment: 'Country',
+    columnType: 'string',
+    columnComment: 'country',
     alias: 'country',
     width: 200,
     filterable: true,
-    displayName: 'Country',
+    displayName: 'country',
     fixed: 'left' as const
   },
   {
     columnName: 'city',
-    columnType: 'varchar',
-    columnComment: 'City',
+    columnType: 'string',
+    columnComment: 'city',
     alias: 'city',
     width: 200,
     filterable: true,
-    displayName: 'City',
+    displayName: 'city',
     fixed: 'left' as const
   },
   {
     columnName: 'state',
-    columnType: 'varchar',
-    columnComment: 'State',
+    columnType: 'string',
+    columnComment: 'state',
     alias: 'state',
-    displayName: '状态'
+    displayName: 'state'
   },
   {
     columnName: 'zipcode',
-    columnType: 'varchar',
-    columnComment: 'Zipcode',
+    columnType: 'number',
+    columnComment: 'zipcode',
     alias: 'zipcode',
-    displayName: 'Zipcode',
+    displayName: 'zipcode',
     width: 200,
     fixed: 'right' as const
   },
   {
     columnName: 'address',
-    columnType: 'varchar',
-    columnComment: 'Address',
+    columnType: 'string',
+    columnComment: 'address',
     alias: 'address',
-    displayName: 'Address',
+    displayName: 'address',
     showOverflowTooltip: true,
     width: 200
   },
   {
     columnName: 'phone',
-    columnType: 'varchar',
-    columnComment: 'Phone',
+    columnType: 'string',
+    columnComment: 'phone',
     alias: 'phone',
-    displayName: 'Phone',
+    displayName: 'phone',
     width: 200
   },
   {
     columnName: 'mobile',
-    columnType: 'varchar',
-    columnComment: 'Mobile',
+    columnType: 'string',
+    columnComment: 'mobile',
     alias: 'mobile',
-    // showOverflowTooltip: true,
-    displayName: 'Mobile'
+    displayName: 'mobile'
   }
 ])
 
