@@ -1,23 +1,41 @@
 /**
- * @desc webworker 模块类型声明
+ * Web Worker 类型定义
  */
-
-declare interface Worker {
-  post: <T = any>() => Promise<T>
-}
-
 declare namespace Webworker {
-  interface Action {
+  export interface Action<T = any, R = any> {
     message: string
-    callback?: () => T
-  }
-  type Worker = {
-    post: <T = any>() => Promise<T>
+    callback?: () => R
+    metadata?: T
   }
 
-  type ArrayOfStrings = string[]
+  export interface Worker extends globalThis.Worker {
+    post<T = any>(): Promise<T>
+  }
 
-  type ArrayOfObjects = Action[]
+  export interface PostAllParams {
+    messages?: string[]
+    actions?: Action[]
+    filter?: ((action: Action) => boolean) | null | undefined
+  }
 
-  type PostAllParams = ArrayOfObjects | ArrayOfStrings
+  export interface WorkerOptions {
+    timeout?: number
+    retryCount?: number
+    retryDelay?: number
+  }
+
+  export interface WorkerResult<T = any> {
+    data: T
+    success: boolean
+    error?: Error
+    executionTime: number
+  }
+
+  export interface WorkerStats {
+    totalExecutions: number
+    successfulExecutions: number
+    failedExecutions: number
+    averageExecutionTime: number
+    lastExecutionTime: number
+  }
 }

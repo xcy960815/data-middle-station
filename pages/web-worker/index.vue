@@ -2,30 +2,22 @@
   <NuxtLayout>
     <div class="web-worker-container">
       <div class="animated-node"></div>
-      <div style="margin-top: 200px">
-        0到1000000000 的总和 {{ useWebworkerCount }}
-      </div>
-      <el-button
-        type="primary"
-        @click="notUseWebworkerComputeCount"
-      >
+      <div style="margin-top: 200px">0到1000000000 的总和 {{ useWebworkerCount }}</div>
+      <el-button type="primary" @click="notUseWebworkerComputeCount">
         不使用webworker计算 0到1000000000 的总和
       </el-button>
-      <el-button
-        type="primary"
-        @click="useWebworkerComputeCount"
-      >
-        使用webworker计算 0到1000000000 的总和
-      </el-button>
+      <el-button type="primary" @click="useWebworkerComputeCount"> 使用webworker计算 0到1000000000 的总和 </el-button>
     </div>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
 const useWebworkerCount = ref(0)
-const { $webworker } = useNuxtApp()
+const { $createWorker } = useNuxtApp()
+
 /**
- * @desc 使用webworker计算 0到1000000000 的总和
+ * 使用webworker计算 0到1000000000 的总和
+ * @returns {void}
  */
 const useWebworkerComputeCount = async () => {
   useWebworkerCount.value = 0
@@ -41,26 +33,17 @@ const useWebworkerComputeCount = async () => {
       }
     }
   ]
-  const webworker = new $webworker(actions)
-  // 测试run方法 done
-  // useWebworkerCount.value = await webworker.run<number>(() => {
-  //   let sum = 0;
-  //   for (let i = 1; i <= 1000000000; i++) {
-  //     sum += i;
-  //   }
-  //   return sum;
-  // });
-  // 测试 postMessage方法 done
-  // useWebworkerCount.value = (await webworker.postMessage<number>('computeCount')) || 0;
-  // 测试 postMessageAll  done
-  const result = await webworker.postMessageAll<number>([
-    { message: 'computeCount' }
-  ])
 
-  useWebworkerCount.value = result[0] || 0
+  const webworker = $createWorker(actions)
+  const result = await webworker.postMessageAll<number>({
+    messages: ['computeCount']
+  })
+
+  useWebworkerCount.value = result[0]?.data || 0
 }
 /**
- * @desc 不使用webworker计算 0到1000000000 的总和
+ * 不使用webworker计算 0到1000000000 的总和
+ * @returns {void}
  */
 const notUseWebworkerComputeCount = () => {
   useWebworkerCount.value = 0
@@ -78,34 +61,41 @@ const notUseWebworkerComputeCount = () => {
     background-color: red;
     left: 0px;
     top: 0px;
+    transform: rotate(0deg);
   }
 
   25% {
     background-color: yellow;
     left: 200px;
     top: 0px;
+    transform: rotate(90deg);
   }
 
   50% {
     background-color: blue;
     left: 200px;
     top: 200px;
+    transform: rotate(180deg);
   }
 
   75% {
     background-color: green;
     left: 0px;
     top: 200px;
+    transform: rotate(270deg);
   }
 
   100% {
     background-color: red;
     left: 0px;
     top: 0px;
+    transform: rotate(360deg);
   }
 }
+
 .web-worker-container {
   position: relative;
+
   .animated-node {
     width: 100px;
     height: 100px;
