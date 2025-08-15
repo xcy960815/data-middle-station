@@ -1263,6 +1263,8 @@ const clearGroups = () => {
  * @returns {void}
  */
 const rebuildGroups = () => {
+  console.log('重建分组')
+
   if (
     !stage ||
     !headerLayer ||
@@ -3015,6 +3017,7 @@ const handleResize = () => {
  * @returns {void}
  */
 const refreshTable = (resetScroll: boolean) => {
+  console.log('refreshTable', resetScroll)
   /**
    * 重置滚动状态
    */
