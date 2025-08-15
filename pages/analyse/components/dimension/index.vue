@@ -36,7 +36,8 @@
     </div>
     <!-- 字段的操作选项 -->
     <context-menu ref="contextmenu">
-      <context-menu-item @click="handleSetAlias"> 设置别名 </context-menu-item>
+      <context-menu-item @click="handleSetAlias">设置别名</context-menu-item>
+      <context-menu-item @click="handleSetWidth">设置列宽</context-menu-item>
       <context-menu-divider></context-menu-divider>
       <context-menu-submenu title="固定列">
         <context-menu-item @click="handleSetFixed('left')">左固定</context-menu-item>
@@ -249,6 +250,34 @@ const handleSetAlias = () => {
     .then(({ value }) => {
       if (!currentDimension.value) return
       currentDimension.value.displayName = value
+      dimensionStore.updateDimension(currentDimension.value)
+      currentDimension.value = null
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消操作'
+      })
+      currentDimension.value = null
+    })
+}
+
+/**
+ * @desc 设置列宽
+ */
+const handleSetWidth = () => {
+  ElMessageBox.prompt('请输入列宽', {
+    title: '设置列宽',
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPattern: /^[1-9]\d*$/,
+    inputErrorMessage: '列宽仅支持正整数',
+    inputValue: String(currentDimension.value!.width || ''),
+    autofocus: true
+  })
+    .then(({ value }) => {
+      if (!currentDimension.value) return
+      currentDimension.value.width = Number(value)
       dimensionStore.updateDimension(currentDimension.value)
       currentDimension.value = null
     })

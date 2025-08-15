@@ -36,13 +36,10 @@ export const getAnalyseHandler = () => {
       chartStore.setChartType((chartConfig?.chartType as AnalyseStore.ChartType) || 'table')
       columnStore.setColumns(chartConfig?.column || [])
       dimensionStore.setDimensions(chartConfig?.dimension || [])
-      filterStore.setFilters(chartConfig?.filter || [])
+      filterStore.setFilters((chartConfig?.filter as FilterStore.FilterOption[]) || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])
       columnStore.setDataSource(chartConfig?.dataSource || '')
-      filterStore.setFilters(chartConfig?.filter || [])
-      groupStore.setGroups(chartConfig?.group || [])
-      orderStore.setOrders(chartConfig?.order || [])
     }
   }
 
