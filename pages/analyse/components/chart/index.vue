@@ -13,7 +13,7 @@
         :xAxisFields="xAxisFields"
         :yAxisFields="yAxisFields"
         :data="data"
-        :title="chartTitle"
+        :title="chartStore.getChartType !== 'table' ? chartTitle : undefined"
         :chart-width="chartWidth"
         :chart-height="chartHeight"
         @renderChartStart="handleRenderChartStart"
