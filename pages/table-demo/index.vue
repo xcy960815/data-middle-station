@@ -1,10 +1,12 @@
 <template>
   <ClientOnly>
     <CanvasTable
-      :show-overflow-tooltip="true"
+      :enable-summary="true"
       chart-height="500px"
       chart-width="100%"
       :x-axis-fields="xAxisFields"
+      header-background="red"
+      summary-background="blue"
       :y-axis-fields="yAxisFields"
       :enable-row-hover-highlight="true"
       :enable-col-hover-highlight="true"
