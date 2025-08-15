@@ -1077,10 +1077,10 @@ const calculateVisibleRows = () => {
  * @param createFn 创建函数
  * @returns {T}
  */
-const getFromPool = <T extends Konva.Node>(pool: T[], createFn: () => T): T => {
-  let pooledNode = pool.pop()
+const getFromPool = <T extends Konva.Node>(pools: T[], createPoolFn: () => T): T => {
+  let pooledNode = pools.pop()
   if (!pooledNode) {
-    pooledNode = createFn()
+    pooledNode = createPoolFn()
   }
   return pooledNode
 }
@@ -2013,6 +2013,7 @@ const drawBodyPart = (
 
   // 计算可视区域
   calculateVisibleRows()
+
   // 切片渲染期间暂存当前指针位置，避免 getPointerPosition 在拖拽中为 null
   const pointerPosSnapshot = stage.getPointerPosition()
 
@@ -2070,13 +2071,12 @@ const drawBodyPart = (
         x += col.width || 0
         return
       }
-      const isMergedCol = false
       const hasSpanMethod = typeof props.spanMethod === 'function'
       let spanRow = 1
       let spanCol = 1
       let coveredBySpanMethod = false
       if (hasSpanMethod) {
-        const res = props.spanMethod!({ row, column: col, rowIndex, colIndex })
+        const res = props.spanMethod({ row, column: col, rowIndex, colIndex })
         if (Array.isArray(res)) {
           spanRow = Math.max(0, Number(res[0]) || 0)
           spanCol = Math.max(0, Number(res[1]) || 0)
@@ -2086,18 +2086,8 @@ const drawBodyPart = (
         }
         if (spanRow === 0 && spanCol === 0) coveredBySpanMethod = true
       }
-      let currentSpan: { start: number; end: number } | null = null
-      let shouldDraw = true
-      let mergedDrawStart = rowIndex
-      let mergedDrawEnd = rowIndex
-      if (hasSpanMethod) {
-        if (coveredBySpanMethod) {
-          shouldDraw = false
-        } else {
-          mergedDrawStart = rowIndex
-          mergedDrawEnd = Math.min(rowIndex + spanRow - 1, visibleRowEnd)
-        }
-      }
+
+      const shouldDraw = !hasSpanMethod || !coveredBySpanMethod
 
       if (!shouldDraw) {
         // 该列该行被上方合并单元格覆盖，仅推进 x 游标
@@ -2109,6 +2099,7 @@ const drawBodyPart = (
       const cell = getFromPool(pools.cellRects, () => new Konva.Rect({ listening: true, cursor: 'pointer' }))
 
       const computedRowSpan = hasSpanMethod ? spanRow : 1
+
       const cellHeight = computedRowSpan * props.rowHeight
 
       // 列跨度宽度
@@ -2124,9 +2115,6 @@ const drawBodyPart = (
           }
         }
         cellWidth = acc
-      }
-      if (!hasSpanMethod && isMergedCol && currentSpan) {
-        for (let r = mergedDrawStart + 1; r <= mergedDrawEnd; r++) coveredCells.add(`${r}:${colIndex}`)
       }
 
       cell.x(x)
@@ -2264,7 +2252,32 @@ const recomputeHoverIndexFromPointer = (localY?: number, localX?: number) => {
   if (filterDropdown.visible) return
   const pointerPos = stage.getPointerPosition()
   if (!pointerPos) {
-    // 保持原有 hover，不做清空，等待下一次可用位置再更新
+    // 鼠标在表格外部，清除所有高亮
+    if (hoveredRowIndex !== null || hoveredColIndex !== null) {
+      hoveredRowIndex = null
+      hoveredColIndex = null
+      createOrUpdateHoverRects()
+    }
+    return
+  }
+
+  // 检查鼠标是否在表格区域内
+  const stageWidth = stage.width()
+  const stageHeight = stage.height()
+  const { leftWidth, rightWidth } = getSplitColumns()
+  const rightStartX = stageWidth - rightWidth - props.scrollbarSize
+
+  // 判断鼠标是否在表格区域内
+  const isInTableArea =
+    pointerPos.x >= 0 && pointerPos.x < stageWidth && pointerPos.y >= 0 && pointerPos.y < stageHeight
+
+  if (!isInTableArea) {
+    // 鼠标在表格外部，清除所有高亮
+    if (hoveredRowIndex !== null || hoveredColIndex !== null) {
+      hoveredRowIndex = null
+      hoveredColIndex = null
+      createOrUpdateHoverRects()
+    }
     return
   }
 
@@ -2272,8 +2285,7 @@ const recomputeHoverIndexFromPointer = (localY?: number, localX?: number) => {
   if (localY === undefined) {
     localY = pointerPos.y
   }
-  const withinContent =
-    localY >= props.headerHeight && localY <= stage.height() - getSummaryHeight() - props.scrollbarSize
+  const withinContent = localY >= props.headerHeight && localY <= stageHeight - getSummaryHeight() - props.scrollbarSize
   const newHoverRowIndex = withinContent
     ? (() => {
         const yInContent = localY! - props.headerHeight + scrollY
@@ -2286,9 +2298,7 @@ const recomputeHoverIndexFromPointer = (localY?: number, localX?: number) => {
   if (localX === undefined) {
     localX = pointerPos.x
   }
-  const { leftCols, centerCols, rightCols, leftWidth, rightWidth } = getSplitColumns()
-  const stageWidth = stage.width()
-  const rightStartX = stageWidth - rightWidth - props.scrollbarSize
+  const { leftCols, centerCols, rightCols } = getSplitColumns()
 
   let newHoverColIndex: number | null = null
 
@@ -2347,11 +2357,6 @@ const recomputeHoverIndexFromPointer = (localY?: number, localX?: number) => {
   }
 
   if (rowChanged || colChanged) {
-    createOrUpdateHoverRects()
-  }
-
-  // 若仍无 hover（例如鼠标位于内容区域外），强制刷新一次矩形显隐，避免残留
-  if (hoveredRowIndex === null && hoveredColIndex === null) {
     createOrUpdateHoverRects()
   }
 }
@@ -3061,6 +3066,16 @@ onMounted(() => {
     container.addEventListener('mouseup', updatePointerPositions)
     container.addEventListener('mouseenter', updatePointerPositions)
     container.addEventListener('mouseleave', updatePointerPositions)
+
+    // 添加鼠标离开表格容器的事件监听器
+    const handleMouseLeave = () => {
+      if (hoveredRowIndex !== null || hoveredColIndex !== null) {
+        hoveredRowIndex = null
+        hoveredColIndex = null
+        createOrUpdateHoverRects()
+      }
+    }
+    container.addEventListener('mouseleave', handleMouseLeave)
 
     // 存储处理器引用，卸载时移除
     containerPointerPositionHandler = updatePointerPositions
