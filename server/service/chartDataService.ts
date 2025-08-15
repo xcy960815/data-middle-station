@@ -45,11 +45,10 @@ export class ChartDataService {
 
     allColumns.forEach((item: DimensionStore.DimensionOption | GroupStore.GroupOption) => {
       const columnName = toLine(item.columnName)
-      const alias = item.alias ? item.alias : item.columnName
       // 检查是否是日期时间类型的列
       const isDateTimeColumn = /date|time|created_at|updated_at/i.test(columnName)
       const fieldExpression = isDateTimeColumn ? `DATE_FORMAT(${columnName}, '%Y-%m-%d %H:%i:%s')` : columnName
-      sql += ` ${fieldExpression} as \`${alias}\`,`
+      sql += ` ${fieldExpression},`
     })
     return sql.slice(0, sql.length - 1)
   }

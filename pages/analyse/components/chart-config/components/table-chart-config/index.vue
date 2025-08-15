@@ -1,55 +1,24 @@
 <template>
-  <el-form
-    label-position="top"
-    label-width="auto"
-    :model="tableChartConfigData"
-  >
+  <el-form label-position="top" label-width="auto" :model="tableChartConfigData">
     <el-form-item label="展现方式">
-      <el-select
-        v-model="tableChartConfigData.displayMode"
-        placeholder="展示方式"
-      >
-        <el-option
-          label="原始展示"
-          value="originalDisplay"
-        />
-        <el-option
-          label="聚合展示"
-          value="aggregationDisplay"
-        />
+      <el-select v-model="tableChartConfigData.displayMode" placeholder="展示方式">
+        <el-option label="原始展示" value="originalDisplay" />
+        <el-option label="聚合展示" value="aggregationDisplay" />
       </el-select>
     </el-form-item>
     <el-form-item label="是否展示同比环比">
       <el-switch
         v-model="tableChartConfigData.showCompare"
-        style="
-          --el-switch-on-color: #13ce66;
-          --el-switch-off-color: #ff4949;
-        "
+        style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
     </el-form-item>
     <el-form-item label="条件格式">
-      <el-tag
-        v-for="(
-          conditionOption, index
-        ) in tableChartConfigData.conditions"
-        :key="index"
-        closable
-        type="warning"
-      >
+      <el-tag v-for="(conditionOption, index) in tableChartConfigData.conditions" :key="index" closable type="warning">
         {{ conditionOption.conditionField }}
-        {{
-          conditionSymbolMap[
-            conditionOption.conditionSymbol
-          ]
-        }}
+        {{ conditionSymbolMap[conditionOption.conditionSymbol] }}
         {{ conditionOption.conditionValue }}
       </el-tag>
-      <el-icon
-        :size="18"
-        class="cursor-pointer"
-        @click="handleOpenConditionDialog"
-      >
+      <el-icon :size="18" class="cursor-pointer" @click="handleOpenConditionDialog">
         <CirclePlus />
       </el-icon>
     </el-form-item>
@@ -57,30 +26,15 @@
 
   <!-- 条件格式dialog -->
   <client-only>
-    <el-dialog
-      v-model="conditionDialogVisible"
-      title="条件格式设置"
-      width="50%"
-    >
+    <el-dialog v-model="conditionDialogVisible" title="条件格式设置" width="50%">
       <el-form label-position="left" label-width="auto">
-        <el-icon
-          :size="18"
-          class="cursor-pointer"
-          @click="handleAddCondition"
-        >
+        <el-icon :size="18" class="cursor-pointer" @click="handleAddCondition">
           <CirclePlus />
         </el-icon>
-        <el-row
-          v-for="(
-            condition, index
-          ) in conditionsState.conditions"
-        >
+        <el-row v-for="(condition, index) in conditionsState.conditions">
           <el-col :span="3">
             <el-form-item>
-              <el-select
-                v-model="condition.conditionType"
-                placeholder="条件类型"
-              >
+              <el-select v-model="condition.conditionType" placeholder="条件类型">
                 <el-option label="单色" value="单色" />
                 <el-option label="色阶" value="色阶" />
               </el-select>
@@ -89,28 +43,19 @@
           <el-col :span="4">
             <el-form-item>
               <!-- 字段 -->
-              <el-select
-                v-model="condition.conditionField"
-                placeholder="条件字段"
-              >
+              <el-select v-model="condition.conditionField" placeholder="条件字段">
                 <el-option
                   v-for="field in fields"
-                  :label="field.alias || field.columnName"
-                  :value="field.alias || field.columnName"
+                  :label="field.displayName || field.columnName"
+                  :value="field.columnName"
                 />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col
-            :span="4"
-            v-if="condition.conditionType === '单色'"
-          >
+          <el-col :span="4" v-if="condition.conditionType === '单色'">
             <el-form-item>
               <!-- 条件 -->
-              <el-select
-                v-model="condition.conditionSymbol"
-                placeholder="条件"
-              >
+              <el-select v-model="condition.conditionSymbol" placeholder="条件">
                 <!-- 介于 -->
                 <el-option label="介于" value="between" />
                 <el-option label="大于" value="gt" />
@@ -122,49 +67,22 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col
-            :span="4"
-            v-if="
-              condition.conditionType === '单色' &&
-              condition.conditionSymbol !== 'between'
-            "
-          >
+          <el-col :span="4" v-if="condition.conditionType === '单色' && condition.conditionSymbol !== 'between'">
             <el-form-item>
               <!-- 适用于非介于的情况 -->
-              <el-input
-                v-model="condition.conditionValue"
-                placeholder="条件值"
-              ></el-input>
+              <el-input v-model="condition.conditionValue" placeholder="条件值"></el-input>
             </el-form-item>
           </el-col>
-          <el-col
-            :span="4"
-            v-if="
-              condition.conditionType === '单色' &&
-              condition.conditionSymbol === 'between'
-            "
-          >
+          <el-col :span="4" v-if="condition.conditionType === '单色' && condition.conditionSymbol === 'between'">
             <el-form-item>
               <!-- 适用于介于的情况 -->
-              <el-input
-                v-model="condition.conditionMinValue"
-                placeholder="条件最小值"
-              ></el-input>
+              <el-input v-model="condition.conditionMinValue" placeholder="条件最小值"></el-input>
             </el-form-item>
           </el-col>
-          <el-col
-            :span="4"
-            v-if="
-              condition.conditionType === '单色' &&
-              condition.conditionSymbol === 'between'
-            "
-          >
+          <el-col :span="4" v-if="condition.conditionType === '单色' && condition.conditionSymbol === 'between'">
             <el-form-item>
               <!-- 适用于介于的情况 -->
-              <el-input
-                v-model="condition.conditionMaxValue"
-                placeholder="条件最大值"
-              ></el-input>
+              <el-input v-model="condition.conditionMaxValue" placeholder="条件最大值"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="4">
@@ -173,12 +91,7 @@
               <el-select
                 v-model="condition.conditionColor"
                 class="condition-color-select"
-                @change="
-                  handleColorChange(
-                    condition.conditionColor,
-                    index
-                  )
-                "
+                @change="handleColorChange(condition.conditionColor, index)"
                 placeholder="颜色"
               >
                 <el-option-group
@@ -192,11 +105,7 @@
                     :label="item.label"
                     :value="item.color"
                   >
-                    <span
-                      style="float: left; font-weight: 700"
-                      :style="{ color: item.color }"
-                      >██████</span
-                    >
+                    <span style="float: left; font-weight: 700" :style="{ color: item.color }">██████</span>
                   </el-option>
                 </el-option-group>
               </el-select>
@@ -204,11 +113,7 @@
           </el-col>
           <!-- 删除 -->
           <el-col :span="1">
-            <el-button
-              type="danger"
-              circle
-              @click="handleDeleteCondition(index)"
-            >
+            <el-button type="danger" circle @click="handleDeleteCondition(index)">
               <el-icon class="cursor-pointer" :size="14">
                 <Delete />
               </el-icon>
@@ -218,12 +123,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="conditionDialogVisible = false"
-            >取消</el-button
-          >
-          <el-button type="primary" @click="handleConfirm">
-            保存
-          </el-button>
+          <el-button @click="conditionDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleConfirm"> 保存 </el-button>
         </span>
       </template>
     </el-dialog>
@@ -237,7 +138,13 @@ const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
 
 const tableChartConfigData = computed(() => {
-  return chartsConfigStore.chartConfig.table
+  return (
+    chartsConfigStore.chartConfig?.table || {
+      displayMode: 'originalDisplay',
+      showCompare: false,
+      conditions: []
+    }
+  )
 })
 const conditionSymbolMap: { [k: string]: string } = {
   between: '介于',
@@ -305,15 +212,11 @@ const conditionsState = reactive<{
  * @returns Array<Dimension | Group>
  */
 const fields = computed(() => {
-  const fields = dimensionStore.getDimensions
-    .concat(groupStore.getGroups)
-    .filter((field) => {
-      return (
-        field.columnType?.includes('int') ||
-        field.columnType?.includes('float') ||
-        field.columnType?.includes('double')
-      )
-    })
+  const fields = dimensionStore.getDimensions.concat(groupStore.getGroups).filter((field) => {
+    return (
+      field.columnType?.includes('int') || field.columnType?.includes('float') || field.columnType?.includes('double')
+    )
+  })
 
   return fields
 })
@@ -324,17 +227,11 @@ const fields = computed(() => {
  */
 const handleOpenConditionDialog = (): void => {
   conditionDialogVisible.value = true
-  conditionsState.conditions = JSON.parse(
-    JSON.stringify(
-      chartsConfigStore.chartConfig.table.conditions
-    )
-  )
+  conditionsState.conditions = JSON.parse(JSON.stringify(chartsConfigStore.chartConfig?.table.conditions || []))
   nextTick(() => {
-    conditionsState.conditions.forEach(
-      (condition, index) => {
-        handleColorChange(condition.conditionColor, index)
-      }
-    )
+    conditionsState.conditions.forEach((condition, index) => {
+      handleColorChange(condition.conditionColor, index)
+    })
   })
 }
 
@@ -343,23 +240,22 @@ const handleOpenConditionDialog = (): void => {
  * @returns {void}
  */
 const handleAddCondition = () => {
-  const condition: ChartConfigStore.TableChartConfigConditionOption =
-    {
-      // 条件
-      conditionType: '单色',
-      // 条件字段
-      conditionField: '',
-      // 条件符号
-      conditionSymbol: 'gt',
-      // 最小范围值
-      conditionMinValue: '',
-      // 最大范围值
-      conditionMaxValue: '',
-      // 条件值
-      conditionValue: '',
-      // 条件颜色
-      conditionColor: ''
-    }
+  const condition: ChartConfigStore.TableChartConfigConditionOption = {
+    // 条件
+    conditionType: '单色',
+    // 条件字段
+    conditionField: '',
+    // 条件符号
+    conditionSymbol: 'gt',
+    // 最小范围值
+    conditionMinValue: '',
+    // 最大范围值
+    conditionMaxValue: '',
+    // 条件值
+    conditionValue: '',
+    // 条件颜色
+    conditionColor: ''
+  }
   conditionsState.conditions.push(condition)
 }
 
@@ -369,14 +265,8 @@ const handleAddCondition = () => {
  * @param index {number} 下标
  * @returns {void}
  */
-const handleColorChange = (
-  color: string,
-  index: number
-): void => {
-  const inputNodeList =
-    document.querySelectorAll<HTMLInputElement>(
-      '.condition-color-select  input'
-    )
+const handleColorChange = (color: string, index: number): void => {
+  const inputNodeList = document.querySelectorAll<HTMLInputElement>('.condition-color-select  input')
   if (inputNodeList && inputNodeList.length) {
     const inputNode = inputNodeList[index]
     inputNode.style.color = color
@@ -397,9 +287,7 @@ const handleDeleteCondition = (index: number): void => {
  * @returns {void}
  */
 const handleConfirm = (): void => {
-  chartsConfigStore.setTableChartConditions(
-    conditionsState.conditions
-  )
+  chartsConfigStore.setTableChartConditions(conditionsState.conditions)
   conditionDialogVisible.value = false
 }
 </script>

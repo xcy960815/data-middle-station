@@ -36,7 +36,6 @@ export class ChartConfigService {
         columnName: item.columnName,
         columnType: item.columnType,
         columnComment: item.columnComment,
-        alias: item.alias || item.columnComment,
         displayName: item.displayName || item.columnComment
       })),
       /**
@@ -47,7 +46,6 @@ export class ChartConfigService {
         columnName: item.columnName,
         columnType: item.columnType,
         columnComment: item.columnComment,
-        alias: item.alias || item.columnComment,
         displayName: item.displayName || item.columnComment
       })),
       /**
@@ -58,7 +56,6 @@ export class ChartConfigService {
         columnName: item.columnName,
         columnType: item.columnType,
         columnComment: item.columnComment,
-        alias: item.columnComment,
         displayName: item.columnComment
       })),
       /**
@@ -69,7 +66,6 @@ export class ChartConfigService {
         columnName: item.columnName,
         columnType: item.columnType,
         columnComment: item.columnComment,
-        alias: item.alias || item.columnComment,
         displayName: item.displayName || item.columnComment
       })),
       /**
@@ -80,7 +76,6 @@ export class ChartConfigService {
         columnName: item.columnName,
         columnType: item.columnType,
         columnComment: item.columnComment,
-        alias: item.columnComment,
         displayName: item.columnComment
       }))
     }

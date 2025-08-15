@@ -1,13 +1,7 @@
 <template>
   <!-- 分析页面下方分组 -->
-  <div
-    class="group relative h-full flex items-center"
-    @dragover="dragoverHandler"
-    @drop="dropHandler"
-  >
-    <div
-      class="group__header flex items-center justify-between"
-    >
+  <div class="group relative h-full flex items-center" @dragover="dragoverHandler" @drop="dropHandler">
+    <div class="group__header flex items-center justify-between">
       <span class="group__title">分组</span>
       <icon-park
         class="cursor-pointer"
@@ -42,8 +36,8 @@
 </template>
 
 <script setup lang="ts">
-import { clearAllHandler } from '../clearAll'
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const columnStore = useColumnStore()
@@ -60,11 +54,7 @@ const groupList = computed(() => {
  * @desc addGroup
  * @param {GroupStore.GroupOption|Array<GroupStore.GroupOption>} groups
  */
-const addGroup = (
-  group:
-    | GroupStore.GroupOption
-    | Array<GroupStore.GroupOption>
-) => {
+const addGroup = (group: GroupStore.GroupOption | Array<GroupStore.GroupOption>) => {
   group = Array.isArray(group) ? group : [group]
   groupStore.addGroups(group)
 }
@@ -74,22 +64,12 @@ const addGroup = (
  * @param {DragEvent} dragEvent
  * @returns {number}
  */
-const getTargetIndex = (
-  index: number,
-  dragEvent: DragEvent
-): number => {
+const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
   const dropY = dragEvent.clientY // 落点Y
   let ys = [].slice
-    .call(
-      document.querySelectorAll(
-        '.group__content > [data-action="drag"]'
-      )
-    )
+    .call(document.querySelectorAll('.group__content > [data-action="drag"]'))
     .map(
-      (element: HTMLDivElement) =>
-        (element.getBoundingClientRect().top +
-          element.getBoundingClientRect().bottom) /
-        2
+      (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
     )
   ys.splice(index, 1)
   let targetIndex = ys.findIndex((e) => dropY < e)
@@ -105,10 +85,7 @@ const getTargetIndex = (
  * @param {DragEvent} dragEvent
  * @returns {void}
  */
-const dragstartHandler = (
-  index: number,
-  dragEvent: DragEvent
-) => {
+const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
@@ -125,10 +102,7 @@ const dragstartHandler = (
  * @param {DragEvent} dragEvent
  * @returns {void}
  */
-const dragHandler = (
-  _index: number,
-  dragEvent: DragEvent
-) => {
+const dragHandler = (_index: number, dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
 /**
@@ -146,23 +120,16 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData = JSON.parse(
-    dragEvent.dataTransfer?.getData('text') || '{}'
-  )
+  const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const group = data.value
   const column = data.value
   const index = data.index
   switch (data.from) {
     case 'group': {
       // relocate postion by dragging
-      const targetIndex = getTargetIndex(
-        data.index,
-        dragEvent
-      )
+      const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
-      const groups = JSON.parse(
-        JSON.stringify(groupStore.getGroups)
-      )
+      const groups = JSON.parse(JSON.stringify(groupStore.getGroups))
       const target = groups.splice(data.index, 1)[0]
       groups.splice(targetIndex, 0, target)
       groupStore.setGroups(groups)

@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 /**
  * 获取容器元素
@@ -274,8 +274,8 @@ const getSummaryHeight = () => (props.enableSummary ? props.summaryHeight : 0)
  */
 const emits = defineEmits<{
   'cell-click': [{ rowIndex: number; colIndex: number; colKey: string; rowData: ChartDataDao.ChartData[0] }]
-  renderChartStart: []
-  renderChartEnd: []
+  'render-chart-start': []
+  'render-chart-end': []
 }>()
 
 /**
@@ -287,7 +287,6 @@ const allColumns = computed(
 )
 
 /**
- * columnName -> alias 映射，便于过滤时兼容别名字段
  * @returns {Record<string, string>}
  */
 const columnAliasMap = computed(() => {
@@ -295,9 +294,9 @@ const columnAliasMap = computed(() => {
   allColumns.value.forEach((c: GroupStore.GroupOption | DimensionStore.DimensionOption) => {
     if (c && typeof c === 'object') {
       const colName = c.columnName
-      const alias = c.alias as string | undefined
-      if (colName && alias && alias !== colName) {
-        map[colName] = alias
+      const displayName = c.displayName as string | undefined
+      if (colName && displayName && displayName !== colName) {
+        map[colName] = displayName
       }
     }
   })
@@ -524,7 +523,6 @@ let resizeNeighborStartWidth = 0
  * stage 容器上用于同步指针位置的事件处理器引用
  */
 let containerPointerPositionHandler: ((e: MouseEvent) => void) | null = null
-let resizeObserver: ResizeObserver | null = null
 
 /**
  * 拖拽状态
@@ -1062,35 +1060,7 @@ const calculateVisibleRows = () => {
   if (!stage) return
 
   const stageHeight = stage.height()
-
-  // 防护检查：确保 stageHeight 是有效值
-  if (!isFinite(stageHeight) || stageHeight <= 0) {
-    console.warn('Invalid stageHeight:', stageHeight)
-    visibleRowStart = 0
-    visibleRowEnd = 0
-    visibleRowCount = 0
-    return
-  }
-
   const contentHeight = stageHeight - props.headerHeight - getSummaryHeight() - props.scrollbarSize
-
-  // 防护检查：确保 contentHeight 是有效值
-  if (!isFinite(contentHeight) || contentHeight <= 0) {
-    console.warn('Invalid contentHeight:', contentHeight)
-    visibleRowStart = 0
-    visibleRowEnd = 0
-    visibleRowCount = 0
-    return
-  }
-
-  // 防护检查：确保 rowHeight 是有效值
-  if (!props.rowHeight || props.rowHeight <= 0) {
-    console.warn('Invalid rowHeight:', props.rowHeight)
-    visibleRowStart = 0
-    visibleRowEnd = 0
-    visibleRowCount = 0
-    return
-  }
 
   // 计算可视区域能显示的行数
   visibleRowCount = Math.ceil(contentHeight / props.rowHeight)
@@ -1098,24 +1068,9 @@ const calculateVisibleRows = () => {
   // 根据scrollY计算起始行
   const startRow = Math.floor(scrollY / props.rowHeight)
 
-  // 防护检查：确保 startRow 是有效值
-  if (!isFinite(startRow)) {
-    console.warn('Invalid startRow:', startRow)
-    visibleRowStart = 0
-    visibleRowEnd = 0
-    return
-  }
-
   // 添加缓冲区，确保滚动时有预渲染的行
   visibleRowStart = Math.max(0, startRow - props.bufferRows)
   visibleRowEnd = Math.min(activeData.value.length - 1, startRow + visibleRowCount + props.bufferRows)
-
-  // 最终防护检查：确保计算结果有效
-  if (!isFinite(visibleRowStart) || !isFinite(visibleRowEnd)) {
-    console.warn('Invalid visible rows:', { visibleRowStart, visibleRowEnd })
-    visibleRowStart = 0
-    visibleRowEnd = 0
-  }
 }
 
 /**
@@ -1161,23 +1116,14 @@ const createFixedColumnShadow = () => {
  * @returns {void}
  */
 const initStage = () => {
-  // 触发图表开始渲染事件
-  emits('renderChartStart')
-
+  emits('render-chart-start')
   const tableContainer = getContainerEl()
-  if (!tableContainer) {
-    console.warn('Container element not found in initStage')
-    return
-  }
+  console.log('tableContainer', tableContainer)
+
+  if (!tableContainer) return
 
   const width = tableContainer.clientWidth
   const height = tableContainer.clientHeight
-
-  // 防护检查：确保容器尺寸有效
-  if (!width || !height || width <= 0 || height <= 0) {
-    console.warn('Invalid container dimensions:', { width, height })
-    return
-  }
 
   if (!stage) {
     stage = new Konva.Stage({ container: tableContainer, width, height })
@@ -1632,7 +1578,7 @@ const drawHeaderPart = (
     const maxTextWidth = (col.width || 0) - 40
     const fontFamily = props.headerFontFamily
     const fontSize = props.headerFontSize
-    const displayName = col.displayName || col.alias || col.columnName
+    const displayName = col.displayName || col.columnName
     const truncatedTitle = truncateText(displayName, maxTextWidth, fontSize, fontFamily)
     const label = new Konva.Text({
       x: getTextX(x),
@@ -2108,20 +2054,7 @@ const drawBodyPart = (
   // 渲染可视区域的行
   for (let rowIndex = visibleRowStart; rowIndex <= visibleRowEnd; rowIndex++) {
     const row = activeData.value[rowIndex]
-
-    // 防护检查：确保 rowHeight 是有效值
-    if (!props.rowHeight || props.rowHeight <= 0) {
-      console.warn('Invalid rowHeight:', props.rowHeight)
-      continue
-    }
-
     const y = rowIndex * props.rowHeight
-
-    // 防护检查：确保 y 是有效值
-    if (!isFinite(y) || y < 0) {
-      console.warn('Invalid y position:', y, 'for rowIndex:', rowIndex)
-      continue
-    }
 
     // 创建背景条纹：必须置底，避免在合并单元格跨越多行时覆盖上方单元格
     const bg = getFromPool(pools.backgroundRects, () => new Konva.Rect({ listening: false, name: 'row-bg' }))
@@ -2176,12 +2109,6 @@ const drawBodyPart = (
 
       const cellHeight = computedRowSpan * props.rowHeight
 
-      // 防护检查：确保 cellHeight 是有效值
-      if (!isFinite(cellHeight) || cellHeight <= 0) {
-        console.warn('Invalid cellHeight:', cellHeight, 'for rowIndex:', rowIndex, 'colIndex:', colIndex)
-        continue
-      }
-
       // 列跨度宽度
       let cellWidth = col.width || 0
       if (hasSpanMethod && spanCol > 1) {
@@ -2195,12 +2122,6 @@ const drawBodyPart = (
           }
         }
         cellWidth = acc
-      }
-
-      // 防护检查：确保 cellWidth 是有效值
-      if (!isFinite(cellWidth) || cellWidth <= 0) {
-        console.warn('Invalid cellWidth:', cellWidth, 'for rowIndex:', rowIndex, 'colIndex:', colIndex)
-        continue
       }
 
       cell.x(x)
@@ -3121,8 +3042,6 @@ const refreshTable = (resetScroll: boolean) => {
    */
   setTimeout(() => {
     createFixedColumnShadow()
-    // 触发图表渲染完成事件
-    emits('renderChartEnd')
   }, 0)
 }
 
@@ -3130,60 +3049,16 @@ const refreshTable = (resetScroll: boolean) => {
  * 挂载
  * @returns {void}
  */
-onMounted(async () => {
+onMounted(() => {
   window.addEventListener('mousedown', onGlobalMousedown, true)
-
-  // 等待 DOM 完全渲染完成
-  await nextTick()
-
-  // 确保容器元素存在且有有效尺寸
-  const tableContainer = getContainerEl()
-  if (!tableContainer) {
-    console.warn('Container element not found, retrying...')
-    // 如果容器不存在，等待一段时间后重试
-    setTimeout(() => {
-      initStage()
-      refreshTable(true)
-    }, 100)
-    return
-  }
-
-  // 检查容器尺寸
-  const { clientWidth, clientHeight } = tableContainer
-  if (clientWidth === 0 || clientHeight === 0) {
-    console.warn('Container has zero dimensions, waiting for layout...')
-    // 如果尺寸为 0，等待布局完成
-    setTimeout(() => {
-      initStage()
-      refreshTable(true)
-    }, 50)
-    return
-  }
-
   initStage()
   refreshTable(true)
+
+  const tableContainer = getContainerEl()
   tableContainer?.addEventListener('wheel', handleWheel, { passive: false })
   window.addEventListener('resize', handleResize)
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('mouseup', handleMouseUp)
-
-  // 监听容器尺寸变化
-  resizeObserver = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.target.id === 'container-table') {
-        const { width, height } = entry.contentRect
-        if (width > 0 && height > 0 && stage) {
-          console.log('Container resized, updating stage:', { width, height })
-          stage.size({ width, height })
-          refreshTable(false)
-        }
-      }
-    }
-  })
-
-  if (tableContainer) {
-    resizeObserver.observe(tableContainer)
-  }
 
   // 添加全局鼠标事件监听器来确保 Konva 指针位置始终正确
   if (stage) {
@@ -3280,12 +3155,6 @@ onBeforeUnmount(() => {
       container.removeEventListener('mouseleave', pointerHandler)
     }
     containerPointerPositionHandler = null
-  }
-
-  // 清理 ResizeObserver
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-    resizeObserver = null
   }
 
   stage?.destroy()

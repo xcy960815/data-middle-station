@@ -27,7 +27,6 @@ declare namespace DatabaseVo {
     columnName: string
     columnType: string
     columnComment: string
-    alias: string
     displayName: string
   }
 }

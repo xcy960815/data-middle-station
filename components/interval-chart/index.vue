@@ -81,7 +81,7 @@ const initChart = () => {
   })
 
   // 获取 y 轴字段名称
-  const yAxisFieldNames = props.yAxisFields.map((item) => item.alias || item.displayName || item.columnName)
+  const yAxisFieldNames = props.yAxisFields.map((item) => item.displayName || item.columnName)
   // 获取图表数据
   const chartData = props.data
   // console.log("chartData", chartData);

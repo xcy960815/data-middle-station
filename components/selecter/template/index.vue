@@ -11,7 +11,7 @@
     >
       <template #reference> -->
     <div class="chart-selecter-container px-1" :class="invalidClass">
-      <span class="chart-selecter-name mr-1">{{ alias || displayName }}</span>
+      <span class="chart-selecter-name mr-1">{{ displayName }}</span>
       <slot class="chart-selecter-order-icon" name="order-icon"></slot>
       <!-- 无效排序图标 -->
       <el-tooltip class="box-item" effect="dark" :content="invalidContent" placement="top" v-if="hasInvalidIcon()">
@@ -45,10 +45,6 @@ const props = defineProps({
   },
   // 通用参数
   displayName: {
-    type: String,
-    default: ''
-  },
-  alias: {
     type: String,
     default: ''
   },
