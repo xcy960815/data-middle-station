@@ -112,7 +112,6 @@ export class DatabaseService {
         columnName: item.columnName,
         columnType: columnType,
         columnComment: item.columnComment,
-        alias: item.columnComment,
         displayName: item.columnComment
       }
     })

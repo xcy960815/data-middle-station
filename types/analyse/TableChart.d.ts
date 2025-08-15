@@ -26,7 +26,6 @@ declare namespace TableChart {
    * @property {string} columnName 字段名
    * @property {string} columnType 字段类型
    * @property {string} columnCommon 字段描述
-   * @property {string} alias 字段别名
    * @property {string} columnFormat 字段格式化
    * @property {string} displayName 字段显示名
    * @property {OrderStore.OrderType} orderType 排序类型

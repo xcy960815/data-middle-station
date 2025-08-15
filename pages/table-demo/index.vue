@@ -51,7 +51,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'id',
     columnType: 'number',
     columnComment: 'id',
-    alias: 'id',
     displayName: 'id',
     width: 200,
     filterable: true,
@@ -61,14 +60,12 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'name',
     columnType: 'string',
     columnComment: 'name',
-    alias: 'name',
     displayName: 'name'
   },
   {
     columnName: 'age',
     columnType: 'number',
     columnComment: 'age',
-    alias: 'age',
     displayName: 'age',
     fixed: 'left' as const
   },
@@ -76,7 +73,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'gender',
     columnType: 'string',
     columnComment: 'gender',
-    alias: 'gender',
     filterable: true,
     sortable: true,
     displayName: 'gender'
@@ -85,7 +81,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'country',
     columnType: 'string',
     columnComment: 'country',
-    alias: 'country',
     width: 200,
     filterable: true,
     sortable: true,
@@ -96,7 +91,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'city',
     columnType: 'string',
     columnComment: 'city',
-    alias: 'city',
     width: 200,
     filterable: true,
     sortable: true,
@@ -107,14 +101,12 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'state',
     columnType: 'string',
     columnComment: 'state',
-    alias: 'state',
     displayName: 'state'
   },
   {
     columnName: 'zipcode',
     columnType: 'number',
     columnComment: 'zipcode',
-    alias: 'zipcode',
     displayName: 'zipcode',
     width: 200,
     fixed: 'right' as const
@@ -123,7 +115,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'address',
     columnType: 'string',
     columnComment: 'address',
-    alias: 'address',
     displayName: 'address',
     showOverflowTooltip: true,
     width: 200
@@ -132,7 +123,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'phone',
     columnType: 'string',
     columnComment: 'phone',
-    alias: 'phone',
     displayName: 'phone',
     width: 200
   },
@@ -140,7 +130,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'mobile',
     columnType: 'string',
     columnComment: 'mobile',
-    alias: 'mobile',
     displayName: 'mobile'
   }
 ])

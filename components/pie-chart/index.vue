@@ -56,7 +56,7 @@ const initChart = () => {
     title: props.title
   })
   chart.coordinate({ type: 'theta', innerRadius: 0.6 })
-  const fields = props.yAxisFields.map((item) => item.alias || item.columnName)
+  const fields = props.yAxisFields.map((item) => item.columnName)
 
   const pieChart = chart
     .interval()
@@ -96,7 +96,7 @@ const initChart = () => {
   // 是否展示label
   if (pieChartConfigData.value.showLabel) {
     pieChart.label({
-      text: props.xAxisFields.map((item) => item.alias || item.columnName),
+      text: props.xAxisFields.map((item) => item.columnName),
       position: 'spider',
       connectorDistance: 0,
       fontWeight: 'bold',
