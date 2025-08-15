@@ -13,14 +13,12 @@
   min-width: 100px;
 
   &-inner {
-    // padding: @vc-padding-vertical 10px;
     margin: 0;
     list-style: none;
   }
 
   &-item {
-    // padding: @vc-padding-vertical @vc-item-padding-horizontal;
-    padding: @vc-item-padding-horizontal;
+    padding: @vc-item-padding-vertical @vc-item-padding-horizontal;
     line-height: 1;
     color: @vc-text-color;
     cursor: pointer;
@@ -58,7 +56,7 @@
 
       .@{vc-prefix}-item {
         display: inline-block;
-        padding: @vc-padding-vertical (@vc-item-padding-horizontal - 5);
+        padding: @vc-item-padding-vertical @vc-item-padding-horizontal;
       }
     }
   }

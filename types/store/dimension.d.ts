@@ -62,5 +62,6 @@ declare namespace DimensionStore {
   type DimensionActions = {
     addDimensions: (dimensions: DimensionOption[]) => void
     removeDimension: (index: number) => void
+    updateDimension: (dimension: DimensionOption) => void
   }
 }
