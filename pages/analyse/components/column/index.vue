@@ -6,6 +6,7 @@
     <div class="column__content">
       <div
         @contextmenu="contextmenuHandler(column)"
+        v-contextmenu:contextmenu
         class="flex items-center"
         :class="columnClasses(column)"
         v-for="(column, index) in columnList"
@@ -27,67 +28,29 @@
         }}</span>
       </div>
     </div>
-    <!-- v-contextmenu:contextmenu -->
     <!-- 字段的操作选项 -->
-    <!-- <context-menu ref="contextmenu">
-      <context-menu-item @click="setDataModel">
-        商家ID
-      </context-menu-item>
-      <context-menu-item @click="setDataModel">
-        买家ID
-      </context-menu-item>
-      <context-menu-item @click="setDataModel">
-        商品ID
-      </context-menu-item>
-      <context-menu-item @click="setDataModel">
-        作者ID
-      </context-menu-item>
-      <context-menu-item @click="setDataModel">
-        动态ID
-      </context-menu-item>
-      <context-menu-item @click="setDataModel">
-        视频ID
-      </context-menu-item>
-      <context-menu-item @click="setDataModel">
-        图片Url
-      </context-menu-item>
-      <context-menu-divider> </context-menu-divider>
+    <context-menu ref="contextmenu">
+      <context-menu-item @click="setDataModel('测试')"> 测试菜单项 </context-menu-item>
+      <context-menu-divider></context-menu-divider>
       <context-menu-submenu title="时间">
-        <context-menu-item @click="setDataModel"
-          >时间</context-menu-item
-        >
-        <context-menu-item @click="setDataModel"
-          >日期</context-menu-item
-        >
+        <context-menu-item @click="setDataModel('时间')">时间</context-menu-item>
+        <context-menu-item @click="setDataModel('日期')">日期</context-menu-item>
       </context-menu-submenu>
-      <context-menu-divider> </context-menu-divider>
-      <context-menu-submenu title="地理角色">
-        <context-menu-item @click="setDataModel"
-          >经度</context-menu-item
-        >
-        <context-menu-item @click="setDataModel"
-          >纬度</context-menu-item
-        >
-        <context-menu-item @click="setDataModel"
-          >位置</context-menu-item
-        >
-        <context-menu-item @click="setDataModel"
-          >关联值</context-menu-item
-        >
-      </context-menu-submenu>
-    </context-menu> -->
+    </context-menu>
   </div>
 </template>
 
 <script setup lang="ts">
-import { IconPark } from '@icon-park/vue-next/es/all'
-import DataSourceSelecter from '@/components/selecter/dataSource/index.vue'
 import ContextMenu from '@/components/context-menu/index.vue'
-import { ref, computed } from 'vue'
+import DataSourceSelecter from '@/components/selecter/dataSource/index.vue'
+import { IconPark } from '@icon-park/vue-next/es/all'
+import { computed, ref, watch } from 'vue'
+import { useAnalyseStore } from '~/stores/analyse'
+import { useChartConfigStore } from '~/stores/chart-config'
 import { useColumnStore } from '~/stores/column'
 import { useDimensionStore } from '~/stores/dimension'
-import { useGroupStore } from '~/stores/group'
 import { useFilterStore } from '~/stores/filter'
+import { useGroupStore } from '~/stores/group'
 import { useOrderStore } from '~/stores/order'
 
 // 数字图标
@@ -159,6 +122,7 @@ const columnList = computed(() => {
  * @desc 当前选中的列
  */
 const currentColumn = ref<ColumnStore.ColumnOption>()
+const contextmenu = ref()
 
 /**
  * @desc 拖拽开始事件
@@ -275,14 +239,59 @@ const dropHandler = (dragEvent: DragEvent) => {
  * @param column {ColumnStore.ColumnOption} 列选项
  */
 const contextmenuHandler = (column: ColumnStore.ColumnOption) => {
+  console.log('右键点击事件触发:', column)
   currentColumn.value = column
+
+  // 手动触发右键菜单显示（调试用）
+  if (contextmenu.value) {
+    console.log('右键菜单组件引用:', contextmenu.value)
+  } else {
+    console.log('右键菜单组件引用不存在')
+  }
 }
 
 /**
  * @desc 设置数据模型
  */
-const setDataModel = () => {
-  console.log('column', currentColumn.value)
+const setDataModel = (dataType: string) => {
+  if (!currentColumn.value) return
+
+  console.log('设置数据模型:', {
+    column: currentColumn.value,
+    dataType: dataType
+  })
+
+  // 这里可以根据不同的数据类型进行相应的处理
+  // 例如：更新列的数据模型类型、保存到store等
+  switch (dataType) {
+    case '商家ID':
+    case '买家ID':
+    case '商品ID':
+    case '作者ID':
+    case '动态ID':
+    case '视频ID':
+      // 处理ID类型
+      console.log(`设置 ${currentColumn.value.columnName} 为ID类型: ${dataType}`)
+      break
+    case '图片Url':
+      // 处理URL类型
+      console.log(`设置 ${currentColumn.value.columnName} 为URL类型: ${dataType}`)
+      break
+    case '时间':
+    case '日期':
+      // 处理时间类型
+      console.log(`设置 ${currentColumn.value.columnName} 为时间类型: ${dataType}`)
+      break
+    case '经度':
+    case '纬度':
+    case '位置':
+    case '关联值':
+      // 处理地理类型
+      console.log(`设置 ${currentColumn.value.columnName} 为地理类型: ${dataType}`)
+      break
+    default:
+      console.log(`设置 ${currentColumn.value.columnName} 为未知类型: ${dataType}`)
+  }
 }
 
 /**

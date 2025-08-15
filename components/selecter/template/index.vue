@@ -1,7 +1,7 @@
 <template>
   <!-- selecter 公共模版 -->
   <client-only>
-    <el-popover
+    <!-- <el-popover
       class="chart-selecter relative"
       v-model:visible="selecterVisible"
       trigger="click"
@@ -9,34 +9,34 @@
       placement="bottom"
       width="100px"
     >
-      <template #reference>
-        <div class="chart-selecter-container px-1" :class="invalidClass">
-          <span class="chart-selecter-name mr-1">{{ displayName }}</span>
-          <slot class="chart-selecter-order-icon" name="order-icon"></slot>
-          <!-- 无效排序图标 -->
-          <el-tooltip class="box-item" effect="dark" :content="invalidContent" placement="top" v-if="hasInvalidIcon()">
-            <icon-park class="chart-selecterinvalid-icon" type="caution" size="14" fill="#333" />
-          </el-tooltip>
-          <!-- 删除图标 -->
-          <icon-park
-            class="chart-selecter-delete"
-            type="DeleteTwo"
-            size="14"
-            fill="#333"
-            @click.stop="handleDeleteSelecter"
-          />
-        </div>
-      </template>
+      <template #reference> -->
+    <div class="chart-selecter-container px-1" :class="invalidClass">
+      <span class="chart-selecter-name mr-1">{{ alias || displayName }}</span>
+      <slot class="chart-selecter-order-icon" name="order-icon"></slot>
+      <!-- 无效排序图标 -->
+      <el-tooltip class="box-item" effect="dark" :content="invalidContent" placement="top" v-if="hasInvalidIcon()">
+        <icon-park class="chart-selecterinvalid-icon" type="caution" size="14" fill="#333" />
+      </el-tooltip>
+      <!-- 删除图标 -->
+      <icon-park
+        class="chart-selecter-delete"
+        type="DeleteTwo"
+        size="14"
+        fill="#333"
+        @click.stop="handleDeleteSelecter"
+      />
+    </div>
+    <!-- </template>
       <template #default>
         <slot></slot>
       </template>
-    </el-popover>
+    </el-popover> -->
   </client-only>
 </template>
 
 <script lang="ts" setup>
-import { ElTooltip, ElPopover } from 'element-plus'
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { ElTooltip } from 'element-plus'
 const props = defineProps({
   // 通用参数
   invalid: {
@@ -45,6 +45,10 @@ const props = defineProps({
   },
   // 通用参数
   displayName: {
+    type: String,
+    default: ''
+  },
+  alias: {
     type: String,
     default: ''
   },

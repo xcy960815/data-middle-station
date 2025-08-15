@@ -20,12 +20,15 @@
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
+        @contextmenu="contextmenuHandler(item)"
+        v-contextmenu:contextmenu
         @mousedown.stop
       >
         <selecter-dimension
           class="dimension__item__name"
           cast="dimension"
           :name="item.columnName"
+          v-model:alias="item.alias"
           v-model:displayName="item.displayName"
           :index="index"
           :invalid="item.__invalid"
@@ -33,11 +36,15 @@
       </div>
     </div>
     <!-- 字段的操作选项 -->
-    <!-- <client-only>
-      <context-menu v-contextmenu:contextmenu ref="contextmenu">
-        <context-menu-item @click="handleCreateComputedField"> 创建计算字段 </context-menu-item>
-      </context-menu>
-    </client-only> -->
+    <context-menu ref="contextmenu">
+      <context-menu-item @click="handleSetAlias"> 设置别名 </context-menu-item>
+      <context-menu-divider></context-menu-divider>
+      <context-menu-submenu title="固定列">
+        <context-menu-item @click="handleSetFixed('left')">左固定</context-menu-item>
+        <context-menu-item @click="handleSetFixed('right')">右固定</context-menu-item>
+        <context-menu-item @click="handleSetFixed(null)">取消固定</context-menu-item>
+      </context-menu-submenu>
+    </context-menu>
     <!-- <client-only>
         <el-dialog
           v-model="createComputedFieldVisible"
@@ -60,10 +67,11 @@
 </template>
 
 <script setup lang="ts">
-import { clearAllHandler } from '../clearAll'
+import ContextMenuItem from '@/components/context-menu/Item.vue'
 import SelecterDimension from '@/components/selecter/dimension/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
-import ContextMenuItem from '@/components/context-menu/Item.vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 // 初始化数据
@@ -216,11 +224,52 @@ const handleCreateComputedField = () => {
 }
 
 /**
+ * @desc 当前选中的列
+ */
+const currentDimension = ref<DimensionStore.DimensionOption | null>(null)
+/**
  * @desc 右键点击事件
  * @param {DimensionStore.DimensionOption} dimension
  */
 const contextmenuHandler = (dimension: DimensionStore.DimensionOption) => {
-  console.log('dimension', dimension)
+  currentDimension.value = dimension
+}
+
+/**
+ * @desc 设置别名
+ */
+const handleSetAlias = () => {
+  ElMessageBox.prompt('请输入别名', '设置别名', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
+    inputErrorMessage: '别名仅支持中英文、数字、下划线，且不能为空',
+    inputValue: currentDimension.value!.alias || '',
+    autofocus: true
+  })
+    .then(({ value }) => {
+      if (!currentDimension.value) return
+      currentDimension.value.alias = value
+      dimensionStore.updateDimension(currentDimension.value)
+      currentDimension.value = null
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消操作'
+      })
+      currentDimension.value = null
+    })
+}
+
+/**
+ * @desc 设置固定列
+ */
+const handleSetFixed = (fixed: 'left' | 'right' | null) => {
+  if (!currentDimension.value) return
+  currentDimension.value.fixed = fixed
+  dimensionStore.updateDimension(currentDimension.value)
+  currentDimension.value = null
 }
 </script>
 

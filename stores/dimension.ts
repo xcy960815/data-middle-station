@@ -7,14 +7,8 @@ import { defineStore } from 'pinia'
 export const useDimensionStore = defineStore<
   DimensionStore.DimensionKey,
   BaseStore.State<DimensionStore.DimensionState>,
-  BaseStore.Getters<
-    DimensionStore.DimensionState,
-    DimensionStore.DimensionGetters
-  >,
-  BaseStore.Actions<
-    DimensionStore.DimensionState,
-    DimensionStore.DimensionActions
-  >
+  BaseStore.Getters<DimensionStore.DimensionState, DimensionStore.DimensionGetters>,
+  BaseStore.Actions<DimensionStore.DimensionState, DimensionStore.DimensionActions>
 >(StoreNames.DIMENSION, {
   state: () => ({
     dimensions: []
@@ -48,6 +42,12 @@ export const useDimensionStore = defineStore<
      */
     removeDimension(index: number) {
       this.dimensions.splice(index, 1)
+    },
+    updateDimension(dimension) {
+      const index = this.dimensions.findIndex((item) => item.columnName === dimension.columnName)
+      if (index !== -1) {
+        this.dimensions[index] = dimension
+      }
     }
   }
 })

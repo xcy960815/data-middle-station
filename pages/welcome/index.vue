@@ -11,7 +11,6 @@
 </template>
 
 <script lang="ts" setup>
-import { useFetch } from '#app'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -253,18 +252,23 @@ const userStore = useUserStore()
  * 导航到主页的处理函数
  */
 const navigateToHome = async () => {
-  const { data: loginResult } = await useFetch('/api/login', {
-    method: 'POST',
-    body: {
-      userName: 'admin',
-      password: '123456'
+  try {
+    const loginResult = await $fetch('/api/login', {
+      method: 'POST',
+      body: {
+        userName: 'admin',
+        password: '123456'
+      }
+    })
+
+    // 根据你的 API 返回结构处理
+    if (loginResult?.code === RequestCodeEnum.Success) {
+      router.push('/homepage')
+    } else {
+      console.error('登录失败:', loginResult?.message)
     }
-  })
-  // 根据你的 API 返回结构处理
-  if (loginResult.value?.code === RequestCodeEnum.Success) {
-    router.push('/homepage')
-  } else {
-    console.error('登录失败:', loginResult.value?.message)
+  } catch (error) {
+    console.error('登录请求失败:', error)
   }
 }
 </script>

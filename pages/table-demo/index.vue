@@ -29,14 +29,13 @@ const spanMethod = ({
   rowIndex: number
   colIndex: number
 }): { rowspan: number; colspan: number } => {
-  // if (colIndex === 0) {
-  //   if (rowIndex % 2 === 0) {
-  //     const remaining = data.length - rowIndex
-  //     return { rowspan: remaining >= 2 ? 2 : 1, colspan: 1 }
-  //   } else {
-  //     return { rowspan: 0, colspan: 0 }
-  //   }
-  // }
+  if (colIndex === 0) {
+    if (rowIndex % 2 === 0) {
+      return { rowspan: 2, colspan: 1 }
+    } else {
+      return { rowspan: 0, colspan: 0 }
+    }
+  }
   return { rowspan: 1, colspan: 1 }
 }
 /**
