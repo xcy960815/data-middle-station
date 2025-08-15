@@ -6,7 +6,7 @@
       chart-width="100%"
       :x-axis-fields="xAxisFields"
       header-background="red"
-      summary-background="blue"
+      summary-background="yellow"
       :y-axis-fields="yAxisFields"
       :enable-row-hover-highlight="true"
       :enable-col-hover-highlight="true"
@@ -80,6 +80,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'gender',
     alias: 'gender',
     filterable: true,
+    sortable: true,
     displayName: 'gender'
   },
   {
@@ -89,6 +90,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     alias: 'country',
     width: 200,
     filterable: true,
+    sortable: true,
     displayName: 'country',
     fixed: 'left' as const
   },
@@ -99,6 +101,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     alias: 'city',
     width: 200,
     filterable: true,
+    sortable: true,
     displayName: 'city',
     fixed: 'left' as const
   },

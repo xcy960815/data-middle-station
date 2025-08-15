@@ -37,6 +37,8 @@ declare namespace GroupStore {
     showOverflowTooltip?: boolean
     /** 是否支持表头过滤（下拉枚举） */
     filterable?: boolean
+    /** 是否支持排序 */
+    sortable?: boolean
   }
 
   /**
