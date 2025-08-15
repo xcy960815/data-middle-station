@@ -22,6 +22,101 @@
         <CirclePlus />
       </el-icon>
     </el-form-item>
+    <el-form-item label="是否展示汇总行">
+      <el-switch
+        v-model="tableChartConfigData.showSummary"
+        style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+      />
+    </el-form-item>
+    <!-- 行高亮 -->
+    <el-form-item label="行高亮">
+      <el-switch
+        v-model="tableChartConfigData.enableRowHoverHighlight"
+        style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+      />
+    </el-form-item>
+    <!-- 列高亮 -->
+    <el-form-item label="列高亮">
+      <el-switch
+        v-model="tableChartConfigData.enableColHoverHighlight"
+        style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+      />
+    </el-form-item>
+    <!-- 是否显示边框 -->
+    <el-form-item label="是否显示边框">
+      <el-switch
+        v-model="tableChartConfigData.border"
+        style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+      />
+    </el-form-item>
+    <!-- hoverFill -->
+    <el-form-item label="悬停填充颜色">
+      <el-color-picker v-model="tableChartConfigData.hoverFill" />
+    </el-form-item>
+    <!-- 表头高度 -->
+    <el-form-item label="表头高度">
+      <el-input v-model="tableChartConfigData.headerHeight" placeholder="表头高度"></el-input>
+    </el-form-item>
+    <!-- 汇总高度 -->
+    <el-form-item label="汇总高度">
+      <el-input v-model="tableChartConfigData.summaryHeight" placeholder="汇总高度"></el-input>
+    </el-form-item>
+    <!-- rowHeight -->
+    <el-form-item label="行高">
+      <el-input v-model="tableChartConfigData.rowHeight" placeholder="行高"></el-input>
+    </el-form-item>
+    <!-- scrollbarSize -->
+    <el-form-item label="滚动条大小">
+      <el-input v-model="tableChartConfigData.scrollbarSize" placeholder="滚动条大小"></el-input>
+    </el-form-item>
+    <!-- tablePadding -->
+    <el-form-item label="表格内边距">
+      <el-input v-model="tableChartConfigData.tablePadding" placeholder="表格内边距"></el-input>
+    </el-form-item>
+    <!-- headerBackground -->
+    <el-form-item label="表头背景色">
+      <el-color-picker v-model="tableChartConfigData.headerBackground" />
+    </el-form-item>
+    <!-- bodyBackgroundOdd -->
+    <el-form-item label="表格奇数行背景色">
+      <el-color-picker v-model="tableChartConfigData.bodyBackgroundOdd" />
+    </el-form-item>
+    <!-- bodyBackgroundEven -->
+    <el-form-item label="表格偶数行背景色">
+      <el-color-picker v-model="tableChartConfigData.bodyBackgroundEven" />
+    </el-form-item>
+    <!-- borderColor -->
+    <el-form-item label="表格边框颜色">
+      <el-color-picker v-model="tableChartConfigData.borderColor" />
+    </el-form-item>
+    <!-- headerFontFamily -->
+    <el-form-item label="表头字体">
+      <el-input v-model="tableChartConfigData.headerFontFamily" placeholder="表头字体"></el-input>
+    </el-form-item>
+    <!-- headerFontSize -->
+    <el-form-item label="表头字体大小">
+      <el-input v-model="tableChartConfigData.headerFontSize" placeholder="表头字体大小"></el-input>
+    </el-form-item>
+    <!-- bodyTextColor -->
+    <el-form-item label="表格文本颜色">
+      <el-color-picker v-model="tableChartConfigData.bodyTextColor" />
+    </el-form-item>
+    <!-- bodyFontFamily -->
+    <el-form-item label="表格字体">
+      <el-input v-model="tableChartConfigData.bodyFontFamily" placeholder="表格字体"></el-input>
+    </el-form-item>
+    <!-- bodyFontSize -->
+    <el-form-item label="表格字体大小">
+      <el-input v-model="tableChartConfigData.bodyFontSize" placeholder="表格字体大小"></el-input>
+    </el-form-item>
+    <!-- bodyFontWeight -->
+    <el-form-item label="表格字体粗细">
+      <el-input v-model="tableChartConfigData.bodyFontWeight" placeholder="表格字体粗细"></el-input>
+    </el-form-item>
+    <!-- bodyFontStyle -->
+    <el-form-item label="表格字体样式">
+      <el-input v-model="tableChartConfigData.bodyFontStyle" placeholder="表格字体样式"></el-input>
+    </el-form-item>
   </el-form>
 
   <!-- 条件格式dialog -->
@@ -132,20 +227,77 @@
 </template>
 
 <script lang="ts" setup>
+/**
+ * @desc 条件格式dialog
+ */
 const conditionDialogVisible = ref(false)
+/**
+ * @desc 图表配置store
+ */
 const chartsConfigStore = useChartConfigStore()
+/**
+ * @desc 维度store
+ */
 const dimensionStore = useDimensionStore()
+/**
+ * @desc 分组store
+ */
 const groupStore = useGroupStore()
 
+/**
+ * @desc 表格配置数据
+ */
 const tableChartConfigData = computed(() => {
   return (
     chartsConfigStore.chartConfig?.table || {
       displayMode: 'originalDisplay',
       showCompare: false,
-      conditions: []
+      conditions: [],
+      showSummary: false,
+      enableRowHoverHighlight: false,
+      enableColHoverHighlight: false,
+      border: false,
+      hoverFill: 'rgba(24, 144, 255, 0.12)',
+      headerHeight: 32,
+      summaryHeight: 32,
+      enableSummary: false,
+      rowHeight: 32,
+      scrollbarSize: 16,
+      tablePadding: 0,
+      headerBackground: '#f9fafb',
+      bodyBackgroundOdd: '#ffffff',
+      bodyBackgroundEven: '#f9fafb',
+      borderColor: '#d1d5db',
+      headerTextColor: '#374151',
+      headerFontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      headerFontSize: 14,
+      bodyTextColor: '#374151',
+      bodyFontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      bodyFontSize: 14,
+      bodyFontWeight: 'normal',
+      bodyFontStyle: 'normal',
+      summaryFontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      summaryFontSize: 14,
+      summaryBackground: '#f9fafb',
+      summaryTextColor: '#374151',
+      scrollbarBackground: '#f3f4f6',
+      scrollbarThumb: '#d1d5db',
+      scrollbarThumbHover: '#9ca3af',
+      bufferRows: 5,
+      minAutoColWidth: 80,
+      scrollThreshold: 3,
+      headerSortActiveBackground: '#e5e7eb',
+      sortableColor: '#6b7280'
     }
   )
 })
+
+watch(tableChartConfigData, (newVal) => {
+  console.log(newVal)
+})
+/**
+ * @desc 条件符号映射
+ */
 const conditionSymbolMap: { [k: string]: string } = {
   between: '介于',
   gt: '大于',
@@ -155,7 +307,11 @@ const conditionSymbolMap: { [k: string]: string } = {
   gte: '大于等于',
   lte: '小于等于'
 }
+
 // 单色配色列表
+/**
+ * @desc 单色配色列表
+ */
 const monochromeColorList = [
   {
     label: '红色系',
@@ -191,6 +347,9 @@ const monochromeColorList = [
   }
 ]
 // 多色配色列表
+/**
+ * @desc 多色配色列表
+ */
 const multiColorList = [
   { label: '██████', color: 'rgb(255, 117, 78)' },
   { label: '██████', color: 'rgb(247, 144, 163)' },
@@ -202,8 +361,11 @@ const multiColorList = [
   { label: '██████', color: 'rgb(195, 86, 145)' }
 ]
 
+/**
+ * @desc 条件状态
+ */
 const conditionsState = reactive<{
-  conditions: Array<ChartConfigStore.TableChartConfigConditionOption>
+  conditions: Array<ChartConfigStore.ConditionOption>
 }>({
   conditions: []
 })
@@ -240,7 +402,7 @@ const handleOpenConditionDialog = (): void => {
  * @returns {void}
  */
 const handleAddCondition = () => {
-  const condition: ChartConfigStore.TableChartConfigConditionOption = {
+  const condition: ChartConfigStore.ConditionOption = {
     // 条件
     conditionType: '单色',
     // 条件字段

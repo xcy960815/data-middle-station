@@ -7,9 +7,40 @@
         :yAxisFields="yAxisFields"
         :chart-width="chartWidth"
         :chart-height="chartHeight"
-        :chart-config="chartConfig"
-        :enable-row-hover-highlight="enableRowHoverHighlight"
-        :enable-col-hover-highlight="enableColHoverHighlight"
+        :border="chartConfig?.table?.border"
+        :hover-fill="chartConfig?.table?.hoverFill"
+        :header-height="chartConfig?.table?.headerHeight"
+        :summary-height="chartConfig?.table?.summaryHeight"
+        :enable-summary="chartConfig?.table?.enableSummary"
+        :row-height="chartConfig?.table?.rowHeight"
+        :scrollbar-size="chartConfig?.table?.scrollbarSize"
+        :table-padding="chartConfig?.table?.tablePadding"
+        :header-background="chartConfig?.table?.headerBackground"
+        :body-background-odd="chartConfig?.table?.bodyBackgroundOdd"
+        :body-background-even="chartConfig?.table?.bodyBackgroundEven"
+        :border-color="chartConfig?.table?.borderColor"
+        :header-text-color="chartConfig?.table?.headerTextColor"
+        :body-text-color="chartConfig?.table?.bodyTextColor"
+        :header-font-family="chartConfig?.table?.headerFontFamily"
+        :header-font-size="chartConfig?.table?.headerFontSize"
+        :body-font-family="chartConfig?.table?.bodyFontFamily"
+        :body-font-size="chartConfig?.table?.bodyFontSize"
+        :body-font-weight="chartConfig?.table?.bodyFontWeight"
+        :body-font-style="chartConfig?.table?.bodyFontStyle"
+        :summary-font-family="chartConfig?.table?.summaryFontFamily"
+        :summary-font-size="chartConfig?.table?.summaryFontSize"
+        :summary-background="chartConfig?.table?.summaryBackground"
+        :summary-text-color="chartConfig?.table?.summaryTextColor"
+        :scrollbar-background="chartConfig?.table?.scrollbarBackground"
+        :scrollbar-thumb="chartConfig?.table?.scrollbarThumb"
+        :scrollbar-thumb-hover="chartConfig?.table?.scrollbarThumbHover"
+        :buffer-rows="chartConfig?.table?.bufferRows"
+        :min-auto-col-width="chartConfig?.table?.minAutoColWidth"
+        :scroll-threshold="chartConfig?.table?.scrollThreshold"
+        :header-sort-active-background="chartConfig?.table?.headerSortActiveBackground"
+        :sortable-color="chartConfig?.table?.sortableColor"
+        :enable-row-hover-highlight="chartConfig?.table?.enableRowHoverHighlight"
+        :enable-col-hover-highlight="chartConfig?.table?.enableColHoverHighlight"
       />
     </client-only>
   </div>
@@ -41,28 +72,10 @@ const props = defineProps({
   },
   // 图表配置
   chartConfig: {
-    type: Object as PropType<{
-      conditions?: Array<{
-        conditionType: string
-        conditionField: string
-        conditionSymbol: string
-        conditionValue: number
-        conditionColor: string
-      }>
-    }>,
+    type: Object as PropType<ChartConfigStore.ChartConfig>,
     default: () => ({})
-  },
-  enableRowHoverHighlight: {
-    type: Boolean,
-    default: () => true
-  },
-  enableColHoverHighlight: {
-    type: Boolean,
-    default: () => true
   }
 })
-
-console.log(props.yAxisFields)
 </script>
 
 <style scoped lang="scss">

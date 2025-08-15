@@ -57,10 +57,21 @@ declare namespace ChartConfigVo {
    * 过滤配置
    */
   interface FilterOption extends ColumnOption {
+    /**
+     * 过滤类型
+     */
     filterType?: FilterType
+    /**
+     * 过滤值
+     */
     filterValue?: string
+    /**
+     * 显示名称
+     */
     displayName?: string
-    // 聚合方式
+    /**
+     * 聚合方式
+     */
     aggregationType: FilterAggregationsType
   }
 
