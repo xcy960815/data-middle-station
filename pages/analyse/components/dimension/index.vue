@@ -28,7 +28,6 @@
           class="dimension__item__name"
           cast="dimension"
           :name="item.columnName"
-          v-model:alias="item.alias"
           v-model:displayName="item.displayName"
           :index="index"
           :invalid="item.__invalid"
@@ -244,12 +243,12 @@ const handleSetAlias = () => {
     cancelButtonText: '取消',
     inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
     inputErrorMessage: '别名仅支持中英文、数字、下划线，且不能为空',
-    inputValue: currentDimension.value!.alias || '',
+    inputValue: currentDimension.value!.displayName || '',
     autofocus: true
   })
     .then(({ value }) => {
       if (!currentDimension.value) return
-      currentDimension.value.alias = value
+      currentDimension.value.displayName = value
       dimensionStore.updateDimension(currentDimension.value)
       currentDimension.value = null
     })

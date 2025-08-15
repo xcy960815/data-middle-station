@@ -57,7 +57,7 @@ watch(
  */
 const initChart = () => {
   emits('renderChartStart')
-  const fields = props.yAxisFields.map((item) => item.alias || item.displayName || item.columnName)
+  const fields = props.yAxisFields.map((item) => item.displayName || item.columnName)
   const chart = new Chart({
     container: 'container-line',
     theme: 'classic',

@@ -11,7 +11,7 @@
               @click="handleEmitOrder(header)"
             >
               <span :class="getTableHeaderClass(header)">
-                {{ header.displayName || header.alias || header.columnName }}
+                {{ header.displayName || header.columnName }}
               </span>
               <!-- <icon-park
                 class="mx-1"
@@ -65,7 +65,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 const props = defineProps({
   data: {
@@ -237,7 +237,7 @@ const getComparedStyle = (
   const { conditionType, conditionSymbol, conditionValue, conditionColor, conditionMinValue, conditionMaxValue } =
     condition
 
-  const keyForValue = (tableHeaderOption.alias || tableHeaderOption.columnName || '') as string
+  const keyForValue = (tableHeaderOption.displayName || tableHeaderOption.columnName || '') as string
   const currentValue = Number(tableDataOption[keyForValue] ?? 0)
 
   if (conditionType === '单色') {
@@ -256,7 +256,7 @@ const getComparedStyle = (
   }
 
   if (conditionType === '色阶') {
-    const keyForRow = (tableHeaderOption.alias || tableHeaderOption.columnName || '') as string
+    const keyForRow = (tableHeaderOption.displayName || tableHeaderOption.columnName || '') as string
     const currentRowValueList = props.data.map((t) => Number(t[keyForRow] ?? 0))
     const maxValue = Math.max(...currentRowValueList)
     const minValue = Math.min(...currentRowValueList)
@@ -286,7 +286,7 @@ const getComparedContent = (
   tableHeaderOption: TableChart.TableHeaderOption,
   index: number
 ): string => {
-  const key = (tableHeaderOption.alias || tableHeaderOption.columnName || '') as string
+  const key = (tableHeaderOption.displayName || tableHeaderOption.columnName || '') as string
   return key && tableDataOption[key] != null ? String(tableDataOption[key]) : ''
 }
 

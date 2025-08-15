@@ -63,7 +63,7 @@ const DATE_ICON_NAME = 'calendar-thirty'
 const STRING_ICON_NAME = 'text'
 
 const columnDisplayNames = (column: ColumnStore.ColumnOption) => {
-  return column.alias || column.displayName || column.columnName
+  return column.displayName || column.columnName
 }
 
 /**
@@ -351,8 +351,7 @@ const queryTableColumn = async (tableName: string) => {
         columnName: item.columnName || '',
         columnType: item.columnType || '',
         columnComment: item.columnComment || '',
-        displayName: item.displayName || '',
-        alias: item.alias || ''
+        displayName: item.displayName || ''
       }
     })
     columnStore.setColumns(cloumns || [])
