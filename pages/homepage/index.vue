@@ -61,11 +61,11 @@
 </template>
 
 <script lang="ts" setup>
-import { fetch } from '~/composables/request'
 import { IconPark } from '@icon-park/vue-next/es/all'
-import { ElMessageBox, ElMessage, type FormInstance, type FormRules } from 'element-plus'
-const layoutName = 'homepage'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { fetch } from '~/composables/request'
 import ChartCard from './components/chart-card.vue'
+const layoutName = 'homepage'
 
 const homePageStore = useHomepageStore()
 /**
