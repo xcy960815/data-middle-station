@@ -64,17 +64,20 @@ const props = defineProps({
   },
   chartHeight: {
     type: [Number, String],
-    default: () => 0
+    default: () => '100%'
   },
   chartWidth: {
     type: [Number, String],
-    default: () => 0
+    default: () => '100%'
   },
   // 图表配置
   chartConfig: {
     type: Object as PropType<ChartConfigStore.ChartConfig>,
     default: () => ({})
   }
+})
+onMounted(() => {
+  console.log(props.chartConfig)
 })
 </script>
 
