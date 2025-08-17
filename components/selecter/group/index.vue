@@ -1,5 +1,5 @@
 <template>
-  <div class="group-selecter" @contextmenu="contextmenuHandler" v-contextmenu:contextmenuRef>
+  <div class="group-selecter" @contextmenu="contextmenuHandler">
     <selecter-template v-bind="$attrs"></selecter-template>
   </div>
   <!-- 字段的操作选项 -->
@@ -54,7 +54,10 @@ const contextmenuHandler = (event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
   currentGroup.value = props.group
-  console.log('currentGroup', currentGroup.value)
+  // 直接显示右键菜单
+  if (contextmenuRef.value) {
+    contextmenuRef.value.show(event)
+  }
 }
 /**
  * @desc 设置别名

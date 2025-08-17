@@ -1,5 +1,5 @@
 <template>
-  <div class="dimension-selecter" @contextmenu="contextmenuHandler" v-contextmenu:contextmenuRef>
+  <div class="dimension-selecter" @contextmenu="contextmenuHandler">
     <selecter-template v-bind="$attrs" :dimension="dimension"></selecter-template>
   </div>
   <!-- 字段的操作选项 -->
@@ -52,7 +52,11 @@ const contextmenuHandler = (event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
   currentDimension.value = props.dimension
-  console.log('currentDimension', currentDimension.value)
+
+  // 直接显示右键菜单
+  if (contextmenuRef.value) {
+    contextmenuRef.value.show(event)
+  }
 }
 /**
  * @desc 设置别名
