@@ -1,37 +1,27 @@
 <template>
   <div class="chart-info">
-    <h4
-      class="chart-name cursor-pointer"
-      @click="handleUpdateAnalyseName"
-    >
+    <h4 class="chart-name cursor-pointer" @click="handleUpdateAnalyseName">
       {{ analyseName }}
-      <span class="edit-icon"
-        ><i class="icon-park-outline-edit"></i
-      ></span>
+      <span class="edit-icon"><i class="icon-park-outline-edit"></i></span>
     </h4>
-    <p
-      class="chart-desc cursor-pointer"
-      @click="handleUpdateChartDesc"
-    >
+    <p class="chart-desc cursor-pointer" @click="handleUpdateChartDesc">
       {{ analyseDesc || '' }}
-      <span class="edit-icon"
-        ><i class="icon-park-outline-edit"></i
-      ></span>
+      <span class="edit-icon"><i class="icon-park-outline-edit"></i></span>
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ElMessageBox, ElMessage } from 'element-plus'
-const chartStore = useAnalyseStore()
+import { ElMessage, ElMessageBox } from 'element-plus'
+const analyseStore = useAnalyseStore()
 const chartId = computed(() => {
-  return chartStore.getChartId
+  return analyseStore.getChartId
 })
 const analyseName = computed(() => {
-  return chartStore.getAnalyseName
+  return analyseStore.getAnalyseName
 })
 const analyseDesc = computed(() => {
-  return chartStore.getAnalyseDesc
+  return analyseStore.getAnalyseDesc
 })
 
 const props = defineProps({
@@ -50,8 +40,7 @@ const handleUpdateAnalyseName = () => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
-    inputErrorMessage:
-      '分析名称仅支持中英文、数字、下划线，且不能为空',
+    inputErrorMessage: '分析名称仅支持中英文、数字、下划线，且不能为空',
     inputValue: analyseName.value || '未命名分析',
     autofocus: true
   }).then(({ value }) => {
@@ -79,7 +68,7 @@ const updateAnalyseName = async (value: string) => {
       type: 'success',
       message: '更新成功'
     })
-    chartStore.setAnalyseName(value)
+    analyseStore.setAnalyseName(value)
   }
 }
 /**
@@ -119,7 +108,7 @@ const updateChartDesc = async (value: string) => {
       type: 'success',
       message: '更新成功'
     })
-    chartStore.setAnalyseDesc(value)
+    analyseStore.setAnalyseDesc(value)
   }
 }
 </script>

@@ -1117,8 +1117,8 @@ const createFixedColumnShadow = () => {
  */
 const initStage = () => {
   emits('render-chart-start')
+
   const tableContainer = getContainerEl()
-  console.log('tableContainer', tableContainer)
 
   if (!tableContainer) return
 
@@ -1243,6 +1243,13 @@ const clearGroups = () => {
   visibleRowCount = 0
 
   /**
+   * 重置汇总组引用
+   */
+  leftSummaryGroup = null
+  centerSummaryGroup = null
+  rightSummaryGroup = null
+
+  /**
    * 重置悬浮高亮
    */
   hoveredRowIndex = null
@@ -1263,8 +1270,6 @@ const clearGroups = () => {
  * @returns {void}
  */
 const rebuildGroups = () => {
-  console.log('重建分组')
-
   if (
     !stage ||
     !headerLayer ||
@@ -1589,7 +1594,7 @@ const drawHeaderPart = (
       fontSize: fontSize,
       fontFamily: fontFamily,
       fill: props.headerTextColor,
-      align: 'left',
+      align: col.align || 'left',
       verticalAlign: 'middle',
       listening: false
     })
@@ -1833,7 +1838,7 @@ const drawSummaryPart = (
       fontSize: props.summaryFontSize,
       fontFamily: props.summaryFontFamily,
       fill: props.summaryTextColor,
-      align: 'left',
+      align: col.align || 'left',
       verticalAlign: 'middle',
       listening: false
     })
@@ -3017,7 +3022,6 @@ const handleResize = () => {
  * @returns {void}
  */
 const refreshTable = (resetScroll: boolean) => {
-  console.log('refreshTable', resetScroll)
   /**
    * 重置滚动状态
    */
@@ -3049,6 +3053,59 @@ const refreshTable = (resetScroll: boolean) => {
 }
 
 /**
+ * 监听 props 变化
+ */
+watch(
+  () => [props.xAxisFields, props.yAxisFields, props.data],
+  () => {
+    if (!stage) return
+    refreshTable(true)
+  },
+  { deep: true }
+)
+
+watch(
+  () => [props.chartWidth, props.chartHeight],
+  () => {
+    if (!stage) return
+    // 当尺寸变化时，完全重新初始化
+    initStage()
+    refreshTable(true)
+  }
+)
+
+watch(
+  () => [
+    // props.chartWidth,
+    // props.chartHeight,
+    props.headerHeight,
+    props.rowHeight,
+    props.scrollbarSize,
+    props.tablePadding,
+    props.headerBackground,
+    props.bodyBackgroundOdd,
+    props.bodyBackgroundEven,
+    props.borderColor,
+    props.headerTextColor,
+    props.bodyTextColor,
+    props.summaryFontFamily,
+    props.summaryFontSize,
+    props.scrollbarBackground,
+    props.scrollbarThumb,
+    props.scrollbarThumbHover,
+    props.bufferRows,
+    props.hoverFill,
+    props.sortableColor,
+    props.enableSummary
+  ],
+  () => {
+    if (!stage) return
+    console.log('Table config changed, enableSummary:', props.enableSummary)
+    refreshTable(false)
+  }
+)
+
+/**
  * 挂载
  * @returns {void}
  */
@@ -3056,7 +3113,6 @@ onMounted(() => {
   window.addEventListener('mousedown', onGlobalMousedown, true)
   initStage()
   refreshTable(true)
-
   const tableContainer = getContainerEl()
   tableContainer?.addEventListener('wheel', handleWheel, { passive: false })
   window.addEventListener('resize', handleResize)
@@ -3093,47 +3149,6 @@ onMounted(() => {
     containerPointerPositionHandler = updatePointerPositions
   }
 })
-
-/**
- * 监听 props 变化
- */
-watch(
-  () => [props.xAxisFields, props.yAxisFields, props.data],
-  () => {
-    if (!stage) return
-    refreshTable(true)
-  },
-  { deep: true }
-)
-
-watch(
-  () => [
-    props.chartWidth,
-    props.chartHeight,
-    props.headerHeight,
-    props.rowHeight,
-    props.scrollbarSize,
-    props.tablePadding,
-    props.headerBackground,
-    props.bodyBackgroundOdd,
-    props.bodyBackgroundEven,
-    props.borderColor,
-    props.headerTextColor,
-    props.bodyTextColor,
-    props.summaryFontFamily,
-    props.summaryFontSize,
-    props.scrollbarBackground,
-    props.scrollbarThumb,
-    props.scrollbarThumbHover,
-    props.bufferRows,
-    props.hoverFill,
-    props.sortableColor
-  ],
-  () => {
-    if (!stage) return
-    refreshTable(false)
-  }
-)
 
 /**
  * 卸载

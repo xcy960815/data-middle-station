@@ -3,7 +3,7 @@ import { fetch } from '~/composables/request'
  * @desc 获取图表配置 handler
  */
 export const getAnalyseHandler = () => {
-  const chartStore = useAnalyseStore()
+  const analyseStore = useAnalyseStore()
   const columnStore = useColumnStore()
   const dimensionStore = useDimensionStore()
   const filterStore = useFilterStore()
@@ -25,21 +25,22 @@ export const getAnalyseHandler = () => {
     if (result.code === 200) {
       const data = result.data!
       const analyseName = data.analyseName
-      chartStore.setAnalyseName(analyseName)
+      analyseStore.setAnalyseName(analyseName)
       const analyseDesc = data.analyseDesc
-      chartStore.setAnalyseDesc(analyseDesc)
+      analyseStore.setAnalyseDesc(analyseDesc)
       const id = data.id
-      chartStore.setChartId(id)
+      analyseStore.setChartId(id)
       const chartConfigId = data.chartConfigId
-      chartStore.setChartConfigId(chartConfigId)
+      analyseStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
-      chartStore.setChartType((chartConfig?.chartType as AnalyseStore.ChartType) || 'table')
+      analyseStore.setChartType((chartConfig?.chartType as AnalyseStore.ChartType) || 'table')
       columnStore.setColumns(chartConfig?.column || [])
       dimensionStore.setDimensions(chartConfig?.dimension || [])
       filterStore.setFilters((chartConfig?.filter as FilterStore.FilterOption[]) || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])
       columnStore.setDataSource(chartConfig?.dataSource || '')
+      analyseStore.setChartInitialized(false)
     }
   }
 

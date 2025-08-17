@@ -15,62 +15,31 @@
       <div
         data-action="drag"
         class="dimension__item my-1"
-        v-for="(item, index) in dimensions"
+        v-for="(dimension, index) in dimensions"
         :key="index"
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
-        @contextmenu="contextmenuHandler(item)"
-        v-contextmenu:contextmenu
         @mousedown.stop
       >
         <selecter-dimension
           class="dimension__item__name"
           cast="dimension"
-          :name="item.columnName"
-          v-model:displayName="item.displayName"
+          :columnName="dimension.columnName"
+          :dimension="dimension"
+          :displayName="dimension.displayName"
           :index="index"
-          :invalid="item.__invalid"
-        ></selecter-dimension>
+          :invalid="dimension.__invalid"
+        >
+        </selecter-dimension>
       </div>
     </div>
-    <!-- 字段的操作选项 -->
-    <context-menu ref="contextmenu">
-      <context-menu-item @click="handleSetAlias">设置别名</context-menu-item>
-      <context-menu-item @click="handleSetWidth">设置列宽</context-menu-item>
-      <context-menu-divider></context-menu-divider>
-      <context-menu-submenu title="固定列">
-        <context-menu-item @click="handleSetFixed('left')">左固定</context-menu-item>
-        <context-menu-item @click="handleSetFixed('right')">右固定</context-menu-item>
-        <context-menu-item @click="handleSetFixed(null)">取消固定</context-menu-item>
-      </context-menu-submenu>
-    </context-menu>
-    <!-- <client-only>
-        <el-dialog
-          v-model="createComputedFieldVisible"
-          title="创建计算字段"
-          width="30%"
-        >
-          <monaco-editor></monaco-editor>
-          <template #footer>
-            <span class="dialog-footer">
-              <el-button
-                @click="createComputedFieldVisible = false"
-              >
-                取消
-              </el-button>
-            </span>
-          </template>
-</el-dialog>
-</client-only> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import ContextMenuItem from '@/components/context-menu/Item.vue'
 import SelecterDimension from '@/components/selecter/dimension/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
@@ -94,8 +63,6 @@ const groupList = computed<GroupStore.GroupState['groups']>(() => {
   return groupStore.getGroups
 })
 
-const createComputedFieldVisible = ref<boolean>(false)
-
 /**
  * @desc addDimension
  * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
@@ -103,15 +70,6 @@ const createComputedFieldVisible = ref<boolean>(false)
 const addDimension = (dimension: DimensionStore.DimensionOption | Array<DimensionStore.DimensionOption>) => {
   dimension = Array.isArray(dimension) ? dimension : [dimension]
   dimensionStore.addDimensions(dimension)
-}
-
-/**
- * @desc addGroup
- * @param {GroupStore.GroupOption|Array<GroupStore.GroupOption>} groups
- */
-const addGroup = (group: GroupStore.GroupOption | Array<GroupStore.GroupOption>) => {
-  group = Array.isArray(group) ? group : [group]
-  groupStore.addGroups(group)
 }
 
 /**
@@ -212,92 +170,6 @@ const dropHandler = (dragEvent: DragEvent) => {
       addDimension(dimension)
       break
   }
-}
-
-/**
- * @desc 创建计算字段
- * @return void
- */
-const handleCreateComputedField = () => {
-  console.log('创建计算字段')
-  createComputedFieldVisible.value = true
-}
-
-/**
- * @desc 当前选中的列
- */
-const currentDimension = ref<DimensionStore.DimensionOption | null>(null)
-/**
- * @desc 右键点击事件
- * @param {DimensionStore.DimensionOption} dimension
- */
-const contextmenuHandler = (dimension: DimensionStore.DimensionOption) => {
-  currentDimension.value = dimension
-}
-
-/**
- * @desc 设置别名
- */
-const handleSetAlias = () => {
-  ElMessageBox.prompt('请输入别名', '设置别名', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
-    inputErrorMessage: '别名仅支持中英文、数字、下划线，且不能为空',
-    inputValue: currentDimension.value!.displayName || '',
-    autofocus: true
-  })
-    .then(({ value }) => {
-      if (!currentDimension.value) return
-      currentDimension.value.displayName = value
-      dimensionStore.updateDimension(currentDimension.value)
-      currentDimension.value = null
-    })
-    .catch(() => {
-      ElMessage({
-        type: 'info',
-        message: '取消操作'
-      })
-      currentDimension.value = null
-    })
-}
-
-/**
- * @desc 设置列宽
- */
-const handleSetWidth = () => {
-  ElMessageBox.prompt('请输入列宽', {
-    title: '设置列宽',
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /^[1-9]\d*$/,
-    inputErrorMessage: '列宽仅支持正整数',
-    inputValue: String(currentDimension.value!.width || ''),
-    autofocus: true
-  })
-    .then(({ value }) => {
-      if (!currentDimension.value) return
-      currentDimension.value.width = Number(value)
-      dimensionStore.updateDimension(currentDimension.value)
-      currentDimension.value = null
-    })
-    .catch(() => {
-      ElMessage({
-        type: 'info',
-        message: '取消操作'
-      })
-      currentDimension.value = null
-    })
-}
-
-/**
- * @desc 设置固定列
- */
-const handleSetFixed = (fixed: 'left' | 'right' | null) => {
-  if (!currentDimension.value) return
-  currentDimension.value.fixed = fixed
-  dimensionStore.updateDimension(currentDimension.value)
-  currentDimension.value = null
 }
 </script>
 

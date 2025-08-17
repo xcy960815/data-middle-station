@@ -26,7 +26,7 @@ declare namespace GroupStore {
     /**
      * 对齐方式
      */
-    align?: 'left' | 'right' | null
+    align?: 'left' | 'right' | 'center' | null
     /**
      * 宽度
      */
@@ -35,9 +35,13 @@ declare namespace GroupStore {
      * 是否显示溢出提示
      */
     showOverflowTooltip?: boolean
-    /** 是否支持表头过滤（下拉枚举） */
+    /**
+     * 是否支持表头过滤
+     */
     filterable?: boolean
-    /** 是否支持排序 */
+    /**
+     * 是否支持排序
+     */
     sortable?: boolean
   }
 
@@ -56,7 +60,23 @@ declare namespace GroupStore {
    * @desc action
    */
   type GroupActions = {
+    /**
+     * @desc 添加分组
+     * @param groups {GroupOption[]}
+     * @returns {void}
+     */
     addGroups: (groups: GroupOption[]) => void
+    /**
+     * @desc 删除分组
+     * @param index {number}
+     * @returns {void}
+     */
     removeGroup: (index: number) => void
+    /**
+     * @desc 更新分组
+     * @param group {GroupOption}
+     * @returns {void}
+     */
+    updateGroup: (group: GroupOption) => void
   }
 }

@@ -1,18 +1,19 @@
-import { computed } from 'vue'
 import dayjs from 'dayjs'
+import { computed } from 'vue'
 
 /**
  * @desc 获取图表数据
  * @returns {Promise<void>}
  */
 export const getChartDataHandler = () => {
-  const chartStore = useAnalyseStore()
+  const analyseStore = useAnalyseStore()
   const dimensionStore = useDimensionStore()
   const groupStore = useGroupStore()
   const columnStore = useColumnStore()
   const filterStore = useFilterStore()
   const orderStore = useOrderStore()
   const chartConfigStore = useChartConfigStore()
+
   /**
    * @desc 图表推荐策略类
    * @param {AnalyseStore.AnalyseState['chartType']} chartType
@@ -70,14 +71,13 @@ export const getChartDataHandler = () => {
    * @returns {Promise<void>}
    */
   const queryChartData = async () => {
-    const chartType = chartStore.getChartType
+    const chartType = analyseStore.getChartType
     const errorMessage = chartSuggestStrategies(chartType)
-    chartStore.setChartErrorMessage(errorMessage)
+    analyseStore.setChartErrorMessage(errorMessage)
     if (errorMessage) {
       return
     }
-    // const { dataSource, dimensions, filters } =
-    //   queryChartDataParams.value
+
     const dataSource = columnStore.getDataSource
     const dimensions = dimensionStore.getDimensions
     const filters = filterStore.getFilters
@@ -86,7 +86,7 @@ export const getChartDataHandler = () => {
     if (!dimensions.length) return
 
     const startTime = dayjs().valueOf()
-    chartStore.setChartLoading(true)
+    analyseStore.setChartLoading(true)
     const result = await $fetch('/api/getChartData', {
       method: 'POST',
       // 请求参数
@@ -96,23 +96,26 @@ export const getChartDataHandler = () => {
     })
     const endTime = dayjs().valueOf()
     if (result.code === 200) {
-      chartStore.setChartData(result.data || [])
-      chartStore.setChartErrorMessage('')
+      analyseStore.setChartData(result.data || [])
+      analyseStore.setChartErrorMessage('')
     } else {
-      chartStore.setChartData([])
-      chartStore.setChartErrorMessage(result.message)
+      analyseStore.setChartData([])
+      analyseStore.setChartErrorMessage(result.message)
     }
     /**
      * 统一处理的逻辑
      */
-    chartStore.setChartLoading(false)
-    chartStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
+    analyseStore.setChartLoading(false)
+
+    analyseStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
     const duration = endTime - startTime
     const seconds = Math.floor(duration / 1000)
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
-    chartStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${remainingSeconds}秒` : `${remainingSeconds}秒`)
+    analyseStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${remainingSeconds}秒` : `${remainingSeconds}秒`)
   }
+
+  const queryChartDataThrottled = throttle(queryChartData, 1000)
 
   /**
    * @desc 监听查询表格数据的参数变化
@@ -120,13 +123,18 @@ export const getChartDataHandler = () => {
   watch(
     () => queryChartDataParams.value,
     () => {
-      queryChartData()
+      // if (!analyseStore.getChartInitialized) {
+      //   return
+      // }
+
+      queryChartDataThrottled()
     },
     {
       deep: true,
       immediate: true
     }
   )
+
   return {
     queryChartDataParams,
     queryChartData
