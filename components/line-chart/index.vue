@@ -1,6 +1,6 @@
 <template>
   <!-- 折线图 -->
-  <div id="container-line" class="h-full w-full"></div>
+  <div id="container-line" class="h-full w-full" data-canvas-type="line-chart" data-canvas-component="LineChart"></div>
 </template>
 <script setup lang="ts">
 import { Chart } from '@antv/g2'

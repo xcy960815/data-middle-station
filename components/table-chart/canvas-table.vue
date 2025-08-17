@@ -1,5 +1,11 @@
 <template>
-  <div id="container-table" class="container-table" :style="containerStyle"></div>
+  <div
+    id="container-table"
+    class="container-table"
+    :style="containerStyle"
+    data-canvas-type="table-chart"
+    data-canvas-component="CanvasTable"
+  ></div>
 
   <!-- 使用 Teleport 将下拉浮层挂到 body，避免与 Konva 容器冲突 -->
   <teleport to="body">
@@ -1308,7 +1314,9 @@ const rebuildGroups = () => {
   }
 
   leftHeaderGroup = new Konva.Group({ x: 0, y: 0, name: 'leftHeader' })
+
   centerHeaderGroup = new Konva.Group({ x: leftWidth - scrollX, y: 0, name: 'centerHeader' })
+
   rightHeaderGroup = new Konva.Group({
     x: stageWidth - rightWidth - verticalScrollbarSpace,
     y: 0,
@@ -1316,7 +1324,9 @@ const rebuildGroups = () => {
   })
 
   leftBodyGroup = new Konva.Group({ x: 0, y: props.headerHeight - scrollY, name: 'leftBody' })
+
   centerBodyGroup = new Konva.Group({ x: -scrollX, y: -scrollY, name: 'centerBody' })
+
   rightBodyGroup = new Konva.Group({
     x: stageWidth - rightWidth - verticalScrollbarSpace,
     y: props.headerHeight - scrollY,
@@ -1337,7 +1347,9 @@ const rebuildGroups = () => {
   if (props.enableSummary) {
     const summaryY = stageHeight - getSummaryHeight() - horizontalScrollbarSpace
     leftSummaryGroup = new Konva.Group({ x: 0, y: summaryY, name: 'leftSummary' })
+
     centerSummaryGroup = new Konva.Group({ x: leftWidth - scrollX, y: summaryY, name: 'centerSummary' })
+
     rightSummaryGroup = new Konva.Group({
       x: stageWidth - rightWidth - verticalScrollbarSpace,
       y: summaryY,
@@ -1431,8 +1443,8 @@ const createScrollbars = () => {
       width: props.scrollbarSize,
       height: props.headerHeight,
       fill: props.headerBackground,
-      stroke: props.borderColor,
-      strokeWidth: 1
+      stroke: '', // 移除边框，避免与表头边框冲突
+      strokeWidth: 0
     })
     scrollbarLayer.add(verticalScrollbarHeaderMask)
     // 绘制垂直滚动条底部遮罩
@@ -1549,7 +1561,7 @@ const drawHeaderPart = (
 ) => {
   if (!group) return
 
-  // background
+  // background - 移除边框，避免与单元格边框重复
   const totalWidth = cols.reduce((acc, c) => acc + (c.width || 0), 0)
   const bg = new Konva.Rect({
     x: startX + props.tablePadding,
@@ -1557,8 +1569,8 @@ const drawHeaderPart = (
     width: totalWidth,
     height: props.headerHeight,
     fill: props.headerBackground,
-    stroke: props.borderColor,
-    strokeWidth: 1
+    stroke: '', // 移除背景边框，避免重复
+    strokeWidth: 0
   })
   group.add(bg)
 
@@ -1578,7 +1590,7 @@ const drawHeaderPart = (
 
     // 如果该列当前参与排序，则给表头单元格一个高亮背景（多列排序）
     const isSortColumn = sortState.columns.find((s) => s.columnName === col.columnName)
-    cell.fill(isSortColumn ? props.headerSortActiveBackground : 'transparent')
+    cell.fill(isSortColumn ? props.headerSortActiveBackground : props.headerBackground)
 
     // 预留右侧区域（排序箭头 + 过滤图标），避免与文本重叠
     // 预留约 40px 给右侧图标
@@ -1789,7 +1801,7 @@ const drawSummaryPart = (
 ) => {
   if (!group) return
 
-  // background
+  // background - 移除边框，避免与单元格边框重复
   const totalWidth = cols.reduce((acc, c) => acc + (c.width || 0), 0)
 
   const bg = new Konva.Rect({
@@ -1798,8 +1810,8 @@ const drawSummaryPart = (
     width: totalWidth,
     height: props.summaryHeight,
     fill: props.summaryBackground,
-    stroke: props.borderColor,
-    strokeWidth: 1
+    stroke: '', // 移除背景边框，避免重复
+    strokeWidth: 0
   })
   group.add(bg)
 
@@ -1818,8 +1830,8 @@ const drawSummaryPart = (
 
     group.add(cell)
 
-    // 汇总行单元格使用透明背景（和表头保持一致）
-    cell.fill('transparent')
+    // 汇总行单元格使用汇总背景色
+    cell.fill(props.summaryBackground)
 
     // 先显示占位文本，然后异步更新
     const rule = summaryState[col.columnName] || 'nodisplay'
