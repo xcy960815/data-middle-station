@@ -1,19 +1,19 @@
 <template>
-  <el-form label-position="top" label-width="auto" :model="tableChartConfigData">
+  <el-form label-position="top" label-width="auto" :model="tableChartConfig">
     <el-form-item label="展现方式">
-      <el-select v-model="tableChartConfigData.displayMode" placeholder="展示方式">
+      <el-select v-model="tableChartConfig.displayMode" placeholder="展示方式">
         <el-option label="原始展示" value="originalDisplay" />
         <el-option label="聚合展示" value="aggregationDisplay" />
       </el-select>
     </el-form-item>
     <el-form-item label="是否展示同比环比">
       <el-switch
-        v-model="tableChartConfigData.showCompare"
+        v-model="tableChartConfig.showCompare"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
     </el-form-item>
     <el-form-item label="条件格式">
-      <el-tag v-for="(conditionOption, index) in tableChartConfigData.conditions" :key="index" closable type="warning">
+      <el-tag v-for="(conditionOption, index) in tableChartConfig.conditions" :key="index" closable type="warning">
         {{ conditionOption.conditionField }}
         {{ conditionSymbolMap[conditionOption.conditionSymbol] }}
         {{ conditionOption.conditionValue }}
@@ -24,98 +24,98 @@
     </el-form-item>
     <el-form-item label="是否展示汇总行">
       <el-switch
-        v-model="tableChartConfigData.showSummary"
+        v-model="tableChartConfig.showSummary"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
     </el-form-item>
     <!-- 行高亮 -->
     <el-form-item label="行高亮">
       <el-switch
-        v-model="tableChartConfigData.enableRowHoverHighlight"
+        v-model="tableChartConfig.enableRowHoverHighlight"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
     </el-form-item>
     <!-- 列高亮 -->
     <el-form-item label="列高亮">
       <el-switch
-        v-model="tableChartConfigData.enableColHoverHighlight"
+        v-model="tableChartConfig.enableColHoverHighlight"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
     </el-form-item>
     <!-- 是否显示边框 -->
     <el-form-item label="是否显示边框">
       <el-switch
-        v-model="tableChartConfigData.border"
+        v-model="tableChartConfig.border"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
     </el-form-item>
     <!-- hoverFill -->
     <el-form-item label="悬停填充颜色">
-      <el-color-picker v-model="tableChartConfigData.hoverFill" />
+      <el-color-picker v-model="tableChartConfig.hoverFill" />
     </el-form-item>
     <!-- 表头高度 -->
     <el-form-item label="表头高度">
-      <el-input v-model="tableChartConfigData.headerHeight" placeholder="表头高度"></el-input>
+      <el-input v-model="tableChartConfig.headerHeight" placeholder="表头高度"></el-input>
     </el-form-item>
     <!-- 汇总高度 -->
     <el-form-item label="汇总高度">
-      <el-input v-model="tableChartConfigData.summaryHeight" placeholder="汇总高度"></el-input>
+      <el-input v-model="tableChartConfig.summaryHeight" placeholder="汇总高度"></el-input>
     </el-form-item>
     <!-- rowHeight -->
     <el-form-item label="行高">
-      <el-input v-model="tableChartConfigData.rowHeight" placeholder="行高"></el-input>
+      <el-input v-model="tableChartConfig.rowHeight" placeholder="行高"></el-input>
     </el-form-item>
     <!-- scrollbarSize -->
     <el-form-item label="滚动条大小">
-      <el-input v-model="tableChartConfigData.scrollbarSize" placeholder="滚动条大小"></el-input>
+      <el-input v-model="tableChartConfig.scrollbarSize" placeholder="滚动条大小"></el-input>
     </el-form-item>
     <!-- tablePadding -->
     <el-form-item label="表格内边距">
-      <el-input v-model="tableChartConfigData.tablePadding" placeholder="表格内边距"></el-input>
+      <el-input v-model="tableChartConfig.tablePadding" placeholder="表格内边距"></el-input>
     </el-form-item>
     <!-- headerBackground -->
     <el-form-item label="表头背景色">
-      <el-color-picker v-model="tableChartConfigData.headerBackground" />
+      <el-color-picker v-model="tableChartConfig.headerBackground" />
     </el-form-item>
     <!-- bodyBackgroundOdd -->
     <el-form-item label="表格奇数行背景色">
-      <el-color-picker v-model="tableChartConfigData.bodyBackgroundOdd" />
+      <el-color-picker v-model="tableChartConfig.bodyBackgroundOdd" />
     </el-form-item>
     <!-- bodyBackgroundEven -->
     <el-form-item label="表格偶数行背景色">
-      <el-color-picker v-model="tableChartConfigData.bodyBackgroundEven" />
+      <el-color-picker v-model="tableChartConfig.bodyBackgroundEven" />
     </el-form-item>
     <!-- borderColor -->
     <el-form-item label="表格边框颜色">
-      <el-color-picker v-model="tableChartConfigData.borderColor" />
+      <el-color-picker v-model="tableChartConfig.borderColor" />
     </el-form-item>
     <!-- headerFontFamily -->
     <el-form-item label="表头字体">
-      <el-input v-model="tableChartConfigData.headerFontFamily" placeholder="表头字体"></el-input>
+      <el-input v-model="tableChartConfig.headerFontFamily" placeholder="表头字体"></el-input>
     </el-form-item>
     <!-- headerFontSize -->
     <el-form-item label="表头字体大小">
-      <el-input v-model="tableChartConfigData.headerFontSize" placeholder="表头字体大小"></el-input>
+      <el-input v-model="tableChartConfig.headerFontSize" placeholder="表头字体大小"></el-input>
     </el-form-item>
     <!-- bodyTextColor -->
     <el-form-item label="表格文本颜色">
-      <el-color-picker v-model="tableChartConfigData.bodyTextColor" />
+      <el-color-picker v-model="tableChartConfig.bodyTextColor" />
     </el-form-item>
     <!-- bodyFontFamily -->
     <el-form-item label="表格字体">
-      <el-input v-model="tableChartConfigData.bodyFontFamily" placeholder="表格字体"></el-input>
+      <el-input v-model="tableChartConfig.bodyFontFamily" placeholder="表格字体"></el-input>
     </el-form-item>
     <!-- bodyFontSize -->
     <el-form-item label="表格字体大小">
-      <el-input v-model="tableChartConfigData.bodyFontSize" placeholder="表格字体大小"></el-input>
+      <el-input v-model="tableChartConfig.bodyFontSize" placeholder="表格字体大小"></el-input>
     </el-form-item>
     <!-- bodyFontWeight -->
     <el-form-item label="表格字体粗细">
-      <el-input v-model="tableChartConfigData.bodyFontWeight" placeholder="表格字体粗细"></el-input>
+      <el-input v-model="tableChartConfig.bodyFontWeight" placeholder="表格字体粗细"></el-input>
     </el-form-item>
     <!-- bodyFontStyle -->
     <el-form-item label="表格字体样式">
-      <el-input v-model="tableChartConfigData.bodyFontStyle" placeholder="表格字体样式"></el-input>
+      <el-input v-model="tableChartConfig.bodyFontStyle" placeholder="表格字体样式"></el-input>
     </el-form-item>
   </el-form>
 
@@ -247,7 +247,9 @@ const groupStore = useGroupStore()
 /**
  * @desc 表格配置数据
  */
-const tableChartConfigData = computed(() => {
+const tableChartConfig = computed(() => {
+  console.log(chartsConfigStore.chartConfig?.table)
+
   return (
     chartsConfigStore.chartConfig?.table || {
       displayMode: 'originalDisplay',
@@ -292,7 +294,7 @@ const tableChartConfigData = computed(() => {
   )
 })
 
-watch(tableChartConfigData, (newVal) => {
+watch(tableChartConfig, (newVal) => {
   console.log(newVal)
 })
 /**

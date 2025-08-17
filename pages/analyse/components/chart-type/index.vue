@@ -18,28 +18,28 @@
 </template>
 
 <script setup lang="ts">
-const chartStore = useAnalyseStore()
+const analyseStore = useAnalyseStore()
 const chartType = computed(() => {
-  const chartType = chartStore.getChartType as AnalyseStore.ChartType
+  const chartType = analyseStore.getChartType as AnalyseStore.ChartType
   return chartType
 })
 const chartsType = ref<Array<{ name: AnalyseStore.ChartType; image: string }>>([
   {
     name: 'table',
-    image: '//si.geilicdn.com/hz_img_044b00000160691e3f220a02685e_300_200.jpeg',
+    image: '//si.geilicdn.com/hz_img_044b00000160691e3f220a02685e_300_200.jpeg'
   },
   {
     name: 'interval',
-    image: '//si.geilicdn.com/hz_img_0a6900000160690fba580a026860_150_100_unadjust.png',
+    image: '//si.geilicdn.com/hz_img_0a6900000160690fba580a026860_150_100_unadjust.png'
   },
   {
     name: 'line',
-    image: '//si.geilicdn.com/hz_img_12da00000160690fba720a02685e_150_100_unadjust.png',
+    image: '//si.geilicdn.com/hz_img_12da00000160690fba720a02685e_150_100_unadjust.png'
   },
   {
     name: 'pie',
-    image: '//si.geilicdn.com/hz_img_12d900000160690fba6d0a02685e_300_200.jpeg',
-  },
+    image: '//si.geilicdn.com/hz_img_12d900000160690fba6d0a02685e_300_200.jpeg'
+  }
 ])
 
 /**
@@ -51,11 +51,11 @@ const chartsType = ref<Array<{ name: AnalyseStore.ChartType; image: string }>>([
 
 const changeChartType = (chartType: AnalyseStore.ChartType, index: number): void => {
   const chartTypeItems = document.querySelectorAll('.chart-type-item')
-  chartTypeItems.forEach(item => {
+  chartTypeItems.forEach((item) => {
     item.classList.remove('active')
   })
   chartTypeItems[index].classList.add('active')
-  chartStore.setChartType(chartType)
+  analyseStore.setChartType(chartType)
 }
 
 const getAnalyseName = (type: AnalyseStore.ChartType): string => {
@@ -63,7 +63,7 @@ const getAnalyseName = (type: AnalyseStore.ChartType): string => {
     table: '表格',
     interval: '柱状图',
     line: '折线图',
-    pie: '饼图',
+    pie: '饼图'
   }
   return nameMap[type]
 }

@@ -9,11 +9,12 @@
     </template>
     <template v-else>
       <component
+        v-loading="chartLoading"
         :is="chartComponent"
         :xAxisFields="xAxisFields"
         :yAxisFields="yAxisFields"
         :data="data"
-        :title="chartStore.getChartType !== 'table' ? chartTitle : undefined"
+        :title="chartTitle"
         :chart-width="chartWidth"
         :chart-height="chartHeight"
         @renderChartStart="handleRenderChartStart"
@@ -24,21 +25,47 @@
 </template>
 
 <script setup lang="ts">
-// 扇形图（饼图）
+/**
+ * 扇形图（饼图）
+ */
 import PieChart from '~/components/pie-chart/index.vue'
-// 柱状图
+/**
+ * 柱状图
+ */
 import IntervalChart from '~/components/interval-chart/index.vue'
-// 折线图
+/**
+ * 折线图
+ */
 import LineChart from '~/components/line-chart/index.vue'
-// 表格
-import TableChart from '~/components/table-chart/canvas-table.vue'
+/**
+ * 表格
+ */
+import TableChart from '~/components/table-chart/index.vue'
 
-const chartStore = useAnalyseStore()
+/**
+ * @desc 分析器 store
+ */
+const analyseStore = useAnalyseStore()
+/**
+ * @desc 维度 store
+ */
 const dimensionStore = useDimensionStore()
+/**
+ * @desc 分组 store
+ */
 const groupStore = useGroupStore()
 
-const chartWidth = ref(0)
-const chartHeight = ref(0)
+/**
+ * @desc 图表宽度
+ */
+const chartWidth = ref<string | number>('100%')
+/**
+ * @desc 图表高度
+ */
+const chartHeight = ref<string | number>('100%')
+/**
+ * @desc 图表 resize 观察器
+ */
 const chartResizeObserver = ref<ResizeObserver>()
 
 /**
@@ -46,18 +73,19 @@ const chartResizeObserver = ref<ResizeObserver>()
  * @type {boolean}
  */
 const chartLoading = computed(() => {
-  return chartStore.getChartLoading
+  return analyseStore.getChartLoading
 })
 
-const chartTitle = computed(() => {
-  return chartStore.getAnalyseName
-})
+/**
+ * @desc 图表标题
+ */
+const chartTitle = computed(() => analyseStore.getAnalyseName)
 
 /**
  * @desc 图表错误信息
  */
 const chartErrorMessage = computed(() => {
-  return chartStore.getChartErrorMessage
+  return analyseStore.getChartErrorMessage
 })
 
 /**
@@ -83,17 +111,25 @@ const xAxisFields = computed(() => {
  * @type {Array<Chart. ChartData>}
  */
 const data = computed(() => {
-  const chartData = chartStore.getChartData
+  const chartData = analyseStore.getChartData
   return chartData
 })
-
+/**
+ * @desc 图表组件映射
+ * @type {Record<string, Component>}
+ */
 const chartComponentMap = {
   table: TableChart,
   line: LineChart,
   interval: IntervalChart,
   pie: PieChart
 }
-const chartComponent = computed(() => chartComponentMap[chartStore.getChartType] || TableChart)
+
+/**
+ * @desc 图表组件
+ * @type {Component}
+ */
+const chartComponent = computed(() => chartComponentMap[analyseStore.getChartType] || TableChart)
 
 /**
  * @desc 图表开始渲染
@@ -119,6 +155,7 @@ onMounted(() => {
       chartHeight.value = chartsDom.clientHeight
     }
   }, 300)
+
   chartResizeObserver.value = new ResizeObserver(sizeChange)
   if (chartsDom) {
     chartResizeObserver.value.observe(chartsDom)

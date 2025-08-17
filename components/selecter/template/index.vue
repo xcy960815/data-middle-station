@@ -1,21 +1,11 @@
 <template>
-  <!-- selecter 公共模版 -->
   <client-only>
-    <!-- <el-popover
-      class="chart-selecter relative"
-      v-model:visible="selecterVisible"
-      trigger="click"
-      popper-class="chart-selecter-template-popover"
-      placement="bottom"
-      width="100px"
-    >
-      <template #reference> -->
     <div class="chart-selecter-container px-1" :class="invalidClass">
       <span class="chart-selecter-name mr-1">{{ displayName }}</span>
       <slot class="chart-selecter-order-icon" name="order-icon"></slot>
       <!-- 无效排序图标 -->
       <el-tooltip class="box-item" effect="dark" :content="invalidContent" placement="top" v-if="hasInvalidIcon()">
-        <icon-park class="chart-selecterinvalid-icon" type="caution" size="14" fill="#333" />
+        <icon-park class="chart-selecterinvalid-icon" type="caution" size="14" fill="#333" @contextmenu.stop />
       </el-tooltip>
       <!-- 删除图标 -->
       <icon-park
@@ -24,19 +14,14 @@
         size="14"
         fill="#333"
         @click.stop="handleDeleteSelecter"
+        @contextmenu.stop
       />
     </div>
-    <!-- </template>
-      <template #default>
-        <slot></slot>
-      </template>
-    </el-popover> -->
   </client-only>
 </template>
 
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
-import { ElTooltip } from 'element-plus'
 const props = defineProps({
   // 通用参数
   invalid: {
@@ -117,34 +102,6 @@ onMounted(() => {
   }
 })
 </script>
-
-<style lang="scss">
-.chart-selecter-template-popover {
-  padding: 5px 0 !important;
-
-  .aggregation-option {
-    height: 26px;
-    line-height: 26px;
-    padding: 0 15px 0 30px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    position: relative;
-
-    .aggregation-mark {
-      position: absolute;
-      left: 10px;
-      top: 4px;
-    }
-
-    &:hover {
-      background-color: #eee;
-      color: #fff;
-    }
-  }
-}
-</style>
-
 <style lang="scss" scoped>
 .chart-selecter-container {
   position: relative;

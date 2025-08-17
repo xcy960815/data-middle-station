@@ -9,7 +9,7 @@ import { Chart } from '@antv/g2'
 const props = defineProps({
   title: {
     type: String,
-    default: () => '我是扇形图标题'
+    default: () => ''
   },
   data: {
     type: Array as PropType<ChartDataDao.ChartData>,

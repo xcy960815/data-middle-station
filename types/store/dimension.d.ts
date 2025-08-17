@@ -22,7 +22,7 @@ declare namespace DimensionStore {
     /**
      * 对齐方式
      */
-    align?: 'left' | 'right' | null
+    align?: 'left' | 'right' | 'center' | null
     /**
      * 宽度
      */

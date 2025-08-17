@@ -10,12 +10,12 @@ export const useGroupStore = defineStore<
   BaseStore.Actions<GroupStore.GroupState, GroupStore.GroupActions>
 >(StoreNames.GROUP, {
   state: () => ({
-    groups: [],
+    groups: []
   }),
   getters: {
     getGroups(state) {
       return state.groups
-    },
+    }
   },
   actions: {
     /**
@@ -42,5 +42,16 @@ export const useGroupStore = defineStore<
     removeGroup(index: number) {
       this.groups.splice(index, 1)
     },
-  },
+    /**
+     * @desc 更新分组
+     * @param group {GroupOption}
+     * @returns {void}
+     */
+    updateGroup(group) {
+      const index = this.groups.findIndex((item) => item.columnName === group.columnName)
+      if (index !== -1) {
+        this.groups[index] = group
+      }
+    }
+  }
 })

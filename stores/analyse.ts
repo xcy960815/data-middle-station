@@ -16,7 +16,8 @@ export const useAnalyseStore = defineStore<
     chartId: null,
     chartConfigId: null,
     chartLoading: false,
-    chartData: [],
+    chartInitialized: false,
+    chartData: []
   }),
   getters: {
     /**
@@ -81,6 +82,12 @@ export const useAnalyseStore = defineStore<
     getChartData(state) {
       return state.chartData
     },
+    /**
+     * @desc 获取图表初始化状态
+     */
+    getChartInitialized(state) {
+      return state.chartInitialized
+    }
   },
   actions: {
     /**
@@ -159,5 +166,11 @@ export const useAnalyseStore = defineStore<
     setChartData(chartData) {
       this.chartData = chartData
     },
-  },
+    /**
+     * @desc 设置图表初始化状态
+     */
+    setChartInitialized(chartInitialized) {
+      this.chartInitialized = chartInitialized
+    }
+  }
 })
