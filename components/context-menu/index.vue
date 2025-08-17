@@ -1,34 +1,15 @@
 <template>
   <Teleport :to="teleport" v-if="teleport">
-    <Transition
-      @before-enter="handleBeforeEnter"
-      @enter="handleEnter"
-      @after-enter="handleAfterEnter"
-    >
-      <div
-        class="contextmenu"
-        ref="contextmenuElement"
-        v-show="visible"
-        :style="contextMenuPositionStyle"
-      >
+    <Transition @before-enter="handleBeforeEnter" @enter="handleEnter" @after-enter="handleAfterEnter">
+      <div class="contextmenu" ref="contextmenuElement" v-show="visible" :style="contextMenuPositionStyle">
         <ul class="contextmenu-inner">
           <slot></slot>
         </ul>
       </div>
     </Transition>
   </Teleport>
-  <Transition
-    @before-enter="handleBeforeEnter"
-    @enter="handleEnter"
-    @after-enter="handleAfterEnter"
-    v-else
-  >
-    <div
-      class="contextmenu"
-      ref="contextmenuElement"
-      v-show="visible"
-      :style="contextMenuPositionStyle"
-    >
+  <Transition @before-enter="handleBeforeEnter" @enter="handleEnter" @after-enter="handleAfterEnter" v-else>
+    <div class="contextmenu" ref="contextmenuElement" v-show="visible" :style="contextMenuPositionStyle">
       <ul class="contextmenu-inner">
         <slot></slot>
       </ul>
@@ -55,11 +36,7 @@ const props = defineProps({
   }
 })
 
-const emits = defineEmits([
-  'show',
-  'hide',
-  'update:modelValue'
-])
+const emits = defineEmits(['show', 'hide', 'update:modelValue'])
 // 右键菜单的元素
 const contextmenuElement = ref<HTMLDivElement | null>(null)
 // 右键菜单是否显示
@@ -90,41 +67,36 @@ const contextMenuPositionStyle = computed(() => ({
  */
 const showContextMenu = (evt: MouseEvent) => {
   evt.preventDefault()
-  const autoAjustPlacement = props.autoAjustPlacement
-  const targetPosition = {
-    top: evt.pageY,
-    left: evt.pageX
-  }
-  updateModelValue(true)
+  evt.stopPropagation()
+  // 先关闭再打开，防止多次右键菜单叠加
+  updateModelValue(false)
   nextTick(() => {
+    const autoAjustPlacement = props.autoAjustPlacement
+    const targetPosition = {
+      top: evt.pageY,
+      left: evt.pageX
+    }
     if (autoAjustPlacement) {
       const contextmenuNode = contextmenuElement.value
-      if (!contextmenuNode) return
-      const contextmenuWidth = contextmenuNode.clientWidth
-      const contextmenuHeight = contextmenuNode.clientHeight
-      // 如果右键菜单超出了可视区域，需要调整位置
-      if (
-        contextmenuHeight + targetPosition.top >=
-        window.innerHeight + window.scrollY
-      ) {
-        const targetTop =
-          targetPosition.top - contextmenuHeight
-        if (targetTop > window.scrollY) {
-          targetPosition.top = targetTop
+      if (contextmenuNode) {
+        const contextmenuWidth = contextmenuNode.clientWidth
+        const contextmenuHeight = contextmenuNode.clientHeight
+        if (contextmenuHeight + targetPosition.top >= window.innerHeight + window.scrollY) {
+          const targetTop = targetPosition.top - contextmenuHeight
+          if (targetTop > window.scrollY) {
+            targetPosition.top = targetTop
+          }
         }
-      }
-      if (
-        contextmenuWidth + targetPosition.left >=
-        window.innerWidth + window.scrollX
-      ) {
-        const targetWidth =
-          targetPosition.left - contextmenuWidth
-        if (targetWidth > window.scrollX) {
-          targetPosition.left = targetWidth
+        if (contextmenuWidth + targetPosition.left >= window.innerWidth + window.scrollX) {
+          const targetWidth = targetPosition.left - contextmenuWidth
+          if (targetWidth > window.scrollX) {
+            targetPosition.left = targetWidth
+          }
         }
       }
     }
     contextMenuPosition.value = targetPosition
+    updateModelValue(true)
     emits('show')
   })
 }
@@ -166,23 +138,18 @@ const handleAfterEnter = (el: Element) => {
 /**
  * @desc 触发元素的配置
  */
-const contextMenuOptions = reactive<
-  Map<Element, ContextMenu.ContextMenuOtions>
->(new Map())
+const contextMenuOptions = reactive<Map<Element, ContextMenu.ContextMenuOtions>>(new Map())
 /**
  * @desc 当前触发元素
  * @type {Ref<ContextMenu.ContextMenuElement>}
  */
-const currentReferenceElement =
-  ref<ContextMenu.ContextMenuElement>()
+const currentReferenceElement = ref<ContextMenu.ContextMenuElement>()
 /**
  * @desc 当前触发元素的配置
  * @type {ComputedRef<ContextMenu.ContextMenuOptions>}
  */
 const currentTriggerOptions = computed(
-  () =>
-    currentReferenceElement.value &&
-    contextMenuOptions.get(currentReferenceElement.value)
+  () => currentReferenceElement.value && contextMenuOptions.get(currentReferenceElement.value)
 )
 /**
  * @desc 添加触发元素
@@ -195,12 +162,11 @@ const initContextMenuEvent = (
   options?: ContextMenu.InitContextMenuOptions
 ): void => {
   // 获取用户的触发方式
-  const triggerTypes: ContextMenu.TriggerType[] =
-    options?.triggerTypes
-      ? Array.isArray(options.triggerTypes)
-        ? options.triggerTypes
-        : [options.triggerTypes]
-      : ['contextmenu']
+  const triggerTypes: ContextMenu.TriggerType[] = options?.triggerTypes
+    ? Array.isArray(options.triggerTypes)
+      ? options.triggerTypes
+      : [options.triggerTypes]
+    : ['contextmenu']
   /**
    * @desc 触发事件
    * @param {Event} evt
@@ -217,10 +183,7 @@ const initContextMenuEvent = (
    * @returns {void}
    */
   triggerTypes.forEach((triggerType) => {
-    contextMenuElement.addEventListener(
-      triggerType,
-      triggerEventHandler
-    )
+    contextMenuElement.addEventListener(triggerType, triggerEventHandler)
   })
   /**
    * @desc 保存触发元素
@@ -235,16 +198,11 @@ const initContextMenuEvent = (
  * @param {ContextMenu.ContextMenuElement} contextMenuElement
  * @returns {void}
  */
-const removeContextMenuEvent = (
-  contextMenuElement: ContextMenu.ContextMenuElement
-): void => {
+const removeContextMenuEvent = (contextMenuElement: ContextMenu.ContextMenuElement): void => {
   const options = contextMenuOptions.get(contextMenuElement)
   if (!options) return
   options.triggerTypes.forEach((triggerType) => {
-    contextMenuElement.removeEventListener(
-      triggerType,
-      options.triggerEventHandler
-    )
+    contextMenuElement.removeEventListener(triggerType, options.triggerEventHandler)
   })
   contextMenuOptions.delete(contextMenuElement)
 }
@@ -254,35 +212,28 @@ const removeContextMenuEvent = (
  * @returns {void}
  */
 const handleClickBody = (evt: Event): void => {
-  if (
-    !evt.target ||
-    !contextmenuElement.value ||
-    !currentReferenceElement.value
-  )
-    return
-  const notOutside =
-    contextmenuElement.value.contains(evt.target as Node) ||
-    (currentTriggerOptions.value &&
-      currentTriggerOptions.value.triggerTypes.includes(
-        'click'
-      ) &&
-      currentReferenceElement.value.contains(
-        evt.target as Node
-      ))
-  if (!notOutside) {
+  if (!evt.target || !contextmenuElement.value) return
+  // 只要点击不在菜单内就关闭菜单
+  if (!contextmenuElement.value.contains(evt.target as Node)) {
     updateModelValue(false)
   }
 }
-/**
- * @desc 监听modelValue的变化
- */
+// esc关闭菜单
+const handleEscKey = (evt: KeyboardEvent) => {
+  if (evt.key === 'Escape') {
+    updateModelValue(false)
+  }
+}
+
 watch(visible, (value) => {
   if (value) {
     // 显示菜单时，添加事件监听
     document.addEventListener('click', handleClickBody)
+    document.addEventListener('keydown', handleEscKey)
   } else {
     // 隐藏菜单时，移除事件监听
     document.removeEventListener('click', handleClickBody)
+    document.removeEventListener('keydown', handleEscKey)
   }
 })
 /**
@@ -290,6 +241,7 @@ watch(visible, (value) => {
  */
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickBody)
+  document.removeEventListener('keydown', handleEscKey)
 })
 
 provide('visible', visible)
@@ -299,6 +251,8 @@ provide('hide', hideContextMenu)
 
 defineExpose({
   initContextMenuEvent,
-  removeContextMenuEvent
+  removeContextMenuEvent,
+  show: showContextMenu,
+  hide: hideContextMenu
 })
 </script>

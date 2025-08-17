@@ -5,8 +5,7 @@
     <div class="column__title py-2">维度</div>
     <div class="column__content">
       <div
-        @contextmenu="contextmenuHandler(column)"
-        v-contextmenu:contextmenu
+        @contextmenu="contextmenuHandler(column, $event)"
         class="flex items-center"
         :class="columnClasses(column)"
         v-for="(column, index) in columnList"
@@ -122,7 +121,8 @@ const columnList = computed(() => {
  * @desc 当前选中的列
  */
 const currentColumn = ref<ColumnStore.ColumnOption>()
-const contextmenu = ref()
+
+const contextmenu = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 /**
  * @desc 拖拽开始事件
@@ -238,15 +238,14 @@ const dropHandler = (dragEvent: DragEvent) => {
  * @desc 右键点击事件
  * @param column {ColumnStore.ColumnOption} 列选项
  */
-const contextmenuHandler = (column: ColumnStore.ColumnOption) => {
-  console.log('右键点击事件触发:', column)
+const contextmenuHandler = (column: ColumnStore.ColumnOption, event: MouseEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
   currentColumn.value = column
 
-  // 手动触发右键菜单显示（调试用）
+  // 显示右键菜单
   if (contextmenu.value) {
-    console.log('右键菜单组件引用:', contextmenu.value)
-  } else {
-    console.log('右键菜单组件引用不存在')
+    contextmenu.value.show(event)
   }
 }
 
@@ -255,11 +254,6 @@ const contextmenuHandler = (column: ColumnStore.ColumnOption) => {
  */
 const setDataModel = (dataType: string) => {
   if (!currentColumn.value) return
-
-  console.log('设置数据模型:', {
-    column: currentColumn.value,
-    dataType: dataType
-  })
 
   // 这里可以根据不同的数据类型进行相应的处理
   // 例如：更新列的数据模型类型、保存到store等

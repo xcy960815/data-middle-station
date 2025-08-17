@@ -1,6 +1,11 @@
 <template>
   <!-- 柱状图 -->
-  <div id="container-interval" class="h-full w-full"></div>
+  <div
+    id="container-interval"
+    class="h-full w-full"
+    data-canvas-type="interval-chart"
+    data-canvas-component="IntervalChart"
+  ></div>
 </template>
 
 <script lang="ts" setup>

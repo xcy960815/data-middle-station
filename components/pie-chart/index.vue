@@ -1,6 +1,6 @@
 <template>
   <!-- 环形图 -->
-  <div id="container-pie" class="h-full w-full"></div>
+  <div id="container-pie" class="h-full w-full" data-canvas-type="pie-chart" data-canvas-component="PieChart"></div>
 </template>
 
 <script lang="ts" setup>
