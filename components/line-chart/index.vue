@@ -6,14 +6,10 @@
 import { Chart } from '@antv/g2'
 
 const props = defineProps({
-  // title: {
-  //   type: String,
-  //   default: () => '我是折线图标题'
-  // },
-  // subtitle: {
-  //   type: String,
-  //   default: () => '我是折线图副标题'
-  // },
+  title: {
+    type: String,
+    default: () => ''
+  },
   data: {
     type: Array as PropType<ChartDataDao.ChartData>,
     default: () => []
@@ -63,10 +59,9 @@ const initChart = () => {
     theme: 'classic',
     autoFit: true
   })
-  // chart.title({
-  //   title: props.title,
-  //   subtitle: props.subtitle
-  // })
+  chart.title({
+    title: props.title
+  })
   const lineChart = chart
     .line()
     .data({

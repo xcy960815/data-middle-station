@@ -1,8 +1,10 @@
 <template>
   <ClientOnly>
+    <!-- 是否展示汇总行 -->
+    <el-button @click="handleSummaryClick">是否展示汇总行</el-button>
     <CanvasTable
-      :enable-summary="true"
-      chart-height="500px"
+      :enable-summary="enableSummary"
+      chart-height="90%"
       chart-width="100%"
       :x-axis-fields="xAxisFields"
       header-background="red"
@@ -13,13 +15,14 @@
       :data="data"
       :span-method="spanMethod"
       @cell-click="handleCellClick"
-    />
+    >
+    </CanvasTable>
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
-
+const enableSummary = ref(true)
 const spanMethod = ({
   rowIndex,
   colIndex
@@ -177,6 +180,14 @@ const data: ChartDataDao.ChartData = Array.from({ length: 3000 }, (_, i) => ({
  */
 const handleCellClick = (cell: { rowIndex: number; colIndex: number }) => {
   console.log('Cell clicked:', cell)
+}
+
+/**
+ * 汇总行点击事件
+ */
+const handleSummaryClick = () => {
+  enableSummary.value = !enableSummary.value
+  console.log('enableSummary', enableSummary.value)
 }
 </script>
 

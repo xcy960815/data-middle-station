@@ -17,18 +17,18 @@
 </template>
 
 <script setup lang="ts">
-import { ElCheckbox, ElButton, ElTag, ElMessage, ElMessageBox, ElCheckboxGroup } from 'element-plus'
+import { ElButton, ElCheckbox, ElCheckboxGroup, ElMessage, ElMessageBox, ElTag } from 'element-plus'
 import * as XLSX from 'xlsx'
-import { updateAnalyseHandler } from '../../updateAnalyse'
 import { getChartDataHandler } from '../../getChartData'
+import { updateAnalyseHandler } from '../../updateAnalyse'
 const { queryChartData } = getChartDataHandler()
 const { handleUpdateAnalyse } = updateAnalyseHandler()
-const chartStore = useAnalyseStore()
+const analyseStore = useAnalyseStore()
 const chartConfigStore = useChartConfigStore()
 const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
-const chartUpdateTime = computed(() => chartStore.getChartUpdateTime)
-const chartUpdateTakesTime = computed(() => chartStore.getChartUpdateTakesTime)
+const chartUpdateTime = computed(() => analyseStore.getChartUpdateTime)
+const chartUpdateTakesTime = computed(() => analyseStore.getChartUpdateTakesTime)
 /**
  * @desc 点刷新按钮
  * @returns void
@@ -74,9 +74,9 @@ const handleClickDownload = () => {
   const selectFeildsState = reactive<{
     selectFeilds: string[]
   }>({
-    selectFeilds: feilds.map(feild => {
+    selectFeilds: feilds.map((feild) => {
       return feild.columnName || ''
-    }),
+    })
   })
 
   /**
@@ -89,25 +89,25 @@ const handleClickDownload = () => {
         ElCheckboxGroup,
         {
           modelValue: selectFeildsState.selectFeilds,
-          'onUpdate:modelValue': value => {
-            selectFeildsState.selectFeilds = value.map(item => item.toString())
+          'onUpdate:modelValue': (value) => {
+            selectFeildsState.selectFeilds = value.map((item) => item.toString())
           },
-          style: 'width: 100%;display: grid;',
+          style: 'width: 100%;display: grid;'
         },
         () => {
-          return feilds.map(feild => {
+          return feilds.map((feild) => {
             return h(ElCheckbox, {
               label: feild.displayName || feild.columnName,
-              value: feild.columnName || '',
+              value: feild.columnName || ''
             })
           })
         }
       ),
     showCancelButton: false,
     confirmButtonText: '下载',
-    cancelButtonText: '取消',
+    cancelButtonText: '取消'
   })
-    .then(async action => {
+    .then(async (action) => {
       // const { $webworker } = useNuxtApp()
       // const webworker = new $webworker()
       // const result = await webworker.run(() => {
@@ -130,7 +130,7 @@ const handleClickDownload = () => {
         if (Array.isArray(columns) && columns.length > 0) {
           const filteredData = data.map((item: DataOption) => {
             const filteredItem = {} as Record<keyof DataOption, string | number>
-            columns.forEach(column => {
+            columns.forEach((column) => {
               filteredItem[column] = item[column]
             })
             return filteredItem
@@ -161,13 +161,13 @@ const handleClickDownload = () => {
         }
 
         // 设置每列的宽度
-        worksheet['!cols'] = Object.keys(maxWidthMap).map(colIndex => ({
-          width: maxWidthMap[colIndex] + 2,
+        worksheet['!cols'] = Object.keys(maxWidthMap).map((colIndex) => ({
+          width: maxWidthMap[colIndex] + 2
         }))
 
         const workbook: XLSX.WorkBook = {
           Sheets: { [sheetName]: worksheet },
-          SheetNames: [sheetName],
+          SheetNames: [sheetName]
         }
 
         const excelBuffer: ArrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
@@ -177,7 +177,7 @@ const handleClickDownload = () => {
 
       function saveExcelFile(buffer: ArrayBuffer, fileName: string): void {
         const data: Blob = new Blob([buffer], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         })
         const url = window.URL.createObjectURL(data)
         const link = document.createElement('a')
@@ -185,14 +185,9 @@ const handleClickDownload = () => {
         link.download = fileName
         link.click()
       }
-      exportToExcel(
-        chartStore.getChartData,
-        '文件名.xlsx',
-        '文件名',
-        selectFeildsState.selectFeilds
-      )
+      exportToExcel(analyseStore.getChartData, '文件名.xlsx', '文件名', selectFeildsState.selectFeilds)
     })
-    .catch(e => {
+    .catch((e) => {
       ElMessage.info('取消下载')
     })
 }

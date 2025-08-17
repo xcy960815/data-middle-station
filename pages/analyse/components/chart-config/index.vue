@@ -14,12 +14,7 @@
 
       <el-tabs v-model="chartConfigTab" type="card" class="config-tabs">
         <el-tab-pane label="通用" name="common">
-          <el-form
-            label-position="top"
-            label-width="auto"
-            :model="commonChartConfig"
-            class="config-form"
-          >
+          <el-form label-position="top" label-width="auto" :model="commonChartConfig" class="config-form">
             <el-form-item label="备注">
               <el-input
                 type="textarea"
@@ -30,13 +25,7 @@
             </el-form-item>
 
             <el-form-item label="数据量上限">
-              <el-input-number
-                v-model="commonChartConfig.limit"
-                :min="1"
-                :max="10000"
-                :step="100"
-                class="w-full"
-              />
+              <el-input-number v-model="commonChartConfig.limit" :min="1" :max="10000" :step="100" class="w-full" />
             </el-form-item>
 
             <el-form-item label="智能作图建议">
@@ -50,11 +39,7 @@
             </el-form-item>
 
             <el-form-item label="缓存策略">
-              <el-select
-                v-model="commonChartConfig.mixStrategy"
-                placeholder="请选择缓存策略"
-                class="w-full"
-              >
+              <el-select v-model="commonChartConfig.mixStrategy" placeholder="请选择缓存策略" class="w-full">
                 <el-option label="实时" value="real" />
                 <el-option label="每日更新" value="daily" />
               </el-select>
@@ -80,13 +65,13 @@
 </template>
 
 <script setup lang="ts">
-import TableChartConfig from './components/table-chart-config/index.vue'
-import LineChartConfig from './components/line-chart-config/index.vue'
 import IntervalChartConfig from './components/interval-chart-config/index.vue'
+import LineChartConfig from './components/line-chart-config/index.vue'
 import PieChartConfig from './components/pie-chart-config/index.vue'
+import TableChartConfig from './components/table-chart-config/index.vue'
 
 const chartsConfigStore = useChartConfigStore()
-const chartStore = useAnalyseStore()
+const analyseStore = useAnalyseStore()
 const chartConfigTab = ref('common')
 /**
  * @desc 图表配置抽屉 状态
@@ -95,13 +80,13 @@ const chartConfigDrawer = computed({
   get: () => {
     return chartsConfigStore.chartConfigDrawer
   },
-  set: value => chartsConfigStore.setChartConfigDrawer(value),
+  set: (value) => chartsConfigStore.setChartConfigDrawer(value)
 })
 /**
  * @desc 图表配置组件
  */
 const chartConfigComponent = computed(() => {
-  const chartType = chartStore.getChartType
+  const chartType = analyseStore.getChartType
   switch (chartType) {
     case 'table':
       return TableChartConfig

@@ -5,50 +5,51 @@
         :data="data"
         :xAxisFields="xAxisFields"
         :yAxisFields="yAxisFields"
-        :chart-width="chartWidth"
-        :chart-height="chartHeight"
-        :border="chartConfig?.table?.border"
-        :hover-fill="chartConfig?.table?.hoverFill"
-        :header-height="chartConfig?.table?.headerHeight"
-        :summary-height="chartConfig?.table?.summaryHeight"
-        :enable-summary="chartConfig?.table?.enableSummary"
-        :row-height="chartConfig?.table?.rowHeight"
-        :scrollbar-size="chartConfig?.table?.scrollbarSize"
-        :table-padding="chartConfig?.table?.tablePadding"
-        :header-background="chartConfig?.table?.headerBackground"
-        :body-background-odd="chartConfig?.table?.bodyBackgroundOdd"
-        :body-background-even="chartConfig?.table?.bodyBackgroundEven"
-        :border-color="chartConfig?.table?.borderColor"
-        :header-text-color="chartConfig?.table?.headerTextColor"
-        :body-text-color="chartConfig?.table?.bodyTextColor"
-        :header-font-family="chartConfig?.table?.headerFontFamily"
-        :header-font-size="chartConfig?.table?.headerFontSize"
-        :body-font-family="chartConfig?.table?.bodyFontFamily"
-        :body-font-size="chartConfig?.table?.bodyFontSize"
-        :body-font-weight="chartConfig?.table?.bodyFontWeight"
-        :body-font-style="chartConfig?.table?.bodyFontStyle"
-        :summary-font-family="chartConfig?.table?.summaryFontFamily"
-        :summary-font-size="chartConfig?.table?.summaryFontSize"
-        :summary-background="chartConfig?.table?.summaryBackground"
-        :summary-text-color="chartConfig?.table?.summaryTextColor"
-        :scrollbar-background="chartConfig?.table?.scrollbarBackground"
-        :scrollbar-thumb="chartConfig?.table?.scrollbarThumb"
-        :scrollbar-thumb-hover="chartConfig?.table?.scrollbarThumbHover"
-        :buffer-rows="chartConfig?.table?.bufferRows"
-        :min-auto-col-width="chartConfig?.table?.minAutoColWidth"
-        :scroll-threshold="chartConfig?.table?.scrollThreshold"
-        :header-sort-active-background="chartConfig?.table?.headerSortActiveBackground"
-        :sortable-color="chartConfig?.table?.sortableColor"
-        :enable-row-hover-highlight="chartConfig?.table?.enableRowHoverHighlight"
-        :enable-col-hover-highlight="chartConfig?.table?.enableColHoverHighlight"
-      />
+        chart-width="100%"
+        chart-height="100%"
+        :border="tableChartConfig?.border"
+        :hover-fill="tableChartConfig?.hoverFill"
+        :header-height="tableChartConfig?.headerHeight"
+        :summary-height="tableChartConfig?.summaryHeight"
+        :enable-summary="tableChartConfig?.enableSummary"
+        :row-height="tableChartConfig?.rowHeight"
+        :scrollbar-size="tableChartConfig?.scrollbarSize"
+        :table-padding="tableChartConfig?.tablePadding"
+        :header-background="tableChartConfig?.headerBackground"
+        :body-background-odd="tableChartConfig?.bodyBackgroundOdd"
+        :body-background-even="tableChartConfig?.bodyBackgroundEven"
+        :border-color="tableChartConfig?.borderColor"
+        :header-text-color="tableChartConfig?.headerTextColor"
+        :body-text-color="tableChartConfig?.bodyTextColor"
+        :header-font-family="tableChartConfig?.headerFontFamily"
+        :header-font-size="tableChartConfig?.headerFontSize"
+        :body-font-family="tableChartConfig?.bodyFontFamily"
+        :body-font-size="tableChartConfig?.bodyFontSize"
+        :body-font-weight="tableChartConfig?.bodyFontWeight"
+        :body-font-style="tableChartConfig?.bodyFontStyle"
+        :summary-font-family="tableChartConfig?.summaryFontFamily"
+        :summary-font-size="tableChartConfig?.summaryFontSize"
+        :summary-background="tableChartConfig?.summaryBackground"
+        :summary-text-color="tableChartConfig?.summaryTextColor"
+        :scrollbar-background="tableChartConfig?.scrollbarBackground"
+        :scrollbar-thumb="tableChartConfig?.scrollbarThumb"
+        :scrollbar-thumb-hover="tableChartConfig?.scrollbarThumbHover"
+        :buffer-rows="tableChartConfig?.bufferRows"
+        :min-auto-col-width="tableChartConfig?.minAutoColWidth"
+        :scroll-threshold="tableChartConfig?.scrollThreshold"
+        :header-sort-active-background="tableChartConfig?.headerSortActiveBackground"
+        :sortable-color="tableChartConfig?.sortableColor"
+        :enable-row-hover-highlight="tableChartConfig?.enableRowHoverHighlight"
+        :enable-col-hover-highlight="tableChartConfig?.enableColHoverHighlight"
+      >
+      </CanvasTable>
     </client-only>
   </div>
 </template>
 
 <script lang="ts" setup>
 import CanvasTable from './canvas-table.vue'
-
+const chartConfigStore = useChartConfigStore()
 const props = defineProps({
   data: {
     type: Array as PropType<ChartDataDao.ChartData>,
@@ -69,15 +70,13 @@ const props = defineProps({
   chartWidth: {
     type: [Number, String],
     default: () => '100%'
-  },
-  // 图表配置
-  chartConfig: {
-    type: Object as PropType<ChartConfigStore.ChartConfig>,
-    default: () => ({})
   }
 })
-onMounted(() => {
-  console.log(props.chartConfig)
+/**
+ * 表格配置
+ */
+const tableChartConfig = computed(() => {
+  return chartConfigStore.chartConfig?.table
 })
 </script>
 
@@ -86,5 +85,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
 }
 </style>

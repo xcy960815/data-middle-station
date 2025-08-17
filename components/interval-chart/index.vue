@@ -11,10 +11,6 @@ const props = defineProps({
     type: String,
     default: () => '我是柱状图标题'
   },
-  // subtitle: {
-  //   type: String,
-  //   default: () => '我是柱状图副标题'
-  // },
   data: {
     type: Array as PropType<Array<ChartDataVo.ChartData>>,
     default: () => []
@@ -77,14 +73,13 @@ const initChart = () => {
   // 配置图表标题
   chart.title({
     title: props.title
-    // subtitle: props.subtitle
   })
 
   // 获取 y 轴字段名称
   const yAxisFieldNames = props.yAxisFields.map((item) => item.displayName || item.columnName)
   // 获取图表数据
   const chartData = props.data
-  // console.log("chartData", chartData);
+  // console.log('chartData', chartData)
 
   // 配置图表
   const intervalChart = chart

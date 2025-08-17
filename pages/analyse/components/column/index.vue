@@ -104,7 +104,7 @@ const columnIconName = computed(() => (column: ColumnStore.ColumnOption) => {
 })
 
 const columnStore = useColumnStore()
-const chartStore = useAnalyseStore()
+const analyseStore = useAnalyseStore()
 const filterStore = useFilterStore()
 const orderStore = useOrderStore()
 const chartConfigStore = useChartConfigStore()
@@ -302,7 +302,7 @@ watch(
   async (newDataSource, oldDataSource) => {
     if (!newDataSource) {
       // 如果数据源为空，清空图表数据
-      chartStore.setChartData([])
+      analyseStore.setChartData([])
       // 如果数据源为空，清空筛选条件
       filterStore.setFilters([])
       // 如果数据源为空，清空排序条件

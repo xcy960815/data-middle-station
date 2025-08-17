@@ -66,6 +66,10 @@ declare namespace AnalyseStore {
      * 图表加载状态
      */
     chartLoading: boolean
+    /**
+     * 图表初始化状态
+     */
+    chartInitialized: boolean
   }
   /**
    * @desc 图表getter
