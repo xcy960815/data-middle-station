@@ -14,50 +14,11 @@
 
       <el-tabs v-model="chartConfigTab" type="card" class="config-tabs">
         <el-tab-pane label="通用" name="common">
-          <el-form label-position="top" label-width="auto" :model="commonChartConfig" class="config-form">
-            <el-form-item label="备注">
-              <el-input
-                type="textarea"
-                v-model="commonChartConfig.analyseDesc"
-                :rows="3"
-                placeholder="请输入图表备注信息"
-              />
-            </el-form-item>
-
-            <el-form-item label="数据量上限">
-              <el-input-number v-model="commonChartConfig.limit" :min="1" :max="10000" :step="100" class="w-full" />
-            </el-form-item>
-
-            <el-form-item label="智能作图建议">
-              <el-switch
-                v-model="commonChartConfig.suggest"
-                class="ml-2"
-                active-text="开启"
-                inactive-text="关闭"
-                style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-              />
-            </el-form-item>
-
-            <el-form-item label="缓存策略">
-              <el-select v-model="commonChartConfig.mixStrategy" placeholder="请选择缓存策略" class="w-full">
-                <el-option label="实时" value="real" />
-                <el-option label="每日更新" value="daily" />
-              </el-select>
-            </el-form-item>
-
-            <el-form-item label="分享">
-              <el-input
-                type="textarea"
-                v-model="commonChartConfig.shareStrategy"
-                :rows="3"
-                placeholder="请输入分享策略"
-              />
-            </el-form-item>
-          </el-form>
+          <CommonConfig />
         </el-tab-pane>
-
         <el-tab-pane label="外观" name="appearance">
-          <component :is="chartConfigComponent"></component>
+          <component v-if="chartConfigTab === 'appearance' && !!chartConfigDrawer" :is="chartConfigComponent">
+          </component>
         </el-tab-pane>
       </el-tabs>
     </el-drawer>
@@ -65,6 +26,7 @@
 </template>
 
 <script setup lang="ts">
+import CommonConfig from './components/common-config/index.vue'
 import IntervalChartConfig from './components/interval-chart-config/index.vue'
 import LineChartConfig from './components/line-chart-config/index.vue'
 import PieChartConfig from './components/pie-chart-config/index.vue'
@@ -72,7 +34,7 @@ import TableChartConfig from './components/table-chart-config/index.vue'
 
 const chartsConfigStore = useChartConfigStore()
 const analyseStore = useAnalyseStore()
-const chartConfigTab = ref('common')
+const chartConfigTab = ref('appearance')
 /**
  * @desc 图表配置抽屉 状态
  */
@@ -99,12 +61,6 @@ const chartConfigComponent = computed(() => {
     default:
       return TableChartConfig
   }
-})
-/**
- * @desc 图表公共配置
- */
-const commonChartConfig = computed(() => {
-  return chartsConfigStore.commonChartConfig
 })
 </script>
 
