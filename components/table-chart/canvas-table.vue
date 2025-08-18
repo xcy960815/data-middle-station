@@ -32,7 +32,7 @@
     <div
       ref="summaryDropdownEl"
       v-if="summaryDropdown.visible"
-      class="dms-filter-dropdown"
+      class="dms-summary-dropdown"
       :style="summaryDropdownStyle"
     >
       <el-select
@@ -93,10 +93,6 @@ const props = withDefaults(
      */
     chartHeight?: number | string
     /**
-     * 表格边框
-     */
-    border?: boolean
-    /**
      * 高亮 cell 背景色
      */
     highlightCellBackground?: string
@@ -115,7 +111,7 @@ const props = withDefaults(
     /**
      * 行高
      */
-    rowHeight?: number
+    bodyRowHeight?: number
     /**
      * 滚动条大小
      */
@@ -234,12 +230,11 @@ const props = withDefaults(
   {
     chartWidth: '100%',
     chartHeight: '100%',
-    border: false,
     highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
     headerHeight: 32,
     summaryHeight: 32,
     enableSummary: false,
-    rowHeight: 32,
+    bodyRowHeight: 32,
     scrollbarSize: 16,
     tablePadding: 0,
     headerBackground: '#f7f7f9',
@@ -280,6 +275,7 @@ const getSummaryHeight = () => (props.enableSummary ? props.summaryHeight : 0)
  */
 const emits = defineEmits<{
   'cell-click': [{ rowIndex: number; colIndex: number; colKey: string; rowData: ChartDataDao.ChartData[0] }]
+  'action-click': [{ rowIndex: number; action: string; rowData: ChartDataDao.ChartData[0] }]
   'render-chart-start': []
   'render-chart-end': []
 }>()
@@ -359,13 +355,20 @@ const activeData = computed<ChartDataDao.ChartData>(() => {
    */
   if (!sortState.columns.length) return base
   const sorted = [...base]
-  const toNum = (v: string | number) => {
+  const toNum = (v: string | number | null | undefined) => {
     const n = Number(v)
     return Number.isFinite(n) ? n : null
   }
   const aliasMap2 = columnAliasMap.value
-  const getVal = (row: any, key: string) =>
-    row[key] !== undefined ? row[key] : aliasMap2[key] ? row[aliasMap2[key]] : undefined
+
+  const getVal = (row: ChartDataDao.ChartData[0], key: string): string | number | undefined => {
+    const alias = aliasMap2[key]
+    const candidates: unknown[] = [row[key], alias ? row[alias] : undefined]
+    for (const v of candidates) {
+      if (typeof v === 'string' || typeof v === 'number') return v
+    }
+    return undefined
+  }
   sorted.sort((a, b) => {
     for (const s of sortState.columns) {
       const key = s.columnName
@@ -605,6 +608,33 @@ let centerHeaderHoverRect: Konva.Rect | null = null
  */
 let rightHeaderHoverRect: Konva.Rect | null = null
 
+/**
+ * 最近一次指针的屏幕坐标（用于判断表格上是否存在遮罩层）
+ */
+let lastClientX = 0
+let lastClientY = 0
+
+/**
+ * 判断当前指针位置的顶层元素是否属于表格容器
+ * 若不属于，则认为表格被其它遮罩/弹层覆盖，此时不进行高亮
+ * @param {number} clientX 鼠标点击位置的 X 坐标
+ * @param {number} clientY 鼠标点击位置的 Y 坐标
+ * @returns {boolean} 是否在表格容器内
+ */
+const isTopMostInTable = (clientX: number, clientY: number): boolean => {
+  const container = getContainerEl()
+  if (!container) return false
+  const topEl = document.elementFromPoint(clientX, clientY) as HTMLElement | null
+  if (!topEl) return false
+  if (!container.contains(topEl)) return false
+  // 仅当命中的元素为 Konva 的 canvas（或其包裹层）时，认为没有被遮罩覆盖
+  if (topEl.tagName === 'CANVAS') return true
+  const konvaContent = topEl.closest('.konvajs-content') as HTMLElement | null
+  if (konvaContent && container.contains(konvaContent)) return true
+  // 命中的虽然在容器内，但不是 Konva 画布，视为被遮罩覆盖
+  return false
+}
+
 const numberOptions = [
   { label: '不展示', value: 'nodisplay' },
   { label: '最大', value: 'max' },
@@ -646,11 +676,10 @@ const rightBodyPools: ObjectPools = { cellRects: [], textNodes: [], backgroundRe
 const containerStyle = computed(() => {
   const height = typeof props.chartHeight === 'number' ? `${props.chartHeight}px` : (props.chartHeight ?? '460px')
   const width = typeof props.chartWidth === 'number' ? `${props.chartWidth}px` : (props.chartWidth ?? '100%')
-  const borderStyle = props.border ? '1px solid #e5e7eb' : 'none'
+
   return {
     height,
     width,
-    border: borderStyle,
     background: '#fff'
   } as Record<string, string>
 })
@@ -852,7 +881,7 @@ const getSplitColumns = () => {
   // 计算滚动条预留高度
   const stageHeightRaw = stage.height()
   // 计算内容高度
-  const contentHeightForV = activeData.value.length * props.rowHeight
+  const contentHeightForV = activeData.value.length * props.bodyRowHeight
   const verticalScrollbarSpace =
     contentHeightForV > stageHeightRaw - props.headerHeight - getSummaryHeight() ? props.scrollbarSize : 0
   // 计算内容宽度
@@ -906,6 +935,125 @@ const getSplitColumns = () => {
  */
 const clamp = (n: number, min: number, max: number) => {
   return Math.max(min, Math.min(max, n))
+}
+
+/**
+ * 调整十六进制颜色亮度
+ * @param hex 颜色，如 #409EFF
+ * @param percent 亮度百分比，正数变亮，负数变暗（-100~100）
+ */
+const adjustHexColorBrightness = (hex: string, percent: number): string => {
+  const normalizeHex = (h: string) => {
+    if (!h) return '#000000'
+    if (h.startsWith('#')) h = h.slice(1)
+    if (h.length === 3)
+      h = h
+        .split('')
+        .map((c) => c + c)
+        .join('')
+    if (h.length !== 6) return '#000000'
+    return '#' + h
+  }
+  const base = normalizeHex(hex)
+  const r = parseInt(base.slice(1, 3), 16)
+  const g = parseInt(base.slice(3, 5), 16)
+  const b = parseInt(base.slice(5, 7), 16)
+  const adj = (v: number) => clamp(Math.round(v + (percent / 100) * 255), 0, 255)
+  const toHex = (v: number) => v.toString(16).padStart(2, '0')
+  return `#${toHex(adj(r))}${toHex(adj(g))}${toHex(adj(b))}`
+}
+
+/**
+ * 为按钮矩形绑定“原生按钮”式动效（hover/active 阴影与亮度变化）
+ */
+const bindButtonInteractions = (
+  rect: Konva.Rect,
+  options: {
+    baseFill: string
+    baseStroke: string
+    layer: Konva.Layer | null
+    disabled?: boolean
+  }
+) => {
+  let isHovering = false
+  const hoverFill = adjustHexColorBrightness(options.baseFill, 8)
+  const activeFill = adjustHexColorBrightness(options.baseFill, -8)
+  const original = { x: rect.x(), y: rect.y(), w: rect.width(), h: rect.height() }
+
+  const applyNormal = () => {
+    rect.fill(options.baseFill)
+    rect.shadowOpacity(0)
+    rect.shadowBlur(0)
+    rect.shadowOffset({ x: 0, y: 0 })
+    rect.to({ x: original.x, y: original.y, scaleX: 1, scaleY: 1, duration: 0.08, easing: Konva.Easings.EaseInOut })
+    options.layer?.batchDraw()
+  }
+  const applyHover = () => {
+    rect.fill(hoverFill)
+    rect.shadowColor(options.baseFill)
+    rect.shadowOpacity(0.25)
+    rect.shadowBlur(8)
+    rect.shadowOffset({ x: 0, y: 1 })
+    rect.to({ x: original.x, y: original.y, scaleX: 1, scaleY: 1, duration: 0.08, easing: Konva.Easings.EaseInOut })
+    options.layer?.batchDraw()
+  }
+  const applyActive = () => {
+    rect.fill(activeFill)
+    rect.shadowColor(options.baseFill)
+    rect.shadowOpacity(0.2)
+    rect.shadowBlur(4)
+    rect.shadowOffset({ x: 0, y: 0 })
+    const sx = 0.98
+    const sy = 0.98
+    const dx = (original.w * (1 - sx)) / 2
+    const dy = (original.h * (1 - sy)) / 2
+    rect.to({
+      x: original.x + dx,
+      y: original.y + dy,
+      scaleX: sx,
+      scaleY: sy,
+      duration: 0.06,
+      easing: Konva.Easings.EaseInOut
+    })
+    options.layer?.batchDraw()
+  }
+
+  // 清理旧事件并绑定
+  rect.off('mouseenter.buttonfx')
+  rect.off('mouseleave.buttonfx')
+  rect.off('mousedown.buttonfx')
+  rect.off('mouseup.buttonfx')
+
+  if (options.disabled) {
+    rect.opacity(0.6)
+    rect.on('mouseenter.buttonfx', () => {
+      setPointer(false)
+      if (stage) stage.container().style.cursor = 'not-allowed'
+    })
+    rect.on('mouseleave.buttonfx', () => {
+      if (stage) stage.container().style.cursor = 'default'
+    })
+    return
+  }
+
+  rect.opacity(1)
+  rect.on('mouseenter.buttonfx', () => {
+    isHovering = true
+    setPointer(true)
+    applyHover()
+  })
+  rect.on('mouseleave.buttonfx', () => {
+    isHovering = false
+    setPointer(false)
+    applyNormal()
+  })
+  rect.on('mousedown.buttonfx', () => {
+    applyActive()
+  })
+  rect.on('mouseup.buttonfx', () => {
+    if (isHovering) applyHover()
+    else applyNormal()
+  })
 }
 
 /**
@@ -1038,7 +1186,7 @@ const getScrollLimits = () => {
   const stageHeight = stage.height()
 
   // 计算内容高度
-  let contentHeight = activeData.value.length * props.rowHeight
+  let contentHeight = activeData.value.length * props.bodyRowHeight
 
   // 初步估算：不预留滚动条空间
   const visibleContentWidthNoV = stageWidth - leftWidth - rightWidth
@@ -1069,10 +1217,10 @@ const calculateVisibleRows = () => {
   const contentHeight = stageHeight - props.headerHeight - getSummaryHeight() - props.scrollbarSize
 
   // 计算可视区域能显示的行数
-  visibleRowCount = Math.ceil(contentHeight / props.rowHeight)
+  visibleRowCount = Math.ceil(contentHeight / props.bodyRowHeight)
 
   // 根据scrollY计算起始行
-  const startRow = Math.floor(scrollY / props.rowHeight)
+  const startRow = Math.floor(scrollY / props.bodyRowHeight)
 
   // 添加缓冲区，确保滚动时有预渲染的行
   visibleRowStart = Math.max(0, startRow - props.bufferRows)
@@ -1123,6 +1271,8 @@ const createFixedColumnShadow = () => {
  */
 const initStage = () => {
   emits('render-chart-start')
+
+  // 等待demo节点发生变更再触发该方法
 
   const tableContainer = getContainerEl()
 
@@ -1478,7 +1628,7 @@ const createScrollbars = () => {
     // 计算垂直滚动条高度
     const trackHeight =
       stageHeight - props.headerHeight - getSummaryHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0)
-    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.rowHeight))
+    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
     // 计算垂直滚动条 Y 坐标
     const thumbY = props.headerHeight + (scrollY / maxScrollY) * (trackHeight - thumbHeight)
 
@@ -2073,7 +2223,7 @@ const drawBodyPart = (
   // 渲染可视区域的行
   for (let rowIndex = visibleRowStart; rowIndex <= visibleRowEnd; rowIndex++) {
     const row = activeData.value[rowIndex]
-    const y = rowIndex * props.rowHeight
+    const y = rowIndex * props.bodyRowHeight
 
     // 创建背景条纹：必须置底，避免在合并单元格跨越多行时覆盖上方单元格
     const bg = getFromPool(pools.backgroundRects, () => new Konva.Rect({ listening: false, name: 'row-bg' }))
@@ -2081,7 +2231,7 @@ const drawBodyPart = (
     bg.x(0)
     bg.y(y)
     bg.width(totalWidth)
-    bg.height(props.rowHeight)
+    bg.height(props.bodyRowHeight)
     bg.fill(rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven)
     bg.stroke('')
     bg.strokeWidth(0)
@@ -2102,7 +2252,9 @@ const drawBodyPart = (
       let spanCol = 1
       let coveredBySpanMethod = false
       if (hasSpanMethod) {
-        const res = props.spanMethod({ row, column: col, rowIndex, colIndex })
+        // 传入全局列索引，以避免将左/中/右分区的局部索引当成第 0 列
+        const globalColIndex = allColumns.value.findIndex((c) => c.columnName === col.columnName)
+        const res = props.spanMethod({ row, column: col, rowIndex, colIndex: globalColIndex })
         if (Array.isArray(res)) {
           spanRow = Math.max(0, Number(res[0]) || 0)
           spanCol = Math.max(0, Number(res[1]) || 0)
@@ -2126,7 +2278,7 @@ const drawBodyPart = (
 
       const computedRowSpan = hasSpanMethod ? spanRow : 1
 
-      const cellHeight = computedRowSpan * props.rowHeight
+      const cellHeight = computedRowSpan * props.bodyRowHeight
 
       // 列跨度宽度
       let cellWidth = col.width || 0
@@ -2143,13 +2295,30 @@ const drawBodyPart = (
         cellWidth = acc
       }
 
+      // 若为合并单元格（跨行或跨列），在行斑马纹之上绘制统一背景色，避免内部出现条纹断层
+      if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
+        const mergedBg = getFromPool(
+          pools.backgroundRects,
+          () => new Konva.Rect({ listening: false, name: 'merged-cell-bg' })
+        )
+        mergedBg.x(x)
+        mergedBg.y(y)
+        mergedBg.width(cellWidth)
+        mergedBg.height(cellHeight)
+        // 使用起始行的背景色以保持整体风格一致
+        mergedBg.fill(rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven)
+        mergedBg.stroke('')
+        mergedBg.strokeWidth(0)
+        group.add(mergedBg)
+      }
+
       cell.x(x)
       cell.y(y)
       cell.width(cellWidth)
       cell.height(cellHeight)
       cell.stroke(props.borderColor)
       cell.strokeWidth(1)
-      // 始终保持单元格为透明，让行/列 hover 与底层条纹统一表现
+      // 单元格边框保持透明填充，由上面的 merged 背景负责覆盖条纹
       cell.fill('transparent')
 
       // 清除之前的事件监听器
@@ -2164,45 +2333,170 @@ const drawBodyPart = (
       })
       group.add(cell)
 
-      // 创建文本
-      const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
-      const value = String(rawValue ?? '')
-      const maxTextWidth = cellWidth - 16
-      const fontFamily = props.bodyFontFamily
-      const fontSize = props.bodyFontSize
-      const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
+      // 如果是操作列，绘制按钮；否则绘制文本
+      if (col.columnName === 'action') {
+        const actions = col.actions
+        const gap = 6
+        const buttonHeight = Math.max(22, Math.min(28, cellHeight - 8))
+        // 估算单个按钮宽度基于文本长度
+        const estimateButtonWidth = (text: string) => {
+          const temp = new Konva.Text({
+            text,
+            fontSize: Math.min(props.bodyFontSize, 13),
+            fontFamily: props.bodyFontFamily
+          })
+          const w = temp.width() + 16
+          temp.destroy()
+          return clamp(w, 48, 120)
+        }
+        const palette: Record<string, { fill: string; stroke: string; text: string }> = {
+          primary: { fill: '#409EFF', stroke: '#2b74c7', text: '#fff' },
+          success: { fill: '#67C23A', stroke: '#4ea427', text: '#fff' },
+          warning: { fill: '#E6A23C', stroke: '#c9882f', text: '#fff' },
+          danger: { fill: '#F56C6C', stroke: '#d15858', text: '#fff' },
+          default: { fill: '#73767a', stroke: '#5b5e62', text: '#fff' }
+        }
+        if (actions && actions.length > 0) {
+          const widths = actions.map((a) => estimateButtonWidth(a.label))
+          const totalButtonsWidth = widths.reduce((a, b) => a + b, 0) + gap * (actions.length - 1)
+          let startX = x + (cellWidth - totalButtonsWidth) / 2
+          const centerY = y + (cellHeight - buttonHeight) / 2
+          actions.forEach((a, idx) => {
+            const w = widths[idx]
+            const theme = palette[a.type || 'primary'] || palette.primary
+            const rect = getFromPool(
+              pools.backgroundRects,
+              () => new Konva.Rect({ listening: true, name: `action-button-${a.key}` })
+            )
+            rect.off('click')
+            rect.off('mouseenter')
+            rect.off('mouseleave')
+            rect.x(startX)
+            rect.y(centerY)
+            rect.width(w)
+            rect.height(buttonHeight)
+            rect.cornerRadius(4)
+            rect.fill(theme.fill)
+            rect.stroke(theme.stroke)
+            rect.strokeWidth(1)
+            const isDisabled =
+              typeof a.disabled === 'function' ? a.disabled(activeData.value[rowIndex], rowIndex) : !!a.disabled
+            bindButtonInteractions(rect, {
+              baseFill: theme.fill,
+              baseStroke: theme.stroke,
+              layer: group.getLayer(),
+              disabled: isDisabled
+            })
+            rect.on('click', () => {
+              if (isDisabled) return
+              const rowData = activeData.value[rowIndex]
+              emits('action-click', { rowIndex, action: a.key, rowData })
+            })
+            group.add(rect)
 
-      const textNode = getFromPool(pools.textNodes, () => new Konva.Text({ listening: false }))
+            const textNode = getFromPool(pools.textNodes, () => new Konva.Text({ listening: false }))
+            textNode.x(startX + w / 2)
+            textNode.y(centerY + buttonHeight / 2)
+            textNode.text(a.label)
+            textNode.fontSize(Math.min(props.bodyFontSize, 13))
+            textNode.fontFamily(props.bodyFontFamily)
+            textNode.fill(theme.text)
+            textNode.opacity(isDisabled ? 0.6 : 1)
+            textNode.align('center')
+            textNode.verticalAlign('middle')
+            textNode.offset({ x: textNode.width() / 2, y: textNode.height() / 2 })
+            group.add(textNode)
 
-      textNode.x(getTextX(x))
-      textNode.y(y + cellHeight / 2)
-      textNode.text(truncatedValue)
-      textNode.fontSize(fontSize)
-      textNode.fontFamily(fontFamily)
-      textNode.fill(props.bodyTextColor)
-      textNode.align('left')
-      textNode.verticalAlign('middle')
-      textNode.offsetY(textNode.height() / 2)
-      group.add(textNode)
+            startX += w + gap
+          })
+        } else {
+          // 兼容：未配置 actions 时，渲染一个默认“操作”按钮
+          const buttonWidth = Math.max(48, Math.min(88, cellWidth - 16))
+          const buttonX = x + (cellWidth - buttonWidth) / 2
+          const buttonY = y + (cellHeight - buttonHeight) / 2
+          const rect = getFromPool(
+            pools.backgroundRects,
+            () => new Konva.Rect({ listening: true, name: 'action-button' })
+          )
+          rect.off('click')
+          rect.off('mouseenter')
+          rect.off('mouseleave')
+          rect.x(buttonX)
+          rect.y(buttonY)
+          rect.width(buttonWidth)
+          rect.height(buttonHeight)
+          rect.cornerRadius(4)
+          rect.fill('#409EFF')
+          rect.stroke('#2b74c7')
+          rect.strokeWidth(1)
+          const isDisabled = false
+          bindButtonInteractions(rect, {
+            baseFill: '#409EFF',
+            baseStroke: '#2b74c7',
+            layer: group.getLayer(),
+            disabled: isDisabled
+          })
+          rect.on('click', () => {
+            if (isDisabled) return
+            const rowData = activeData.value[rowIndex]
+            emits('action-click', { rowIndex, action: 'action', rowData })
+          })
+          group.add(rect)
 
-      const colShowOverflow = col.showOverflowTooltip
-      const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
-      if (enableTooltip && truncatedValue !== value) {
-        // 悬浮提示：仅在文本被截断时创建 Konva.Tooltip 等价层
-        // 这里用浏览器原生 title 实现，命中区域为单元格矩形
-        // Konva 没有内置 tooltip，避免复杂度，先用 title
-        cell.off('mouseenter.tooltip')
-        cell.on('mouseenter.tooltip', () => {
-          if (!stage) return
-          // 设置 container 的 title
-          stage.container().setAttribute('title', String(rawValue ?? ''))
-        })
-        cell.off('mouseleave.tooltip')
-        cell.on('mouseleave.tooltip', () => {
-          if (!stage) return
-          // 清除 title，避免全局悬浮
-          stage.container().removeAttribute('title')
-        })
+          const label = getFromPool(pools.textNodes, () => new Konva.Text({ listening: false }))
+          label.x(buttonX + buttonWidth / 2)
+          label.y(buttonY + buttonHeight / 2)
+          label.text('操作')
+          label.fontSize(Math.min(props.bodyFontSize, 13))
+          label.fontFamily(props.bodyFontFamily)
+          label.fill('#fff')
+          label.opacity(isDisabled ? 0.6 : 1)
+          label.align('center')
+          label.verticalAlign('middle')
+          label.offset({ x: label.width() / 2, y: label.height() / 2 })
+          group.add(label)
+        }
+      } else {
+        // 创建文本
+        const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
+        const value = String(rawValue ?? '')
+        const maxTextWidth = cellWidth - 16
+        const fontFamily = props.bodyFontFamily
+        const fontSize = props.bodyFontSize
+        const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
+
+        const textNode = getFromPool(pools.textNodes, () => new Konva.Text({ listening: false }))
+
+        textNode.x(getTextX(x))
+        textNode.y(y + cellHeight / 2)
+        textNode.text(truncatedValue)
+        textNode.fontSize(fontSize)
+        textNode.fontFamily(fontFamily)
+        textNode.fill(props.bodyTextColor)
+        textNode.align('left')
+        textNode.verticalAlign('middle')
+        textNode.offsetY(textNode.height() / 2)
+        group.add(textNode)
+
+        const colShowOverflow = col.showOverflowTooltip
+        const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
+        if (enableTooltip && truncatedValue !== value) {
+          // 悬浮提示：仅在文本被截断时创建 Konva.Tooltip 等价层
+          // 这里用浏览器原生 title 实现，命中区域为单元格矩形
+          // Konva 没有内置 tooltip，避免复杂度，先用 title
+          cell.off('mouseenter.tooltip')
+          cell.on('mouseenter.tooltip', () => {
+            if (!stage) return
+            // 设置 container 的 title
+            stage.container().setAttribute('title', String(rawValue ?? ''))
+          })
+          cell.off('mouseleave.tooltip')
+          cell.on('mouseleave.tooltip', () => {
+            if (!stage) return
+            // 清除 title，避免全局悬浮
+            stage.container().removeAttribute('title')
+          })
+        }
       }
 
       x += col.width || 0
@@ -2222,8 +2516,8 @@ const drawBodyPart = (
       const col = cols[selectedColIndex]
       // 默认宽/高
       let highlightWidth = col.width || 0
-      let highlightY = selectedCell!.rowIndex * props.rowHeight
-      let highlightHeight = props.rowHeight
+      let highlightY = selectedCell!.rowIndex * props.bodyRowHeight
+      let highlightHeight = props.bodyRowHeight
 
       // 若存在 spanMethod，以其为准
       if (typeof props.spanMethod === 'function') {
@@ -2231,7 +2525,8 @@ const drawBodyPart = (
           row: activeData.value[selectedCell!.rowIndex],
           column: col,
           rowIndex: selectedCell!.rowIndex,
-          colIndex: selectedColIndex
+          // 选中高亮也应传全局列索引
+          colIndex: allColumns.value.findIndex((c) => c.columnName === col.columnName)
         })
         let spanRow = 1
         let spanCol = 1
@@ -2244,7 +2539,7 @@ const drawBodyPart = (
         }
         if (spanRow > 0 && spanCol > 0) {
           const drawEnd = Math.min(selectedCell!.rowIndex + spanRow - 1, visibleRowEnd)
-          highlightHeight = (drawEnd - selectedCell!.rowIndex + 1) * props.rowHeight
+          highlightHeight = (drawEnd - selectedCell!.rowIndex + 1) * props.bodyRowHeight
           // 计算跨列宽度
           let acc = 0
           for (let c = selectedColIndex; c < Math.min(selectedColIndex + spanCol, cols.length); c++) {
@@ -2276,6 +2571,15 @@ const drawBodyPart = (
 const recomputeHoverIndexFromPointer = (localY?: number, localX?: number) => {
   if (!stage || (!props.enableRowHoverHighlight && !props.enableColHoverHighlight)) return
   if (filterDropdown.visible) return
+  // 若顶层元素不是表格容器（可能被遮罩覆盖），则不进行任何高亮
+  if (!isTopMostInTable(lastClientX, lastClientY)) {
+    if (hoveredRowIndex !== null || hoveredColIndex !== null) {
+      hoveredRowIndex = null
+      hoveredColIndex = null
+      createOrUpdateHoverRects()
+    }
+    return
+  }
   const pointerPos = stage.getPointerPosition()
   if (!pointerPos) {
     // 鼠标在表格外部，清除所有高亮
@@ -2315,7 +2619,7 @@ const recomputeHoverIndexFromPointer = (localY?: number, localX?: number) => {
   const newHoverRowIndex = withinContent
     ? (() => {
         const yInContent = localY! - props.headerHeight + scrollY
-        const idx = Math.floor(yInContent / props.rowHeight)
+        const idx = Math.floor(yInContent / props.bodyRowHeight)
         return idx >= 0 && idx < tableData.value.length ? idx : null
       })()
     : null
@@ -2403,7 +2707,7 @@ const createOrUpdateHoverRects = () => {
     name: string
   ): Konva.Rect | null => {
     if (!group) return null
-    const y = hoveredRowIndex === null ? 0 : hoveredRowIndex * props.rowHeight
+    const y = hoveredRowIndex === null ? 0 : hoveredRowIndex * props.bodyRowHeight
     const shouldShow =
       hoveredRowIndex !== null && hoveredRowIndex >= visibleRowStart && hoveredRowIndex <= visibleRowEnd
     if (!rectRef) {
@@ -2411,7 +2715,7 @@ const createOrUpdateHoverRects = () => {
         x: 0,
         y,
         width: totalWidth,
-        height: props.rowHeight,
+        height: props.bodyRowHeight,
         fill: props.highlightCellBackground,
         listening: false,
         visible: shouldShow,
@@ -2422,7 +2726,7 @@ const createOrUpdateHoverRects = () => {
     } else {
       rectRef.y(y)
       rectRef.width(totalWidth)
-      rectRef.height(props.rowHeight)
+      rectRef.height(props.bodyRowHeight)
       rectRef.visible(shouldShow)
       rectRef.moveToTop()
     }
@@ -2479,6 +2783,7 @@ const createOrUpdateHoverRects = () => {
           row: activeData.value[hoveredRowIndex!],
           column: cols[i],
           rowIndex: hoveredRowIndex!,
+          // 悬浮列高亮回溯也使用全局列索引
           colIndex: allColumns.value.findIndex((c) => c.columnName === cols[i].columnName)
         })
         let spanCol = 1
@@ -2502,8 +2807,8 @@ const createOrUpdateHoverRects = () => {
 
     const shouldShow = hoveredColIndex === colIndex
     // 列高亮应该覆盖整个可视区域，包括缓冲区域
-    const visibleHeight = (visibleRowEnd - visibleRowStart + 1) * props.rowHeight
-    const startY = visibleRowStart * props.rowHeight
+    const visibleHeight = (visibleRowEnd - visibleRowStart + 1) * props.bodyRowHeight
+    const startY = visibleRowStart * props.bodyRowHeight
 
     if (!rectRef) {
       rectRef = new Konva.Rect({
@@ -2708,7 +3013,7 @@ const updateVerticalScroll = (offsetY: number) => {
   const needsRerender =
     visibleRowStart !== oldVisibleStart ||
     visibleRowEnd !== oldVisibleEnd ||
-    Math.abs(scrollY - oldScrollY) > props.rowHeight * 2 // 滚动超过2行时强制重新渲染
+    Math.abs(scrollY - oldScrollY) > props.bodyRowHeight * 2 // 滚动超过2行时强制重新渲染
 
   if (needsRerender) {
     // 重新渲染可视区域
@@ -2799,7 +3104,7 @@ const updateScrollbars = () => {
   if (verticalScrollbarThumb && maxScrollY > 0) {
     const trackHeight =
       stageHeight - props.headerHeight - getSummaryHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0)
-    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.rowHeight))
+    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
     const thumbY = props.headerHeight + (scrollY / maxScrollY) * (trackHeight - thumbHeight)
     verticalScrollbarThumb.y(thumbY)
   }
@@ -2847,6 +3152,9 @@ const handleWheel = (e: WheelEvent) => {
 const handleMouseMove = (e: MouseEvent) => {
   if (!stage) return
   if (filterDropdown.visible) return
+  // 记录最近的屏幕坐标
+  lastClientX = e.clientX
+  lastClientY = e.clientY
 
   // 列宽拖拽中：实时更新覆盖宽度并重建分组
   if (isResizingColumn && resizingColumnName) {
@@ -2878,7 +3186,7 @@ const handleMouseMove = (e: MouseEvent) => {
       props.headerHeight -
       getSummaryHeight() -
       (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
-    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.rowHeight))
+    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
     const scrollRatio = deltaY / (trackHeight - thumbHeight)
     const newScrollY = dragStartScrollY + scrollRatio * maxScrollY
 
@@ -2893,7 +3201,7 @@ const handleMouseMove = (e: MouseEvent) => {
     const needsRerender =
       visibleRowStart !== oldVisibleStart ||
       visibleRowEnd !== oldVisibleEnd ||
-      Math.abs(scrollY - oldScrollY) > props.rowHeight * 2
+      Math.abs(scrollY - oldScrollY) > props.bodyRowHeight * 2
 
     if (needsRerender) {
       // 重新渲染可视区域
@@ -3078,24 +3386,26 @@ watch(
 
 watch(
   () => [props.chartWidth, props.chartHeight],
-  () => {
+  async () => {
     if (!stage) return
-    // 当尺寸变化时，完全重新初始化
+    // 等待demo节点发生变更再触发该方法
+    await nextTick()
     initStage()
     refreshTable(true)
   }
 )
 
 /**
- * header 相关
+ * header 相关（尺寸与样式）
  */
 watch(
   () => [
-    props.headerTextColor,
+    props.headerHeight,
     props.headerFontFamily,
     props.headerFontSize,
-    props.headerHeight,
-    props.headerBackground
+    props.headerTextColor,
+    props.headerBackground,
+    props.headerSortActiveBackground
   ],
   () => {
     if (!stage) return
@@ -3104,26 +3414,17 @@ watch(
 )
 
 /**
- * body 相关
+ * body 相关（行高与样式）
  */
 watch(
   () => [
-    props.rowHeight,
+    props.bodyRowHeight,
     props.bodyBackgroundOdd,
     props.bodyBackgroundEven,
     props.borderColor,
     props.bodyTextColor,
     props.bodyFontSize,
-    props.bodyFontFamily,
-    props.scrollbarBackground,
-    props.scrollbarThumb,
-    props.scrollbarThumbHover,
-    props.bufferRows,
-    props.highlightCellBackground,
-    props.sortableColor,
-    props.enableRowHoverHighlight,
-    props.enableColHoverHighlight,
-    props.border
+    props.bodyFontFamily
   ],
   () => {
     if (!stage) return
@@ -3141,9 +3442,7 @@ watch(
     props.summaryFontFamily,
     props.summaryFontSize,
     props.summaryBackground,
-    props.summaryTextColor,
-    props.enableRowHoverHighlight,
-    props.enableColHoverHighlight
+    props.summaryTextColor
   ],
   () => {
     if (!stage) return
@@ -3152,16 +3451,25 @@ watch(
 )
 
 /**
- * 滚动条相关
+ * 滚动条相关（样式与尺寸）
+ */
+watch(
+  () => [props.scrollbarBackground, props.scrollbarThumb, props.scrollbarThumbHover, props.scrollbarSize],
+  () => {
+    if (!stage) return
+    refreshTable(false)
+  }
+)
+
+/**
+ * 交互相关（悬浮高亮、排序指示等）
  */
 watch(
   () => [
-    props.scrollbarBackground,
-    props.scrollbarThumb,
-    props.scrollbarThumbHover,
-    props.bufferRows,
-    props.scrollThreshold,
-    props.scrollbarSize
+    props.enableRowHoverHighlight,
+    props.enableColHoverHighlight,
+    props.sortableColor,
+    props.highlightCellBackground
   ],
   () => {
     if (!stage) return
@@ -3169,6 +3477,18 @@ watch(
   }
 )
 
+/**
+ * 虚拟滚动/性能相关
+ */
+watch(
+  () => [props.bufferRows, props.scrollThreshold],
+  () => {
+    if (!stage) return
+    refreshTable(false)
+  }
+)
+
+// 其他：无
 /**
  * 挂载
  * @returns {void}
@@ -3260,7 +3580,8 @@ onBeforeUnmount(() => {
   position: relative;
 }
 
-.dms-filter-dropdown {
+.dms-filter-dropdown,
+.dms-summary-dropdown {
   background: #fff;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #ebeef5;
