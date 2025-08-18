@@ -172,7 +172,7 @@ declare namespace ChartConfigStore {
     /**
      * 行高
      */
-    rowHeight: number
+    bodyRowHeight: number
     /**
      * 滚动条大小
      */
