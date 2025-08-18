@@ -171,7 +171,7 @@ const paginatedData = computed(() => {
 /**
  * @desc 表格配置
  */
-const tableChartConfig = computed(() => chartsConfigStore.chartConfig?.table)
+const tableChartConfig = computed(() => chartsConfigStore.privateChartConfig?.table)
 
 // 方法
 /**
@@ -228,7 +228,7 @@ const getComparedStyle = (
   tableDataOption: ChartDataDao.ChartData[number],
   tableHeaderOption: TableChart.TableHeaderOption
 ): string => {
-  const conditions = chartsConfigStore.getChartConfig?.table?.conditions
+  const conditions = chartsConfigStore.getPrivateChartConfig?.table?.conditions
   if (!conditions) return ''
 
   const condition = conditions.find((c) => c.conditionField === tableHeaderOption.columnName)

@@ -49,7 +49,7 @@ const defaultIntervalConfig = {
  * 属性配置
  */
 const intervalChartConfig = computed(() => {
-  return chartConfigStore.chartConfig?.interval || defaultIntervalConfig
+  return chartConfigStore.privateChartConfig?.interval || defaultIntervalConfig
 })
 /**
  * 监听属性配置变化

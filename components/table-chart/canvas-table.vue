@@ -117,10 +117,6 @@ const props = withDefaults(
      */
     scrollbarSize?: number
     /**
-     * 表格内边距
-     */
-    tablePadding?: number
-    /**
      * 表头背景色
      */
     headerBackground?: string
@@ -236,7 +232,6 @@ const props = withDefaults(
     enableSummary: false,
     bodyRowHeight: 32,
     scrollbarSize: 16,
-    tablePadding: 0,
     headerBackground: '#f7f7f9',
     bodyBackgroundOdd: '#ffffff',
     bodyBackgroundEven: '#fafafa',
@@ -1714,7 +1709,7 @@ const drawHeaderPart = (
   // background - 移除边框，避免与单元格边框重复
   const totalWidth = cols.reduce((acc, c) => acc + (c.width || 0), 0)
   const bg = new Konva.Rect({
-    x: startX + props.tablePadding,
+    x: startX,
     y: 0,
     width: totalWidth,
     height: props.headerHeight,
@@ -1955,7 +1950,7 @@ const drawSummaryPart = (
   const totalWidth = cols.reduce((acc, c) => acc + (c.width || 0), 0)
 
   const bg = new Konva.Rect({
-    x: startX + props.tablePadding,
+    x: startX,
     y: 0,
     width: totalWidth,
     height: props.summaryHeight,
