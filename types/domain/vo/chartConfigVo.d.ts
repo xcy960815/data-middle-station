@@ -121,6 +121,10 @@ declare namespace ChartConfigVo {
     aggregationType: OrderAggregationsType
   }
 
+  type CommonChartConfig = ChartConfigDao.CommonChartConfig
+
+  type PrivateChartConfig = ChartConfigDao.PrivateChartConfig
+
   /**
    * 图表配置
    */
@@ -158,9 +162,13 @@ declare namespace ChartConfigVo {
      */
     order: OrderOption[]
     /**
-     * 限制
+     * 公共图表配置
      */
-    limit: number
+    commonChartConfig?: CommonChartConfig
+    /**
+     * 各图表类型配置
+     */
+    privateChartConfig?: PrivateChartConfig
     /**
      * 创建时间
      */

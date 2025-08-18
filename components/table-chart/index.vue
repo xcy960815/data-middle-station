@@ -13,7 +13,6 @@
         :enable-summary="tableChartConfig?.enableSummary"
         :body-row-height="tableChartConfig?.bodyRowHeight"
         :scrollbar-size="tableChartConfig?.scrollbarSize"
-        :table-padding="tableChartConfig?.tablePadding"
         :header-background="tableChartConfig?.headerBackground"
         :body-background-odd="tableChartConfig?.bodyBackgroundOdd"
         :body-background-even="tableChartConfig?.bodyBackgroundEven"
@@ -73,7 +72,7 @@ const props = defineProps({
  * 表格配置
  */
 const tableChartConfig = computed(() => {
-  return chartConfigStore.chartConfig?.table
+  return chartConfigStore.privateChartConfig?.table
 })
 </script>
 

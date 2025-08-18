@@ -12,7 +12,7 @@ export const updateAnalyseHandler = () => {
    * @desc 点击保存
    */
   const handleUpdateAnalyse = async () => {
-    const chartConfig = chartConfigStore.getChartConfig
+    const privateChartConfig = chartConfigStore.getPrivateChartConfig
     const chartConfigId = analyseStore.getChartConfigId
     const column = columnStore.getColumns
     const dimension = dimensionStore.getDimensions
@@ -39,8 +39,9 @@ export const updateAnalyseHandler = () => {
           group,
           order,
           filter,
-          limit: commonChartConfig.limit,
-          chartType
+          chartType,
+          commonChartConfig,
+          privateChartConfig
         }
       }
     })

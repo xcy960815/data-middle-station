@@ -24,7 +24,7 @@ export class ChartDataService {
   private dao2Vo(chartData: ChartDataDao.ChartData): ChartDataVo.ChartData {
     return chartData.map((item) => ({
       ...item,
-      [item.columnName]: item.columnValue
+      [String(item.columnName)]: item.columnValue
     }))
   }
 
@@ -115,7 +115,7 @@ export class ChartDataService {
     /**
      * @desc 获取请求参数
      */
-    const { filters, orders, groups, dimensions, limit, dataSource } = requestParams
+    const { filters, orders, groups, dimensions, dataSource, commonChartConfig } = requestParams
     /**
      * @desc 构建select语句
      */
@@ -136,7 +136,7 @@ export class ChartDataService {
     /**
      * @desc 构建sql语句
      */
-    const sql = `${selectClause} from ${toLine(dataSource)}${whereClause}${groupByClause}${orderByClause} limit ${limit}`
+    const sql = `${selectClause} from ${toLine(dataSource)}${whereClause}${groupByClause}${orderByClause} limit ${commonChartConfig.limit}`
 
     /**
      * @desc 获取图表数据

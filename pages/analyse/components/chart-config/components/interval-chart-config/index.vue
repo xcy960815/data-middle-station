@@ -38,7 +38,7 @@ const chartsConfigStore = useChartConfigStore()
 
 const intervalChartConfigData = computed(() => {
   return (
-    chartsConfigStore.chartConfig?.interval || {
+    chartsConfigStore.privateChartConfig?.interval || {
       displayMode: 'levelDisplay',
       showPercentage: false,
       showLabel: false,

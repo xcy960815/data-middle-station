@@ -41,8 +41,8 @@
     },
 
     // 自动保存
-    "files.autoSave": "afterDelay",
-    "files.autoSaveDelay": 1000,
+    // "files.autoSave": "afterDelay",
+    // "files.autoSaveDelay": 1000,
 
     // 格式化设置
     "editor.formatOnSave": true,

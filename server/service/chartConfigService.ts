@@ -1,5 +1,5 @@
-import { ChartConfigMapper } from '../mapper/chartConfigMapper'
 import dayjs from 'dayjs'
+import { ChartConfigMapper } from '../mapper/chartConfigMapper'
 
 /**
  * @desc 分析服务
@@ -29,6 +29,8 @@ export class ChartConfigService {
   private dao2Vo(chartConfigOption: ChartConfigDao.ChartConfig): ChartConfigVo.ChartConfig {
     return {
       ...chartConfigOption,
+      commonChartConfig: chartConfigOption.commonChartConfig,
+      privateChartConfig: chartConfigOption.privateChartConfig,
       /**
        * 列配置
        */

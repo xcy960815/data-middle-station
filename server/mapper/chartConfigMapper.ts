@@ -1,4 +1,4 @@
-import { Column, Mapping, BaseMapper, Row, IColumnTarget, mapToTarget, entityColumnsMap } from './baseMapper'
+import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
 
 import { ResultSetHeader } from 'mysql2'
 
@@ -31,6 +31,12 @@ export class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTa
   @Column('order')
   order: ChartConfigDao.OrderOption[] = []
 
+  @Column('common_chart_config')
+  commonChartConfig!: ChartConfigDao.CommonChartConfig
+
+  @Column('private_chart_config')
+  privateChartConfig!: ChartConfigDao.PrivateChartConfig
+
   @Column('create_time')
   createTime: string = ''
 
@@ -42,9 +48,6 @@ export class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTa
 
   @Column('updated_by')
   updatedBy: string = ''
-
-  @Column('limit')
-  limit!: number
 
   @Column('is_deleted')
   isDeleted: number = 0
@@ -61,7 +64,8 @@ const CHART_CONFIG_BASE_FIELDS = [
   'filter',
   'group',
   'order',
-  'limit',
+  'common_chart_config',
+  'private_chart_config',
   'create_time',
   'update_time',
   'created_by',
@@ -91,7 +95,7 @@ export class ChartConfigMapper extends BaseMapper {
   public async getChartConfig<T extends ChartConfigDao.ChartConfig = ChartConfigDao.ChartConfig>(
     id: number
   ): Promise<T> {
-    const sql = `select 
+    const sql = `select
           ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
             from ${CHART_CONFIG_TABLE_NAME} where id = ? and is_deleted = 0`
     const result = await this.exe<Array<T>>(sql, [id])

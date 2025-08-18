@@ -63,7 +63,7 @@ export const getChartDataHandler = () => {
       orders: orderStore.getOrders.filter((item) => item.aggregationType && item.orderType),
       groups: groupStore.getGroups,
       dimensions: dimensionStore.getDimensions,
-      limit: chartConfigStore.getCommonChartConfig.limit
+      commonChartConfig: chartConfigStore.getCommonChartConfig
     }
   })
   /**
