@@ -134,14 +134,6 @@ declare namespace ChartConfigStore {
    */
   type TableChartConfig = {
     /**
-     * 展示方式
-     */
-    displayMode: string // "originalDisplay"|"aggregationDisplay"
-    /**
-     * 是否显示对比
-     */
-    showCompare: boolean
-    /**
      * 条件
      */
     conditions: Array<ConditionOption>
@@ -164,7 +156,7 @@ declare namespace ChartConfigStore {
     /**
      * 悬停填充颜色
      */
-    hoverFill: string
+    highlightCellBackground: string
     /**
      * 表头高度
      */
@@ -229,14 +221,6 @@ declare namespace ChartConfigStore {
      * 表格内容字体大小
      */
     bodyFontSize: number
-    /**
-     * 表格内容字体粗细
-     */
-    bodyFontWeight: string
-    /**
-     * 表格内容字体样式
-     */
-    bodyFontStyle: string
     /**
      * 汇总字体
      */
@@ -321,18 +305,30 @@ declare namespace ChartConfigStore {
     /**
      * @desc 图表配置
      */
-    chartConfig: ChartConfig | null
+    chartConfig: ChartConfig
   }
 
   /**
    * @desc getter
    */
-  type ChartConfigGetters = {}
+  type ChartConfigGetters = {
+    /**
+     * @desc 获取表格图配置
+     */
+    getTableChartConfig: (state: ChartConfigState) => TableChartConfig | null
+  }
 
   /**
    * @desc action
    */
   type ChartConfigActions = {
+    /**
+     * @desc 设置表格图配置条件
+     */
     setTableChartConditions(conditions: ConditionOption[]): void
+    /**
+     * @desc 设置表格图配置
+     */
+    setTableChartConfig(config: TableChartConfig): void
   }
 }

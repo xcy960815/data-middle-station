@@ -97,9 +97,9 @@ const props = withDefaults(
      */
     border?: boolean
     /**
-     * 悬停填充颜色
+     * 高亮 cell 背景色
      */
-    hoverFill?: string
+    highlightCellBackground?: string
     /**
      * 表头高度
      */
@@ -165,19 +165,19 @@ const props = withDefaults(
      */
     bodyFontSize?: number
     /**
-     * 汇总字体
+     * 汇总行字体
      */
     summaryFontFamily?: string
     /**
-     * 汇总字体大小
+     * 汇总行字体大小
      */
     summaryFontSize?: number
     /**
-     * 汇总背景色
+     * 汇总行背景色
      */
     summaryBackground?: string
     /**
-     * 汇总文本颜色
+     * 汇总行文本颜色
      */
     summaryTextColor?: string
     /**
@@ -233,9 +233,9 @@ const props = withDefaults(
   }>(),
   {
     chartWidth: '100%',
-    chartHeight: 460,
+    chartHeight: '100%',
     border: false,
-    hoverFill: 'rgba(24, 144, 255, 0.12)',
+    highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
     headerHeight: 32,
     summaryHeight: 32,
     enableSummary: false,
@@ -2412,7 +2412,7 @@ const createOrUpdateHoverRects = () => {
         y,
         width: totalWidth,
         height: props.rowHeight,
-        fill: props.hoverFill,
+        fill: props.highlightCellBackground,
         listening: false,
         visible: shouldShow,
         name
@@ -2511,7 +2511,7 @@ const createOrUpdateHoverRects = () => {
         y: startY,
         width: colWidth,
         height: visibleHeight,
-        fill: props.hoverFill,
+        fill: props.highlightCellBackground,
         listening: false,
         visible: shouldShow,
         name
@@ -2627,7 +2627,7 @@ const createOrUpdateHoverRects = () => {
         y: 0,
         width: colWidth,
         height: props.headerHeight,
-        fill: props.hoverFill,
+        fill: props.highlightCellBackground,
         listening: false,
         visible: shouldShow,
         name
@@ -3086,33 +3086,85 @@ watch(
   }
 )
 
+/**
+ * header 相关
+ */
 watch(
   () => [
-    // props.chartWidth,
-    // props.chartHeight,
+    props.headerTextColor,
+    props.headerFontFamily,
+    props.headerFontSize,
     props.headerHeight,
+    props.headerBackground
+  ],
+  () => {
+    if (!stage) return
+    refreshTable(false)
+  }
+)
+
+/**
+ * body 相关
+ */
+watch(
+  () => [
     props.rowHeight,
-    props.scrollbarSize,
-    props.tablePadding,
-    props.headerBackground,
     props.bodyBackgroundOdd,
     props.bodyBackgroundEven,
     props.borderColor,
-    props.headerTextColor,
     props.bodyTextColor,
-    props.summaryFontFamily,
-    props.summaryFontSize,
+    props.bodyFontSize,
+    props.bodyFontFamily,
     props.scrollbarBackground,
     props.scrollbarThumb,
     props.scrollbarThumbHover,
     props.bufferRows,
-    props.hoverFill,
+    props.highlightCellBackground,
     props.sortableColor,
-    props.enableSummary
+    props.enableRowHoverHighlight,
+    props.enableColHoverHighlight,
+    props.border
   ],
   () => {
     if (!stage) return
-    console.log('Table config changed, enableSummary:', props.enableSummary)
+    refreshTable(false)
+  }
+)
+
+/**
+ * 汇总行相关
+ */
+watch(
+  () => [
+    props.enableSummary,
+    props.summaryHeight,
+    props.summaryFontFamily,
+    props.summaryFontSize,
+    props.summaryBackground,
+    props.summaryTextColor,
+    props.enableRowHoverHighlight,
+    props.enableColHoverHighlight
+  ],
+  () => {
+    if (!stage) return
+    refreshTable(false)
+  }
+)
+
+/**
+ * 滚动条相关
+ */
+watch(
+  () => [
+    props.scrollbarBackground,
+    props.scrollbarThumb,
+    props.scrollbarThumbHover,
+    props.bufferRows,
+    props.scrollThreshold,
+    props.scrollbarSize
+  ],
+  () => {
+    if (!stage) return
     refreshTable(false)
   }
 )

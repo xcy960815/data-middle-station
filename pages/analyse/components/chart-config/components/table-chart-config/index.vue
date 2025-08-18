@@ -1,36 +1,9 @@
 <template>
   <el-form label-position="top" label-width="auto" :model="tableChartConfig">
-    <el-form-item label="展现方式">
-      <el-select v-model="tableChartConfig.displayMode" placeholder="展示方式">
-        <el-option label="原始展示" value="originalDisplay" />
-        <el-option label="聚合展示" value="aggregationDisplay" />
-      </el-select>
-    </el-form-item>
-    <el-form-item label="是否展示同比环比">
-      <el-switch
-        v-model="tableChartConfig.showCompare"
-        style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-      />
-    </el-form-item>
-    <el-form-item label="条件格式">
-      <el-tag v-for="(conditionOption, index) in tableChartConfig.conditions" :key="index" closable type="warning">
-        {{ conditionOption.conditionField }}
-        {{ conditionSymbolMap[conditionOption.conditionSymbol] }}
-        {{ conditionOption.conditionValue }}
-      </el-tag>
-      <el-icon :size="18" class="cursor-pointer" @click="handleOpenConditionDialog">
-        <CirclePlus />
-      </el-icon>
-    </el-form-item>
-    <el-form-item label="是否展示汇总行">
-      <el-switch
-        v-model="tableChartConfig.showSummary"
-        style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-      />
-    </el-form-item>
     <!-- 行高亮 -->
     <el-form-item label="行高亮">
       <el-switch
+        @change="handleUpdateTableConfig"
         v-model="tableChartConfig.enableRowHoverHighlight"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
@@ -38,6 +11,7 @@
     <!-- 列高亮 -->
     <el-form-item label="列高亮">
       <el-switch
+        @change="handleUpdateTableConfig"
         v-model="tableChartConfig.enableColHoverHighlight"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
@@ -45,77 +19,173 @@
     <!-- 是否显示边框 -->
     <el-form-item label="是否显示边框">
       <el-switch
+        @change="handleUpdateTableConfig"
         v-model="tableChartConfig.border"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
     </el-form-item>
-    <!-- hoverFill -->
-    <el-form-item label="悬停填充颜色">
-      <el-color-picker v-model="tableChartConfig.hoverFill" />
+    <!-- highlightCellBackground -->
+    <el-form-item label="高亮 cell 背景色">
+      <el-color-picker v-model="tableChartConfig.highlightCellBackground" @change="handleUpdateTableConfig" />
     </el-form-item>
     <!-- 表头高度 -->
     <el-form-item label="表头高度">
-      <el-input v-model="tableChartConfig.headerHeight" placeholder="表头高度"></el-input>
+      <el-input
+        v-model="tableChartConfig.headerHeight"
+        placeholder="表头高度"
+        @change="handleUpdateTableConfig"
+      ></el-input>
+    </el-form-item>
+    <!-- 表头字体大小 -->
+    <el-form-item label="表头字体大小">
+      <el-input
+        v-model="tableChartConfig.headerFontSize"
+        placeholder="表头字体大小"
+        @change="handleUpdateTableConfig"
+      ></el-input>
+    </el-form-item>
+    <el-form-item label="表头字体">
+      <el-select
+        v-model="tableChartConfig.headerFontFamily"
+        placeholder="请选择表头字体"
+        @change="handleUpdateTableConfig"
+      >
+        <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
+      </el-select>
+    </el-form-item>
+    <!-- 表头文本颜色 -->
+    <el-form-item label="表头文本颜色">
+      <el-color-picker v-model="tableChartConfig.headerTextColor" @change="handleUpdateTableConfig" />
+    </el-form-item>
+    <!-- 表头背景色 -->
+    <el-form-item label="表头背景色">
+      <el-color-picker v-model="tableChartConfig.headerBackground" @change="handleUpdateTableConfig" />
+    </el-form-item>
+    <!-- 表格文本颜色 -->
+    <el-form-item label="表格文本颜色">
+      <el-color-picker v-model="tableChartConfig.bodyTextColor" @change="handleUpdateTableConfig" />
+    </el-form-item>
+    <!-- 行高 -->
+    <el-form-item label="行高">
+      <el-input v-model="tableChartConfig.rowHeight" placeholder="行高" @change="handleUpdateTableConfig"></el-input>
+    </el-form-item>
+    <!-- 表格字体 -->
+    <el-form-item label="表格字体">
+      <el-select
+        v-model="tableChartConfig.bodyFontFamily"
+        placeholder="请选择表格字体"
+        @change="handleUpdateTableConfig"
+      >
+        <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
+      </el-select>
+    </el-form-item>
+    <!-- 表格字体大小 -->
+    <el-form-item label="表格字体大小">
+      <el-input
+        v-model="tableChartConfig.bodyFontSize"
+        placeholder="表格字体大小"
+        @blur="handleUpdateTableConfig"
+      ></el-input>
+    </el-form-item>
+    <el-form-item label="是否展示汇总行">
+      <el-switch
+        @change="handleUpdateTableConfig"
+        v-model="tableChartConfig.showSummary"
+        style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+      />
     </el-form-item>
     <!-- 汇总高度 -->
-    <el-form-item label="汇总高度">
-      <el-input v-model="tableChartConfig.summaryHeight" placeholder="汇总高度"></el-input>
+    <el-form-item label="汇总行高度">
+      <el-input
+        v-model="tableChartConfig.summaryHeight"
+        placeholder="汇总行高度"
+        @blur="handleUpdateTableConfig"
+      ></el-input>
     </el-form-item>
-    <!-- rowHeight -->
-    <el-form-item label="行高">
-      <el-input v-model="tableChartConfig.rowHeight" placeholder="行高"></el-input>
+    <!-- 汇总行字体 -->
+    <el-form-item label="汇总行字体">
+      <el-input
+        v-model="tableChartConfig.summaryFontFamily"
+        placeholder="汇总行字体"
+        @blur="handleUpdateTableConfig"
+      ></el-input>
     </el-form-item>
-    <!-- scrollbarSize -->
+    <!-- 汇总字体大小 -->
+    <el-form-item label="汇总行字体大小">
+      <el-input
+        v-model="tableChartConfig.summaryFontSize"
+        placeholder="汇总行字体大小"
+        @blur="handleUpdateTableConfig"
+      ></el-input>
+    </el-form-item>
+    <!-- 汇总文本颜色 -->
+    <el-form-item label="汇总行文本颜色">
+      <el-color-picker v-model="tableChartConfig.summaryTextColor" @change="handleUpdateTableConfig" />
+    </el-form-item>
+    <!-- 汇总背景色 -->
+    <el-form-item label="汇总行背景色">
+      <el-color-picker v-model="tableChartConfig.summaryBackground" @change="handleUpdateTableConfig" />
+    </el-form-item>
+    <!-- 滚动条背景色 -->
+    <el-form-item label="滚动条背景色">
+      <el-color-picker v-model="tableChartConfig.scrollbarBackground" @change="handleUpdateTableConfig" />
+    </el-form-item>
+    <!-- 滚动条滑块颜色 -->
+    <el-form-item label="滚动条滑块颜色">
+      <el-color-picker v-model="tableChartConfig.scrollbarThumb" @change="handleUpdateTableConfig" />
+    </el-form-item>
+    <!-- 滚动条滑块悬停颜色 -->
+    <el-form-item label="滚动条滑块悬停颜色">
+      <el-color-picker v-model="tableChartConfig.scrollbarThumbHover" @change="handleUpdateTableConfig" />
+    </el-form-item>
+    <!-- 缓冲行数 -->
+    <el-form-item label="缓冲行数">
+      <el-input
+        v-model="tableChartConfig.bufferRows"
+        placeholder="缓冲行数"
+        @change="handleUpdateTableConfig"
+      ></el-input>
+    </el-form-item>
+    <!-- 最小自动列宽度 -->
     <el-form-item label="滚动条大小">
-      <el-input v-model="tableChartConfig.scrollbarSize" placeholder="滚动条大小"></el-input>
+      <el-input
+        v-model="tableChartConfig.scrollbarSize"
+        placeholder="滚动条大小"
+        @change="handleUpdateTableConfig"
+      ></el-input>
     </el-form-item>
     <!-- tablePadding -->
     <el-form-item label="表格内边距">
-      <el-input v-model="tableChartConfig.tablePadding" placeholder="表格内边距"></el-input>
-    </el-form-item>
-    <!-- headerBackground -->
-    <el-form-item label="表头背景色">
-      <el-color-picker v-model="tableChartConfig.headerBackground" />
+      <el-input
+        v-model="tableChartConfig.tablePadding"
+        placeholder="表格内边距"
+        @change="handleUpdateTableConfig"
+      ></el-input>
     </el-form-item>
     <!-- bodyBackgroundOdd -->
     <el-form-item label="表格奇数行背景色">
-      <el-color-picker v-model="tableChartConfig.bodyBackgroundOdd" />
+      <el-color-picker v-model="tableChartConfig.bodyBackgroundOdd" @change="handleUpdateTableConfig" />
     </el-form-item>
     <!-- bodyBackgroundEven -->
     <el-form-item label="表格偶数行背景色">
-      <el-color-picker v-model="tableChartConfig.bodyBackgroundEven" />
+      <el-color-picker v-model="tableChartConfig.bodyBackgroundEven" @change="handleUpdateTableConfig" />
     </el-form-item>
     <!-- borderColor -->
     <el-form-item label="表格边框颜色">
-      <el-color-picker v-model="tableChartConfig.borderColor" />
+      <el-color-picker v-model="tableChartConfig.borderColor" @change="handleUpdateTableConfig" />
     </el-form-item>
-    <!-- headerFontFamily -->
-    <el-form-item label="表头字体">
-      <el-input v-model="tableChartConfig.headerFontFamily" placeholder="表头字体"></el-input>
-    </el-form-item>
-    <!-- headerFontSize -->
-    <el-form-item label="表头字体大小">
-      <el-input v-model="tableChartConfig.headerFontSize" placeholder="表头字体大小"></el-input>
-    </el-form-item>
+
     <!-- bodyTextColor -->
     <el-form-item label="表格文本颜色">
-      <el-color-picker v-model="tableChartConfig.bodyTextColor" />
+      <el-color-picker v-model="tableChartConfig.bodyTextColor" @change="handleUpdateTableConfig" />
     </el-form-item>
     <!-- bodyFontFamily -->
     <el-form-item label="表格字体">
-      <el-input v-model="tableChartConfig.bodyFontFamily" placeholder="表格字体"></el-input>
-    </el-form-item>
-    <!-- bodyFontSize -->
-    <el-form-item label="表格字体大小">
-      <el-input v-model="tableChartConfig.bodyFontSize" placeholder="表格字体大小"></el-input>
-    </el-form-item>
-    <!-- bodyFontWeight -->
-    <el-form-item label="表格字体粗细">
-      <el-input v-model="tableChartConfig.bodyFontWeight" placeholder="表格字体粗细"></el-input>
-    </el-form-item>
-    <!-- bodyFontStyle -->
-    <el-form-item label="表格字体样式">
-      <el-input v-model="tableChartConfig.bodyFontStyle" placeholder="表格字体样式"></el-input>
+      <el-input
+        v-model="tableChartConfig.bodyFontFamily"
+        placeholder="表格字体"
+        @change="handleUpdateTableConfig"
+      ></el-input>
     </el-form-item>
   </el-form>
 
@@ -247,56 +317,70 @@ const groupStore = useGroupStore()
 /**
  * @desc 表格配置数据
  */
-const tableChartConfig = computed(() => {
-  console.log(chartsConfigStore.chartConfig?.table)
-
-  return (
-    chartsConfigStore.chartConfig?.table || {
-      displayMode: 'originalDisplay',
-      showCompare: false,
-      conditions: [],
-      showSummary: false,
-      enableRowHoverHighlight: false,
-      enableColHoverHighlight: false,
-      border: false,
-      hoverFill: 'rgba(24, 144, 255, 0.12)',
-      headerHeight: 32,
-      summaryHeight: 32,
-      enableSummary: false,
-      rowHeight: 32,
-      scrollbarSize: 16,
-      tablePadding: 0,
-      headerBackground: '#f9fafb',
-      bodyBackgroundOdd: '#ffffff',
-      bodyBackgroundEven: '#f9fafb',
-      borderColor: '#d1d5db',
-      headerTextColor: '#374151',
-      headerFontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      headerFontSize: 14,
-      bodyTextColor: '#374151',
-      bodyFontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      bodyFontSize: 14,
-      bodyFontWeight: 'normal',
-      bodyFontStyle: 'normal',
-      summaryFontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      summaryFontSize: 14,
-      summaryBackground: '#f9fafb',
-      summaryTextColor: '#374151',
-      scrollbarBackground: '#f3f4f6',
-      scrollbarThumb: '#d1d5db',
-      scrollbarThumbHover: '#9ca3af',
-      bufferRows: 5,
-      minAutoColWidth: 80,
-      scrollThreshold: 3,
-      headerSortActiveBackground: '#e5e7eb',
-      sortableColor: '#6b7280'
-    }
-  )
+const tableChartConfig = reactive<ChartConfigStore.TableChartConfig>({
+  conditions: [],
+  showSummary: false,
+  enableRowHoverHighlight: false,
+  enableColHoverHighlight: false,
+  border: false,
+  highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
+  headerHeight: 32,
+  summaryHeight: 32,
+  enableSummary: false,
+  rowHeight: 32,
+  scrollbarSize: 16,
+  tablePadding: 0,
+  headerBackground: '#f9fafb',
+  bodyBackgroundOdd: '#ffffff',
+  bodyBackgroundEven: '#f9fafb',
+  borderColor: '#d1d5db',
+  headerTextColor: '#374151',
+  headerFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
+  headerFontSize: 14,
+  bodyTextColor: '#374151',
+  bodyFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
+  bodyFontSize: 14,
+  summaryFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
+  summaryFontSize: 14,
+  summaryBackground: '#f9fafb',
+  summaryTextColor: '#374151',
+  scrollbarBackground: '#f3f4f6',
+  scrollbarThumb: '#d1d5db',
+  scrollbarThumbHover: '#9ca3af',
+  bufferRows: 5,
+  minAutoColWidth: 80,
+  scrollThreshold: 3,
+  headerSortActiveBackground: '#e5e7eb',
+  sortableColor: '#6b7280'
 })
 
-watch(tableChartConfig, (newVal) => {
-  console.log(newVal)
+onMounted(() => {
+  if (chartsConfigStore.chartConfig.table) {
+    tableChartConfig.bodyBackgroundEven = chartsConfigStore.chartConfig.table.bodyBackgroundEven
+    tableChartConfig.bodyBackgroundOdd = chartsConfigStore.chartConfig.table.bodyBackgroundOdd
+    tableChartConfig.borderColor = chartsConfigStore.chartConfig.table.borderColor
+    tableChartConfig.headerBackground = chartsConfigStore.chartConfig.table.headerBackground
+    tableChartConfig.headerTextColor = chartsConfigStore.chartConfig.table.headerTextColor
+    tableChartConfig.headerFontFamily = chartsConfigStore.chartConfig.table.headerFontFamily
+    tableChartConfig.headerFontSize = chartsConfigStore.chartConfig.table.headerFontSize
+    tableChartConfig.bodyFontFamily = chartsConfigStore.chartConfig.table.bodyFontFamily
+    tableChartConfig.bodyFontSize = chartsConfigStore.chartConfig.table.bodyFontSize
+    tableChartConfig.summaryFontFamily = chartsConfigStore.chartConfig.table.summaryFontFamily
+    tableChartConfig.summaryFontSize = chartsConfigStore.chartConfig.table.summaryFontSize
+    tableChartConfig.summaryBackground = chartsConfigStore.chartConfig.table.summaryBackground
+    tableChartConfig.summaryTextColor = chartsConfigStore.chartConfig.table.summaryTextColor
+    tableChartConfig.scrollbarBackground = chartsConfigStore.chartConfig.table.scrollbarBackground
+    tableChartConfig.scrollbarThumb = chartsConfigStore.chartConfig.table.scrollbarThumb
+    tableChartConfig.scrollbarThumbHover = chartsConfigStore.chartConfig.table.scrollbarThumbHover
+    tableChartConfig.bufferRows = chartsConfigStore.chartConfig.table.bufferRows
+    tableChartConfig.minAutoColWidth = chartsConfigStore.chartConfig.table.minAutoColWidth
+    tableChartConfig.scrollThreshold = chartsConfigStore.chartConfig.table.scrollThreshold
+    tableChartConfig.headerSortActiveBackground = chartsConfigStore.chartConfig.table.headerSortActiveBackground
+    tableChartConfig.sortableColor = chartsConfigStore.chartConfig.table.sortableColor
+    tableChartConfig.conditions = chartsConfigStore.chartConfig.table.conditions
+  }
 })
+
 /**
  * @desc 条件符号映射
  */
@@ -348,7 +432,7 @@ const monochromeColorList = [
     ]
   }
 ]
-// 多色配色列表
+
 /**
  * @desc 多色配色列表
  */
@@ -454,6 +538,45 @@ const handleConfirm = (): void => {
   chartsConfigStore.setTableChartConditions(conditionsState.conditions)
   conditionDialogVisible.value = false
 }
+
+/**
+ * @desc 更新表格配置
+ * @returns {void}
+ */
+const handleUpdateTableConfig = (): void => {
+  chartsConfigStore.setTableChartConfig(tableChartConfig)
+}
+
+const fontFamilyOptions = [
+  {
+    label: '系统默认',
+    value: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif'
+  },
+  {
+    label: '微软雅黑',
+    value: "'Microsoft YaHei', sans-serif"
+  },
+  {
+    label: '苹方',
+    value: "'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif"
+  },
+  {
+    label: '宋体',
+    value: "'SimSun', 'STSong', serif"
+  },
+  {
+    label: '黑体',
+    value: "'SimHei', 'STHeiti', sans-serif"
+  },
+  {
+    label: 'Arial',
+    value: 'Arial, Helvetica, sans-serif'
+  },
+  {
+    label: 'Times New Roman',
+    value: "'Times New Roman', Times, serif"
+  }
+]
 </script>
 
 <style scoped lang="scss"></style>
