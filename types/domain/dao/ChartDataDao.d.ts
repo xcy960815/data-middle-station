@@ -17,7 +17,7 @@ declare namespace ChartDataDao {
     orders: OrderStore.OrderOption[]
     groups: GroupStore.GroupOption[]
     dimensions: DimensionStore.DimensionOption[]
-    limit: number
+    commonChartConfig: ChartConfigDao.CommonChartConfig
     dataSource: string
   }
 }

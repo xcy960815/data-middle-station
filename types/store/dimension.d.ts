@@ -43,13 +43,21 @@ declare namespace DimensionStore {
      * 操作列按钮配置（当用于操作列时生效）
      */
     actions?: Array<{
-      /** 唯一动作键 */
+      /**
+       * 唯一动作键
+       */
       key: string
-      /** 按钮文案 */
+      /**
+       * 按钮文案
+       */
       label: string
-      /** 按钮类型，影响配色 */
+      /**
+       * 按钮类型，影响配色
+       */
       type?: 'primary' | 'success' | 'warning' | 'danger' | 'default'
-      /** 是否禁用；也可传函数 (row, rowIndex) => boolean */
+      /**
+       * 是否禁用；也可传函数 (row, rowIndex) => boolean
+       */
       disabled?: boolean | ((row: ChartDataDao.ChartData[0], rowIndex: number) => boolean)
     }>
   }

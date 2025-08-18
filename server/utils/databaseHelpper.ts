@@ -54,7 +54,7 @@ export function convertToSqlProperties<T extends Record<string, any>>(
   }
 }
 
-const KEYWORDCOLUMNS = ['group', 'order', 'column', 'limit']
+const KEYWORDCOLUMNS = ['group', 'order', 'column', 'dimension', 'filter']
 
 // 工具函数：格式化 SQL 字段名
 export function formatSqlKey(key: string) {

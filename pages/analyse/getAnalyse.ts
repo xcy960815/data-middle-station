@@ -39,8 +39,14 @@ export const getAnalyseHandler = () => {
       filterStore.setFilters((chartConfig?.filter as FilterStore.FilterOption[]) || [])
       groupStore.setGroups(chartConfig?.group || [])
       orderStore.setOrders(chartConfig?.order || [])
+      // 设置公共配置与图表配置
+      useChartConfigStore().setCommonChartConfig(
+        chartConfig?.commonChartConfig || useChartConfigStore().$state.commonChartConfig
+      )
+      useChartConfigStore().setPrivateChartConfig(
+        chartConfig?.privateChartConfig || useChartConfigStore().$state.privateChartConfig
+      )
       columnStore.setDataSource(chartConfig?.dataSource || '')
-      analyseStore.setChartInitialized(false)
     }
   }
 
