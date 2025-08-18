@@ -14,10 +14,10 @@
         <el-color-picker v-model="tableConfig.highlightCellBackground" />
       </el-form-item>
       <el-form-item label="表头高度">
-        <el-input-number v-model="tableConfig.headerHeight" :min="10" :max="100" :step="10" />
+        <el-input-number v-model="tableConfig.headerHeight" :step="10" />
       </el-form-item>
       <el-form-item label="表头字体大小">
-        <el-input-number v-model="tableConfig.headerFontSize" :min="10" :max="100" :step="10" />
+        <el-input-number v-model="tableConfig.headerFontSize" :step="10" />
       </el-form-item>
       <el-form-item label="表头字体">
         <el-select style="width: 200px" v-model="tableConfig.headerFontFamily" placeholder="请选择表头字体">
@@ -39,9 +39,6 @@
       <el-form-item label="表格偶数行背景色">
         <el-color-picker v-model="tableConfig.bodyBackgroundEven" />
       </el-form-item>
-      <el-form-item label="表格边框颜色">
-        <el-color-picker v-model="tableConfig.borderColor" />
-      </el-form-item>
       <el-form-item label="滚动条背景色">
         <el-color-picker v-model="tableConfig.scrollbarBackground" />
       </el-form-item>
@@ -56,14 +53,20 @@
         <el-switch v-model="tableConfig.enableSummary" />
       </el-form-item>
       <el-form-item label="汇总高度">
-        <el-input-number v-model="tableConfig.summaryHeight" :min="10" :max="100" :step="10" />
+        <el-input-number v-model="tableConfig.summaryHeight" :step="10" />
+      </el-form-item>
+      <el-form-item label="表格高度">
+        <el-input-number v-model="tableConfig.chartHeight" :step="100" />
+      </el-form-item>
+      <el-form-item label="表格宽度">
+        <el-input-number v-model="tableConfig.chartWidth" :step="100" />
       </el-form-item>
     </el-form>
     <CanvasTable
       :enable-summary="tableConfig.enableSummary"
       :summary-height="tableConfig.summaryHeight"
-      chart-height="90%"
-      chart-width="100%"
+      :chart-height="tableConfig.chartHeight"
+      :chart-width="tableConfig.chartWidth"
       :x-axis-fields="xAxisFields"
       :header-text-color="tableConfig.headerTextColor"
       :body-text-color="tableConfig.bodyTextColor"
@@ -78,7 +81,6 @@
       :summary-background="tableConfig.summaryBackground"
       :body-background-odd="tableConfig.bodyBackgroundOdd"
       :body-background-even="tableConfig.bodyBackgroundEven"
-      :border-color="tableConfig.borderColor"
       :scrollbar-background="tableConfig.scrollbarBackground"
       :scrollbar-thumb="tableConfig.scrollbarThumb"
       :scrollbar-thumb-hover="tableConfig.scrollbarThumbHover"
@@ -94,6 +96,7 @@
       :data="data"
       :span-method="spanMethod"
       @cell-click="handleCellClick"
+      @action-click="handleActionClick"
     >
     </CanvasTable>
   </ClientOnly>
@@ -101,7 +104,7 @@
 
 <script setup lang="ts">
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
-const enableSummary = ref(true)
+
 const spanMethod = ({
   rowIndex,
   colIndex
@@ -111,13 +114,24 @@ const spanMethod = ({
   rowIndex: number
   colIndex: number
 }): { rowspan: number; colspan: number } => {
+  // 合并行：将第 0 列按两行一组合并
   if (colIndex === 0) {
     if (rowIndex % 2 === 0) {
       return { rowspan: 2, colspan: 1 }
-    } else {
+    }
+    return { rowspan: 0, colspan: 0 }
+  }
+
+  // 合并列：在每第 3 行（0,3,6,...)，将第 1、2 列横向合并
+  if (rowIndex % 3 === 0) {
+    if (colIndex === 1) {
+      return { rowspan: 1, colspan: 2 }
+    }
+    if (colIndex === 2) {
       return { rowspan: 0, colspan: 0 }
     }
   }
+
   return { rowspan: 1, colspan: 1 }
 }
 /**
@@ -194,6 +208,20 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     fixed: 'right' as const
   },
   {
+    columnName: 'action',
+    columnType: 'string',
+    columnComment: '操作',
+    displayName: '操作',
+    width: 220,
+    fixed: 'right' as const,
+    align: 'center' as const,
+    actions: [
+      { key: 'view', label: '查看', type: 'primary' },
+      { key: 'edit', label: '编辑', type: 'success' },
+      { key: 'delete', label: '删除', type: 'danger' }
+    ]
+  },
+  {
     columnName: 'address',
     columnType: 'string',
     columnComment: 'address',
@@ -219,7 +247,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
 /**
  * 数据
  */
-const data: ChartDataDao.ChartData = Array.from({ length: 3000 }, (_, i) => ({
+const data: ChartDataDao.ChartData = Array.from({ length: 30 }, (_, i) => ({
   id: i + 1,
   name: `User ${i + 1}`,
   age: 18 + ((i * 7) % 40),
@@ -252,13 +280,57 @@ const data: ChartDataDao.ChartData = Array.from({ length: 3000 }, (_, i) => ({
     'Node.js, Express'
   ][(i * 23) % 8],
   notes: `Additional notes for user ${i + 1}. Lorem ipsum dolor sit amet.`,
-  email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
+  email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`,
+  hasChildren: true,
+  children: Array.from({ length: 3 }, (_, j) => ({
+    id: i * 100 + j + 1,
+    name: `Child ${i * 100 + j + 1}`,
+    age: 18 + ((i * 7 + j) % 40),
+    gender: ['Male', 'Female', 'Other'][(i * 3 + j) % 3],
+    country: ['China', 'USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia'][(i * 3 + j) % 8],
+    city: ['Beijing', 'Shanghai', 'New York', 'London', 'Berlin', 'Paris', 'Tokyo', 'Toronto', 'Sydney'][
+      (i * 5 + j) % 9
+    ],
+    state: ['CA', 'NY', 'TX', 'FL', 'WA', 'IL', 'PA', 'OH', 'GA', 'NC'][(i * 7 + j) % 10],
+    zipcode: `${10000 + ((i * 123 + j) % 90000)}`,
+    address: `${i * 100 + j + 1} Main Street, Apt ${i * 100 + (j % 50) + 1}--${i * 100 + j + 1} Main Street, Apt ${i * 100 + (j % 50) + 1}---${i * 100 + j + 1} Main Street, Apt ${i * 100 + (j % 50) + 1}`,
+    phone: `+1-555-${String(1000 + i * 100 + j).slice(-4)}`,
+    mobile: `+1-666-${String(2000 + i * 100 + j).slice(-4)}`,
+    company: ['TechCorp', 'DataSoft', 'CloudInc', 'WebSolutions', 'AppDev', 'SystemsLtd', 'CodeWorks', 'DigitalPro'][
+      (i * 11 + j) % 8
+    ],
+    department: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Support', 'Design'][
+      (i * 13 + j) % 8
+    ],
+    position: ['Developer', 'Manager', 'Analyst', 'Designer', 'Consultant', 'Specialist', 'Coordinator', 'Director'][
+      (i * 17 + j) % 8
+    ],
+    salary: `$${(30000 + ((i * 1000 + j) % 120000)).toLocaleString()}`,
+    experience: `${i * 20 + (j % 20) + 1} years`,
+    education: ['Bachelor', 'Master', 'PhD', 'Associate', 'High School', 'Certificate'][(i * 19 + j) % 6],
+    skills: [
+      'JavaScript, React',
+      'Python, Django',
+      'Java, Spring',
+      'C#, .NET',
+      'PHP, Laravel',
+      'Go, Gin',
+      'Ruby, Rails',
+      'Node.js, Express'
+    ][(i * 23 + j) % 8],
+    notes: `Additional notes for user ${i * 100 + j + 1}. Lorem ipsum dolor sit amet.`,
+    email: `user${i * 100 + j + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29 + j) % 5]}`
+  }))
 }))
 /**
  * 单元格点击事件
  */
 const handleCellClick = (cell: { rowIndex: number; colIndex: number }) => {
   console.log('Cell clicked:', cell)
+}
+
+const handleActionClick = (payload: { rowIndex: number; action: string; rowData: ChartDataDao.ChartData[0] }) => {
+  console.log('Action clicked:', payload.rowIndex, payload.action, payload.rowData)
 }
 
 const tableConfig = reactive({
@@ -276,7 +348,6 @@ const tableConfig = reactive({
   bodyTextColor: '#374151', // 新增
   bodyBackgroundOdd: '#ffffff', // 新增
   bodyBackgroundEven: '#fafafa', // 新增
-  borderColor: '#e5e7eb', // 新增
   bodyFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
   bodyFontSize: 13,
   summaryFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
@@ -290,7 +361,10 @@ const tableConfig = reactive({
   minAutoColWidth: 100,
   scrollThreshold: 10,
   headerSortActiveBackground: '#ecf5ff',
-  sortableColor: '#409EFF'
+  sortableColor: '#409EFF',
+  chartHeight: 460,
+  chartWidth: 1000,
+  bodyRowHeight: 32
 })
 
 const fontFamilyOptions = [

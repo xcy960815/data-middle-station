@@ -56,7 +56,7 @@ export const useChartConfigStore = defineStore<
         /** @desc 是否显示汇总 */
         enableSummary: false,
         /** @desc 行高 */
-        rowHeight: 40,
+        bodyRowHeight: 40,
         /** @desc 滚动条大小 */
         scrollbarSize: 12,
         /** @desc 表格内边距 */
@@ -167,13 +167,15 @@ export const useChartConfigStore = defineStore<
     /** @desc 设置表格图配置 */
     setTableChartConfig(value) {
       if (this.chartConfig) {
-        this.chartConfig.table = value
+        this.chartConfig.table = JSON.parse(JSON.stringify(value)) as ChartConfigStore.TableChartConfig
       }
     },
     /** @desc 设置表格图配置条件 */
     setTableChartConditions(conditions) {
       if (this.chartConfig) {
-        this.chartConfig.table.conditions = conditions
+        this.chartConfig.table.conditions = JSON.parse(
+          JSON.stringify(conditions)
+        ) as ChartConfigStore.TableChartConfig['conditions']
       }
     }
   }
