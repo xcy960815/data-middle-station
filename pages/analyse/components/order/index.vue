@@ -8,7 +8,7 @@
       <div
         data-action="drag"
         class="order__item my-1"
-        v-for="(item, index) in orderList"
+        v-for="(orderOption, index) in orderList"
         :key="index"
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
@@ -18,19 +18,22 @@
         <selecter-order
           class="order__item__name"
           cast="order"
-          v-model:displayName="item.displayName"
-          v-model:orderType="item.orderType"
-          :name="item.columnName"
+          :display-name="orderOption.displayName"
+          v-model:orderType="orderOption.orderType"
+          :column-name="orderOption.columnName"
           :index="index"
-          v-model:aggregationType="item.aggregationType"
+          v-model:aggregationType="orderOption.aggregationType"
+          :order="orderOption"
+          :invalid="orderOption.__invalid"
+          :invalidMessage="orderOption.__invalidMessage"
         ></selecter-order>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { clearAllHandler } from '../clearAll'
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const orderStore = useOrderStore()
@@ -111,11 +114,19 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<OrderStore.OrderOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
-  const order: OrderStore.OrderOption = {
+  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+
+  const orderOption: OrderStore.OrderOption = {
     ...data.value,
     // 默认降序
-    orderType: 'desc'
+    orderType: 'desc',
+    aggregationType: 'count'
+  }
+  const isSelected = orderStore.getOrders.find((item) => item.columnName === orderOption.columnName)
+  if (isSelected) {
+    // TODO 提示用户已经选中了
+    orderOption.__invalid = true
+    orderOption.__invalidMessage = '该排序已存在'
   }
   switch (data.from) {
     case 'order': {
@@ -129,7 +140,7 @@ const dropHandler = (dragEvent: DragEvent) => {
       break
     }
     default: {
-      addOrder(order)
+      addOrder(orderOption)
       break
     }
   }

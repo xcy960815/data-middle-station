@@ -60,7 +60,8 @@ export const getChartDataHandler = () => {
       dataSource: columnStore.getDataSource,
       // 这样做可以避免条件没有选完就进行查询的情况 good
       filters: filterStore.getFilters.filter((item) => item.aggregationType && (item.filterType || item.filterValue)),
-      orders: orderStore.getOrders.filter((item) => item.aggregationType && item.orderType),
+      // TODO 不知道 aggregationType 是干嘛的，先这样吧
+      orders: orderStore.getOrders.filter((item) => item.aggregationType || item.orderType),
       groups: groupStore.getGroups,
       dimensions: dimensionStore.getDimensions,
       commonChartConfig: chartConfigStore.getCommonChartConfig

@@ -147,7 +147,7 @@ const props = withDefaults(
     /**
      * 表头字体大小
      */
-    headerFontSize?: number
+    headerFontSize?: number | string
     /**
      * 表格内容字体
      */
@@ -155,7 +155,7 @@ const props = withDefaults(
     /**
      * 表格内容字体大小
      */
-    bodyFontSize?: number
+    bodyFontSize?: number | string
     /**
      * 汇总行字体
      */
@@ -163,7 +163,7 @@ const props = withDefaults(
     /**
      * 汇总行字体大小
      */
-    summaryFontSize?: number
+    summaryFontSize?: number | string
     /**
      * 汇总行背景色
      */
@@ -524,11 +524,6 @@ let resizeNeighborColumnName: string | null = null
 let resizeNeighborStartWidth = 0
 
 /**
- * stage 容器上用于同步指针位置的事件处理器引用
- */
-let containerPointerPositionHandler: ((e: MouseEvent) => void) | null = null
-
-/**
  * stage 容器上用于处理 mouseleave 的事件处理器引用
  */
 let containerMouseLeaveHandler: (() => void) | null = null
@@ -817,6 +812,7 @@ const handleSelectedFilter = () => {
  * @returns {void}
  */
 const onGlobalMousedown = (e: MouseEvent) => {
+  if (stage) stage.setPointersPositions(e)
   if (!filterDropdown.visible && !summaryDropdown.visible) return
   const panel = filterDropdownEl.value
   const panelSummary = summaryDropdownEl.value
@@ -1049,7 +1045,8 @@ const getTextX = (x: number) => {
  * @param fontFamily 字体
  * @returns 裁剪后的文本
  */
-const truncateText = (text: string, maxWidth: number, fontSize: number, fontFamily: string): string => {
+const truncateText = (text: string, maxWidth: number, fontSize: number | string, fontFamily: string): string => {
+  fontSize = typeof fontSize === 'string' ? Number(fontSize) : fontSize
   // 创建一个临时文本节点来测量文本宽度
   const tempText = new Konva.Text({
     text: text,
@@ -1298,6 +1295,11 @@ const initStage = () => {
     scrollbarLayer = new Konva.Layer()
     stage.add(scrollbarLayer)
   }
+
+  stage.setPointersPositions({
+    clientX: 0,
+    clientY: 0
+  })
 }
 
 /**
@@ -1691,7 +1693,7 @@ const drawHeaderPart = (
     // 预留约 40px 给右侧图标
     const maxTextWidth = (col.width || 0) - 40
     const fontFamily = props.headerFontFamily
-    const fontSize = props.headerFontSize
+    const fontSize = typeof props.headerFontSize === 'string' ? parseFloat(props.headerFontSize) : props.headerFontSize
     const displayName = col.displayName || col.columnName
     const truncatedTitle = truncateText(displayName, maxTextWidth, fontSize, fontFamily)
     const label = new Konva.Text({
@@ -1937,12 +1939,13 @@ const drawSummaryPart = (
       props.summaryFontSize,
       props.summaryFontFamily
     )
-
+    const fontSize =
+      typeof props.summaryFontSize === 'string' ? parseFloat(props.summaryFontSize) : props.summaryFontSize
     const label = new Konva.Text({
       x: getTextX(x),
       y: props.summaryHeight / 2,
       text: truncatedTitle,
-      fontSize: props.summaryFontSize,
+      fontSize: fontSize,
       fontFamily: props.summaryFontFamily,
       fill: props.summaryTextColor,
       align: col.align || 'left',
@@ -2283,11 +2286,12 @@ const drawBodyPart = (
         const actions = col.actions
         const gap = 6
         const buttonHeight = Math.max(22, Math.min(28, cellHeight - 8))
+        const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
         // 估算单个按钮宽度基于文本长度
         const estimateButtonWidth = (text: string) => {
           const temp = new Konva.Text({
             text,
-            fontSize: Math.min(props.bodyFontSize, 13),
+            fontSize: fontSize,
             fontFamily: props.bodyFontFamily
           })
           const w = temp.width() + 16
@@ -2338,12 +2342,13 @@ const drawBodyPart = (
               emits('action-click', { rowIndex, action: a.key, rowData })
             })
             group.add(rect)
-
+            const fontSize =
+              typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
             const textNode = getFromPool(pools.textNodes, () => new Konva.Text({ listening: false }))
             textNode.x(startX + w / 2)
             textNode.y(centerY + buttonHeight / 2)
             textNode.text(a.label)
-            textNode.fontSize(Math.min(props.bodyFontSize, 13))
+            textNode.fontSize(fontSize)
             textNode.fontFamily(props.bodyFontFamily)
             textNode.fill(theme.text)
             textNode.opacity(isDisabled ? 0.6 : 1)
@@ -2387,12 +2392,12 @@ const drawBodyPart = (
             emits('action-click', { rowIndex, action: 'action', rowData })
           })
           group.add(rect)
-
+          const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
           const label = getFromPool(pools.textNodes, () => new Konva.Text({ listening: false }))
           label.x(buttonX + buttonWidth / 2)
           label.y(buttonY + buttonHeight / 2)
           label.text('操作')
-          label.fontSize(Math.min(props.bodyFontSize, 13))
+          label.fontSize(fontSize)
           label.fontFamily(props.bodyFontFamily)
           label.fill('#fff')
           label.opacity(isDisabled ? 0.6 : 1)
@@ -2407,7 +2412,7 @@ const drawBodyPart = (
         const value = String(rawValue ?? '')
         const maxTextWidth = cellWidth - 16
         const fontFamily = props.bodyFontFamily
-        const fontSize = props.bodyFontSize
+        const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
         const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
 
         const textNode = getFromPool(pools.textNodes, () => new Konva.Text({ listening: false }))
@@ -3015,9 +3020,7 @@ const handleWheel = (e: WheelEvent) => {
   e.preventDefault()
 
   // 设置指针位置到 stage，避免 Konva 警告
-  if (stage) {
-    stage.setPointersPositions(e)
-  }
+  if (stage) stage.setPointersPositions(e)
 
   const hasDeltaX = Math.abs(e.deltaX) > 0
   const hasDeltaY = Math.abs(e.deltaY) > 0
@@ -3037,6 +3040,7 @@ const handleWheel = (e: WheelEvent) => {
  */
 const handleMouseMove = (e: MouseEvent) => {
   if (!stage) return
+  stage.setPointersPositions(e)
   if (filterDropdown.visible) return
 
   // 记录最近的屏幕坐标
@@ -3143,7 +3147,8 @@ const handleMouseMove = (e: MouseEvent) => {
 /**
  * 处理鼠标抬起事件
  */
-const handleMouseUp = () => {
+const handleMouseUp = (e: MouseEvent) => {
+  if (stage) stage.setPointersPositions(e)
   /**
    * 滚动条拖拽结束
    */
@@ -3227,7 +3232,7 @@ const updateScrollPositions = () => {
  * 处理窗口大小改变
  * @returns {void}
  */
-const handleResize = () => {
+const handleResize = (e: UIEvent) => {
   initStage()
   calculateVisibleRows()
   clearGroups()
@@ -3393,45 +3398,14 @@ watch(
  * @returns {void}
  */
 onMounted(() => {
-  window.addEventListener('mousedown', onGlobalMousedown, true)
   initStage()
   refreshTable(true)
+  window.addEventListener('mousedown', onGlobalMousedown, true)
   const tableContainer = getContainerEl()
   tableContainer?.addEventListener('wheel', handleWheel, { passive: false })
   window.addEventListener('resize', handleResize)
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('mouseup', handleMouseUp)
-
-  // 添加全局鼠标事件监听器来确保 Konva 指针位置始终正确
-  if (stage) {
-    const container = stage.container()
-    // 创建事件处理函数引用，以便后续可以移除
-    const updatePointerPositions = (e: MouseEvent) => {
-      if (stage) {
-        stage.setPointersPositions(e)
-      }
-    }
-
-    container.addEventListener('mousemove', updatePointerPositions)
-    container.addEventListener('mousedown', updatePointerPositions)
-    container.addEventListener('mouseup', updatePointerPositions)
-    container.addEventListener('mouseenter', updatePointerPositions)
-    container.addEventListener('mouseleave', updatePointerPositions)
-
-    // 添加鼠标离开表格容器的事件监听器
-    const handleMouseLeave = () => {
-      if (hoveredRowIndex !== null || hoveredColIndex !== null) {
-        hoveredRowIndex = null
-        hoveredColIndex = null
-        createOrUpdateHoverRects()
-      }
-    }
-    container.addEventListener('mouseleave', handleMouseLeave)
-
-    // 存储处理器引用，卸载时移除
-    containerPointerPositionHandler = updatePointerPositions
-    containerMouseLeaveHandler = handleMouseLeave
-  }
 })
 
 /**
@@ -3444,24 +3418,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('mouseup', handleMouseUp)
-
-  // 移除 stage 容器的事件监听器
-  if (stage) {
-    const container = stage.container()
-    const pointerHandler = containerPointerPositionHandler
-    if (pointerHandler) {
-      container.removeEventListener('mousemove', pointerHandler)
-      container.removeEventListener('mousedown', pointerHandler)
-      container.removeEventListener('mouseup', pointerHandler)
-      container.removeEventListener('mouseenter', pointerHandler)
-      container.removeEventListener('mouseleave', pointerHandler)
-    }
-    containerPointerPositionHandler = null
-    if (containerMouseLeaveHandler) {
-      container.removeEventListener('mouseleave', containerMouseLeaveHandler)
-      containerMouseLeaveHandler = null
-    }
-  }
 
   stage?.destroy()
   stage = null

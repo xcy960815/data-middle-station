@@ -1,5 +1,5 @@
 <template>
-  <selecter-template v-bind="$attrs" :display-name="displayName" :cast="cast" :index="index">
+  <selecter-template v-bind="$attrs" :display-name="displayName" :cast="cast" :index="index" :order="order">
     <template #order-icon>
       <!-- 降序 -->
       <icon-park
@@ -71,6 +71,10 @@ const props = defineProps({
   aggregationType: {
     type: String as PropType<OrderStore.OrderAggregationsType>,
     default: ''
+  },
+  order: {
+    type: Object as PropType<OrderStore.OrderOption>,
+    default: () => ({})
   }
 })
 
