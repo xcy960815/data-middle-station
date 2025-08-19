@@ -1,6 +1,10 @@
 import dayjs from 'dayjs'
 import { computed } from 'vue'
 
+// 保证只注册一次 watch，并复用同一个防抖函数
+let hasSetupChartDataWatcher = false
+let sharedQueryChartDataDebounce: (() => Promise<void>) | null = null
+
 /**
  * @desc 获取图表数据
  * @returns {Promise<void>}
@@ -78,22 +82,26 @@ export const getChartDataHandler = () => {
     if (errorMessage) {
       return
     }
-
+    analyseStore.setChartLoading(true)
     const dataSource = columnStore.getDataSource
     const dimensions = dimensionStore.getDimensions
     const filters = filterStore.getFilters
-
     if (!dataSource) return
     if (!dimensions.length) return
 
     const startTime = dayjs().valueOf()
-    analyseStore.setChartLoading(true)
+
     const result = await $fetch('/api/getChartData', {
       method: 'POST',
       // 请求参数
       body: {
         ...queryChartDataParams.value
       }
+    }).finally(() => {
+      /**
+       * 统一处理的逻辑
+       */
+      analyseStore.setChartLoading(false)
     })
     const endTime = dayjs().valueOf()
     if (result.code === 200) {
@@ -103,10 +111,6 @@ export const getChartDataHandler = () => {
       analyseStore.setChartData([])
       analyseStore.setChartErrorMessage(result.message)
     }
-    /**
-     * 统一处理的逻辑
-     */
-    analyseStore.setChartLoading(false)
 
     analyseStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
     const duration = endTime - startTime
@@ -116,25 +120,26 @@ export const getChartDataHandler = () => {
     analyseStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${remainingSeconds}秒` : `${remainingSeconds}秒`)
   }
 
-  const queryChartDataThrottled = throttle(queryChartData, 1000)
+  // 仅初始化一次防抖函数
+  if (!sharedQueryChartDataDebounce) {
+    sharedQueryChartDataDebounce = debounce(queryChartData, 1000)
+  }
 
   /**
    * @desc 监听查询表格数据的参数变化
    */
-  watch(
-    () => queryChartDataParams.value,
-    () => {
-      // if (!analyseStore.getChartInitialized) {
-      //   return
-      // }
-
-      queryChartDataThrottled()
-    },
-    {
-      deep: true,
-      immediate: true
-    }
-  )
+  if (!hasSetupChartDataWatcher) {
+    watch(
+      () => queryChartDataParams.value,
+      () => {
+        sharedQueryChartDataDebounce && sharedQueryChartDataDebounce()
+      },
+      {
+        deep: true
+      }
+    )
+    hasSetupChartDataWatcher = true
+  }
 
   return {
     queryChartDataParams,
