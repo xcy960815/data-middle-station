@@ -1,4 +1,5 @@
 import { ElMessage } from 'element-plus'
+import { $fetch } from 'ofetch'
 
 export const fetch = $fetch.create({
   // 请求拦截器
