@@ -3,5 +3,6 @@
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "typeRoots": ["./types", "./node_modules/@types"]
-  }
+  },
+  "exclude": ["**/*.vue.bak", "**/index1.vue"]
 }

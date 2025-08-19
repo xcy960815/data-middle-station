@@ -120,11 +120,13 @@
     </el-form-item>
     <!-- 汇总行字体 -->
     <el-form-item label="汇总行字体">
-      <el-input
+      <el-select
         v-model="tableChartConfig.summaryFontFamily"
-        placeholder="汇总行字体"
-        @blur="handleUpdateTableConfig"
-      ></el-input>
+        placeholder="请选择汇总行字体"
+        @change="handleUpdateTableConfig"
+      >
+        <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
+      </el-select>
     </el-form-item>
     <!-- 汇总行字体大小 -->
     <el-form-item label="汇总行字体大小">

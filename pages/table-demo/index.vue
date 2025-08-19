@@ -68,6 +68,7 @@
       :chart-height="tableConfig.chartHeight"
       :chart-width="tableConfig.chartWidth"
       :x-axis-fields="xAxisFields"
+      :highlight-cell-background="tableConfig.highlightCellBackground"
       :header-text-color="tableConfig.headerTextColor"
       :body-text-color="tableConfig.bodyTextColor"
       :header-font-family="tableConfig.headerFontFamily"
@@ -336,8 +337,8 @@ const handleActionClick = (payload: { rowIndex: number; action: string; rowData:
 const tableConfig = reactive({
   enableSummary: false,
   summaryHeight: 32,
-  enableRowHoverHighlight: false,
-  enableColHoverHighlight: false,
+  enableRowHoverHighlight: true,
+  enableColHoverHighlight: true,
   border: false,
   highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
   headerHeight: 32,
