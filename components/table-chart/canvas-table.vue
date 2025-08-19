@@ -2625,7 +2625,7 @@ const recomputeHoverIndexFromPointer = () => {
 const createOrUpdateHoverRects = () => {
   if (!stage || !leftBodyGroup || !centerBodyGroup || !rightBodyGroup) return
   const { leftCols, centerCols, rightCols } = getSplitColumns()
-  console.log(leftCols, centerCols, rightCols)
+  // console.log(leftCols, centerCols, rightCols)
 
   /**
    * 清理 body 旧的覆盖式高亮矩形
@@ -2646,8 +2646,8 @@ const createOrUpdateHoverRects = () => {
   destroyOldBodyHoverRects(leftBodyGroup)
   destroyOldBodyHoverRects(centerBodyGroup)
   destroyOldBodyHoverRects(rightBodyGroup)
-  console.log('hoveredRowIndex', hoveredRowIndex)
-  console.log('hoveredColIndex', hoveredColIndex)
+  // console.log('hoveredRowIndex', hoveredRowIndex)
+  // console.log('hoveredColIndex', hoveredColIndex)
 
   // 计算行高亮区间（考虑合并单元格纵向跨度）
   // let highlightStartRow = hoveredRowIndex ?? 0
