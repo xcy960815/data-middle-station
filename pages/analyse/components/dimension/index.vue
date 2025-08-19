@@ -26,10 +26,11 @@
           class="dimension__item__name"
           cast="dimension"
           :columnName="dimension.columnName"
-          :dimension="dimension"
           :displayName="dimension.displayName"
+          :dimension="dimension"
           :index="index"
           :invalid="dimension.__invalid"
+          :invalidMessage="dimension.__invalidMessage"
         >
         </selecter-dimension>
       </div>
@@ -136,23 +137,32 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  // get drag data
-  const data: DragData<DimensionStore.DimensionOption | ColumnStore.ColumnOption> = JSON.parse(
-    dragEvent.dataTransfer?.getData('text') || '{}'
-  )
-  const dimension = data.value as DimensionStore.DimensionOption
-  const isSelected = dimensionStore.getDimensions.find((item) => item.columnName === dimension.columnName)
+  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const dimensionOption: DimensionStore.DimensionOption = {
+    ...data.value,
+    __invalid: false,
+    __invalidMessage: '',
+    fixed: null,
+    align: null,
+    width: null,
+    showOverflowTooltip: false,
+    filterable: false,
+    sortable: false
+  }
+
+  const isSelected = dimensionStore.getDimensions.find((item) => item.columnName === dimensionOption.columnName)
   if (isSelected) {
-    // 提示用户已经选中了
-    return
+    // TODO 提示用户已经选中了
+    dimensionOption.__invalid = true
+    dimensionOption.__invalidMessage = '该维度已存在'
   }
   // 判断是否跟groupList中的字段相同
-  const isGroup = groupList.value.find((item) => item.columnName === dimension.columnName)
-  if (isGroup) {
-    return
+  const isInGroup = groupList.value.find((item) => item.columnName === dimensionOption.columnName)
+  if (isInGroup) {
+    // TODO 提示用户已经选中了
+    dimensionOption.__invalid = true
+    dimensionOption.__invalidMessage = '该维度已存在'
   }
-  dimension.__invalid = false
-  const column = data.value as ColumnStore.ColumnOption
   const index = data.index
   switch (data.from) {
     case 'dimension':
@@ -166,8 +176,8 @@ const dropHandler = (dragEvent: DragEvent) => {
       break
     default:
       // 更新列名 主要是显示已经选中的标志
-      columnStore.updateColumn({ column, index })
-      addDimension(dimension)
+      columnStore.updateColumn({ column: data.value, index })
+      addDimension(dimensionOption)
       break
   }
 }

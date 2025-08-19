@@ -1,6 +1,6 @@
 <template>
   <div class="group-selecter" @contextmenu="contextmenuHandler">
-    <selecter-template v-bind="$attrs"></selecter-template>
+    <selecter-template v-bind="$attrs" :group="group"></selecter-template>
   </div>
   <!-- 字段的操作选项 -->
   <context-menu ref="contextmenuRef">

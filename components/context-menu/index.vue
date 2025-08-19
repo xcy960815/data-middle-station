@@ -22,10 +22,6 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  autoAjustPlacement: {
-    type: Boolean,
-    default: true
-  },
   disabled: {
     type: Boolean,
     default: false
@@ -68,35 +64,34 @@ const contextMenuPositionStyle = computed(() => ({
 const showContextMenu = (evt: MouseEvent) => {
   evt.preventDefault()
   evt.stopPropagation()
-  // 先关闭再打开，防止多次右键菜单叠加
-  updateModelValue(false)
+  const initialPosition = {
+    top: evt.pageY,
+    left: evt.pageX
+  }
+  // 先把菜单放到鼠标处，先显示再测量尺寸，避免获取到 0 宽高
+  contextMenuPosition.value = initialPosition
+  updateModelValue(true)
   nextTick(() => {
-    const autoAjustPlacement = props.autoAjustPlacement
-    const targetPosition = {
-      top: evt.pageY,
-      left: evt.pageX
+    const contextmenuNode = contextmenuElement.value
+    if (!contextmenuNode) {
+      emits('show')
+      return
     }
-    if (autoAjustPlacement) {
-      const contextmenuNode = contextmenuElement.value
-      if (contextmenuNode) {
-        const contextmenuWidth = contextmenuNode.clientWidth
-        const contextmenuHeight = contextmenuNode.clientHeight
-        if (contextmenuHeight + targetPosition.top >= window.innerHeight + window.scrollY) {
-          const targetTop = targetPosition.top - contextmenuHeight
-          if (targetTop > window.scrollY) {
-            targetPosition.top = targetTop
-          }
-        }
-        if (contextmenuWidth + targetPosition.left >= window.innerWidth + window.scrollX) {
-          const targetWidth = targetPosition.left - contextmenuWidth
-          if (targetWidth > window.scrollX) {
-            targetPosition.left = targetWidth
-          }
-        }
-      }
-    }
-    contextMenuPosition.value = targetPosition
-    updateModelValue(true)
+    // 使用 scrollWidth/scrollHeight，避免进入动画阶段 height 被置为 0 导致测量不准
+    const menuWidth = Math.max(contextmenuNode.scrollWidth, contextmenuNode.offsetWidth)
+    const menuHeight = Math.max(contextmenuNode.scrollHeight, contextmenuNode.offsetHeight)
+    const viewportLeft = window.scrollX
+    const viewportTop = window.scrollY
+    const viewportRight = viewportLeft + window.innerWidth
+    const viewportBottom = viewportTop + window.innerHeight
+
+    const maxLeft = Math.max(viewportLeft, viewportRight - menuWidth)
+    const maxTop = Math.max(viewportTop, viewportBottom - menuHeight)
+    const adjustedLeft = Math.min(Math.max(initialPosition.left, viewportLeft), maxLeft)
+    const adjustedTop = Math.min(Math.max(initialPosition.top, viewportTop), maxTop)
+
+    contextMenuPosition.value = { top: adjustedTop, left: adjustedLeft }
+    // 保持原有行为，触发展示事件
     emits('show')
   })
 }
@@ -245,7 +240,6 @@ onBeforeUnmount(() => {
 })
 
 provide('visible', visible)
-provide('autoAjustPlacement', props.autoAjustPlacement)
 provide('show', showContextMenu)
 provide('hide', hideContextMenu)
 

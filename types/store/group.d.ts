@@ -19,6 +19,11 @@ declare namespace GroupStore {
      * 是否无效
      */
     __invalid?: boolean
+
+    /**
+     * 无效信息
+     */
+    __invalidMessage?: string
     /**
      * 固定列
      */
@@ -30,7 +35,7 @@ declare namespace GroupStore {
     /**
      * 宽度
      */
-    width?: number
+    width?: number | null
     /**
      * 是否显示溢出提示
      */

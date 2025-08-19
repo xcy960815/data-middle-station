@@ -32,7 +32,7 @@ declare namespace ChartConfigStore {
     /**
      * @desc 私有图表配置
      */
-    privateChartConfig: PrivateChartConfig
+    privateChartConfig: PrivateChartConfig | null
   }
 
   /**
