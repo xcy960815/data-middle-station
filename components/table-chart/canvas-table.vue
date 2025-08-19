@@ -54,7 +54,7 @@
 import { ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-
+const defaultFontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif'
 /**
  * 获取容器元素
  * @returns {HTMLDivElement | null} 容器元素
@@ -226,7 +226,7 @@ const props = withDefaults(
   {
     chartWidth: '100%',
     chartHeight: '100%',
-    highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
+    highlightCellBackground: 'rgba(24, 144, 255,)',
     headerHeight: 32,
     summaryHeight: 32,
     enableSummary: false,
@@ -238,11 +238,11 @@ const props = withDefaults(
     borderColor: '#dcdfe6',
     headerTextColor: '#303133',
     bodyTextColor: '#303133',
-    headerFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
+    headerFontFamily: defaultFontFamily,
     headerFontSize: 14,
-    bodyFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
+    bodyFontFamily: defaultFontFamily,
     bodyFontSize: 13,
-    summaryFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
+    summaryFontFamily: defaultFontFamily,
     summaryFontSize: 14,
     summaryBackground: '#f7f7f9',
     summaryTextColor: '#303133',
@@ -2706,12 +2706,17 @@ const createOrUpdateHoverRects = () => {
     const shouldShow =
       hoveredRowIndex !== null && hoveredRowIndex >= visibleRowStart && hoveredRowIndex <= visibleRowEnd
     if (!rectRef) {
+      //  判断 props.highlightCellBackground 是否包含 透明度
+      const isTransparent = props.highlightCellBackground.includes('rgba')
+      const opacity = isTransparent ? 1 : 0.12
       rectRef = new Konva.Rect({
         x: 0,
         y,
         width: totalWidth,
         height: props.bodyRowHeight,
         fill: props.highlightCellBackground,
+        // 设置透明度
+        opacity,
         listening: false,
         visible: shouldShow,
         name
@@ -2804,7 +2809,9 @@ const createOrUpdateHoverRects = () => {
     // 列高亮应该覆盖整个可视区域，包括缓冲区域
     const visibleHeight = (visibleRowEnd - visibleRowStart + 1) * props.bodyRowHeight
     const startY = visibleRowStart * props.bodyRowHeight
-
+    // 判断 props.highlightCellBackground 是否包含 透明度
+    const isTransparent = props.highlightCellBackground.includes('rgba')
+    const opacity = isTransparent ? 1 : 0.12
     if (!rectRef) {
       rectRef = new Konva.Rect({
         x: colX,
@@ -2812,6 +2819,7 @@ const createOrUpdateHoverRects = () => {
         width: colWidth,
         height: visibleHeight,
         fill: props.highlightCellBackground,
+        opacity,
         listening: false,
         visible: shouldShow,
         name
@@ -2920,7 +2928,9 @@ const createOrUpdateHoverRects = () => {
     }
 
     const shouldShow = hoveredColIndex === colIndex
-
+    // 判断 props.highlightCellBackground 是否包含 透明度
+    const isTransparent = props.highlightCellBackground.includes('rgba')
+    const opacity = isTransparent ? 1 : 0.12
     if (!rectRef) {
       rectRef = new Konva.Rect({
         x: colX,
@@ -2928,6 +2938,7 @@ const createOrUpdateHoverRects = () => {
         width: colWidth,
         height: props.headerHeight,
         fill: props.highlightCellBackground,
+        opacity,
         listening: false,
         visible: shouldShow,
         name
@@ -3021,7 +3032,7 @@ const updateVerticalScroll = (offsetY: number) => {
   const bodyY = props.headerHeight - scrollY
   const centerY = -scrollY
 
-  // Only body content moves vertically, headers stay fixed
+  // 固定列和中间列随垂直滚动
   leftBodyGroup.y(bodyY)
   rightBodyGroup.y(bodyY)
   centerBodyGroup.y(centerY)
@@ -3040,8 +3051,8 @@ const updateVerticalScroll = (offsetY: number) => {
 
   // 垂直滚动时同步 hover 矩形位置/显示：优先使用最近的指针坐标
   if (props.enableRowHoverHighlight || props.enableColHoverHighlight) {
-    const p = stage.getPointerPosition()
-    recomputeHoverIndexFromPointer(p?.y, p?.x)
+    const pointerPos = stage.getPointerPosition()
+    recomputeHoverIndexFromPointer(pointerPos?.y, pointerPos?.x)
   }
   summaryLayer?.batchDraw()
   fixedSummaryLayer?.batchDraw()
@@ -3080,8 +3091,8 @@ const updateHorizontalScroll = (offsetX: number) => {
 
   // 横向滚动时也保持 hover 矩形可见（宽度不变，仅 redraw）
   if (props.enableRowHoverHighlight || props.enableColHoverHighlight) {
-    const p2 = stage.getPointerPosition()
-    recomputeHoverIndexFromPointer(p2?.y, p2?.x)
+    const pointerPos = stage.getPointerPosition()
+    recomputeHoverIndexFromPointer(pointerPos?.y, pointerPos?.x)
   }
 }
 
