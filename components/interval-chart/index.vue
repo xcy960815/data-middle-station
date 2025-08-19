@@ -10,7 +10,7 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
-
+import { ref } from 'vue'
 const props = defineProps({
   title: {
     type: String,
@@ -66,8 +66,18 @@ watch(
 /**
  * 初始化图表
  */
+const chartInstance = ref<Chart | null>(null)
+/**
+ *
+ */
 const initChart = () => {
   emits('renderChartStart')
+
+  // 已存在则销毁，避免重复渲染叠加
+  if (chartInstance.value) {
+    chartInstance.value.destroy()
+    chartInstance.value = null
+  }
   // 初始化图表实例
   const chart = new Chart({
     container: 'container-interval',
@@ -82,22 +92,50 @@ const initChart = () => {
 
   // 获取 y 轴字段名称
   const yAxisFieldNames = props.yAxisFields.map((item) => item.displayName || item.columnName)
-  // 获取图表数据
-  const chartData = props.data
-  // console.log('chartData', chartData)
 
   // 配置图表
   const intervalChart = chart
     .interval()
-    .data(chartData)
+    .data({
+      type: 'inline',
+      value: [
+        { name: 'London', 月份: 'Jan.', 月均降雨量: 18.9 },
+        { name: 'London', 月份: 'Feb.', 月均降雨量: 28.8 },
+        { name: 'London', 月份: 'Mar.', 月均降雨量: 39.3 },
+        { name: 'London', 月份: 'Apr.', 月均降雨量: 81.4 },
+        { name: 'London', 月份: 'May', 月均降雨量: 47 },
+        { name: 'London', 月份: 'Jun.', 月均降雨量: 20.3 },
+        { name: 'London', 月份: 'Jul.', 月均降雨量: 24 },
+        { name: 'London', 月份: 'Aug.', 月均降雨量: 35.6 },
+        { name: 'Berlin', 月份: 'Jan.', 月均降雨量: 12.4 },
+        { name: 'Berlin', 月份: 'Feb.', 月均降雨量: 23.2 },
+        { name: 'Berlin', 月份: 'Mar.', 月均降雨量: 34.5 },
+        { name: 'Berlin', 月份: 'Apr.', 月均降雨量: 99.7 },
+        { name: 'Berlin', 月份: 'May', 月均降雨量: 52.6 },
+        { name: 'Berlin', 月份: 'Jun.', 月均降雨量: 35.5 },
+        { name: 'Berlin', 月份: 'Jul.', 月均降雨量: 37.4 },
+        { name: 'Berlin', 月份: 'Aug.', 月均降雨量: 42.4 }
+      ],
+      transform: [
+        {
+          type: 'fold',
+          fields: yAxisFieldNames,
+          key: 'type',
+          value: 'value'
+        }
+      ]
+    })
     .transform({
       type: 'sortX',
       by: 'y',
       reverse: true
     })
-    .encode('x', '月份')
-    .encode('y', '月均降雨量')
-    .encode('color', '城市名称')
+    .encode(
+      'x',
+      props.xAxisFields.map((item) => item.columnName)
+    )
+    .encode('y', 'value')
+    .encode('color', 'type')
     .scale('y', { nice: true })
     .axis('y', { labelFormatter: '~s' })
     .scale('color', {
@@ -134,7 +172,7 @@ const initChart = () => {
    */
   if (intervalChartConfig.value.showLabel) {
     intervalChart.label({
-      text: (d: any) => d['月均降雨量'],
+      text: 'value',
       position: 'top'
     })
   }
@@ -169,8 +207,8 @@ const initChart = () => {
               (item) => `
             <div style="display: flex; align-items: center; padding: 4px 0;">
               <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
-              <span style="margin-right: 12px;">${item.data.name}</span>
-              <span style="font-weight: bold;">${item.data.月均降雨量}</span>
+              <span style="margin-right: 12px;">${item.data['type'] ?? ''}</span>
+              <span style="font-weight: bold;">${item.data['value'] ?? ''}</span>
             </div>
           `
             )
@@ -184,6 +222,7 @@ const initChart = () => {
     })
 
   chart.render()
+  chartInstance.value = chart
   emits('renderChartEnd')
 }
 
