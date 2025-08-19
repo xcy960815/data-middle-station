@@ -1,10 +1,11 @@
 import type { DirectiveBinding } from 'vue'
-import ContextMenu from '~/components/context-menu/index.vue'
-import ContextMenuItem from '~/components/context-menu/Item.vue'
-import ContextMenuSubmenu from '~/components/context-menu/submenu.vue'
 import ContextMenuDivider from '~/components/context-menu/divider.vue'
 import ContextMenuGroup from '~/components/context-menu/group.vue'
 import ContextMenuIcon from '~/components/context-menu/Icon.vue'
+import ContextMenu from '~/components/context-menu/index.vue'
+import ContextMenuItem from '~/components/context-menu/Item.vue'
+import ContextMenuSubmenu from '~/components/context-menu/submenu.vue'
+import '~/components/context-menu/themes/default/index.less'
 
 class ContextMenuPlugin {
   /**
@@ -29,8 +30,6 @@ class ContextMenuPlugin {
    * @param {DirectiveBinding} binding
    */
   updated(contextMenuElement: ContextMenu.ContextMenuElement, binding: DirectiveBinding): void {
-    // this.unmounted(contextMenuElement, binding);
-    // this.mounted(contextMenuElement, binding);
     const contextmenuRefName = binding.arg
     if (!contextmenuRefName) return
     const contextmenuOptions = binding.value
@@ -58,7 +57,6 @@ class ContextMenuPlugin {
     contextmenuInstance?.removeContextMenuEvent(contextMenuElement)
   }
 }
-import '~/components/context-menu/themes/default/index.less'
 /**
  * @desc 绑定右键菜单指令
  */
