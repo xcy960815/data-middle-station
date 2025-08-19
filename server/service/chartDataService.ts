@@ -72,7 +72,7 @@ export class ChartDataService {
 
   /**
    * @desc 构建orderBy语句
-   * @param orders {OrderStore.OrderOption[]} 排序条件
+   * @param {OrderStore.OrderOption[]} orders  排序条件
    * @returns {string} orderBy语句
    */
   private buildOrderByClause(orders: OrderStore.OrderOption[]): string {

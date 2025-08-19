@@ -42,8 +42,10 @@ declare namespace OrderStore {
    * @property {string} type 列类型
    */
   type OrderOption = ColumnStore.ColumnOption & {
-    orderType: OrderType
-    aggregationType: OrderAggregationsType
+    orderType: OrderType | null
+    aggregationType?: OrderAggregationsType
+    __invalid?: boolean | null
+    __invalidMessage?: string | null
   }
 
   /**
