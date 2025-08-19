@@ -1,12 +1,11 @@
 <template>
   <div class="bar relative flex">
     <el-button link @click="handleClickRefresh" class="mr-auto"> 刷新 </el-button>
-
     <el-button link @click="handleClickAlarm">报警</el-button>
     <el-button link @click="handleClickSetting">设置</el-button>
     <el-button link @click="handleClickFullScreen">全屏</el-button>
     <el-button link @click="handleClickDownload">下载</el-button>
-    <el-button link @click="handleUpdateAnalyse">保存</el-button>
+    <el-button link @click="handleAnalyse">保存</el-button>
     <el-tag v-show="chartUpdateTakesTime" size="small" class="pr-[10px] ml-[10px]" type="info"
       >更新耗时 ：{{ chartUpdateTakesTime }}</el-tag
     >
@@ -18,12 +17,12 @@
 
 <script setup lang="ts">
 import { ElButton, ElCheckbox, ElCheckboxGroup, ElMessage, ElMessageBox, ElTag } from 'element-plus'
-import * as XLSX from 'xlsx'
 import { getChartDataHandler } from '../../getChartData'
 import { updateAnalyseHandler } from '../../updateAnalyse'
 const { queryChartData } = getChartDataHandler()
 const { handleUpdateAnalyse } = updateAnalyseHandler()
 const analyseStore = useAnalyseStore()
+const columnStore = useColumnStore()
 const chartConfigStore = useChartConfigStore()
 const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
@@ -56,6 +55,44 @@ const handleClickSetting = () => {
  */
 const handleClickFullScreen = () => {
   console.log('handleClickFullScreen')
+}
+
+/**
+ * @desc 点保存按钮
+ * @returns void
+ */
+const handleAnalyse = () => {
+  // 给用户提示
+  ElMessageBox({
+    title: '请确认',
+    message: h('div', [
+      '确认保存分析',
+      h(
+        'span',
+        {
+          style: {
+            color: '#409eff',
+            fontWeight: 'bold',
+            backgroundColor: '#ecf5ff',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            margin: '0 4px'
+          }
+        },
+        analyseStore.getAnalyseName
+      ),
+      '吗？'
+    ]),
+    showCancelButton: true,
+    confirmButtonText: '确认',
+    cancelButtonText: '取消'
+  })
+    .then(() => {
+      handleUpdateAnalyse()
+    })
+    .catch(() => {
+      ElMessage.info('取消保存')
+    })
 }
 
 /**
@@ -108,86 +145,37 @@ const handleClickDownload = () => {
     cancelButtonText: '取消'
   })
     .then(async (action) => {
-      // const { $webworker } = useNuxtApp()
-      // const webworker = new $webworker()
-      // const result = await webworker.run(() => {
-      //   let sum = 0;
-      //   for (let i = 1; i <= 1000000000; i++) {
-      //     sum += i;
-      //   }
-      //   return sum;
-      // })
+      if (action === 'confirm') {
+        const data = analyseStore.getChartData
+        const columns = selectFeildsState.selectFeilds
+        const fileName = `${analyseStore.getAnalyseName}.xlsx`
+        const sheetName = columnStore.getDataSource
 
-      type DataOption = Record<string, string | number>
+        // 显示下载开始提示
+        ElMessage.success(
+          h('div', [
+            '开始下载文件：',
+            h(
+              'span',
+              {
+                style: {
+                  color: '#67c23a',
+                  fontWeight: 'bold',
+                  backgroundColor: '#f0f9ff',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  margin: '0 4px'
+                }
+              },
+              fileName
+            )
+          ])
+        )
 
-      function exportToExcel(
-        data: DataOption[],
-        fileName: string,
-        sheetName: string,
-        columns?: (keyof DataOption)[]
-      ): void {
-        let worksheet: XLSX.WorkSheet | null = null
-        if (Array.isArray(columns) && columns.length > 0) {
-          const filteredData = data.map((item: DataOption) => {
-            const filteredItem = {} as Record<keyof DataOption, string | number>
-            columns.forEach((column) => {
-              filteredItem[column] = item[column]
-            })
-            return filteredItem
-          })
-
-          worksheet = XLSX.utils.json_to_sheet(filteredData)
-        } else {
-          worksheet = XLSX.utils.json_to_sheet(data)
-        }
-
-        const maxWidthMap = {} as Record<string, number>
-
-        // 计算每列的最大宽度
-        for (let k in worksheet) {
-          if (!k.startsWith('!')) {
-            const colIndex = k.replace(/[0-9]/g, '')
-            const cellValue = worksheet[k].v.toString()
-            const cellLen = Math.max(cellValue.length, 10)
-
-            if (!maxWidthMap[colIndex]) {
-              maxWidthMap[colIndex] = cellLen
-            } else {
-              if (cellLen > maxWidthMap[colIndex]) {
-                maxWidthMap[colIndex] = cellLen
-              }
-            }
-          }
-        }
-
-        // 设置每列的宽度
-        worksheet['!cols'] = Object.keys(maxWidthMap).map((colIndex) => ({
-          width: maxWidthMap[colIndex] + 2
-        }))
-
-        const workbook: XLSX.WorkBook = {
-          Sheets: { [sheetName]: worksheet },
-          SheetNames: [sheetName]
-        }
-
-        const excelBuffer: ArrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-
-        saveExcelFile(excelBuffer, fileName)
+        exportToExcel(data, fileName, sheetName, columns)
       }
-
-      function saveExcelFile(buffer: ArrayBuffer, fileName: string): void {
-        const data: Blob = new Blob([buffer], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        })
-        const url = window.URL.createObjectURL(data)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = fileName
-        link.click()
-      }
-      exportToExcel(analyseStore.getChartData, '文件名.xlsx', '文件名', selectFeildsState.selectFeilds)
     })
-    .catch((e) => {
+    .catch(() => {
       ElMessage.info('取消下载')
     })
 }

@@ -17,15 +17,15 @@
 const props = defineProps({
   title: {
     type: String,
-    default: '',
+    default: ''
   },
   disabled: {
     type: Boolean,
-    default: false,
-  },
-});
+    default: false
+  }
+})
 
-const emits = defineEmits(['mouseenter', 'mouseleave']);
+const emits = defineEmits(['mouseenter', 'mouseleave'])
 /**
  * @desc titile的class
  */
@@ -33,8 +33,8 @@ const titleClasses = computed(() => ({
   ['contextmenu-item']: true,
   ['contextmenu-submenu__title']: true,
   ['contextmenu-item--hover']: hoverSubmenu.value,
-  ['contextmenu-item--disabled']: props.disabled,
-}));
+  ['contextmenu-item--disabled']: props.disabled
+}))
 /**
  * @desc 子菜单的class
  */
@@ -44,67 +44,61 @@ const subMenusClasses = computed(() => ({
   ['contextmenu-submenu__menus--top']: placements.value.includes('top'),
   ['contextmenu-submenu__menus--right']: placements.value.includes('right'),
   ['contextmenu-submenu__menus--bottom']: placements.value.includes('bottom'),
-  ['contextmenu-submenu__menus--left']: placements.value.includes('left'),
-}));
-const submenuElement = ref<HTMLDivElement | null>(null);
-/**
- * @desc 是否自动调整子菜单的位置
- */
-const autoAjustPlacement = inject<boolean>('autoAjustPlacement');
+  ['contextmenu-submenu__menus--left']: placements.value.includes('left')
+}))
+const submenuElement = ref<HTMLDivElement | null>(null)
 /**
  * @desc 子菜单的展示位置
  */
-const placements = ref(['top', 'right']);
+const placements = ref(['top', 'right'])
 /**
  * @desc 是否hover
  */
-const hoverSubmenu = ref(false);
+const hoverSubmenu = ref(false)
 /**
  * @desc 鼠标进入事件
  * @param evt { Event }
  * @returns { void }
  */
 const handleMouseenter = (evt: Event) => {
-  if (props.disabled) return;
-  hoverSubmenu.value = true;
-  emits('mouseenter', evt);
+  if (props.disabled) return
+  hoverSubmenu.value = true
+  emits('mouseenter', evt)
 
   nextTick(() => {
-    const targetPlacements = [];
-    // 计算子菜单的位置
-    if (autoAjustPlacement) {
-      const { target } = evt;
-      const targetElementStyle = (target as HTMLElement).getBoundingClientRect();
-      if (!submenuElement.value) return;
-      const submenuWidth = submenuElement.value.clientWidth;
-      const submenuHeight = submenuElement.value.clientHeight;
-      if (targetElementStyle.right + submenuWidth >= window.innerWidth) {
-        // 如果子菜单的右边超出了窗口的宽度，就放在左边
-        targetPlacements.push('left');
-      } else {
-        // 否则就放在右边
-        targetPlacements.push('right');
-      }
-      if (targetElementStyle.bottom + submenuHeight >= window.innerHeight) {
-        // 如果子菜单的底部超出了窗口的高度，就放在上边
-        targetPlacements.push('bottom');
-      } else {
-        // 否则就放在下边
-        targetPlacements.push('top');
-      }
+    const targetPlacements = []
+    // 计算子菜单的位置（始终自动调整）
+    const { target } = evt
+    const targetElementStyle = (target as HTMLElement).getBoundingClientRect()
+    if (!submenuElement.value) return
+    const submenuWidth = submenuElement.value.clientWidth
+    const submenuHeight = submenuElement.value.clientHeight
+    if (targetElementStyle.right + submenuWidth >= window.innerWidth) {
+      // 如果子菜单的右边超出了窗口的宽度，就放在左边
+      targetPlacements.push('left')
+    } else {
+      // 否则就放在右边
+      targetPlacements.push('right')
+    }
+    if (targetElementStyle.bottom + submenuHeight >= window.innerHeight) {
+      // 如果子菜单的底部超出了窗口的高度，就放在上边
+      targetPlacements.push('bottom')
+    } else {
+      // 否则就放在下边
+      targetPlacements.push('top')
     }
 
-    placements.value = targetPlacements;
-  });
-};
+    placements.value = targetPlacements
+  })
+}
 /**
  * @desc 鼠标离开事件
  * @param evt { Event }
  * @returns { void }
  */
 const handleMouseleave = (evt: Event) => {
-  if (props.disabled) return;
-  hoverSubmenu.value = false;
-  emits('mouseleave', evt);
-};
+  if (props.disabled) return
+  hoverSubmenu.value = false
+  emits('mouseleave', evt)
+}
 </script>

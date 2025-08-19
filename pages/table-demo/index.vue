@@ -1,106 +1,108 @@
 <template>
-  <ClientOnly>
-    <el-form label-width="auto" :model="tableConfig">
-      <el-form-item label="是否行高亮">
-        <el-switch v-model="tableConfig.enableRowHoverHighlight" />
-      </el-form-item>
-      <el-form-item label="是否列高亮">
-        <el-switch v-model="tableConfig.enableColHoverHighlight" />
-      </el-form-item>
-      <el-form-item label="是否显示边框">
-        <el-switch v-model="tableConfig.border" />
-      </el-form-item>
-      <el-form-item label="高亮 cell 背景色">
-        <el-color-picker v-model="tableConfig.highlightCellBackground" />
-      </el-form-item>
-      <el-form-item label="表头高度">
-        <el-input-number v-model="tableConfig.headerHeight" :step="10" />
-      </el-form-item>
-      <el-form-item label="表头字体大小">
-        <el-input-number v-model="tableConfig.headerFontSize" :step="10" />
-      </el-form-item>
-      <el-form-item label="表头字体">
-        <el-select style="width: 200px" v-model="tableConfig.headerFontFamily" placeholder="请选择表头字体">
-          <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="表头文本颜色">
-        <el-color-picker v-model="tableConfig.headerTextColor" />
-      </el-form-item>
-      <el-form-item label="表头背景色">
-        <el-color-picker v-model="tableConfig.headerBackground" />
-      </el-form-item>
-      <el-form-item label="表格文本颜色">
-        <el-color-picker v-model="tableConfig.bodyTextColor" />
-      </el-form-item>
-      <el-form-item label="表格奇数行背景色">
-        <el-color-picker v-model="tableConfig.bodyBackgroundOdd" />
-      </el-form-item>
-      <el-form-item label="表格偶数行背景色">
-        <el-color-picker v-model="tableConfig.bodyBackgroundEven" />
-      </el-form-item>
-      <el-form-item label="滚动条背景色">
-        <el-color-picker v-model="tableConfig.scrollbarBackground" />
-      </el-form-item>
-      <el-form-item label="滚动条滑块颜色">
-        <el-color-picker v-model="tableConfig.scrollbarThumb" />
-      </el-form-item>
-      <el-form-item label="滚动条滑块悬停颜色">
-        <el-color-picker v-model="tableConfig.scrollbarThumbHover" />
-      </el-form-item>
+  <div class="table-demo-container">
+    <ClientOnly>
+      <el-form label-width="auto" :model="tableConfig">
+        <el-form-item label="是否行高亮">
+          <el-switch v-model="tableConfig.enableRowHoverHighlight" />
+        </el-form-item>
+        <el-form-item label="是否列高亮">
+          <el-switch v-model="tableConfig.enableColHoverHighlight" />
+        </el-form-item>
+        <el-form-item label="是否显示边框">
+          <el-switch v-model="tableConfig.border" />
+        </el-form-item>
+        <el-form-item label="高亮 cell 背景色">
+          <el-color-picker v-model="tableConfig.highlightCellBackground" />
+        </el-form-item>
+        <el-form-item label="表头高度">
+          <el-input-number v-model="tableConfig.headerHeight" :step="10" />
+        </el-form-item>
+        <el-form-item label="表头字体大小">
+          <el-input-number v-model="tableConfig.headerFontSize" :step="10" />
+        </el-form-item>
+        <el-form-item label="表头字体">
+          <el-select style="width: 200px" v-model="tableConfig.headerFontFamily" placeholder="请选择表头字体">
+            <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="表头文本颜色">
+          <el-color-picker v-model="tableConfig.headerTextColor" />
+        </el-form-item>
+        <el-form-item label="表头背景色">
+          <el-color-picker v-model="tableConfig.headerBackground" />
+        </el-form-item>
+        <el-form-item label="表格文本颜色">
+          <el-color-picker v-model="tableConfig.bodyTextColor" />
+        </el-form-item>
+        <el-form-item label="表格奇数行背景色">
+          <el-color-picker v-model="tableConfig.bodyBackgroundOdd" />
+        </el-form-item>
+        <el-form-item label="表格偶数行背景色">
+          <el-color-picker v-model="tableConfig.bodyBackgroundEven" />
+        </el-form-item>
+        <el-form-item label="滚动条背景色">
+          <el-color-picker v-model="tableConfig.scrollbarBackground" />
+        </el-form-item>
+        <el-form-item label="滚动条滑块颜色">
+          <el-color-picker v-model="tableConfig.scrollbarThumb" />
+        </el-form-item>
+        <el-form-item label="滚动条滑块悬停颜色">
+          <el-color-picker v-model="tableConfig.scrollbarThumbHover" />
+        </el-form-item>
 
-      <el-form-item label="是否展示汇总">
-        <el-switch v-model="tableConfig.enableSummary" />
-      </el-form-item>
-      <el-form-item label="汇总高度">
-        <el-input-number v-model="tableConfig.summaryHeight" :step="10" />
-      </el-form-item>
-      <el-form-item label="表格高度">
-        <el-input-number v-model="tableConfig.chartHeight" :step="100" />
-      </el-form-item>
-      <el-form-item label="表格宽度">
-        <el-input-number v-model="tableConfig.chartWidth" :step="100" />
-      </el-form-item>
-    </el-form>
-    <CanvasTable
-      :enable-summary="tableConfig.enableSummary"
-      :summary-height="tableConfig.summaryHeight"
-      :chart-height="tableConfig.chartHeight"
-      :chart-width="tableConfig.chartWidth"
-      :x-axis-fields="xAxisFields"
-      :highlight-cell-background="tableConfig.highlightCellBackground"
-      :header-text-color="tableConfig.headerTextColor"
-      :body-text-color="tableConfig.bodyTextColor"
-      :header-font-family="tableConfig.headerFontFamily"
-      :header-font-size="tableConfig.headerFontSize"
-      :header-height="tableConfig.headerHeight"
-      :body-font-family="tableConfig.bodyFontFamily"
-      :body-font-size="tableConfig.bodyFontSize"
-      :summary-font-family="tableConfig.summaryFontFamily"
-      :summary-font-size="tableConfig.summaryFontSize"
-      :header-background="tableConfig.headerBackground"
-      :summary-background="tableConfig.summaryBackground"
-      :body-background-odd="tableConfig.bodyBackgroundOdd"
-      :body-background-even="tableConfig.bodyBackgroundEven"
-      :scrollbar-background="tableConfig.scrollbarBackground"
-      :scrollbar-thumb="tableConfig.scrollbarThumb"
-      :scrollbar-thumb-hover="tableConfig.scrollbarThumbHover"
-      :buffer-rows="tableConfig.bufferRows"
-      :min-auto-col-width="tableConfig.minAutoColWidth"
-      :scroll-threshold="tableConfig.scrollThreshold"
-      :header-sort-active-background="tableConfig.headerSortActiveBackground"
-      :sortable-color="tableConfig.sortableColor"
-      :y-axis-fields="yAxisFields"
-      :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
-      :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
-      :border="tableConfig.border"
-      :data="data"
-      :span-method="spanMethod"
-      @cell-click="handleCellClick"
-      @action-click="handleActionClick"
-    >
-    </CanvasTable>
-  </ClientOnly>
+        <el-form-item label="是否展示汇总">
+          <el-switch v-model="tableConfig.enableSummary" />
+        </el-form-item>
+        <el-form-item label="汇总高度">
+          <el-input-number v-model="tableConfig.summaryHeight" :step="10" />
+        </el-form-item>
+        <el-form-item label="表格高度">
+          <el-input-number v-model="tableConfig.chartHeight" :step="100" />
+        </el-form-item>
+        <el-form-item label="表格宽度">
+          <el-input-number v-model="tableConfig.chartWidth" :step="100" />
+        </el-form-item>
+      </el-form>
+      <CanvasTable
+        :enable-summary="tableConfig.enableSummary"
+        :summary-height="tableConfig.summaryHeight"
+        :chart-height="tableConfig.chartHeight"
+        :chart-width="tableConfig.chartWidth"
+        :x-axis-fields="xAxisFields"
+        :highlight-cell-background="tableConfig.highlightCellBackground"
+        :header-text-color="tableConfig.headerTextColor"
+        :body-text-color="tableConfig.bodyTextColor"
+        :header-font-family="tableConfig.headerFontFamily"
+        :header-font-size="tableConfig.headerFontSize"
+        :header-height="tableConfig.headerHeight"
+        :body-font-family="tableConfig.bodyFontFamily"
+        :body-font-size="tableConfig.bodyFontSize"
+        :summary-font-family="tableConfig.summaryFontFamily"
+        :summary-font-size="tableConfig.summaryFontSize"
+        :header-background="tableConfig.headerBackground"
+        :summary-background="tableConfig.summaryBackground"
+        :body-background-odd="tableConfig.bodyBackgroundOdd"
+        :body-background-even="tableConfig.bodyBackgroundEven"
+        :scrollbar-background="tableConfig.scrollbarBackground"
+        :scrollbar-thumb="tableConfig.scrollbarThumb"
+        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHover"
+        :buffer-rows="tableConfig.bufferRows"
+        :min-auto-col-width="tableConfig.minAutoColWidth"
+        :scroll-threshold="tableConfig.scrollThreshold"
+        :header-sort-active-background="tableConfig.headerSortActiveBackground"
+        :sortable-color="tableConfig.sortableColor"
+        :y-axis-fields="yAxisFields"
+        :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
+        :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
+        :border="tableConfig.border"
+        :data="data"
+        :span-method="spanMethod"
+        @cell-click="handleCellClick"
+        @action-click="handleActionClick"
+      >
+      </CanvasTable>
+    </ClientOnly>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -338,7 +340,7 @@ const tableConfig = reactive({
   enableSummary: false,
   summaryHeight: 32,
   enableRowHoverHighlight: true,
-  enableColHoverHighlight: true,
+  enableColHoverHighlight: false,
   border: false,
   highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
   headerHeight: 32,
@@ -364,7 +366,7 @@ const tableConfig = reactive({
   headerSortActiveBackground: '#ecf5ff',
   sortableColor: '#409EFF',
   chartHeight: 460,
-  chartWidth: 1000,
+  chartWidth: 1500,
   bodyRowHeight: 32
 })
 
@@ -401,10 +403,9 @@ const fontFamilyOptions = [
 </script>
 
 <style scoped>
-.stage-container {
-  height: 460px;
-  width: 100%;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+.table-demo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 </style>

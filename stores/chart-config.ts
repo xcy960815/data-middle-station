@@ -142,7 +142,9 @@ export const useChartConfigStore = defineStore<
     },
     /** @desc 设置图表配置 */
     setPrivateChartConfig(value) {
-      this.privateChartConfig = JSON.parse(JSON.stringify(value)) as ChartConfigStore.PrivateChartConfig
+      this.privateChartConfig = value
+        ? (JSON.parse(JSON.stringify(value)) as ChartConfigStore.PrivateChartConfig)
+        : null
     },
     /** @desc 设置表格图配置 */
     setTableChartConfig(value) {

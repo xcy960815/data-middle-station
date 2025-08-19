@@ -25,10 +25,12 @@
         <selecter-group
           class="group__item__name"
           cast="group"
-          v-model:displayName="item.displayName"
-          :name="item.columnName"
+          :displayName="item.displayName"
+          :group="item"
+          :column-name="item.columnName"
           :index="index"
           :invalid="item.__invalid"
+          :invalidMessage="item.__invalidMessage"
         ></selecter-group>
       </div>
     </div>
@@ -41,7 +43,7 @@ import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const columnStore = useColumnStore()
-
+const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
 /**
  * @desc groupList
@@ -120,9 +122,29 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
-  const group = data.value
-  const column = data.value
+  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const groupOption: GroupStore.GroupOption = {
+    ...data.value,
+    __invalid: false,
+    __invalidMessage: '',
+    fixed: null,
+    align: null,
+    width: null,
+    showOverflowTooltip: false,
+    filterable: false,
+    sortable: false
+  }
+  const isSelected = groupStore.getGroups.find((item) => item.columnName === groupOption.columnName)
+  if (isSelected) {
+    groupOption.__invalid = true
+    groupOption.__invalidMessage = '该分组已存在'
+  }
+  const isInDimension = dimensionStore.getDimensions.find((item) => item.columnName === groupOption.columnName)
+  if (isInDimension) {
+    // TODO 提示用户已经选中了
+    groupOption.__invalid = true
+    groupOption.__invalidMessage = '该分组已存在'
+  }
   const index = data.index
   switch (data.from) {
     case 'group': {
@@ -137,8 +159,8 @@ const dropHandler = (dragEvent: DragEvent) => {
     }
     default: {
       // 更新列名 主要是显示已经选中的标志
-      columnStore.updateColumn({ column, index })
-      addGroup(group)
+      columnStore.updateColumn({ column: data.value, index })
+      addGroup(groupOption)
       break
     }
   }

@@ -306,11 +306,9 @@ watch(
       // 如果数据源为空，清空维度条件
       dimensionStore.setDimensions([])
       // 如果数据源为空，清空图表配置
-      chartConfigStore.setChartConfig(null)
+      chartConfigStore.setPrivateChartConfig(null)
       // 如果数据源为空，清空图表配置条件
       columnStore.setColumns([])
-      // 如果数据源为空，清空图表配置
-      chartConfigStore.setChartConfig(null)
     }
     // else {
     //   await queryTableColumn(newDataSource)

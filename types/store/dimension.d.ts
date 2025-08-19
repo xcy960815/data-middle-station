@@ -16,6 +16,10 @@ declare namespace DimensionStore {
      */
     __invalid?: boolean
     /**
+     * 无效信息
+     */
+    __invalidMessage?: string
+    /**
      * 固定列
      */
     fixed?: 'left' | 'right' | null
@@ -26,7 +30,7 @@ declare namespace DimensionStore {
     /**
      * 宽度
      */
-    width?: number
+    width?: number | null
     /**
      * 是否显示溢出提示
      */

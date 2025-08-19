@@ -4,8 +4,14 @@
       <span class="chart-selecter-name mr-1">{{ displayName }}</span>
       <slot class="chart-selecter-order-icon" name="order-icon"></slot>
       <!-- 无效排序图标 -->
-      <el-tooltip class="box-item" effect="dark" :content="invalidContent" placement="top" v-if="hasInvalidIcon()">
-        <icon-park class="chart-selecterinvalid-icon" type="caution" size="14" fill="#333" @contextmenu.stop />
+      <el-tooltip
+        class="box-item"
+        effect="dark"
+        :content="invalidMessage || invalidContent"
+        placement="top"
+        v-if="hasInvalidIcon()"
+      >
+        <icon-park class="chart-selecterinvalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
       </el-tooltip>
       <!-- 删除图标 -->
       <icon-park
@@ -27,6 +33,13 @@ const props = defineProps({
   invalid: {
     type: Boolean,
     default: false
+  },
+  /**
+   * @desc 无效信息 默认使用无效内容
+   */
+  invalidMessage: {
+    type: String,
+    default: ''
   },
   // 通用参数
   displayName: {
@@ -54,7 +67,7 @@ const selecterVisible = ref(false)
  * @desc 无效样式
  */
 const invalidClass = computed(() => {
-  return props.invalid ? 'invalid' : ''
+  return props.invalid ? 'invalid-selecter' : ''
 })
 /**
  * @desc 无效内容
@@ -115,7 +128,7 @@ onMounted(() => {
   align-items: center;
 
   // 无效字段样式
-  &.invalid {
+  &.invalid-selecter {
     border-color: #ff4d4f;
   }
 
