@@ -107,11 +107,11 @@ export class ChartDataService {
 
   /**
    * @desc 获取图表数据
-   * @param requestParams {ChartDataDao.RequestParams} 请求参数
+   * @param requestParams {ChartDataDto.RequestParams} 请求参数
    * @returns {Promise<AnalyseDao.ChartData>}
    */
 
-  public async getChartData(requestParams: ChartDataDao.RequestParams): Promise<Array<ChartDataVo.ChartData>> {
+  public async getChartData(requestParams: ChartDataDto.RequestParams): Promise<Array<ChartDataVo.ChartData>> {
     /**
      * @desc 获取请求参数
      */
@@ -142,7 +142,6 @@ export class ChartDataService {
      * @desc 获取图表数据
      */
     const data = await this.chartDataMapper.getChartData(sql)
-
     return this.dao2Vo(data)
   }
 }

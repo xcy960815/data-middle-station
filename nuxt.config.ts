@@ -1,5 +1,4 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { resolve } from 'path'
 export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: true,
@@ -73,6 +72,7 @@ export default defineNuxtConfig({
     serviceDbPwd: process.env.SERVICE_DB_PASSWORD,
     serviceDbTimezone: process.env.SERVICE_DB_TIMEZONE,
     serviceDbStrings: String(process.env.SERVICE_DB_DATE_STRINGS),
+    serviceDbDecimalNumbers: String(process.env.SERVICE_DB_DECIMAL_NUMBERS),
 
     serviceDataDbName: process.env.SERVICE_DATA_DB_NAME,
     serviceDataDbHost: process.env.SERVICE_DATA_DB_HOST,
@@ -81,6 +81,7 @@ export default defineNuxtConfig({
     serviceDataDbPwd: process.env.SERVICE_DATA_DB_PASSWORD,
     serviceDataDbTimezone: process.env.SERVICE_DATA_DB_TIMEZONE,
     serviceDataDbStrings: String(process.env.SERVICE_DATA_DB_DATE_STRINGS),
+    serviceDataDbDecimalNumbers: String(process.env.SERVICE_DATA_DB_DECIMAL_NUMBERS),
 
     serviceRedisBase: process.env.SERVICE_REDIS_BASE,
     serviceRedisHost: process.env.SERVICE_REDIS_HOST,
