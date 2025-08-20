@@ -47,7 +47,7 @@ export const getChartDataHandler = () => {
           return `${chartNames[chartType]}至少需要一个值和一个分组`
         }
       case 'pie':
-        if (dimensions.length === 1 && groups.length === 1) {
+        if (dimensions.length > 0 && groups.length > 0) {
           return ''
         } else {
           return `${chartNames[chartType]}只需要一个值和一个分组`

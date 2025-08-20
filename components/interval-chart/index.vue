@@ -15,7 +15,7 @@ import { ref } from 'vue'
 const props = defineProps({
   title: {
     type: String,
-    default: () => '我是柱状图标题'
+    default: () => ''
   },
   data: {
     type: Array as PropType<Array<ChartDataVo.ChartData>>,
