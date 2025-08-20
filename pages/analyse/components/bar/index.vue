@@ -28,6 +28,27 @@ const dimensionStore = useDimensionStore()
 const groupStore = useGroupStore()
 const chartUpdateTime = computed(() => analyseStore.getChartUpdateTime)
 const chartUpdateTakesTime = computed(() => analyseStore.getChartUpdateTakesTime)
+
+/**
+ * @desc 键盘事件处理
+ */
+const handleKeyDown = (event: KeyboardEvent) => {
+  // Cmd+S (Mac) 或 Ctrl+S (Windows/Linux) 快捷键
+  if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+    event.preventDefault() // 阻止浏览器默认的保存行为
+    handleAnalyse()
+  }
+}
+
+// 组件挂载时添加键盘事件监听
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyDown)
+})
+
+// 组件卸载时移除键盘事件监听
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown)
+})
 /**
  * @desc 点刷新按钮
  * @returns void

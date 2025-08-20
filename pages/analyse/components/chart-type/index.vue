@@ -6,7 +6,7 @@
         :key="i.name"
         class="chart-type-item"
         :class="{ active: i.name === chartType }"
-        @click="changeChartType(i.name, index)"
+        @click="handleChangeChartType(i.name, index)"
       >
         <div class="chart-type-content">
           <img :src="i.image" :alt="i.name" class="chart-image" />
@@ -44,12 +44,11 @@ const chartsType = ref<Array<{ name: AnalyseStore.ChartType; image: string }>>([
 
 /**
  * @desc 切换图表类型
- * @param {string} chartType - 图表类型
+ * @param {AnalyseStore.ChartType} chartType - 图表类型
  * @param {number} index - 图表类型索引
  * @returns {void}
  */
-
-const changeChartType = (chartType: AnalyseStore.ChartType, index: number): void => {
+const handleChangeChartType = (chartType: AnalyseStore.ChartType, index: number): void => {
   const chartTypeItems = document.querySelectorAll('.chart-type-item')
   chartTypeItems.forEach((item) => {
     item.classList.remove('active')
@@ -57,14 +56,18 @@ const changeChartType = (chartType: AnalyseStore.ChartType, index: number): void
   chartTypeItems[index].classList.add('active')
   analyseStore.setChartType(chartType)
 }
-
+const nameMap = {
+  table: '表格',
+  interval: '柱状图',
+  line: '折线图',
+  pie: '饼图'
+}
+/**
+ * @desc 获取图表名称
+ * @param {AnalyseStore.ChartType} type - 图表类型
+ * @returns {string} 图表名称
+ */
 const getAnalyseName = (type: AnalyseStore.ChartType): string => {
-  const nameMap = {
-    table: '表格',
-    interval: '柱状图',
-    line: '折线图',
-    pie: '饼图'
-  }
   return nameMap[type]
 }
 </script>
