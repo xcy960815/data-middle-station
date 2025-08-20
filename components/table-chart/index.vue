@@ -48,7 +48,7 @@ import CanvasTable from './canvas-table.vue'
 const chartConfigStore = useChartConfigStore()
 const props = defineProps({
   data: {
-    type: Array as PropType<ChartDataDao.ChartData>,
+    type: Array as PropType<Array<ChartDataVo.ChartData>>,
     default: () => []
   },
   xAxisFields: {

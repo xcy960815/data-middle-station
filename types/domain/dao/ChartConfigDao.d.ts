@@ -190,6 +190,10 @@ declare namespace ChartConfigDao {
      * 是否显示文字
      */
     showLabel: boolean
+    /**
+     * 图表类型
+     */
+    chartType: 'pie' | 'rose'
   }
 
   /**

@@ -5,9 +5,9 @@ declare namespace ChartDataDao {
   /**
    * @desc 图表数据
    */
-  type ChartData = Array<{
+  type ChartData = {
     [key: string]: string | number | ChartData | undefined | null | boolean
-  }>
+  }
 
   /**
    * @desc 请求参数

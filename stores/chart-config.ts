@@ -90,7 +90,8 @@ export const useChartConfigStore = defineStore<
        * @desc 饼图配置
        */
       pie: {
-        showLabel: false
+        showLabel: false,
+        chartType: 'pie' as 'pie' | 'rose'
       },
       /**
        * @desc 柱状图配置

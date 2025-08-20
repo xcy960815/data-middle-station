@@ -112,7 +112,7 @@ const spanMethod = ({
   rowIndex,
   colIndex
 }: {
-  row: ChartDataDao.ChartData[0]
+  row: ChartDataVo.ChartData
   column: GroupStore.GroupOption | DimensionStore.DimensionOption
   rowIndex: number
   colIndex: number
@@ -250,7 +250,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
 /**
  * 数据
  */
-const data: ChartDataDao.ChartData = Array.from({ length: 30 }, (_, i) => ({
+const data: Array<ChartDataVo.ChartData> = Array.from({ length: 30 }, (_, i) => ({
   id: i + 1,
   name: `User ${i + 1}`,
   age: 18 + ((i * 7) % 40),
@@ -283,47 +283,7 @@ const data: ChartDataDao.ChartData = Array.from({ length: 30 }, (_, i) => ({
     'Node.js, Express'
   ][(i * 23) % 8],
   notes: `Additional notes for user ${i + 1}. Lorem ipsum dolor sit amet.`,
-  email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`,
-  hasChildren: true,
-  children: Array.from({ length: 3 }, (_, j) => ({
-    id: i * 100 + j + 1,
-    name: `Child ${i * 100 + j + 1}`,
-    age: 18 + ((i * 7 + j) % 40),
-    gender: ['Male', 'Female', 'Other'][(i * 3 + j) % 3],
-    country: ['China', 'USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia'][(i * 3 + j) % 8],
-    city: ['Beijing', 'Shanghai', 'New York', 'London', 'Berlin', 'Paris', 'Tokyo', 'Toronto', 'Sydney'][
-      (i * 5 + j) % 9
-    ],
-    state: ['CA', 'NY', 'TX', 'FL', 'WA', 'IL', 'PA', 'OH', 'GA', 'NC'][(i * 7 + j) % 10],
-    zipcode: `${10000 + ((i * 123 + j) % 90000)}`,
-    address: `${i * 100 + j + 1} Main Street, Apt ${i * 100 + (j % 50) + 1}--${i * 100 + j + 1} Main Street, Apt ${i * 100 + (j % 50) + 1}---${i * 100 + j + 1} Main Street, Apt ${i * 100 + (j % 50) + 1}`,
-    phone: `+1-555-${String(1000 + i * 100 + j).slice(-4)}`,
-    mobile: `+1-666-${String(2000 + i * 100 + j).slice(-4)}`,
-    company: ['TechCorp', 'DataSoft', 'CloudInc', 'WebSolutions', 'AppDev', 'SystemsLtd', 'CodeWorks', 'DigitalPro'][
-      (i * 11 + j) % 8
-    ],
-    department: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Support', 'Design'][
-      (i * 13 + j) % 8
-    ],
-    position: ['Developer', 'Manager', 'Analyst', 'Designer', 'Consultant', 'Specialist', 'Coordinator', 'Director'][
-      (i * 17 + j) % 8
-    ],
-    salary: `$${(30000 + ((i * 1000 + j) % 120000)).toLocaleString()}`,
-    experience: `${i * 20 + (j % 20) + 1} years`,
-    education: ['Bachelor', 'Master', 'PhD', 'Associate', 'High School', 'Certificate'][(i * 19 + j) % 6],
-    skills: [
-      'JavaScript, React',
-      'Python, Django',
-      'Java, Spring',
-      'C#, .NET',
-      'PHP, Laravel',
-      'Go, Gin',
-      'Ruby, Rails',
-      'Node.js, Express'
-    ][(i * 23 + j) % 8],
-    notes: `Additional notes for user ${i * 100 + j + 1}. Lorem ipsum dolor sit amet.`,
-    email: `user${i * 100 + j + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29 + j) % 5]}`
-  }))
+  email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
 }))
 /**
  * 单元格点击事件
@@ -332,7 +292,7 @@ const handleCellClick = (cell: { rowIndex: number; colIndex: number }) => {
   console.log('Cell clicked:', cell)
 }
 
-const handleActionClick = (payload: { rowIndex: number; action: string; rowData: ChartDataDao.ChartData[0] }) => {
+const handleActionClick = (payload: { rowIndex: number; action: string; rowData: ChartDataVo.ChartData }) => {
   console.log('Action clicked:', payload.rowIndex, payload.action, payload.rowData)
 }
 

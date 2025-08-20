@@ -75,7 +75,7 @@ const props = withDefaults(
     /**
      * 数据
      */
-    data: ChartDataDao.ChartData
+    data: Array<ChartDataVo.ChartData>
     /**
      * 分组字段
      */
@@ -217,7 +217,7 @@ const props = withDefaults(
      * 返回 [rowspan, colspan] 或 { rowspan, colspan }；返回 0/0 表示被合并覆盖
      */
     spanMethod?: (args: {
-      row: ChartDataDao.ChartData[0]
+      row: ChartDataVo.ChartData
       column: GroupStore.GroupOption | DimensionStore.DimensionOption
       rowIndex: number
       colIndex: number
@@ -269,8 +269,8 @@ const getSummaryHeight = () => (props.enableSummary ? props.summaryHeight : 0)
  * 定义事件
  */
 const emits = defineEmits<{
-  'cell-click': [{ rowIndex: number; colIndex: number; colKey: string; rowData: ChartDataDao.ChartData[0] }]
-  'action-click': [{ rowIndex: number; action: string; rowData: ChartDataDao.ChartData[0] }]
+  'cell-click': [{ rowIndex: number; colIndex: number; colKey: string; rowData: ChartDataVo.ChartData }]
+  'action-click': [{ rowIndex: number; action: string; rowData: ChartDataVo.ChartData }]
   'render-chart-start': []
   'render-chart-end': []
 }>()
@@ -302,9 +302,9 @@ const columnAliasMap = computed(() => {
 
 /**
  * 表格数据
- * @returns {ChartDataDao.ChartData}
+ * @returns {ChartDataVo.ChartData}
  */
-const tableData = computed<ChartDataDao.ChartData>(() => props.data)
+const tableData = computed<Array<ChartDataVo.ChartData>>(() => props.data)
 
 /**
  * 排序状态
@@ -327,9 +327,9 @@ const summaryState = reactive<Record<string, string>>({})
 
 /**
  * 应用排序后的数据视图
- * @returns {ChartDataDao.ChartData}
+ * @returns {ChartDataVo.ChartData}
  */
-const activeData = computed<ChartDataDao.ChartData>(() => {
+const activeData = computed<Array<ChartDataVo.ChartData>>(() => {
   // 先按 filter 过滤
   let base = tableData.value.filter((row) => row && typeof row === 'object') // 过滤掉无效的行
   const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
@@ -356,7 +356,7 @@ const activeData = computed<ChartDataDao.ChartData>(() => {
   }
   const aliasMap2 = columnAliasMap.value
 
-  const getVal = (row: ChartDataDao.ChartData[0], key: string): string | number | undefined => {
+  const getVal = (row: ChartDataVo.ChartData, key: string): string | number | undefined => {
     const alias = aliasMap2[key]
     const candidates: unknown[] = [row[key], alias ? row[alias] : undefined]
     for (const v of candidates) {
