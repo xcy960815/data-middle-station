@@ -1,8 +1,8 @@
-import mysql from 'mysql2/promise'
-import chalk from 'chalk'
-import gradient from 'gradient-string'
 import boxen from 'boxen'
+import chalk from 'chalk'
 import figlet from 'figlet'
+import gradient from 'gradient-string'
+import mysql from 'mysql2/promise'
 
 const logger = new Logger({
   fileName: 'database',
@@ -22,6 +22,8 @@ const getDatasourceConfig = () => {
   const serviceDbTimezone = useRuntimeConfig().serviceDbTimezone
   const serviceDbStrings = useRuntimeConfig().serviceDbStrings
 
+  const serviceDbDecimalNumbers = useRuntimeConfig().serviceDbDecimalNumbers
+
   const serviceDataDbName = useRuntimeConfig().serviceDataDbName
   const serviceDataDbHost = useRuntimeConfig().serviceDataDbHost
   const serviceDataDbPort = useRuntimeConfig().serviceDataDbPort
@@ -29,6 +31,8 @@ const getDatasourceConfig = () => {
   const serviceDataDbPwd = useRuntimeConfig().serviceDataDbPwd
   const serviceDataDbTimezone = useRuntimeConfig().serviceDataDbTimezone
   const serviceDataDbStrings = useRuntimeConfig().serviceDataDbStrings
+
+  const serviceDataDbDecimalNumbers = useRuntimeConfig().serviceDataDbDecimalNumbers
 
   const dataSourceConfig: NodeJS.DataSourceConfig = {
     [serviceDbName]: {
@@ -38,7 +42,8 @@ const getDatasourceConfig = () => {
       user: serviceDbUser,
       database: serviceDbName,
       timezone: serviceDbTimezone,
-      dateStrings: serviceDbStrings
+      dateStrings: serviceDbStrings,
+      decimalNumbers: serviceDbDecimalNumbers
     },
     [serviceDataDbName]: {
       password: serviceDataDbPwd,
@@ -47,7 +52,8 @@ const getDatasourceConfig = () => {
       user: serviceDataDbUser,
       database: serviceDataDbName,
       timezone: serviceDataDbTimezone,
-      dateStrings: serviceDataDbStrings
+      dateStrings: serviceDataDbStrings,
+      decimalNumbers: serviceDataDbDecimalNumbers
     }
   }
 

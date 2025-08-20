@@ -22,7 +22,7 @@ declare namespace NodeJS {
   type DB_DATABASE = PoolOptions['database']
   type DB_TIMEZONE = PoolOptions['timezone']
   type DB_DATE_STRINGS = PoolOptions['dateStrings']
-
+  type DB_DECIMAL_NUMBERS = PoolOptions['decimalNumbers']
   /**
    * @desc redis配置
    */
@@ -77,6 +77,11 @@ declare namespace NodeJS {
      */
     SERVICE_DB_DATE_STRINGS: DB_DATE_STRINGS
 
+    /**
+     * 服务数据库小数位数
+     */
+    SERVICE_DB_DECIMAL_NUMBERS: DB_DECIMAL_NUMBERS
+
     // 所需数据分析数据库配置
     /**
      * 所需数据分析数据库名称
@@ -106,6 +111,11 @@ declare namespace NodeJS {
      * 所需数据分析数据库日期字符串
      */
     SERVICE_DATA_DB_DATE_STRINGS: DB_DATE_STRINGS
+
+    /**
+     * 所需数据分析数据库小数位数
+     */
+    SERVICE_DATA_DB_DECIMAL_NUMBERS: DB_DECIMAL_NUMBERS
 
     // 服务redis配置
     /**
