@@ -11,6 +11,7 @@
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
 import { ref } from 'vue'
+
 const props = defineProps({
   title: {
     type: String,
@@ -51,6 +52,7 @@ const defaultIntervalConfig = {
 const intervalChartConfig = computed(() => {
   return chartConfigStore.privateChartConfig?.interval || defaultIntervalConfig
 })
+
 /**
  * 监听属性配置变化
  */
@@ -90,69 +92,61 @@ const initChart = () => {
     title: props.title
   })
 
-  // 获取 y 轴字段名称
-  const yAxisFieldNames = props.yAxisFields.map((item) => item.displayName || item.columnName)
+  // 维度与度量：yAxisFields 最后一个为 X 轴，其余为度量
+  const xFieldName = props.yAxisFields[props.yAxisFields.length - 1]?.columnName
+  const measureFields = props.yAxisFields
+    .slice(0, Math.max(0, props.yAxisFields.length - 1))
+    .map((item) => item.columnName)
+    .filter(Boolean) as string[]
 
-  // 配置图表
+  // 可选分组（用于单度量或双层分组）
+  const groupFieldName = props.xAxisFields[0]?.columnName
+  const useFold = measureFields.length > 1
+
   const intervalChart = chart
     .interval()
     .data({
       type: 'inline',
-      value: [
-        { name: 'London', 月份: 'Jan.', 月均降雨量: 18.9 },
-        { name: 'London', 月份: 'Feb.', 月均降雨量: 28.8 },
-        { name: 'London', 月份: 'Mar.', 月均降雨量: 39.3 },
-        { name: 'London', 月份: 'Apr.', 月均降雨量: 81.4 },
-        { name: 'London', 月份: 'May', 月均降雨量: 47 },
-        { name: 'London', 月份: 'Jun.', 月均降雨量: 20.3 },
-        { name: 'London', 月份: 'Jul.', 月均降雨量: 24 },
-        { name: 'London', 月份: 'Aug.', 月均降雨量: 35.6 },
-        { name: 'Berlin', 月份: 'Jan.', 月均降雨量: 12.4 },
-        { name: 'Berlin', 月份: 'Feb.', 月均降雨量: 23.2 },
-        { name: 'Berlin', 月份: 'Mar.', 月均降雨量: 34.5 },
-        { name: 'Berlin', 月份: 'Apr.', 月均降雨量: 99.7 },
-        { name: 'Berlin', 月份: 'May', 月均降雨量: 52.6 },
-        { name: 'Berlin', 月份: 'Jun.', 月均降雨量: 35.5 },
-        { name: 'Berlin', 月份: 'Jul.', 月均降雨量: 37.4 },
-        { name: 'Berlin', 月份: 'Aug.', 月均降雨量: 42.4 }
-      ],
-      transform: [
-        {
-          type: 'fold',
-          fields: yAxisFieldNames,
-          key: 'type',
-          value: 'value'
-        }
-      ]
+      value: props.data,
+      transform: useFold ? [{ type: 'fold', fields: measureFields, key: 'key', value: 'value' }] : []
     })
-    .transform({
-      type: 'sortX',
-      by: 'y',
-      reverse: true
-    })
-    .encode(
-      'x',
-      props.xAxisFields.map((item) => item.columnName)
-    )
-    .encode('y', 'value')
-    .encode('color', 'type')
+    .encode('x', xFieldName)
+    .encode('y', useFold ? 'value' : measureFields[0] || 'value')
     .scale('y', { nice: true })
-    .axis('y', { labelFormatter: '~s' })
-    .scale('color', {
-      range: getChartColors()
-    })
+
+  // 轴标题（优先显示中文别名）
+  const xFieldOption = props.yAxisFields[props.yAxisFields.length - 1]
+  const xAxisTitle = xFieldOption?.displayName || xFieldOption?.columnComment || xFieldOption?.columnName || ''
+
+  let yAxisTitle = '数值'
+  if (!useFold && measureFields[0]) {
+    const yFieldOption = props.yAxisFields.find((item) => item.columnName === measureFields[0])
+    yAxisTitle = yFieldOption?.displayName || yFieldOption?.columnComment || yFieldOption?.columnName || yAxisTitle
+  }
+
+  // 默认刻度格式化
+  const yAxisOptions: any = { title: yAxisTitle, labelFormatter: '~s' }
+  intervalChart.axis('x', { title: xAxisTitle })
+  intervalChart.axis('y', yAxisOptions)
+
+  // 颜色与分组：
+  if (useFold && groupFieldName) {
+    // 双层分组：城市 × 指标
+    intervalChart.encode('color', (d: any) => `${d[groupFieldName]}-${d.key}`).transform({ type: 'dodgeX' })
+  } else if (useFold) {
+    // 多指标分组
+    intervalChart.encode('color', 'key').transform({ type: 'dodgeX' })
+  } else if (groupFieldName) {
+    // 单指标，按分组字段分组
+    intervalChart.encode('color', groupFieldName).transform({ type: 'dodgeX' })
+  }
 
   /**
    * 是否显示百分比
    */
   if (intervalChartConfig.value.showPercentage) {
     // TODO 值也要 展示 百分比
-    intervalChart.axis({
-      y: {
-        labelFormatter: (d: number) => `${d / 100}%`,
-        transform: [{ type: 'hide' }]
-      }
-    })
+    intervalChart.axis('y', { ...yAxisOptions, labelFormatter: (d: number) => `${Number(d) / 100}%` })
   }
   /**
    * 平级展示
@@ -172,7 +166,7 @@ const initChart = () => {
    */
   if (intervalChartConfig.value.showLabel) {
     intervalChart.label({
-      text: 'value',
+      text: useFold ? 'value' : measureFields[0],
       position: 'top'
     })
   }
@@ -199,6 +193,8 @@ const initChart = () => {
       // 自定义tooltip内容
       customContent: (title: string, data: any[]) => {
         if (!data || data.length === 0) return ''
+        const seriesFieldForTooltip = useFold ? 'key' : groupFieldName || ''
+        const valueFieldForTooltip = useFold ? 'value' : measureFields[0]
         return `
         <div style="padding: 8px;">
           <div style="margin-bottom: 4px;font-weight:bold;">${title}</div>
@@ -207,8 +203,8 @@ const initChart = () => {
               (item) => `
             <div style="display: flex; align-items: center; padding: 4px 0;">
               <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
-              <span style="margin-right: 12px;">${item.data['type'] ?? ''}</span>
-              <span style="font-weight: bold;">${item.data['value'] ?? ''}</span>
+              <span style="margin-right: 12px;">${seriesFieldForTooltip ? (item.data[seriesFieldForTooltip] ?? '') : ''}</span>
+              <span style="font-weight: bold;">${item.data[valueFieldForTooltip] ?? ''}</span>
             </div>
           `
             )
@@ -217,9 +213,10 @@ const initChart = () => {
       `
       }
     })
-    .interaction('elementHighlightByColor', {
-      background: true
-    })
+    // 按 X 轴整列显示背景带
+    .interaction('elementHighlightByX', { background: true })
+    // 保留同色高亮，但不绘制背景块
+    .interaction('elementHighlightByColor', { background: false })
 
   chart.render()
   chartInstance.value = chart
