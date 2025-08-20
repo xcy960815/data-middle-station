@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@antv/g2':
-        specifier: ^5.3.3
-        version: 5.3.3
+        specifier: ^5.3.5
+        version: 5.3.5
       '@icon-park/vue-next':
         specifier: ^1.4.2
         version: 1.4.2(vue@3.5.16(typescript@5.8.3))
@@ -222,8 +222,8 @@ packages:
   '@antv/g-web-animations-api@2.1.25':
     resolution: {integrity: sha512-xljNU+mDsdaDr+DwP77te2ZkNLcLiwuwppwXuRRpv/wVxUue726c/QbfYj/wMwJoBcOEtl/5hjAks/+gdvr3ag==}
 
-  '@antv/g2@5.3.3':
-    resolution: {integrity: sha512-K+Pf1ZRslGn2IHQzA+2NrukeaNqrpOZB76zytkmt5bhGOhZgSWSfc9ubxi0OAlrBY+Yc6DfYcLiHziuASYoG5w==}
+  '@antv/g2@5.3.5':
+    resolution: {integrity: sha512-Q2TPfWTf2fMwe02Uqk4Uvgy/RGXpGQXfSMPHKLkwTUh6WrFImpgzU4mHhUewKVu5ppPGGfvlwIbZcHeBnNb5ug==}
 
   '@antv/g@6.1.25':
     resolution: {integrity: sha512-qkXztWRVYQDl/x3tlA9Oww5DwaBCDDYXq6Wai9jfO8TZeIV3T8Dbw5eG/M115doyHX2vIVRkrE6+xiFe5weIHQ==}
@@ -6916,7 +6916,7 @@ snapshots:
       '@babel/runtime': 7.27.4
       tslib: 2.8.1
 
-  '@antv/g2@5.3.3':
+  '@antv/g2@5.3.5':
     dependencies:
       '@antv/component': 2.1.3
       '@antv/coord': 0.4.7

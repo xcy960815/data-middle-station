@@ -152,14 +152,12 @@ const dropHandler = (dragEvent: DragEvent) => {
 
   const isSelected = dimensionStore.getDimensions.find((item) => item.columnName === dimensionOption.columnName)
   if (isSelected) {
-    // TODO 提示用户已经选中了
     dimensionOption.__invalid = true
     dimensionOption.__invalidMessage = '该维度已存在'
   }
   // 判断是否跟groupList中的字段相同
   const isInGroup = groupList.value.find((item) => item.columnName === dimensionOption.columnName)
   if (isInGroup) {
-    // TODO 提示用户已经选中了
     dimensionOption.__invalid = true
     dimensionOption.__invalidMessage = '该维度已存在'
   }
