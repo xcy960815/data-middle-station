@@ -50,12 +50,32 @@ watch(
     deep: true
   }
 )
+
+/**
+ * 监听数据变化
+ */
+watch(
+  () => props.data,
+  () => {
+    console.log('数据变化，重新渲染图表')
+    initChart()
+  },
+  {
+    deep: true
+  }
+)
 /**
  * 初始化图表
  */
 const chartInstance = ref<Chart | null>(null)
 const initChart = () => {
   emits('renderChartStart')
+
+  // 如果没有数据，不渲染图表
+  if (!props.data || props.data.length === 0) {
+    emits('renderChartEnd')
+    return
+  }
 
   // 已存在则销毁，避免重复渲染叠加
   if (chartInstance.value) {
@@ -64,14 +84,13 @@ const initChart = () => {
   }
 
   // 维度与度量：yAxisFields 最后一个为 X 轴，其余为度量
-  const xFieldName = props.yAxisFields[props.yAxisFields.length - 1]?.columnName
+  const xFieldName = props.yAxisFields[props.yAxisFields.length - 1].columnName
   const measureFields = props.yAxisFields
-    .slice(0, Math.max(0, props.yAxisFields.length - 1))
-    .map((item) => item.columnName)
-    .filter(Boolean) as string[]
+    .slice(0, props.yAxisFields.length - 1)
+    .map((item) => item.columnName) as string[]
 
   // 可选分组（用于单度量或双层分组）
-  const groupFieldName = props.xAxisFields[0]?.columnName
+  const groupFieldName = props.xAxisFields[0].columnName
   const useFold = measureFields.length > 1
 
   // 初始化图表实例
@@ -87,8 +106,8 @@ const initChart = () => {
     title: props.title
   })
 
-  const lineChart = chart
-    .line()
+  // 设置公共数据和编码
+  chart
     .data({
       type: 'inline',
       value: props.data,
@@ -96,79 +115,72 @@ const initChart = () => {
     })
     .encode('x', xFieldName)
     .encode('y', (row: ChartDataVo.ChartData) => {
-      if (useFold) return Number(row['value'])
-      const field = measureFields[0]
-      const value = field ? row[field] : row['value']
-      return Number(value)
+      if (useFold) return row['value']
+      return row[measureFields[0]]
     })
     .scale('y', { nice: true })
-    .style('strokeWidth', 2)
-    .animate('enter', { type: 'pathIn' })
 
   // 轴标题（优先显示中文别名）
   const xFieldOption = props.yAxisFields[props.yAxisFields.length - 1]
-  const xAxisTitle = xFieldOption?.displayName || xFieldOption?.columnComment || xFieldOption?.columnName || ''
+  const xAxisTitle = xFieldOption.displayName || xFieldOption.columnComment || xFieldOption.columnName
 
-  let yAxisTitle = '数值'
-  if (!useFold && measureFields[0]) {
+  let yAxisTitle = ''
+  if (!useFold) {
     const yFieldOption = props.yAxisFields.find((item) => item.columnName === measureFields[0])
-    yAxisTitle = yFieldOption?.displayName || yFieldOption?.columnComment || yFieldOption?.columnName || yAxisTitle
+    yAxisTitle = yFieldOption?.displayName || yFieldOption?.columnComment || yFieldOption?.columnName || ''
   }
   const yAxisOptions: { title: string; labelFormatter: string } = { title: yAxisTitle, labelFormatter: '~s' }
   chart.axis('x', { title: xAxisTitle })
   chart.axis('y', yAxisOptions)
 
-  // 颜色与分组（显式设置 series，保证按系列连线）
+  // 颜色与分组编码
   if (useFold && groupFieldName) {
-    const seriesEncoder = (row: Record<string, unknown>) => `${String(row[groupFieldName])}-${String(row['key'])}`
-    lineChart.encode('color', seriesEncoder).encode('series', seriesEncoder)
+    const seriesEncoder = (row: ChartDataVo.ChartData) => `${String(row[groupFieldName])}-${String(row['key'])}`
+    chart.encode('color', seriesEncoder).encode('series', seriesEncoder)
   } else if (useFold) {
-    lineChart.encode('color', 'key').encode('series', 'key')
+    chart.encode('color', 'key').encode('series', 'key')
   } else if (groupFieldName) {
-    lineChart.encode('color', groupFieldName).encode('series', groupFieldName)
+    chart.encode('color', groupFieldName).encode('series', groupFieldName)
   }
+
+  // 创建线条
+  const lineChart = chart.line().style('strokeWidth', 2)
 
   // 是否画圆点
   if (lineChartConfig.value.showPoint) {
-    const point = chart
-      .point()
-      .data({
-        type: 'inline',
-        value: props.data,
-        transform: useFold ? [{ type: 'fold', fields: measureFields, key: 'key', value: 'value' }] : []
-      })
-      .encode('x', xFieldName)
-      .encode('y', (row: Record<string, unknown>) => {
-        if (useFold) return Number(row['value'])
-        const field = measureFields[0]
-        const value = field ? row[field] : row['value']
-        return Number(value)
-      })
-      .style('r', 2.5)
-
-    if (useFold && groupFieldName) {
-      const seriesEncoder = (row: Record<string, unknown>) => `${String(row[groupFieldName])}-${String(row['key'])}`
-      point.encode('color', seriesEncoder).encode('series', seriesEncoder)
-    } else if (useFold) {
-      point.encode('color', 'key').encode('series', 'key')
-    } else if (groupFieldName) {
-      point.encode('color', groupFieldName).encode('series', groupFieldName)
-    }
+    chart.point().tooltip(false)
   }
 
-  // 是否平滑展示
+  /**
+   * 是否平滑展示
+   */
   if (lineChartConfig.value.smooth) {
-    lineChart.style('shape', 'smooth')
+    lineChart.encode('shape', 'smooth')
   }
 
-  // 是否显示说明文字
+  /**
+   * 是否显示说明文字
+   */
   if (lineChartConfig.value.showLabel) {
     lineChart.label({
-      text: useFold ? 'value' : measureFields[0] || 'value'
+      text: useFold ? 'value' : measureFields[0],
+      position: 'top',
+      dy: -10,
+      style: {
+        textAlign: 'center',
+        fontSize: 12,
+        fill: '#666',
+        stroke: '#fff',
+        strokeWidth: 2,
+        strokeOpacity: 0.8
+      },
+      transform: [{ type: 'overlapDodgeY' }]
     })
   }
 
-  // 是否开启横向滚动
+  /**
+   * 是否开启横向滚动
+   */
   if (lineChartConfig.value.horizontalBar) {
     lineChart.slider('x', true)
   }
