@@ -75,33 +75,40 @@ const chartInstance = ref<Chart | null>(null)
 const initChart = () => {
   emits('renderChartStart')
 
+  // 如果没有数据，不渲染图表
+  if (!props.data || props.data.length === 0) {
+    emits('renderChartEnd')
+    return
+  }
+
   // 已存在则销毁，避免重复渲染叠加
   if (chartInstance.value) {
     chartInstance.value.destroy()
     chartInstance.value = null
   }
+
+  // 维度与度量：yAxisFields 最后一个为 X 轴，其余为度量
+  const xFieldName = props.yAxisFields[props.yAxisFields.length - 1].columnName
+  const measureFields = props.yAxisFields
+    .slice(0, props.yAxisFields.length - 1)
+    .map((item) => item.columnName) as string[]
+
+  // 可选分组（用于单度量或双层分组）
+  const groupFieldName = props.xAxisFields[0].columnName
+  const useFold = measureFields.length > 1
+
   // 初始化图表实例
   const chart = new Chart({
     container: 'container-interval',
     theme: 'classic',
     autoFit: true
   })
+  chartInstance.value = chart
 
   // 配置图表标题
   chart.title({
     title: props.title
   })
-
-  // 维度与度量：yAxisFields 最后一个为 X 轴，其余为度量
-  const xFieldName = props.yAxisFields[props.yAxisFields.length - 1]?.columnName
-  const measureFields = props.yAxisFields
-    .slice(0, Math.max(0, props.yAxisFields.length - 1))
-    .map((item) => item.columnName)
-    .filter(Boolean) as string[]
-
-  // 可选分组（用于单度量或双层分组）
-  const groupFieldName = props.xAxisFields[0]?.columnName
-  const useFold = measureFields.length > 1
 
   const intervalChart = chart
     .interval()
@@ -118,47 +125,44 @@ const initChart = () => {
   const xFieldOption = props.yAxisFields[props.yAxisFields.length - 1]
   const xAxisTitle = xFieldOption?.displayName || xFieldOption?.columnComment || xFieldOption?.columnName || ''
 
-  let yAxisTitle = '数值'
-  if (!useFold && measureFields[0]) {
+  let yAxisTitle = ''
+  if (!useFold) {
     const yFieldOption = props.yAxisFields.find((item) => item.columnName === measureFields[0])
-    yAxisTitle = yFieldOption?.displayName || yFieldOption?.columnComment || yFieldOption?.columnName || yAxisTitle
+    yAxisTitle = yFieldOption?.displayName || yFieldOption?.columnComment || yFieldOption?.columnName || ''
   }
 
-  // 默认刻度格式化
-  const yAxisOptions: any = { title: yAxisTitle, labelFormatter: '~s' }
-  intervalChart.axis('x', { title: xAxisTitle })
-  intervalChart.axis('y', yAxisOptions)
+  const yAxisOptions: { title: string; labelFormatter: string } = { title: yAxisTitle, labelFormatter: '~s' }
+  chart.axis('x', { title: xAxisTitle })
+  chart.axis('y', yAxisOptions)
 
   // 颜色与分组：
   if (useFold && groupFieldName) {
     // 双层分组：城市 × 指标
-    intervalChart.encode('color', (d: any) => `${d[groupFieldName]}-${d.key}`).transform({ type: 'dodgeX' })
+    intervalChart.encode('color', (d: ChartDataVo.ChartData) => `${d[groupFieldName]}-${d.key}`)
   } else if (useFold) {
     // 多指标分组
-    intervalChart.encode('color', 'key').transform({ type: 'dodgeX' })
+    intervalChart.encode('color', 'key')
   } else if (groupFieldName) {
     // 单指标，按分组字段分组
-    intervalChart.encode('color', groupFieldName).transform({ type: 'dodgeX' })
+    intervalChart.encode('color', groupFieldName)
+  }
+
+  /**
+   * 显示模式配置
+   */
+  if (intervalChartConfig.value.displayMode === 'levelDisplay') {
+    // 平级展示
+    intervalChart.transform({ type: 'dodgeX' })
+  } else if (intervalChartConfig.value.displayMode === 'stackDisplay') {
+    // 叠加展示
+    intervalChart.transform({ type: 'stackY' })
   }
 
   /**
    * 是否显示百分比
    */
   if (intervalChartConfig.value.showPercentage) {
-    // TODO 值也要 展示 百分比
     intervalChart.axis('y', { ...yAxisOptions, labelFormatter: (d: number) => `${Number(d) / 100}%` })
-  }
-  /**
-   * 平级展示
-   */
-  if (intervalChartConfig.value.displayMode === 'levelDisplay') {
-    intervalChart.transform({ type: 'dodgeX' })
-  }
-  /**
-   * 叠加展示
-   */
-  if (intervalChartConfig.value.displayMode === 'stackDisplay') {
-    intervalChart.transform({ type: 'stackY' })
   }
 
   /**
@@ -203,8 +207,8 @@ const initChart = () => {
               (item) => `
             <div style="display: flex; align-items: center; padding: 4px 0;">
               <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
-              <span style="margin-right: 12px;">${seriesFieldForTooltip ? (item.data[seriesFieldForTooltip] ?? '') : ''}</span>
-              <span style="font-weight: bold;">${item.data[valueFieldForTooltip] ?? ''}</span>
+              <span style="margin-right: 12px;">${seriesFieldForTooltip ? (item.data?.[seriesFieldForTooltip] ?? '') : ''}</span>
+              <span style="font-weight: bold;">${item.data?.[valueFieldForTooltip] ?? ''}</span>
             </div>
           `
             )
