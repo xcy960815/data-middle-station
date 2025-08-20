@@ -18,11 +18,11 @@ export class ChartDataService {
 
   /**
    * @desc 将dao对象转换为vo对象
-   * @param chartData {ChartDataDao.ChartData} 图表数据
+   * @param chartDataDao {ChartDataDao.ChartData} 图表数据
    * @returns {ChartDataVo.ChartData}
    */
-  private dao2Vo(chartData: ChartDataDao.ChartData): ChartDataVo.ChartData {
-    return chartData.map((item) => ({
+  private dao2Vo(chartDataDao: Array<ChartDataDao.ChartData>): Array<ChartDataVo.ChartData> {
+    return chartDataDao.map((item) => ({
       ...item,
       [String(item.columnName)]: item.columnValue
     }))
@@ -111,7 +111,7 @@ export class ChartDataService {
    * @returns {Promise<AnalyseDao.ChartData>}
    */
 
-  public async getChartData(requestParams: ChartDataDao.RequestParams): Promise<ChartDataVo.ChartData> {
+  public async getChartData(requestParams: ChartDataDao.RequestParams): Promise<Array<ChartDataVo.ChartData>> {
     /**
      * @desc 获取请求参数
      */

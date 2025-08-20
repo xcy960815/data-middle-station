@@ -62,7 +62,7 @@ declare namespace DimensionStore {
       /**
        * 是否禁用；也可传函数 (row, rowIndex) => boolean
        */
-      disabled?: boolean | ((row: ChartDataDao.ChartData[0], rowIndex: number) => boolean)
+      disabled?: boolean | ((row: ChartDataVo.ChartData, rowIndex: number) => boolean)
     }>
   }
 

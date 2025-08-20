@@ -2,13 +2,13 @@ import * as XLSX from 'xlsx'
 
 /**
  * 导出Excel
- * @param {ChartDataDao.ChartData} data 数据
+ * @param {ChartDataVo.ChartData} data 数据
  * @param {string} fileName 文件名
  * @param {string} sheetName 表名
  * @param {string[]} columns 列名
  */
 export const exportToExcel = async (
-  data: ChartDataDao.ChartData,
+  data: Array<ChartDataVo.ChartData>,
   fileName: string,
   sheetName: string,
   columns?: string[]
