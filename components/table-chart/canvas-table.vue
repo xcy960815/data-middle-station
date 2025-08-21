@@ -60,6 +60,7 @@ import { ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { chartProps } from './props'
 const defaultFontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif'
 /**
  * 获取容器元素
@@ -69,202 +70,7 @@ const getContainerEl = (): HTMLDivElement | null => {
   return document.getElementById('container-table') as HTMLDivElement | null
 }
 
-/**
- * 接收外部传入的数据与列配置及样式参数
- */
-const props = withDefaults(
-  defineProps<{
-    /**
-     * 图表标题
-     */
-    title?: string
-    /**
-     * 数据
-     */
-    data: Array<ChartDataVo.ChartData>
-    /**
-     * 分组字段
-     */
-    xAxisFields: Array<GroupStore.GroupOption>
-    /**
-     * 维度字段
-     */
-    yAxisFields: Array<DimensionStore.DimensionOption>
-    /**
-     * 表格宽度
-     */
-    chartWidth?: number | string
-    /**
-     * 表格高度
-     */
-    chartHeight?: number | string
-    /**
-     * 高亮 cell 背景色
-     */
-    highlightCellBackground?: string
-    /**
-     * 表头高度
-     */
-    headerHeight?: number
-    /**
-     * 汇总高度
-     */
-    summaryHeight?: number
-    /**
-     * 是否渲染汇总
-     */
-    enableSummary?: boolean
-    /**
-     * 行高
-     */
-    bodyRowHeight?: number
-    /**
-     * 滚动条大小
-     */
-    scrollbarSize?: number
-    /**
-     * 表头背景色
-     */
-    headerBackground?: string
-    /**
-     * 表格奇数行背景色
-     */
-    bodyBackgroundOdd?: string
-    /**
-     * 表格偶数行背景色
-     */
-    bodyBackgroundEven?: string
-    /**
-     * 表格边框颜色
-     */
-    borderColor?: string
-    /**
-     * 表头文本颜色
-     */
-    headerTextColor?: string
-    /**
-     * 表格文本颜色
-     */
-    bodyTextColor?: string
-    /**
-     * 表头字体
-     */
-    headerFontFamily?: string
-    /**
-     * 表头字体大小
-     */
-    headerFontSize?: number | string
-    /**
-     * 表格内容字体
-     */
-    bodyFontFamily?: string
-    /**
-     * 表格内容字体大小
-     */
-    bodyFontSize?: number | string
-    /**
-     * 汇总行字体
-     */
-    summaryFontFamily?: string
-    /**
-     * 汇总行字体大小
-     */
-    summaryFontSize?: number | string
-    /**
-     * 汇总行背景色
-     */
-    summaryBackground?: string
-    /**
-     * 汇总行文本颜色
-     */
-    summaryTextColor?: string
-    /**
-     * 滚动条背景色
-     */
-    scrollbarBackground?: string
-    /**
-     * 滚动条滑块颜色
-     */
-    scrollbarThumb?: string
-    /**
-     * 滚动条滑块悬停颜色
-     */
-    scrollbarThumbHover?: string
-    /**
-     * 上下缓冲行数
-     */
-    bufferRows?: number
-    /**
-     * 自动列最小宽度（当列未指定width时，均分剩余宽度，但不小于该值）
-     */
-    minAutoColWidth?: number
-    /**
-     * 滚动条拖拽容错阈值（像素），防止轻微鼠标移动意外触发滚动
-     */
-    scrollThreshold?: number
-    /**
-     * 参与排序的表头高亮背景色
-     */
-    headerSortActiveBackground?: string
-    /**
-     * 排序箭头激活颜色
-     */
-    sortableColor?: string
-    /**
-     * 是否启用行高亮
-     */
-    enableRowHoverHighlight?: boolean
-    /**
-     * 是否启用列高亮（含表头列）
-     */
-    enableColHoverHighlight?: boolean
-    /**
-     * 单元格合并方法：参考 Element Plus 的 span-method
-     * 返回 [rowspan, colspan] 或 { rowspan, colspan }；返回 0/0 表示被合并覆盖
-     */
-    spanMethod?: (args: {
-      row: ChartDataVo.ChartData
-      column: GroupStore.GroupOption | DimensionStore.DimensionOption
-      rowIndex: number
-      colIndex: number
-    }) => { rowspan: number; colspan: number } | [number, number] | null | undefined
-  }>(),
-  {
-    chartWidth: '100%',
-    chartHeight: '100%',
-    highlightCellBackground: 'rgba(24, 144, 255, 1)',
-    headerHeight: 32,
-    summaryHeight: 32,
-    enableSummary: false,
-    bodyRowHeight: 32,
-    scrollbarSize: 16,
-    headerBackground: '#f7f7f9',
-    bodyBackgroundOdd: '#ffffff',
-    bodyBackgroundEven: '#fafafa',
-    borderColor: '#dcdfe6',
-    headerTextColor: '#303133',
-    bodyTextColor: '#303133',
-    headerFontFamily: defaultFontFamily,
-    headerFontSize: 14,
-    bodyFontFamily: defaultFontFamily,
-    bodyFontSize: 13,
-    summaryFontFamily: defaultFontFamily,
-    summaryFontSize: 14,
-    summaryBackground: '#f7f7f9',
-    summaryTextColor: '#303133',
-    scrollbarBackground: '#f1f1f1',
-    scrollbarThumb: '#c1c1c1',
-    scrollbarThumbHover: '#a8a8a8',
-    bufferRows: 5,
-    minAutoColWidth: 100,
-    scrollThreshold: 10,
-    headerSortActiveBackground: '#ecf5ff',
-    sortableColor: '#409EFF',
-    enableRowHoverHighlight: false,
-    enableColHoverHighlight: false
-  }
-)
-
+const props = defineProps(chartProps)
 /**
  * 获取有效的汇总高度（受开关控制）
  * @returns {number}
@@ -554,9 +360,13 @@ let selectedCell: { rowIndex: number; colIndex: number; colKey: string } | null 
 let highlightRect: Konva.Rect | null = null
 
 /**
- * 虚拟滚动状态
+ * 可视区域起始行索引
  */
 let visibleRowStart = 0
+
+/**
+ * 可视区域结束行索引
+ */
 let visibleRowEnd = 0
 
 /**
