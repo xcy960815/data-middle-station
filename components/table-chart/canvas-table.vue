@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="containerTableRef"
     id="container-table"
     class="container-table"
     :style="containerStyle"
@@ -61,7 +62,6 @@ import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { chartProps } from './props'
-const defaultFontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif'
 /**
  * 获取容器元素
  * @returns {HTMLDivElement | null} 容器元素

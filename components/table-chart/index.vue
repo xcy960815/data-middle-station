@@ -46,6 +46,12 @@
 <script lang="ts" setup>
 import CanvasTable from './canvas-table.vue'
 const chartConfigStore = useChartConfigStore()
+interface PaginationConfig {
+  pageSize: number
+  pageNum: number
+  total: number
+}
+
 const props = defineProps({
   data: {
     type: Array as PropType<Array<ChartDataVo.ChartData>>,
@@ -66,8 +72,27 @@ const props = defineProps({
   chartWidth: {
     type: [Number, String],
     default: () => '100%'
+  },
+  enablePagination: {
+    type: Boolean,
+    default: false
+  },
+  paginationConfig: {
+    type: Object as PropType<PaginationConfig>,
+    default: () => ({ pageSize: 10, pageNum: 1, total: 0 })
   }
 })
+
+const emits = defineEmits<{
+  'pagination-change': [{ pageNum: number; pageSize: number; total: number }]
+}>()
+
+/**
+ * 处理分页变化事件
+ */
+const handlePaginationChange = (paginationData: { pageNum: number; pageSize: number; total: number }) => {
+  emits('pagination-change', paginationData)
+}
 /**
  * 表格配置
  */

@@ -1,5 +1,21 @@
 import type { PropType } from 'vue'
 
+interface PaginationConfig {
+  pageSize: number
+  /**
+   * 每页条数
+   */
+  pageSizes: Array<number>
+  /**
+   * 当前页码
+   */
+  pageNum: number
+  /**
+   * 总条数
+   */
+  total: number
+}
+
 export const featureProps = {
   /**
    * 是否启用汇总
