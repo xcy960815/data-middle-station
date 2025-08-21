@@ -208,22 +208,23 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'zipcode',
     displayName: 'zipcode',
     width: 200,
+    filterable: true,
     fixed: 'right' as const
   },
-  {
-    columnName: 'action',
-    columnType: 'string',
-    columnComment: '操作',
-    displayName: '操作',
-    width: 220,
-    fixed: 'right' as const,
-    align: 'center' as const,
-    actions: [
-      { key: 'view', label: '查看', type: 'primary' },
-      { key: 'edit', label: '编辑', type: 'success' },
-      { key: 'delete', label: '删除', type: 'danger' }
-    ]
-  },
+  // {
+  //   columnName: 'action',
+  //   columnType: 'string',
+  //   columnComment: '操作',
+  //   displayName: '操作',
+  //   width: 220,
+  //   fixed: 'right' as const,
+  //   align: 'center' as const,
+  //   actions: [
+  //     { key: 'view', label: '查看', type: 'primary' },
+  //     { key: 'edit', label: '编辑', type: 'success' },
+  //     { key: 'delete', label: '删除', type: 'danger' }
+  //   ]
+  // },
   {
     columnName: 'address',
     columnType: 'string',
@@ -297,7 +298,7 @@ const handleActionClick = (payload: { rowIndex: number; action: string; rowData:
 }
 
 const tableConfig = reactive({
-  enableSummary: false,
+  enableSummary: true,
   summaryHeight: 32,
   enableRowHoverHighlight: true,
   enableColHoverHighlight: false,
