@@ -9,7 +9,12 @@
 
   <!-- 过滤器下拉（多选） -->
   <teleport to="body">
-    <div ref="filterDropdownEl" v-if="filterDropdown.visible" class="dms-filter-dropdown" :style="filterDropdownStyle">
+    <div
+      ref="filterDropdownRef"
+      v-show="filterDropdown.visible"
+      class="dms-filter-dropdown"
+      :style="filterDropdownStyle"
+    >
       <el-select
         v-model="filterDropdown.selectedValues"
         multiple
@@ -18,7 +23,7 @@
         collapse-tags-tooltip
         size="small"
         placeholder="选择过滤值"
-        style="width: 180px"
+        style="width: 160px"
         @change="handleSelectedFilter"
         @blur="closeFilterDropdown"
         @keydown.stop
@@ -30,8 +35,8 @@
   <!-- 汇总行下拉（单选） -->
   <teleport to="body">
     <div
-      ref="summaryDropdownEl"
-      v-if="summaryDropdown.visible"
+      ref="summaryDropdownRef"
+      v-show="summaryDropdown.visible"
       class="dms-summary-dropdown"
       :style="summaryDropdownStyle"
     >
@@ -53,6 +58,7 @@
 <script setup lang="ts">
 import { ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
+import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 const defaultFontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif'
 /**
@@ -680,11 +686,11 @@ const summaryDropdown = reactive({
 /**
  * 过滤下拉浮层元素
  */
-const filterDropdownEl = ref<HTMLDivElement | null>(null)
+const filterDropdownRef = ref<HTMLDivElement | null>(null)
 /**
  * 汇总下拉浮层元素
  */
-const summaryDropdownEl = ref<HTMLDivElement | null>(null)
+const summaryDropdownRef = ref<HTMLDivElement | null>(null)
 
 /**
  * 过滤下拉浮层样式
@@ -708,6 +714,68 @@ const summaryDropdownStyle = computed(() => {
     zIndex: String(3000)
   } as Record<string, string>
 })
+/**
+ * 获取下拉框的弹出位置
+ * @param {number} clientX
+ * @param {number} clientY
+ * @param {number} wapperWidth
+ * @param {number} wapperHeight
+ * @returns {dropdownX:number,dropdownY:number}
+ */
+const getWapperPosition = (clientX: number, clientY: number, wapperWidth: number, wapperHeight: number) => {
+  // 获取视口高度
+  const viewportHeight = window.innerHeight
+  // 获取视口宽度
+  const viewportWidth = window.innerWidth
+
+  // 计算各方向剩余空间
+  const spaceBelow = viewportHeight - clientY
+  const spaceAbove = clientY
+  const spaceRight = viewportWidth - clientX
+  const spaceLeft = clientX
+
+  // 垂直位置计算
+  let dropdownY = clientY
+  if (spaceBelow >= wapperHeight) {
+    // 下方空间充足，显示在点击位置下方
+    dropdownY = clientY + 5
+  } else if (spaceAbove >= wapperHeight) {
+    // 下方空间不足但上方空间充足，显示在点击位置上方
+    dropdownY = clientY - wapperHeight - 5
+  } else {
+    // 上下空间都不足，优先选择空间较大的一方
+    if (spaceBelow >= spaceAbove) {
+      dropdownY = clientY + 5
+    } else {
+      dropdownY = clientY - wapperHeight - 5
+    }
+    // 确保不超出边界
+    dropdownY = Math.max(5, Math.min(dropdownY, viewportHeight - wapperHeight - 5))
+  }
+
+  // 水平位置计算
+  let dropdownX = clientX
+  if (spaceRight >= wapperWidth) {
+    // 右侧空间充足，显示在点击位置右侧
+    dropdownX = clientX + 5
+  } else if (spaceLeft >= wapperWidth) {
+    // 右侧空间不足但左侧空间充足，显示在点击位置左侧
+    dropdownX = clientX - wapperWidth - 5
+  } else {
+    // 左右空间都不足，优先选择空间较大的一方
+    if (spaceRight >= spaceLeft) {
+      dropdownX = clientX + 5
+    } else {
+      dropdownX = clientX - wapperWidth - 5
+    }
+    // 确保不超出边界
+    dropdownX = Math.max(5, Math.min(dropdownX, viewportWidth - wapperWidth - 5))
+  }
+  return {
+    dropdownX,
+    dropdownY
+  }
+}
 
 /**
  * 打开过滤下拉浮层
@@ -718,23 +786,32 @@ const summaryDropdownStyle = computed(() => {
  * @param {Array<string>} selected 已选中的选项
  */
 const openFilterDropdown = (
-  clientX: number,
-  clientY: number,
+  evt: KonvaEventObject<MouseEvent, Konva.Circle>,
   colName: string,
   options: string[],
   selected: string[]
 ) => {
-  // Teleport 到 body 后直接使用视口坐标
-  filterDropdown.x = clientX
-  filterDropdown.y = clientY + 8
-  filterDropdown.colName = colName
-  filterDropdown.options = options
-  filterDropdown.selectedValues = [...selected]
   filterDropdown.visible = true
-  // 打开下拉时取消 hover 高亮，避免视觉干扰
-  hoveredRowIndex = null
-  hoveredColIndex = null
-  createOrUpdateHoverRects()
+
+  if (!filterDropdownRef.value) return
+  const filterDropdownEl = filterDropdownRef.value
+  if (!filterDropdownEl) return
+  nextTick(() => {
+    const filterDropdownElRect = filterDropdownEl.getBoundingClientRect()
+    const filterDropdownElHeight = Math.ceil(filterDropdownElRect.height)
+    const filterDropdownElWidth = Math.ceil(filterDropdownElRect.width)
+    const { clientX, clientY } = evt.evt
+    const { dropdownX, dropdownY } = getWapperPosition(clientX, clientY, filterDropdownElWidth, filterDropdownElHeight)
+    filterDropdown.x = dropdownX
+    filterDropdown.y = dropdownY
+    filterDropdown.colName = colName
+    filterDropdown.options = options
+    filterDropdown.selectedValues = [...selected]
+    // 打开下拉时取消 hover 高亮，避免视觉干扰
+    hoveredRowIndex = null
+    hoveredColIndex = null
+    createOrUpdateHoverRects()
+  })
 }
 
 /**
@@ -754,18 +831,36 @@ const closeFilterDropdown = () => {
  * @param {string} selected 已选中的选项
  */
 const openSummaryDropdown = (
-  clientX: number,
-  clientY: number,
+  evt: KonvaEventObject<MouseEvent, Konva.Rect>,
   colName: string,
   options: Array<{ label: string; value: string }>,
   selected?: string
 ) => {
-  summaryDropdown.x = clientX
-  summaryDropdown.y = clientY + 8
-  summaryDropdown.colName = colName
-  summaryDropdown.options = options
-  summaryDropdown.selectedValue = selected || 'nodisplay'
   summaryDropdown.visible = true
+  if (!summaryDropdownRef.value) return
+  const summaryDropdownEl = summaryDropdownRef.value
+  if (!summaryDropdownEl) return
+  nextTick(() => {
+    const summaryDropdownElRect = summaryDropdownEl.getBoundingClientRect()
+    const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
+    const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
+    const { clientX, clientY } = evt.evt
+    const { dropdownX, dropdownY } = getWapperPosition(
+      clientX,
+      clientY,
+      summaryDropdownElWidth,
+      summaryDropdownElHeight
+    )
+    summaryDropdown.x = dropdownX
+    summaryDropdown.y = dropdownY
+    summaryDropdown.colName = colName
+    summaryDropdown.options = options
+    summaryDropdown.selectedValue = selected || 'nodisplay'
+    // 打开下拉时取消 hover 高亮，避免视觉干扰
+    hoveredRowIndex = null
+    hoveredColIndex = null
+    createOrUpdateHoverRects()
+  })
 }
 
 /**
@@ -814,8 +909,8 @@ const handleSelectedFilter = () => {
 const onGlobalMousedown = (e: MouseEvent) => {
   if (stage) stage.setPointersPositions(e)
   if (!filterDropdown.visible && !summaryDropdown.visible) return
-  const panel = filterDropdownEl.value
-  const panelSummary = summaryDropdownEl.value
+  const panel = filterDropdownRef.value
+  const panelSummary = summaryDropdownRef.value
   const target = e.target as HTMLElement | null
   if (!target) return
   // 点击自身面板内：不关闭
@@ -1833,7 +1928,7 @@ const drawHeaderPart = (
         const options = Array.from(values)
         const current = filterState[col.columnName] ? Array.from(filterState[col.columnName]!) : []
         const optionUnion = Array.from(new Set<string>([...options, ...current]))
-        openFilterDropdown(evt.evt.clientX, evt.evt.clientY, col.columnName, optionUnion, current)
+        openFilterDropdown(evt, col.columnName, optionUnion, current)
       })
     }
 
@@ -1989,7 +2084,6 @@ const drawSummaryPart = (
         group.getLayer()?.batchDraw()
       })
     }
-
     cell.on('mouseenter', () => {
       if (stage) stage.container().style.cursor = 'pointer'
     })
@@ -1999,13 +2093,11 @@ const drawSummaryPart = (
 
     cell.on('click', (evt) => {
       if (!stage) return
-      const isNumber = typeof activeData.value[0]?.[col.columnName] === 'number'
-
-      const { clientX, clientY } = evt.evt
+      const isNumber = col.columnType === 'number'
       const options = isNumber ? numberOptions : textOptions
       const prev = summaryState[col.columnName] || 'nodisplay'
       const valid = options.some((o) => o.value === prev) ? prev : 'nodisplay'
-      openSummaryDropdown(clientX, clientY, col.columnName, options, valid)
+      openSummaryDropdown(evt, col.columnName, options, valid)
     })
 
     x += col.width || 0
@@ -3445,7 +3537,7 @@ onBeforeUnmount(() => {
   background: #fff;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #ebeef5;
-  padding: 8px;
+  padding: 5px 8px;
   border-radius: 4px;
 }
 </style>
