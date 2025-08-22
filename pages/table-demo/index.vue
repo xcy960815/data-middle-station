@@ -14,6 +14,12 @@
         <el-form-item label="高亮 cell 背景色">
           <el-color-picker v-model="tableConfig.highlightCellBackground" />
         </el-form-item>
+        <el-form-item label="高亮行背景色">
+          <el-color-picker v-model="tableConfig.highlightRowBackground" />
+        </el-form-item>
+        <el-form-item label="高亮列背景色">
+          <el-color-picker v-model="tableConfig.highlightColBackground" />
+        </el-form-item>
         <el-form-item label="表头高度">
           <el-input-number v-model="tableConfig.headerHeight" :step="10" />
         </el-form-item>
@@ -301,7 +307,9 @@ const tableConfig = reactive({
   enableSummary: true,
   summaryHeight: 32,
   enableRowHoverHighlight: true,
-  enableColHoverHighlight: false,
+  enableColHoverHighlight: true,
+  highlightRowBackground: 'rgba(24, 144, 255, 0.1)',
+  highlightColBackground: 'rgba(24, 144, 255, 0.1)',
   border: false,
   highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
   headerHeight: 32,

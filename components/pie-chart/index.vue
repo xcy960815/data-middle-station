@@ -1,7 +1,7 @@
 <template>
   <!-- 饼图 -->
   <div
-    id="container-pie"
+    id="pie-container"
     class="h-full w-full pie-chart-container"
     data-canvas-type="pie-chart"
     data-canvas-component="PieChart"
@@ -67,7 +67,7 @@ const initChart = () => {
 
   // 初始化图表实例
   const chart = new Chart({
-    container: 'container-pie',
+    container: 'pie-container',
     theme: 'classic',
     autoFit: true
   })

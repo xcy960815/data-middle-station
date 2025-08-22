@@ -1,7 +1,7 @@
 <template>
   <!-- 柱状图 -->
   <div
-    id="container-interval"
+    id="interval-container"
     class="h-full w-full"
     data-canvas-type="interval-chart"
     data-canvas-component="IntervalChart"
@@ -99,7 +99,7 @@ const initChart = () => {
 
   // 初始化图表实例
   const chart = new Chart({
-    container: 'container-interval',
+    container: 'interval-container',
     theme: 'classic',
     autoFit: true
   })
