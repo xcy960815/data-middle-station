@@ -1,6 +1,6 @@
 <template>
   <!-- 折线图 -->
-  <div id="container-line" class="h-full w-full" data-canvas-type="line-chart" data-canvas-component="LineChart"></div>
+  <div id="line-container" class="h-full w-full" data-canvas-type="line-chart" data-canvas-component="LineChart"></div>
 </template>
 <script setup lang="ts">
 import { Chart } from '@antv/g2'
@@ -95,7 +95,7 @@ const initChart = () => {
 
   // 初始化图表实例
   const chart = new Chart({
-    container: 'container-line',
+    container: 'line-container',
     theme: 'classic',
     autoFit: true
   })
