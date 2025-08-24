@@ -14,13 +14,13 @@ export const styleProps = {
    */
   highlightCellBackground: { type: String, default: 'rgba(24, 144, 255, 1)' },
   /**
-   * 高亮行背景色
+   * 行悬停高亮颜色（包含背景色和边框色）
    */
-  highlightRowBackground: { type: String, default: 'rgba(24, 144, 255, 0.1)' },
+  highlightRowBackground: { type: String, default: 'rgba(64, 158, 255, 0.1)' },
   /**
-   * 高亮列背景色
+   * 列悬停高亮颜色（包含背景色和边框色）
    */
-  highlightColBackground: { type: String, default: 'rgba(24, 144, 255, 0.1)' },
+  highlightColBackground: { type: String, default: 'rgba(64, 158, 255, 0.08)' },
 
   /**
    * 表头高度
