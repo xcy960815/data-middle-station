@@ -115,6 +115,8 @@
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
 
 const spanMethod = ({
+  row,
+  column,
   rowIndex,
   colIndex
 }: {
@@ -123,23 +125,23 @@ const spanMethod = ({
   rowIndex: number
   colIndex: number
 }): { rowspan: number; colspan: number } => {
-  // // 合并行：将第 0 列按两行一组合并
-  // if (colIndex === 0) {
-  //   if (rowIndex % 2 === 0) {
-  //     return { rowspan: 2, colspan: 1 }
-  //   }
-  //   return { rowspan: 0, colspan: 0 }
-  // }
+  // 更稳健：按列名而不是索引进行纵向合并，避免列顺序变化造成误判
+  if (column.columnName === 'id') {
+    if (rowIndex % 2 === 0) {
+      return { rowspan: 2, colspan: 1 }
+    }
+    return { rowspan: 0, colspan: 0 }
+  }
 
-  // // 合并列：在每第 3 行（0,3,6,...)，将第 1、2 列横向合并
-  // if (rowIndex % 3 === 0) {
-  //   if (colIndex === 1) {
-  //     return { rowspan: 1, colspan: 2 }
-  //   }
-  //   if (colIndex === 2) {
-  //     return { rowspan: 0, colspan: 0 }
-  //   }
-  // }
+  // 保留示例的横向合并逻辑（仍按索引演示）
+  if (rowIndex % 3 === 0) {
+    if (colIndex === 1) {
+      return { rowspan: 1, colspan: 2 }
+    }
+    if (colIndex === 2) {
+      return { rowspan: 0, colspan: 0 }
+    }
+  }
 
   return { rowspan: 1, colspan: 1 }
 }
@@ -335,7 +337,7 @@ const tableConfig = reactive({
   headerSortActiveBackground: '#ecf5ff',
   sortableColor: '#409EFF',
   chartHeight: 460,
-  chartWidth: 1500,
+  chartWidth: 1000,
   bodyRowHeight: 32
 })
 
