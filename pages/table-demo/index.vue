@@ -1,7 +1,7 @@
 <template>
   <div class="table-demo-container">
     <ClientOnly>
-      <el-form label-width="auto" :model="tableConfig">
+      <!-- <el-form label-width="auto" :model="tableConfig">
         <el-form-item label="是否行高亮">
           <el-switch v-model="tableConfig.enableRowHoverHighlight" />
         </el-form-item>
@@ -68,7 +68,7 @@
         <el-form-item label="表格宽度">
           <el-input-number v-model="tableConfig.chartWidth" :step="100" />
         </el-form-item>
-      </el-form>
+      </el-form> -->
       <CanvasTable
         :enable-summary="tableConfig.enableSummary"
         :summary-height="tableConfig.summaryHeight"
@@ -123,23 +123,23 @@ const spanMethod = ({
   rowIndex: number
   colIndex: number
 }): { rowspan: number; colspan: number } => {
-  // 合并行：将第 0 列按两行一组合并
-  if (colIndex === 0) {
-    if (rowIndex % 2 === 0) {
-      return { rowspan: 2, colspan: 1 }
-    }
-    return { rowspan: 0, colspan: 0 }
-  }
+  // // 合并行：将第 0 列按两行一组合并
+  // if (colIndex === 0) {
+  //   if (rowIndex % 2 === 0) {
+  //     return { rowspan: 2, colspan: 1 }
+  //   }
+  //   return { rowspan: 0, colspan: 0 }
+  // }
 
-  // 合并列：在每第 3 行（0,3,6,...)，将第 1、2 列横向合并
-  if (rowIndex % 3 === 0) {
-    if (colIndex === 1) {
-      return { rowspan: 1, colspan: 2 }
-    }
-    if (colIndex === 2) {
-      return { rowspan: 0, colspan: 0 }
-    }
-  }
+  // // 合并列：在每第 3 行（0,3,6,...)，将第 1、2 列横向合并
+  // if (rowIndex % 3 === 0) {
+  //   if (colIndex === 1) {
+  //     return { rowspan: 1, colspan: 2 }
+  //   }
+  //   if (colIndex === 2) {
+  //     return { rowspan: 0, colspan: 0 }
+  //   }
+  // }
 
   return { rowspan: 1, colspan: 1 }
 }
@@ -257,7 +257,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
 /**
  * 数据
  */
-const data: Array<ChartDataVo.ChartData> = Array.from({ length: 30 }, (_, i) => ({
+const data: Array<ChartDataVo.ChartData> = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
   name: `User ${i + 1}`,
   age: 18 + ((i * 7) % 40),
