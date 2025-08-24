@@ -576,9 +576,9 @@ const handleScroll = () => {
       summaryDropdownElWidth,
       summaryDropdownElHeight
     )
-    console.log('summaryDropdown.originalClientX', summaryDropdown.originalClientX)
-    console.log('summaryDropdown.originalClientY', summaryDropdown.originalClientY)
-    console.log('scrollX', scrollX, 'scrollY', scrollY)
+    // console.log('summaryDropdown.originalClientX', summaryDropdown.originalClientX)
+    // console.log('summaryDropdown.originalClientY', summaryDropdown.originalClientY)
+    // console.log('scrollX', scrollX, 'scrollY', scrollY)
     summaryDropdown.x = dropdownX
     summaryDropdown.y = dropdownY
   }
@@ -2739,8 +2739,8 @@ const recomputeHoverIndexFromPointer = () => {
 
   if (rowChanged || colChanged) {
     updateHoverRects()
-    console.log('hoveredRowIndex', hoveredRowIndex)
-    console.log('hoveredColIndex', hoveredColIndex)
+    // console.log('hoveredRowIndex', hoveredRowIndex)
+    // console.log('hoveredColIndex', hoveredColIndex)
   }
 }
 
