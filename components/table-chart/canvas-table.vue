@@ -2234,9 +2234,9 @@ const drawBodyPart = (
       let spanRow = 1
       let spanCol = 1
       let coveredBySpanMethod = false
+      // 传入全局列索引，以避免将左/中/右分区的局部索引当成第 0 列
+      const globalColIndex = tableColumns.value.findIndex((c) => c.columnName === col.columnName)
       if (hasSpanMethod) {
-        // 传入全局列索引，以避免将左/中/右分区的局部索引当成第 0 列
-        const globalColIndex = tableColumns.value.findIndex((c) => c.columnName === col.columnName)
         const res = props.spanMethod({ row, column: col, rowIndex, colIndex: globalColIndex })
         if (Array.isArray(res)) {
           spanRow = Math.max(0, Number(res[0]) || 0)
@@ -2247,6 +2247,23 @@ const drawBodyPart = (
         }
         // 只要任一维度为 0，即视为被合并覆盖（与常见表格合并语义一致）
         if (spanRow === 0 || spanCol === 0) coveredBySpanMethod = true
+
+        // 修正：当横向覆盖（spanCol === 0）但覆盖起始列位于不同分区时，视为不覆盖（避免跨分区空白）
+        if (coveredBySpanMethod && spanCol === 0) {
+          const { leftCols, centerCols } = getSplitColumns()
+          const leftCount = leftCols.length
+          const centerCount = centerCols.length
+          const boundaryCenter = leftCount + centerCount
+          const currentPartition =
+            globalColIndex < leftCount ? 'left' : globalColIndex < boundaryCenter ? 'center' : 'right'
+          const prevGlobal = globalColIndex - 1
+          if (prevGlobal >= 0) {
+            const prevPartition = prevGlobal < leftCount ? 'left' : prevGlobal < boundaryCenter ? 'center' : 'right'
+            if (prevPartition !== currentPartition) {
+              coveredBySpanMethod = false
+            }
+          }
+        }
       }
 
       const shouldDraw = !hasSpanMethod || !coveredBySpanMethod
