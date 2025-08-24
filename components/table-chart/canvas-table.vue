@@ -1260,6 +1260,12 @@ const getFromPool = <T extends Konva.Node>(pools: T[], createPoolFn: () => T): T
  */
 const returnToPool = <T extends Konva.Node>(pool: T[], node: T) => {
   node.remove() // 从场景中移除
+  // 清理可能存在的临时属性，避免对象复用导致高亮残留
+  try {
+    node.setAttr && node.setAttr('original-fill', null)
+    node.setAttr && node.setAttr('original-stroke', null)
+    node.setAttr && node.setAttr('original-strokeWidth', null)
+  } catch {}
   pool.push(node)
 }
 
@@ -2201,6 +2207,10 @@ const drawBodyPart = (
       () => new Konva.Rect({ listening: false, name: 'row-rect' })
     )
 
+    // 行背景矩形不应携带行/列索引，避免被误纳入 hover 高亮集合
+    backgroundRect.setAttr('row-index', null)
+    backgroundRect.setAttr('col-index', null)
+
     backgroundRect.x(0)
     backgroundRect.y(y)
     backgroundRect.width(rowTotalWidth)
@@ -2364,6 +2374,9 @@ const drawBodyPart = (
               rect.off('click')
               rect.off('mouseenter')
               rect.off('mouseleave')
+              // 按钮矩形不应携带行/列索引，避免被误纳入 hover 高亮集合
+              rect.setAttr('row-index', null)
+              rect.setAttr('col-index', null)
               rect.x(startX)
               rect.y(centerY)
               rect.width(w)
@@ -2415,6 +2428,9 @@ const drawBodyPart = (
             rect.off('click')
             rect.off('mouseenter')
             rect.off('mouseleave')
+            // 按钮矩形不应携带行/列索引，避免被误纳入 hover 高亮集合
+            rect.setAttr('row-index', null)
+            rect.setAttr('col-index', null)
             rect.x(buttonX)
             rect.y(buttonY)
             rect.width(buttonWidth)
@@ -2806,6 +2822,9 @@ const getColOrRowHighlightRects = (type: 'row' | 'column', index: number) => {
     if (!group) return
     group.children.forEach((child) => {
       if (!(child instanceof Konva.Rect)) return
+      // 排除非单元格矩形：行背景与操作按钮
+      const nodeName = child.name?.() || ''
+      if (nodeName === 'row-rect' || nodeName === 'action-button' || nodeName.startsWith?.('action-button-')) return
       if (type === 'row') {
         // 检查行索引
         const attr = child.getAttr('row-index')
@@ -2967,14 +2986,9 @@ const updateVerticalScroll = (offsetY: number) => {
   updateScrollbars()
 
   // 更新行和列高亮矩形位置（因为可视区域可能改变了）
-  if (
-    (hoveredRowIndex !== null && props.enableRowHoverHighlight) ||
-    (hoveredColIndex !== null && props.enableColHoverHighlight)
-  ) {
-    // 先重新计算鼠标位置对应的行列索引，再更新高亮
-    recomputeHoverIndexFromPointer()
-    updateHoverRects()
-  }
+  // 无条件重算与更新，避免滚动时 hover 状态不同步
+  recomputeHoverIndexFromPointer()
+  updateHoverRects()
 
   bodyLayer?.batchDraw()
   fixedBodyLayer?.batchDraw()
@@ -3009,6 +3023,7 @@ const updateHorizontalScroll = (offsetX: number) => {
   fixedSummaryLayer?.batchDraw()
 
   recomputeHoverIndexFromPointer()
+  updateHoverRects()
 
   // 横向滚动时更新弹框位置
   updateDropdownPositions()
@@ -3054,6 +3069,10 @@ const handleWheel = (e: WheelEvent) => {
 
   // 设置指针位置到 stage，避免 Konva 警告
   if (stage) stage.setPointersPositions(e)
+
+  // 同步最后一次客户端坐标，用于遮罩与区域判断
+  lastClientX = e.clientX
+  lastClientY = e.clientY
 
   const hasDeltaX = Math.abs(e.deltaX) > 0
   const hasDeltaY = Math.abs(e.deltaY) > 0
