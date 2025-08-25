@@ -3,6 +3,17 @@
     <el-divider content-position="left">高亮与交互</el-divider>
     <!-- 行高亮 -->
     <el-form-item label="行高亮">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">行高亮</span>
+          <el-tooltip content="启用后，鼠标悬停时，行会高亮" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('enableRowHoverHighlight')" size="small"
+            >重置</el-button
+          >
+        </span>
+      </template>
       <el-switch
         @change="handleUpdateTableConfig"
         v-model="tableChartConfig.enableRowHoverHighlight"
@@ -11,20 +22,55 @@
     </el-form-item>
     <!-- 列高亮 -->
     <el-form-item label="列高亮">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">列高亮</span>
+          <el-tooltip content="启用后，鼠标悬停时，列会高亮" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('enableColHoverHighlight')" size="small"
+            >重置</el-button
+          >
+        </span>
+      </template>
       <el-switch
         @change="handleUpdateTableConfig"
         v-model="tableChartConfig.enableColHoverHighlight"
         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
       />
     </el-form-item>
-    <!-- highlightCellBackground -->
+    <!-- 高亮 cell 背景色 -->
     <el-form-item label="高亮 cell 背景色">
-      <el-color-picker v-model="tableChartConfig.highlightCellBackground" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">高亮 cell 背景色</span>
+          <el-tooltip content="启用后，鼠标悬停时，cell 会高亮" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('highlightCellBackground')" size="small"
+            >重置</el-button
+          >
+        </span>
+      </template>
+      <el-color-picker
+        v-model="tableChartConfig.highlightCellBackground"
+        @change="handleUpdateTableConfig"
+        show-alpha
+      />
     </el-form-item>
 
     <el-divider content-position="left">表头</el-divider>
     <!-- 表头高度 -->
     <el-form-item label="表头高度">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表头高度</span>
+          <el-tooltip content="表头高度" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('headerHeight')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-input
         v-model="tableChartConfig.headerHeight"
         placeholder="表头高度"
@@ -33,6 +79,15 @@
     </el-form-item>
     <!-- 表头字体 -->
     <el-form-item label="表头字体">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表头字体</span>
+          <el-tooltip content="表头字体" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('headerFontFamily')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-select
         v-model="tableChartConfig.headerFontFamily"
         placeholder="请选择表头字体"
@@ -43,6 +98,15 @@
     </el-form-item>
     <!-- 表头字体大小 -->
     <el-form-item label="表头字体大小">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表头字体大小</span>
+          <el-tooltip content="表头字体大小" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('headerFontSize')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-input
         v-model="tableChartConfig.headerFontSize"
         placeholder="表头字体大小"
@@ -51,16 +115,43 @@
     </el-form-item>
     <!-- 表头文本颜色 -->
     <el-form-item label="表头文本颜色">
-      <el-color-picker v-model="tableChartConfig.headerTextColor" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表头文本颜色</span>
+          <el-tooltip content="表头文本颜色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('headerTextColor')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.headerTextColor" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
     <!-- 表头背景色 -->
     <el-form-item label="表头背景色">
-      <el-color-picker v-model="tableChartConfig.headerBackground" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表头背景色</span>
+          <el-tooltip content="表头背景色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('headerBackground')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.headerBackground" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
 
     <el-divider content-position="left">正文</el-divider>
     <!-- 行高 -->
     <el-form-item label="行高">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">行高</span>
+          <el-tooltip content="行高" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('bodyRowHeight')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-input
         v-model="tableChartConfig.bodyRowHeight"
         placeholder="行高"
@@ -69,6 +160,15 @@
     </el-form-item>
     <!-- 表格字体 -->
     <el-form-item label="表格字体">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表格字体</span>
+          <el-tooltip content="表格字体" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('bodyFontFamily')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-select
         v-model="tableChartConfig.bodyFontFamily"
         placeholder="请选择表格字体"
@@ -79,6 +179,15 @@
     </el-form-item>
     <!-- 表格字体大小 -->
     <el-form-item label="表格字体大小">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表格字体大小</span>
+          <el-tooltip content="表格字体大小" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('bodyFontSize')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-input
         v-model="tableChartConfig.bodyFontSize"
         placeholder="表格字体大小"
@@ -87,23 +196,69 @@
     </el-form-item>
     <!-- 表格文本颜色 -->
     <el-form-item label="表格文本颜色">
-      <el-color-picker v-model="tableChartConfig.bodyTextColor" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表格文本颜色</span>
+          <el-tooltip content="表格文本颜色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('bodyTextColor')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.bodyTextColor" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
     <!-- 表格奇数行背景色 -->
     <el-form-item label="表格奇数行背景色">
-      <el-color-picker v-model="tableChartConfig.bodyBackgroundOdd" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表格奇数行背景色</span>
+          <el-tooltip content="表格奇数行背景色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('bodyBackgroundOdd')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.bodyBackgroundOdd" @change="handleUpdateTableConfig" show-alpha />
+      <el-button type="text" @click="handleResetTableConfig('bodyBackgroundOdd')" size="small">重置</el-button>
     </el-form-item>
     <!-- 表格偶数行背景色 -->
     <el-form-item label="表格偶数行背景色">
-      <el-color-picker v-model="tableChartConfig.bodyBackgroundEven" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表格偶数行背景色</span>
+          <el-tooltip content="表格偶数行背景色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('bodyBackgroundEven')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.bodyBackgroundEven" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
     <!-- 表格边框颜色 -->
     <el-form-item label="表格边框颜色">
-      <el-color-picker v-model="tableChartConfig.borderColor" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">表格边框颜色</span>
+          <el-tooltip content="表格边框颜色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('borderColor')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.borderColor" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
 
     <el-divider content-position="left">汇总行</el-divider>
     <el-form-item label="是否展示汇总行">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">是否展示汇总行</span>
+          <el-tooltip content="是否展示汇总行" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('enableSummary')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-switch
         @change="handleUpdateTableConfig"
         v-model="tableChartConfig.enableSummary"
@@ -112,6 +267,15 @@
     </el-form-item>
     <!-- 汇总行高度 -->
     <el-form-item label="汇总行高度">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">汇总行高度</span>
+          <el-tooltip content="汇总行高度" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('summaryHeight')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-input
         v-model="tableChartConfig.summaryHeight"
         placeholder="汇总行高度"
@@ -120,6 +284,15 @@
     </el-form-item>
     <!-- 汇总行字体 -->
     <el-form-item label="汇总行字体">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">汇总行字体</span>
+          <el-tooltip content="汇总行字体" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('summaryFontFamily')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-select
         v-model="tableChartConfig.summaryFontFamily"
         placeholder="请选择汇总行字体"
@@ -130,6 +303,15 @@
     </el-form-item>
     <!-- 汇总行字体大小 -->
     <el-form-item label="汇总行字体大小">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">汇总行字体大小</span>
+          <el-tooltip content="汇总行字体大小" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('summaryFontSize')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-input
         v-model="tableChartConfig.summaryFontSize"
         placeholder="汇总行字体大小"
@@ -138,16 +320,43 @@
     </el-form-item>
     <!-- 汇总行文本颜色 -->
     <el-form-item label="汇总行文本颜色">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">汇总行文本颜色</span>
+          <el-tooltip content="汇总行文本颜色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('summaryTextColor')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-color-picker v-model="tableChartConfig.summaryTextColor" @change="handleUpdateTableConfig" />
     </el-form-item>
     <!-- 汇总行背景色 -->
     <el-form-item label="汇总行背景色">
-      <el-color-picker v-model="tableChartConfig.summaryBackground" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">汇总行背景色</span>
+          <el-tooltip content="汇总行背景色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('summaryBackground')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.summaryBackground" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
 
     <el-divider content-position="left">滚动条</el-divider>
     <!-- 滚动条大小 -->
     <el-form-item label="滚动条大小">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">滚动条大小</span>
+          <el-tooltip content="滚动条大小" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('scrollbarSize')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-input
         v-model="tableChartConfig.scrollbarSize"
         placeholder="滚动条大小"
@@ -156,20 +365,56 @@
     </el-form-item>
     <!-- 滚动条背景色 -->
     <el-form-item label="滚动条背景色">
-      <el-color-picker v-model="tableChartConfig.scrollbarBackground" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">滚动条背景色</span>
+          <el-tooltip content="滚动条背景色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('scrollbarBackground')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.scrollbarBackground" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
     <!-- 滚动条滑块颜色 -->
     <el-form-item label="滚动条滑块颜色">
-      <el-color-picker v-model="tableChartConfig.scrollbarThumb" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">滚动条滑块颜色</span>
+          <el-tooltip content="滚动条滑块颜色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('scrollbarThumb')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.scrollbarThumb" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
     <!-- 滚动条滑块悬停颜色 -->
     <el-form-item label="滚动条滑块悬停颜色">
-      <el-color-picker v-model="tableChartConfig.scrollbarThumbHover" @change="handleUpdateTableConfig" />
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">滚动条滑块悬停颜色</span>
+          <el-tooltip content="滚动条滑块悬停颜色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('scrollbarThumbHover')" size="small">重置</el-button>
+        </span>
+      </template>
+      <el-color-picker v-model="tableChartConfig.scrollbarThumbHover" @change="handleUpdateTableConfig" show-alpha />
     </el-form-item>
 
     <el-divider content-position="left">性能</el-divider>
     <!-- 缓冲行数 -->
     <el-form-item label="缓冲行数">
+      <template #label>
+        <span class="el-form-item__slot flex items-center">
+          <span class="mr-2 el-form-item-label">缓冲行数</span>
+          <el-tooltip content="缓冲行数" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-button type="text" @click="handleResetTableConfig('bufferRows')" size="small">重置</el-button>
+        </span>
+      </template>
       <el-input
         v-model="tableChartConfig.bufferRows"
         placeholder="缓冲行数"
@@ -180,45 +425,17 @@
 </template>
 
 <script lang="ts" setup>
+import { IconPark } from '@icon-park/vue-next/es/all'
+
 /**
  * @desc 图表配置store
  */
 const chartsConfigStore = useChartConfigStore()
+
 /**
  * @desc 表格配置数据
  */
-const tableChartConfig = reactive<ChartConfigStore.TableChartConfig>({
-  enableRowHoverHighlight: false,
-  enableColHoverHighlight: false,
-  highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
-  headerHeight: 32,
-  summaryHeight: 32,
-  enableSummary: false,
-  bodyRowHeight: 32,
-  scrollbarSize: 16,
-  headerBackground: '#f9fafb',
-  bodyBackgroundOdd: '#ffffff',
-  bodyBackgroundEven: '#f9fafb',
-  borderColor: '#d1d5db',
-  headerTextColor: '#374151',
-  headerFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
-  headerFontSize: 14,
-  bodyTextColor: '#374151',
-  bodyFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
-  bodyFontSize: 14,
-  summaryFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
-  summaryFontSize: 14,
-  summaryBackground: '#f9fafb',
-  summaryTextColor: '#374151',
-  scrollbarBackground: '#f3f4f6',
-  scrollbarThumb: '#d1d5db',
-  scrollbarThumbHover: '#9ca3af',
-  bufferRows: 5,
-  minAutoColWidth: 80,
-  scrollThreshold: 3,
-  headerSortActiveBackground: '#e5e7eb',
-  sortableColor: '#6b7280'
-})
+const tableChartConfig = reactive<ChartConfigStore.TableChartConfig>({ ...defaultTableChartConfig })
 
 onMounted(() => {
   if (chartsConfigStore.privateChartConfig.table) {
@@ -234,6 +451,22 @@ const handleUpdateTableConfig = (): void => {
   chartsConfigStore.setTableChartConfig(tableChartConfig)
 }
 
+/**
+ * @desc 重置表格配置
+ * @returns {void}
+ */
+const handleResetTableConfig = <K extends keyof ChartConfigStore.TableChartConfig>(chartConfigKey?: K): void => {
+  if (chartConfigKey) {
+    tableChartConfig[chartConfigKey] = defaultTableChartConfig[chartConfigKey]
+  } else {
+    Object.assign(tableChartConfig, defaultTableChartConfig)
+  }
+  handleUpdateTableConfig()
+}
+
+/**
+ * @desc 字体选项
+ */
 const fontFamilyOptions = [
   {
     label: '系统默认',
