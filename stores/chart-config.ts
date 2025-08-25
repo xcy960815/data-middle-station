@@ -6,6 +6,8 @@ export const defaultTableChartConfig: ChartConfigVo.TableChartConfig = {
   enableRowHoverHighlight: false,
   enableColHoverHighlight: false,
   highlightCellBackground: '#f5f7fa',
+  highlightRowBackground: 'rgba(24, 144, 255, 0.1)',
+  highlightColBackground: 'rgba(24, 144, 255, 0.1)',
   headerHeight: 30,
   summaryHeight: 30,
   enableSummary: false,
@@ -90,6 +92,9 @@ export const useChartConfigStore = defineStore<
   BaseStore.Actions<ChartConfigStore.ChartConfigState, ChartConfigStore.ChartConfigActions>
 >(StoreNames.CHART_CONFIG, {
   state: () => ({
+    /**
+     * @desc 图表配置抽屉
+     */
     chartConfigDrawer: false,
     /**
      * @desc 私有图表配置
@@ -128,15 +133,24 @@ export const useChartConfigStore = defineStore<
     getTableChartConfig: (state) => state.privateChartConfig?.table || null
   },
   actions: {
-    /** @desc 设置图表配置抽屉 */
+    /**
+     * @desc 设置图表配置抽屉
+     * @param value 值
+     */
     setChartConfigDrawer(value) {
       this.chartConfigDrawer = value
     },
-    /** @desc 设置图表公共配置 */
+    /**
+     * @desc 设置图表公共配置
+     * @param value 值
+     */
     setCommonChartConfig(value) {
       this.commonChartConfig = value
     },
-    /** @desc 设置图表配置 */
+    /**
+     * @desc 设置图表配置
+     * @param value 值
+     */
     setPrivateChartConfig(value) {
       this.privateChartConfig = value
         ? (JSON.parse(JSON.stringify(value)) as ChartConfigStore.PrivateChartConfig)
@@ -147,13 +161,19 @@ export const useChartConfigStore = defineStore<
             interval: defaultIntervalChartConfig
           }
     },
-    /** @desc 设置表格图配置 */
+    /**
+     * @desc 设置表格图配置
+     * @param value 值
+     */
     setTableChartConfig(value) {
       if (this.privateChartConfig) {
         this.privateChartConfig.table = JSON.parse(JSON.stringify(value)) as ChartConfigStore.TableChartConfig
       }
     },
-    /** @desc 设置表格图配置条件 */
+    /**
+     * @desc 设置表格图配置条件
+     * @param conditions 条件
+     */
     setTableChartConditions(conditions) {
       // if (this.chartConfig) {
       //   this.chartConfig.table.conditions = JSON.parse(

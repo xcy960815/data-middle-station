@@ -8,6 +8,8 @@
         :chart-width="chartWidth"
         :chart-height="chartHeight"
         :highlight-cell-background="tableChartConfig?.highlightCellBackground"
+        :highlight-row-background="tableChartConfig?.highlightRowBackground"
+        :highlight-col-background="tableChartConfig?.highlightColBackground"
         :header-height="tableChartConfig?.headerHeight"
         :summary-height="tableChartConfig?.summaryHeight"
         :enable-summary="tableChartConfig?.enableSummary"
