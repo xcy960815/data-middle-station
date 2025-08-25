@@ -12,7 +12,7 @@
         <h3 class="config-title">图表配置</h3>
       </div>
 
-      <el-tabs v-model="chartConfigTab" type="card" class="config-tabs">
+      <el-tabs v-model="chartConfigTab" type="card" size="mini" class="config-tabs">
         <el-tab-pane label="通用" name="common">
           <CommonConfig />
         </el-tab-pane>

@@ -262,6 +262,14 @@ declare namespace ChartConfigDao {
      */
     highlightCellBackground: string
     /**
+     * 行高亮背景色
+     */
+    highlightRowBackground: string
+    /**
+     * 列高亮背景色
+     */
+    highlightColBackground: string
+    /**
      * 表头高度
      */
     headerHeight: number
