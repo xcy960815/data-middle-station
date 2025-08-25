@@ -31,6 +31,18 @@
       <template #label>
         <span class="el-form-item__slot flex items-center">
           <span class="mr-2 el-form-item-label">行高亮背景色</span>
+          <el-tooltip content="行高亮背景色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-tooltip content="重置" placement="top">
+            <icon-park
+              class="ml-auto reset-icon"
+              type="Refresh"
+              size="16"
+              fill="#666"
+              @click="handleResetTableConfig('highlightRowBackground')"
+            />
+          </el-tooltip>
         </span>
       </template>
       <el-color-picker v-model="tableChartConfig.highlightRowBackground" @change="handleUpdateTableConfig" show-alpha />
@@ -65,6 +77,18 @@
       <template #label>
         <span class="el-form-item__slot flex items-center">
           <span class="mr-2 el-form-item-label">列高亮背景色</span>
+          <el-tooltip content="列高亮背景色" placement="top">
+            <icon-park type="Info" size="16" fill="#ccc" />
+          </el-tooltip>
+          <el-tooltip content="重置" placement="top">
+            <icon-park
+              class="ml-auto reset-icon"
+              type="Refresh"
+              size="16"
+              fill="#666"
+              @click="handleResetTableConfig('highlightColBackground')"
+            />
+          </el-tooltip>
         </span>
       </template>
       <el-color-picker v-model="tableChartConfig.highlightColBackground" @change="handleUpdateTableConfig" show-alpha />
