@@ -1,7 +1,7 @@
 <template>
   <div class="table-demo-container">
     <ClientOnly>
-      <!-- <el-form label-width="auto" :model="tableConfig">
+      <el-form label-width="auto" :model="tableConfig">
         <el-form-item label="是否行高亮">
           <el-switch v-model="tableConfig.enableRowHoverHighlight" />
         </el-form-item>
@@ -12,13 +12,13 @@
           <el-switch v-model="tableConfig.border" />
         </el-form-item>
         <el-form-item label="高亮 cell 背景色">
-          <el-color-picker v-model="tableConfig.highlightCellBackground" />
+          <el-color-picker v-model="tableConfig.highlightCellBackground" show-alpha />
         </el-form-item>
         <el-form-item label="高亮行背景色">
-          <el-color-picker v-model="tableConfig.highlightRowBackground" />
+          <el-color-picker v-model="tableConfig.highlightRowBackground" show-alpha />
         </el-form-item>
         <el-form-item label="高亮列背景色">
-          <el-color-picker v-model="tableConfig.highlightColBackground" />
+          <el-color-picker v-model="tableConfig.highlightColBackground" show-alpha />
         </el-form-item>
         <el-form-item label="表头高度">
           <el-input-number v-model="tableConfig.headerHeight" :step="10" />
@@ -32,28 +32,28 @@
           </el-select>
         </el-form-item>
         <el-form-item label="表头文本颜色">
-          <el-color-picker v-model="tableConfig.headerTextColor" />
+          <el-color-picker v-model="tableConfig.headerTextColor" show-alpha />
         </el-form-item>
         <el-form-item label="表头背景色">
-          <el-color-picker v-model="tableConfig.headerBackground" />
+          <el-color-picker v-model="tableConfig.headerBackground" show-alpha />
         </el-form-item>
         <el-form-item label="表格文本颜色">
-          <el-color-picker v-model="tableConfig.bodyTextColor" />
+          <el-color-picker v-model="tableConfig.bodyTextColor" show-alpha />
         </el-form-item>
         <el-form-item label="表格奇数行背景色">
-          <el-color-picker v-model="tableConfig.bodyBackgroundOdd" />
+          <el-color-picker v-model="tableConfig.bodyBackgroundOdd" show-alpha />
         </el-form-item>
         <el-form-item label="表格偶数行背景色">
-          <el-color-picker v-model="tableConfig.bodyBackgroundEven" />
+          <el-color-picker v-model="tableConfig.bodyBackgroundEven" show-alpha />
         </el-form-item>
         <el-form-item label="滚动条背景色">
-          <el-color-picker v-model="tableConfig.scrollbarBackground" />
+          <el-color-picker v-model="tableConfig.scrollbarBackground" show-alpha />
         </el-form-item>
         <el-form-item label="滚动条滑块颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumb" />
+          <el-color-picker v-model="tableConfig.scrollbarThumb" show-alpha />
         </el-form-item>
         <el-form-item label="滚动条滑块悬停颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumbHover" />
+          <el-color-picker v-model="tableConfig.scrollbarThumbHover" show-alpha />
         </el-form-item>
 
         <el-form-item label="是否展示汇总">
@@ -68,7 +68,7 @@
         <el-form-item label="表格宽度">
           <el-input-number v-model="tableConfig.chartWidth" :step="100" />
         </el-form-item>
-      </el-form> -->
+      </el-form>
       <CanvasTable
         :enable-summary="tableConfig.enableSummary"
         :summary-height="tableConfig.summaryHeight"
@@ -125,25 +125,23 @@ const spanMethod = ({
   rowIndex: number
   colIndex: number
 }): { rowspan: number; colspan: number } => {
-  // 更稳健：按列名而不是索引进行纵向合并，避免列顺序变化造成误判
-  if (column.columnName === 'id') {
-    if (rowIndex % 2 === 0) {
-      return { rowspan: 2, colspan: 1 }
-    }
-    return { rowspan: 0, colspan: 0 }
-  }
-
-  // 保留示例的横向合并逻辑（仍按索引演示）
-  if (rowIndex % 3 === 0) {
-    if (colIndex === 1) {
-      return { rowspan: 1, colspan: 2 }
-    }
-    if (colIndex === 2) {
-      return { rowspan: 0, colspan: 0 }
+  if (colIndex === 0) {
+    if (rowIndex % 3 === 0) {
+      return {
+        rowspan: 3, // 合并3行
+        colspan: 1
+      }
+    } else {
+      return {
+        rowspan: 0,
+        colspan: 0
+      }
     }
   }
-
-  return { rowspan: 1, colspan: 1 }
+  return {
+    rowspan: 1,
+    colspan: 1
+  }
 }
 /**
  * 分组列
@@ -183,42 +181,42 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     filterable: true,
     sortable: true,
     displayName: 'gender'
-  },
-  {
-    columnName: 'country',
-    columnType: 'string',
-    columnComment: 'country',
-    width: 200,
-    filterable: true,
-    sortable: true,
-    displayName: 'country',
-    fixed: 'left' as const
-  },
-  {
-    columnName: 'city',
-    columnType: 'string',
-    columnComment: 'city',
-    width: 200,
-    filterable: true,
-    sortable: true,
-    displayName: 'city',
-    fixed: 'left' as const
-  },
-  {
-    columnName: 'state',
-    columnType: 'string',
-    columnComment: 'state',
-    displayName: 'state'
-  },
-  {
-    columnName: 'zipcode',
-    columnType: 'number',
-    columnComment: 'zipcode',
-    displayName: 'zipcode',
-    width: 200,
-    filterable: true,
-    fixed: 'right' as const
-  },
+  }
+  // {
+  //   columnName: 'country',
+  //   columnType: 'string',
+  //   columnComment: 'country',
+  //   width: 200,
+  //   filterable: true,
+  //   sortable: true,
+  //   displayName: 'country',
+  //   fixed: 'left' as const
+  // },
+  // {
+  //   columnName: 'city',
+  //   columnType: 'string',
+  //   columnComment: 'city',
+  //   width: 200,
+  //   filterable: true,
+  //   sortable: true,
+  //   displayName: 'city',
+  //   fixed: 'left' as const
+  // },
+  // {
+  //   columnName: 'state',
+  //   columnType: 'string',
+  //   columnComment: 'state',
+  //   displayName: 'state'
+  // },
+  // {
+  //   columnName: 'zipcode',
+  //   columnType: 'number',
+  //   columnComment: 'zipcode',
+  //   displayName: 'zipcode',
+  //   width: 200,
+  //   filterable: true,
+  //   fixed: 'right' as const
+  // },
   // {
   //   columnName: 'action',
   //   columnType: 'string',
@@ -233,36 +231,36 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
   //     { key: 'delete', label: '删除', type: 'danger' }
   //   ]
   // },
-  {
-    columnName: 'address',
-    columnType: 'string',
-    columnComment: 'address',
-    displayName: 'address',
-    showOverflowTooltip: true,
-    width: 200
-  },
-  {
-    columnName: 'phone',
-    columnType: 'string',
-    columnComment: 'phone',
-    displayName: 'phone',
-    width: 200
-  },
-  {
-    columnName: 'mobile',
-    columnType: 'string',
-    columnComment: 'mobile',
-    displayName: 'mobile'
-  }
+  // {
+  //   columnName: 'address',
+  //   columnType: 'string',
+  //   columnComment: 'address',
+  //   displayName: 'address',
+  //   showOverflowTooltip: true,
+  //   width: 200
+  // },
+  // {
+  //   columnName: 'phone',
+  //   columnType: 'string',
+  //   columnComment: 'phone',
+  //   displayName: 'phone',
+  //   width: 200
+  // },
+  // {
+  //   columnName: 'mobile',
+  //   columnType: 'string',
+  //   columnComment: 'mobile',
+  //   displayName: 'mobile'
+  // }
 ])
 
 /**
  * 数据
  */
-const data: Array<ChartDataVo.ChartData> = Array.from({ length: 20 }, (_, i) => ({
+const data: Array<ChartDataVo.ChartData> = Array.from({ length: 10 }, (_, i) => ({
   id: i + 1,
   name: `User ${i + 1}`,
-  age: 18 + ((i * 7) % 40),
+  age: 18 + i,
   gender: ['Male', 'Female', 'Other'][(i * 3) % 3],
   country: ['China', 'USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia'][(i * 3) % 8],
   city: ['Beijing', 'Shanghai', 'New York', 'London', 'Berlin', 'Paris', 'Tokyo', 'Toronto', 'Sydney'][(i * 5) % 9],
@@ -310,8 +308,8 @@ const tableConfig = reactive({
   summaryHeight: 32,
   enableRowHoverHighlight: true,
   enableColHoverHighlight: true,
-  highlightRowBackground: 'rgba(24, 144, 255, 0.1)',
-  highlightColBackground: 'rgba(24, 144, 255, 0.1)',
+  highlightRowBackground: 'rgba(24, 144, 255, 0.15)',
+  highlightColBackground: 'rgba(24, 144, 255, 0.15)',
   border: false,
   highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
   headerHeight: 32,
@@ -328,15 +326,15 @@ const tableConfig = reactive({
   summaryFontSize: 14,
   summaryBackground: '#f7f7f9',
   summaryTextColor: '#303133',
-  scrollbarBackground: '#f1f1f1',
-  scrollbarThumb: '#c1c1c1',
-  scrollbarThumbHover: '#a8a8a8',
+  scrollbarBackground: 'rgba(24, 144, 255, 0.5)',
+  scrollbarThumb: 'rgba(24, 144, 255, 0.5)',
+  scrollbarThumbHover: 'rgba(24, 144, 255, 0.8)',
   bufferRows: 5,
   minAutoColWidth: 100,
   scrollThreshold: 10,
   headerSortActiveBackground: '#ecf5ff',
   sortableColor: '#409EFF',
-  chartHeight: 460,
+  chartHeight: 260,
   chartWidth: 1000,
   bodyRowHeight: 32
 })
