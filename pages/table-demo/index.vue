@@ -181,77 +181,77 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     filterable: true,
     sortable: true,
     displayName: 'gender'
+  },
+  {
+    columnName: 'country',
+    columnType: 'string',
+    columnComment: 'country',
+    width: 200,
+    filterable: true,
+    sortable: true,
+    displayName: 'country',
+    fixed: 'left' as const
+  },
+  {
+    columnName: 'city',
+    columnType: 'string',
+    columnComment: 'city',
+    width: 200,
+    filterable: true,
+    sortable: true,
+    displayName: 'city',
+    fixed: 'left' as const
+  },
+  {
+    columnName: 'state',
+    columnType: 'string',
+    columnComment: 'state',
+    displayName: 'state'
+  },
+  {
+    columnName: 'zipcode',
+    columnType: 'number',
+    columnComment: 'zipcode',
+    displayName: 'zipcode',
+    width: 200,
+    filterable: true,
+    fixed: 'right' as const
+  },
+  {
+    columnName: 'action',
+    columnType: 'string',
+    columnComment: '操作',
+    displayName: '操作',
+    width: 220,
+    fixed: 'right' as const,
+    align: 'center' as const,
+    actions: [
+      { key: 'view', label: '查看', type: 'primary' },
+      { key: 'edit', label: '编辑', type: 'success' },
+      { key: 'delete', label: '删除', type: 'danger' }
+    ]
+  },
+  {
+    columnName: 'address',
+    columnType: 'string',
+    columnComment: 'address',
+    displayName: 'address',
+    showOverflowTooltip: true,
+    width: 200
+  },
+  {
+    columnName: 'phone',
+    columnType: 'string',
+    columnComment: 'phone',
+    displayName: 'phone',
+    width: 200
+  },
+  {
+    columnName: 'mobile',
+    columnType: 'string',
+    columnComment: 'mobile',
+    displayName: 'mobile'
   }
-  // {
-  //   columnName: 'country',
-  //   columnType: 'string',
-  //   columnComment: 'country',
-  //   width: 200,
-  //   filterable: true,
-  //   sortable: true,
-  //   displayName: 'country',
-  //   fixed: 'left' as const
-  // },
-  // {
-  //   columnName: 'city',
-  //   columnType: 'string',
-  //   columnComment: 'city',
-  //   width: 200,
-  //   filterable: true,
-  //   sortable: true,
-  //   displayName: 'city',
-  //   fixed: 'left' as const
-  // },
-  // {
-  //   columnName: 'state',
-  //   columnType: 'string',
-  //   columnComment: 'state',
-  //   displayName: 'state'
-  // },
-  // {
-  //   columnName: 'zipcode',
-  //   columnType: 'number',
-  //   columnComment: 'zipcode',
-  //   displayName: 'zipcode',
-  //   width: 200,
-  //   filterable: true,
-  //   fixed: 'right' as const
-  // },
-  // {
-  //   columnName: 'action',
-  //   columnType: 'string',
-  //   columnComment: '操作',
-  //   displayName: '操作',
-  //   width: 220,
-  //   fixed: 'right' as const,
-  //   align: 'center' as const,
-  //   actions: [
-  //     { key: 'view', label: '查看', type: 'primary' },
-  //     { key: 'edit', label: '编辑', type: 'success' },
-  //     { key: 'delete', label: '删除', type: 'danger' }
-  //   ]
-  // },
-  // {
-  //   columnName: 'address',
-  //   columnType: 'string',
-  //   columnComment: 'address',
-  //   displayName: 'address',
-  //   showOverflowTooltip: true,
-  //   width: 200
-  // },
-  // {
-  //   columnName: 'phone',
-  //   columnType: 'string',
-  //   columnComment: 'phone',
-  //   displayName: 'phone',
-  //   width: 200
-  // },
-  // {
-  //   columnName: 'mobile',
-  //   columnType: 'string',
-  //   columnComment: 'mobile',
-  //   displayName: 'mobile'
-  // }
 ])
 
 /**
@@ -334,8 +334,8 @@ const tableConfig = reactive({
   scrollThreshold: 10,
   headerSortActiveBackground: '#ecf5ff',
   sortableColor: '#409EFF',
-  chartHeight: 260,
-  chartWidth: 1000,
+  chartHeight: 360,
+  chartWidth: 1500,
   bodyRowHeight: 32
 })
 
