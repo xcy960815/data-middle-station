@@ -7,16 +7,35 @@ declare namespace ChartConfigStore {
    */
   type ChartConfigKey = 'chartConfig'
 
-  type TableChartConfig = ChartConfigDao.TableChartConfig
-  type PieChartConfig = ChartConfigDao.PieChartConfig
-  type IntervalChartConfig = ChartConfigDao.IntervalChartConfig
-  type LineChartConfig = ChartConfigDao.LineChartConfig
+  /**
+   * @desc 表格配置
+   */
+  type TableChartConfig = ChartConfigVo.TableChartConfig
+
+  /**
+   * @desc 饼图配置
+   */
+  type PieChartConfig = ChartConfigVo.PieChartConfig
+
+  /**
+   * @desc 柱状图配置
+   */
+  type IntervalChartConfig = ChartConfigVo.IntervalChartConfig
+
+  /**
+   * @desc 折线图配置
+   */
+  type LineChartConfig = ChartConfigVo.LineChartConfig
 
   /**
    * @desc 图表公共配置
    */
-  type CommonChartConfig = ChartConfigDao.CommonChartConfig
-  type PrivateChartConfig = ChartConfigDao.PrivateChartConfig
+  type CommonChartConfig = ChartConfigVo.CommonChartConfig
+  /**
+   * @desc 私有图表配置
+   */
+  type PrivateChartConfig = ChartConfigVo.PrivateChartConfig
+
   /**
    * @desc 图表配置状态
    */
@@ -32,7 +51,7 @@ declare namespace ChartConfigStore {
     /**
      * @desc 私有图表配置
      */
-    privateChartConfig: PrivateChartConfig | null
+    privateChartConfig: PrivateChartConfig
   }
 
   /**
