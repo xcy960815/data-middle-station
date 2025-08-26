@@ -249,6 +249,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
   {
     columnName: 'mobile',
     columnType: 'string',
+    width: 200,
     columnComment: 'mobile',
     displayName: 'mobile'
   }
@@ -257,7 +258,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
 /**
  * 数据
  */
-const data: Array<ChartDataVo.ChartData> = Array.from({ length: 10 }, (_, i) => ({
+const data: Array<ChartDataVo.ChartData> = Array.from({ length: 1000 }, (_, i) => ({
   id: i + 1,
   name: `User ${i + 1}`,
   age: 18 + i,
