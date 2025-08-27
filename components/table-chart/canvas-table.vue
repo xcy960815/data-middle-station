@@ -1440,8 +1440,6 @@ const recomputeHoverIndexFromPointer = () => {
 
   if (rowChanged || colChanged) {
     updateHoverRects()
-    console.log('hoveredRowIndex', tableVars.hoveredRowIndex)
-    console.log('hoveredColIndex', tableVars.hoveredColIndex)
   }
 }
 
