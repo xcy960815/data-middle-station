@@ -1,5 +1,5 @@
 import Konva from 'konva'
-import type { KonvaNodePools } from './variable'
+import { tableVars } from './variable'
 /**
  * 设置指针样式的辅助函数
  * @param on 是否显示指针
@@ -55,46 +55,6 @@ export const clearPool = (pool: Konva.Node[]) => {
 export const returnToPool = <T extends Konva.Node>(pool: T[], node: T) => {
   node.remove()
   pool.push(node)
-}
-
-/**
- * 回收 Konva 节点
- * @param {Konva.Group} bodyGroup 分组
- * @param {ObjectPools} pools 对象池
- * @returns {void}
- */
-const recoverKonvaNode = (bodyGroup: Konva.Group, pools: KonvaNodePools) => {
-  // 清空当前组，将对象返回池中
-  const children = bodyGroup.children.slice()
-  children.forEach((child) => {
-    const isText = child instanceof Konva.Text
-    const isRect = child instanceof Konva.Rect
-    if (isText) {
-      const isMergedCellText = child.name() === 'merged-cell-text'
-      if (isMergedCellText) {
-        returnToPool(pools.mergedCellTexts, child)
-      }
-      const isCellText = child.name() === 'cell-text'
-      if (isCellText) {
-        returnToPool(pools.cellTexts, child)
-      }
-    }
-    if (isRect) {
-      const isBackgroundRect = child.name() === 'background-rect'
-      if (isBackgroundRect) {
-        returnToPool(pools.backgroundRects, child)
-      }
-      const isMergedCellRect = child.name() === 'merged-cell-rect'
-      if (isMergedCellRect) {
-        returnToPool(pools.mergedCellRects, child)
-      }
-
-      const isCellRect = child.name() === 'cell-rect'
-      if (isCellRect) {
-        returnToPool(pools.cellRects, child)
-      }
-    }
-  })
 }
 
 /**
@@ -169,4 +129,171 @@ export const getDropdownPosition = (clientX: number, clientY: number, wapperWidt
  */
 export const constrainToRange = (n: number, min: number, max: number) => {
   return Math.max(min, Math.min(max, n))
+}
+
+/**
+ * 文本起始 X 坐标（包含左侧 8px 内边距）
+ * @param x 文本起始 X 坐标
+ * @returns 文本起始 X 坐标（包含左侧 8px 内边距）
+ */
+export const getTextX = (x: number) => {
+  return x + 8
+}
+
+/**
+ * 判断当前指针位置的顶层元素是否属于表格容器
+ * 若不属于，则认为表格被其它遮罩/弹层覆盖，此时不进行高亮
+ * @param {number} clientX 鼠标点击位置的 X 坐标
+ * @param {number} clientY 鼠标点击位置的 Y 坐标
+ * @returns {boolean} 是否在表格容器内
+ */
+export const isTopMostInTable = (clientX: number, clientY: number): boolean => {
+  const container = getTableContainerElement()
+  if (!container) return false
+  const topEl = document.elementFromPoint(clientX, clientY) as HTMLElement | null
+  if (!topEl) return false
+  if (!container.contains(topEl)) return false
+  // 仅当命中的元素为 Konva 的 canvas（或其包裹层）时，认为没有被遮罩覆盖
+  if (topEl.tagName === 'CANVAS') return true
+  const konvaContent = topEl.closest('.konvajs-content') as HTMLElement | null
+  if (konvaContent && container.contains(konvaContent)) return true
+  // 命中的虽然在容器内，但不是 Konva 画布，视为被遮罩覆盖
+  return false
+}
+
+/**
+ * 清除分组 清理所有分组
+ * @returns {void}
+ */
+export const clearGroups = () => {
+  tableVars.headerLayer?.destroyChildren()
+  tableVars.bodyLayer?.destroyChildren()
+  tableVars.summaryLayer?.destroyChildren()
+  tableVars.fixedHeaderLayer?.destroyChildren()
+  tableVars.fixedBodyLayer?.destroyChildren()
+  tableVars.fixedSummaryLayer?.destroyChildren()
+  tableVars.scrollbarLayer?.destroyChildren()
+  clearPool(tableVars.leftBodyPools.cellRects)
+  clearPool(tableVars.leftBodyPools.cellTexts)
+  clearPool(tableVars.leftBodyPools.mergedCellRects)
+  clearPool(tableVars.leftBodyPools.backgroundRects)
+  clearPool(tableVars.centerBodyPools.cellRects)
+  clearPool(tableVars.centerBodyPools.cellTexts)
+  clearPool(tableVars.centerBodyPools.mergedCellRects)
+  clearPool(tableVars.centerBodyPools.backgroundRects)
+  clearPool(tableVars.rightBodyPools.cellRects)
+  clearPool(tableVars.rightBodyPools.cellTexts)
+  clearPool(tableVars.rightBodyPools.mergedCellRects)
+  clearPool(tableVars.rightBodyPools.backgroundRects)
+
+  /**
+   * 重置滚动条引用
+   */
+  tableVars.verticalScrollbarGroup = null
+  tableVars.horizontalScrollbarGroup = null
+  tableVars.verticalScrollbarThumb = null
+  tableVars.horizontalScrollbarThumb = null
+
+  /**
+   * 重置中心区域剪辑组引用
+   */
+  tableVars.centerBodyClipGroup = null
+
+  /**
+   * 重置单元格选择
+   */
+  tableVars.selectedCell = null
+  tableVars.highlightRect = null
+
+  /**
+   * 重置虚拟滚动状态
+   */
+  tableVars.visibleRowStart = 0
+  tableVars.visibleRowEnd = 0
+  tableVars.visibleRowCount = 0
+
+  /**
+   * 重置汇总组引用
+   */
+  tableVars.leftSummaryGroup = null
+  tableVars.centerSummaryGroup = null
+  tableVars.rightSummaryGroup = null
+
+  /**
+   * 重置悬浮高亮
+   */
+  tableVars.hoveredRowIndex = null
+  tableVars.hoveredColIndex = null
+}
+
+/**
+ * 调整十六进制颜色亮度
+ * @param hex 颜色，如 #409EFF
+ * @param percent 亮度百分比，正数变亮，负数变暗（-100~100）
+ */
+export const adjustHexColorBrightness = (hex: string, percent: number): string => {
+  const normalizeHex = (h: string) => {
+    if (!h) return '#000000'
+    if (h.startsWith('#')) h = h.slice(1)
+    if (h.length === 3)
+      h = h
+        .split('')
+        .map((c) => c + c)
+        .join('')
+    if (h.length !== 6) return '#000000'
+    return '#' + h
+  }
+  const base = normalizeHex(hex)
+  const r = parseInt(base.slice(1, 3), 16)
+  const g = parseInt(base.slice(3, 5), 16)
+  const b = parseInt(base.slice(5, 7), 16)
+  const adj = (v: number) => constrainToRange(Math.round(v + (percent / 100) * 255), 0, 255)
+  const toHex = (v: number) => v.toString(16).padStart(2, '0')
+  return `#${toHex(adj(r))}${toHex(adj(g))}${toHex(adj(b))}`
+}
+
+/**
+ * 超出最大宽度时裁剪文本，并追加省略号
+ * @param text 文本
+ * @param maxWidth 最大宽度
+ * @param fontSize 字体大小
+ * @param fontFamily 字体
+ * @returns 裁剪后的文本
+ */
+export const truncateText = (text: string, maxWidth: number, fontSize: number | string, fontFamily: string): string => {
+  fontSize = typeof fontSize === 'string' ? Number(fontSize) : fontSize
+  // 创建一个临时文本节点来测量文本宽度
+  const tempText = new Konva.Text({
+    text: text,
+    fontSize: fontSize,
+    fontFamily: fontFamily
+  })
+
+  // 如果文本宽度小于等于 maxWidth，直接返回
+  if (tempText.width() <= maxWidth) {
+    tempText.destroy()
+    return text
+  }
+
+  // 二分查找，找到最大可容纳的字符数
+  let left = 0
+  let right = text.length
+  let result = ''
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+    const testText = text.substring(0, mid) + '...'
+
+    tempText.text(testText)
+
+    if (tempText.width() <= maxWidth) {
+      result = testText
+      left = mid + 1
+    } else {
+      right = mid - 1
+    }
+  }
+
+  tempText.destroy()
+  return result || '...'
 }
