@@ -8,9 +8,6 @@
         <el-form-item label="是否列高亮">
           <el-switch v-model="tableConfig.enableColHoverHighlight" />
         </el-form-item>
-        <el-form-item label="是否显示边框">
-          <el-switch v-model="tableConfig.border" />
-        </el-form-item>
         <el-form-item label="高亮 cell 背景色">
           <el-color-picker v-model="tableConfig.highlightCellBackground" show-alpha />
         </el-form-item>
@@ -100,7 +97,6 @@
         :y-axis-fields="yAxisFields"
         :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
         :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
-        :border="tableConfig.border"
         :data="data"
         :highlight-row-background="tableConfig.highlightRowBackground"
         :highlight-col-background="tableConfig.highlightColBackground"
@@ -174,8 +170,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'id',
     displayName: 'id',
     width: 200,
-    filterable: true,
-    fixed: 'left' as const
+    filterable: true
+    // fixed: 'left' as const
   },
   {
     columnName: 'name',
@@ -187,8 +183,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'age',
     columnType: 'number',
     columnComment: 'age',
-    displayName: 'age',
-    fixed: 'left' as const
+    displayName: 'age'
+    // fixed: 'left' as const
   },
   {
     columnName: 'gender',
@@ -205,8 +201,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     sortable: true,
-    displayName: 'country',
-    fixed: 'left' as const
+    displayName: 'country'
+    // fixed: 'left' as const
   },
   {
     columnName: 'city',
@@ -215,8 +211,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     sortable: true,
-    displayName: 'city',
-    fixed: 'left' as const
+    displayName: 'city'
+    // fixed: 'left' as const
   },
   {
     columnName: 'state',
@@ -230,8 +226,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'zipcode',
     displayName: 'zipcode',
     width: 200,
-    filterable: true,
-    fixed: 'right' as const
+    filterable: true
+    // fixed: 'right' as const
   },
   {
     columnName: 'action',
@@ -327,7 +323,6 @@ const tableConfig = reactive({
   enableColHoverHighlight: true,
   highlightRowBackground: 'rgba(24, 144, 255, 0.15)',
   highlightColBackground: 'rgba(24, 144, 255, 0.15)',
-  border: false,
   highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
   headerHeight: 32,
   headerTextColor: '#303133',
