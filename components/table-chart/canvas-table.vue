@@ -55,17 +55,27 @@ import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { chartProps } from './props'
-import { numberOptions, paletteOptions, setPointerStyle, textOptions } from './utils'
-
-/**
- * 获取容器元素
- * @returns {HTMLDivElement | null} 容器元素
- */
-const getTableContainerElement = (): HTMLDivElement | null => {
-  return document.getElementById('table-container') as HTMLDivElement | null
-}
+import {
+  clearPool,
+  constrainToRange,
+  getDropdownPosition,
+  getFromPool,
+  getTableContainerElement,
+  paletteOptions,
+  returnToPool,
+  setPointerStyle
+} from './utils'
+import {
+  type KonvaNodePools,
+  type PositionMap,
+  createTableState,
+  numberOptions,
+  tableVars,
+  textOptions
+} from './variable'
 
 const props = defineProps(chartProps)
+
 const { $webworker } = useNuxtApp()
 /**
  * 获取有效的汇总高度（受开关控制）
@@ -98,6 +108,7 @@ const tableColumns = computed(() => {
 })
 
 /**
+ * 列别名映射
  * @returns {Record<string, string>}
  */
 const columnAliasMap = computed(() => {
@@ -115,298 +126,15 @@ const columnAliasMap = computed(() => {
 })
 
 /**
- * 表格数据
- * @returns {ChartDataVo.ChartData}
+ * 使用状态管理器
  */
-const tableData = computed<Array<ChartDataVo.ChartData>>(() => props.data)
+const { tableData, sortColumns, filterState, summaryState, activeData } = createTableState(
+  props,
+  tableColumns,
+  columnAliasMap
+)
 
-/**
- * 排序状态
- * @returns {Array<{ columnName: string; order: 'asc' | 'desc' }>}
- */
-const sortColumns = ref<Array<{ columnName: string; order: 'asc' | 'desc' }>>([])
-
-/**
- * 过滤状态：列名 -> 选中的离散值集合（使用 Set 便于判定）
- * @returns {Record<string, Set<string>>}
- */
-const filterState = reactive<Record<string, Set<string>>>({})
-
-/**
- * 汇总行选择状态：列名 -> 选中的规则
- */
-const summaryState = reactive<Record<string, string>>({})
-
-/**
- * 应用排序后的数据视图
- * @returns {ChartDataVo.ChartData}
- */
-const activeData = computed<Array<ChartDataVo.ChartData>>(() => {
-  // 先按 filter 过滤
-  let base = tableData.value.filter((row) => row && typeof row === 'object') // 过滤掉无效的行
-  const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
-  if (filterKeys.length) {
-    const aliasMap = columnAliasMap.value
-    base = base.filter((row) => {
-      for (const k of filterKeys) {
-        const set = filterState[k]
-        const alias = aliasMap[k]
-        const val = row[k] !== undefined ? row[k] : alias ? row[alias] : undefined
-        if (!set.has(String(val ?? ''))) return false
-      }
-      return true
-    })
-  }
-  /**
-   * 如果未排序，则直接返回原始数据
-   */
-  if (!sortColumns.value.length) return base
-  const sorted = [...base]
-  const toNum = (v: string | number | null | undefined) => {
-    const n = Number(v)
-    return Number.isFinite(n) ? n : null
-  }
-  const aliasMap2 = columnAliasMap.value
-
-  const getVal = (row: ChartDataVo.ChartData, key: string): string | number | undefined => {
-    const alias = aliasMap2[key]
-    const candidates: unknown[] = [row[key], alias ? row[alias] : undefined]
-    for (const v of candidates) {
-      if (typeof v === 'string' || typeof v === 'number') return v
-    }
-    return undefined
-  }
-  sorted.sort((a, b) => {
-    for (const s of sortColumns.value) {
-      const key = s.columnName
-      const av = getVal(a, key)
-      const bv = getVal(b, key)
-      const an = toNum(av)
-      const bn = toNum(bv)
-      let cmp = 0
-      if (an !== null && bn !== null) cmp = an - bn
-      else cmp = String(av ?? '').localeCompare(String(bv ?? ''))
-      if (cmp !== 0) return s.order === 'asc' ? cmp : -cmp
-    }
-    return 0
-  })
-  return sorted
-})
-
-/**
- * Stage 实例
- */
-let stage: Konva.Stage | null = null
-
-/**
- * 滚动条层（滚动条）
- */
-let scrollbarLayer: Konva.Layer | null = null
-
-/**
- * 中间区域剪辑组（中间区域）
- */
-let centerBodyClipGroup: Konva.Group | null = null
-
-/**
- * 表头层（固定表头）
- */
-let headerLayer: Konva.Layer | null = null
-
-/**
- * 表格层（主体）
- */
-let bodyLayer: Konva.Layer | null = null
-
-/**
- * 汇总层（汇总）
- */
-let summaryLayer: Konva.Layer | null = null
-
-/**
- * 固定表头层（固定表头）
- */
-let fixedHeaderLayer: Konva.Layer | null = null
-
-/**
- * 固定表body层（固定表body）
- */
-let fixedBodyLayer: Konva.Layer | null = null
-
-/**
- * 固定汇总层（固定汇总）
- */
-let fixedSummaryLayer: Konva.Layer | null = null
-
-/**
- * 左侧表头组（左侧表头）
- */
-let leftHeaderGroup: Konva.Group | null = null
-
-/**
- * 中间表头组（中间表头）
- */
-let centerHeaderGroup: Konva.Group | null = null
-
-/**
- * 右侧表头组（右侧表头）
- */
-let rightHeaderGroup: Konva.Group | null = null
-
-/**
- * 左侧主体组（左侧主体）
- */
-let leftBodyGroup: Konva.Group | null = null
-
-/**
- * 中间主体组（中间主体）
- */
-let centerBodyGroup: Konva.Group | null = null
-
-/**
- * 右侧主体组
- */
-let rightBodyGroup: Konva.Group | null = null
-
-/**
- * 左侧汇总组（左侧汇总）
- */
-let leftSummaryGroup: Konva.Group | null = null
-
-/**
- * 中间汇总组（中间汇总）
- */
-let centerSummaryGroup: Konva.Group | null = null
-
-/**
- * 右侧汇总组（右侧汇总）
- */
-let rightSummaryGroup: Konva.Group | null = null
-
-/**
- * 垂直滚动多少像素
- */
-let scrollY = 0
-
-/**
- * 水平滚动多少像素
- */
-let scrollX = 0
-
-/**
- * 垂直滚动条组
- */
-let verticalScrollbarGroup: Konva.Group | null = null
-
-/**
- * 水平滚动条组
- */
-let horizontalScrollbarGroup: Konva.Group | null = null
-
-/**
- * 垂直滚动条滑块
- */
-let verticalScrollbarThumb: Konva.Rect | null = null
-/**
- * 水平滚动条滑块
- */
-let horizontalScrollbarThumb: Konva.Rect | null = null
-
-/**
- * 列宽拖拽相关状态
- */
-const columnWidthOverrides: Record<string, number> = {}
-
-/**
- * 列宽拖拽状态
- */
-let isResizingColumn = false
-
-/**
- * 列宽拖拽列名
- */
-let resizingColumnName: string | null = null
-/**
- * 列宽拖拽起始 X 坐标
- */
-let resizeStartX = 0
-/**
- * 列宽拖拽起始宽度
- */
-let resizeStartWidth = 0
-
-/**
- * 列宽拖拽邻居列名
- */
-let resizeNeighborColumnName: string | null = null
-/**
- * 列宽拖拽邻居起始宽度
- */
-let resizeNeighborStartWidth = 0
-
-/**
- * 是否正在垂直拖动滚动条
- */
-let isDraggingVerticalThumb = false
-/**
- * 是否正在水平拖动滚动条
- */
-let isDraggingHorizontalThumb = false
-/**
- * 垂直滚动条拖拽起始 Y 坐标
- */
-let dragStartY = 0
-/**
- * 水平滚动条拖拽起始 X 坐标
- */
-let dragStartX = 0
-/**
- * 垂直滚动条拖拽起始滚动位置 Y
- */
-let dragStartScrollY = 0
-/**
- * 水平滚动条拖拽起始滚动位置 X
- */
-let dragStartScrollX = 0
-
-/**
- * 单元格选中状态
- */
-let selectedCell: { rowIndex: number; colIndex: number; colKey: string } | null = null
-/**
- * 高亮矩形
- */
-let highlightRect: Konva.Rect | null = null
-
-/**
- * 可视区域起始行索引
- */
-let visibleRowStart = 0
-
-/**
- * 可视区域结束行索引
- */
-let visibleRowEnd = 0
-
-/**
- * 上下缓冲行数
- */
-let visibleRowCount = 0
-
-/**
- * 需要高亮的行索引
- */
-let hoveredRowIndex: number | null = null
-/**
- * 需要高亮的列索引
- */
-let hoveredColIndex: number | null = null
-/**
- * 最近一次指针的屏幕坐标（用于判断表格上是否存在遮罩层）
- */
-
-let lastClientX = 0
-let lastClientY = 0
+// 所有变量已移动到 tableVars 对象中，通过 tableVars.xxx 访问
 
 /**
  * 判断当前指针位置的顶层元素是否属于表格容器
@@ -436,14 +164,14 @@ const isTopMostInTable = (clientX: number, clientY: number): boolean => {
  * @returns 是否在表格区域内
  */
 const isInTableArea = (clientX: number, clientY: number) => {
-  if (!stage) return false
+  if (!tableVars.stage) return false
 
   // 转换为 stage 坐标
-  const pointerPosition = stage.getPointerPosition()
+  const pointerPosition = tableVars.stage.getPointerPosition()
   if (!pointerPosition) return false
 
-  const stageWidth = stage.width()
-  const stageHeight = stage.height()
+  const stageWidth = tableVars.stage.width()
+  const stageHeight = tableVars.stage.height()
   const { maxScrollX, maxScrollY } = getScrollLimits()
 
   // 计算表格有效区域（排除滚动条）
@@ -459,20 +187,9 @@ const isInTableArea = (clientX: number, clientY: number) => {
 }
 
 /**
- * 对象池
- */
-interface ObjectPools {
-  mergedCellRects: Konva.Rect[]
-  cellRects: Konva.Rect[]
-  mergedCellTexts: Konva.Text[]
-  cellTexts: Konva.Text[]
-  backgroundRects: Konva.Rect[]
-}
-
-/**
  * 左侧主体组对象池
  */
-const leftBodyPools: ObjectPools = {
+const leftBodyPools: KonvaNodePools = {
   mergedCellRects: [],
   cellRects: [],
   mergedCellTexts: [],
@@ -482,7 +199,7 @@ const leftBodyPools: ObjectPools = {
 /**
  * 中间主体组对象池
  */
-const centerBodyPools: ObjectPools = {
+const centerBodyPools: KonvaNodePools = {
   mergedCellRects: [],
   cellRects: [],
   mergedCellTexts: [],
@@ -492,7 +209,7 @@ const centerBodyPools: ObjectPools = {
 /**
  * 右侧主体组对象池
  */
-const rightBodyPools: ObjectPools = {
+const rightBodyPools: KonvaNodePools = {
   mergedCellRects: [],
   cellRects: [],
   mergedCellTexts: [],
@@ -565,10 +282,10 @@ const handleScroll = () => {
     const scrollY = window.pageYOffset || document.documentElement.scrollTop
 
     // 将保存的页面坐标转换为当前的视口坐标
-    const currentClientX = filterDropdown.originalClientX - scrollX
+    const currentClientX = filterDropdown.originalClientX - tableVars.scrollX
     const currentClientY = filterDropdown.originalClientY - scrollY
 
-    const { dropdownX, dropdownY } = getWapperPosition(
+    const { dropdownX, dropdownY } = getDropdownPosition(
       currentClientX,
       currentClientY,
       filterDropdownElWidth,
@@ -589,18 +306,15 @@ const handleScroll = () => {
     const scrollY = window.pageYOffset || document.documentElement.scrollTop
 
     // 将保存的页面坐标转换为当前的视口坐标
-    const currentClientX = summaryDropdown.originalClientX - scrollX
+    const currentClientX = summaryDropdown.originalClientX - tableVars.scrollX
     const currentClientY = summaryDropdown.originalClientY - scrollY
 
-    const { dropdownX, dropdownY } = getWapperPosition(
+    const { dropdownX, dropdownY } = getDropdownPosition(
       currentClientX,
       currentClientY,
       summaryDropdownElWidth,
       summaryDropdownElHeight
     )
-    // console.log('summaryDropdown.originalClientX', summaryDropdown.originalClientX)
-    // console.log('summaryDropdown.originalClientY', summaryDropdown.originalClientY)
-    // console.log('scrollX', scrollX, 'scrollY', scrollY)
     summaryDropdown.x = dropdownX
     summaryDropdown.y = dropdownY
   }
@@ -617,7 +331,7 @@ const updateDropdownPositions = () => {
     const filterDropdownElWidth = Math.ceil(filterDropdownElRect.width)
 
     // 对于表格内部滚动，使用保存的原始客户端坐标
-    const { dropdownX, dropdownY } = getWapperPosition(
+    const { dropdownX, dropdownY } = getDropdownPosition(
       filterDropdown.originalClientX,
       filterDropdown.originalClientY,
       filterDropdownElWidth,
@@ -634,7 +348,7 @@ const updateDropdownPositions = () => {
     const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
 
     // 对于表格内部滚动，使用保存的原始客户端坐标
-    const { dropdownX, dropdownY } = getWapperPosition(
+    const { dropdownX, dropdownY } = getDropdownPosition(
       summaryDropdown.originalClientX,
       summaryDropdown.originalClientY,
       summaryDropdownElWidth,
@@ -667,68 +381,6 @@ const summaryDropdownStyle = computed(() => {
     zIndex: 3000
   }
 })
-/**
- * 获取下拉框的弹出位置
- * @param {number} clientX
- * @param {number} clientY
- * @param {number} wapperWidth
- * @param {number} wapperHeight
- * @returns {dropdownX:number,dropdownY:number}
- */
-const getWapperPosition = (clientX: number, clientY: number, wapperWidth: number, wapperHeight: number) => {
-  // 获取视口高度
-  const viewportHeight = window.innerHeight
-  // 获取视口宽度
-  const viewportWidth = window.innerWidth
-
-  // 计算各方向剩余空间
-  const spaceBelow = viewportHeight - clientY
-  const spaceAbove = clientY
-  const spaceRight = viewportWidth - clientX
-  const spaceLeft = clientX
-
-  // 垂直位置计算
-  let dropdownY = clientY
-  if (spaceBelow >= wapperHeight) {
-    // 下方空间充足，显示在点击位置下方
-    dropdownY = clientY + 5
-  } else if (spaceAbove >= wapperHeight) {
-    // 下方空间不足但上方空间充足，显示在点击位置上方
-    dropdownY = clientY - wapperHeight - 5
-  } else {
-    // 上下空间都不足，优先选择空间较大的一方
-    if (spaceBelow >= spaceAbove) {
-      dropdownY = clientY + 5
-    } else {
-      dropdownY = clientY - wapperHeight - 5
-    }
-    // 确保不超出边界
-    dropdownY = Math.max(5, Math.min(dropdownY, viewportHeight - wapperHeight - 5))
-  }
-
-  // 水平位置计算
-  let dropdownX = clientX
-  if (spaceRight >= wapperWidth) {
-    // 右侧空间充足，显示在点击位置右侧
-    dropdownX = clientX + 5
-  } else if (spaceLeft >= wapperWidth) {
-    // 右侧空间不足但左侧空间充足，显示在点击位置左侧
-    dropdownX = clientX - wapperWidth - 5
-  } else {
-    // 左右空间都不足，优先选择空间较大的一方
-    if (spaceRight >= spaceLeft) {
-      dropdownX = clientX + 5
-    } else {
-      dropdownX = clientX - wapperWidth - 5
-    }
-    // 确保不超出边界
-    dropdownX = Math.max(5, Math.min(dropdownX, viewportWidth - wapperWidth - 5))
-  }
-  return {
-    dropdownX,
-    dropdownY
-  }
-}
 
 /**
  * 打开过滤下拉浮层
@@ -759,15 +411,20 @@ const openFilterDropdown = (
     const filterDropdownElRect = filterDropdownEl.getBoundingClientRect()
     const filterDropdownElHeight = Math.ceil(filterDropdownElRect.height)
     const filterDropdownElWidth = Math.ceil(filterDropdownElRect.width)
-    const { dropdownX, dropdownY } = getWapperPosition(clientX, clientY, filterDropdownElWidth, filterDropdownElHeight)
+    const { dropdownX, dropdownY } = getDropdownPosition(
+      clientX,
+      clientY,
+      filterDropdownElWidth,
+      filterDropdownElHeight
+    )
     filterDropdown.x = dropdownX
     filterDropdown.y = dropdownY
     filterDropdown.colName = colName
     filterDropdown.options = options
     filterDropdown.selectedValues = [...selected]
     // 打开下拉时取消 hover 高亮，避免视觉干扰
-    hoveredRowIndex = null
-    hoveredColIndex = null
+    tableVars.hoveredRowIndex = null
+    tableVars.hoveredColIndex = null
     updateHoverRects()
   })
 }
@@ -800,7 +457,6 @@ const openSummaryDropdown = (
   const scrollY = window.pageYOffset || document.documentElement.scrollTop
   summaryDropdown.originalClientX = clientX + scrollX
   summaryDropdown.originalClientY = clientY + scrollY
-
   summaryDropdown.visible = true
   if (!summaryDropdownRef.value) return
   const summaryDropdownEl = summaryDropdownRef.value
@@ -809,7 +465,7 @@ const openSummaryDropdown = (
     const summaryDropdownElRect = summaryDropdownEl.getBoundingClientRect()
     const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
     const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
-    const { dropdownX, dropdownY } = getWapperPosition(
+    const { dropdownX, dropdownY } = getDropdownPosition(
       clientX,
       clientY,
       summaryDropdownElWidth,
@@ -821,8 +477,8 @@ const openSummaryDropdown = (
     summaryDropdown.options = options
     summaryDropdown.selectedValue = selected || 'nodisplay'
     // 打开下拉时取消 hover 高亮，避免视觉干扰
-    hoveredRowIndex = null
-    hoveredColIndex = null
+    tableVars.hoveredRowIndex = null
+    tableVars.hoveredColIndex = null
     updateHoverRects()
   })
 }
@@ -871,7 +527,7 @@ const handleSelectedFilter = () => {
  * @returns {void}
  */
 const onGlobalMousedown = (e: MouseEvent) => {
-  if (stage) stage.setPointersPositions(e)
+  if (tableVars.stage) tableVars.stage.setPointersPositions(e)
   if (!filterDropdown.visible && !summaryDropdown.visible) return
   const panel = filterDropdownRef.value
   const panelSummary = summaryDropdownRef.value
@@ -881,10 +537,10 @@ const onGlobalMousedown = (e: MouseEvent) => {
   if ((panel && panel.contains(target)) || (panelSummary && panelSummary.contains(target))) return
   // 点击 el-select 下拉面板：不关闭
   const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
-  if (inElSelectDropdown) return
-  // 其它点击：关闭
-  filterDropdown.visible = false
-  summaryDropdown.visible = false
+  if (!inElSelectDropdown) {
+    filterDropdown.visible = false
+    summaryDropdown.visible = false
+  }
 }
 
 /**
@@ -892,7 +548,7 @@ const onGlobalMousedown = (e: MouseEvent) => {
  * @returns
  */
 const getSplitColumns = () => {
-  if (!stage) {
+  if (!tableVars.stage) {
     // 如果stage还没有初始化，返回默认值
     const leftCols = tableColumns.value.filter((c) => c.fixed === 'left')
     const rightCols = tableColumns.value.filter((c) => c.fixed === 'right')
@@ -908,9 +564,9 @@ const getSplitColumns = () => {
     }
   }
   // 计算滚动条预留宽度
-  const stageWidthRaw = stage.width()
+  const stageWidthRaw = tableVars.stage.width()
   // 计算滚动条预留高度
-  const stageHeightRaw = stage.height()
+  const stageHeightRaw = tableVars.stage.height()
   // 计算内容高度
   const contentHeight = activeData.value.length * props.bodyRowHeight
   // 计算垂直滚动条预留空间
@@ -931,7 +587,7 @@ const getSplitColumns = () => {
 
   // 为每个列计算最终宽度（支持用户拖拽覆盖）
   const columnsWithWidth = tableColumns.value.map((col) => {
-    const overrideWidth = columnWidthOverrides[col.columnName as string]
+    const overrideWidth = tableVars.columnWidthOverrides[col.columnName as string]
     const width = overrideWidth !== undefined ? overrideWidth : col.width !== undefined ? col.width : autoColumnWidth
     return { ...col, width }
   })
@@ -959,17 +615,6 @@ const getSplitColumns = () => {
 }
 
 /**
- * 限制数值在[min, max] 区间内
- * @param n 数值
- * @param min 最小值
- * @param max 最大值
- * @returns 限制后的数值
- */
-const clamp = (n: number, min: number, max: number) => {
-  return Math.max(min, Math.min(max, n))
-}
-
-/**
  * 调整十六进制颜色亮度
  * @param hex 颜色，如 #409EFF
  * @param percent 亮度百分比，正数变亮，负数变暗（-100~100）
@@ -990,7 +635,7 @@ const adjustHexColorBrightness = (hex: string, percent: number): string => {
   const r = parseInt(base.slice(1, 3), 16)
   const g = parseInt(base.slice(3, 5), 16)
   const b = parseInt(base.slice(5, 7), 16)
-  const adj = (v: number) => clamp(Math.round(v + (percent / 100) * 255), 0, 255)
+  const adj = (v: number) => constrainToRange(Math.round(v + (percent / 100) * 255), 0, 255)
   const toHex = (v: number) => v.toString(16).padStart(2, '0')
   return `#${toHex(adj(r))}${toHex(adj(g))}${toHex(adj(b))}`
 }
@@ -1059,10 +704,10 @@ const bindButtonInteractions = (
   if (options.disabled) {
     rect.opacity(0.6)
     rect.on('mouseenter.buttonfx', () => {
-      setPointerStyle(stage, false, 'not-allowed')
+      setPointerStyle(tableVars.stage, false, 'not-allowed')
     })
     rect.on('mouseleave.buttonfx', () => {
-      setPointerStyle(stage, false, 'default')
+      setPointerStyle(tableVars.stage, false, 'default')
     })
     return
   }
@@ -1070,12 +715,12 @@ const bindButtonInteractions = (
   rect.opacity(1)
   rect.on('mouseenter.buttonfx', () => {
     isHovering = true
-    setPointerStyle(stage, true, 'pointer')
+    setPointerStyle(tableVars.stage, true, 'pointer')
     applyHover()
   })
   rect.on('mouseleave.buttonfx', () => {
     isHovering = false
-    setPointerStyle(stage, false, 'default')
+    setPointerStyle(tableVars.stage, false, 'default')
     applyNormal()
   })
   rect.on('mousedown.buttonfx', () => {
@@ -1151,24 +796,24 @@ const truncateText = (text: string, maxWidth: number, fontSize: number | string,
  * @param group 分组
  */
 const createHighlightRect = (x: number, y: number, width: number, height: number, group: Konva.Group) => {
-  if (highlightRect) {
-    highlightRect.destroy()
-    highlightRect = null
+  if (tableVars.highlightRect) {
+    tableVars.highlightRect.destroy()
+    tableVars.highlightRect = null
   }
 
-  highlightRect = new Konva.Rect({
+  tableVars.highlightRect = new Konva.Rect({
     x,
     y,
     width,
     height,
-    fill: 'rgba(66, 165, 245, 0.3)',
-    stroke: '#1976d2',
-    strokeWidth: 2,
+    fill: props.highlightCellBackground,
     listening: false
   })
 
-  group.add(highlightRect)
-  highlightRect.moveToTop()
+  group.add(tableVars.highlightRect)
+
+  tableVars.highlightRect.moveToTop()
+
   const layer = group.getLayer()
   layer?.batchDraw()
 }
@@ -1194,12 +839,12 @@ const handleCellClick = (
   cellHeight: number,
   group: Konva.Group
 ) => {
-  selectedCell = { rowIndex, colIndex, colKey: col.columnName }
-  if (rowIndex >= visibleRowStart && rowIndex <= visibleRowEnd) {
+  tableVars.selectedCell = { rowIndex, colIndex, colKey: col.columnName }
+  if (rowIndex >= tableVars.visibleRowStart && rowIndex <= tableVars.visibleRowEnd) {
     createHighlightRect(cellX, cellY, cellWidth, cellHeight, group)
-  } else if (highlightRect) {
-    highlightRect.destroy()
-    highlightRect = null
+  } else if (tableVars.highlightRect) {
+    tableVars.highlightRect.destroy()
+    tableVars.highlightRect = null
   }
 
   const rowData = activeData.value[rowIndex]
@@ -1211,11 +856,11 @@ const handleCellClick = (
  * @returns {{ maxScrollX: number, maxScrollY: number }}
  */
 const getScrollLimits = () => {
-  if (!stage) return { maxScrollX: 0, maxScrollY: 0 }
+  if (!tableVars.stage) return { maxScrollX: 0, maxScrollY: 0 }
   const { totalWidth, leftWidth, rightWidth } = getSplitColumns()
 
-  const stageWidth = stage.width()
-  const stageHeight = stage.height()
+  const stageWidth = tableVars.stage.width()
+  const stageHeight = tableVars.stage.height()
 
   // 计算内容高度
   let contentHeight = activeData.value.length * props.bodyRowHeight
@@ -1239,57 +884,27 @@ const getScrollLimits = () => {
 }
 
 /**
- * 计算虚拟滚动的可视区域（根据当前滚动位置得出渲染行范围）
+ * 计算可视区域 数据的起始行和结束行
  * @returns {void}
  */
 const calculateVisibleRows = () => {
-  if (!stage) return
+  if (!tableVars.stage) return
 
-  const stageHeight = stage.height()
-  const contentHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - props.scrollbarSize
+  const stageHeight = tableVars.stage.height()
+  const bodyHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - props.scrollbarSize
 
   // 计算可视区域能显示的行数
-  visibleRowCount = Math.ceil(contentHeight / props.bodyRowHeight)
+  tableVars.visibleRowCount = Math.ceil(bodyHeight / props.bodyRowHeight)
 
   // 根据scrollY计算起始行
-  const startRow = Math.floor(scrollY / props.bodyRowHeight)
+  const startRow = Math.floor(tableVars.stageScrollY / props.bodyRowHeight)
 
-  // 添加缓冲区，确保滚动时有预渲染的行
-  visibleRowStart = Math.max(0, startRow - props.bufferRows)
-  visibleRowEnd = Math.min(activeData.value.length - 1, startRow + visibleRowCount + props.bufferRows)
-}
-
-/**
- * 对象池：获取或创建对象
- * @param pool 对象池
- * @param createFn 创建函数
- * @returns {T}
- */
-const getFromPool = <T extends Konva.Node>(pools: T[], createPoolHandler: () => T): T => {
-  let pooledNode = pools.pop()
-  if (!pooledNode) {
-    pooledNode = createPoolHandler()
-  }
-  return pooledNode
-}
-
-/**
- * 回收 Konva 节点
- * @param pool 对象池
- * @param node 对象
- * @returns {void}
- */
-const returnToPool = <T extends Konva.Node>(pool: T[], node: T) => {
-  node.remove() // 从场景中移除
-  // 清理可能存在的临时属性，避免对象复用导致高亮残留
-  try {
-    node.setAttr && node.setAttr('original-fill', null)
-    node.setAttr && node.setAttr('original-stroke', null)
-    node.setAttr && node.setAttr('original-strokeWidth', null)
-  } catch (e) {
-    console.log('e', e)
-  }
-  pool.push(node)
+  // 算上缓冲条数的开始下标+结束下标
+  tableVars.visibleRowStart = Math.max(0, startRow - props.bufferRows)
+  tableVars.visibleRowEnd = Math.min(
+    activeData.value.length - 1,
+    startRow + tableVars.visibleRowCount + props.bufferRows
+  )
 }
 
 /**
@@ -1308,49 +923,49 @@ const initStage = () => {
   const width = tableContainer.clientWidth
   const height = tableContainer.clientHeight
 
-  if (!stage) {
-    stage = new Konva.Stage({ container: tableContainer, width, height })
+  if (!tableVars.stage) {
+    tableVars.stage = new Konva.Stage({ container: tableContainer, width, height })
   } else {
-    stage.size({ width, height })
+    tableVars.stage.size({ width, height })
   }
 
-  if (!headerLayer) {
-    headerLayer = new Konva.Layer()
-    stage.add(headerLayer)
+  if (!tableVars.headerLayer) {
+    tableVars.headerLayer = new Konva.Layer()
+    tableVars.stage.add(tableVars.headerLayer)
   }
 
-  if (!bodyLayer) {
-    bodyLayer = new Konva.Layer()
-    stage.add(bodyLayer)
+  if (!tableVars.bodyLayer) {
+    tableVars.bodyLayer = new Konva.Layer()
+    tableVars.stage.add(tableVars.bodyLayer)
   }
 
-  if (!fixedBodyLayer) {
-    fixedBodyLayer = new Konva.Layer()
-    stage.add(fixedBodyLayer)
+  if (!tableVars.fixedBodyLayer) {
+    tableVars.fixedBodyLayer = new Konva.Layer()
+    tableVars.stage.add(tableVars.fixedBodyLayer)
   }
 
-  if (!fixedHeaderLayer) {
-    fixedHeaderLayer = new Konva.Layer()
-    stage.add(fixedHeaderLayer)
+  if (!tableVars.fixedHeaderLayer) {
+    tableVars.fixedHeaderLayer = new Konva.Layer()
+    tableVars.stage.add(tableVars.fixedHeaderLayer)
   }
 
   // 创建汇总图层与固定汇总图层（位于滚动条层之下）
-  if (!summaryLayer) {
-    summaryLayer = new Konva.Layer()
-    stage.add(summaryLayer)
+  if (!tableVars.summaryLayer) {
+    tableVars.summaryLayer = new Konva.Layer()
+    tableVars.stage.add(tableVars.summaryLayer)
   }
 
-  if (!fixedSummaryLayer) {
-    fixedSummaryLayer = new Konva.Layer()
-    stage.add(fixedSummaryLayer)
+  if (!tableVars.fixedSummaryLayer) {
+    tableVars.fixedSummaryLayer = new Konva.Layer()
+    tableVars.stage.add(tableVars.fixedSummaryLayer)
   }
 
-  if (!scrollbarLayer) {
-    scrollbarLayer = new Konva.Layer()
-    stage.add(scrollbarLayer)
+  if (!tableVars.scrollbarLayer) {
+    tableVars.scrollbarLayer = new Konva.Layer()
+    tableVars.stage.add(tableVars.scrollbarLayer)
   }
 
-  stage.setPointersPositions({
+  tableVars.stage.setPointersPositions({
     clientX: 0,
     clientY: 0
   })
@@ -1361,67 +976,64 @@ const initStage = () => {
  * @returns {void}
  */
 const clearGroups = () => {
-  headerLayer?.destroyChildren()
-  bodyLayer?.destroyChildren()
-  summaryLayer?.destroyChildren()
-  fixedHeaderLayer?.destroyChildren()
-  fixedBodyLayer?.destroyChildren()
-  fixedSummaryLayer?.destroyChildren()
-  scrollbarLayer?.destroyChildren()
-  // 清理对象池
-  const clearPool = (pool: Konva.Node[]) => {
-    pool.forEach((node) => node.destroy())
-    pool.length = 0
-  }
-
+  tableVars.headerLayer?.destroyChildren()
+  tableVars.bodyLayer?.destroyChildren()
+  tableVars.summaryLayer?.destroyChildren()
+  tableVars.fixedHeaderLayer?.destroyChildren()
+  tableVars.fixedBodyLayer?.destroyChildren()
+  tableVars.fixedSummaryLayer?.destroyChildren()
+  tableVars.scrollbarLayer?.destroyChildren()
   clearPool(leftBodyPools.cellRects)
   clearPool(leftBodyPools.cellTexts)
+  clearPool(leftBodyPools.mergedCellRects)
   clearPool(leftBodyPools.backgroundRects)
   clearPool(centerBodyPools.cellRects)
   clearPool(centerBodyPools.cellTexts)
+  clearPool(centerBodyPools.mergedCellRects)
   clearPool(centerBodyPools.backgroundRects)
   clearPool(rightBodyPools.cellRects)
   clearPool(rightBodyPools.cellTexts)
+  clearPool(rightBodyPools.mergedCellRects)
   clearPool(rightBodyPools.backgroundRects)
 
   /**
    * 重置滚动条引用
    */
-  verticalScrollbarGroup = null
-  horizontalScrollbarGroup = null
-  verticalScrollbarThumb = null
-  horizontalScrollbarThumb = null
+  tableVars.verticalScrollbarGroup = null
+  tableVars.horizontalScrollbarGroup = null
+  tableVars.verticalScrollbarThumb = null
+  tableVars.horizontalScrollbarThumb = null
 
   /**
    * 重置中心区域剪辑组引用
    */
-  centerBodyClipGroup = null
+  tableVars.centerBodyClipGroup = null
 
   /**
    * 重置单元格选择
    */
-  selectedCell = null
-  highlightRect = null
+  tableVars.selectedCell = null
+  tableVars.highlightRect = null
 
   /**
    * 重置虚拟滚动状态
    */
-  visibleRowStart = 0
-  visibleRowEnd = 0
-  visibleRowCount = 0
+  tableVars.visibleRowStart = 0
+  tableVars.visibleRowEnd = 0
+  tableVars.visibleRowCount = 0
 
   /**
    * 重置汇总组引用
    */
-  leftSummaryGroup = null
-  centerSummaryGroup = null
-  rightSummaryGroup = null
+  tableVars.leftSummaryGroup = null
+  tableVars.centerSummaryGroup = null
+  tableVars.rightSummaryGroup = null
 
   /**
    * 重置悬浮高亮
    */
-  hoveredRowIndex = null
-  hoveredColIndex = null
+  tableVars.hoveredRowIndex = null
+  tableVars.hoveredColIndex = null
 }
 
 /**
@@ -1430,35 +1042,32 @@ const clearGroups = () => {
  */
 const rebuildGroups = () => {
   if (
-    !stage ||
-    !headerLayer ||
-    !bodyLayer ||
-    !fixedBodyLayer ||
-    !fixedHeaderLayer ||
-    !scrollbarLayer ||
-    !summaryLayer ||
-    !fixedSummaryLayer
+    !tableVars.stage ||
+    !tableVars.headerLayer ||
+    !tableVars.bodyLayer ||
+    !tableVars.fixedBodyLayer ||
+    !tableVars.fixedHeaderLayer ||
+    !tableVars.scrollbarLayer ||
+    !tableVars.summaryLayer ||
+    !tableVars.fixedSummaryLayer
   )
     return
 
   // 清空位置映射列表，准备重建
-  headerPositionMapList.length = 0
-  bodyPositionMapList.length = 0
-  summaryPositionMapList.length = 0
+  tableVars.headerPositionMapList.length = 0
+  tableVars.bodyPositionMapList.length = 0
+  tableVars.summaryPositionMapList.length = 0
 
   const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
-  const stageWidth = stage.width()
-  const stageHeight = stage.height()
+  const stageWidth = tableVars.stage.width()
+  const stageHeight = tableVars.stage.height()
   const { maxScrollX, maxScrollY } = getScrollLimits()
   const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
   const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
 
-  /**
-   * 确保 centerBodyClipGroup 存在
-   */
-  if (!centerBodyClipGroup) {
+  if (!tableVars.centerBodyClipGroup) {
     const clipHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - horizontalScrollbarSpace
-    centerBodyClipGroup = new Konva.Group({
+    tableVars.centerBodyClipGroup = new Konva.Group({
       x: leftWidth,
       y: props.headerHeight,
       clip: {
@@ -1468,108 +1077,127 @@ const rebuildGroups = () => {
         height: clipHeight
       }
     })
-    bodyLayer.add(centerBodyClipGroup)
+    tableVars.bodyLayer.add(tableVars.centerBodyClipGroup)
   }
 
-  leftHeaderGroup = new Konva.Group({ x: 0, y: 0, name: 'leftHeader' })
+  tableVars.leftHeaderGroup = new Konva.Group({ x: 0, y: 0, name: 'left-header-group' })
 
-  centerHeaderGroup = new Konva.Group({ x: leftWidth - scrollX, y: 0, name: 'centerHeader' })
+  tableVars.centerHeaderGroup = new Konva.Group({ x: leftWidth - tableVars.scrollX, y: 0, name: 'center-header-group' })
 
-  rightHeaderGroup = new Konva.Group({
+  tableVars.rightHeaderGroup = new Konva.Group({
     x: stageWidth - rightWidth - verticalScrollbarSpace,
     y: 0,
-    name: 'rightHeader'
+    name: 'right-header-group'
   })
 
-  leftBodyGroup = new Konva.Group({ x: 0, y: props.headerHeight - scrollY, name: 'leftBody' })
+  tableVars.leftBodyGroup = new Konva.Group({
+    x: 0,
+    y: props.headerHeight - tableVars.stageScrollY,
+    name: 'left-body-group'
+  })
 
-  centerBodyGroup = new Konva.Group({ x: -scrollX, y: -scrollY, name: 'centerBody' })
+  tableVars.centerBodyGroup = new Konva.Group({
+    x: -tableVars.scrollX,
+    y: -tableVars.stageScrollY,
+    name: 'center-body-group'
+  })
 
-  rightBodyGroup = new Konva.Group({
+  tableVars.rightBodyGroup = new Konva.Group({
     x: stageWidth - rightWidth - verticalScrollbarSpace,
-    y: props.headerHeight - scrollY,
-    name: 'rightBody'
+    y: props.headerHeight - tableVars.stageScrollY,
+    name: 'right-body-group'
   })
 
   /**
    * 添加中心滚动表头到表头层（底层）
    */
-  headerLayer.add(centerHeaderGroup)
+  tableVars.headerLayer.add(tableVars.centerHeaderGroup)
 
   /**
    * 添加固定表头到固定表头层（顶层）
    */
-  fixedHeaderLayer.add(leftHeaderGroup, rightHeaderGroup)
+  tableVars.fixedHeaderLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup)
 
   // 构建底部 summary 组（受开关控制）
   if (props.enableSummary) {
     const summaryY = stageHeight - getSummaryRowHeight() - horizontalScrollbarSpace
-    leftSummaryGroup = new Konva.Group({ x: 0, y: summaryY, name: 'leftSummary' })
+    tableVars.leftSummaryGroup = new Konva.Group({ x: 0, y: summaryY, name: 'left-summary-group' })
 
-    centerSummaryGroup = new Konva.Group({ x: leftWidth - scrollX, y: summaryY, name: 'centerSummary' })
+    tableVars.centerSummaryGroup = new Konva.Group({
+      x: leftWidth - tableVars.scrollX,
+      y: summaryY,
+      name: 'center-summary-group'
+    })
 
-    rightSummaryGroup = new Konva.Group({
+    tableVars.rightSummaryGroup = new Konva.Group({
       x: stageWidth - rightWidth - verticalScrollbarSpace,
       y: summaryY,
-      name: 'rightSummary'
+      name: 'right-summary-group'
     })
     // 中间 summary 放到底层，固定左右 summary 放顶层
-    summaryLayer.add(centerSummaryGroup)
-    fixedSummaryLayer.add(leftSummaryGroup, rightSummaryGroup)
+    tableVars.summaryLayer.add(tableVars.centerSummaryGroup)
+    tableVars.fixedSummaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
   } else {
-    leftSummaryGroup = null
-    centerSummaryGroup = null
-    rightSummaryGroup = null
+    tableVars.leftSummaryGroup = null
+    tableVars.centerSummaryGroup = null
+    tableVars.rightSummaryGroup = null
   }
 
   /**
    * 添加中心滚动内容到剪辑组
    */
-  centerBodyClipGroup.add(centerBodyGroup)
+  tableVars.centerBodyClipGroup.add(tableVars.centerBodyGroup)
 
   /**
    * 添加固定列到固定层（顶层）
    */
-  fixedBodyLayer.add(leftBodyGroup, rightBodyGroup)
+  tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup)
 
-  headerPositionMapList.length = 0
+  tableVars.headerPositionMapList.length = 0
   /**
    * 绘制左侧表头部分
    */
-  drawHeaderPart(leftHeaderGroup, leftCols, 0, headerPositionMapList, 0)
+  drawHeaderPart(tableVars.leftHeaderGroup, leftCols, 0, tableVars.headerPositionMapList, 0)
   /**
    * 绘制中间表头部分
    */
-  drawHeaderPart(centerHeaderGroup, centerCols, leftCols.length, headerPositionMapList, leftWidth)
+  drawHeaderPart(tableVars.centerHeaderGroup, centerCols, leftCols.length, tableVars.headerPositionMapList, leftWidth)
   /**
    * 绘制右侧表头部分
    */
   drawHeaderPart(
-    rightHeaderGroup,
+    tableVars.rightHeaderGroup,
     rightCols,
     leftCols.length + centerCols.length,
-    headerPositionMapList,
+    tableVars.headerPositionMapList,
     leftWidth + centerWidth
   )
 
-  bodyPositionMapList.length = 0
+  tableVars.bodyPositionMapList.length = 0
   /**
    * 绘制左侧主体部分
    */
-  drawBodyPart(leftBodyGroup, leftCols, leftBodyPools, 0, bodyPositionMapList, 0)
+  drawBodyPart(tableVars.leftBodyGroup, leftCols, leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
   /**
    * 绘制中间主体部分
    */
-  drawBodyPart(centerBodyGroup, centerCols, centerBodyPools, leftCols.length, bodyPositionMapList, leftWidth)
+  drawBodyPart(
+    tableVars.centerBodyGroup,
+    centerCols,
+    centerBodyPools,
+    leftCols.length,
+    tableVars.bodyPositionMapList,
+    leftWidth
+  )
   /**
    * 绘制右侧主体部分
    */
   drawBodyPart(
-    rightBodyGroup,
+    tableVars.rightBodyGroup,
     rightCols,
     rightBodyPools,
     leftCols.length + centerCols.length,
-    bodyPositionMapList,
+    tableVars.bodyPositionMapList,
     leftWidth + centerWidth
   )
 
@@ -1577,37 +1205,43 @@ const rebuildGroups = () => {
    * 绘制底部 summary
    */
   if (props.enableSummary) {
-    summaryPositionMapList.length = 0
+    tableVars.summaryPositionMapList.length = 0
 
-    drawSummaryPart(leftSummaryGroup, leftCols, 0, summaryPositionMapList, 0)
-    drawSummaryPart(centerSummaryGroup, centerCols, leftCols.length, summaryPositionMapList, leftWidth)
+    drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
     drawSummaryPart(
-      rightSummaryGroup,
+      tableVars.centerSummaryGroup,
+      centerCols,
+      leftCols.length,
+      tableVars.summaryPositionMapList,
+      leftWidth
+    )
+    drawSummaryPart(
+      tableVars.rightSummaryGroup,
       rightCols,
       leftCols.length + centerCols.length,
-      summaryPositionMapList,
+      tableVars.summaryPositionMapList,
       leftWidth + centerWidth
     )
   }
 
   createScrollbars()
 
-  headerLayer.batchDraw()
-  bodyLayer?.batchDraw()
-  fixedBodyLayer?.batchDraw()
-  fixedHeaderLayer?.batchDraw()
-  summaryLayer?.batchDraw()
-  fixedSummaryLayer?.batchDraw()
-  scrollbarLayer?.batchDraw()
+  tableVars.headerLayer.batchDraw()
+  tableVars.bodyLayer?.batchDraw()
+  tableVars.fixedBodyLayer?.batchDraw()
+  tableVars.fixedHeaderLayer?.batchDraw()
+  tableVars.summaryLayer?.batchDraw()
+  tableVars.fixedSummaryLayer?.batchDraw()
+  tableVars.scrollbarLayer?.batchDraw()
 }
 
 /**
  * 创建滚动条
  */
 const createScrollbars = () => {
-  if (!stage || !scrollbarLayer) return
-  const stageWidth = stage.width()
-  const stageHeight = stage.height()
+  if (!tableVars.stage || !tableVars.scrollbarLayer) return
+  const stageWidth = tableVars.stage.width()
+  const stageHeight = tableVars.stage.height()
   const { maxScrollX, maxScrollY } = getScrollLimits()
 
   if (maxScrollY > 0) {
@@ -1621,7 +1255,7 @@ const createScrollbars = () => {
       stroke: '', // 移除边框，避免与表头边框冲突
       strokeWidth: 0
     })
-    scrollbarLayer.add(verticalScrollbarHeaderMask)
+    tableVars.scrollbarLayer.add(verticalScrollbarHeaderMask)
     // 绘制垂直滚动条底部遮罩
     const verticalScrollbarFooterMask = new Konva.Rect({
       x: stageWidth - props.scrollbarSize,
@@ -1633,11 +1267,11 @@ const createScrollbars = () => {
       strokeWidth: 1
     })
 
-    if (getSummaryRowHeight() > 0) scrollbarLayer.add(verticalScrollbarFooterMask)
+    if (getSummaryRowHeight() > 0) tableVars.scrollbarLayer.add(verticalScrollbarFooterMask)
 
     // 创建垂直滚动条组
-    verticalScrollbarGroup = new Konva.Group()
-    scrollbarLayer.add(verticalScrollbarGroup)
+    tableVars.verticalScrollbarGroup = new Konva.Group()
+    tableVars.scrollbarLayer.add(tableVars.verticalScrollbarGroup)
     // 绘制垂直滚动条轨道
     const verticalScrollbarTrack = new Konva.Rect({
       x: stageWidth - props.scrollbarSize,
@@ -1648,17 +1282,17 @@ const createScrollbars = () => {
       stroke: props.borderColor,
       strokeWidth: 1
     })
-    verticalScrollbarGroup.add(verticalScrollbarTrack)
+    tableVars.verticalScrollbarGroup.add(verticalScrollbarTrack)
 
     // 计算垂直滚动条高度
     const trackHeight =
       stageHeight - props.headerHeight - getSummaryRowHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0)
     const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
     // 计算垂直滚动条 Y 坐标
-    const thumbY = props.headerHeight + (scrollY / maxScrollY) * (trackHeight - thumbHeight)
+    const thumbY = props.headerHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
 
     // 绘制垂直滚动条滑块
-    verticalScrollbarThumb = new Konva.Rect({
+    tableVars.verticalScrollbarThumb = new Konva.Rect({
       x: stageWidth - props.scrollbarSize + 2,
       y: thumbY,
       width: props.scrollbarSize - 4,
@@ -1667,7 +1301,7 @@ const createScrollbars = () => {
       cornerRadius: 2,
       draggable: false
     })
-    verticalScrollbarGroup.add(verticalScrollbarThumb)
+    tableVars.verticalScrollbarGroup.add(tableVars.verticalScrollbarThumb)
 
     // 设置垂直滚动条事件
     setupVerticalScrollbarEvents()
@@ -1676,8 +1310,8 @@ const createScrollbars = () => {
   // 水平滚动条
   if (maxScrollX > 0) {
     // 创建水平滚动条组
-    horizontalScrollbarGroup = new Konva.Group()
-    scrollbarLayer.add(horizontalScrollbarGroup)
+    tableVars.horizontalScrollbarGroup = new Konva.Group()
+    tableVars.scrollbarLayer.add(tableVars.horizontalScrollbarGroup)
 
     const verticalScrollbarSpaceForHorizontal = maxScrollY > 0 ? props.scrollbarSize : 0
     // 绘制水平滚动条轨道
@@ -1690,7 +1324,7 @@ const createScrollbars = () => {
       stroke: props.borderColor,
       strokeWidth: 1
     })
-    horizontalScrollbarGroup.add(horizontalScrollbarTrack)
+    tableVars.horizontalScrollbarGroup.add(horizontalScrollbarTrack)
 
     // 计算水平滚动条宽度
     const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
@@ -1698,10 +1332,10 @@ const createScrollbars = () => {
     // 计算水平滚动条宽度
     const visibleWidth = stageWidth - leftWidth - rightWidth - verticalScrollbarSpaceForThumb
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
-    const thumbX = leftWidth + (scrollX / maxScrollX) * (visibleWidth - thumbWidth)
+    const thumbX = leftWidth + (tableVars.scrollX / maxScrollX) * (visibleWidth - thumbWidth)
 
     // 绘制水平滚动条滑块
-    horizontalScrollbarThumb = new Konva.Rect({
+    tableVars.horizontalScrollbarThumb = new Konva.Rect({
       x: thumbX,
       y: stageHeight - props.scrollbarSize + 2,
       width: thumbWidth,
@@ -1710,7 +1344,7 @@ const createScrollbars = () => {
       cornerRadius: 2,
       draggable: false
     })
-    horizontalScrollbarGroup.add(horizontalScrollbarThumb)
+    tableVars.horizontalScrollbarGroup.add(tableVars.horizontalScrollbarThumb)
 
     // 设置水平滚动条事件
     setupHorizontalScrollbarEvents()
@@ -1730,7 +1364,7 @@ const drawHeaderPart = (
   headerCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
   startColIndex: number,
   positionMapList: PositionMap[],
-  startX: number
+  stageStartX: number
 ) => {
   if (!headerGroup) return
 
@@ -1740,10 +1374,9 @@ const drawHeaderPart = (
     y: 0,
     width: headerGroupWidth,
     height: props.headerHeight,
-    fill: props.headerBackground,
-    stroke: '',
-    strokeWidth: 0
+    fill: props.headerBackground
   })
+
   headerGroup.add(headerBackgroundRect)
 
   let x = 0
@@ -1755,15 +1388,14 @@ const drawHeaderPart = (
       height: props.headerHeight,
       stroke: props.borderColor,
       strokeWidth: 1,
-      listening: false,
-      cursor: 'default'
+      listening: false
     })
     headerCellRect.setAttr('col-index', colIndex + startColIndex)
     headerCellRect.setAttr('row-index', 0)
     headerGroup.add(headerCellRect)
-    // 记录表头单元格位置信息
+    // 记录表头单元格位置信息（使用舞台坐标）
     positionMapList.push({
-      x: startX + x,
+      x: stageStartX + x,
       y: 0,
       width: col.width || 0,
       height: props.headerHeight,
@@ -1782,7 +1414,7 @@ const drawHeaderPart = (
     const fontSize = typeof props.headerFontSize === 'string' ? parseFloat(props.headerFontSize) : props.headerFontSize
     const displayName = col.displayName || col.columnName
     const truncatedTitle = truncateText(displayName, maxTextWidth, fontSize, fontFamily)
-    const label = new Konva.Text({
+    const cellTextNode = new Konva.Text({
       x: getTextX(x),
       y: props.headerHeight / 2,
       text: truncatedTitle,
@@ -1793,8 +1425,8 @@ const drawHeaderPart = (
       verticalAlign: 'middle',
       listening: false
     })
-    label.offsetY(label.height() / 2)
-    headerGroup.add(label)
+    cellTextNode.offsetY(cellTextNode.height() / 2)
+    headerGroup.add(cellTextNode)
     const centerY = props.headerHeight / 2
 
     // 如果用户当前列开启排序
@@ -1834,14 +1466,14 @@ const drawHeaderPart = (
       headerGroup.add(downTriangle)
 
       // 排序箭头也显示小手
-      upTriangle.on('mouseenter', () => setPointerStyle(stage, true, 'pointer'))
-      upTriangle.on('mouseleave', () => setPointerStyle(stage, false, 'default'))
-      downTriangle.on('mouseenter', () => setPointerStyle(stage, true, 'pointer'))
-      downTriangle.on('mouseleave', () => setPointerStyle(stage, false, 'default'))
+      upTriangle.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'pointer'))
+      upTriangle.on('mouseleave', () => setPointerStyle(tableVars.stage, false, 'default'))
+      downTriangle.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'pointer'))
+      downTriangle.on('mouseleave', () => setPointerStyle(tableVars.stage, false, 'default'))
 
       // 排序箭头点击事件：只在点击箭头时触发排序
       const handleSortClick = (event: Konva.KonvaEventObject<MouseEvent>, order: 'asc' | 'desc') => {
-        if (isResizingColumn) return
+        if (tableVars.isResizingColumn) return
         const e = event.evt
         const hasModifier = !!(e && (e.shiftKey || e.ctrlKey || e.metaKey))
         const idx = sortColumns.value.findIndex((s) => s.columnName === col.columnName)
@@ -1916,9 +1548,9 @@ const drawHeaderPart = (
         fill: hasFilter ? filterColor : 'transparent'
       })
       // 鼠标进入图标时，显示手型
-      filterIcon.on('mouseenter', () => setPointerStyle(stage, true, 'pointer'))
+      filterIcon.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'pointer'))
       // 鼠标离开图标时，恢复默认指针
-      filterIcon.on('mouseleave', () => setPointerStyle(stage, false, 'default'))
+      filterIcon.on('mouseleave', () => setPointerStyle(tableVars.stage, false, 'default'))
 
       headerGroup.add(filterIcon)
 
@@ -1947,26 +1579,26 @@ const drawHeaderPart = (
     })
     headerGroup.add(resizer)
 
-    resizer.on('mouseenter', () => setPointerStyle(stage, true, 'col-resize'))
+    resizer.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'col-resize'))
     resizer.on('mouseleave', () => {
-      if (!isResizingColumn) setPointerStyle(stage, false, 'default')
+      if (!tableVars.isResizingColumn) setPointerStyle(tableVars.stage, false, 'default')
     })
     // 鼠标按下时，开始拖拽列宽
     resizer.on('mousedown', (evt) => {
-      isResizingColumn = true
-      resizingColumnName = col.columnName
-      resizeStartX = evt.evt.clientX
-      resizeStartWidth = col.width || 0
+      tableVars.isResizingColumn = true
+      tableVars.resizingColumnName = col.columnName
+      tableVars.resizeStartX = evt.evt.clientX
+      tableVars.resizeStartWidth = col.width || 0
       // 找到同组内紧随其后的列，作为跟随调整的邻居列
       const neighbor = headerCols[colIndex + 1]
       if (neighbor) {
-        resizeNeighborColumnName = neighbor.columnName
-        resizeNeighborStartWidth = neighbor.width || 0
+        tableVars.resizeNeighborColumnName = neighbor.columnName
+        tableVars.resizeNeighborStartWidth = neighbor.width || 0
       } else {
-        resizeNeighborColumnName = null
-        resizeNeighborStartWidth = 0
+        tableVars.resizeNeighborColumnName = null
+        tableVars.resizeNeighborStartWidth = 0
       }
-      setPointerStyle(stage, true, 'col-resize')
+      setPointerStyle(tableVars.stage, true, 'col-resize')
     })
 
     x += col.width || 0
@@ -1984,9 +1616,9 @@ const drawSummaryPart = (
   summaryCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
   startColIndex: number,
   positionMapList: PositionMap[],
-  startX: number
+  stageStartX: number
 ) => {
-  if (!stage || !summaryGroup) return
+  if (!tableVars.stage || !summaryGroup) return
   // 计算汇总行总长度
   const summaryTotalWidth = summaryCols.reduce((acc, c) => acc + (c.width || 0), 0)
   const summaryBackgroundRect = new Konva.Rect({
@@ -1994,9 +1626,7 @@ const drawSummaryPart = (
     y: 0,
     width: summaryTotalWidth,
     height: props.summaryHeight,
-    fill: props.summaryBackground,
-    stroke: '', // 移除背景边框，避免重复
-    strokeWidth: 0
+    fill: props.summaryBackground
   })
 
   summaryGroup.add(summaryBackgroundRect)
@@ -2011,22 +1641,23 @@ const drawSummaryPart = (
       fill: props.summaryBackground,
       stroke: props.borderColor,
       strokeWidth: 1,
-      listening: true,
-      cursor: 'default'
+      listening: true
     })
-    summaryCellRect.setAttr('col-index', colIndex + startColIndex)
-    summaryCellRect.setAttr('row-index', activeData.value.length + 1)
+    const realRowIndex = activeData.value.length + 1
+    const realColIndex = colIndex + startColIndex
+    summaryCellRect.setAttr('col-index', realColIndex)
+    summaryCellRect.setAttr('row-index', realRowIndex)
     summaryGroup.add(summaryCellRect)
 
-    const y = stage!.height() - props.summaryHeight
-    // 记录汇总单元格位置信息
+    const y = tableVars.stage!.height() - props.summaryHeight
+    // 记录汇总单元格位置信息（使用舞台坐标）
     positionMapList.push({
-      x: startX + x,
+      x: stageStartX + x,
       y: y,
       width: col.width || 0,
       height: props.summaryHeight,
-      rowIndex: activeData.value.length + 1,
-      colIndex: colIndex + startColIndex
+      rowIndex: realRowIndex,
+      colIndex: realColIndex
     })
 
     // 先显示占位文本，然后异步更新
@@ -2088,11 +1719,11 @@ const drawSummaryPart = (
         summaryGroup.getLayer()?.batchDraw()
       })
     }
-    summaryCellRect.on('mouseenter', () => setPointerStyle(stage, true, 'pointer'))
-    summaryCellRect.on('mouseleave', () => setPointerStyle(stage, false, 'default'))
+    summaryCellRect.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'pointer'))
+    summaryCellRect.on('mouseleave', () => setPointerStyle(tableVars.stage, false, 'default'))
 
     summaryCellRect.on('click', (evt) => {
-      if (!stage) return
+      if (!tableVars.stage) return
       const isNumber = col.columnType === 'number'
       const options = isNumber ? numberOptions : textOptions
       const prev = summaryState[col.columnName] || 'nodisplay'
@@ -2159,31 +1790,32 @@ const computeSummaryValueForColumn = async (
  * @returns {void}
  */
 const setupVerticalScrollbarEvents = () => {
-  if (!verticalScrollbarThumb || !stage) return
+  if (!tableVars.verticalScrollbarThumb || !tableVars.stage) return
   /**
    * 设置垂直滚动条拖拽事件
    */
-  verticalScrollbarThumb.on('mousedown', (event) => {
-    isDraggingVerticalThumb = true
-    dragStartY = event.evt.clientY
-    dragStartScrollY = scrollY
-    stage!.container().style.cursor = 'grabbing'
-    stage!.setPointersPositions(event.evt)
+  tableVars.verticalScrollbarThumb.on('mousedown', (event) => {
+    tableVars.isDraggingVerticalThumb = true
+    tableVars.dragStartY = event.evt.clientY
+    tableVars.dragStartScrollY = tableVars.stageScrollY
+    tableVars.stage!.container().style.cursor = 'grabbing'
+    tableVars.stage!.setPointersPositions(event.evt)
   })
   /**
    * 设置垂直滚动条鼠标进入事件
    */
-  verticalScrollbarThumb.on('mouseenter', () => {
-    if (verticalScrollbarThumb) verticalScrollbarThumb.fill(props.scrollbarThumbHover)
-    scrollbarLayer?.batchDraw()
+  tableVars.verticalScrollbarThumb.on('mouseenter', () => {
+    if (tableVars.verticalScrollbarThumb) tableVars.verticalScrollbarThumb.fill(props.scrollbarThumbHover)
+    tableVars.scrollbarLayer?.batchDraw()
   })
 
   /**
    * 设置垂直滚动条鼠标离开事件
    */
-  verticalScrollbarThumb.on('mouseleave', () => {
-    if (verticalScrollbarThumb && !isDraggingVerticalThumb) verticalScrollbarThumb.fill(props.scrollbarThumb)
-    scrollbarLayer?.batchDraw()
+  tableVars.verticalScrollbarThumb.on('mouseleave', () => {
+    if (tableVars.verticalScrollbarThumb && !tableVars.isDraggingVerticalThumb)
+      tableVars.verticalScrollbarThumb.fill(props.scrollbarThumb)
+    tableVars.scrollbarLayer?.batchDraw()
   })
 }
 
@@ -2192,33 +1824,34 @@ const setupVerticalScrollbarEvents = () => {
  * @returns {void}
  */
 const setupHorizontalScrollbarEvents = () => {
-  if (!horizontalScrollbarThumb || !stage) return
+  if (!tableVars.horizontalScrollbarThumb || !tableVars.stage) return
 
-  horizontalScrollbarThumb.on('mousedown', (event) => {
-    isDraggingHorizontalThumb = true
-    dragStartX = event.evt.clientX
-    dragStartScrollX = scrollX
-    stage!.container().style.cursor = 'grabbing'
+  tableVars.horizontalScrollbarThumb.on('mousedown', (event) => {
+    tableVars.isDraggingHorizontalThumb = true
+    tableVars.dragStartX = event.evt.clientX
+    tableVars.dragStartScrollX = tableVars.scrollX
+    tableVars.stage!.container().style.cursor = 'grabbing'
 
     // 设置指针位置到 stage，避免 Konva 警告
-    stage!.setPointersPositions(event.evt)
+    tableVars.stage!.setPointersPositions(event.evt)
   })
 
-  horizontalScrollbarThumb.on('mouseenter', () => {
-    if (horizontalScrollbarThumb) horizontalScrollbarThumb.fill(props.scrollbarThumbHover)
-    scrollbarLayer?.batchDraw()
+  tableVars.horizontalScrollbarThumb.on('mouseenter', () => {
+    if (tableVars.horizontalScrollbarThumb) tableVars.horizontalScrollbarThumb.fill(props.scrollbarThumbHover)
+    tableVars.scrollbarLayer?.batchDraw()
   })
 
-  horizontalScrollbarThumb.on('mouseleave', () => {
-    if (horizontalScrollbarThumb && !isDraggingHorizontalThumb) horizontalScrollbarThumb.fill(props.scrollbarThumb)
-    scrollbarLayer?.batchDraw()
+  tableVars.horizontalScrollbarThumb.on('mouseleave', () => {
+    if (tableVars.horizontalScrollbarThumb && !tableVars.isDraggingHorizontalThumb)
+      tableVars.horizontalScrollbarThumb.fill(props.scrollbarThumb)
+    tableVars.scrollbarLayer?.batchDraw()
   })
 }
 
 const drawBackgroundRect = (
   bodyGroup: Konva.Group,
   bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
-  pools: ObjectPools,
+  pools: KonvaNodePools,
   rowIndex: number
 ) => {
   // 分组总宽度
@@ -2229,6 +1862,7 @@ const drawBackgroundRect = (
   )
   // y坐标
   const y = rowIndex * props.bodyRowHeight
+  backgroundRect.name('background-rect')
   backgroundRect.setAttr('row-index', null)
   backgroundRect.setAttr('col-index', null)
   backgroundRect.x(0)
@@ -2237,8 +1871,6 @@ const drawBackgroundRect = (
   backgroundRect.height(props.bodyRowHeight)
   const backgroundColor = rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
   backgroundRect.fill(backgroundColor)
-  backgroundRect.stroke('')
-  backgroundRect.strokeWidth(0)
   bodyGroup.add(backgroundRect)
   backgroundRect.moveToBottom()
 }
@@ -2249,7 +1881,7 @@ const drawBackgroundRect = (
  * @param {ObjectPools} pools 对象池
  * @returns {void}
  */
-const recoverKonvaNode = (bodyGroup: Konva.Group, pools: ObjectPools) => {
+const recoverKonvaNode = (bodyGroup: Konva.Group, pools: KonvaNodePools) => {
   // 清空当前组，将对象返回池中
   const children = bodyGroup.children.slice()
   children.forEach((child) => {
@@ -2283,20 +1915,6 @@ const recoverKonvaNode = (bodyGroup: Konva.Group, pools: ObjectPools) => {
   })
 }
 
-interface PositionMap {
-  value?: any
-  x: number
-  y: number
-  width: number
-  height: number
-  rowIndex: number
-  colIndex: number
-}
-
-const headerPositionMapList: PositionMap[] = []
-const bodyPositionMapList: PositionMap[] = []
-const summaryPositionMapList: PositionMap[] = []
-
 /**
  *
  * 画body区域 只渲染可视区域的行
@@ -2304,25 +1922,26 @@ const summaryPositionMapList: PositionMap[] = []
  * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} cols 列
  * @param {ObjectPools} pools 对象池
  * @param {number} startColIndex 起始列索引
+ * @param {PositionMap[]} positionMapList 位置映射列表
+ * @param {number} stageStartX 舞台起始X坐标
  * @returns {void}
  */
 const drawBodyPart = (
   bodyGroup: Konva.Group | null,
   bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
-  pools: ObjectPools,
+  pools: KonvaNodePools,
   startColIndex: number,
   positionMapList: PositionMap[],
-  startX: number
+  stageStartX: number
 ) => {
-  if (!stage || !bodyGroup) return
+  if (!tableVars.stage || !bodyGroup) return
 
-  // 计算可视区域
   calculateVisibleRows()
 
   recoverKonvaNode(bodyGroup, pools)
 
   // 渲染可视区域的行
-  for (let rowIndex = visibleRowStart; rowIndex <= visibleRowEnd; rowIndex++) {
+  for (let rowIndex = tableVars.visibleRowStart; rowIndex <= tableVars.visibleRowEnd; rowIndex++) {
     const row = activeData.value[rowIndex]
     // 绘制背景矩形
     drawBackgroundRect(bodyGroup, bodyCols, pools, rowIndex)
@@ -2362,13 +1981,12 @@ const drawBodyPart = (
 
       const cellHeight = computedRowSpan * props.bodyRowHeight
 
-      // 计算合并单元格的宽度和标记覆盖区域
+      // 计算合并单元格的宽度（此处暂未实现跨列合并的宽度累加，保持原逻辑）
       let cellWidth = col.width || 0
 
-      // 记录可视区域内主体单元格位置信息
+      // 记录可视区域内主体单元格位置信息（使用舞台坐标）
       positionMapList.push({
-        value: row[col.columnName],
-        x: startX + x,
+        x: stageStartX + x,
         y: y + props.headerHeight,
         width: cellWidth,
         height: cellHeight,
@@ -2381,7 +1999,7 @@ const drawBodyPart = (
           pools.backgroundRects,
           () => new Konva.Rect({ listening: false, name: 'merged-cell-rect' })
         )
-
+        mergedCellRect.name('merged-cell-rect')
         mergedCellRect.setAttr('row-index', rowIndex + 1)
         mergedCellRect.setAttr('col-index', colIndex + startColIndex)
         mergedCellRect.x(x)
@@ -2400,26 +2018,28 @@ const drawBodyPart = (
         const maxTextWidth = cellWidth - 16
         const fontFamily = props.bodyFontFamily
         const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-
         const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
-
-        const mergedTextNode = getFromPool(
+        const mergedCellText = getFromPool(
           pools.mergedCellTexts,
           () => new Konva.Text({ listening: false, name: 'merged-cell-text' })
         )
-        mergedTextNode.x(getTextX(x))
-        mergedTextNode.y(y + cellHeight / 2)
-        mergedTextNode.text(truncatedValue)
-        mergedTextNode.fontSize(fontSize)
-        mergedTextNode.fontFamily(fontFamily)
+        mergedCellText.name('merged-cell-text')
+        mergedCellText.setAttr('row-index', null)
+        mergedCellText.setAttr('col-index', null)
+        mergedCellText.x(getTextX(x))
+        mergedCellText.y(y + cellHeight / 2)
+        mergedCellText.text(truncatedValue)
+        mergedCellText.fontSize(fontSize)
+        mergedCellText.fontFamily(fontFamily)
         // 填充文字颜色
-        mergedTextNode.fill(props.bodyTextColor)
-        mergedTextNode.align('left')
-        mergedTextNode.verticalAlign('middle')
-        mergedTextNode.offsetY(mergedTextNode.height() / 2)
-        bodyGroup.add(mergedTextNode)
+        mergedCellText.fill(props.bodyTextColor)
+        mergedCellText.align('left')
+        mergedCellText.verticalAlign('middle')
+        mergedCellText.offsetY(mergedCellText.height() / 2)
+        bodyGroup.add(mergedCellText)
       } else {
         const cellRect = getFromPool(pools.cellRects, () => new Konva.Rect({ listening: true, name: 'cell-rect' }))
+        cellRect.name('cell-rect')
         cellRect.setAttr('row-index', rowIndex + 1)
         cellRect.setAttr('col-index', colIndex + startColIndex)
         cellRect.x(x)
@@ -2455,7 +2075,7 @@ const drawBodyPart = (
             })
             const w = temp.width() + 16
             temp.destroy()
-            return clamp(w, 48, 120)
+            return constrainToRange(w, 48, 120)
           }
 
           if (actions && actions.length > 0) {
@@ -2463,114 +2083,63 @@ const drawBodyPart = (
             const totalButtonsWidth = widths.reduce((a, b) => a + b, 0) + gap * (actions.length - 1)
             let startX = x + (cellWidth - totalButtonsWidth) / 2
             const centerY = y + (cellHeight - buttonHeight) / 2
-            actions.forEach((a, idx) => {
+            actions.forEach((action, idx) => {
               const w = widths[idx]
-              const theme = paletteOptions[a.type || 'primary'] || paletteOptions.primary
-              const rect = getFromPool(
+              const theme = paletteOptions[action.type || 'primary'] || paletteOptions.primary
+              const buttonRect = getFromPool(
                 pools.backgroundRects,
-                () => new Konva.Rect({ listening: true, name: `action-button-${a.key}` })
+                () => new Konva.Rect({ listening: true, name: `button-rect` })
               )
-              rect.off('click')
-              rect.off('mouseenter')
-              rect.off('mouseleave')
+              buttonRect.off('click')
+              buttonRect.off('mouseenter')
+              buttonRect.off('mouseleave')
               // 按钮矩形不应携带行/列索引，避免被误纳入 hover 高亮集合
-              rect.setAttr('row-index', null)
-              rect.setAttr('col-index', null)
-              rect.x(startX)
-              rect.y(centerY)
-              rect.width(w)
-              rect.height(buttonHeight)
-              rect.cornerRadius(4)
-              rect.fill(theme.fill)
-              rect.stroke(theme.stroke)
-              rect.strokeWidth(1)
+              buttonRect.setAttr('row-index', null)
+              buttonRect.setAttr('col-index', null)
+              buttonRect.x(startX)
+              buttonRect.y(centerY)
+              buttonRect.width(w)
+              buttonRect.height(buttonHeight)
+              buttonRect.cornerRadius(4)
+              buttonRect.fill(theme.fill)
+              buttonRect.stroke(theme.stroke)
+              buttonRect.strokeWidth(1)
               const isDisabled =
-                typeof a.disabled === 'function' ? a.disabled(activeData.value[rowIndex], rowIndex) : !!a.disabled
-              bindButtonInteractions(rect, {
+                typeof action.disabled === 'function'
+                  ? action.disabled(activeData.value[rowIndex], rowIndex)
+                  : !!action.disabled
+              bindButtonInteractions(buttonRect, {
                 baseFill: theme.fill,
                 baseStroke: theme.stroke,
                 layer: bodyGroup.getLayer(),
                 disabled: isDisabled
               })
-              rect.on('click', () => {
+              buttonRect.on('click', () => {
                 if (isDisabled) return
                 const rowData = activeData.value[rowIndex]
-                emits('action-click', { rowIndex, action: a.key, rowData })
+                emits('action-click', { rowIndex, action: action.key, rowData })
               })
-              bodyGroup.add(rect)
+              bodyGroup.add(buttonRect)
               const fontSize =
                 typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-              const textNode = getFromPool(
+              const buttonText = getFromPool(
                 pools.cellTexts,
-                () => new Konva.Text({ listening: false, name: 'action-button-text' })
+                () => new Konva.Text({ listening: false, name: 'button-text' })
               )
-              textNode.x(startX + w / 2)
-              textNode.y(centerY + buttonHeight / 2)
-              textNode.text(a.label)
-              textNode.fontSize(fontSize)
-              textNode.fontFamily(props.bodyFontFamily)
-              textNode.fill(theme.text)
-              textNode.opacity(isDisabled ? 0.6 : 1)
-              textNode.align('center')
-              textNode.verticalAlign('middle')
-              textNode.offset({ x: textNode.width() / 2, y: textNode.height() / 2 })
-              bodyGroup.add(textNode)
+              buttonText.x(startX + w / 2)
+              buttonText.y(centerY + buttonHeight / 2)
+              buttonText.text(action.label)
+              buttonText.fontSize(fontSize)
+              buttonText.fontFamily(props.bodyFontFamily)
+              buttonText.fill(theme.text)
+              buttonText.opacity(isDisabled ? 0.6 : 1)
+              buttonText.align('center')
+              buttonText.verticalAlign('middle')
+              buttonText.offset({ x: buttonText.width() / 2, y: buttonText.height() / 2 })
+              bodyGroup.add(buttonText)
 
               startX += w + gap
             })
-          } else {
-            // 兼容：未配置 actions 时，渲染一个默认“操作”按钮
-            const buttonWidth = Math.max(48, Math.min(88, cellWidth - 16))
-            const buttonX = x + (cellWidth - buttonWidth) / 2
-            const buttonY = y + (cellHeight - buttonHeight) / 2
-            const rect = getFromPool(
-              pools.backgroundRects,
-              () => new Konva.Rect({ listening: true, name: 'action-button' })
-            )
-            rect.off('click')
-            rect.off('mouseenter')
-            rect.off('mouseleave')
-            // 按钮矩形不应携带行/列索引，避免被误纳入 hover 高亮集合
-            rect.setAttr('row-index', null)
-            rect.setAttr('col-index', null)
-            rect.x(buttonX)
-            rect.y(buttonY)
-            rect.width(buttonWidth)
-            rect.height(buttonHeight)
-            rect.cornerRadius(4)
-            rect.fill('#409EFF')
-            rect.stroke('#2b74c7')
-            rect.strokeWidth(1)
-            const isDisabled = false
-            bindButtonInteractions(rect, {
-              baseFill: '#409EFF',
-              baseStroke: '#2b74c7',
-              layer: bodyGroup.getLayer(),
-              disabled: isDisabled
-            })
-            rect.on('click', () => {
-              if (isDisabled) return
-              const rowData = activeData.value[rowIndex]
-              emits('action-click', { rowIndex, action: 'action', rowData })
-            })
-            bodyGroup.add(rect)
-            const fontSize =
-              typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-            const label = getFromPool(
-              pools.cellTexts,
-              () => new Konva.Text({ listening: false, name: 'action-button-text' })
-            )
-            label.x(buttonX + buttonWidth / 2)
-            label.y(buttonY + buttonHeight / 2)
-            label.text('操作')
-            label.fontSize(fontSize)
-            label.fontFamily(props.bodyFontFamily)
-            label.fill('#fff')
-            label.opacity(isDisabled ? 0.6 : 1)
-            label.align('center')
-            label.verticalAlign('middle')
-            label.offset({ x: label.width() / 2, y: label.height() / 2 })
-            bodyGroup.add(label)
           }
         } else {
           // 创建文本
@@ -2582,18 +2151,20 @@ const drawBodyPart = (
 
           const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
 
-          const textNode = getFromPool(pools.cellTexts, () => new Konva.Text({ listening: false, name: 'cell-text' }))
-
-          textNode.x(getTextX(x))
-          textNode.y(y + cellHeight / 2)
-          textNode.text(truncatedValue)
-          textNode.fontSize(fontSize)
-          textNode.fontFamily(fontFamily)
-          textNode.fill(props.bodyTextColor)
-          textNode.align('left')
-          textNode.verticalAlign('middle')
-          textNode.offsetY(textNode.height() / 2)
-          bodyGroup.add(textNode)
+          const cellText = getFromPool(pools.cellTexts, () => new Konva.Text({ listening: false, name: 'cell-text' }))
+          cellText.name('cell-text')
+          cellText.setAttr('row-index', null)
+          cellText.setAttr('col-index', null)
+          cellText.x(getTextX(x))
+          cellText.y(y + cellHeight / 2)
+          cellText.text(truncatedValue)
+          cellText.fontSize(fontSize)
+          cellText.fontFamily(fontFamily)
+          cellText.fill(props.bodyTextColor)
+          cellText.align('left')
+          cellText.verticalAlign('middle')
+          cellText.offsetY(cellText.height() / 2)
+          bodyGroup.add(cellText)
 
           const colShowOverflow = col.showOverflowTooltip
           const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
@@ -2603,15 +2174,15 @@ const drawBodyPart = (
             // Konva 没有内置 tooltip，避免复杂度，先用 title
             cellRect.off('mouseenter.tooltip')
             cellRect.on('mouseenter.tooltip', () => {
-              if (!stage) return
+              if (!tableVars.stage) return
               // 设置 container 的 title
-              stage.container().setAttribute('title', String(rawValue ?? ''))
+              tableVars.stage.container().setAttribute('title', String(rawValue ?? ''))
             })
             cellRect.off('mouseleave.tooltip')
             cellRect.on('mouseleave.tooltip', () => {
-              if (!stage) return
+              if (!tableVars.stage) return
               // 清除 title，避免全局悬浮
-              stage.container().removeAttribute('title')
+              tableVars.stage.container().removeAttribute('title')
             })
           }
         }
@@ -2679,7 +2250,7 @@ const drawBodyPart = (
  */
 const recomputeHoverIndexFromPointer = () => {
   if (
-    !stage ||
+    !tableVars.stage ||
     (!props.enableRowHoverHighlight && !props.enableColHoverHighlight) ||
     filterDropdown.visible ||
     summaryDropdown.visible
@@ -2689,20 +2260,20 @@ const recomputeHoverIndexFromPointer = () => {
 
   // 清除高亮的辅助函数
   const clearHoverHighlight = () => {
-    if (hoveredRowIndex !== null || hoveredColIndex !== null) {
-      hoveredRowIndex = null
-      hoveredColIndex = null
+    if (tableVars.hoveredRowIndex !== null || tableVars.hoveredColIndex !== null) {
+      tableVars.hoveredRowIndex = null
+      tableVars.hoveredColIndex = null
       updateHoverRects()
     }
   }
 
   // 检查各种边界条件，如果不符合则清除高亮并返回
-  if (!isTopMostInTable(lastClientX, lastClientY)) {
+  if (!isTopMostInTable(tableVars.lastClientX, tableVars.lastClientY)) {
     clearHoverHighlight()
     return
   }
 
-  const pointerPosition = stage.getPointerPosition()
+  const pointerPosition = tableVars.stage.getPointerPosition()
   if (!pointerPosition) {
     clearHoverHighlight()
     return
@@ -2711,17 +2282,19 @@ const recomputeHoverIndexFromPointer = () => {
   /**
    * 检查鼠标是否在表格区域内（排除滚动条区域）
    */
-  if (!isInTableArea(lastClientX, lastClientY)) {
+  if (!isInTableArea(tableVars.lastClientX, tableVars.lastClientY)) {
     clearHoverHighlight()
     return
   }
 
-  // const stageWidth = stage.width()
-  // const stageHeight = stage.height()
-  const localY = pointerPosition.y + scrollY
-  const localX = pointerPosition.x + scrollX
+  const localY = pointerPosition.y + tableVars.stageScrollY
+  const localX = pointerPosition.x + tableVars.scrollX
   // 计算鼠标所在的行索引
-  const positionMapList = [...headerPositionMapList, ...bodyPositionMapList, ...summaryPositionMapList]
+  const positionMapList = [
+    ...tableVars.headerPositionMapList,
+    ...tableVars.bodyPositionMapList,
+    ...tableVars.summaryPositionMapList
+  ]
   const positionOption = positionMapList.find(
     (item) => localX >= item.x && localX <= item.x + item.width && localY >= item.y && localY <= item.y + item.height
   )
@@ -2731,142 +2304,29 @@ const recomputeHoverIndexFromPointer = () => {
     newHoveredRowIndex = positionOption.rowIndex
     newHoveredColIndex = positionOption.colIndex
   }
-  const rowChanged = newHoveredRowIndex !== hoveredRowIndex
-  const colChanged = newHoveredColIndex !== hoveredColIndex
-  // const hasHorizontalScrollbar = getScrollLimits().maxScrollX > 0
-  // const horizontalBarSpace = hasHorizontalScrollbar ? props.scrollbarSize : 0
-  // const summaryHeight = getSummaryRowHeight()
-
-  // /**
-  //  * 计算鼠标所在的行索引（考虑合并行，且仅在当前列是合并列时折叠到起始行）
-  //  * header = 0, body 从 1 开始, summary = activeData.length + 1
-  //  */
-  // const getRowIndexFromPointer = (hoverColIndex: number | null): number | null => {
-  //   // Header 区域
-  //   if (localY < props.headerHeight) return 0
-
-  //   const bodyEndY = stageHeight - summaryHeight - horizontalBarSpace
-  //   // Body 区域
-  //   if (localY >= props.headerHeight && localY <= bodyEndY) {
-  //     const yInBodyContent = localY - props.headerHeight + scrollY
-  //     let rowInData = Math.floor(yInBodyContent / props.bodyRowHeight)
-  //     if (rowInData < 0 || rowInData >= activeData.value.length) return null
-
-  //     // 仅当当前列是合并列，并且指针命中了被合并覆盖的行时，返回起始行
-  //     if (typeof props.spanMethod === 'function' && hoverColIndex !== null) {
-  //       const col = tableColumns.value[hoverColIndex]
-  //       if (col) {
-  //         const parseRowspan = (res: any): number => {
-  //           if (Array.isArray(res)) return Math.max(0, Number(res[0]) || 0)
-  //           if (res && typeof res === 'object') return Math.max(0, Number(res.rowspan) || 0)
-  //           return 1
-  //         }
-
-  //         const currentRes = props.spanMethod({
-  //           row: activeData.value[rowInData],
-  //           column: col,
-  //           rowIndex: rowInData,
-  //           colIndex: hoverColIndex
-  //         })
-  //         const currentSpanRow = parseRowspan(currentRes)
-
-  //         // 若当前行在该列被合并覆盖（rowspan 为 0），向上查找起始行
-  //         if (currentSpanRow === 0) {
-  //           for (let k = rowInData - 1; k >= 0; k--) {
-  //             const res = props.spanMethod({
-  //               row: activeData.value[k],
-  //               column: col,
-  //               rowIndex: k,
-  //               colIndex: hoverColIndex
-  //             })
-  //             const spanRow = parseRowspan(res)
-  //             if (spanRow > 1 && rowInData < k + spanRow) {
-  //               rowInData = k
-  //               break
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-
-  //     // 返回最终行索引（1 基）
-  //     return rowInData + 1
-  //   }
-
-  //   // Summary 区域
-  //   if (summaryHeight > 0 && localY > bodyEndY && localY <= stageHeight - horizontalBarSpace) {
-  //     return activeData.value.length + 1
-  //   }
-
-  //   return null
-  // }
-
-  // /**
-  //  * 计算列索引的辅助函数
-  //  * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} cols 列数组
-  //  * @param {number} startX 起始 X 坐标
-  //  * @param {number} currentX 当前 X 坐标
-  //  */
-  // const findColumnIndex = (
-  //   cols: (GroupStore.GroupOption | DimensionStore.DimensionOption)[],
-  //   startX: number,
-  //   currentX: number
-  // ) => {
-  //   for (let i = 0; i < cols.length; i++) {
-  //     const colWidth = cols[i].width || 0
-  //     if (currentX >= startX && currentX < startX + colWidth) {
-  //       return i
-  //     }
-  //     startX += colWidth
-  //   }
-  //   return null
-  // }
-
-  // const { leftCols, centerCols, rightCols, leftWidth, rightWidth } = getSplitColumns()
-
-  // // 当存在水平滚动条时，右侧固定列的起始 X 需要扣除滚动条占位
-  // const effectiveRightStartX = stageWidth - rightWidth - horizontalBarSpace
-  // let newHoverColIndex: number | null = null
-  // if (localX < leftWidth) {
-  //   // 左侧固定列区域
-  //   const idx = findColumnIndex(leftCols, 0, localX)
-  //   newHoverColIndex = idx
-  // } else if (localX >= effectiveRightStartX) {
-  //   // 右侧固定列区域
-  //   const idx = findColumnIndex(rightCols, effectiveRightStartX, localX)
-  //   newHoverColIndex = idx !== null ? leftCols.length + centerCols.length + idx : null
-  // } else {
-  //   // 中间滚动区域，需要考虑 scrollX 偏移
-  //   const centerX = localX - leftWidth + scrollX
-  //   const idx = findColumnIndex(centerCols, 0, centerX)
-  //   newHoverColIndex = idx !== null ? leftCols.length + idx : null
-  // }
-
-  // const newHoverRowIndex = getRowIndexFromPointer(newHoverColIndex)
-
-  // 更新状态并重新渲染
-  // const rowChanged = newHoverRowIndex !== hoveredRowIndex
-  // const colChanged = newHoverColIndex !== hoveredColIndex
-
+  const rowChanged = newHoveredRowIndex !== tableVars.hoveredRowIndex
+  const colChanged = newHoveredColIndex !== tableVars.hoveredColIndex
   if (rowChanged) {
-    hoveredRowIndex = newHoveredRowIndex
+    tableVars.hoveredRowIndex = newHoveredRowIndex
   }
   if (colChanged) {
-    hoveredColIndex = newHoveredColIndex
+    tableVars.hoveredColIndex = newHoveredColIndex
   }
 
   if (rowChanged || colChanged) {
     updateHoverRects()
-    console.log('hoveredRowIndex', hoveredRowIndex)
-    console.log('hoveredColIndex', hoveredColIndex)
+    console.log('hoveredRowIndex', tableVars.hoveredRowIndex)
+    console.log('hoveredColIndex', tableVars.hoveredColIndex)
   }
 }
 
 /**
  * 清除所有高亮效果
+ * @param type 类型：row 行，column 列
+ * @returns {void}
  */
-const clearHoverHighlights = (type: 'row' | 'column') => {
-  if (!stage) return
+const resetHighlightRects = (type: 'row' | 'column') => {
+  if (!tableVars.stage) return
   if (type === 'row') {
     rowHighlightRects?.forEach((rect) => {
       rect.fill(null)
@@ -2884,29 +2344,22 @@ const clearHoverHighlights = (type: 'row' | 'column') => {
  * 创建或更新行和列的 hover 高亮矩形
  */
 const updateHoverRects = () => {
-  if (!stage) return
+  if (!tableVars.stage) return
   // 根据配置和当前悬停状态创建高亮效果
-  if (props.enableRowHoverHighlight && hoveredRowIndex !== null) {
+  if (props.enableRowHoverHighlight && tableVars.hoveredRowIndex !== null) {
     // 清除之前的高亮
-    clearHoverHighlights('row')
-    getColOrRowHighlightRects('row', hoveredRowIndex)
+    resetHighlightRects('row')
+    getColOrRowHighlightRects('row', tableVars.hoveredRowIndex)
   } else {
-    clearHoverHighlights('row')
+    resetHighlightRects('row')
   }
-  if (props.enableColHoverHighlight && hoveredColIndex !== null) {
+  if (props.enableColHoverHighlight && tableVars.hoveredColIndex !== null) {
     // 清除之前的高亮
-    clearHoverHighlights('column')
-    getColOrRowHighlightRects('column', hoveredColIndex)
+    resetHighlightRects('column')
+    getColOrRowHighlightRects('column', tableVars.hoveredColIndex)
   } else {
-    clearHoverHighlights('column')
+    resetHighlightRects('column')
   }
-
-  // 重绘所有图层
-  bodyLayer?.batchDraw()
-  fixedBodyLayer?.batchDraw()
-  headerLayer?.batchDraw()
-  fixedHeaderLayer?.batchDraw()
-  scrollbarLayer?.batchDraw()
 }
 let rowHighlightRects: Konva.Rect[] | null = null
 let colHighlightRects: Konva.Rect[] | null = null
@@ -2924,15 +2377,15 @@ const getColOrRowHighlightRects = (type: 'row' | 'column', index: number) => {
   }
 
   const allGroups = [
-    leftHeaderGroup,
-    centerHeaderGroup,
-    rightHeaderGroup,
-    leftBodyGroup,
-    centerBodyGroup,
-    rightBodyGroup,
-    leftSummaryGroup,
-    centerSummaryGroup,
-    rightSummaryGroup
+    tableVars.leftHeaderGroup,
+    tableVars.centerHeaderGroup,
+    tableVars.rightHeaderGroup,
+    tableVars.leftBodyGroup,
+    tableVars.centerBodyGroup,
+    tableVars.rightBodyGroup,
+    tableVars.leftSummaryGroup,
+    tableVars.centerSummaryGroup,
+    tableVars.rightSummaryGroup
   ]
   allGroups.forEach((group) => {
     if (!group) return
@@ -2987,18 +2440,23 @@ const applyHighlightToAllRects = () => {
   }
 
   // 最后处理交叉矩形：找到既在行高亮数组又在列高亮数组的矩形
-  if (rowHighlightRects && colHighlightRects && hoveredRowIndex !== null && hoveredColIndex !== null) {
+  if (
+    rowHighlightRects &&
+    colHighlightRects &&
+    tableVars.hoveredRowIndex !== null &&
+    tableVars.hoveredColIndex !== null
+  ) {
     // 寻找交叉矩形：同时具有当前行和列索引的矩形
     const allGroups = [
-      leftHeaderGroup,
-      centerHeaderGroup,
-      rightHeaderGroup,
-      leftBodyGroup,
-      centerBodyGroup,
-      rightBodyGroup,
-      leftSummaryGroup,
-      centerSummaryGroup,
-      rightSummaryGroup
+      tableVars.leftHeaderGroup,
+      tableVars.centerHeaderGroup,
+      tableVars.rightHeaderGroup,
+      tableVars.leftBodyGroup,
+      tableVars.centerBodyGroup,
+      tableVars.rightBodyGroup,
+      tableVars.leftSummaryGroup,
+      tableVars.centerSummaryGroup,
+      tableVars.rightSummaryGroup
     ]
 
     allGroups.forEach((group) => {
@@ -3012,8 +2470,8 @@ const applyHighlightToAllRects = () => {
         if (
           typeof rowAttr === 'number' &&
           typeof colAttr === 'number' &&
-          rowAttr === hoveredRowIndex &&
-          colAttr === hoveredColIndex
+          rowAttr === tableVars.hoveredRowIndex &&
+          colAttr === tableVars.hoveredColIndex
         ) {
           // 使用交叉高亮颜色（这里可以设计一个混合色或者使用列高亮色）
           child.fill(props.highlightColBackground)
@@ -3028,53 +2486,59 @@ const applyHighlightToAllRects = () => {
  * @param offsetY 滚动偏移量
  */
 const updateVerticalScroll = (offsetY: number) => {
-  // console.log("offsetY", offsetY);
-  if (!stage || !leftBodyGroup || !centerBodyGroup || !rightBodyGroup) return
+  if (!tableVars.stage || !tableVars.leftBodyGroup || !tableVars.centerBodyGroup || !tableVars.rightBodyGroup) return
   const { maxScrollY } = getScrollLimits()
-  const oldScrollY = scrollY
-  scrollY = clamp(scrollY + offsetY, 0, maxScrollY)
+  const oldScrollY = tableVars.stageScrollY
+  tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY + offsetY, 0, maxScrollY)
 
   // 检查是否需要重新渲染（滚动超过一定阈值或可视区域改变）
-  const oldVisibleStart = visibleRowStart
-  const oldVisibleEnd = visibleRowEnd
+  const oldVisibleStart = tableVars.visibleRowStart
+  const oldVisibleEnd = tableVars.visibleRowEnd
   calculateVisibleRows()
 
   const needsRerender =
-    visibleRowStart !== oldVisibleStart ||
-    visibleRowEnd !== oldVisibleEnd ||
-    Math.abs(scrollY - oldScrollY) > props.bodyRowHeight * 2 // 滚动超过2行时强制重新渲染
+    tableVars.visibleRowStart !== oldVisibleStart ||
+    tableVars.visibleRowEnd !== oldVisibleEnd ||
+    Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 2 // 滚动超过2行时强制重新渲染
 
   if (needsRerender) {
     // 重新渲染可视区域
     const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
-    bodyPositionMapList.length = 0
-    drawBodyPart(leftBodyGroup, leftCols, leftBodyPools, 0, bodyPositionMapList, 0)
-    drawBodyPart(centerBodyGroup, centerCols, centerBodyPools, leftCols.length, bodyPositionMapList, leftWidth)
+    tableVars.bodyPositionMapList.length = 0
+    drawBodyPart(tableVars.leftBodyGroup, leftCols, leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
     drawBodyPart(
-      rightBodyGroup,
+      tableVars.centerBodyGroup,
+      centerCols,
+      centerBodyPools,
+      leftCols.length,
+      tableVars.bodyPositionMapList,
+      leftWidth
+    )
+    drawBodyPart(
+      tableVars.rightBodyGroup,
       rightCols,
       rightBodyPools,
       leftCols.length + centerCols.length,
-      bodyPositionMapList,
+      tableVars.bodyPositionMapList,
       leftWidth + centerWidth
     )
   }
 
-  const bodyY = props.headerHeight - scrollY
-  const centerY = -scrollY
+  const bodyY = props.headerHeight - tableVars.stageScrollY
+  const centerY = -tableVars.stageScrollY
 
   // 固定列和中间列随垂直滚动
-  leftBodyGroup.y(bodyY)
-  rightBodyGroup.y(bodyY)
-  centerBodyGroup.y(centerY)
+  tableVars.leftBodyGroup.y(bodyY)
+  tableVars.rightBodyGroup.y(bodyY)
+  tableVars.centerBodyGroup.y(centerY)
   updateScrollbars()
   recomputeHoverIndexFromPointer()
   updateHoverRects()
 
-  bodyLayer?.batchDraw()
-  fixedBodyLayer?.batchDraw()
-  summaryLayer?.batchDraw()
-  fixedSummaryLayer?.batchDraw()
+  tableVars.bodyLayer?.batchDraw()
+  tableVars.fixedBodyLayer?.batchDraw()
+  tableVars.summaryLayer?.batchDraw()
+  tableVars.fixedSummaryLayer?.batchDraw()
 }
 
 /**
@@ -3082,25 +2546,25 @@ const updateVerticalScroll = (offsetY: number) => {
  * @param offsetX 滚动偏移量
  */
 const updateHorizontalScroll = (offsetX: number) => {
-  if (!stage || !centerHeaderGroup || !centerBodyGroup) return
+  if (!tableVars.stage || !tableVars.centerHeaderGroup || !tableVars.centerBodyGroup) return
   const { maxScrollX } = getScrollLimits()
   const { leftWidth } = getSplitColumns()
-  scrollX = clamp(scrollX + offsetX, 0, maxScrollX)
+  tableVars.scrollX = constrainToRange(tableVars.scrollX + offsetX, 0, maxScrollX)
 
-  const headerX = leftWidth - scrollX
-  const centerX = -scrollX
+  const headerX = leftWidth - tableVars.scrollX
+  const centerX = -tableVars.scrollX
 
   // 中间区域随横向滚动
-  centerHeaderGroup.x(headerX)
-  centerBodyGroup.x(centerX)
-  centerSummaryGroup?.x(headerX)
+  tableVars.centerHeaderGroup.x(headerX)
+  tableVars.centerBodyGroup.x(centerX)
+  tableVars.centerSummaryGroup?.x(headerX)
 
   updateScrollbars()
 
-  headerLayer?.batchDraw()
-  bodyLayer?.batchDraw()
-  summaryLayer?.batchDraw()
-  // fixedSummaryLayer?.batchDraw()
+  tableVars.headerLayer?.batchDraw()
+  tableVars.bodyLayer?.batchDraw()
+  tableVars.summaryLayer?.batchDraw()
+  // tableVars.fixedSummaryLayer?.batchDraw()
   recomputeHoverIndexFromPointer()
   updateHoverRects()
   // 横向滚动时更新弹框位置
@@ -3111,31 +2575,31 @@ const updateHorizontalScroll = (offsetX: number) => {
  * 更新滚动条
  */
 const updateScrollbars = () => {
-  if (!stage) return
+  if (!tableVars.stage) return
 
-  const stageWidth = stage.width()
-  const stageHeight = stage.height()
+  const stageWidth = tableVars.stage.width()
+  const stageHeight = tableVars.stage.height()
   const { maxScrollX, maxScrollY } = getScrollLimits()
 
   // 更新垂直滚动条位置
-  if (verticalScrollbarThumb && maxScrollY > 0) {
+  if (tableVars.verticalScrollbarThumb && maxScrollY > 0) {
     const trackHeight =
       stageHeight - props.headerHeight - getSummaryRowHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0)
     const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
-    const thumbY = props.headerHeight + (scrollY / maxScrollY) * (trackHeight - thumbHeight)
-    verticalScrollbarThumb.y(thumbY)
+    const thumbY = props.headerHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
+    tableVars.verticalScrollbarThumb.y(thumbY)
   }
 
   // 更新水平滚动条位置
-  if (horizontalScrollbarThumb && maxScrollX > 0) {
+  if (tableVars.horizontalScrollbarThumb && maxScrollX > 0) {
     const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
     const visibleWidth = stageWidth - leftWidth - rightWidth - (maxScrollY > 0 ? props.scrollbarSize : 0)
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
-    const thumbX = leftWidth + (scrollX / maxScrollX) * (visibleWidth - thumbWidth)
-    horizontalScrollbarThumb.x(thumbX)
+    const thumbX = leftWidth + (tableVars.scrollX / maxScrollX) * (visibleWidth - thumbWidth)
+    tableVars.horizontalScrollbarThumb.x(thumbX)
   }
 
-  scrollbarLayer?.batchDraw()
+  tableVars.scrollbarLayer?.batchDraw()
 }
 
 /**
@@ -3145,10 +2609,10 @@ const updateScrollbars = () => {
 const handleMouseWheel = (e: WheelEvent) => {
   e.preventDefault()
 
-  if (stage) stage.setPointersPositions(e)
+  if (tableVars.stage) tableVars.stage.setPointersPositions(e)
   // 同步最后一次客户端坐标，用于遮罩与区域判断
-  lastClientX = e.clientX
-  lastClientY = e.clientY
+  tableVars.lastClientX = e.clientX
+  tableVars.lastClientY = e.clientY
 
   const hasDeltaX = Math.abs(e.deltaX) > 0
   const hasDeltaY = Math.abs(e.deltaY) > 0
@@ -3168,24 +2632,24 @@ const handleMouseWheel = (e: WheelEvent) => {
  * @returns {void}
  */
 const handleMouseMove = (e: MouseEvent) => {
-  if (!stage) return
-  stage.setPointersPositions(e)
+  if (!tableVars.stage) return
+  tableVars.stage.setPointersPositions(e)
   if (filterDropdown.visible || summaryDropdown.visible) return
 
   // 记录鼠标在屏幕中的坐标
-  lastClientX = e.clientX
-  lastClientY = e.clientY
+  tableVars.lastClientX = e.clientX
+  tableVars.lastClientY = e.clientY
 
   /**
    * 列宽拖拽中：实时更新覆盖宽度并重建分组
    */
-  if (isResizingColumn && resizingColumnName) {
-    const delta = e.clientX - resizeStartX
-    const newWidth = Math.max(props.minAutoColWidth, resizeStartWidth + delta)
-    columnWidthOverrides[resizingColumnName] = newWidth
-    if (resizeNeighborColumnName) {
-      const neighborWidth = Math.max(props.minAutoColWidth, resizeNeighborStartWidth - delta)
-      columnWidthOverrides[resizeNeighborColumnName] = neighborWidth
+  if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
+    const delta = e.clientX - tableVars.resizeStartX
+    const newWidth = Math.max(props.minAutoColWidth, tableVars.resizeStartWidth + delta)
+    tableVars.columnWidthOverrides[tableVars.resizingColumnName] = newWidth
+    if (tableVars.resizeNeighborColumnName) {
+      const neighborWidth = Math.max(props.minAutoColWidth, tableVars.resizeNeighborStartWidth - delta)
+      tableVars.columnWidthOverrides[tableVars.resizeNeighborColumnName] = neighborWidth
     }
     clearGroups()
     rebuildGroups()
@@ -3195,14 +2659,14 @@ const handleMouseMove = (e: MouseEvent) => {
   /**
    * 垂直滚动
    */
-  if (isDraggingVerticalThumb) {
-    const deltaY = e.clientY - dragStartY
+  if (tableVars.isDraggingVerticalThumb) {
+    const deltaY = e.clientY - tableVars.dragStartY
     // 添加容错机制：只有当垂直移动距离超过阈值时才触发滚动
     const scrollThreshold = props.scrollThreshold
     if (Math.abs(deltaY) < scrollThreshold) return
 
     const { maxScrollY } = getScrollLimits()
-    const stageHeight = stage.height()
+    const stageHeight = tableVars.stage.height()
     const trackHeight =
       stageHeight -
       props.headerHeight -
@@ -3210,33 +2674,40 @@ const handleMouseMove = (e: MouseEvent) => {
       (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
     const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
     const scrollRatio = deltaY / (trackHeight - thumbHeight)
-    const newScrollY = dragStartScrollY + scrollRatio * maxScrollY
+    const newScrollY = tableVars.dragStartScrollY + scrollRatio * maxScrollY
 
-    const oldScrollY = scrollY
-    scrollY = clamp(newScrollY, 0, maxScrollY)
+    const oldScrollY = tableVars.stageScrollY
+    tableVars.stageScrollY = constrainToRange(newScrollY, 0, maxScrollY)
 
     // 检查是否需要重新渲染虚拟滚动内容
-    const oldVisibleStart = visibleRowStart
-    const oldVisibleEnd = visibleRowEnd
+    const oldVisibleStart = tableVars.visibleRowStart
+    const oldVisibleEnd = tableVars.visibleRowEnd
     calculateVisibleRows()
 
     const needsRerender =
-      visibleRowStart !== oldVisibleStart ||
-      visibleRowEnd !== oldVisibleEnd ||
-      Math.abs(scrollY - oldScrollY) > props.bodyRowHeight * 2
+      tableVars.visibleRowStart !== oldVisibleStart ||
+      tableVars.visibleRowEnd !== oldVisibleEnd ||
+      Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 2
 
     if (needsRerender) {
       // 重新渲染可视区域
       const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
-      bodyPositionMapList.length = 0
-      drawBodyPart(leftBodyGroup, leftCols, leftBodyPools, 0, bodyPositionMapList, 0)
-      drawBodyPart(centerBodyGroup, centerCols, centerBodyPools, leftCols.length, bodyPositionMapList, leftWidth)
+      tableVars.bodyPositionMapList.length = 0
+      drawBodyPart(tableVars.leftBodyGroup, leftCols, leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
       drawBodyPart(
-        rightBodyGroup,
+        tableVars.centerBodyGroup,
+        centerCols,
+        centerBodyPools,
+        leftCols.length,
+        tableVars.bodyPositionMapList,
+        leftWidth
+      )
+      drawBodyPart(
+        tableVars.rightBodyGroup,
         rightCols,
         rightBodyPools,
         leftCols.length + centerCols.length,
-        bodyPositionMapList,
+        tableVars.bodyPositionMapList,
         leftWidth + centerWidth
       )
     }
@@ -3247,27 +2718,27 @@ const handleMouseMove = (e: MouseEvent) => {
   /**
    * 水平滚动
    */
-  if (isDraggingHorizontalThumb) {
-    const deltaX = e.clientX - dragStartX
+  if (tableVars.isDraggingHorizontalThumb) {
+    const deltaX = e.clientX - tableVars.dragStartX
     // 添加容错机制：只有当水平移动距离超过阈值时才触发滚动
     const scrollThreshold = props.scrollThreshold
     if (Math.abs(deltaX) < scrollThreshold) return
     const { maxScrollX } = getScrollLimits()
     const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
-    const stageWidth = stage.width()
+    const stageWidth = tableVars.stage.width()
     const visibleWidth = stageWidth - leftWidth - rightWidth - props.scrollbarSize
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
     const scrollRatio = deltaX / (visibleWidth - thumbWidth)
-    const newScrollX = dragStartScrollX + scrollRatio * maxScrollX
+    const newScrollX = tableVars.dragStartScrollX + scrollRatio * maxScrollX
 
-    scrollX = clamp(newScrollX, 0, maxScrollX)
+    tableVars.scrollX = constrainToRange(newScrollX, 0, maxScrollX)
     updateScrollPositions()
   }
 
   /**
    * 普通移动时，更新 hoveredRowIndex 和 hoveredColIndex
    */
-  if (!isDraggingVerticalThumb && !isDraggingHorizontalThumb) {
+  if (!tableVars.isDraggingVerticalThumb && !tableVars.isDraggingHorizontalThumb) {
     recomputeHoverIndexFromPointer()
   }
 }
@@ -3278,28 +2749,30 @@ const handleMouseMove = (e: MouseEvent) => {
  * @returns {void}
  */
 const handleMouseUp = (e: MouseEvent) => {
-  if (stage) stage.setPointersPositions(e)
+  if (tableVars.stage) tableVars.stage.setPointersPositions(e)
   /**
    * 滚动条拖拽结束
    */
-  if (isDraggingVerticalThumb || isDraggingHorizontalThumb) {
-    isDraggingVerticalThumb = false
-    isDraggingHorizontalThumb = false
-    setPointerStyle(stage, false, 'default')
+  if (tableVars.isDraggingVerticalThumb || tableVars.isDraggingHorizontalThumb) {
+    tableVars.isDraggingVerticalThumb = false
+    tableVars.isDraggingHorizontalThumb = false
+    setPointerStyle(tableVars.stage, false, 'default')
 
-    if (verticalScrollbarThumb && !isDraggingVerticalThumb) verticalScrollbarThumb.fill(props.scrollbarThumb)
-    if (horizontalScrollbarThumb && !isDraggingHorizontalThumb) horizontalScrollbarThumb.fill(props.scrollbarThumb)
-    scrollbarLayer?.batchDraw()
+    if (tableVars.verticalScrollbarThumb && !tableVars.isDraggingVerticalThumb)
+      tableVars.verticalScrollbarThumb.fill(props.scrollbarThumb)
+    if (tableVars.horizontalScrollbarThumb && !tableVars.isDraggingHorizontalThumb)
+      tableVars.horizontalScrollbarThumb.fill(props.scrollbarThumb)
+    tableVars.scrollbarLayer?.batchDraw()
   }
 
   /**
    * 列宽拖拽结束
    */
-  if (isResizingColumn) {
-    isResizingColumn = false
-    resizingColumnName = null
-    resizeNeighborColumnName = null
-    setPointerStyle(stage, false, 'default')
+  if (tableVars.isResizingColumn) {
+    tableVars.isResizingColumn = false
+    tableVars.resizingColumnName = null
+    tableVars.resizeNeighborColumnName = null
+    setPointerStyle(tableVars.stage, false, 'default')
     // 结束拖拽后，强制重建，确保汇总行列宽与表头同步
     clearGroups()
     rebuildGroups()
@@ -3311,47 +2784,53 @@ const handleMouseUp = (e: MouseEvent) => {
  * @returns {void}
  */
 const updateScrollPositions = () => {
-  if (!leftBodyGroup || !centerBodyGroup || !rightBodyGroup || !centerHeaderGroup) return
+  if (
+    !tableVars.leftBodyGroup ||
+    !tableVars.centerBodyGroup ||
+    !tableVars.rightBodyGroup ||
+    !tableVars.centerHeaderGroup
+  )
+    return
 
   const { leftWidth } = getSplitColumns()
-  const bodyY = props.headerHeight - scrollY
-  const centerX = -scrollX
-  const headerX = leftWidth - scrollX
-  const summaryY = stage
-    ? stage.height() - getSummaryRowHeight() - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
+  const bodyY = props.headerHeight - tableVars.stageScrollY
+  const centerX = -tableVars.scrollX
+  const headerX = leftWidth - tableVars.scrollX
+  const summaryY = tableVars.stage
+    ? tableVars.stage.height() - getSummaryRowHeight() - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
     : 0
 
   /**
    * 更新左侧和右侧主体（只有 Y 位置变化）
    */
-  leftBodyGroup.y(bodyY)
-  rightBodyGroup.y(bodyY)
+  tableVars.leftBodyGroup.y(bodyY)
+  tableVars.rightBodyGroup.y(bodyY)
 
   /**
    * 更新中间主体（X 和 Y 位置变化）
    */
-  centerBodyGroup.x(centerX)
-  centerBodyGroup.y(-scrollY)
+  tableVars.centerBodyGroup.x(centerX)
+  tableVars.centerBodyGroup.y(-tableVars.stageScrollY)
 
   /**
    * 更新中心表头（只有 X 位置变化）
    */
-  centerHeaderGroup.x(headerX)
+  tableVars.centerHeaderGroup.x(headerX)
 
   /**
    * 更新底部 summary 组位置
    */
-  if (leftSummaryGroup) leftSummaryGroup.y(summaryY)
-  if (rightSummaryGroup) rightSummaryGroup.y(summaryY)
-  if (centerSummaryGroup) centerSummaryGroup.y(summaryY)
+  if (tableVars.leftSummaryGroup) tableVars.leftSummaryGroup.y(summaryY)
+  if (tableVars.rightSummaryGroup) tableVars.rightSummaryGroup.y(summaryY)
+  if (tableVars.centerSummaryGroup) tableVars.centerSummaryGroup.y(summaryY)
 
   updateScrollbars()
-  headerLayer?.batchDraw()
-  bodyLayer?.batchDraw()
-  fixedBodyLayer?.batchDraw()
-  fixedHeaderLayer?.batchDraw()
-  summaryLayer?.batchDraw()
-  fixedSummaryLayer?.batchDraw()
+  tableVars.headerLayer?.batchDraw()
+  tableVars.bodyLayer?.batchDraw()
+  tableVars.fixedBodyLayer?.batchDraw()
+  tableVars.fixedHeaderLayer?.batchDraw()
+  tableVars.summaryLayer?.batchDraw()
+  tableVars.fixedSummaryLayer?.batchDraw()
 
   // 滚动时更新弹框位置
   // updateDropdownPositions()
@@ -3378,15 +2857,15 @@ const refreshTable = (resetScroll: boolean) => {
    * 重置滚动状态
    */
   if (resetScroll) {
-    scrollX = 0
-    scrollY = 0
+    tableVars.scrollX = 0
+    tableVars.stageScrollY = 0
   } else {
     /**
      * 在不重置时，保证滚动值在新范围内
      */
     const { maxScrollX, maxScrollY } = getScrollLimits()
-    scrollX = clamp(scrollX, 0, maxScrollX)
-    scrollY = clamp(scrollY, 0, maxScrollY)
+    tableVars.scrollX = constrainToRange(tableVars.scrollX, 0, maxScrollX)
+    tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY, 0, maxScrollY)
   }
 
   calculateVisibleRows()
@@ -3400,7 +2879,7 @@ const refreshTable = (resetScroll: boolean) => {
 watch(
   () => [props.xAxisFields, props.yAxisFields, props.data],
   () => {
-    if (!stage) return
+    if (!tableVars.stage) return
     refreshTable(true)
   },
   { deep: true }
@@ -3409,7 +2888,7 @@ watch(
 watch(
   () => [props.chartWidth, props.chartHeight],
   async () => {
-    if (!stage) return
+    if (!tableVars.stage) return
     // 等待demo节点发生变更再触发该方法
     await nextTick()
     initStage()
@@ -3430,7 +2909,7 @@ watch(
     props.headerSortActiveBackground
   ],
   () => {
-    if (!stage) return
+    if (!tableVars.stage) return
     refreshTable(false)
   }
 )
@@ -3449,7 +2928,7 @@ watch(
     props.bodyFontFamily
   ],
   () => {
-    if (!stage) return
+    if (!tableVars.stage) return
     refreshTable(false)
   }
 )
@@ -3467,7 +2946,7 @@ watch(
     props.summaryTextColor
   ],
   () => {
-    if (!stage) return
+    if (!tableVars.stage) return
     refreshTable(false)
   }
 )
@@ -3478,7 +2957,7 @@ watch(
 watch(
   () => [props.scrollbarBackground, props.scrollbarThumb, props.scrollbarThumbHover, props.scrollbarSize],
   () => {
-    if (!stage) return
+    if (!tableVars.stage) return
     refreshTable(false)
   }
 )
@@ -3494,7 +2973,7 @@ watch(
     props.highlightCellBackground
   ],
   () => {
-    if (!stage) return
+    if (!tableVars.stage) return
     refreshTable(false)
   }
 )
@@ -3505,7 +2984,7 @@ watch(
 watch(
   () => [props.bufferRows, props.scrollThreshold],
   () => {
-    if (!stage) return
+    if (!tableVars.stage) return
     refreshTable(false)
   }
 )
@@ -3542,18 +3021,18 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
   document.removeEventListener('scroll', handleScroll)
 
-  stage?.destroy()
-  stage = null
-  headerLayer = null
-  bodyLayer = null
-  fixedBodyLayer = null
-  fixedHeaderLayer = null
-  summaryLayer = null
-  fixedSummaryLayer = null
-  scrollbarLayer = null
-  centerBodyClipGroup = null
-  selectedCell = null
-  highlightRect = null
+  tableVars.stage?.destroy()
+  tableVars.stage = null
+  tableVars.headerLayer = null
+  tableVars.bodyLayer = null
+  tableVars.fixedBodyLayer = null
+  tableVars.fixedHeaderLayer = null
+  tableVars.summaryLayer = null
+  tableVars.fixedSummaryLayer = null
+  tableVars.scrollbarLayer = null
+  tableVars.centerBodyClipGroup = null
+  tableVars.selectedCell = null
+  tableVars.highlightRect = null
 })
 </script>
 
