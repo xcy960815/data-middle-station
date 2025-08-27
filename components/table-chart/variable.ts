@@ -1,5 +1,10 @@
 import Konva from 'konva'
-import { computed, reactive, ref, type ComputedRef } from 'vue'
+import { computed, ref } from 'vue'
+import { chartProps } from './props'
+
+export type Prettify<T> = {
+  [K in keyof T]: T[K]
+} & {}
 
 export interface PositionMap {
   x: number
@@ -64,130 +69,225 @@ export const textOptions = [
   { label: '未填写', value: 'nofilled' }
 ]
 
+interface TableVars {
+  rowHighlightRects: Konva.Rect[] | null
+  colHighlightRects: Konva.Rect[] | null
+  leftBodyPools: KonvaNodePools
+  centerBodyPools: KonvaNodePools
+  rightBodyPools: KonvaNodePools
+  stage: Konva.Stage | null
+  scrollbarLayer: Konva.Layer | null
+  centerBodyClipGroup: Konva.Group | null
+  headerLayer: Konva.Layer | null
+  bodyLayer: Konva.Layer | null
+  summaryLayer: Konva.Layer | null
+  fixedHeaderLayer: Konva.Layer | null
+  fixedBodyLayer: Konva.Layer | null
+  fixedSummaryLayer: Konva.Layer | null
+  leftHeaderGroup: Konva.Group | null
+  centerHeaderGroup: Konva.Group | null
+  rightHeaderGroup: Konva.Group | null
+  leftBodyGroup: Konva.Group | null
+  centerBodyGroup: Konva.Group | null
+  rightBodyGroup: Konva.Group | null
+  leftSummaryGroup: Konva.Group | null
+  centerSummaryGroup: Konva.Group | null
+  rightSummaryGroup: Konva.Group | null
+  verticalScrollbarGroup: Konva.Group | null
+  horizontalScrollbarGroup: Konva.Group | null
+  verticalScrollbarThumb: Konva.Rect | null
+  horizontalScrollbarThumb: Konva.Rect | null
+  selectedCell: { rowIndex: number; colIndex: number; colKey: string } | null
+  highlightRect: Konva.Rect | null
+  stageScrollY: number
+  scrollX: number
+  columnWidthOverrides: Record<string, number>
+  isResizingColumn: boolean
+  resizingColumnName: string | null
+  resizeStartX: number
+  resizeStartWidth: number
+  resizeNeighborColumnName: string | null
+  resizeNeighborStartWidth: number
+  isDraggingVerticalThumb: boolean
+  isDraggingHorizontalThumb: boolean
+  dragStartY: number
+  dragStartX: number
+  dragStartScrollY: number
+  dragStartScrollX: number
+  visibleRowStart: number
+  visibleRowEnd: number
+  visibleRowCount: number
+  hoveredRowIndex: number | null
+  hoveredColIndex: number | null
+  lastClientX: number
+  lastClientY: number
+  headerPositionMapList: PositionMap[]
+  bodyPositionMapList: PositionMap[]
+  summaryPositionMapList: PositionMap[]
+}
+
 /**
  * 表格全局状态变量
  */
-export const tableVars = {
+export const tableVars: TableVars = {
+  /**
+   * 行高亮矩形
+   */
+  rowHighlightRects: null,
+  /**
+   * 列高亮矩形
+   */
+  colHighlightRects: null,
+  /**
+   * 左侧主体组对象池
+   */
+  leftBodyPools: {
+    mergedCellRects: [],
+    cellRects: [],
+    mergedCellTexts: [],
+    cellTexts: [],
+    backgroundRects: []
+  },
+  /**
+   * 中间主体组对象池
+   */
+  centerBodyPools: {
+    mergedCellRects: [],
+    cellRects: [],
+    mergedCellTexts: [],
+    cellTexts: [],
+    backgroundRects: []
+  },
+  /**
+   * 右侧主体组对象池
+   */
+  rightBodyPools: {
+    mergedCellRects: [],
+    cellRects: [],
+    mergedCellTexts: [],
+    cellTexts: [],
+    backgroundRects: []
+  },
   // ========== Konva 对象 ==========
   /**
    * Stage 实例
    */
-  stage: null as Konva.Stage | null,
+  stage: null,
 
   /**
    * 滚动条层（滚动条）
    */
-  scrollbarLayer: null as Konva.Layer | null,
+  scrollbarLayer: null,
 
   /**
    * 中间区域剪辑组（中间区域）
    */
-  centerBodyClipGroup: null as Konva.Group | null,
+  centerBodyClipGroup: null,
 
   /**
    * 表头层（固定表头）
    */
-  headerLayer: null as Konva.Layer | null,
+  headerLayer: null,
 
   /**
    * 表格层（主体）
    */
-  bodyLayer: null as Konva.Layer | null,
+  bodyLayer: null,
 
   /**
    * 汇总层（汇总）
    */
-  summaryLayer: null as Konva.Layer | null,
+  summaryLayer: null,
 
   /**
    * 固定表头层（固定表头）
    */
-  fixedHeaderLayer: null as Konva.Layer | null,
+  fixedHeaderLayer: null,
 
   /**
    * 固定表body层（固定表body）
    */
-  fixedBodyLayer: null as Konva.Layer | null,
+  fixedBodyLayer: null,
 
   /**
    * 固定汇总层（固定汇总）
    */
-  fixedSummaryLayer: null as Konva.Layer | null,
+  fixedSummaryLayer: null,
 
   /**
    * 左侧表头组（左侧表头）
    */
-  leftHeaderGroup: null as Konva.Group | null,
+  leftHeaderGroup: null,
 
   /**
    * 中间表头组（中间表头）
    */
-  centerHeaderGroup: null as Konva.Group | null,
+  centerHeaderGroup: null,
 
   /**
    * 右侧表头组（右侧表头）
    */
-  rightHeaderGroup: null as Konva.Group | null,
+  rightHeaderGroup: null,
 
   /**
    * 左侧主体组（左侧主体）
    */
-  leftBodyGroup: null as Konva.Group | null,
+  leftBodyGroup: null,
 
   /**
    * 中间主体组（中间主体）
    */
-  centerBodyGroup: null as Konva.Group | null,
+  centerBodyGroup: null,
 
   /**
    * 右侧主体组
    */
-  rightBodyGroup: null as Konva.Group | null,
+  rightBodyGroup: null,
 
   /**
    * 左侧汇总组（左侧汇总）
    */
-  leftSummaryGroup: null as Konva.Group | null,
+  leftSummaryGroup: null,
 
   /**
    * 中间汇总组（中间汇总）
    */
-  centerSummaryGroup: null as Konva.Group | null,
+  centerSummaryGroup: null,
 
   /**
    * 右侧汇总组（右侧汇总）
    */
-  rightSummaryGroup: null as Konva.Group | null,
+  rightSummaryGroup: null,
 
   /**
    * 垂直滚动条组
    */
-  verticalScrollbarGroup: null as Konva.Group | null,
+  verticalScrollbarGroup: null,
 
   /**
    * 水平滚动条组
    */
-  horizontalScrollbarGroup: null as Konva.Group | null,
+  horizontalScrollbarGroup: null,
 
   /**
    * 垂直滚动条滑块
    */
-  verticalScrollbarThumb: null as Konva.Rect | null,
+  verticalScrollbarThumb: null,
 
   /**
    * 水平滚动条滑块
    */
-  horizontalScrollbarThumb: null as Konva.Rect | null,
+  horizontalScrollbarThumb: null,
 
   /**
    * 单元格选中状态
    */
-  selectedCell: null as { rowIndex: number; colIndex: number; colKey: string } | null,
+  selectedCell: null,
 
   /**
    * 高亮矩形
    */
-  highlightRect: null as Konva.Rect | null,
+  highlightRect: null,
 
   // ========== 滚动相关 ==========
   /**
@@ -204,7 +304,7 @@ export const tableVars = {
   /**
    * 列宽拖拽相关状态
    */
-  columnWidthOverrides: {} as Record<string, number>,
+  columnWidthOverrides: {},
 
   /**
    * 列宽拖拽状态
@@ -214,7 +314,7 @@ export const tableVars = {
   /**
    * 列宽拖拽列名
    */
-  resizingColumnName: null as string | null,
+  resizingColumnName: null,
 
   /**
    * 列宽拖拽起始 X 坐标
@@ -229,7 +329,7 @@ export const tableVars = {
   /**
    * 列宽拖拽邻居列名
    */
-  resizeNeighborColumnName: null as string | null,
+  resizeNeighborColumnName: null,
 
   /**
    * 列宽拖拽邻居起始宽度
@@ -287,12 +387,12 @@ export const tableVars = {
   /**
    * 需要高亮的行索引
    */
-  hoveredRowIndex: null as number | null,
+  hoveredRowIndex: null,
 
   /**
    * 需要高亮的列索引
    */
-  hoveredColIndex: null as number | null,
+  hoveredColIndex: null,
 
   /**
    * 最近一次指针的屏幕坐标（用于判断表格上是否存在遮罩层）
@@ -301,22 +401,51 @@ export const tableVars = {
   lastClientY: 0,
 
   // ========== 位置映射列表 ==========
-  headerPositionMapList: [] as PositionMap[],
-  bodyPositionMapList: [] as PositionMap[],
-  summaryPositionMapList: [] as PositionMap[]
+  headerPositionMapList: [],
+  bodyPositionMapList: [],
+  summaryPositionMapList: []
+}
+
+interface CreateTableStateProps {
+  filterState: Record<string, Set<string>>
+  props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
 
 /**
  * 创建表格状态管理器
- * @param props 组件 props
- * @param tableColumns 表格列配置
- * @param columnAliasMap 列别名映射
  */
-export function createTableState(
-  props: any,
-  tableColumns: ComputedRef<any[]>,
-  columnAliasMap: ComputedRef<Record<string, string>>
-) {
+export function createTableState({ filterState, props }: CreateTableStateProps) {
+  /**
+   * 列别名映射
+   * @returns {Record<string, string>}
+   */
+  const columnAliasMap = computed(() => {
+    const map: Record<string, string> = {}
+    tableColumns.value.forEach((c: GroupStore.GroupOption | DimensionStore.DimensionOption) => {
+      if (c && typeof c === 'object') {
+        const columnName = c.columnName
+        const displayName = c.displayName as string | undefined
+        if (columnName && displayName && displayName !== columnName) {
+          map[columnName] = displayName
+        }
+      }
+    })
+    return map
+  })
+
+  /**
+   * 所有列 已经按照左中右排序过
+   * @returns {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>}
+   */
+  const tableColumns = computed(() => {
+    const leftColsx = props.xAxisFields.filter((c) => c.fixed === 'left')
+    const rightColsx = props.xAxisFields.filter((c) => c.fixed === 'right')
+    const centerColsx = props.xAxisFields.filter((c) => !c.fixed)
+    const leftColsy = props.yAxisFields.filter((c) => c.fixed === 'left')
+    const rightColsy = props.yAxisFields.filter((c) => c.fixed === 'right')
+    const centerColsy = props.yAxisFields.filter((c) => !c.fixed)
+    return leftColsx.concat(centerColsx).concat(rightColsx).concat(leftColsy).concat(centerColsy).concat(rightColsy)
+  })
   /**
    * 表格数据
    */
@@ -326,16 +455,6 @@ export function createTableState(
    * 排序状态
    */
   const sortColumns = ref<Array<{ columnName: string; order: 'asc' | 'desc' }>>([])
-
-  /**
-   * 过滤状态：列名 -> 选中的离散值集合（使用 Set 便于判定）
-   */
-  const filterState = reactive<Record<string, Set<string>>>({})
-
-  /**
-   * 汇总行选择状态：列名 -> 选中的规则
-   */
-  const summaryState = reactive<Record<string, string>>({})
 
   /**
    * 应用排序后的数据视图
@@ -392,12 +511,26 @@ export function createTableState(
     return sorted
   })
 
+  /**
+   * 容器样式
+   */
+  const tableContainerStyle = computed(() => {
+    const height = typeof props.chartHeight === 'number' ? `${props.chartHeight}px` : (props.chartHeight ?? '460px')
+    const width = typeof props.chartWidth === 'number' ? `${props.chartWidth}px` : (props.chartWidth ?? '100%')
+    return {
+      height,
+      width,
+      background: '#fff'
+    }
+  })
   return {
     tableData,
     sortColumns,
     filterState,
-    summaryState,
-    activeData
+    activeData,
+    tableColumns,
+    columnAliasMap,
+    tableContainerStyle
   }
 }
 

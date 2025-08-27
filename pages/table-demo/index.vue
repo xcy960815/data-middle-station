@@ -102,6 +102,8 @@
         :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
         :border="tableConfig.border"
         :data="data"
+        :highlight-row-background="tableConfig.highlightRowBackground"
+        :highlight-col-background="tableConfig.highlightColBackground"
         :span-method="spanMethod"
         @cell-click="handleCellClick"
         @action-click="handleActionClick"
