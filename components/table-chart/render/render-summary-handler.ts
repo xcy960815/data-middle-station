@@ -1,8 +1,8 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { chartProps } from './props'
-import { getTextX, setPointerStyle, truncateText } from './utils'
-import { numberOptions, tableVars, textOptions, type PositionMap, type Prettify } from './variable'
+import { chartProps } from '../props'
+import { getTextX, setPointerStyle, truncateText } from '../utils'
+import { numberOptions, tableVars, textOptions, type PositionMap, type Prettify } from '../variable'
 
 interface RenderSummaryHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>

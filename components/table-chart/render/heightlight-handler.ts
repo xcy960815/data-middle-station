@@ -1,7 +1,7 @@
 import Konva from 'konva'
-import { chartProps } from './props'
-import type { Prettify } from './variable'
-import { tableVars } from './variable'
+import { chartProps } from '../props'
+import type { Prettify } from '../variable'
+import { tableVars } from '../variable'
 
 interface HighlightHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>

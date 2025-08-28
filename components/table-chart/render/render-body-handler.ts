@@ -1,8 +1,8 @@
 import Konva from 'konva'
-import { konvaStageHandler } from './konva-stage-handler'
-import { chartProps } from './props'
-import { adjustHexColorBrightness, getFromPool, getTextX, returnToPool, setPointerStyle, truncateText } from './utils'
-import { tableVars, type KonvaNodePools, type Prettify } from './variable'
+import { konvaStageHandler } from '../konva-stage-handler'
+import { chartProps } from '../props'
+import { adjustHexColorBrightness, getFromPool, getTextX, returnToPool, setPointerStyle, truncateText } from '../utils'
+import { tableVars, type KonvaNodePools, type Prettify } from '../variable'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
   activeData: Array<ChartDataVo.ChartData>
@@ -489,6 +489,119 @@ export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryR
     return cellRect
   }
 
+  const drawCellText = ({
+    pools,
+    x,
+    y,
+    cellHeight,
+    truncatedValue,
+    fontSize,
+    fontFamily
+  }: {
+    pools: KonvaNodePools
+    x: number
+    y: number
+    cellHeight: number
+    truncatedValue: string
+    fontSize: number
+    fontFamily: string
+  }) => {
+    const cellText = getFromPool(pools.cellTexts, () => new Konva.Text({ listening: false, name: 'cell-text' }))
+    cellText.name('cell-text')
+    cellText.setAttr('row-index', null)
+    cellText.setAttr('col-index', null)
+    cellText.x(getTextX(x))
+    cellText.y(y + cellHeight / 2)
+    cellText.text(truncatedValue)
+    cellText.fontSize(fontSize)
+    cellText.fontFamily(fontFamily)
+    cellText.fill(props.bodyTextColor)
+    cellText.align('left')
+    cellText.verticalAlign('middle')
+    cellText.offsetY(cellText.height() / 2)
+
+    return cellText
+  }
+
+  const drawButtonRect = ({
+    pools,
+    startX,
+    centerY,
+    w,
+    buttonHeight,
+    theme
+  }: {
+    pools: KonvaNodePools
+    startX: number
+    centerY: number
+    w: number
+    buttonHeight: number
+    theme: { fill: string; stroke: string }
+  }) => {
+    const buttonRect = getFromPool(
+      pools.backgroundRects,
+      () => new Konva.Rect({ listening: true, name: `button-rect` })
+    )
+    buttonRect.name('button-rect')
+    buttonRect.off('click')
+    buttonRect.off('mouseenter')
+    buttonRect.off('mouseleave')
+    buttonRect.setAttr('row-index', null)
+    buttonRect.setAttr('col-index', null)
+    buttonRect.x(startX)
+    buttonRect.y(centerY)
+    buttonRect.width(w)
+    buttonRect.height(buttonHeight)
+    buttonRect.cornerRadius(4)
+    buttonRect.fill(theme.fill)
+    buttonRect.stroke(theme.stroke)
+    buttonRect.strokeWidth(1)
+
+    return buttonRect
+  }
+
+  const drawButtonText = ({
+    pools,
+    x,
+    y,
+    buttonName,
+    fontSize,
+    fontFamily,
+    opacity,
+    textColor,
+    offsetX,
+    offsetY
+  }: {
+    pools: KonvaNodePools
+    x: number
+    y: number
+    buttonName: string
+    fontSize: number
+    fontFamily: string
+    opacity: number
+    textColor: string
+    offsetX: number
+    offsetY: number
+  }) => {
+    const buttonCellText = getFromPool(
+      pools.cellTexts,
+      () => new Konva.Text({ listening: false, name: 'button-cell-text' })
+    )
+    buttonCellText.name('button-cell-text')
+    buttonCellText.x(x)
+    buttonCellText.y(y)
+    buttonCellText.text(buttonName)
+    buttonCellText.fontSize(fontSize)
+    buttonCellText.fontFamily(fontFamily)
+    buttonCellText.fill(textColor)
+    buttonCellText.opacity(opacity)
+    buttonCellText.align('center')
+    buttonCellText.verticalAlign('middle')
+    buttonCellText.offset({ x: offsetX, y: offsetY })
+
+    return buttonCellText
+  }
+
   return {
     createHighlightRect,
     calculateVisibleRows,
@@ -500,6 +613,9 @@ export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryR
     drawBackgroundRect,
     drawMergedCellRect,
     drawMergedCellText,
-    drawCellRect
+    drawCellRect,
+    drawCellText,
+    drawButtonRect,
+    drawButtonText
   }
 }
