@@ -97,7 +97,6 @@ interface TableVars {
   horizontalScrollbarGroup: Konva.Group | null
   verticalScrollbarThumb: Konva.Rect | null
   horizontalScrollbarThumb: Konva.Rect | null
-  selectedCell: { rowIndex: number; colIndex: number; colKey: string } | null
   highlightRect: Konva.Rect | null
   stageScrollY: number
   scrollX: number
@@ -280,11 +279,6 @@ export const tableVars: TableVars = {
   horizontalScrollbarThumb: null,
 
   /**
-   * 单元格选中状态
-   */
-  selectedCell: null,
-
-  /**
    * 高亮矩形
    */
   highlightRect: null,
@@ -406,6 +400,11 @@ export const tableVars: TableVars = {
   summaryPositionMapList: []
 }
 
+export interface SortColumn {
+  columnName: string
+  order: 'asc' | 'desc'
+}
+
 interface CreateTableStateProps {
   filterState: Record<string, Set<string>>
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -414,7 +413,7 @@ interface CreateTableStateProps {
 /**
  * 创建表格状态管理器
  */
-export function createTableState({ filterState, props }: CreateTableStateProps) {
+export const createTableState = ({ filterState, props }: CreateTableStateProps) => {
   /**
    * 列别名映射
    * @returns {Record<string, string>}
@@ -454,7 +453,7 @@ export function createTableState({ filterState, props }: CreateTableStateProps) 
   /**
    * 排序状态
    */
-  const sortColumns = ref<Array<{ columnName: string; order: 'asc' | 'desc' }>>([])
+  const sortColumns = ref<Array<SortColumn>>([])
 
   /**
    * 应用排序后的数据视图
@@ -537,7 +536,7 @@ export function createTableState({ filterState, props }: CreateTableStateProps) 
 /**
  * 重置表格状态
  */
-export function resetTableVars() {
+export const resetTableVars = () => {
   // 重置 Konva 对象
   tableVars.stage = null
   tableVars.scrollbarLayer = null
@@ -561,7 +560,6 @@ export function resetTableVars() {
   tableVars.horizontalScrollbarGroup = null
   tableVars.verticalScrollbarThumb = null
   tableVars.horizontalScrollbarThumb = null
-  tableVars.selectedCell = null
   tableVars.highlightRect = null
 
   // 重置滚动相关

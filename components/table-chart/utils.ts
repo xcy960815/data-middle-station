@@ -1,5 +1,4 @@
 import Konva from 'konva'
-import { tableVars } from './variable'
 /**
  * 设置指针样式的辅助函数
  * @param on 是否显示指针
@@ -162,71 +161,6 @@ export const isTopMostInTable = (clientX: number, clientY: number): boolean => {
 }
 
 /**
- * 清除分组 清理所有分组
- * @returns {void}
- */
-export const clearGroups = () => {
-  tableVars.headerLayer?.destroyChildren()
-  tableVars.bodyLayer?.destroyChildren()
-  tableVars.summaryLayer?.destroyChildren()
-  tableVars.fixedHeaderLayer?.destroyChildren()
-  tableVars.fixedBodyLayer?.destroyChildren()
-  tableVars.fixedSummaryLayer?.destroyChildren()
-  tableVars.scrollbarLayer?.destroyChildren()
-  clearPool(tableVars.leftBodyPools.cellRects)
-  clearPool(tableVars.leftBodyPools.cellTexts)
-  clearPool(tableVars.leftBodyPools.mergedCellRects)
-  clearPool(tableVars.leftBodyPools.backgroundRects)
-  clearPool(tableVars.centerBodyPools.cellRects)
-  clearPool(tableVars.centerBodyPools.cellTexts)
-  clearPool(tableVars.centerBodyPools.mergedCellRects)
-  clearPool(tableVars.centerBodyPools.backgroundRects)
-  clearPool(tableVars.rightBodyPools.cellRects)
-  clearPool(tableVars.rightBodyPools.cellTexts)
-  clearPool(tableVars.rightBodyPools.mergedCellRects)
-  clearPool(tableVars.rightBodyPools.backgroundRects)
-
-  /**
-   * 重置滚动条引用
-   */
-  tableVars.verticalScrollbarGroup = null
-  tableVars.horizontalScrollbarGroup = null
-  tableVars.verticalScrollbarThumb = null
-  tableVars.horizontalScrollbarThumb = null
-
-  /**
-   * 重置中心区域剪辑组引用
-   */
-  tableVars.centerBodyClipGroup = null
-
-  /**
-   * 重置单元格选择
-   */
-  tableVars.selectedCell = null
-  tableVars.highlightRect = null
-
-  /**
-   * 重置虚拟滚动状态
-   */
-  tableVars.visibleRowStart = 0
-  tableVars.visibleRowEnd = 0
-  tableVars.visibleRowCount = 0
-
-  /**
-   * 重置汇总组引用
-   */
-  tableVars.leftSummaryGroup = null
-  tableVars.centerSummaryGroup = null
-  tableVars.rightSummaryGroup = null
-
-  /**
-   * 重置悬浮高亮
-   */
-  tableVars.hoveredRowIndex = null
-  tableVars.hoveredColIndex = null
-}
-
-/**
  * 调整十六进制颜色亮度
  * @param hex 颜色，如 #409EFF
  * @param percent 亮度百分比，正数变亮，负数变暗（-100~100）
@@ -296,4 +230,22 @@ export const truncateText = (text: string, maxWidth: number, fontSize: number | 
 
   tempText.destroy()
   return result || '...'
+}
+
+/**
+ * 估算单个按钮宽度基于文本长度
+ * @param {string} text 文本
+ * @param {number | string} fontSize 字体大小
+ * @param {string} fontFamily 字体
+ * @returns 估算的按钮宽度
+ */
+export const estimateButtonWidth = (text: string, fontSize: number | string, fontFamily: string) => {
+  const tempCellText = new Konva.Text({
+    text,
+    fontSize: typeof fontSize === 'string' ? Number(fontSize) : fontSize,
+    fontFamily: fontFamily
+  })
+  const w = tempCellText.width() + 16
+  tempCellText.destroy()
+  return constrainToRange(w, 48, 120)
 }

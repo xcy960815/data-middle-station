@@ -4,7 +4,7 @@ import { chartProps } from './props'
 import { getTextX, setPointerStyle, truncateText } from './utils'
 import { numberOptions, tableVars, textOptions, type PositionMap, type Prettify } from './variable'
 
-interface DrawSummaryHandlerProps {
+interface RenderSummaryHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
   summaryState: Record<string, string>
   activeData: ComputedRef<Array<ChartDataVo.ChartData>>
@@ -16,12 +16,12 @@ interface DrawSummaryHandlerProps {
   ) => void
 }
 
-export const drawSummaryHandler = ({
+export const renderSummaryHandler = ({
   props,
   summaryState,
   activeData,
   openSummaryDropdown
-}: DrawSummaryHandlerProps) => {
+}: RenderSummaryHandlerProps) => {
   const { $webworker } = useNuxtApp()
   /**
    * 计算某列的汇总显示值（异步版本）
