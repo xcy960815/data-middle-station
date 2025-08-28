@@ -1,7 +1,6 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, reactive, ref } from 'vue'
-import { konvaStageHandler } from './konva-stage-handler'
 import { getDropdownPosition } from './utils'
 import { tableVars } from './variable'
 
@@ -27,7 +26,6 @@ export const filterDropdownHandler = ({
   // clearGroups,
   updateHoverRects
 }: FilterDropdownHandlerProps) => {
-  const { clearGroups, rebuildGroups } = konvaStageHandler()
   /**
    * 过滤下拉浮层元素
    */
@@ -68,7 +66,7 @@ export const filterDropdownHandler = ({
   /**
    * 更新过滤下拉浮层位置（用于表格内部滚动）
    */
-  const updateFilterDropdownPositions = () => {
+  const updateFilterDropdownPositionsInTable = () => {
     // 本次开发先隐藏掉
     if (filterDropdown.visible && filterDropdownRef.value) {
       filterDropdown.visible = false
@@ -98,24 +96,9 @@ export const filterDropdownHandler = ({
   }
 
   /**
-   * 应用过滤下拉浮层选中的选项
-   */
-  const handleSelectedFilter = () => {
-    const colName = filterDropdown.colName
-    const selectedValues = filterDropdown.selectedValues
-    if (!selectedValues || selectedValues.length === 0) {
-      delete filterState[colName]
-    } else {
-      filterState[colName] = new Set(selectedValues)
-    }
-    clearGroups()
-    rebuildGroups()
-  }
-
-  /**
    * 滚动事件处理函数
    */
-  const handleFilterDropdownScroll = () => {
+  const updateFilterDropdownPositionsInPage = () => {
     if (filterDropdown.visible && filterDropdownRef.value) {
       const filterDropdownElRect = filterDropdownRef.value.getBoundingClientRect()
       const filterDropdownElHeight = Math.ceil(filterDropdownElRect.height)
@@ -187,10 +170,9 @@ export const filterDropdownHandler = ({
     filterDropdownRef,
     filterDropdownStyle,
     filterDropdown,
-    updateFilterDropdownPositions,
+    updateFilterDropdownPositionsInTable,
+    updateFilterDropdownPositionsInPage,
     closeFilterDropdown,
-    handleFilterDropdownScroll,
-    openFilterDropdown,
-    handleSelectedFilter
+    openFilterDropdown
   }
 }

@@ -1,7 +1,7 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, reactive, ref, type ExtractPropTypes } from 'vue'
-import { konvaStageHandler } from './konva-stage-handler'
+import { konvaGroupHandler } from './konva-group-handler'
 import { chartProps } from './props'
 import { getDropdownPosition } from './utils'
 import { tableVars, type Prettify } from './variable'
@@ -20,16 +20,32 @@ export interface SummaryDropdown {
 interface SummaryDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
   updateHoverRects: () => void
-  // rebuildGroups: () => void
 }
 
 export const summaryDropDownHandler = ({ props, updateHoverRects }: SummaryDropdownHandlerProps) => {
-  // 获取 konvaStageHandler 的 clearGroups 和 rebuildGroups 方法
-  const { clearGroups, rebuildGroups } = konvaStageHandler()
+  const { clearGroups } = konvaGroupHandler()
   /**
    * 汇总行选择状态：列名 -> 选中的规则
    */
   const summaryState = reactive<Record<string, string>>({})
+
+  /**
+   * 汇总下拉浮层元素
+   */
+  const summaryDropdownRef = ref<HTMLDivElement | null>(null)
+
+  // 汇总行下拉状态（DOM）
+  const summaryDropdown = reactive<SummaryDropdown>({
+    visible: false,
+    x: 0,
+    y: 0,
+    colName: '' as string,
+    options: [] as Array<{ label: string; value: string }>,
+    selectedValue: '' as string,
+    // 存储原始点击位置，用于滚动时重新计算
+    originalClientX: 0,
+    originalClientY: 0
+  })
 
   /**
    * 获取有效的汇总高度（受开关控制）
@@ -50,24 +66,9 @@ export const summaryDropDownHandler = ({ props, updateHoverRects }: SummaryDropd
   })
 
   /**
-   * 汇总下拉浮层元素
+   * 更新汇总下拉浮层位置
    */
-  const summaryDropdownRef = ref<HTMLDivElement | null>(null)
-
-  // 汇总行下拉状态（DOM）
-  const summaryDropdown = reactive<SummaryDropdown>({
-    visible: false,
-    x: 0,
-    y: 0,
-    colName: '' as string,
-    options: [] as Array<{ label: string; value: string }>,
-    selectedValue: '' as string,
-    // 存储原始点击位置，用于滚动时重新计算
-    originalClientX: 0,
-    originalClientY: 0
-  })
-
-  const updateSummaryDropdownPositions = () => {
+  const updateSummaryDropdownPositionsInTable = () => {
     // 本次开发先隐藏掉
     if (summaryDropdown.visible && summaryDropdownRef.value) {
       summaryDropdown.visible = false
@@ -98,30 +99,37 @@ export const summaryDropDownHandler = ({ props, updateHoverRects }: SummaryDropd
     summaryDropdown.visible = false
   }
 
-  const handleSummaryDropdownScroll = () => {
-    // 如果汇总下拉框可见，重新计算位置
+  /**
+   *
+   */
+  const updateSummaryDropdownPositionsInPage = () => {
+    // 本次开发先隐藏掉
     if (summaryDropdown.visible && summaryDropdownRef.value) {
-      const summaryDropdownElRect = summaryDropdownRef.value.getBoundingClientRect()
-      const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
-      const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
-
-      // 获取当前滚动偏移量
-      const scrollX = window.pageXOffset || document.documentElement.scrollLeft
-      const scrollY = window.pageYOffset || document.documentElement.scrollTop
-
-      // 将保存的页面坐标转换为当前的视口坐标
-      const currentClientX = summaryDropdown.originalClientX - scrollX
-      const currentClientY = summaryDropdown.originalClientY - scrollY
-
-      const { dropdownX, dropdownY } = getDropdownPosition(
-        currentClientX,
-        currentClientY,
-        summaryDropdownElWidth,
-        summaryDropdownElHeight
-      )
-      summaryDropdown.x = dropdownX
-      summaryDropdown.y = dropdownY
+      summaryDropdown.visible = false
     }
+    // // 如果汇总下拉框可见，重新计算位置
+    // if (summaryDropdown.visible && summaryDropdownRef.value) {
+    //   const summaryDropdownElRect = summaryDropdownRef.value.getBoundingClientRect()
+    //   const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
+    //   const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
+
+    //   // 获取当前滚动偏移量
+    //   const scrollX = window.pageXOffset || document.documentElement.scrollLeft
+    //   const scrollY = window.pageYOffset || document.documentElement.scrollTop
+
+    //   // 将保存的页面坐标转换为当前的视口坐标
+    //   const currentClientX = summaryDropdown.originalClientX - scrollX
+    //   const currentClientY = summaryDropdown.originalClientY - scrollY
+
+    //   const { dropdownX, dropdownY } = getDropdownPosition(
+    //     currentClientX,
+    //     currentClientY,
+    //     summaryDropdownElWidth,
+    //     summaryDropdownElHeight
+    //   )
+    //   summaryDropdown.x = dropdownX
+    //   summaryDropdown.y = dropdownY
+    // }
   }
 
   /**
@@ -170,30 +178,15 @@ export const summaryDropDownHandler = ({ props, updateHoverRects }: SummaryDropd
     })
   }
 
-  /**
-   * 应用汇总选择
-   * @returns {void}
-   */
-  const handleSelectedSummary = () => {
-    const colName = summaryDropdown.colName
-    const selected = summaryDropdown.selectedValue
-    summaryState[colName] = selected
-    clearGroups()
-    rebuildGroups()
-    // 选择后关闭弹框
-    summaryDropdown.visible = false
-  }
-
   return {
     summaryState,
     summaryDropdownStyle,
     summaryDropdownRef,
     summaryDropdown,
-    updateSummaryDropdownPositions,
+    updateSummaryDropdownPositionsInPage,
+    updateSummaryDropdownPositionsInTable,
     closeSummaryDropdown,
     getSummaryRowHeight,
-    handleSummaryDropdownScroll,
-    openSummaryDropdown,
-    handleSelectedSummary
+    openSummaryDropdown
   }
 }
