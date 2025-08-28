@@ -1,23 +1,47 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { reactive, ref } from 'vue'
+import { computed, nextTick, reactive, ref } from 'vue'
+import { konvaStageHandler } from './konva-stage-handler'
 import { getDropdownPosition } from './utils'
 import { tableVars } from './variable'
 
+export interface FilterDropdown {
+  visible: boolean
+  x: number
+  y: number
+  colName: string
+  options: string[]
+  selectedValues: string[]
+  originalClientX: number
+  originalClientY: number
+}
+
 interface FilterDropdownHandlerProps {
   updateHoverRects: () => void
-  clearGroups: () => void
-  rebuildGroups: () => void
+  // clearGroups: () => void
+  // rebuildGroups: () => void
 }
-export const filterDropdownHandler = ({ updateHoverRects, clearGroups, rebuildGroups }: FilterDropdownHandlerProps) => {
+
+export const filterDropdownHandler = ({
+  // rebuildGroups,
+  // clearGroups,
+  updateHoverRects
+}: FilterDropdownHandlerProps) => {
+  const { clearGroups, rebuildGroups } = konvaStageHandler()
   /**
    * 过滤下拉浮层元素
    */
   const filterDropdownRef = ref<HTMLDivElement | null>(null)
+
+  /**
+   * 过滤状态：列名 -> 选中的离散值集合（使用 Set 便于判定）
+   */
+  const filterState = reactive<Record<string, Set<string>>>({})
+
   /**
    * 过滤下拉浮层状态（DOM）
    */
-  const filterDropdown = reactive({
+  const filterDropdown = reactive<FilterDropdown>({
     visible: false,
     x: 0,
     y: 0,
@@ -45,39 +69,36 @@ export const filterDropdownHandler = ({ updateHoverRects, clearGroups, rebuildGr
    * 更新过滤下拉浮层位置（用于表格内部滚动）
    */
   const updateFilterDropdownPositions = () => {
-    // 如果过滤下拉框可见，重新计算位置
+    // 本次开发先隐藏掉
     if (filterDropdown.visible && filterDropdownRef.value) {
-      const filterDropdownElRect = filterDropdownRef.value.getBoundingClientRect()
-      const filterDropdownElHeight = Math.ceil(filterDropdownElRect.height)
-      const filterDropdownElWidth = Math.ceil(filterDropdownElRect.width)
-
-      // 对于表格内部滚动，使用保存的原始客户端坐标
-      const { dropdownX, dropdownY } = getDropdownPosition(
-        filterDropdown.originalClientX,
-        filterDropdown.originalClientY,
-        filterDropdownElWidth,
-        filterDropdownElHeight
-      )
-      filterDropdown.x = dropdownX
-      filterDropdown.y = dropdownY
+      filterDropdown.visible = false
     }
+    // // 如果过滤下拉框可见，重新计算位置
+    // if (filterDropdown.visible && filterDropdownRef.value) {
+    //   const filterDropdownElRect = filterDropdownRef.value.getBoundingClientRect()
+    //   const filterDropdownElHeight = Math.ceil(filterDropdownElRect.height)
+    //   const filterDropdownElWidth = Math.ceil(filterDropdownElRect.width)
+    //   // 对于表格内部滚动，使用保存的原始客户端坐标
+    //   const { dropdownX, dropdownY } = getDropdownPosition(
+    //     filterDropdown.originalClientX,
+    //     filterDropdown.originalClientY,
+    //     filterDropdownElWidth,
+    //     filterDropdownElHeight
+    //   )
+    //   filterDropdown.x = dropdownX
+    //   filterDropdown.y = dropdownY
+    // }
   }
+
   /**
    * 关闭过滤下拉浮层
-   * @returns {void}
    */
   const closeFilterDropdown = () => {
     filterDropdown.visible = false
   }
 
   /**
-   * 过滤状态：列名 -> 选中的离散值集合（使用 Set 便于判定）
-   */
-  const filterState = reactive<Record<string, Set<string>>>({})
-
-  /**
    * 应用过滤下拉浮层选中的选项
-   * @returns {void}
    */
   const handleSelectedFilter = () => {
     const colName = filterDropdown.colName
@@ -90,11 +111,11 @@ export const filterDropdownHandler = ({ updateHoverRects, clearGroups, rebuildGr
     clearGroups()
     rebuildGroups()
   }
+
   /**
    * 滚动事件处理函数
    */
   const handleFilterDropdownScroll = () => {
-    // 如果过滤下拉框可见，重新计算位置
     if (filterDropdown.visible && filterDropdownRef.value) {
       const filterDropdownElRect = filterDropdownRef.value.getBoundingClientRect()
       const filterDropdownElHeight = Math.ceil(filterDropdownElRect.height)
@@ -121,11 +142,6 @@ export const filterDropdownHandler = ({ updateHoverRects, clearGroups, rebuildGr
 
   /**
    * 打开过滤下拉浮层
-   * @param {number} clientX 鼠标点击位置的 X 坐标
-   * @param {number} clientY 鼠标点击位置的 Y 坐标
-   * @param {string} colName 列名
-   * @param {Array<string>} options 选项列表
-   * @param {Array<string>} selected 已选中的选项
    */
   const openFilterDropdown = (
     evt: KonvaEventObject<MouseEvent, Konva.Shape | Konva.Circle>,
@@ -167,6 +183,7 @@ export const filterDropdownHandler = ({ updateHoverRects, clearGroups, rebuildGr
   }
 
   return {
+    filterState,
     filterDropdownRef,
     filterDropdownStyle,
     filterDropdown,
@@ -174,7 +191,6 @@ export const filterDropdownHandler = ({ updateHoverRects, clearGroups, rebuildGr
     closeFilterDropdown,
     handleFilterDropdownScroll,
     openFilterDropdown,
-    filterState,
     handleSelectedFilter
   }
 }
