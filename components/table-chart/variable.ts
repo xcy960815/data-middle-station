@@ -99,7 +99,7 @@ interface TableVars {
   horizontalScrollbarThumb: Konva.Rect | null
   highlightRect: Konva.Rect | null
   stageScrollY: number
-  scrollX: number
+  stageScrollX: number
   columnWidthOverrides: Record<string, number>
   isResizingColumn: boolean
   resizingColumnName: string | null
@@ -292,7 +292,7 @@ export const tableVars: TableVars = {
   /**
    * 水平滚动多少像素
    */
-  scrollX: 0,
+  stageScrollX: 0,
 
   // ========== 列宽拖拽相关状态 ==========
   /**
@@ -564,7 +564,7 @@ export const resetTableVars = () => {
 
   // 重置滚动相关
   tableVars.stageScrollY = 0
-  tableVars.scrollX = 0
+  tableVars.stageScrollX = 0
 
   // 重置列宽拖拽相关
   tableVars.columnWidthOverrides = {}
