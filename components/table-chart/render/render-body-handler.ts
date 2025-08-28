@@ -23,7 +23,6 @@ export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryR
    */
   const calculateVisibleRows = () => {
     if (!tableVars.stage) return
-
     const stageHeight = tableVars.stage.height()
     const bodyHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - props.scrollbarSize
 
