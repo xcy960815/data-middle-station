@@ -136,7 +136,6 @@ const rebuildGroups = () => {
   ) {
     return
   }
-
   const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
   const { width: stageWidth, height: stageHeight } = getStageAttr()
   const { maxScrollX, maxScrollY } = getScrollLimits()
