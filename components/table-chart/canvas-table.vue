@@ -53,18 +53,16 @@
 import { ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
 import { onBeforeUnmount, onMounted } from 'vue'
-import { filterDropdownHandler } from './filter-dropdown-handler'
-import { highlightHandler } from './heightlight-handler'
-import { konvaGroupHandler } from './konva-group-handler'
+import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
+import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
 import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
-import { renderBodyHandler } from './render-body'
-import { renderSummaryHandler } from './render-summary'
-import { summaryDropDownHandler } from './summary-dropdown-handler'
+import { highlightHandler } from './render/heightlight-handler'
+import { renderBodyHandler } from './render/render-body-handler'
+import { renderSummaryHandler } from './render/render-summary-handler'
 import {
   constrainToRange,
   estimateButtonWidth,
-  getFromPool,
   getTableContainerElement,
   getTextX,
   isTopMostInTable,
@@ -74,30 +72,10 @@ import {
 } from './utils'
 import { type KonvaNodePools, type PositionMap, createTableState, tableVars } from './variable'
 
-const { initStage, destroyStage, getStageAttr } = konvaStageHandler()
-/**
- * 创建或更新行和列的 hover 高亮矩形
- */
-const updateHoverRects = () => {
-  if (!tableVars.stage) return
-  // 根据配置和当前悬停状态创建高亮效果
-  if (props.enableRowHoverHighlight && tableVars.hoveredRowIndex !== null) {
-    // 清除之前的高亮
-    resetHighlightRects('row')
-    getColOrRowHighlightRects('row', tableVars.hoveredRowIndex)
-  } else {
-    resetHighlightRects('row')
-  }
-  if (props.enableColHoverHighlight && tableVars.hoveredColIndex !== null) {
-    // 清除之前的高亮
-    resetHighlightRects('column')
-    getColOrRowHighlightRects('column', tableVars.hoveredColIndex)
-  } else {
-    resetHighlightRects('column')
-  }
-}
-
 const {
+  initStage,
+  destroyStage,
+  getStageAttr,
   clearGroups,
   createHeaderLeftGroups,
   createHeaderCenterGroups,
@@ -109,7 +87,23 @@ const {
   createSummaryCenterGroups,
   createSummaryRightGroups,
   createCenterBodyClipGroup
-} = konvaGroupHandler()
+} = konvaStageHandler()
+/**
+ * 创建或更新行和列的 hover 高亮矩形
+ */
+const updateHoverRects = () => {
+  resetHighlightRects('row')
+  // 清除之前的高亮
+  resetHighlightRects('column')
+  // 根据配置和当前悬停状态创建高亮效果
+  if (props.enableRowHoverHighlight && tableVars.hoveredRowIndex !== null) {
+    // 清除之前的高亮
+    getColOrRowHighlightRects('row', tableVars.hoveredRowIndex)
+  }
+  if (props.enableColHoverHighlight && tableVars.hoveredColIndex !== null) {
+    getColOrRowHighlightRects('column', tableVars.hoveredColIndex)
+  }
+}
 
 /**
  * 重建分组
@@ -341,7 +335,10 @@ const {
   drawBackgroundRect,
   drawMergedCellRect,
   drawMergedCellText,
-  drawCellRect
+  drawCellRect,
+  drawCellText,
+  drawButtonRect,
+  drawButtonText
 } = renderBodyHandler({ props, activeData: activeData.value, tableColumns: tableColumns.value, getSummaryRowHeight })
 
 /**
@@ -942,24 +939,7 @@ const drawBodyPart = (
             actions.forEach((action, idx) => {
               const w = widths[idx]
               const theme = paletteOptions[action.type || 'primary'] || paletteOptions.primary
-              const buttonRect = getFromPool(
-                pools.backgroundRects,
-                () => new Konva.Rect({ listening: true, name: `button-rect` })
-              )
-              buttonRect.off('click')
-              buttonRect.off('mouseenter')
-              buttonRect.off('mouseleave')
-              // 按钮矩形不应携带行/列索引，避免被误纳入 hover 高亮集合
-              buttonRect.setAttr('row-index', null)
-              buttonRect.setAttr('col-index', null)
-              buttonRect.x(startX)
-              buttonRect.y(centerY)
-              buttonRect.width(w)
-              buttonRect.height(buttonHeight)
-              buttonRect.cornerRadius(4)
-              buttonRect.fill(theme.fill)
-              buttonRect.stroke(theme.stroke)
-              buttonRect.strokeWidth(1)
+              const buttonRect = drawButtonRect({ pools, startX, centerY, w, buttonHeight, theme })
               const isDisabled =
                 typeof action.disabled === 'function'
                   ? action.disabled(activeData.value[rowIndex], rowIndex)
@@ -978,20 +958,26 @@ const drawBodyPart = (
               bodyGroup.add(buttonRect)
               const fontSize =
                 typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-              const buttonText = getFromPool(
-                pools.cellTexts,
-                () => new Konva.Text({ listening: false, name: 'button-text' })
-              )
-              buttonText.x(startX + w / 2)
-              buttonText.y(centerY + buttonHeight / 2)
-              buttonText.text(action.label)
-              buttonText.fontSize(fontSize)
-              buttonText.fontFamily(props.bodyFontFamily)
-              buttonText.fill(theme.text)
-              buttonText.opacity(isDisabled ? 0.6 : 1)
-              buttonText.align('center')
-              buttonText.verticalAlign('middle')
-              buttonText.offset({ x: buttonText.width() / 2, y: buttonText.height() / 2 })
+              const x = startX + w / 2
+              const y = centerY + buttonHeight / 2
+              const buttonName = action.label
+              const fontFamily = props.bodyFontFamily
+              const opacity = isDisabled ? 0.6 : 1
+              const textColor = theme.text
+              const offsetX = buttonRect.width() / 2
+              const offsetY = buttonRect.height() / 2
+              const buttonText = drawButtonText({
+                pools,
+                x,
+                y,
+                buttonName,
+                fontSize,
+                fontFamily,
+                opacity,
+                textColor,
+                offsetX,
+                offsetY
+              })
               bodyGroup.add(buttonText)
 
               startX += w + gap
@@ -1007,19 +993,7 @@ const drawBodyPart = (
 
           const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
 
-          const cellText = getFromPool(pools.cellTexts, () => new Konva.Text({ listening: false, name: 'cell-text' }))
-          cellText.name('cell-text')
-          cellText.setAttr('row-index', null)
-          cellText.setAttr('col-index', null)
-          cellText.x(getTextX(x))
-          cellText.y(y + cellHeight / 2)
-          cellText.text(truncatedValue)
-          cellText.fontSize(fontSize)
-          cellText.fontFamily(fontFamily)
-          cellText.fill(props.bodyTextColor)
-          cellText.align('left')
-          cellText.verticalAlign('middle')
-          cellText.offsetY(cellText.height() / 2)
+          const cellText = drawCellText({ pools, x, y, cellHeight, truncatedValue, fontSize, fontFamily })
           bodyGroup.add(cellText)
 
           const colShowOverflow = col.showOverflowTooltip

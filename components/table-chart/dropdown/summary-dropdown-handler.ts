@@ -1,10 +1,9 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, reactive, ref, type ExtractPropTypes } from 'vue'
-import { konvaGroupHandler } from './konva-group-handler'
-import { chartProps } from './props'
-import { getDropdownPosition } from './utils'
-import { tableVars, type Prettify } from './variable'
+import { chartProps } from '../props'
+import { getDropdownPosition } from '../utils'
+import { tableVars, type Prettify } from '../variable'
 
 export interface SummaryDropdown {
   visible: boolean
@@ -23,7 +22,6 @@ interface SummaryDropdownHandlerProps {
 }
 
 export const summaryDropDownHandler = ({ props, updateHoverRects }: SummaryDropdownHandlerProps) => {
-  const { clearGroups } = konvaGroupHandler()
   /**
    * 汇总行选择状态：列名 -> 选中的规则
    */
