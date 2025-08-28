@@ -67,6 +67,21 @@ declare namespace GroupStore {
       /** 是否禁用；也可传函数 (row, rowIndex) => boolean */
       disabled?: boolean | ((row: ChartDataVo.ChartData, rowIndex: number) => boolean)
     }>
+    /**
+     * 是否可编辑
+     */
+    editable?: boolean
+    /**
+     * 编辑类型：input-输入框, select-下拉选择, date-日期, datetime-日期时间
+     */
+    editType?: 'input' | 'select' | 'date' | 'datetime'
+    /**
+     * 下拉选择选项（当 editType 为 select 时使用）
+     */
+    editOptions?: Array<{
+      label: string
+      value: string | number
+    }>
   }
 
   /**
