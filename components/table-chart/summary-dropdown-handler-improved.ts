@@ -1,23 +1,36 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { computed, reactive, ref, type ExtractPropTypes } from 'vue'
+import { computed, nextTick, reactive, ref, type ExtractPropTypes } from 'vue'
+import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
 import { getDropdownPosition } from './utils'
 import { tableVars, type Prettify } from './variable'
 
-interface HandlerParams {
-  updateHoverRects: () => void
-  clearGroups: () => void
-  rebuildGroups: () => void
-  props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+export interface SummaryDropdown {
+  visible: boolean
+  x: number
+  y: number
+  colName: string
+  options: Array<{ label: string; value: string }>
+  selectedValue: string
+  originalClientX: number
+  originalClientY: number
 }
 
-export const summaryDropDownHandler = ({ updateHoverRects, clearGroups, rebuildGroups, props }: HandlerParams) => {
+interface SummaryDropdownHandlerProps {
+  props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+  updateHoverRects: () => void
+  // rebuildGroups: () => void
+}
+
+export const summaryDropDownHandler = ({ props, updateHoverRects }: SummaryDropdownHandlerProps) => {
+  // 获取 konvaStageHandler 的 clearGroups 和 rebuildGroups 方法
+  const { clearGroups, rebuildGroups } = konvaStageHandler()
   /**
    * 汇总行选择状态：列名 -> 选中的规则
    */
   const summaryState = reactive<Record<string, string>>({})
-  // 移除 defineProps，通过参数传入
+
   /**
    * 获取有效的汇总高度（受开关控制）
    * @returns {number}
@@ -42,7 +55,7 @@ export const summaryDropDownHandler = ({ updateHoverRects, clearGroups, rebuildG
   const summaryDropdownRef = ref<HTMLDivElement | null>(null)
 
   // 汇总行下拉状态（DOM）
-  const summaryDropdown = reactive({
+  const summaryDropdown = reactive<SummaryDropdown>({
     visible: false,
     x: 0,
     y: 0,
@@ -55,22 +68,26 @@ export const summaryDropDownHandler = ({ updateHoverRects, clearGroups, rebuildG
   })
 
   const updateSummaryDropdownPositions = () => {
-    // 如果汇总下拉框可见，重新计算位置
+    // 本次开发先隐藏掉
     if (summaryDropdown.visible && summaryDropdownRef.value) {
-      const summaryDropdownElRect = summaryDropdownRef.value.getBoundingClientRect()
-      const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
-      const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
-
-      // 对于表格内部滚动，使用保存的原始客户端坐标
-      const { dropdownX, dropdownY } = getDropdownPosition(
-        summaryDropdown.originalClientX,
-        summaryDropdown.originalClientY,
-        summaryDropdownElWidth,
-        summaryDropdownElHeight
-      )
-      summaryDropdown.x = dropdownX
-      summaryDropdown.y = dropdownY
+      summaryDropdown.visible = false
     }
+    // // 如果汇总下拉框可见，重新计算位置
+    // if (summaryDropdown.visible && summaryDropdownRef.value) {
+    //   const summaryDropdownElRect = summaryDropdownRef.value.getBoundingClientRect()
+    //   const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
+    //   const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
+
+    //   // 对于表格内部滚动，使用保存的原始客户端坐标
+    //   const { dropdownX, dropdownY } = getDropdownPosition(
+    //     summaryDropdown.originalClientX,
+    //     summaryDropdown.originalClientY,
+    //     summaryDropdownElWidth,
+    //     summaryDropdownElHeight
+    //   )
+    //   summaryDropdown.x = dropdownX
+    //   summaryDropdown.y = dropdownY
+    // }
   }
 
   /**

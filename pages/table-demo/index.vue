@@ -1,7 +1,7 @@
 <template>
   <div class="table-demo-container">
     <ClientOnly>
-      <el-form label-width="auto" :model="tableConfig">
+      <el-form label-width="auto" :model="tableConfig" inline>
         <el-form-item label="是否行高亮">
           <el-switch v-model="tableConfig.enableRowHoverHighlight" />
         </el-form-item>
