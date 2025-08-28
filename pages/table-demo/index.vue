@@ -103,6 +103,7 @@
         :span-method="spanMethod"
         @cell-click="handleCellClick"
         @action-click="handleActionClick"
+        @cell-edit="handleCellEdit"
       >
       </CanvasTable>
     </ClientOnly>
@@ -111,6 +112,7 @@
 
 <script setup lang="ts">
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
+import { ElMessage } from 'element-plus'
 
 const spanMethod = ({
   row,
@@ -170,20 +172,26 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'id',
     displayName: 'id',
     width: 200,
-    filterable: true
+    filterable: true,
+    editable: true,
+    editType: 'input'
     // fixed: 'left' as const
   },
   {
     columnName: 'name',
     columnType: 'string',
     columnComment: 'name',
-    displayName: 'name'
+    displayName: 'name',
+    editable: true,
+    editType: 'input'
   },
   {
     columnName: 'age',
     columnType: 'number',
     columnComment: 'age',
-    displayName: 'age'
+    displayName: 'age',
+    editable: true,
+    editType: 'input'
     // fixed: 'left' as const
   },
   {
@@ -192,7 +200,14 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'gender',
     filterable: true,
     sortable: true,
-    displayName: 'gender'
+    displayName: 'gender',
+    editable: true,
+    editType: 'select',
+    editOptions: [
+      { label: '男性', value: 'Male' },
+      { label: '女性', value: 'Female' },
+      { label: '其他', value: 'Other' }
+    ]
   },
   {
     columnName: 'country',
@@ -201,7 +216,19 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     sortable: true,
-    displayName: 'country'
+    displayName: 'country',
+    editable: true,
+    editType: 'select',
+    editOptions: [
+      { label: '中国', value: 'China' },
+      { label: '美国', value: 'USA' },
+      { label: '英国', value: 'UK' },
+      { label: '德国', value: 'Germany' },
+      { label: '法国', value: 'France' },
+      { label: '日本', value: 'Japan' },
+      { label: '加拿大', value: 'Canada' },
+      { label: '澳大利亚', value: 'Australia' }
+    ]
     // fixed: 'left' as const
   },
   {
@@ -211,14 +238,18 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     sortable: true,
-    displayName: 'city'
+    displayName: 'city',
+    editable: true,
+    editType: 'input'
     // fixed: 'left' as const
   },
   {
     columnName: 'state',
     columnType: 'string',
     columnComment: 'state',
-    displayName: 'state'
+    displayName: 'state',
+    editable: true,
+    editType: 'input'
   },
   {
     columnName: 'zipcode',
@@ -226,7 +257,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'zipcode',
     displayName: 'zipcode',
     width: 200,
-    filterable: true
+    filterable: true,
+    editable: true,
+    editType: 'input'
     // fixed: 'right' as const
   },
   {
@@ -249,62 +282,100 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'address',
     displayName: 'address',
     showOverflowTooltip: true,
-    width: 200
+    width: 200,
+    editable: true,
+    editType: 'input'
   },
   {
     columnName: 'phone',
     columnType: 'string',
     columnComment: 'phone',
     displayName: 'phone',
-    width: 200
+    width: 200,
+    editable: true,
+    editType: 'input'
   },
   {
     columnName: 'mobile',
     columnType: 'string',
     width: 200,
     columnComment: 'mobile',
-    displayName: 'mobile'
+    displayName: 'mobile',
+    editable: true,
+    editType: 'input'
+  },
+  {
+    columnName: 'birthday',
+    columnType: 'date',
+    columnComment: '生日',
+    displayName: '生日',
+    width: 150,
+    editable: true,
+    editType: 'date'
+  },
+  {
+    columnName: 'lastLogin',
+    columnType: 'datetime',
+    columnComment: '最后登录时间',
+    displayName: '最后登录时间',
+    width: 180,
+    editable: true,
+    editType: 'datetime'
   }
 ])
 
 /**
  * 数据
  */
-const data: Array<ChartDataVo.ChartData> = Array.from({ length: 1000 }, (_, i) => ({
-  id: i + 1,
-  name: `User ${i + 1}`,
-  age: 18 + i,
-  gender: ['Male', 'Female', 'Other'][(i * 3) % 3],
-  country: ['China', 'USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia'][(i * 3) % 8],
-  city: ['Beijing', 'Shanghai', 'New York', 'London', 'Berlin', 'Paris', 'Tokyo', 'Toronto', 'Sydney'][(i * 5) % 9],
-  state: ['CA', 'NY', 'TX', 'FL', 'WA', 'IL', 'PA', 'OH', 'GA', 'NC'][(i * 7) % 10],
-  zipcode: `${10000 + ((i * 123) % 90000)}`,
-  address: `${i + 1} Main Street, Apt ${(i % 50) + 1}--${i + 1} Main Street, Apt ${(i % 50) + 1}---${i + 1} Main Street, Apt ${(i % 50) + 1}`,
-  phone: `+1-555-${String(1000 + i).slice(-4)}`,
-  mobile: `+1-666-${String(2000 + i).slice(-4)}`,
-  company: ['TechCorp', 'DataSoft', 'CloudInc', 'WebSolutions', 'AppDev', 'SystemsLtd', 'CodeWorks', 'DigitalPro'][
-    (i * 11) % 8
-  ],
-  department: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Support', 'Design'][(i * 13) % 8],
-  position: ['Developer', 'Manager', 'Analyst', 'Designer', 'Consultant', 'Specialist', 'Coordinator', 'Director'][
-    (i * 17) % 8
-  ],
-  salary: `$${(30000 + ((i * 1000) % 120000)).toLocaleString()}`,
-  experience: `${(i % 20) + 1} years`,
-  education: ['Bachelor', 'Master', 'PhD', 'Associate', 'High School', 'Certificate'][(i * 19) % 6],
-  skills: [
-    'JavaScript, React',
-    'Python, Django',
-    'Java, Spring',
-    'C#, .NET',
-    'PHP, Laravel',
-    'Go, Gin',
-    'Ruby, Rails',
-    'Node.js, Express'
-  ][(i * 23) % 8],
-  notes: `Additional notes for user ${i + 1}. Lorem ipsum dolor sit amet.`,
-  email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
-}))
+const data: Array<ChartDataVo.ChartData> = Array.from({ length: 1000 }, (_, i) => {
+  const birthYear = 1970 + (i % 40)
+  const birthMonth = (i % 12) + 1
+  const birthDay = (i % 28) + 1
+  const birthday = `${birthYear}-${birthMonth.toString().padStart(2, '0')}-${birthDay.toString().padStart(2, '0')}`
+
+  const lastLoginHour = i % 24
+  const lastLoginMinute = (i * 7) % 60
+  const lastLoginSecond = (i * 13) % 60
+  const lastLogin = `2024-01-${((i % 30) + 1).toString().padStart(2, '0')} ${lastLoginHour.toString().padStart(2, '0')}:${lastLoginMinute.toString().padStart(2, '0')}:${lastLoginSecond.toString().padStart(2, '0')}`
+
+  return {
+    id: i + 1,
+    name: `User ${i + 1}`,
+    age: 18 + i,
+    gender: ['Male', 'Female', 'Other'][(i * 3) % 3],
+    country: ['China', 'USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia'][(i * 3) % 8],
+    city: ['Beijing', 'Shanghai', 'New York', 'London', 'Berlin', 'Paris', 'Tokyo', 'Toronto', 'Sydney'][(i * 5) % 9],
+    state: ['CA', 'NY', 'TX', 'FL', 'WA', 'IL', 'PA', 'OH', 'GA', 'NC'][(i * 7) % 10],
+    zipcode: `${10000 + ((i * 123) % 90000)}`,
+    address: `${i + 1} Main Street, Apt ${(i % 50) + 1}--${i + 1} Main Street, Apt ${(i % 50) + 1}---${i + 1} Main Street, Apt ${(i % 50) + 1}`,
+    phone: `+1-555-${String(1000 + i).slice(-4)}`,
+    mobile: `+1-666-${String(2000 + i).slice(-4)}`,
+    birthday,
+    lastLogin,
+    company: ['TechCorp', 'DataSoft', 'CloudInc', 'WebSolutions', 'AppDev', 'SystemsLtd', 'CodeWorks', 'DigitalPro'][
+      (i * 11) % 8
+    ],
+    department: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Support', 'Design'][(i * 13) % 8],
+    position: ['Developer', 'Manager', 'Analyst', 'Designer', 'Consultant', 'Specialist', 'Coordinator', 'Director'][
+      (i * 17) % 8
+    ],
+    salary: `$${(30000 + ((i * 1000) % 120000)).toLocaleString()}`,
+    experience: `${(i % 20) + 1} years`,
+    education: ['Bachelor', 'Master', 'PhD', 'Associate', 'High School', 'Certificate'][(i * 19) % 6],
+    skills: [
+      'JavaScript, React',
+      'Python, Django',
+      'Java, Spring',
+      'C#, .NET',
+      'PHP, Laravel',
+      'Go, Gin',
+      'Ruby, Rails',
+      'Node.js, Express'
+    ][(i * 23) % 8],
+    notes: `Additional notes for user ${i + 1}. Lorem ipsum dolor sit amet.`,
+    email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
+  }
+})
 /**
  * 单元格点击事件
  */
@@ -316,11 +387,33 @@ const handleActionClick = (payload: { rowIndex: number; action: string; rowData:
   console.log('Action clicked:', payload.rowIndex, payload.action, payload.rowData)
 }
 
+/**
+ * 单元格编辑事件
+ */
+const handleCellEdit = (payload: {
+  rowIndex: number
+  colKey: string
+  oldValue: any
+  newValue: any
+  rowData: ChartDataVo.ChartData
+}) => {
+  console.log('Cell edited:', {
+    row: payload.rowIndex,
+    column: payload.colKey,
+    oldValue: payload.oldValue,
+    newValue: payload.newValue,
+    rowData: payload.rowData
+  })
+
+  // 这里可以添加数据持久化逻辑，例如调用API保存到后端
+  ElMessage.success(`成功修改 ${payload.colKey}: ${payload.oldValue} → ${payload.newValue}`)
+}
+
 const tableConfig = reactive({
   enableSummary: true,
   summaryHeight: 32,
-  enableRowHoverHighlight: true,
-  enableColHoverHighlight: true,
+  enableRowHoverHighlight: false,
+  enableColHoverHighlight: false,
   highlightRowBackground: 'rgba(24, 144, 255, 0.15)',
   highlightColBackground: 'rgba(24, 144, 255, 0.15)',
   highlightCellBackground: 'rgba(24, 144, 255, 0.12)',

@@ -47,12 +47,25 @@
       </el-select>
     </div>
   </teleport>
+
+  <!-- 单元格编辑器 -->
+  <CellEditor
+    :visible="cellEditor.visible"
+    :edit-type="cellEditor.editType"
+    :edit-options="cellEditor.editOptions"
+    :initial-value="cellEditor.initialValue"
+    :position="cellEditor.position"
+    @save="handleCellEditorSave"
+    @cancel="handleCellEditorCancel"
+  />
 </template>
 
 <script setup lang="ts">
 import { ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
 import { onBeforeUnmount, onMounted } from 'vue'
+import CellEditor from './cell-editor.vue'
+import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
 import { konvaStageHandler } from './konva-stage-handler'
@@ -88,6 +101,7 @@ const {
   createSummaryRightGroups,
   createCenterBodyClipGroup
 } = konvaStageHandler()
+
 /**
  * 创建或更新行和列的 hover 高亮矩形
  */
@@ -142,13 +156,13 @@ const rebuildGroups = () => {
 
   tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
 
-  tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth - tableVars.scrollX, 0)
+  tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth - tableVars.stageScrollX, 0)
 
   tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, 0)
 
   tableVars.leftBodyGroup = createBodyLeftGroups(0, props.headerHeight - tableVars.stageScrollY)
 
-  tableVars.centerBodyGroup = createBodyCenterGroups(-tableVars.scrollX, -tableVars.stageScrollY)
+  tableVars.centerBodyGroup = createBodyCenterGroups(-tableVars.stageScrollX, -tableVars.stageScrollY)
 
   tableVars.rightBodyGroup = createBodyRightGroups(
     stageWidth - rightWidth - verticalScrollbarSpace,
@@ -163,7 +177,7 @@ const rebuildGroups = () => {
     const summaryY = stageHeight - getSummaryRowHeight() - horizontalScrollbarSpace
     tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
 
-    tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.scrollX, summaryY)
+    tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.stageScrollX, summaryY)
 
     tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
     tableVars.summaryLayer.add(tableVars.centerSummaryGroup)
@@ -304,6 +318,7 @@ const {
   getSummaryRowHeight,
   openSummaryDropdown
 } = summaryDropDownHandler({ updateHoverRects, props })
+
 /**
  * 应用汇总选择
  * @returns {void}
@@ -317,6 +332,8 @@ const handleSelectedSummary = () => {
   // 选择后关闭弹框
   summaryDropdown.visible = false
 }
+
+const { startCellEditImmediate, cellEditor } = editorDropdownHandler({ props, activeData: activeData.value })
 
 const { resetHighlightRects, getColOrRowHighlightRects } = highlightHandler({ props })
 
@@ -347,9 +364,84 @@ const {
 const emits = defineEmits<{
   'cell-click': [{ rowIndex: number; colIndex: number; colKey: string; rowData: ChartDataVo.ChartData }]
   'action-click': [{ rowIndex: number; action: string; rowData: ChartDataVo.ChartData }]
+  'cell-edit': [{ rowIndex: number; colKey: string; oldValue: any; newValue: any; rowData: ChartDataVo.ChartData }]
   'render-chart-start': []
   'render-chart-end': []
 }>()
+
+/**
+ * 保存单元格编辑
+ */
+const handleCellEditorSave = (newValue: any) => {
+  const { rowIndex, colKey, column } = cellEditor.editingCell
+  if (rowIndex >= 0 && colKey && column) {
+    const rowData = activeData.value[rowIndex]
+    const oldValue = rowData[colKey]
+
+    // 更新数据
+    rowData[colKey] = newValue
+
+    // 发送编辑事件
+    emits('cell-edit', { rowIndex, colKey, oldValue, newValue, rowData })
+
+    // 重新渲染表格
+    clearGroups()
+    rebuildGroups()
+  }
+
+  // 关闭编辑器
+  resetCellEditor()
+}
+
+/**
+ * 重置编辑器状态
+ */
+const resetCellEditor = () => {
+  console.log('重置编辑器状态')
+  cellEditor.visible = false
+  cellEditor.editingCell = {
+    rowIndex: -1,
+    colIndex: -1,
+    colKey: '',
+    column: null
+  }
+  cellEditor.initialValue = ''
+  cellEditor.editOptions = []
+}
+
+/**
+ * 取消单元格编辑
+ */
+const handleCellEditorCancel = () => {
+  resetCellEditor()
+}
+
+/**
+ * 更新编辑器位置（当表格滚动时调用）
+ */
+const updateCellEditorPosition = () => {
+  if (!cellEditor.visible) return
+
+  const { rowIndex, colIndex } = cellEditor.editingCell
+  if (rowIndex < 0 || colIndex < 0) return
+
+  // 查找对应单元格的位置
+  const positionMapList = [...tableVars.bodyPositionMapList]
+
+  const positionOption = positionMapList.find((item) => item.rowIndex === rowIndex + 1 && item.colIndex === colIndex)
+
+  if (positionOption) {
+    const tableContainer = getTableContainerElement()
+    if (tableContainer) {
+      const containerRect = tableContainer.getBoundingClientRect()
+      cellEditor.position.x = containerRect.left + positionOption.x
+      cellEditor.position.y = containerRect.top + positionOption.y
+    }
+  } else {
+    // 如果单元格不在可视区域，关闭编辑器
+    resetCellEditor()
+  }
+}
 
 /**
  * 点击外部关闭（允许点击 Element Plus 下拉面板）
@@ -358,11 +450,23 @@ const emits = defineEmits<{
  */
 const onGlobalMousedown = (e: MouseEvent) => {
   if (tableVars.stage) tableVars.stage.setPointersPositions(e)
+
+  const target = e.target as HTMLElement | null
+  if (!target) return
+
+  // 检查是否点击了编辑器区域
+  if (cellEditor.visible) {
+    const editorElement = target.closest('.dms-cell-editor')
+    const isElSelectDropdown = target.closest('.el-select-dropdown, .el-popper, .el-picker-panel')
+    if (!editorElement && !isElSelectDropdown) {
+      resetCellEditor()
+    }
+  }
+
   if (!filterDropdown.visible && !summaryDropdown.visible) return
   const panel = filterDropdownRef.value
   const panelSummary = summaryDropdownRef.value
-  const target = e.target as HTMLElement | null
-  if (!target) return
+
   // 点击自身面板内：不关闭
   if ((panel && panel.contains(target)) || (panelSummary && panelSummary.contains(target))) return
   // 点击 el-select 下拉面板：不关闭
@@ -623,6 +727,13 @@ const drawHeaderPart = (
 }
 
 /**
+ * 双击计时器
+ */
+let doubleClickTimer: NodeJS.Timeout | null = null
+let lastClickTime = 0
+let lastClickCell = { rowIndex: -1, colIndex: -1 }
+
+/**
  * 处理单元格点击，更新选中状态并抛出事件
  * @param {number} rowIndex 行索引
  * @param {number} colIndex 列索引
@@ -646,6 +757,35 @@ const handleCellClick = (
   createHighlightRect(cellX, cellY, cellWidth, cellHeight, group)
   const rowData = activeData.value[rowIndex]
   emits('cell-click', { rowIndex, colIndex, colKey: col.columnName, rowData })
+}
+
+/**
+ * 处理单元格双击
+ */
+const handleCellDoubleClick = (
+  rowIndex: number,
+  colIndex: number,
+  column: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  cellX: number,
+  cellY: number,
+  cellWidth: number,
+  cellHeight: number
+) => {
+  // 操作列不允许编辑
+  if (column.columnName === 'action') {
+    return
+  }
+  // 如果已经在编辑，先重置
+  if (cellEditor.visible) {
+    resetCellEditor()
+    // 添加小延时确保重置完成
+    setTimeout(() => {
+      startCellEditImmediate(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
+    }, 10)
+    return
+  }
+
+  startCellEditImmediate(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
 }
 
 /**
@@ -743,7 +883,7 @@ const createScrollbars = () => {
     // 计算水平滚动条宽度
     const visibleWidth = stageWidth - leftWidth - rightWidth - verticalScrollbarSpaceForThumb
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
-    const thumbX = leftWidth + (tableVars.scrollX / maxScrollX) * (visibleWidth - thumbWidth)
+    const thumbX = leftWidth + (tableVars.stageScrollX / maxScrollX) * (visibleWidth - thumbWidth)
 
     // 绘制水平滚动条滑块
     tableVars.horizontalScrollbarThumb = new Konva.Rect({
@@ -805,7 +945,7 @@ const setupHorizontalScrollbarEvents = () => {
   tableVars.horizontalScrollbarThumb.on('mousedown', (event) => {
     tableVars.isDraggingHorizontalThumb = true
     tableVars.dragStartX = event.evt.clientX
-    tableVars.dragStartScrollX = tableVars.scrollX
+    tableVars.dragStartScrollX = tableVars.stageScrollX
     tableVars.stage!.container().style.cursor = 'grabbing'
 
     // 设置指针位置到 stage，避免 Konva 警告
@@ -918,10 +1058,21 @@ const drawBodyPart = (
         bodyGroup.add(mergedCellText)
       } else {
         const cellRect = drawCellRect({ pools, rowIndex, colIndex, startColIndex, x, y, cellWidth, cellHeight })
+        let clickTimeout: NodeJS.Timeout | null = null
         // 添加点击事件
         cellRect.on('click', () => {
-          // 默认不启用"相同值合并"，因此不需要基于跨度推断点击行
-          handleCellClick(rowIndex, colIndex, col, cellRect.x(), cellRect.y(), cellWidth, cellHeight, bodyGroup)
+          if (clickTimeout) {
+            clearTimeout(clickTimeout)
+            clickTimeout = null
+            return
+          }
+          clickTimeout = setTimeout(() => {
+            handleCellClick(rowIndex, colIndex, col, cellRect.x(), cellRect.y(), cellWidth, cellHeight, bodyGroup)
+            clickTimeout = null
+          }, 250) // 250ms 内未发生第二次点击 → 认定为单击
+        })
+        cellRect.on('dblclick', () => {
+          handleCellDoubleClick(rowIndex, colIndex, col, cellRect.x(), cellRect.y(), cellWidth, cellHeight)
         })
 
         bodyGroup.add(cellRect)
@@ -1068,7 +1219,7 @@ const recomputeHoverIndexFromPointer = () => {
   }
 
   const localY = pointerPosition.y + tableVars.stageScrollY
-  const localX = pointerPosition.x + tableVars.scrollX
+  const localX = pointerPosition.x + tableVars.stageScrollX
   // 计算鼠标所在的行索引
   const positionMapList = [
     ...tableVars.headerPositionMapList,
@@ -1151,6 +1302,7 @@ const updateVerticalScroll = (offsetY: number) => {
   updateScrollbars()
   recomputeHoverIndexFromPointer()
   updateHoverRects()
+  updateCellEditorPosition()
 
   tableVars.bodyLayer?.batchDraw()
   tableVars.fixedBodyLayer?.batchDraw()
@@ -1166,10 +1318,10 @@ const updateHorizontalScroll = (offsetX: number) => {
   if (!tableVars.stage || !tableVars.centerHeaderGroup || !tableVars.centerBodyGroup) return
   const { maxScrollX } = getScrollLimits()
   const { leftWidth } = getSplitColumns()
-  tableVars.scrollX = constrainToRange(tableVars.scrollX + offsetX, 0, maxScrollX)
+  tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX + offsetX, 0, maxScrollX)
 
-  const headerX = leftWidth - tableVars.scrollX
-  const centerX = -tableVars.scrollX
+  const headerX = leftWidth - tableVars.stageScrollX
+  const centerX = -tableVars.stageScrollX
 
   // 中间区域随横向滚动
   tableVars.centerHeaderGroup.x(headerX)
@@ -1184,6 +1336,7 @@ const updateHorizontalScroll = (offsetX: number) => {
   // tableVars.fixedSummaryLayer?.batchDraw()
   recomputeHoverIndexFromPointer()
   updateHoverRects()
+  updateCellEditorPosition()
   // 横向滚动时更新弹框位置
   updateFilterDropdownPositionsInTable()
   updateSummaryDropdownPositionsInTable()
@@ -1213,7 +1366,7 @@ const updateScrollbars = () => {
     const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
     const visibleWidth = stageWidth - leftWidth - rightWidth - (maxScrollY > 0 ? props.scrollbarSize : 0)
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
-    const thumbX = leftWidth + (tableVars.scrollX / maxScrollX) * (visibleWidth - thumbWidth)
+    const thumbX = leftWidth + (tableVars.stageScrollX / maxScrollX) * (visibleWidth - thumbWidth)
     tableVars.horizontalScrollbarThumb.x(thumbX)
   }
 
@@ -1349,7 +1502,7 @@ const handleMouseMove = (e: MouseEvent) => {
     const scrollRatio = deltaX / (visibleWidth - thumbWidth)
     const newScrollX = tableVars.dragStartScrollX + scrollRatio * maxScrollX
 
-    tableVars.scrollX = constrainToRange(newScrollX, 0, maxScrollX)
+    tableVars.stageScrollX = constrainToRange(newScrollX, 0, maxScrollX)
     updateScrollPositions()
   }
 
@@ -1411,8 +1564,8 @@ const updateScrollPositions = () => {
 
   const { leftWidth } = getSplitColumns()
   const bodyY = props.headerHeight - tableVars.stageScrollY
-  const centerX = -tableVars.scrollX
-  const headerX = leftWidth - tableVars.scrollX
+  const centerX = -tableVars.stageScrollX
+  const headerX = leftWidth - tableVars.stageScrollX
   const summaryY = tableVars.stage
     ? tableVars.stage.height() - getSummaryRowHeight() - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
     : 0
@@ -1475,11 +1628,11 @@ const refreshTable = (resetScroll: boolean) => {
    * 重置滚动状态
    */
   if (resetScroll) {
-    tableVars.scrollX = 0
+    tableVars.stageScrollX = 0
     tableVars.stageScrollY = 0
   } else {
     const { maxScrollX, maxScrollY } = getScrollLimits()
-    tableVars.scrollX = constrainToRange(tableVars.scrollX, 0, maxScrollX)
+    tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX, 0, maxScrollX)
     tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY, 0, maxScrollY)
   }
 
