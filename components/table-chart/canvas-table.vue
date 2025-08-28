@@ -304,7 +304,7 @@ const {
   handleFilterDropdownScroll,
   openFilterDropdown,
   handleSelectedFilter
-} = filterDropdownHandler({ updateHoverRects, clearGroups, rebuildGroups })
+} = filterDropdownHandler({ updateHoverRects })
 
 const { tableData, sortColumns, activeData, tableColumns, tableContainerStyle } = createTableState({
   props,
@@ -322,7 +322,7 @@ const {
   handleSummaryDropdownScroll,
   openSummaryDropdown,
   handleSelectedSummary
-} = summaryDropDownHandler({ updateHoverRects, clearGroups, rebuildGroups, props })
+} = summaryDropDownHandler({ updateHoverRects, props })
 
 const { drawSummaryPart } = drawSummaryHandler({ props, summaryState, activeData, openSummaryDropdown })
 
