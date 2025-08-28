@@ -1,8 +1,8 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, reactive, ref } from 'vue'
-import { getDropdownPosition } from './utils'
-import { tableVars } from './variable'
+import { getDropdownPosition } from '../utils'
+import { tableVars } from '../variable'
 
 export interface FilterDropdown {
   visible: boolean
