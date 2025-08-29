@@ -84,14 +84,18 @@ import {
   truncateText
 } from './utils'
 import {
-  type KonvaNodePools,
-  type PositionMap,
   createTableState,
   filterState,
+  handleTableColumns,
+  handleTableData,
   sortColumns,
   summaryState,
+  tableColumns,
+  tableData,
   tableVars
 } from './variable'
+
+import type { KonvaNodePools, PositionMap } from './variable'
 
 const {
   initStage,
@@ -144,12 +148,9 @@ const rebuildGroups = () => {
   ) {
     return
   }
-  const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns({
-    tableColumns: tableColumns.value,
-    activeData: activeData.value
-  })
+  const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
   const { width: stageWidth, height: stageHeight } = getStageAttr()
-  const { maxScrollX, maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
+  const { maxScrollX, maxScrollY } = getScrollLimits()
   const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
   const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
 
@@ -311,7 +312,7 @@ const handleSelectedFilter = () => {
   rebuildGroups()
 }
 
-const { tableData, activeData, tableColumns, tableContainerStyle } = createTableState({
+const { tableContainerStyle } = createTableState({
   props
 })
 
@@ -345,7 +346,7 @@ const {
   closeCellEditorDropdown,
   resetCellEditorDropdown,
   updateCellEditorPositionsInTable
-} = editorDropdownHandler({ props, activeData: activeData.value })
+} = editorDropdownHandler({ props, tableData: tableData.value })
 
 /**
  * 保存单元格编辑
@@ -353,7 +354,7 @@ const {
 const handleCellEditorSave = (newValue: string | number) => {
   const { rowIndex, colKey, column } = cellEditorDropdown.editingCell
   if (rowIndex >= 0 && colKey && column) {
-    const rowData = activeData.value[rowIndex]
+    const rowData = tableData.value[rowIndex]
     const oldValue = rowData[colKey]
     // 更新数据
     rowData[colKey] = newValue
@@ -368,7 +369,6 @@ const { resetHighlightRects, getColOrRowHighlightRects } = highlightHandler({ pr
 
 const { drawSummaryPart } = renderSummaryHandler({
   props,
-  activeData,
   openSummaryDropdown: (evt, colName, options, updateHoverRects, selected) =>
     openSummaryDropdown(evt, colName, options, updateHoverRects, selected)
 })
@@ -672,7 +672,7 @@ const handleCellClick = (
   group: Konva.Group
 ) => {
   createHighlightRect(cellX, cellY, cellWidth, cellHeight, group)
-  const rowData = activeData.value[rowIndex]
+  const rowData = tableData.value[rowIndex]
   emits('cell-click', { rowIndex, colIndex, colKey: col.columnName, rowData })
 }
 
@@ -712,10 +712,7 @@ const createScrollbars = () => {
   if (!tableVars.stage || !tableVars.scrollbarLayer) return
   const stageWidth = tableVars.stage.width()
   const stageHeight = tableVars.stage.height()
-  const { maxScrollX, maxScrollY } = getScrollLimits({
-    tableColumns: tableColumns.value,
-    activeData: activeData.value
-  })
+  const { maxScrollX, maxScrollY } = getScrollLimits()
 
   if (maxScrollY > 0) {
     // 绘制垂直滚动条顶部遮罩
@@ -798,10 +795,7 @@ const createScrollbars = () => {
     tableVars.horizontalScrollbarGroup.add(horizontalScrollbarTrack)
 
     // 计算水平滚动条宽度
-    const { leftWidth, rightWidth, centerWidth } = getSplitColumns({
-      tableColumns: tableColumns.value,
-      activeData: activeData.value
-    })
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
     const verticalScrollbarSpaceForThumb = maxScrollY > 0 ? props.scrollbarSize : 0
     // 计算水平滚动条宽度
     const visibleWidth = stageWidth - leftWidth - rightWidth - verticalScrollbarSpaceForThumb
@@ -908,12 +902,12 @@ const drawBodyPart = (
 ) => {
   if (!tableVars.stage || !bodyGroup) return
 
-  calculateVisibleRows(activeData.value)
+  calculateVisibleRows()
 
   recoverKonvaNode(bodyGroup, pools)
   // 渲染可视区域的行
   for (let rowIndex = tableVars.visibleRowStart; rowIndex <= tableVars.visibleRowEnd; rowIndex++) {
-    const row = activeData.value[rowIndex]
+    const row = tableData.value[rowIndex]
     // 绘制背景矩形
     drawBackgroundRect(bodyGroup, bodyCols, pools, rowIndex)
     // y坐标
@@ -1023,7 +1017,7 @@ const drawBodyPart = (
               const buttonRect = drawButtonRect({ pools, startX, centerY, w, buttonHeight, theme })
               const isDisabled =
                 typeof action.disabled === 'function'
-                  ? action.disabled(activeData.value[rowIndex], rowIndex)
+                  ? action.disabled(tableData.value[rowIndex], rowIndex)
                   : !!action.disabled
               bindButtonInteractions(buttonRect, {
                 baseFill: theme.fill,
@@ -1033,7 +1027,7 @@ const drawBodyPart = (
               })
               buttonRect.on('click', () => {
                 if (isDisabled) return
-                const rowData = activeData.value[rowIndex]
+                const rowData = tableData.value[rowIndex]
                 emits('action-click', { rowIndex, action: action.key, rowData })
               })
               bodyGroup.add(buttonRect)
@@ -1143,7 +1137,7 @@ const recomputeHoverIndexFromPointer = () => {
   /**
    * 检查鼠标是否在表格区域内（排除滚动条区域）
    */
-  if (!isInTableArea({ tableColumns: tableColumns.value, activeData: activeData.value })) {
+  if (!isInTableArea()) {
     clearHoverHighlight()
     return
   }
@@ -1185,14 +1179,14 @@ const recomputeHoverIndexFromPointer = () => {
  */
 const updateVerticalScroll = (offsetY: number) => {
   if (!tableVars.stage || !tableVars.leftBodyGroup || !tableVars.centerBodyGroup || !tableVars.rightBodyGroup) return
-  const { maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
+  const { maxScrollY } = getScrollLimits()
   const oldScrollY = tableVars.stageScrollY
   tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY + offsetY, 0, maxScrollY)
 
   // 检查是否需要重新渲染（滚动超过一定阈值或可视区域改变）
   const oldVisibleStart = tableVars.visibleRowStart
   const oldVisibleEnd = tableVars.visibleRowEnd
-  calculateVisibleRows(activeData.value)
+  calculateVisibleRows()
 
   const needsRerender =
     tableVars.visibleRowStart !== oldVisibleStart ||
@@ -1201,10 +1195,7 @@ const updateVerticalScroll = (offsetY: number) => {
 
   if (needsRerender) {
     // 重新渲染可视区域
-    const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns({
-      tableColumns: tableColumns.value,
-      activeData: activeData.value
-    })
+    const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
     tableVars.bodyPositionMapList.length = 0
     drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
     drawBodyPart(
@@ -1247,8 +1238,8 @@ const updateVerticalScroll = (offsetY: number) => {
  */
 const updateHorizontalScroll = (offsetX: number) => {
   if (!tableVars.stage || !tableVars.centerHeaderGroup || !tableVars.centerBodyGroup) return
-  const { maxScrollX } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
-  const { leftWidth } = getSplitColumns({ tableColumns: tableColumns.value, activeData: activeData.value })
+  const { maxScrollX } = getScrollLimits()
+  const { leftWidth } = getSplitColumns()
   tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX + offsetX, 0, maxScrollX)
 
   const headerX = leftWidth - tableVars.stageScrollX
@@ -1280,7 +1271,7 @@ const updateScrollbarPosition = () => {
   if (!tableVars.stage) return
 
   const { width: stageWidth, height: stageHeight } = getStageAttr()
-  const { maxScrollX, maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
+  const { maxScrollX, maxScrollY } = getScrollLimits()
 
   // 更新垂直滚动条位置
   if (tableVars.verticalScrollbarThumb && maxScrollY > 0) {
@@ -1293,10 +1284,7 @@ const updateScrollbarPosition = () => {
 
   // 更新水平滚动条位置
   if (tableVars.horizontalScrollbarThumb && maxScrollX > 0) {
-    const { leftWidth, rightWidth, centerWidth } = getSplitColumns({
-      tableColumns: tableColumns.value,
-      activeData: activeData.value
-    })
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
     const visibleWidth = stageWidth - leftWidth - rightWidth - (maxScrollY > 0 ? props.scrollbarSize : 0)
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
     const thumbX = leftWidth + (tableVars.stageScrollX / maxScrollX) * (visibleWidth - thumbWidth)
@@ -1369,15 +1357,13 @@ const handleMouseMove = (e: MouseEvent) => {
     const scrollThreshold = props.scrollThreshold
     if (Math.abs(deltaY) < scrollThreshold) return
 
-    const { maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
+    const { maxScrollY } = getScrollLimits()
     const stageHeight = tableVars.stage.height()
     const trackHeight =
       stageHeight -
       props.headerHeight -
       getSummaryRowHeight() -
-      (getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value }).maxScrollX > 0
-        ? props.scrollbarSize
-        : 0)
+      (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
     const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
     const scrollRatio = deltaY / (trackHeight - thumbHeight)
     const newScrollY = tableVars.dragStartScrollY + scrollRatio * maxScrollY
@@ -1388,7 +1374,7 @@ const handleMouseMove = (e: MouseEvent) => {
     // 检查是否需要重新渲染虚拟滚动内容
     const oldVisibleStart = tableVars.visibleRowStart
     const oldVisibleEnd = tableVars.visibleRowEnd
-    calculateVisibleRows(activeData.value)
+    calculateVisibleRows()
 
     const needsRerender =
       tableVars.visibleRowStart !== oldVisibleStart ||
@@ -1397,10 +1383,7 @@ const handleMouseMove = (e: MouseEvent) => {
 
     if (needsRerender) {
       // 重新渲染可视区域
-      const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns({
-        tableColumns: tableColumns.value,
-        activeData: activeData.value
-      })
+      const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
       tableVars.bodyPositionMapList.length = 0
       drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
       drawBodyPart(
@@ -1432,11 +1415,8 @@ const handleMouseMove = (e: MouseEvent) => {
     // 添加容错机制：只有当水平移动距离超过阈值时才触发滚动
     const scrollThreshold = props.scrollThreshold
     if (Math.abs(deltaX) < scrollThreshold) return
-    const { maxScrollX } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
-    const { leftWidth, rightWidth, centerWidth } = getSplitColumns({
-      tableColumns: tableColumns.value,
-      activeData: activeData.value
-    })
+    const { maxScrollX } = getScrollLimits()
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
     const stageWidth = tableVars.stage.width()
     const visibleWidth = stageWidth - leftWidth - rightWidth - props.scrollbarSize
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
@@ -1503,16 +1483,12 @@ const updateScrollPositions = () => {
   )
     return
 
-  const { leftWidth } = getSplitColumns({ tableColumns: tableColumns.value, activeData: activeData.value })
+  const { leftWidth } = getSplitColumns()
   const bodyY = props.headerHeight - tableVars.stageScrollY
   const centerX = -tableVars.stageScrollX
   const headerX = leftWidth - tableVars.stageScrollX
   const summaryY = tableVars.stage
-    ? tableVars.stage.height() -
-      getSummaryRowHeight() -
-      (getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value }).maxScrollX > 0
-        ? props.scrollbarSize
-        : 0)
+    ? tableVars.stage.height() - getSummaryRowHeight() - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
     : 0
 
   /**
@@ -1558,7 +1534,7 @@ const updateScrollPositions = () => {
  */
 const handleWindowResize = () => {
   initStage()
-  calculateVisibleRows(activeData.value)
+  calculateVisibleRows()
   clearGroups()
   rebuildGroups()
 }
@@ -1576,15 +1552,12 @@ const refreshTable = (resetScroll: boolean) => {
     tableVars.stageScrollX = 0
     tableVars.stageScrollY = 0
   } else {
-    const { maxScrollX, maxScrollY } = getScrollLimits({
-      tableColumns: tableColumns.value,
-      activeData: activeData.value
-    })
+    const { maxScrollX, maxScrollY } = getScrollLimits()
     tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX, 0, maxScrollX)
     tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY, 0, maxScrollY)
   }
 
-  calculateVisibleRows(activeData.value)
+  calculateVisibleRows()
   clearGroups()
   rebuildGroups()
 }
@@ -1596,9 +1569,13 @@ watch(
   () => [props.xAxisFields, props.yAxisFields, props.data],
   () => {
     if (!tableVars.stage) return
+    handleTableColumns(props.xAxisFields, props.yAxisFields)
+    handleTableData(props.data)
     refreshTable(true)
   },
-  { deep: true }
+  {
+    deep: true
+  }
 )
 
 watch(
@@ -1608,6 +1585,7 @@ watch(
     // 等待demo节点发生变更再触发该方法
     await nextTick()
     initStage()
+    handleTableData(props.data)
     refreshTable(true)
   }
 )
@@ -1710,7 +1688,9 @@ watch(
  * @returns {void}
  */
 onMounted(() => {
+  handleTableColumns(props.xAxisFields, props.yAxisFields)
   initStage()
+  handleTableData(props.data)
   refreshTable(true)
   const tableContainer = getTableContainerElement()
   tableContainer?.addEventListener('wheel', handleMouseWheel, { passive: false })

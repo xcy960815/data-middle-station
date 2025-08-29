@@ -420,86 +420,42 @@ export const filterState = reactive<Record<string, Set<string>>>({})
  */
 export const summaryState = reactive<Record<string, string>>({})
 
-interface CreateTableStateProps {
-  props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-}
+/**
+ * 表格数据
+ */
+export const tableData = ref<Array<ChartDataVo.ChartData>>([])
 
 /**
- * 创建表格状态管理器
+ * 处理表格数据
+ * @param data 表格数据
+ * @returns {void}
  */
-export const createTableState = ({ props }: CreateTableStateProps) => {
-  /**
-   * 所有列 已经按照左中右排序过
-   * @returns {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>}
-   */
-  const tableColumns = computed(() => {
-    const leftColsx = props.xAxisFields.filter((c) => c.fixed === 'left')
-    const rightColsx = props.xAxisFields.filter((c) => c.fixed === 'right')
-    const centerColsx = props.xAxisFields.filter((c) => !c.fixed)
-    const leftColsy = props.yAxisFields.filter((c) => c.fixed === 'left')
-    const rightColsy = props.yAxisFields.filter((c) => c.fixed === 'right')
-    const centerColsy = props.yAxisFields.filter((c) => !c.fixed)
-    return leftColsx.concat(centerColsx).concat(rightColsx).concat(leftColsy).concat(centerColsy).concat(rightColsy)
-  })
-  /**
-   * 列别名映射
-   * @returns {Record<string, string>}
-   */
-  const columnAliasMap = computed(() => {
-    const map: Record<string, string> = {}
-    tableColumns.value.forEach((c: GroupStore.GroupOption | DimensionStore.DimensionOption) => {
-      if (c && typeof c === 'object') {
-        const columnName = c.columnName
-        const displayName = c.displayName as string | undefined
-        if (columnName && displayName && displayName !== columnName) {
-          map[columnName] = displayName
-        }
+export const handleTableData = (data: Array<ChartDataVo.ChartData>) => {
+  tableData.value = data.filter((row) => row && typeof row === 'object')
+  const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
+
+  if (filterKeys.length) {
+    tableData.value = tableData.value.filter((row) => {
+      for (const k of filterKeys) {
+        const set = filterState[k]
+        const val = row[k]
+        if (!set.has(String(val ?? ''))) return false
       }
+      return true
     })
-    return map
-  })
-
+  }
   /**
-   * 表格数据
+   * 如果未排序，则直接返回原始数据
    */
-  const tableData = computed<Array<ChartDataVo.ChartData>>(() => props.data)
-
-  /**
-   * 应用排序后的数据视图
-   */
-  const activeData = computed<Array<ChartDataVo.ChartData>>(() => {
-    // 先按 filter 过滤
-    let base = tableData.value.filter((row) => row && typeof row === 'object') // 过滤掉无效的行
-    const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
-    if (filterKeys.length) {
-      const aliasMap = columnAliasMap.value
-      base = base.filter((row) => {
-        for (const k of filterKeys) {
-          const set = filterState[k]
-          const alias = aliasMap[k]
-          const val = row[k] !== undefined ? row[k] : alias ? row[alias] : undefined
-          if (!set.has(String(val ?? ''))) return false
-        }
-        return true
-      })
-    }
-    /**
-     * 如果未排序，则直接返回原始数据
-     */
-    if (!sortColumns.value.length) return base
-    const sorted = [...base]
+  if (sortColumns.value.length) {
+    const sorted = [...tableData.value]
     const toNum = (v: string | number | null | undefined) => {
       const n = Number(v)
       return Number.isFinite(n) ? n : null
     }
-    const aliasMap2 = columnAliasMap.value
-
     const getVal = (row: ChartDataVo.ChartData, key: string): string | number | undefined => {
-      const alias = aliasMap2[key]
-      const candidates: unknown[] = [row[key], alias ? row[alias] : undefined]
-      for (const v of candidates) {
-        if (typeof v === 'string' || typeof v === 'number') return v
-      }
+      const val = row[key]
+      if (typeof val === 'string' || typeof val === 'number') return val
       return undefined
     }
     sorted.sort((a, b) => {
@@ -516,9 +472,46 @@ export const createTableState = ({ props }: CreateTableStateProps) => {
       }
       return 0
     })
-    return sorted
-  })
+    tableData.value = sorted
+  }
+}
+/**
+ * 表格列
+ */
+export const tableColumns = ref<Array<GroupStore.GroupOption | DimensionStore.DimensionOption>>([])
 
+/**
+ * 处理表格列
+ * @param xAxisFields x轴字段
+ * @param yAxisFields y轴字段
+ * @returns {void}
+ */
+export const handleTableColumns = (
+  xAxisFields: Array<GroupStore.GroupOption>,
+  yAxisFields: Array<DimensionStore.DimensionOption>
+) => {
+  const leftColsx = xAxisFields.filter((c) => c.fixed === 'left')
+  const rightColsx = xAxisFields.filter((c) => c.fixed === 'right')
+  const centerColsx = xAxisFields.filter((c) => !c.fixed)
+  const leftColsy = yAxisFields.filter((c) => c.fixed === 'left')
+  const rightColsy = yAxisFields.filter((c) => c.fixed === 'right')
+  const centerColsy = yAxisFields.filter((c) => !c.fixed)
+  tableColumns.value = leftColsx
+    .concat(centerColsx)
+    .concat(rightColsx)
+    .concat(leftColsy)
+    .concat(centerColsy)
+    .concat(rightColsy)
+}
+
+interface CreateTableStateProps {
+  props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+}
+
+/**
+ * 创建表格状态管理器
+ */
+export const createTableState = ({ props }: CreateTableStateProps) => {
   /**
    * 容器样式
    */
@@ -531,12 +524,7 @@ export const createTableState = ({ props }: CreateTableStateProps) => {
       background: '#fff'
     }
   })
-
   return {
-    tableData,
-    activeData,
-    tableColumns,
-    columnAliasMap,
     tableContainerStyle
   }
 }
