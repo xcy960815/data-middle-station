@@ -1,27 +1,39 @@
 {
   "recommendations": [
+    // Vue 3 官方语言支持 (替代 Vetur)
+    "Vue.volar",
+    "Vue.vscode-typescript-vue-plugin",
     // Prettier 代码格式化
     "esbenp.prettier-vscode",
     // ESLint 代码检查
     "dbaeumer.vscode-eslint",
-    // Vue 语言支持
-    "octref.vetur",
     // TypeScript 增强支持
-    "ms-vscode.typescript-hero",
+    "ms-vscode.vscode-typescript-next",
     // EditorConfig 支持
     "editorconfig.editorconfig",
+    // Tailwind CSS 支持
+    "bradlc.vscode-tailwindcss",
     // GitLens Git 增强
     "eamodio.gitlens",
     // 自动重命名标签
     "formulahendry.auto-rename-tag",
-    // 括号匹配高亮
-    "coenraads.bracket-pair-colorizer-2",
     // 路径智能感知
-    "christian-kohler.path-intellisense"
+    "christian-kohler.path-intellisense",
+    // JSON 增强支持
+    "ms-vscode.vscode-json",
+    // Markdown 支持
+    "yzhang.markdown-all-in-one",
+    // 拼写检查
+    "streetsidesoftware.code-spell-checker"
   ],
   "unwantedRecommendations": [
     // 避免与 Prettier 冲突的格式化插件
     "hookyqr.beautify",
-    "ms-vscode.vscode-typescript-tslint-plugin"
+    "ms-vscode.vscode-typescript-tslint-plugin",
+    // Vue 2 的 Vetur 插件，与 Volar 冲突
+    "octref.vetur",
+    // 已被内置功能替代的插件
+    "coenraads.bracket-pair-colorizer-2",
+    "ms-vscode.typescript-hero"
   ]
 }
