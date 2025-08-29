@@ -189,7 +189,8 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     const selected = summaryDropdown.selectedValue
     summaryState[colName] = selected
     clearGroups()
-    // rebuildGroups()
+    // 通过全局指针调用，避免 import 循环
+    tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
     // 选择后关闭弹框
     summaryDropdown.visible = false
   }

@@ -1,20 +1,20 @@
 import Konva from 'konva'
+import type { CanvasTableEmits } from './emits'
 import { chartProps } from './props'
+import { renderBodyHandler } from './render/render-body-handler'
+import { renderHeaderHandler } from './render/render-header-handler'
+import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
+import { renderSummaryHandler } from './render/render-summary-handler'
 import { clearPool, getTableContainerElement } from './utils'
 import { tableVars, type Prettify } from './variable-handlder'
 interface KonvaStageHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+  emits?: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 /**
  * Konva Stage 和 Layer 管理器
  */
-export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
-  // const { drawSummaryPart } = renderSummaryHandler({ props })
-  // const { drawHeaderPart } = renderHeaderHandler({ props })
-  // const { getSummaryRowHeight } = summaryDropDownHandler({ props })
-  // const { getScrollLimits, getSplitColumns } = renderBodyHandler({ props })
-  // const { createScrollbars } = renderScrollbarsHandler({ props })
-
+export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   /**
    * 初始化 Stage 和所有 Layer
    * @returns {void}
@@ -159,6 +159,150 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
     tableVars.hoveredRowIndex = null
     tableVars.hoveredColIndex = null
   }
+
+  /**
+   * 重建分组
+   * @returns {void}
+   */
+  const rebuildGroups = () => {
+    if (
+      !tableVars.stage ||
+      !tableVars.headerLayer ||
+      !tableVars.fixedHeaderLayer ||
+      !tableVars.bodyLayer ||
+      !tableVars.fixedBodyLayer ||
+      !tableVars.summaryLayer ||
+      !tableVars.fixedSummaryLayer ||
+      !tableVars.scrollbarLayer
+    ) {
+      return
+    }
+
+    // 必须提供 emits 才能完整重建（用于下拉与交互）
+    if (!emits) {
+      throw new Error('rebuildGroups requires emits to be provided to konvaStageHandler')
+    }
+
+    const { drawHeaderPart } = renderHeaderHandler({ props, emits })
+    const { drawBodyPart, getSplitColumns, getScrollLimits } = renderBodyHandler({ props, emits })
+    const { drawSummaryPart } = renderSummaryHandler({ props })
+    const { createScrollbars } = renderScrollbarsHandler({ props, emits })
+
+    // 本地计算汇总行高度，避免依赖下拉处理模块
+    const getSummaryRowHeight = () => (props.enableSummary ? props.summaryHeight : 0)
+
+    const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
+    const { width: stageWidth, height: stageHeight } = getStageAttr()
+    const { maxScrollX, maxScrollY } = getScrollLimits()
+    const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
+    const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
+
+    if (!tableVars.centerBodyClipGroup) {
+      const clipHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - horizontalScrollbarSpace
+      tableVars.centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
+        x: 0,
+        y: 0,
+        width: stageWidth - leftWidth - rightWidth - verticalScrollbarSpace,
+        height: clipHeight
+      })
+      tableVars.bodyLayer.add(tableVars.centerBodyClipGroup)
+    }
+
+    tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
+    tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth - tableVars.stageScrollX, 0)
+    tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, 0)
+
+    tableVars.leftBodyGroup = createBodyLeftGroups(0, props.headerHeight - tableVars.stageScrollY)
+    tableVars.centerBodyGroup = createBodyCenterGroups(-tableVars.stageScrollX, -tableVars.stageScrollY)
+    tableVars.rightBodyGroup = createBodyRightGroups(
+      stageWidth - rightWidth - verticalScrollbarSpace,
+      props.headerHeight - tableVars.stageScrollY
+    )
+
+    tableVars.headerLayer.add(tableVars.centerHeaderGroup)
+    tableVars.fixedHeaderLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup)
+
+    if (props.enableSummary) {
+      const summaryY = stageHeight - getSummaryRowHeight() - horizontalScrollbarSpace
+      tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
+      tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.stageScrollX, summaryY)
+      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
+      tableVars.summaryLayer.add(tableVars.centerSummaryGroup)
+      tableVars.fixedSummaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
+    } else {
+      tableVars.leftSummaryGroup = null
+      tableVars.centerSummaryGroup = null
+      tableVars.rightSummaryGroup = null
+    }
+
+    tableVars.centerBodyClipGroup.add(tableVars.centerBodyGroup)
+    tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup)
+
+    tableVars.headerPositionMapList.length = 0
+    // 绘制表头
+    drawHeaderPart(tableVars.leftHeaderGroup, leftCols, 0, tableVars.headerPositionMapList, 0)
+    drawHeaderPart(tableVars.centerHeaderGroup, centerCols, leftCols.length, tableVars.headerPositionMapList, leftWidth)
+    drawHeaderPart(
+      tableVars.rightHeaderGroup,
+      rightCols,
+      leftCols.length + centerCols.length,
+      tableVars.headerPositionMapList,
+      leftWidth + centerWidth
+    )
+
+    tableVars.bodyPositionMapList.length = 0
+    // 绘制主体
+    drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
+    drawBodyPart(
+      tableVars.centerBodyGroup,
+      centerCols,
+      tableVars.centerBodyPools,
+      leftCols.length,
+      tableVars.bodyPositionMapList,
+      leftWidth
+    )
+    drawBodyPart(
+      tableVars.rightBodyGroup,
+      rightCols,
+      tableVars.rightBodyPools,
+      leftCols.length + centerCols.length,
+      tableVars.bodyPositionMapList,
+      leftWidth + centerWidth
+    )
+
+    // 绘制底部 summary
+    if (props.enableSummary) {
+      tableVars.summaryPositionMapList.length = 0
+      drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
+      drawSummaryPart(
+        tableVars.centerSummaryGroup,
+        centerCols,
+        leftCols.length,
+        tableVars.summaryPositionMapList,
+        leftWidth
+      )
+      drawSummaryPart(
+        tableVars.rightSummaryGroup,
+        rightCols,
+        leftCols.length + centerCols.length,
+        tableVars.summaryPositionMapList,
+        leftWidth + centerWidth
+      )
+    }
+
+    createScrollbars()
+
+    tableVars.headerLayer.batchDraw()
+    tableVars.bodyLayer?.batchDraw()
+    tableVars.fixedBodyLayer?.batchDraw()
+    tableVars.fixedHeaderLayer?.batchDraw()
+    tableVars.summaryLayer?.batchDraw()
+    tableVars.fixedSummaryLayer?.batchDraw()
+    tableVars.scrollbarLayer?.batchDraw()
+  }
+
+  // 暴露到全局状态，供其他模块调用
+  tableVars.rebuildGroupsFn = rebuildGroups
 
   /**
    * 创建左侧表头组
@@ -325,6 +469,7 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
     initStage,
     destroyStage,
     getStageAttr,
+    rebuildGroups,
     createHeaderLeftGroups,
     createHeaderCenterGroups,
     createHeaderRightGroups,
@@ -336,6 +481,5 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
     createSummaryRightGroups,
     createCenterBodyClipGroup,
     clearGroups
-    // rebuildGroups
   }
 }

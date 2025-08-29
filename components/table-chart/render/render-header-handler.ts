@@ -1,5 +1,6 @@
 import Konva from 'konva'
 import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
+import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import type { chartProps } from '../props'
 import { getTextX, setPointerStyle, truncateText } from '../utils'
@@ -7,10 +8,11 @@ import type { PositionMap, Prettify } from '../variable-handlder'
 import { tableVars, variableHandlder } from '../variable-handlder'
 interface RenderHeaderHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
-export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
-  const { openFilterDropdown } = filterDropdownHandler({ props })
+export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) => {
+  const { openFilterDropdown } = filterDropdownHandler({ props, emits })
   // const { rebuildGroups } = konvaStageHandler({ props })
   const { sortColumns, tableData, handleTableData, filterState } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
