@@ -136,9 +136,12 @@ const rebuildGroups = () => {
   ) {
     return
   }
-  const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
+  const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns({
+    tableColumns: tableColumns.value,
+    activeData: activeData.value
+  })
   const { width: stageWidth, height: stageHeight } = getStageAttr()
-  const { maxScrollX, maxScrollY } = getScrollLimits()
+  const { maxScrollX, maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
   const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
   const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
 
@@ -192,6 +195,7 @@ const rebuildGroups = () => {
   tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup)
 
   tableVars.headerPositionMapList.length = 0
+
   /**
    * 绘制左侧表头部分
    */
@@ -355,7 +359,7 @@ const {
   drawCellText,
   drawButtonRect,
   drawButtonText
-} = renderBodyHandler({ props, activeData: activeData.value, tableColumns: tableColumns.value, getSummaryRowHeight })
+} = renderBodyHandler({ props, getSummaryRowHeight })
 
 /**
  * 定义事件
@@ -794,7 +798,10 @@ const createScrollbars = () => {
   if (!tableVars.stage || !tableVars.scrollbarLayer) return
   const stageWidth = tableVars.stage.width()
   const stageHeight = tableVars.stage.height()
-  const { maxScrollX, maxScrollY } = getScrollLimits()
+  const { maxScrollX, maxScrollY } = getScrollLimits({
+    tableColumns: tableColumns.value,
+    activeData: activeData.value
+  })
 
   if (maxScrollY > 0) {
     // 绘制垂直滚动条顶部遮罩
@@ -877,7 +884,10 @@ const createScrollbars = () => {
     tableVars.horizontalScrollbarGroup.add(horizontalScrollbarTrack)
 
     // 计算水平滚动条宽度
-    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns({
+      tableColumns: tableColumns.value,
+      activeData: activeData.value
+    })
     const verticalScrollbarSpaceForThumb = maxScrollY > 0 ? props.scrollbarSize : 0
     // 计算水平滚动条宽度
     const visibleWidth = stageWidth - leftWidth - rightWidth - verticalScrollbarSpaceForThumb
@@ -984,10 +994,9 @@ const drawBodyPart = (
 ) => {
   if (!tableVars.stage || !bodyGroup) return
 
-  calculateVisibleRows()
+  calculateVisibleRows(activeData.value)
 
   recoverKonvaNode(bodyGroup, pools)
-
   // 渲染可视区域的行
   for (let rowIndex = tableVars.visibleRowStart; rowIndex <= tableVars.visibleRowEnd; rowIndex++) {
     const row = activeData.value[rowIndex]
@@ -1212,7 +1221,7 @@ const recomputeHoverIndexFromPointer = () => {
   /**
    * 检查鼠标是否在表格区域内（排除滚动条区域）
    */
-  if (!isInTableArea()) {
+  if (!isInTableArea({ tableColumns: tableColumns.value, activeData: activeData.value })) {
     clearHoverHighlight()
     return
   }
@@ -1254,14 +1263,14 @@ const recomputeHoverIndexFromPointer = () => {
  */
 const updateVerticalScroll = (offsetY: number) => {
   if (!tableVars.stage || !tableVars.leftBodyGroup || !tableVars.centerBodyGroup || !tableVars.rightBodyGroup) return
-  const { maxScrollY } = getScrollLimits()
+  const { maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
   const oldScrollY = tableVars.stageScrollY
   tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY + offsetY, 0, maxScrollY)
 
   // 检查是否需要重新渲染（滚动超过一定阈值或可视区域改变）
   const oldVisibleStart = tableVars.visibleRowStart
   const oldVisibleEnd = tableVars.visibleRowEnd
-  calculateVisibleRows()
+  calculateVisibleRows(activeData.value)
 
   const needsRerender =
     tableVars.visibleRowStart !== oldVisibleStart ||
@@ -1270,7 +1279,10 @@ const updateVerticalScroll = (offsetY: number) => {
 
   if (needsRerender) {
     // 重新渲染可视区域
-    const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
+    const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns({
+      tableColumns: tableColumns.value,
+      activeData: activeData.value
+    })
     tableVars.bodyPositionMapList.length = 0
     drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
     drawBodyPart(
@@ -1315,8 +1327,8 @@ const updateVerticalScroll = (offsetY: number) => {
  */
 const updateHorizontalScroll = (offsetX: number) => {
   if (!tableVars.stage || !tableVars.centerHeaderGroup || !tableVars.centerBodyGroup) return
-  const { maxScrollX } = getScrollLimits()
-  const { leftWidth } = getSplitColumns()
+  const { maxScrollX } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
+  const { leftWidth } = getSplitColumns({ tableColumns: tableColumns.value, activeData: activeData.value })
   tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX + offsetX, 0, maxScrollX)
 
   const headerX = leftWidth - tableVars.stageScrollX
@@ -1349,7 +1361,7 @@ const updateScrollbars = () => {
 
   const stageWidth = tableVars.stage.width()
   const stageHeight = tableVars.stage.height()
-  const { maxScrollX, maxScrollY } = getScrollLimits()
+  const { maxScrollX, maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
 
   // 更新垂直滚动条位置
   if (tableVars.verticalScrollbarThumb && maxScrollY > 0) {
@@ -1362,7 +1374,10 @@ const updateScrollbars = () => {
 
   // 更新水平滚动条位置
   if (tableVars.horizontalScrollbarThumb && maxScrollX > 0) {
-    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns({
+      tableColumns: tableColumns.value,
+      activeData: activeData.value
+    })
     const visibleWidth = stageWidth - leftWidth - rightWidth - (maxScrollY > 0 ? props.scrollbarSize : 0)
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
     const thumbX = leftWidth + (tableVars.stageScrollX / maxScrollX) * (visibleWidth - thumbWidth)
@@ -1435,13 +1450,15 @@ const handleMouseMove = (e: MouseEvent) => {
     const scrollThreshold = props.scrollThreshold
     if (Math.abs(deltaY) < scrollThreshold) return
 
-    const { maxScrollY } = getScrollLimits()
+    const { maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
     const stageHeight = tableVars.stage.height()
     const trackHeight =
       stageHeight -
       props.headerHeight -
       getSummaryRowHeight() -
-      (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
+      (getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value }).maxScrollX > 0
+        ? props.scrollbarSize
+        : 0)
     const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
     const scrollRatio = deltaY / (trackHeight - thumbHeight)
     const newScrollY = tableVars.dragStartScrollY + scrollRatio * maxScrollY
@@ -1452,7 +1469,7 @@ const handleMouseMove = (e: MouseEvent) => {
     // 检查是否需要重新渲染虚拟滚动内容
     const oldVisibleStart = tableVars.visibleRowStart
     const oldVisibleEnd = tableVars.visibleRowEnd
-    calculateVisibleRows()
+    calculateVisibleRows(activeData.value)
 
     const needsRerender =
       tableVars.visibleRowStart !== oldVisibleStart ||
@@ -1461,7 +1478,10 @@ const handleMouseMove = (e: MouseEvent) => {
 
     if (needsRerender) {
       // 重新渲染可视区域
-      const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
+      const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns({
+        tableColumns: tableColumns.value,
+        activeData: activeData.value
+      })
       tableVars.bodyPositionMapList.length = 0
       drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
       drawBodyPart(
@@ -1493,8 +1513,11 @@ const handleMouseMove = (e: MouseEvent) => {
     // 添加容错机制：只有当水平移动距离超过阈值时才触发滚动
     const scrollThreshold = props.scrollThreshold
     if (Math.abs(deltaX) < scrollThreshold) return
-    const { maxScrollX } = getScrollLimits()
-    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
+    const { maxScrollX } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns({
+      tableColumns: tableColumns.value,
+      activeData: activeData.value
+    })
     const stageWidth = tableVars.stage.width()
     const visibleWidth = stageWidth - leftWidth - rightWidth - props.scrollbarSize
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
@@ -1561,12 +1584,16 @@ const updateScrollPositions = () => {
   )
     return
 
-  const { leftWidth } = getSplitColumns()
+  const { leftWidth } = getSplitColumns({ tableColumns: tableColumns.value, activeData: activeData.value })
   const bodyY = props.headerHeight - tableVars.stageScrollY
   const centerX = -tableVars.stageScrollX
   const headerX = leftWidth - tableVars.stageScrollX
   const summaryY = tableVars.stage
-    ? tableVars.stage.height() - getSummaryRowHeight() - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
+    ? tableVars.stage.height() -
+      getSummaryRowHeight() -
+      (getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value }).maxScrollX > 0
+        ? props.scrollbarSize
+        : 0)
     : 0
 
   /**
@@ -1612,7 +1639,7 @@ const updateScrollPositions = () => {
  */
 const handleResize = () => {
   initStage()
-  calculateVisibleRows()
+  calculateVisibleRows(activeData.value)
   clearGroups()
   rebuildGroups()
 }
@@ -1630,12 +1657,15 @@ const refreshTable = (resetScroll: boolean) => {
     tableVars.stageScrollX = 0
     tableVars.stageScrollY = 0
   } else {
-    const { maxScrollX, maxScrollY } = getScrollLimits()
+    const { maxScrollX, maxScrollY } = getScrollLimits({
+      tableColumns: tableColumns.value,
+      activeData: activeData.value
+    })
     tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX, 0, maxScrollX)
     tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY, 0, maxScrollY)
   }
 
-  calculateVisibleRows()
+  calculateVisibleRows(activeData.value)
   clearGroups()
   rebuildGroups()
 }
@@ -1652,109 +1682,109 @@ watch(
   { deep: true }
 )
 
-watch(
-  () => [props.chartWidth, props.chartHeight],
-  async () => {
-    if (!tableVars.stage) return
-    // 等待demo节点发生变更再触发该方法
-    await nextTick()
-    initStage()
-    refreshTable(true)
-  }
-)
+// watch(
+//   () => [props.chartWidth, props.chartHeight],
+//   async () => {
+//     if (!tableVars.stage) return
+//     // 等待demo节点发生变更再触发该方法
+//     await nextTick()
+//     initStage()
+//     refreshTable(true)
+//   }
+// )
 
-/**
- * header 相关（尺寸与样式）
- */
-watch(
-  () => [
-    props.headerHeight,
-    props.headerFontFamily,
-    props.headerFontSize,
-    props.headerTextColor,
-    props.headerBackground,
-    props.headerSortActiveBackground
-  ],
-  () => {
-    if (!tableVars.stage) return
-    refreshTable(false)
-  }
-)
+// /**
+//  * header 相关（尺寸与样式）
+//  */
+// watch(
+//   () => [
+//     props.headerHeight,
+//     props.headerFontFamily,
+//     props.headerFontSize,
+//     props.headerTextColor,
+//     props.headerBackground,
+//     props.headerSortActiveBackground
+//   ],
+//   () => {
+//     if (!tableVars.stage) return
+//     refreshTable(false)
+//   }
+// )
 
-/**
- * body 相关（行高与样式）
- */
-watch(
-  () => [
-    props.bodyRowHeight,
-    props.bodyBackgroundOdd,
-    props.bodyBackgroundEven,
-    props.borderColor,
-    props.bodyTextColor,
-    props.bodyFontSize,
-    props.bodyFontFamily
-  ],
-  () => {
-    if (!tableVars.stage) return
-    refreshTable(false)
-  }
-)
+// /**
+//  * body 相关（行高与样式）
+//  */
+// watch(
+//   () => [
+//     props.bodyRowHeight,
+//     props.bodyBackgroundOdd,
+//     props.bodyBackgroundEven,
+//     props.borderColor,
+//     props.bodyTextColor,
+//     props.bodyFontSize,
+//     props.bodyFontFamily
+//   ],
+//   () => {
+//     if (!tableVars.stage) return
+//     refreshTable(false)
+//   }
+// )
 
-/**
- * 汇总行相关
- */
-watch(
-  () => [
-    props.enableSummary,
-    props.summaryHeight,
-    props.summaryFontFamily,
-    props.summaryFontSize,
-    props.summaryBackground,
-    props.summaryTextColor
-  ],
-  () => {
-    if (!tableVars.stage) return
-    refreshTable(false)
-  }
-)
+// /**
+//  * 汇总行相关
+//  */
+// watch(
+//   () => [
+//     props.enableSummary,
+//     props.summaryHeight,
+//     props.summaryFontFamily,
+//     props.summaryFontSize,
+//     props.summaryBackground,
+//     props.summaryTextColor
+//   ],
+//   () => {
+//     if (!tableVars.stage) return
+//     refreshTable(false)
+//   }
+// )
 
-/**
- * 滚动条相关（样式与尺寸）
- */
-watch(
-  () => [props.scrollbarBackground, props.scrollbarThumb, props.scrollbarThumbHover, props.scrollbarSize],
-  () => {
-    if (!tableVars.stage) return
-    refreshTable(false)
-  }
-)
+// /**
+//  * 滚动条相关（样式与尺寸）
+//  */
+// watch(
+//   () => [props.scrollbarBackground, props.scrollbarThumb, props.scrollbarThumbHover, props.scrollbarSize],
+//   () => {
+//     if (!tableVars.stage) return
+//     refreshTable(false)
+//   }
+// )
 
-/**
- * 交互相关（悬浮高亮、排序指示等）
- */
-watch(
-  () => [
-    props.enableRowHoverHighlight,
-    props.enableColHoverHighlight,
-    props.sortableColor,
-    props.highlightCellBackground
-  ],
-  () => {
-    if (!tableVars.stage) return
-    refreshTable(false)
-  }
-)
+// /**
+//  * 交互相关（悬浮高亮、排序指示等）
+//  */
+// watch(
+//   () => [
+//     props.enableRowHoverHighlight,
+//     props.enableColHoverHighlight,
+//     props.sortableColor,
+//     props.highlightCellBackground
+//   ],
+//   () => {
+//     if (!tableVars.stage) return
+//     refreshTable(false)
+//   }
+// )
 
-/**
- * 虚拟滚动/性能相关
- */
-watch(
-  () => [props.bufferRows, props.scrollThreshold],
-  () => {
-    if (!tableVars.stage) return
-    refreshTable(false)
-  }
-)
+// /**
+//  * 虚拟滚动/性能相关
+//  */
+// watch(
+//   () => [props.bufferRows, props.scrollThreshold],
+//   () => {
+//     if (!tableVars.stage) return
+//     refreshTable(false)
+//   }
+// )
 
 /**
  * 挂载
