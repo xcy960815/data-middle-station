@@ -1,14 +1,14 @@
 import { chartProps } from '../props'
 import { getTableContainerElement } from '../utils'
-import type { Prettify } from '../variable'
-import { tableVars } from '../variable'
+import type { Prettify } from '../variable-handlder'
+import { tableVars, variableHandlder } from '../variable-handlder'
 
 interface EditorDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  tableData: Array<ChartDataVo.ChartData>
 }
 
-export const editorDropdownHandler = ({ props, tableData }: EditorDropdownHandlerProps) => {
+export const editorDropdownHandler = ({ props }: EditorDropdownHandlerProps) => {
+  const { tableData } = variableHandlder({ props })
   /**
    * 单元格编辑器状态
    */
@@ -45,6 +45,13 @@ export const editorDropdownHandler = ({ props, tableData }: EditorDropdownHandle
   ) => {
     const tableContainer = getTableContainerElement()
     if (!tableContainer) return
+
+    // 边界检查：确保 rowIndex 在有效范围内
+    if (rowIndex < 0 || rowIndex >= tableData.value.length) {
+      console.warn(`Invalid rowIndex: ${rowIndex}, tableData length: ${tableData.value.length}`)
+      return
+    }
+
     const tableContainerRect = tableContainer.getBoundingClientRect()
     const offsetX = tableContainerRect.left
     const offsetY = tableContainerRect.top
@@ -52,6 +59,14 @@ export const editorDropdownHandler = ({ props, tableData }: EditorDropdownHandle
     // 计算编辑器的绝对位置（相对于视口）
     const editorX = offsetX + cellX - tableVars.stageScrollX
     const editorY = offsetY + cellY + props.headerHeight - tableVars.stageScrollY
+
+    // 获取当前行数据
+    const currentRowData = tableData.value[rowIndex]
+    if (!currentRowData) {
+      console.warn(`Row data not found for rowIndex: ${rowIndex}`)
+      return
+    }
+
     // 设置编辑器状态
     cellEditorDropdown.editingCell = {
       rowIndex,
@@ -61,7 +76,7 @@ export const editorDropdownHandler = ({ props, tableData }: EditorDropdownHandle
     }
     cellEditorDropdown.editType = column.editType || 'input'
     cellEditorDropdown.editOptions = column.editOptions || []
-    cellEditorDropdown.initialValue = String(tableData[rowIndex][column.columnName] ?? '')
+    cellEditorDropdown.initialValue = String(currentRowData[column.columnName] ?? '')
     cellEditorDropdown.position = {
       x: editorX,
       y: editorY,

@@ -1,23 +1,19 @@
 import Konva from 'konva'
-import type { KonvaEventObject } from 'konva/lib/Node'
 import type { ExtractPropTypes } from 'vue'
+import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
+import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { getTextX, setPointerStyle, truncateText } from '../utils'
-import type { PositionMap, Prettify } from '../variable'
-import { numberOptions, summaryState, tableData, tableVars, textOptions } from '../variable'
-
+import type { PositionMap, Prettify } from '../variable-handlder'
+import { numberOptions, tableVars, textOptions, variableHandlder } from '../variable-handlder'
 interface RenderSummaryHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  openSummaryDropdown: (
-    evt: KonvaEventObject<MouseEvent, Konva.Rect>,
-    colName: string,
-    options: Array<{ label: string; value: string }>,
-    updateHoverRects: () => void,
-    selected?: string
-  ) => void
 }
 
-export const renderSummaryHandler = ({ props, openSummaryDropdown }: RenderSummaryHandlerProps) => {
+export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
+  const { tableData, summaryState } = variableHandlder({ props })
+  const { clearGroups } = konvaStageHandler({ props })
+  const { openSummaryDropdown } = summaryDropDownHandler({ props })
   const { $webworker } = useNuxtApp()
   /**
    * 计算某列的汇总显示值（异步版本）
@@ -191,7 +187,7 @@ export const renderSummaryHandler = ({ props, openSummaryDropdown }: RenderSumma
         const options = isNumber ? numberOptions : textOptions
         const prev = summaryState[col.columnName] || 'nodisplay'
         const valid = options.some((o) => o.value === prev) ? prev : 'nodisplay'
-        openSummaryDropdown(evt, col.columnName, options, () => {}, valid)
+        openSummaryDropdown(evt, col.columnName, options, valid)
       })
 
       x += col.width || 0

@@ -1,11 +1,20 @@
 import Konva from 'konva'
+import { chartProps } from './props'
 import { clearPool, getTableContainerElement } from './utils'
-import { tableVars } from './variable'
-
+import { tableVars, type Prettify } from './variable-handlder'
+interface KonvaStageHandlerProps {
+  props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+}
 /**
  * Konva Stage 和 Layer 管理器
  */
-export const konvaStageHandler = () => {
+export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
+  // const { drawSummaryPart } = renderSummaryHandler({ props })
+  // const { drawHeaderPart } = renderHeaderHandler({ props })
+  // const { getSummaryRowHeight } = summaryDropDownHandler({ props })
+  // const { getScrollLimits, getSplitColumns } = renderBodyHandler({ props })
+  // const { createScrollbars } = renderScrollbarsHandler({ props })
+
   /**
    * 初始化 Stage 和所有 Layer
    * @returns {void}
@@ -107,16 +116,10 @@ export const konvaStageHandler = () => {
     tableVars.scrollbarLayer?.destroyChildren()
     clearPool(tableVars.leftBodyPools.cellRects)
     clearPool(tableVars.leftBodyPools.cellTexts)
-    clearPool(tableVars.leftBodyPools.mergedCellRects)
-    clearPool(tableVars.leftBodyPools.backgroundRects)
     clearPool(tableVars.centerBodyPools.cellRects)
     clearPool(tableVars.centerBodyPools.cellTexts)
-    clearPool(tableVars.centerBodyPools.mergedCellRects)
-    clearPool(tableVars.centerBodyPools.backgroundRects)
     clearPool(tableVars.rightBodyPools.cellRects)
     clearPool(tableVars.rightBodyPools.cellTexts)
-    clearPool(tableVars.rightBodyPools.mergedCellRects)
-    clearPool(tableVars.rightBodyPools.backgroundRects)
 
     /**
      * 重置滚动条引用
@@ -333,5 +336,6 @@ export const konvaStageHandler = () => {
     createSummaryRightGroups,
     createCenterBodyClipGroup,
     clearGroups
+    // rebuildGroups
   }
 }

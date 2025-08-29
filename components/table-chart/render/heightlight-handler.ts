@@ -1,7 +1,7 @@
 import Konva from 'konva'
 import { chartProps } from '../props'
-import type { Prettify } from '../variable'
-import { tableVars } from '../variable'
+import type { Prettify } from '../variable-handlder'
+import { tableVars } from '../variable-handlder'
 
 interface HighlightHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -16,12 +16,14 @@ export const highlightHandler = ({ props }: HighlightHandlerProps) => {
     if (!tableVars.stage) return
     if (type === 'row') {
       tableVars.rowHighlightRects?.forEach((rect) => {
-        rect.fill(null)
+        const originFill = rect.getAttr('origin-fill')
+        rect.fill(originFill)
       })
       tableVars.rowHighlightRects = null
     } else {
       tableVars.colHighlightRects?.forEach((rect) => {
-        rect.fill(null)
+        const originFill = rect.getAttr('origin-fill')
+        rect.fill(originFill)
       })
       tableVars.colHighlightRects = null
     }
@@ -39,7 +41,7 @@ export const highlightHandler = ({ props }: HighlightHandlerProps) => {
       if (!tableVars.colHighlightRects) tableVars.colHighlightRects = []
     }
 
-    const allGroups = [
+    const canvasTableGroups = [
       tableVars.leftHeaderGroup,
       tableVars.centerHeaderGroup,
       tableVars.rightHeaderGroup,
@@ -50,14 +52,13 @@ export const highlightHandler = ({ props }: HighlightHandlerProps) => {
       tableVars.centerSummaryGroup,
       tableVars.rightSummaryGroup
     ]
-    allGroups.forEach((group) => {
+    canvasTableGroups.forEach((group) => {
       if (!group) return
       group.children.forEach((child) => {
         if (!(child instanceof Konva.Rect)) return
         // 排除非单元格矩形：行背景与操作按钮
         const nodeName = child.name?.() || ''
-        if (nodeName === 'background-rect' || nodeName === 'action-button' || nodeName.startsWith?.('action-button-'))
-          return
+        if (nodeName === 'action-button' || nodeName.startsWith?.('action-button-')) return
         if (type === 'row') {
           // 检查行索引
           const attr = child.getAttr('row-index')
@@ -142,8 +143,27 @@ export const highlightHandler = ({ props }: HighlightHandlerProps) => {
       })
     }
   }
+
+  /**
+   * 更新行和列的 hover 高亮矩形
+   */
+  const updateHoverRects = () => {
+    resetHighlightRects('row')
+    // 清除之前的高亮
+    resetHighlightRects('column')
+    // 根据配置和当前悬停状态创建高亮效果
+    if (props.enableRowHoverHighlight && tableVars.hoveredRowIndex !== null) {
+      // 清除之前的高亮
+      getColOrRowHighlightRects('row', tableVars.hoveredRowIndex)
+    }
+    if (props.enableColHoverHighlight && tableVars.hoveredColIndex !== null) {
+      getColOrRowHighlightRects('column', tableVars.hoveredColIndex)
+    }
+  }
+
   return {
     resetHighlightRects,
-    getColOrRowHighlightRects
+    getColOrRowHighlightRects,
+    updateHoverRects
   }
 }
