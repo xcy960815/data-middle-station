@@ -1,3 +1,5 @@
+import { onMounted, onUnmounted, reactive } from 'vue'
+import type { CanvasTableEmits } from '../emits'
 import { chartProps } from '../props'
 import { getTableContainerElement } from '../utils'
 import type { Prettify } from '../variable-handlder'
@@ -5,10 +7,34 @@ import { tableVars, variableHandlder } from '../variable-handlder'
 
 interface EditorDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+  emits?: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
-export const editorDropdownHandler = ({ props }: EditorDropdownHandlerProps) => {
+export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerProps) => {
   const { tableData } = variableHandlder({ props })
+  const clearLayersForRebuild = () => {
+    tableVars.headerLayer?.destroyChildren()
+    tableVars.bodyLayer?.destroyChildren()
+    tableVars.summaryLayer?.destroyChildren()
+    tableVars.fixedHeaderLayer?.destroyChildren()
+    tableVars.fixedBodyLayer?.destroyChildren()
+    tableVars.fixedSummaryLayer?.destroyChildren()
+    tableVars.scrollbarLayer?.destroyChildren()
+    tableVars.verticalScrollbarGroup = null
+    tableVars.horizontalScrollbarGroup = null
+    tableVars.verticalScrollbarThumbRect = null
+    tableVars.horizontalScrollbarThumbRect = null
+    tableVars.centerBodyClipGroup = null
+    tableVars.highlightRect = null
+    tableVars.visibleRowStart = 0
+    tableVars.visibleRowEnd = 0
+    tableVars.visibleRowCount = 0
+    tableVars.leftSummaryGroup = null
+    tableVars.centerSummaryGroup = null
+    tableVars.rightSummaryGroup = null
+    tableVars.hoveredRowIndex = null
+    tableVars.hoveredColIndex = null
+  }
   /**
    * 单元格编辑器状态
    */
@@ -113,6 +139,22 @@ export const editorDropdownHandler = ({ props }: EditorDropdownHandlerProps) => 
     resetCellEditorDropdown()
   }
   /**
+   * 保存单元格编辑
+   */
+  const handleCellEditorSave = (newValue: string | number) => {
+    const { rowIndex, colKey, column } = cellEditorDropdown.editingCell
+    if (rowIndex >= 0 && colKey && column) {
+      const rowData = tableData.value[rowIndex]
+      rowData[colKey] = newValue
+      if (emits) {
+        emits('cell-edit', { rowIndex, colKey, rowData })
+      }
+      clearLayersForRebuild()
+      tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
+    }
+    resetCellEditorDropdown()
+  }
+  /**
    * 重置编辑器状态
    */
   const resetCellEditorDropdown = () => {
@@ -140,6 +182,7 @@ export const editorDropdownHandler = ({ props }: EditorDropdownHandlerProps) => 
     openCellEditorDropdown,
     closeCellEditorDropdown,
     resetCellEditorDropdown,
-    updateCellEditorPositionsInTable
+    updateCellEditorPositionsInTable,
+    handleCellEditorSave
   }
 }

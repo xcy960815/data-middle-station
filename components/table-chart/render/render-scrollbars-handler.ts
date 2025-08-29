@@ -24,7 +24,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   const { tableData } = variableHandlder({ props })
   const { getSummaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
   const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props })
-  const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props, emits })
+  const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })
 
   /**
@@ -37,14 +37,14 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     if (maxScrollY > 0) {
       // 绘制垂直滚动条顶部遮罩
-      const verticalScrollbarHeaderMask = new Konva.Rect({
+      const scrollbarRect = new Konva.Rect({
         x: stageWidth - props.scrollbarSize,
         y: 0,
         width: props.scrollbarSize,
         height: props.headerHeight,
         fill: props.headerBackground
       })
-      tableVars.scrollbarLayer.add(verticalScrollbarHeaderMask)
+      tableVars.scrollbarLayer.add(scrollbarRect)
       // 绘制垂直滚动条底部遮罩
       const verticalScrollbarFooterMask = new Konva.Rect({
         x: stageWidth - props.scrollbarSize,
@@ -62,7 +62,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       tableVars.verticalScrollbarGroup = new Konva.Group()
       tableVars.scrollbarLayer.add(tableVars.verticalScrollbarGroup)
       // 绘制垂直滚动条轨道
-      const verticalScrollbarTrack = new Konva.Rect({
+      const verticalScrollbarRect = new Konva.Rect({
         x: stageWidth - props.scrollbarSize,
         y: props.headerHeight,
         width: props.scrollbarSize,
@@ -71,7 +71,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         stroke: props.borderColor,
         strokeWidth: 1
       })
-      tableVars.verticalScrollbarGroup.add(verticalScrollbarTrack)
+      tableVars.verticalScrollbarGroup.add(verticalScrollbarRect)
 
       // 计算垂直滚动条高度
       const trackHeight =
@@ -81,7 +81,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       const thumbY = props.headerHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
 
       // 绘制垂直滚动条滑块
-      tableVars.verticalScrollbarThumb = new Konva.Rect({
+      tableVars.verticalScrollbarThumbRect = new Konva.Rect({
         x: stageWidth - props.scrollbarSize + 2,
         y: thumbY,
         width: props.scrollbarSize - 4,
@@ -90,7 +90,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         cornerRadius: 2,
         draggable: false
       })
-      tableVars.verticalScrollbarGroup.add(tableVars.verticalScrollbarThumb)
+      tableVars.verticalScrollbarGroup.add(tableVars.verticalScrollbarThumbRect)
 
       // 设置垂直滚动条事件
       setupVerticalScrollbarEvents()
@@ -124,7 +124,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       const thumbX = leftWidth + (tableVars.stageScrollX / maxScrollX) * (visibleWidth - thumbWidth)
 
       // 绘制水平滚动条滑块
-      tableVars.horizontalScrollbarThumb = new Konva.Rect({
+      tableVars.horizontalScrollbarThumbRect = new Konva.Rect({
         x: thumbX,
         y: stageHeight - props.scrollbarSize + 2,
         width: thumbWidth,
@@ -133,7 +133,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         cornerRadius: 2,
         draggable: false
       })
-      tableVars.horizontalScrollbarGroup.add(tableVars.horizontalScrollbarThumb)
+      tableVars.horizontalScrollbarGroup.add(tableVars.horizontalScrollbarThumbRect)
       // 设置水平滚动条事件
       setupHorizontalScrollbarEvents()
     }
@@ -144,11 +144,11 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
    * @returns {void}
    */
   const setupVerticalScrollbarEvents = () => {
-    if (!tableVars.verticalScrollbarThumb || !tableVars.stage) return
+    if (!tableVars.verticalScrollbarThumbRect || !tableVars.stage) return
     /**
      * 设置垂直滚动条拖拽事件
      */
-    tableVars.verticalScrollbarThumb.on('mousedown', (event) => {
+    tableVars.verticalScrollbarThumbRect.on('mousedown', (event: Konva.KonvaEventObject<MouseEvent>) => {
       tableVars.isDraggingVerticalThumb = true
       tableVars.dragStartY = event.evt.clientY
       tableVars.dragStartScrollY = tableVars.stageScrollY
@@ -158,17 +158,17 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     /**
      * 设置垂直滚动条鼠标进入事件
      */
-    tableVars.verticalScrollbarThumb.on('mouseenter', () => {
-      if (tableVars.verticalScrollbarThumb) tableVars.verticalScrollbarThumb.fill(props.scrollbarThumbHover)
+    tableVars.verticalScrollbarThumbRect.on('mouseenter', () => {
+      if (tableVars.verticalScrollbarThumbRect) tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumbHover)
       tableVars.scrollbarLayer?.batchDraw()
     })
 
     /**
      * 设置垂直滚动条鼠标离开事件
      */
-    tableVars.verticalScrollbarThumb.on('mouseleave', () => {
-      if (tableVars.verticalScrollbarThumb && !tableVars.isDraggingVerticalThumb)
-        tableVars.verticalScrollbarThumb.fill(props.scrollbarThumb)
+    tableVars.verticalScrollbarThumbRect.on('mouseleave', () => {
+      if (tableVars.verticalScrollbarThumbRect && !tableVars.isDraggingVerticalThumb)
+        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumb)
       tableVars.scrollbarLayer?.batchDraw()
     })
   }
@@ -177,8 +177,8 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
    * @returns {void}
    */
   const setupHorizontalScrollbarEvents = () => {
-    if (!tableVars.horizontalScrollbarThumb || !tableVars.stage) return
-    tableVars.horizontalScrollbarThumb.on('mousedown', (event) => {
+    if (!tableVars.horizontalScrollbarThumbRect || !tableVars.stage) return
+    tableVars.horizontalScrollbarThumbRect.on('mousedown', (event: Konva.KonvaEventObject<MouseEvent>) => {
       tableVars.isDraggingHorizontalThumb = true
       tableVars.dragStartX = event.evt.clientX
       tableVars.dragStartScrollX = tableVars.stageScrollX
@@ -188,14 +188,14 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       tableVars.stage!.setPointersPositions(event.evt)
     })
 
-    tableVars.horizontalScrollbarThumb.on('mouseenter', () => {
-      if (tableVars.horizontalScrollbarThumb) tableVars.horizontalScrollbarThumb.fill(props.scrollbarThumbHover)
+    tableVars.horizontalScrollbarThumbRect.on('mouseenter', () => {
+      if (tableVars.horizontalScrollbarThumbRect) tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumbHover)
       tableVars.scrollbarLayer?.batchDraw()
     })
 
-    tableVars.horizontalScrollbarThumb.on('mouseleave', () => {
-      if (tableVars.horizontalScrollbarThumb && !tableVars.isDraggingHorizontalThumb)
-        tableVars.horizontalScrollbarThumb.fill(props.scrollbarThumb)
+    tableVars.horizontalScrollbarThumbRect.on('mouseleave', () => {
+      if (tableVars.horizontalScrollbarThumbRect && !tableVars.isDraggingHorizontalThumb)
+        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumb)
       tableVars.scrollbarLayer?.batchDraw()
     })
   }
@@ -268,21 +268,21 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     const { maxScrollX, maxScrollY } = getScrollLimits()
 
     // 更新垂直滚动条位置
-    if (tableVars.verticalScrollbarThumb && maxScrollY > 0) {
+    if (tableVars.verticalScrollbarThumbRect && maxScrollY > 0) {
       const trackHeight =
         stageHeight - props.headerHeight - getSummaryRowHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
       const thumbY = props.headerHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
-      tableVars.verticalScrollbarThumb.y(thumbY)
+      tableVars.verticalScrollbarThumbRect.y(thumbY)
     }
 
     // 更新水平滚动条位置
-    if (tableVars.horizontalScrollbarThumb && maxScrollX > 0) {
+    if (tableVars.horizontalScrollbarThumbRect && maxScrollX > 0) {
       const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
       const visibleWidth = stageWidth - leftWidth - rightWidth - (maxScrollY > 0 ? props.scrollbarSize : 0)
       const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
       const thumbX = leftWidth + (tableVars.stageScrollX / maxScrollX) * (visibleWidth - thumbWidth)
-      tableVars.horizontalScrollbarThumb.x(thumbX)
+      tableVars.horizontalScrollbarThumbRect.x(thumbX)
     }
 
     tableVars.scrollbarLayer?.batchDraw()

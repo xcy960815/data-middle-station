@@ -25,7 +25,7 @@ interface RenderBodyHandlerProps {
 
 export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   const { updateHoverRects } = highlightHandler({ props })
-  const { filterDropdown } = filterDropdownHandler({ props, emits })
+  const { filterDropdown } = filterDropdownHandler({ props })
   const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({ props })
   const { tableColumns, tableData } = variableHandlder({ props })
   const { getStageAttr } = konvaStageHandler({ props })
@@ -197,7 +197,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const { width: stageWidth, height: stageHeight } = getStageAttr()
 
     // 计算内容高度
-    let contentHeight = tableData.value.length * props.bodyRowHeight
+    const contentHeight = tableData.value.length * props.bodyRowHeight
 
     // 初步估算：不预留滚动条空间
     const visibleContentWidthNoV = stageWidth - leftWidth - rightWidth
@@ -580,6 +580,28 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     if (!tableVars.stage || !bodyGroup) return
 
     calculateVisibleRows()
+    // 预计算：字体、span 方法、全局列索引映射、操作列按钮宽度
+    const bodyFontFamily = props.bodyFontFamily
+    const bodyFontSizeNumber =
+      typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
+    const spanMethod = typeof props.spanMethod === 'function' ? props.spanMethod : null
+    const hasSpanMethod = !!spanMethod
+
+    const globalIndexByColName = new Map<string, number>()
+    tableColumns.value.forEach((c, idx) => globalIndexByColName.set(c.columnName as string, idx))
+
+    const actionWidthsMap = new Map<string, { widths: number[]; totalWidth: number }>()
+    const buttonGap = 6
+    for (let i = 0; i < bodyCols.length; i++) {
+      const col = bodyCols[i]
+      // 仅为操作列预估按钮宽度（与行无关，避免在行循环中重复计算）
+      const actions = col.actions as Array<{ label: string }> | undefined
+      if (col.columnName === 'action' && actions && actions.length > 0) {
+        const widths = actions.map((a) => estimateButtonWidth(a.label, bodyFontSizeNumber, bodyFontFamily))
+        const totalWidth = widths.reduce((a, b) => a + b, 0) + buttonGap * (actions.length - 1)
+        actionWidthsMap.set(col.columnName as string, { widths, totalWidth })
+      }
+    }
 
     recoverKonvaNode(bodyGroup, pools)
     // 渲染可视区域的行
@@ -591,13 +613,18 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
       let x = 0
       for (let colIndex = 0; colIndex < bodyCols.length; colIndex++) {
         const col = bodyCols[colIndex]
-        const hasSpanMethod = typeof props.spanMethod === 'function'
+        const columnWidth = col.width || 0
+        // 跳过零宽列
+        if (columnWidth <= 0) {
+          x += columnWidth
+          continue
+        }
         let spanRow = 1
         let spanCol = 1
         let coveredBySpanMethod = false
-        const globalColIndex = tableColumns.value.findIndex((c) => c.columnName === col.columnName)
-        if (hasSpanMethod) {
-          const res = props.spanMethod({ row, column: col, rowIndex, colIndex: globalColIndex })
+        const globalColIndex = globalIndexByColName.get(col.columnName as string) ?? colIndex
+        if (hasSpanMethod && spanMethod) {
+          const res = spanMethod({ row, column: col, rowIndex, colIndex: globalColIndex })
           if (Array.isArray(res)) {
             spanRow = Math.max(0, Number(res[0]) || 0)
             spanCol = Math.max(0, Number(res[1]) || 0)
@@ -612,7 +639,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
         const shouldDraw = !hasSpanMethod || !coveredBySpanMethod
 
         if (!shouldDraw) {
-          x += col.width || 0
+          x += columnWidth
           continue
         }
 
@@ -621,7 +648,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
         const cellHeight = computedRowSpan * props.bodyRowHeight
 
         // 计算合并单元格的宽度（此处暂未实现跨列合并的宽度累加，保持原逻辑）
-        let cellWidth = col.width || 0
+        let cellWidth = columnWidth
 
         // 记录可视区域内主体单元格位置信息（使用舞台坐标）
         positionMapList.push({
@@ -694,14 +721,23 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
           bodyGroup.add(cellRect)
           // 如果是操作列，绘制按钮；否则绘制文本
           if (col.columnName === 'action') {
-            const actions = col.actions
-            const gap = 6
+            const actions = col.actions as
+              | Array<{
+                  key: string
+                  label: string
+                  type?: keyof typeof paletteOptions
+                  disabled?: boolean | ((row: any, rowIndex: number) => boolean)
+                }>
+              | undefined
             const buttonHeight = Math.max(22, Math.min(28, cellHeight - 8))
-            const fontSize =
-              typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
             if (actions && actions.length > 0) {
-              const widths = actions.map((a) => estimateButtonWidth(a.label, fontSize, props.bodyFontFamily))
-              const totalButtonsWidth = widths.reduce((a, b) => a + b, 0) + gap * (actions.length - 1)
+              const preset = actionWidthsMap.get(col.columnName as string)
+              const widths = preset
+                ? preset.widths
+                : actions.map((a) => estimateButtonWidth(a.label, bodyFontSizeNumber, bodyFontFamily))
+              const totalButtonsWidth = preset
+                ? preset.totalWidth
+                : widths.reduce((a, b) => a + b, 0) + buttonGap * (actions.length - 1)
               let startX = x + (cellWidth - totalButtonsWidth) / 2
               const centerY = y + (cellHeight - buttonHeight) / 2
               actions.forEach((action, idx) => {
@@ -724,12 +760,10 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
                   emits('action-click', { rowIndex, action: action.key, rowData })
                 })
                 bodyGroup.add(buttonRect)
-                const fontSize =
-                  typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
                 const x = startX + w / 2
                 const y = centerY + buttonHeight / 2
                 const buttonName = action.label
-                const fontFamily = props.bodyFontFamily
+                const fontFamily = bodyFontFamily
                 const opacity = isDisabled ? 0.6 : 1
                 const textColor = theme.text
                 const offsetX = buttonRect.width() / 2
@@ -739,7 +773,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
                   x,
                   y,
                   buttonName,
-                  fontSize,
+                  fontSize: bodyFontSizeNumber,
                   fontFamily,
                   opacity,
                   textColor,
@@ -748,7 +782,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
                 })
                 bodyGroup.add(buttonText)
 
-                startX += w + gap
+                startX += w + buttonGap
               })
             }
           } else {
@@ -756,9 +790,8 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
             const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
             const value = String(rawValue ?? '')
             const maxTextWidth = cellWidth - 16
-            const fontFamily = props.bodyFontFamily
-            const fontSize =
-              typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
+            const fontFamily = bodyFontFamily
+            const fontSize = bodyFontSizeNumber
 
             const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
 

@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import { ElOption, ElSelect } from 'element-plus'
-import { onBeforeUnmount, onMounted } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import CellEditor from './cell-editor.vue'
 import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
@@ -72,7 +72,6 @@ import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
 import { renderBodyHandler } from './render/render-body-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
-import { constrainToRange, setPointerStyle } from './utils'
 import { tableVars, variableHandlder } from './variable-handlder'
 
 const props = defineProps(chartProps)
@@ -82,237 +81,21 @@ const props = defineProps(chartProps)
  */
 const emits = defineEmits<ChartEmits>()
 
-const { tableContainerStyle, tableData, handleTableData, handleTableColumns } = variableHandlder({ props })
+const { tableContainerStyle, handleTableData, handleTableColumns } = variableHandlder({ props })
 
-const { initStage, destroyStage, clearGroups, rebuildGroups } = konvaStageHandler({ props, emits })
+const { initStage, destroyStage, refreshTable } = konvaStageHandler({ props, emits })
 
-// const { drawHeaderPart } = renderHeaderHandler({ props, emits })
+renderBodyHandler({ props, emits })
 
-const { drawBodyPart, recomputeHoverIndexFromPointer } = renderBodyHandler({ props, emits })
-
-// const { drawSummaryPart } = renderSummaryHandler({ props })
-
-const { createScrollbars, updateScrollPositions } = renderScrollbarsHandler({ props, emits })
+renderScrollbarsHandler({ props, emits })
 
 const { filterDropdownRef, filterDropdownStyle, filterDropdown, closeFilterDropdown, handleSelectedFilter } =
-  filterDropdownHandler({ props, emits })
+  filterDropdownHandler({ props })
 
-const {
-  summaryDropdownRef,
-  summaryDropdownStyle,
-  summaryDropdown,
-  closeSummaryDropdown,
-  getSummaryRowHeight,
-  handleSelectedSummary
-} = summaryDropDownHandler({ props })
+const { summaryDropdownRef, summaryDropdownStyle, summaryDropdown, closeSummaryDropdown, handleSelectedSummary } =
+  summaryDropDownHandler({ props })
 
-const { cellEditorDropdown, closeCellEditorDropdown, resetCellEditorDropdown } = editorDropdownHandler({ props })
-
-/**
- * 保存单元格编辑
- */
-const handleCellEditorSave = (newValue: string | number) => {
-  const { rowIndex, colKey, column } = cellEditorDropdown.editingCell
-  if (rowIndex >= 0 && colKey && column) {
-    const rowData = tableData.value[rowIndex]
-    const oldValue = rowData[colKey]
-    // 更新数据
-    rowData[colKey] = newValue
-    // 发送编辑事件
-    emits('cell-edit', { rowIndex, colKey, rowData })
-    clearGroups()
-    rebuildGroups()
-  }
-  resetCellEditorDropdown()
-}
-
-const { calculateVisibleRows, getScrollLimits, getSplitColumns } = renderBodyHandler({ props, emits })
-
-/**
- * 处理鼠标移动事件
- * @param {MouseEvent} e 鼠标移动事件
- * @returns {void}
- */
-const handleMouseMove = (e: MouseEvent) => {
-  if (!tableVars.stage) return
-  tableVars.stage.setPointersPositions(e)
-  if (filterDropdown.visible || summaryDropdown.visible) return
-
-  // 记录鼠标在屏幕中的坐标
-  tableVars.lastClientX = e.clientX
-  tableVars.lastClientY = e.clientY
-
-  /**
-   * 列宽拖拽中：实时更新覆盖宽度并重建分组
-   */
-  if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
-    const delta = e.clientX - tableVars.resizeStartX
-    const newWidth = Math.max(props.minAutoColWidth, tableVars.resizeStartWidth + delta)
-    tableVars.columnWidthOverrides[tableVars.resizingColumnName] = newWidth
-    if (tableVars.resizeNeighborColumnName) {
-      const neighborWidth = Math.max(props.minAutoColWidth, tableVars.resizeNeighborStartWidth - delta)
-      tableVars.columnWidthOverrides[tableVars.resizeNeighborColumnName] = neighborWidth
-    }
-    clearGroups()
-    rebuildGroups()
-    return
-  }
-
-  /**
-   * 手动拖拽导致的垂直滚动
-   */
-  if (tableVars.isDraggingVerticalThumb) {
-    const deltaY = e.clientY - tableVars.dragStartY
-    // 添加容错机制：只有当垂直移动距离超过阈值时才触发滚动
-    const scrollThreshold = props.scrollThreshold
-    if (Math.abs(deltaY) < scrollThreshold) return
-
-    const { maxScrollY } = getScrollLimits()
-    const stageHeight = tableVars.stage.height()
-    const trackHeight =
-      stageHeight -
-      props.headerHeight -
-      getSummaryRowHeight() -
-      (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
-    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
-    const scrollRatio = deltaY / (trackHeight - thumbHeight)
-    const newScrollY = tableVars.dragStartScrollY + scrollRatio * maxScrollY
-
-    const oldScrollY = tableVars.stageScrollY
-    tableVars.stageScrollY = constrainToRange(newScrollY, 0, maxScrollY)
-
-    // 检查是否需要重新渲染虚拟滚动内容
-    const oldVisibleStart = tableVars.visibleRowStart
-    const oldVisibleEnd = tableVars.visibleRowEnd
-    calculateVisibleRows()
-
-    const needsRerender =
-      tableVars.visibleRowStart !== oldVisibleStart ||
-      tableVars.visibleRowEnd !== oldVisibleEnd ||
-      Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 2
-
-    if (needsRerender) {
-      // 重新渲染可视区域
-      const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
-      tableVars.bodyPositionMapList.length = 0
-      drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
-      drawBodyPart(
-        tableVars.centerBodyGroup,
-        centerCols,
-        tableVars.centerBodyPools,
-        leftCols.length,
-        tableVars.bodyPositionMapList,
-        leftWidth
-      )
-      drawBodyPart(
-        tableVars.rightBodyGroup,
-        rightCols,
-        tableVars.rightBodyPools,
-        leftCols.length + centerCols.length,
-        tableVars.bodyPositionMapList,
-        leftWidth + centerWidth
-      )
-    }
-
-    updateScrollPositions()
-  }
-
-  /**
-   * 手动拖拽导致的水平滚动
-   */
-  if (tableVars.isDraggingHorizontalThumb) {
-    const deltaX = e.clientX - tableVars.dragStartX
-    // 添加容错机制：只有当水平移动距离超过阈值时才触发滚动
-    const scrollThreshold = props.scrollThreshold
-    if (Math.abs(deltaX) < scrollThreshold) return
-    const { maxScrollX } = getScrollLimits()
-    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
-    const stageWidth = tableVars.stage.width()
-    const visibleWidth = stageWidth - leftWidth - rightWidth - props.scrollbarSize
-    const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
-    const scrollRatio = deltaX / (visibleWidth - thumbWidth)
-    const newScrollX = tableVars.dragStartScrollX + scrollRatio * maxScrollX
-
-    tableVars.stageScrollX = constrainToRange(newScrollX, 0, maxScrollX)
-    updateScrollPositions()
-  }
-
-  /**
-   * 普通移动时，更新 hoveredRowIndex 和 hoveredColIndex
-   */
-  if (!tableVars.isDraggingVerticalThumb && !tableVars.isDraggingHorizontalThumb) {
-    recomputeHoverIndexFromPointer()
-  }
-}
-
-/**
- * 处理鼠标抬起事件
- * @param {MouseEvent} e 鼠标抬起事件
- * @returns {void}
- */
-const handleMouseUp = (e: MouseEvent) => {
-  if (tableVars.stage) tableVars.stage.setPointersPositions(e)
-  /**
-   * 滚动条拖拽结束
-   */
-  if (tableVars.isDraggingVerticalThumb || tableVars.isDraggingHorizontalThumb) {
-    tableVars.isDraggingVerticalThumb = false
-    tableVars.isDraggingHorizontalThumb = false
-    setPointerStyle(tableVars.stage, false, 'default')
-    if (tableVars.verticalScrollbarThumb && !tableVars.isDraggingVerticalThumb)
-      tableVars.verticalScrollbarThumb.fill(props.scrollbarThumb)
-    if (tableVars.horizontalScrollbarThumb && !tableVars.isDraggingHorizontalThumb)
-      tableVars.horizontalScrollbarThumb.fill(props.scrollbarThumb)
-    tableVars.scrollbarLayer?.batchDraw()
-  }
-
-  /**
-   * 列宽拖拽结束
-   */
-  if (tableVars.isResizingColumn) {
-    tableVars.isResizingColumn = false
-    tableVars.resizingColumnName = null
-    tableVars.resizeNeighborColumnName = null
-    setPointerStyle(tableVars.stage, false, 'default')
-    // 结束拖拽后，强制重建，确保汇总行列宽与表头同步
-    clearGroups()
-    rebuildGroups()
-  }
-}
-
-/**
- * 处理窗口大小改变
- * @returns {void}
- */
-const handleWindowResize = () => {
-  initStage()
-  calculateVisibleRows()
-  clearGroups()
-  rebuildGroups()
-}
-
-/**
- * 从 props 初始化 初始化表格
- * @param {boolean} resetScroll 是否重置滚动状态
- * @returns {void}
- */
-const refreshTable = (resetScroll: boolean) => {
-  /**
-   * 重置滚动状态
-   */
-  if (resetScroll) {
-    tableVars.stageScrollX = 0
-    tableVars.stageScrollY = 0
-  } else {
-    const { maxScrollX, maxScrollY } = getScrollLimits()
-    tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX, 0, maxScrollX)
-    tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY, 0, maxScrollY)
-  }
-
-  calculateVisibleRows()
-  clearGroups()
-  rebuildGroups()
-}
+const { cellEditorDropdown, closeCellEditorDropdown, handleCellEditorSave } = editorDropdownHandler({ props, emits })
 
 /**
  * 监听 props 变化
@@ -435,28 +218,17 @@ watch(
   }
 )
 
-/**
- * 挂载
- * @returns {void}
- */
 onMounted(() => {
   handleTableColumns(props.xAxisFields, props.yAxisFields)
   initStage()
   handleTableData(props.data)
   refreshTable(true)
-
-  window.addEventListener('resize', handleWindowResize)
-  window.addEventListener('mousemove', handleMouseMove)
-  window.addEventListener('mouseup', handleMouseUp)
 })
 
 /**
  * 卸载
  */
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleWindowResize)
-  window.removeEventListener('mousemove', handleMouseMove)
-  window.removeEventListener('mouseup', handleMouseUp)
   destroyStage()
 })
 </script>

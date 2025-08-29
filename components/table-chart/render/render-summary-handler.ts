@@ -40,13 +40,33 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         case 'min':
           return String(Math.min(...nums))
         case 'avg': {
-          const s = nums.reduce((a, b) => a + b, 0)
-          const avg = s / nums.length
-          return String(Number.isFinite(avg) ? Number(avg.toFixed(4)) : '')
+          // 使用 webworker 参与计算，避免大数据量时阻塞主线程
+          try {
+            const fn = new Function(
+              `const nums = ${JSON.stringify(nums)}; const s = nums.reduce((a,b)=>a+b,0); return s / nums.length;`
+            ) as () => number
+            const result = await $webworker.run<number>(fn)
+            const avg = result && result.success ? result.data : nums.reduce((a, b) => a + b, 0) / nums.length
+            return String(Number.isFinite(avg) ? Number(avg.toFixed(4)) : '')
+          } catch {
+            const s = nums.reduce((a, b) => a + b, 0)
+            const avg = s / nums.length
+            return String(Number.isFinite(avg) ? Number(avg.toFixed(4)) : '')
+          }
         }
         case 'sum': {
-          const s = await $webworker.run(() => nums.reduce((a, b) => a + b, 0))
-          return String(Number.isFinite(s) ? Number(s) : '')
+          // 使用 webworker 参与计算，避免大数据量时阻塞主线程
+          try {
+            const fn = new Function(
+              `const nums = ${JSON.stringify(nums)}; return nums.reduce((a,b)=>a+b,0);`
+            ) as () => number
+            const result = await $webworker.run<number>(fn)
+            const s = result && result.success ? result.data : nums.reduce((a, b) => a + b, 0)
+            return String(Number.isFinite(s) ? s : '')
+          } catch {
+            const s = nums.reduce((a, b) => a + b, 0)
+            return String(Number.isFinite(s) ? s : '')
+          }
         }
         default:
           return ''
@@ -65,6 +85,39 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
     }
   }
   /**
+   * 汇总规则的中文标签
+   */
+  const getRuleLabel = (rule: string) => {
+    switch (rule) {
+      case 'max':
+        return '最大'
+      case 'min':
+        return '最小'
+      case 'avg':
+        return '平均'
+      case 'sum':
+        return '求和'
+      case 'filled':
+        return '已填写'
+      case 'nofilled':
+        return '未填写'
+      default:
+        return ''
+    }
+  }
+  /**
+   * 统一调度一次重绘，避免异步多次 batchDraw 造成抖动
+   */
+  let drawingScheduled = false
+  const scheduleBatchDraw = (layer?: Konva.Layer | null) => {
+    if (drawingScheduled) return
+    drawingScheduled = true
+    requestAnimationFrame(() => {
+      drawingScheduled = false
+      layer?.batchDraw()
+    })
+  }
+  /**
    * 绘制汇总部分（固定在底部，风格与表头一致，但使用 bodyTextColor）
    * @param {Konva.Group | null} group 分组
    * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} cols 列
@@ -78,17 +131,16 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
     stageStartX: number
   ) => {
     if (!tableVars.stage || !summaryGroup) return
-    // 计算汇总行总长度
-    const summaryTotalWidth = summaryCols.reduce((acc, c) => acc + (c.width || 0), 0)
-    const summaryBackgroundRect = new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: summaryTotalWidth,
-      height: props.summaryHeight,
-      fill: props.summaryBackground
-    })
-
-    summaryGroup.add(summaryBackgroundRect)
+    const stage = tableVars.stage
+    const summaryHeight = props.summaryHeight
+    const summaryBackground = props.summaryBackground
+    const borderColor = props.borderColor
+    const summaryFontFamily = props.summaryFontFamily
+    const summaryTextColor = props.summaryTextColor
+    const fontSizeNumber =
+      typeof props.summaryFontSize === 'string' ? parseFloat(props.summaryFontSize) : props.summaryFontSize
+    const realRowIndex = tableData.value.length + 1
+    const summaryY = stage.height() - summaryHeight
 
     let x = 0
     summaryCols.forEach((col, colIndex) => {
@@ -96,25 +148,26 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         x,
         y: 0,
         width: col.width || 0,
-        height: props.summaryHeight,
-        fill: props.summaryBackground,
-        stroke: props.borderColor,
+        height: summaryHeight,
+        fill: summaryBackground,
+        stroke: borderColor,
         strokeWidth: 1,
         listening: true
       })
-      const realRowIndex = tableData.value.length + 1
+      summaryCellRect.setAttr('origin-fill', summaryBackground)
       const realColIndex = colIndex + startColIndex
       summaryCellRect.setAttr('col-index', realColIndex)
       summaryCellRect.setAttr('row-index', realRowIndex)
       summaryGroup.add(summaryCellRect)
 
-      const y = tableVars.stage!.height() - props.summaryHeight
+      const colWidth = col.width || 0
+      const textMaxWidth = colWidth - 16
       // 记录汇总单元格位置信息（使用舞台坐标）
       positionMapList.push({
         x: stageStartX + x,
-        y: y,
-        width: col.width || 0,
-        height: props.summaryHeight,
+        y: summaryY,
+        width: colWidth,
+        height: summaryHeight,
         rowIndex: realRowIndex,
         colIndex: realColIndex
       })
@@ -122,21 +175,14 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
       // 先显示占位文本，然后异步更新
       const rule = summaryState[col.columnName] || 'nodisplay'
       const placeholderText = rule === 'nodisplay' ? '不显示' : '计算中...'
-      const truncatedTitle = truncateText(
-        placeholderText,
-        (col.width || 0) - 16,
-        props.summaryFontSize,
-        props.summaryFontFamily
-      )
-      const fontSize =
-        typeof props.summaryFontSize === 'string' ? parseFloat(props.summaryFontSize) : props.summaryFontSize
+      const truncatedTitle = truncateText(placeholderText, textMaxWidth, props.summaryFontSize, summaryFontFamily)
       const summaryCellText = new Konva.Text({
         x: getTextX(x),
-        y: props.summaryHeight / 2,
+        y: summaryHeight / 2,
         text: truncatedTitle,
-        fontSize: fontSize,
-        fontFamily: props.summaryFontFamily,
-        fill: props.summaryTextColor,
+        fontSize: fontSizeNumber,
+        fontFamily: summaryFontFamily,
+        fill: summaryTextColor,
         align: col.align || 'left',
         verticalAlign: 'middle',
         listening: false
@@ -147,35 +193,12 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
       // 异步计算汇总值并更新文本
       if (rule !== 'nodisplay') {
         computeSummaryValueForColumn(col, rule).then((summaryText) => {
-          // 获取汇总方式的中文名称
-          const getRuleLabel = (rule: string) => {
-            switch (rule) {
-              case 'max':
-                return '最大'
-              case 'min':
-                return '最小'
-              case 'avg':
-                return '平均'
-              case 'sum':
-                return '求和'
-              case 'filled':
-                return '已填写'
-              case 'nofilled':
-                return '未填写'
-              default:
-                return ''
-            }
-          }
           const ruleLabel = getRuleLabel(rule)
           const displayText = ruleLabel ? `${ruleLabel}: ${summaryText}` : summaryText
-          const finalText = truncateText(
-            displayText,
-            (col.width || 0) - 16,
-            props.summaryFontSize,
-            props.summaryFontFamily
-          )
+          const finalText = truncateText(displayText, textMaxWidth, props.summaryFontSize, summaryFontFamily)
           summaryCellText.text(finalText)
-          summaryGroup.getLayer()?.batchDraw()
+          const layer = summaryGroup.getLayer()
+          scheduleBatchDraw(layer)
         })
       }
       summaryCellRect.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'pointer'))
@@ -190,7 +213,7 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         openSummaryDropdown(evt, col.columnName, options, valid)
       })
 
-      x += col.width || 0
+      x += colWidth
     })
   }
   return {
