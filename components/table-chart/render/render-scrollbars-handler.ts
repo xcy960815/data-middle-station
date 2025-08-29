@@ -23,7 +23,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     renderBodyHandler({ props, emits })
   const { tableData } = variableHandlder({ props })
   const { getSummaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
-  const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props })
+  const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props, emits })
   const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })
 
@@ -408,19 +408,27 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     if (hasDeltaY) updateVerticalScroll(e.deltaY)
   }
 
-  onMounted(() => {
+  /**
+   * 初始化滚轮事件监听器
+   */
+  const initWheelListener = () => {
     const tableContainer = getTableContainerElement()
     tableContainer?.addEventListener('wheel', handleMouseWheel, { passive: false })
-  })
+  }
 
-  onBeforeUnmount(() => {
+  /**
+   * 清理滚轮事件监听器
+   */
+  const cleanupWheelListener = () => {
     const tableContainer = getTableContainerElement()
     tableContainer?.removeEventListener('wheel', handleMouseWheel)
-  })
+  }
 
   return {
     createScrollbars,
     updateScrollbarPosition,
-    updateScrollPositions
+    updateScrollPositions,
+    initWheelListener,
+    cleanupWheelListener
   }
 }

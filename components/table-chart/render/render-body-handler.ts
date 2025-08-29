@@ -26,7 +26,10 @@ interface RenderBodyHandlerProps {
 export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   const { updateHoverRects } = highlightHandler({ props })
   const { filterDropdown } = filterDropdownHandler({ props })
-  const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({ props })
+  const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({
+    props,
+    emits
+  })
   const { tableColumns, tableData } = variableHandlder({ props })
   const { getStageAttr } = konvaStageHandler({ props })
   const { getSummaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
@@ -880,9 +883,8 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     cellHeight: number
   ) => {
     // 操作列不允许编辑
-    if (column.columnName === 'action') {
-      return
-    }
+    if (column.columnName === 'action') return
+
     // 如果已经在编辑，先重置
     if (cellEditorDropdown.visible) {
       resetCellEditorDropdown()
