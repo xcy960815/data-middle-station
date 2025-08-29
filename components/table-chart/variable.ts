@@ -1,5 +1,5 @@
 import Konva from 'konva'
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { chartProps } from './props'
 
 export type Prettify<T> = {
@@ -123,21 +123,12 @@ interface TableVars {
   headerPositionMapList: PositionMap[]
   bodyPositionMapList: PositionMap[]
   summaryPositionMapList: PositionMap[]
-  sortColumns: SortColumn[]
-  /**
-   * 过滤状态：列名 -> 选中的离散值集合
-   */
-  filterState: Record<string, Set<string>>
-  /**
-   * 汇总行选择状态：列名 -> 选中的规则
-   */
-  summaryState: Record<string, string>
 }
 
 /**
  * 表格全局状态变量
  */
-export const tableVars: TableVars = reactive({
+export const tableVars: TableVars = {
   /**
    * 行高亮矩形
    */
@@ -406,30 +397,28 @@ export const tableVars: TableVars = reactive({
   // ========== 位置映射列表 ==========
   headerPositionMapList: [],
   bodyPositionMapList: [],
-  summaryPositionMapList: [],
-
-  // ========== 排序相关 ==========
-  /**
-   * 排序状态
-   */
-  sortColumns: [],
-
-  // ========== 过滤和汇总相关 ==========
-  /**
-   * 过滤状态：列名 -> 选中的离散值集合
-   */
-  filterState: {},
-
-  /**
-   * 汇总行选择状态：列名 -> 选中的规则
-   */
-  summaryState: {}
-})
+  summaryPositionMapList: []
+}
 
 export interface SortColumn {
   columnName: string
   order: 'asc' | 'desc'
 }
+
+/**
+ * 排序状态 - 单独的响应式变量
+ */
+export const sortColumns = ref<SortColumn[]>([])
+
+/**
+ * 过滤状态：列名 -> 选中的离散值集合 - 单独的响应式变量
+ */
+export const filterState = reactive<Record<string, Set<string>>>({})
+
+/**
+ * 汇总行选择状态：列名 -> 选中的规则 - 单独的响应式变量
+ */
+export const summaryState = reactive<Record<string, string>>({})
 
 interface CreateTableStateProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -439,6 +428,19 @@ interface CreateTableStateProps {
  * 创建表格状态管理器
  */
 export const createTableState = ({ props }: CreateTableStateProps) => {
+  /**
+   * 所有列 已经按照左中右排序过
+   * @returns {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>}
+   */
+  const tableColumns = computed(() => {
+    const leftColsx = props.xAxisFields.filter((c) => c.fixed === 'left')
+    const rightColsx = props.xAxisFields.filter((c) => c.fixed === 'right')
+    const centerColsx = props.xAxisFields.filter((c) => !c.fixed)
+    const leftColsy = props.yAxisFields.filter((c) => c.fixed === 'left')
+    const rightColsy = props.yAxisFields.filter((c) => c.fixed === 'right')
+    const centerColsy = props.yAxisFields.filter((c) => !c.fixed)
+    return leftColsx.concat(centerColsx).concat(rightColsx).concat(leftColsy).concat(centerColsy).concat(rightColsy)
+  })
   /**
    * 列别名映射
    * @returns {Record<string, string>}
@@ -458,19 +460,6 @@ export const createTableState = ({ props }: CreateTableStateProps) => {
   })
 
   /**
-   * 所有列 已经按照左中右排序过
-   * @returns {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>}
-   */
-  const tableColumns = computed(() => {
-    const leftColsx = props.xAxisFields.filter((c) => c.fixed === 'left')
-    const rightColsx = props.xAxisFields.filter((c) => c.fixed === 'right')
-    const centerColsx = props.xAxisFields.filter((c) => !c.fixed)
-    const leftColsy = props.yAxisFields.filter((c) => c.fixed === 'left')
-    const rightColsy = props.yAxisFields.filter((c) => c.fixed === 'right')
-    const centerColsy = props.yAxisFields.filter((c) => !c.fixed)
-    return leftColsx.concat(centerColsx).concat(rightColsx).concat(leftColsy).concat(centerColsy).concat(rightColsy)
-  })
-  /**
    * 表格数据
    */
   const tableData = computed<Array<ChartDataVo.ChartData>>(() => props.data)
@@ -481,14 +470,12 @@ export const createTableState = ({ props }: CreateTableStateProps) => {
   const activeData = computed<Array<ChartDataVo.ChartData>>(() => {
     // 先按 filter 过滤
     let base = tableData.value.filter((row) => row && typeof row === 'object') // 过滤掉无效的行
-    const filterKeys = Object.keys(tableVars.filterState).filter(
-      (k) => tableVars.filterState[k] && tableVars.filterState[k].size > 0
-    )
+    const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
     if (filterKeys.length) {
       const aliasMap = columnAliasMap.value
       base = base.filter((row) => {
         for (const k of filterKeys) {
-          const set = tableVars.filterState[k]
+          const set = filterState[k]
           const alias = aliasMap[k]
           const val = row[k] !== undefined ? row[k] : alias ? row[alias] : undefined
           if (!set.has(String(val ?? ''))) return false
@@ -499,7 +486,7 @@ export const createTableState = ({ props }: CreateTableStateProps) => {
     /**
      * 如果未排序，则直接返回原始数据
      */
-    if (!tableVars.sortColumns.length) return base
+    if (!sortColumns.value.length) return base
     const sorted = [...base]
     const toNum = (v: string | number | null | undefined) => {
       const n = Number(v)
@@ -516,7 +503,7 @@ export const createTableState = ({ props }: CreateTableStateProps) => {
       return undefined
     }
     sorted.sort((a, b) => {
-      for (const s of tableVars.sortColumns) {
+      for (const s of sortColumns.value) {
         const key = s.columnName
         const av = getVal(a, key)
         const bv = getVal(b, key)
@@ -621,9 +608,9 @@ export const resetTableVars = () => {
   tableVars.summaryPositionMapList.length = 0
 
   // 重置排序相关
-  tableVars.sortColumns.length = 0
+  sortColumns.value.length = 0
 
   // 重置过滤和汇总相关
-  Object.keys(tableVars.filterState).forEach((key) => delete tableVars.filterState[key])
-  Object.keys(tableVars.summaryState).forEach((key) => delete tableVars.summaryState[key])
+  Object.keys(filterState).forEach((key) => delete filterState[key])
+  Object.keys(summaryState).forEach((key) => delete summaryState[key])
 }
