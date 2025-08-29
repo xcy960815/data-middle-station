@@ -58,6 +58,7 @@
 
 <script setup lang="ts">
 import { ElDatePicker, ElInput, ElOption, ElSelect } from 'element-plus'
+import { computed, defineEmits, defineProps, nextTick, onBeforeUnmount, onMounted, ref, watch, withDefaults } from 'vue'
 
 interface EditOptions {
   label: string
@@ -103,11 +104,11 @@ const editorStyle = computed(() => {
     position: 'fixed' as const,
     left: `${x + 1}px`,
     top: `${y + 1}px`,
-    width: `${width - 2}px`,
+    width: `${width - 3}px`,
     height: `${height - 2}px`,
-    zIndex: 9999,
+    zIndex: 999999,
+    backgroundColor: 'red',
     background: '#fff',
-    border: 'none',
     padding: 0,
     margin: 0,
     boxSizing: 'border-box' as const,
@@ -125,7 +126,8 @@ watch(
         focusEditor()
       })
     }
-  }
+  },
+  { immediate: true }
 )
 
 // 聚焦编辑器
@@ -199,6 +201,7 @@ onBeforeUnmount(() => {
       line-height: 1;
       display: flex;
       align-items: center;
+
       &:hover,
       &:focus,
       &.is-focus {
@@ -213,6 +216,7 @@ onBeforeUnmount(() => {
       padding: 0;
       font-size: 14px;
       line-height: 1;
+
       &:hover,
       &:focus {
         border: none !important;
@@ -228,66 +232,8 @@ onBeforeUnmount(() => {
     width: 100%;
     border: none !important;
 
-    &:hover,
-    &:focus,
-    &.is-focus,
-    &.is-focused {
+    .el-select__wrapper {
       border: none !important;
-      box-shadow: none !important;
-      outline: none !important;
-    }
-
-    .el-input {
-      border: none !important;
-      box-shadow: none !important;
-
-      &:hover,
-      &:focus,
-      &.is-focus {
-        border: none !important;
-        box-shadow: none !important;
-      }
-    }
-
-    .el-input__wrapper {
-      height: 100%;
-      border: none !important;
-      box-shadow: none !important;
-      background: transparent;
-      border-radius: 0;
-      padding: 0 8px;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-
-      &:hover,
-      &:focus,
-      &.is-focus,
-      &.is-focused {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-    }
-
-    .el-input__inner {
-      height: 100%;
-      border: none !important;
-      padding: 0;
-      font-size: 14px;
-      line-height: 1;
-
-      &:hover,
-      &:focus {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-    }
-
-    .el-input__suffix {
-      display: flex;
-      align-items: center;
     }
   }
 
