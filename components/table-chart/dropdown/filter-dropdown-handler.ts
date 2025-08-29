@@ -44,7 +44,7 @@ interface FilterDropdownHandlerProps {
 }
 
 export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => {
-  const { filterState } = variableHandlder({ props })
+  const { filterState, handleTableData } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })
 
@@ -202,22 +202,30 @@ export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => 
     } else {
       filterState[colName] = new Set(selectedValues)
     }
+    // 重新处理表格数据，应用过滤条件
+    handleTableData(props.data)
     clearGroups()
     // 通过全局指针调用，避免 import 循环
     tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
   }
 
-  onMounted(() => {
+  /**
+   * 初始化事件监听器
+   */
+  const initFilterDropdownListeners = () => {
     window.addEventListener('scroll', updateFilterDropdownPositionsInPage)
     document.addEventListener('scroll', updateFilterDropdownPositionsInPage)
     document.addEventListener('mousedown', onGlobalMousedown, true)
-  })
+  }
 
-  onUnmounted(() => {
+  /**
+   * 清理事件监听器
+   */
+  const cleanupFilterDropdownListeners = () => {
     window.removeEventListener('scroll', updateFilterDropdownPositionsInPage)
     document.removeEventListener('scroll', updateFilterDropdownPositionsInPage)
     document.removeEventListener('mousedown', onGlobalMousedown, true)
-  })
+  }
 
   return {
     filterDropdownRef,
@@ -226,6 +234,8 @@ export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => 
     updateFilterDropdownPositionsInTable,
     openFilterDropdown,
     closeFilterDropdown,
-    handleSelectedFilter
+    handleSelectedFilter,
+    initFilterDropdownListeners,
+    cleanupFilterDropdownListeners
   }
 }
