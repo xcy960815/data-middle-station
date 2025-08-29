@@ -2,7 +2,7 @@ import Konva from 'konva'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { adjustHexColorBrightness, getFromPool, getTextX, returnToPool, setPointerStyle, truncateText } from '../utils'
-import { tableVars, type KonvaNodePools, type Prettify } from '../variable'
+import { tableColumns, tableData, tableVars, type KonvaNodePools, type Prettify } from '../variable'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 
@@ -20,7 +20,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
    * 计算可视区域 数据的起始行和结束行
    * @returns {void}
    */
-  const calculateVisibleRows = (activeData: Array<ChartDataVo.ChartData>) => {
+  const calculateVisibleRows = () => {
     if (!tableVars.stage) return
     const stageHeight = tableVars.stage.height()
     const bodyHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - props.scrollbarSize
@@ -33,7 +33,10 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
 
     // 算上缓冲条数的开始下标+结束下标
     tableVars.visibleRowStart = Math.max(0, startRow - props.bufferRows)
-    tableVars.visibleRowEnd = Math.min(activeData.length - 1, startRow + tableVars.visibleRowCount + props.bufferRows)
+    tableVars.visibleRowEnd = Math.min(
+      tableData.value.length - 1,
+      startRow + tableVars.visibleRowCount + props.bufferRows
+    )
   }
   /**
    * 在指定分组内创建单元格高亮矩形
@@ -111,17 +114,11 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
    * 计算左右固定列与中间列的分组与宽度汇总
    * @returns
    */
-  const getSplitColumns = ({
-    tableColumns,
-    activeData
-  }: {
-    tableColumns: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
-    activeData: Array<ChartDataVo.ChartData>
-  }) => {
+  const getSplitColumns = () => {
     if (!tableVars.stage) {
-      const leftCols = tableColumns.filter((c) => c.fixed === 'left')
-      const rightCols = tableColumns.filter((c) => c.fixed === 'right')
-      const centerCols = tableColumns.filter((c) => !c.fixed)
+      const leftCols = tableColumns.value.filter((c) => c.fixed === 'left')
+      const rightCols = tableColumns.value.filter((c) => c.fixed === 'right')
+      const centerCols = tableColumns.value.filter((c) => !c.fixed)
       return {
         leftCols,
         centerCols,
@@ -135,7 +132,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     // 计算滚动条预留宽度 高度
     const { width: stageWidthRaw, height: stageHeightRaw } = getStageAttr()
     // 计算内容高度
-    const contentHeight = activeData.length * props.bodyRowHeight
+    const contentHeight = tableData.value.length * props.bodyRowHeight
     // 计算垂直滚动条预留空间
     const verticalScrollbarSpace =
       contentHeight > stageHeightRaw - props.headerHeight - getSummaryRowHeight() ? props.scrollbarSize : 0
@@ -143,8 +140,8 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     const stageWidth = stageWidthRaw - verticalScrollbarSpace
 
     // 计算已设置宽度的列的总宽度
-    const fixedWidthColumns = tableColumns.filter((c) => c.width !== undefined)
-    const autoWidthColumns = tableColumns.filter((c) => c.width === undefined)
+    const fixedWidthColumns = tableColumns.value.filter((c) => c.width !== undefined)
+    const autoWidthColumns = tableColumns.value.filter((c) => c.width === undefined)
     const fixedTotalWidth = fixedWidthColumns.reduce((acc, c) => acc + (c.width || 0), 0)
 
     // 计算自动宽度列应该分配的宽度
@@ -153,7 +150,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     const autoColumnWidth = Math.max(props.minAutoColWidth, rawAutoWidth)
 
     // 为每个列计算最终宽度（支持用户拖拽覆盖）
-    const columnsWithWidth = tableColumns.map((col) => {
+    const columnsWithWidth = tableColumns.value.map((col) => {
       const overrideWidth = tableVars.columnWidthOverrides[col.columnName as string]
       const width = overrideWidth !== undefined ? overrideWidth : col.width !== undefined ? col.width : autoColumnWidth
       return { ...col, width }
@@ -183,20 +180,14 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
    * 获取滚动限制
    * @returns {{ maxScrollX: number, maxScrollY: number }}
    */
-  const getScrollLimits = ({
-    tableColumns,
-    activeData
-  }: {
-    tableColumns: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
-    activeData: Array<ChartDataVo.ChartData>
-  }) => {
+  const getScrollLimits = () => {
     if (!tableVars.stage) return { maxScrollX: 0, maxScrollY: 0 }
-    const { totalWidth, leftWidth, rightWidth } = getSplitColumns({ tableColumns, activeData })
+    const { totalWidth, leftWidth, rightWidth } = getSplitColumns()
 
     const { width: stageWidth, height: stageHeight } = getStageAttr()
 
     // 计算内容高度
-    let contentHeight = activeData.length * props.bodyRowHeight
+    let contentHeight = tableData.value.length * props.bodyRowHeight
 
     // 初步估算：不预留滚动条空间
     const visibleContentWidthNoV = stageWidth - leftWidth - rightWidth
@@ -222,13 +213,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
    * @param clientY 客户端Y坐标
    * @returns 是否在表格区域内
    */
-  const isInTableArea = ({
-    tableColumns,
-    activeData
-  }: {
-    tableColumns: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
-    activeData: Array<ChartDataVo.ChartData>
-  }) => {
+  const isInTableArea = () => {
     if (!tableVars.stage) return false
 
     // 转换为 stage 坐标
@@ -236,7 +221,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     if (!pointerPosition) return false
 
     const { width: stageWidth, height: stageHeight } = getStageAttr()
-    const { maxScrollX, maxScrollY } = getScrollLimits({ tableColumns: tableColumns, activeData: activeData })
+    const { maxScrollX, maxScrollY } = getScrollLimits()
 
     // 计算表格有效区域（排除滚动条）
     const effectiveWidth = maxScrollY > 0 ? stageWidth - props.scrollbarSize : stageWidth
