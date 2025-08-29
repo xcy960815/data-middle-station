@@ -1,21 +1,34 @@
 import Konva from 'konva'
+import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
+import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
+import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
-import { adjustHexColorBrightness, getFromPool, getTextX, returnToPool, setPointerStyle, truncateText } from '../utils'
-import { tableColumns, tableData, tableVars, type KonvaNodePools, type Prettify } from '../variable'
+import {
+  adjustHexColorBrightness,
+  estimateButtonWidth,
+  getFromPool,
+  getTableContainerElement,
+  getTextX,
+  paletteOptions,
+  returnToPool,
+  setPointerStyle,
+  truncateText
+} from '../utils'
+import { tableVars, variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
+import { highlightHandler } from './heightlight-handler'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-
-  getSummaryRowHeight: () => number
+  emits: any
 }
 
-/**
- *
- * @param param0
- * @returns
- */
-export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHandlerProps) => {
-  const { getStageAttr } = konvaStageHandler()
+export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
+  const { updateHoverRects } = highlightHandler({ props })
+  const { filterDropdown } = filterDropdownHandler({ props })
+  const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({ props })
+  const { tableColumns, tableData } = variableHandlder({ props })
+  const { getStageAttr } = konvaStageHandler({ props })
+  const { getSummaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
   /**
    * 计算可视区域 数据的起始行和结束行
    * @returns {void}
@@ -85,7 +98,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
       if (isText) {
         const isMergedCellText = child.name() === 'merged-cell-text'
         if (isMergedCellText) {
-          returnToPool(pools.mergedCellTexts, child)
+          returnToPool(pools.cellTexts, child)
         }
         const isCellText = child.name() === 'cell-text'
         if (isCellText) {
@@ -93,13 +106,9 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
         }
       }
       if (isRect) {
-        const isBackgroundRect = child.name() === 'background-rect'
-        if (isBackgroundRect) {
-          returnToPool(pools.backgroundRects, child)
-        }
         const isMergedCellRect = child.name() === 'merged-cell-rect'
         if (isMergedCellRect) {
-          returnToPool(pools.mergedCellRects, child)
+          returnToPool(pools.cellRects, child)
         }
 
         const isCellRect = child.name() === 'cell-rect'
@@ -342,71 +351,6 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     })
   }
 
-  const drawBackgroundRect = (
-    bodyGroup: Konva.Group,
-    bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
-    pools: KonvaNodePools,
-    rowIndex: number
-  ) => {
-    // 分组总宽度
-    const groupTotalWidth = bodyCols.reduce((acc, c) => acc + (c.width || 0), 0)
-    const backgroundRect = getFromPool(
-      pools.backgroundRects,
-      () => new Konva.Rect({ listening: false, name: 'background-rect' })
-    )
-    // y坐标
-    const y = rowIndex * props.bodyRowHeight
-    backgroundRect.name('background-rect')
-    backgroundRect.setAttr('row-index', null)
-    backgroundRect.setAttr('col-index', null)
-    backgroundRect.x(0)
-    backgroundRect.y(y)
-    backgroundRect.width(groupTotalWidth)
-    backgroundRect.height(props.bodyRowHeight)
-    const backgroundColor = rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
-    backgroundRect.fill(backgroundColor)
-    bodyGroup.add(backgroundRect)
-    backgroundRect.moveToBottom()
-  }
-
-  const drawMergedCellRect = ({
-    pools,
-    rowIndex,
-    colIndex,
-    startColIndex,
-    x,
-    y,
-    cellWidth,
-    cellHeight
-  }: {
-    pools: KonvaNodePools
-    rowIndex: number
-    colIndex: number
-    startColIndex: number
-    x: number
-    y: number
-    cellWidth: number
-    cellHeight: number
-  }) => {
-    const mergedCellRect = getFromPool(
-      pools.mergedCellRects,
-      () => new Konva.Rect({ listening: false, name: 'merged-cell-rect' })
-    )
-    mergedCellRect.name('merged-cell-rect')
-    mergedCellRect.setAttr('row-index', rowIndex + 1)
-    mergedCellRect.setAttr('col-index', colIndex + startColIndex)
-    mergedCellRect.x(x)
-    mergedCellRect.y(y)
-    mergedCellRect.width(cellWidth)
-    mergedCellRect.height(cellHeight)
-    // 使用起始行的背景色以保持整体风格一致
-    mergedCellRect.fill(rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven)
-    mergedCellRect.stroke(props.borderColor)
-    mergedCellRect.strokeWidth(1)
-
-    return mergedCellRect
-  }
-
   const drawMergedCellText = ({
     pools,
     row,
@@ -432,7 +376,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
     const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
     const mergedCellText = getFromPool(
-      pools.mergedCellTexts,
+      pools.cellTexts,
       () => new Konva.Text({ listening: false, name: 'merged-cell-text' })
     )
     mergedCellText.name('merged-cell-text')
@@ -452,6 +396,18 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     return mergedCellText
   }
 
+  /**
+   * 绘制单元格矩形
+   * @param {KonvaNodePools} param0.pools
+   * @param {number} param0.rowIndex
+   * @param {number} param0.colIndex
+   * @param {number} param0.startColIndex
+   * @param {number} param0.x
+   * @param {number} param0.y
+   * @param {number} param0.cellWidth
+   * @param {number} param0.cellHeight
+   * @returns
+   */
   const drawCellRect = ({
     pools,
     rowIndex,
@@ -471,12 +427,15 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     cellWidth: number
     cellHeight: number
   }) => {
+    const background = rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
     const cellRect = getFromPool(pools.cellRects, () => new Konva.Rect({ listening: true, name: 'cell-rect' }))
     cellRect.name('cell-rect')
     cellRect.setAttr('row-index', rowIndex + 1)
     cellRect.setAttr('col-index', colIndex + startColIndex)
     cellRect.x(x)
     cellRect.y(y)
+    cellRect.setAttr('origin-fill', background)
+    cellRect.fill(background)
     cellRect.width(cellWidth)
     cellRect.height(cellHeight)
     cellRect.stroke(props.borderColor)
@@ -535,7 +494,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     theme: { fill: string; stroke: string }
   }) => {
     const buttonRect = getFromPool(
-      pools.backgroundRects,
+      pools.cellRects || [],
       () => new Konva.Rect({ listening: true, name: `button-rect` })
     )
     buttonRect.name('button-rect')
@@ -598,7 +557,401 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     return buttonCellText
   }
 
+  /**
+   *
+   * 画body区域 只渲染可视区域的行
+   * @param {Konva.Group | null} group 分组
+   * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} cols 列
+   * @param {ObjectPools} pools 对象池
+   * @param {number} startColIndex 起始列索引
+   * @param {PositionMap[]} positionMapList 位置映射列表
+   * @param {number} stageStartX 舞台起始X坐标
+   * @returns {void}
+   */
+  const drawBodyPart = (
+    bodyGroup: Konva.Group | null,
+    bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
+    pools: KonvaNodePools,
+    startColIndex: number,
+    positionMapList: PositionMap[],
+    stageStartX: number
+  ) => {
+    if (!tableVars.stage || !bodyGroup) return
+
+    calculateVisibleRows()
+
+    recoverKonvaNode(bodyGroup, pools)
+    // 渲染可视区域的行
+    for (let rowIndex = tableVars.visibleRowStart; rowIndex <= tableVars.visibleRowEnd; rowIndex++) {
+      const row = tableData.value[rowIndex]
+      // y坐标
+      const y = rowIndex * props.bodyRowHeight
+      // 渲染每列的单元格
+      let x = 0
+      for (let colIndex = 0; colIndex < bodyCols.length; colIndex++) {
+        const col = bodyCols[colIndex]
+        const hasSpanMethod = typeof props.spanMethod === 'function'
+        let spanRow = 1
+        let spanCol = 1
+        let coveredBySpanMethod = false
+        const globalColIndex = tableColumns.value.findIndex((c) => c.columnName === col.columnName)
+        if (hasSpanMethod) {
+          const res = props.spanMethod({ row, column: col, rowIndex, colIndex: globalColIndex })
+          if (Array.isArray(res)) {
+            spanRow = Math.max(0, Number(res[0]) || 0)
+            spanCol = Math.max(0, Number(res[1]) || 0)
+          } else if (res && typeof res === 'object') {
+            spanRow = Math.max(0, Number(res.rowspan) || 0)
+            spanCol = Math.max(0, Number(res.colspan) || 0)
+          }
+          // 只要任一维度为 0，即视为被合并覆盖（与常见表格合并语义一致）
+          if (spanRow === 0 || spanCol === 0) coveredBySpanMethod = true
+        }
+
+        const shouldDraw = !hasSpanMethod || !coveredBySpanMethod
+
+        if (!shouldDraw) {
+          x += col.width || 0
+          continue
+        }
+
+        const computedRowSpan = hasSpanMethod ? spanRow : 1
+
+        const cellHeight = computedRowSpan * props.bodyRowHeight
+
+        // 计算合并单元格的宽度（此处暂未实现跨列合并的宽度累加，保持原逻辑）
+        let cellWidth = col.width || 0
+
+        // 记录可视区域内主体单元格位置信息（使用舞台坐标）
+        positionMapList.push({
+          x: stageStartX + x,
+          y: y + props.headerHeight,
+          width: cellWidth,
+          height: cellHeight,
+          rowIndex: rowIndex + 1,
+          colIndex: colIndex + startColIndex
+        })
+        // 若为合并单元格（跨行或跨列），在行斑马纹之上绘制统一背景色，避免内部出现条纹断层
+        if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
+          const mergedCellRect = drawCellRect({
+            pools,
+            rowIndex,
+            colIndex,
+            startColIndex,
+            x,
+            y,
+            cellWidth,
+            cellHeight
+          })
+          bodyGroup.add(mergedCellRect)
+          const mergedCellText = drawMergedCellText({
+            pools,
+            row,
+            col,
+            x,
+            y,
+            cellWidth,
+            cellHeight
+          })
+          bodyGroup.add(mergedCellText)
+        } else {
+          const cellRect = drawCellRect({
+            pools,
+            rowIndex,
+            colIndex,
+            startColIndex,
+            x,
+            y,
+            cellWidth,
+            cellHeight
+          })
+          let clickTimeout: NodeJS.Timeout | null = null
+          // 添加点击事件
+          cellRect.on('click', () => {
+            if (clickTimeout) {
+              clearTimeout(clickTimeout)
+              clickTimeout = null
+              return
+            }
+            clickTimeout = setTimeout(() => {
+              handleCellClick(rowIndex, colIndex, col, cellRect.x(), cellRect.y(), cellWidth, cellHeight, bodyGroup)
+              clickTimeout = null
+            }, 250) // 250ms 内未发生第二次点击 → 认定为单击
+          })
+          cellRect.on('dblclick', () => {
+            handleCellDoubleClick(
+              rowIndex,
+              colIndex + startColIndex,
+              col,
+              cellRect.x(),
+              cellRect.y(),
+              cellWidth,
+              cellHeight
+            )
+          })
+
+          bodyGroup.add(cellRect)
+          // 如果是操作列，绘制按钮；否则绘制文本
+          if (col.columnName === 'action') {
+            const actions = col.actions
+            const gap = 6
+            const buttonHeight = Math.max(22, Math.min(28, cellHeight - 8))
+            const fontSize =
+              typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
+            if (actions && actions.length > 0) {
+              const widths = actions.map((a) => estimateButtonWidth(a.label, fontSize, props.bodyFontFamily))
+              const totalButtonsWidth = widths.reduce((a, b) => a + b, 0) + gap * (actions.length - 1)
+              let startX = x + (cellWidth - totalButtonsWidth) / 2
+              const centerY = y + (cellHeight - buttonHeight) / 2
+              actions.forEach((action, idx) => {
+                const w = widths[idx]
+                const theme = paletteOptions[action.type || 'primary'] || paletteOptions.primary
+                const buttonRect = drawButtonRect({ pools, startX, centerY, w, buttonHeight, theme })
+                const isDisabled =
+                  typeof action.disabled === 'function'
+                    ? action.disabled(tableData.value[rowIndex], rowIndex)
+                    : !!action.disabled
+                bindButtonInteractions(buttonRect, {
+                  baseFill: theme.fill,
+                  baseStroke: theme.stroke,
+                  layer: bodyGroup.getLayer(),
+                  disabled: isDisabled
+                })
+                buttonRect.on('click', () => {
+                  if (isDisabled) return
+                  const rowData = tableData.value[rowIndex]
+                  emits('action-click', { rowIndex, action: action.key, rowData })
+                })
+                bodyGroup.add(buttonRect)
+                const fontSize =
+                  typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
+                const x = startX + w / 2
+                const y = centerY + buttonHeight / 2
+                const buttonName = action.label
+                const fontFamily = props.bodyFontFamily
+                const opacity = isDisabled ? 0.6 : 1
+                const textColor = theme.text
+                const offsetX = buttonRect.width() / 2
+                const offsetY = buttonRect.height() / 2
+                const buttonText = drawButtonText({
+                  pools,
+                  x,
+                  y,
+                  buttonName,
+                  fontSize,
+                  fontFamily,
+                  opacity,
+                  textColor,
+                  offsetX,
+                  offsetY
+                })
+                bodyGroup.add(buttonText)
+
+                startX += w + gap
+              })
+            }
+          } else {
+            // 创建文本
+            const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
+            const value = String(rawValue ?? '')
+            const maxTextWidth = cellWidth - 16
+            const fontFamily = props.bodyFontFamily
+            const fontSize =
+              typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
+
+            const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
+
+            const cellText = drawCellText({
+              pools,
+              x,
+              y,
+              cellHeight,
+              truncatedValue,
+              fontSize,
+              fontFamily
+            })
+            bodyGroup.add(cellText)
+
+            const colShowOverflow = col.showOverflowTooltip
+            const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
+            if (enableTooltip && truncatedValue !== value) {
+              // 悬浮提示：仅在文本被截断时创建 Konva.Tooltip 等价层
+              // 这里用浏览器原生 title 实现，命中区域为单元格矩形
+              // Konva 没有内置 tooltip，避免复杂度，先用 title
+              cellRect.off('mouseenter.tooltip')
+              cellRect.on('mouseenter.tooltip', () => {
+                if (!tableVars.stage) return
+                // 设置 container 的 title
+                tableVars.stage.container().setAttribute('title', String(rawValue ?? ''))
+              })
+              cellRect.off('mouseleave.tooltip')
+              cellRect.on('mouseleave.tooltip', () => {
+                if (!tableVars.stage) return
+                // 清除 title，避免全局悬浮
+                tableVars.stage.container().removeAttribute('title')
+              })
+            }
+          }
+        }
+        x += col.width || 0
+      }
+    }
+    // 渲染完成后，重新计算 行下标 列下标
+    recomputeHoverIndexFromPointer()
+  }
+
+  /**
+   * 处理单元格点击，更新选中状态并抛出事件
+   * @param {number} rowIndex 行索引
+   * @param {number} colIndex 列索引
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列配置
+   * @param {number} cellX 单元格 X 坐标
+   * @param {number} cellY 单元格 Y 坐标
+   * @param {number} cellWidth 单元格宽度
+   * @param {number} cellHeight 单元格高度
+   * @param {Konva.Group} group 分组
+   */
+  const handleCellClick = (
+    rowIndex: number,
+    colIndex: number,
+    col: GroupStore.GroupOption | DimensionStore.DimensionOption,
+    cellX: number,
+    cellY: number,
+    cellWidth: number,
+    cellHeight: number,
+    group: Konva.Group
+  ) => {
+    createHighlightRect(cellX, cellY, cellWidth, cellHeight, group)
+    const rowData = tableData.value[rowIndex]
+    emits('cell-click', { rowIndex, colIndex, colKey: col.columnName, rowData })
+  }
+
+  /**
+   * 处理单元格双击
+   */
+  const handleCellDoubleClick = (
+    rowIndex: number,
+    colIndex: number,
+    column: GroupStore.GroupOption | DimensionStore.DimensionOption,
+    cellX: number,
+    cellY: number,
+    cellWidth: number,
+    cellHeight: number
+  ) => {
+    // 操作列不允许编辑
+    if (column.columnName === 'action') {
+      return
+    }
+    // 如果已经在编辑，先重置
+    if (cellEditorDropdown.visible) {
+      resetCellEditorDropdown()
+      // 添加小延时确保重置完成
+      setTimeout(() => {
+        openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
+      }, 10)
+      return
+    }
+
+    openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
+  }
+
+  /**
+   * 判断当前指针位置的顶层元素是否属于表格容器
+   * 若不属于，则认为表格被其它遮罩/弹层覆盖，此时不进行高亮
+   * @param {number} clientX 鼠标点击位置的 X 坐标
+   * @param {number} clientY 鼠标点击位置的 Y 坐标
+   * @returns {boolean} 是否在表格容器内
+   */
+  const isTopMostInTable = (clientX: number, clientY: number): boolean => {
+    const container = getTableContainerElement()
+    if (!container) return false
+    const topEl = document.elementFromPoint(clientX, clientY) as HTMLElement | null
+    if (!topEl) return false
+    if (!container.contains(topEl)) return false
+    // 仅当命中的元素为 Konva 的 canvas（或其包裹层）时，认为没有被遮罩覆盖
+    if (topEl.tagName === 'CANVAS') return true
+    const konvaContent = topEl.closest('.konvajs-content') as HTMLElement | null
+    if (konvaContent && container.contains(konvaContent)) return true
+    // 命中的虽然在容器内，但不是 Konva 画布，视为被遮罩覆盖
+    return false
+  }
+
+  /**
+   * 基于当前指针位置重新计算 行下标 列下标
+   * @returns {void}
+   */
+  const recomputeHoverIndexFromPointer = () => {
+    if (
+      !tableVars.stage ||
+      (!props.enableRowHoverHighlight && !props.enableColHoverHighlight) ||
+      filterDropdown.visible ||
+      summaryDropdown.visible
+    ) {
+      return
+    }
+
+    // 清除高亮的辅助函数
+    const clearHoverHighlight = () => {
+      if (tableVars.hoveredRowIndex !== null || tableVars.hoveredColIndex !== null) {
+        tableVars.hoveredRowIndex = null
+        tableVars.hoveredColIndex = null
+        updateHoverRects()
+      }
+    }
+
+    // 检查各种边界条件，如果不符合则清除高亮并返回
+    if (!isTopMostInTable(tableVars.lastClientX, tableVars.lastClientY)) {
+      clearHoverHighlight()
+      return
+    }
+
+    const pointerPosition = tableVars.stage.getPointerPosition()
+    if (!pointerPosition) {
+      clearHoverHighlight()
+      return
+    }
+
+    /**
+     * 检查鼠标是否在表格区域内（排除滚动条区域）
+     */
+    if (!isInTableArea()) {
+      clearHoverHighlight()
+      return
+    }
+
+    const localY = pointerPosition.y + tableVars.stageScrollY
+    const localX = pointerPosition.x + tableVars.stageScrollX
+    // 计算鼠标所在的行索引
+    const positionMapList = [
+      ...tableVars.headerPositionMapList,
+      ...tableVars.bodyPositionMapList,
+      ...tableVars.summaryPositionMapList
+    ]
+    const positionOption = positionMapList.find(
+      (item) => localX >= item.x && localX <= item.x + item.width && localY >= item.y && localY <= item.y + item.height
+    )
+    let newHoveredRowIndex = null
+    let newHoveredColIndex = null
+    if (positionOption) {
+      newHoveredRowIndex = positionOption.rowIndex
+      newHoveredColIndex = positionOption.colIndex
+    }
+    const rowChanged = newHoveredRowIndex !== tableVars.hoveredRowIndex
+    const colChanged = newHoveredColIndex !== tableVars.hoveredColIndex
+    if (rowChanged) {
+      tableVars.hoveredRowIndex = newHoveredRowIndex
+    }
+    if (colChanged) {
+      tableVars.hoveredColIndex = newHoveredColIndex
+    }
+
+    if (rowChanged || colChanged) {
+      updateHoverRects()
+    }
+  }
+
   return {
+    recomputeHoverIndexFromPointer,
     createHighlightRect,
     calculateVisibleRows,
     recoverKonvaNode,
@@ -606,12 +959,11 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     getSplitColumns,
     isInTableArea,
     bindButtonInteractions,
-    drawBackgroundRect,
-    drawMergedCellRect,
     drawMergedCellText,
     drawCellRect,
     drawCellText,
     drawButtonRect,
-    drawButtonText
+    drawButtonText,
+    drawBodyPart
   }
 }

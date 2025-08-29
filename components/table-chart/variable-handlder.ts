@@ -20,33 +20,13 @@ export interface PositionMap {
  */
 export interface KonvaNodePools {
   /**
-   * 合并单元格矩形
-   */
-  mergedCellRects: Konva.Rect[]
-  /**
    * 单元格矩形
    */
   cellRects: Konva.Rect[]
   /**
-   * 合并单元格文本
-   */
-  mergedCellTexts: Konva.Text[]
-  /**
    * 单元格文本
    */
   cellTexts: Konva.Text[]
-  /**
-   * 背景矩形
-   */
-  backgroundRects: Konva.Rect[]
-  /**
-   * 按钮矩形
-   */
-  buttonRects?: Konva.Rect[]
-  /**
-   * 按钮文本
-   */
-  buttonTexts?: Konva.Text[]
 }
 
 /**
@@ -141,31 +121,22 @@ export const tableVars: TableVars = {
    * 左侧主体组对象池
    */
   leftBodyPools: {
-    mergedCellRects: [],
     cellRects: [],
-    mergedCellTexts: [],
-    cellTexts: [],
-    backgroundRects: []
+    cellTexts: []
   },
   /**
    * 中间主体组对象池
    */
   centerBodyPools: {
-    mergedCellRects: [],
     cellRects: [],
-    mergedCellTexts: [],
-    cellTexts: [],
-    backgroundRects: []
+    cellTexts: []
   },
   /**
    * 右侧主体组对象池
    */
   rightBodyPools: {
-    mergedCellRects: [],
     cellRects: [],
-    mergedCellTexts: [],
-    cellTexts: [],
-    backgroundRects: []
+    cellTexts: []
   },
   // ========== Konva 对象 ==========
   /**
@@ -408,112 +379,38 @@ export interface SortColumn {
 /**
  * 排序状态 - 单独的响应式变量
  */
-export const sortColumns = ref<SortColumn[]>([])
+const sortColumns = ref<SortColumn[]>([])
 
 /**
  * 过滤状态：列名 -> 选中的离散值集合 - 单独的响应式变量
  */
-export const filterState = reactive<Record<string, Set<string>>>({})
+const filterState = reactive<Record<string, Set<string>>>({})
 
 /**
  * 汇总行选择状态：列名 -> 选中的规则 - 单独的响应式变量
  */
-export const summaryState = reactive<Record<string, string>>({})
+const summaryState = reactive<Record<string, string>>({})
 
 /**
  * 表格数据
  */
-export const tableData = ref<Array<ChartDataVo.ChartData>>([])
+const tableData = ref<Array<ChartDataVo.ChartData>>([])
 
-/**
- * 处理表格数据
- * @param data 表格数据
- * @returns {void}
- */
-export const handleTableData = (data: Array<ChartDataVo.ChartData>) => {
-  tableData.value = data.filter((row) => row && typeof row === 'object')
-  const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
-
-  if (filterKeys.length) {
-    tableData.value = tableData.value.filter((row) => {
-      for (const k of filterKeys) {
-        const set = filterState[k]
-        const val = row[k]
-        if (!set.has(String(val ?? ''))) return false
-      }
-      return true
-    })
-  }
-  /**
-   * 如果未排序，则直接返回原始数据
-   */
-  if (sortColumns.value.length) {
-    const sorted = [...tableData.value]
-    const toNum = (v: string | number | null | undefined) => {
-      const n = Number(v)
-      return Number.isFinite(n) ? n : null
-    }
-    const getVal = (row: ChartDataVo.ChartData, key: string): string | number | undefined => {
-      const val = row[key]
-      if (typeof val === 'string' || typeof val === 'number') return val
-      return undefined
-    }
-    sorted.sort((a, b) => {
-      for (const s of sortColumns.value) {
-        const key = s.columnName
-        const av = getVal(a, key)
-        const bv = getVal(b, key)
-        const an = toNum(av)
-        const bn = toNum(bv)
-        let cmp = 0
-        if (an !== null && bn !== null) cmp = an - bn
-        else cmp = String(av ?? '').localeCompare(String(bv ?? ''))
-        if (cmp !== 0) return s.order === 'asc' ? cmp : -cmp
-      }
-      return 0
-    })
-    tableData.value = sorted
-  }
-}
 /**
  * 表格列
  */
-export const tableColumns = ref<Array<GroupStore.GroupOption | DimensionStore.DimensionOption>>([])
+const tableColumns = ref<Array<GroupStore.GroupOption | DimensionStore.DimensionOption>>([])
 
-/**
- * 处理表格列
- * @param xAxisFields x轴字段
- * @param yAxisFields y轴字段
- * @returns {void}
- */
-export const handleTableColumns = (
-  xAxisFields: Array<GroupStore.GroupOption>,
-  yAxisFields: Array<DimensionStore.DimensionOption>
-) => {
-  const leftColsx = xAxisFields.filter((c) => c.fixed === 'left')
-  const rightColsx = xAxisFields.filter((c) => c.fixed === 'right')
-  const centerColsx = xAxisFields.filter((c) => !c.fixed)
-  const leftColsy = yAxisFields.filter((c) => c.fixed === 'left')
-  const rightColsy = yAxisFields.filter((c) => c.fixed === 'right')
-  const centerColsy = yAxisFields.filter((c) => !c.fixed)
-  tableColumns.value = leftColsx
-    .concat(centerColsx)
-    .concat(rightColsx)
-    .concat(leftColsy)
-    .concat(centerColsy)
-    .concat(rightColsy)
-}
-
-interface CreateTableStateProps {
+interface VariableHandlderProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
 
 /**
  * 创建表格状态管理器
  */
-export const createTableState = ({ props }: CreateTableStateProps) => {
+export const variableHandlder = ({ props }: VariableHandlderProps) => {
   /**
-   * 容器样式
+   * 表格容器样式
    */
   const tableContainerStyle = computed(() => {
     const height = typeof props.chartHeight === 'number' ? `${props.chartHeight}px` : (props.chartHeight ?? '460px')
@@ -524,81 +421,162 @@ export const createTableState = ({ props }: CreateTableStateProps) => {
       background: '#fff'
     }
   })
-  return {
-    tableContainerStyle
+  /**
+   * 处理表格列
+   * @param xAxisFields x轴字段
+   * @param yAxisFields y轴字段
+   * @returns {void}
+   */
+  const handleTableColumns = (
+    xAxisFields: Array<GroupStore.GroupOption>,
+    yAxisFields: Array<DimensionStore.DimensionOption>
+  ) => {
+    const leftColsx = xAxisFields.filter((c) => c.fixed === 'left')
+    const rightColsx = xAxisFields.filter((c) => c.fixed === 'right')
+    const centerColsx = xAxisFields.filter((c) => !c.fixed)
+    const leftColsy = yAxisFields.filter((c) => c.fixed === 'left')
+    const rightColsy = yAxisFields.filter((c) => c.fixed === 'right')
+    const centerColsy = yAxisFields.filter((c) => !c.fixed)
+    tableColumns.value = leftColsx
+      .concat(centerColsx)
+      .concat(rightColsx)
+      .concat(leftColsy)
+      .concat(centerColsy)
+      .concat(rightColsy)
   }
-}
+  /**
+   * 处理表格数据
+   * @param data 表格数据
+   * @returns {void}
+   */
+  const handleTableData = (data: Array<ChartDataVo.ChartData>) => {
+    tableData.value = data.filter((row) => row && typeof row === 'object')
+    const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
 
-/**
- * 重置表格状态
- */
-export const resetTableVars = () => {
-  // 重置 Konva 对象
-  tableVars.stage = null
-  tableVars.scrollbarLayer = null
-  tableVars.centerBodyClipGroup = null
-  tableVars.headerLayer = null
-  tableVars.bodyLayer = null
-  tableVars.summaryLayer = null
-  tableVars.fixedHeaderLayer = null
-  tableVars.fixedBodyLayer = null
-  tableVars.fixedSummaryLayer = null
-  tableVars.leftHeaderGroup = null
-  tableVars.centerHeaderGroup = null
-  tableVars.rightHeaderGroup = null
-  tableVars.leftBodyGroup = null
-  tableVars.centerBodyGroup = null
-  tableVars.rightBodyGroup = null
-  tableVars.leftSummaryGroup = null
-  tableVars.centerSummaryGroup = null
-  tableVars.rightSummaryGroup = null
-  tableVars.verticalScrollbarGroup = null
-  tableVars.horizontalScrollbarGroup = null
-  tableVars.verticalScrollbarThumb = null
-  tableVars.horizontalScrollbarThumb = null
-  tableVars.highlightRect = null
+    if (filterKeys.length) {
+      tableData.value = tableData.value.filter((row) => {
+        for (const k of filterKeys) {
+          const set = filterState[k]
+          const val = row[k]
+          if (!set.has(String(val ?? ''))) return false
+        }
+        return true
+      })
+    }
+    /**
+     * 如果未排序，则直接返回原始数据
+     */
+    if (sortColumns.value.length) {
+      const sorted = [...tableData.value]
+      const toNum = (v: string | number | null | undefined) => {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : null
+      }
+      const getVal = (row: ChartDataVo.ChartData, key: string): string | number | undefined => {
+        const val = row[key]
+        if (typeof val === 'string' || typeof val === 'number') return val
+        return undefined
+      }
+      sorted.sort((a, b) => {
+        for (const s of sortColumns.value) {
+          const key = s.columnName
+          const av = getVal(a, key)
+          const bv = getVal(b, key)
+          const an = toNum(av)
+          const bn = toNum(bv)
+          let cmp = 0
+          if (an !== null && bn !== null) cmp = an - bn
+          else cmp = String(av ?? '').localeCompare(String(bv ?? ''))
+          if (cmp !== 0) return s.order === 'asc' ? cmp : -cmp
+        }
+        return 0
+      })
+      tableData.value = sorted
+    }
+  }
+  /**
+   * 重置表格变量
+   * @returns {void}
+   */
+  const resetTableVars = () => {
+    // 重置 Konva 对象
+    tableVars.stage = null
+    tableVars.scrollbarLayer = null
+    tableVars.centerBodyClipGroup = null
+    tableVars.headerLayer = null
+    tableVars.bodyLayer = null
+    tableVars.summaryLayer = null
+    tableVars.fixedHeaderLayer = null
+    tableVars.fixedBodyLayer = null
+    tableVars.fixedSummaryLayer = null
+    tableVars.leftHeaderGroup = null
+    tableVars.centerHeaderGroup = null
+    tableVars.rightHeaderGroup = null
+    tableVars.leftBodyGroup = null
+    tableVars.centerBodyGroup = null
+    tableVars.rightBodyGroup = null
+    tableVars.leftSummaryGroup = null
+    tableVars.centerSummaryGroup = null
+    tableVars.rightSummaryGroup = null
+    tableVars.verticalScrollbarGroup = null
+    tableVars.horizontalScrollbarGroup = null
+    tableVars.verticalScrollbarThumb = null
+    tableVars.horizontalScrollbarThumb = null
+    tableVars.highlightRect = null
 
-  // 重置滚动相关
-  tableVars.stageScrollY = 0
-  tableVars.stageScrollX = 0
+    // 重置滚动相关
+    tableVars.stageScrollY = 0
+    tableVars.stageScrollX = 0
 
-  // 重置列宽拖拽相关
-  tableVars.columnWidthOverrides = {}
-  tableVars.isResizingColumn = false
-  tableVars.resizingColumnName = null
-  tableVars.resizeStartX = 0
-  tableVars.resizeStartWidth = 0
-  tableVars.resizeNeighborColumnName = null
-  tableVars.resizeNeighborStartWidth = 0
+    // 重置列宽拖拽相关
+    tableVars.columnWidthOverrides = {}
+    tableVars.isResizingColumn = false
+    tableVars.resizingColumnName = null
+    tableVars.resizeStartX = 0
+    tableVars.resizeStartWidth = 0
+    tableVars.resizeNeighborColumnName = null
+    tableVars.resizeNeighborStartWidth = 0
 
-  // 重置滚动条拖拽相关
-  tableVars.isDraggingVerticalThumb = false
-  tableVars.isDraggingHorizontalThumb = false
-  tableVars.dragStartY = 0
-  tableVars.dragStartX = 0
-  tableVars.dragStartScrollY = 0
-  tableVars.dragStartScrollX = 0
+    // 重置滚动条拖拽相关
+    tableVars.isDraggingVerticalThumb = false
+    tableVars.isDraggingHorizontalThumb = false
+    tableVars.dragStartY = 0
+    tableVars.dragStartX = 0
+    tableVars.dragStartScrollY = 0
+    tableVars.dragStartScrollX = 0
 
-  // 重置虚拟滚动相关
-  tableVars.visibleRowStart = 0
-  tableVars.visibleRowEnd = 0
-  tableVars.visibleRowCount = 0
+    // 重置虚拟滚动相关
+    tableVars.visibleRowStart = 0
+    tableVars.visibleRowEnd = 0
+    tableVars.visibleRowCount = 0
 
-  // 重置悬停高亮相关
-  tableVars.hoveredRowIndex = null
-  tableVars.hoveredColIndex = null
-  tableVars.lastClientX = 0
-  tableVars.lastClientY = 0
+    // 重置悬停高亮相关
+    tableVars.hoveredRowIndex = null
+    tableVars.hoveredColIndex = null
+    tableVars.lastClientX = 0
+    tableVars.lastClientY = 0
 
-  // 重置位置映射列表
-  tableVars.headerPositionMapList.length = 0
-  tableVars.bodyPositionMapList.length = 0
-  tableVars.summaryPositionMapList.length = 0
+    // 重置位置映射列表
+    tableVars.headerPositionMapList.length = 0
+    tableVars.bodyPositionMapList.length = 0
+    tableVars.summaryPositionMapList.length = 0
 
-  // 重置排序相关
-  sortColumns.value.length = 0
+    // 重置排序相关
+    sortColumns.value.length = 0
 
-  // 重置过滤和汇总相关
-  Object.keys(filterState).forEach((key) => delete filterState[key])
-  Object.keys(summaryState).forEach((key) => delete summaryState[key])
+    // 重置过滤和汇总相关
+    Object.keys(filterState).forEach((key) => delete filterState[key])
+    Object.keys(summaryState).forEach((key) => delete summaryState[key])
+  }
+  return {
+    tableContainerStyle,
+    handleTableColumns,
+    tableColumns,
+    tableData,
+    filterState,
+    summaryState,
+    sortColumns,
+    handleTableData,
+    resetTableVars
+  }
 }

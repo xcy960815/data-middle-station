@@ -1,8 +1,11 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, reactive, ref } from 'vue'
+import { konvaStageHandler } from '../konva-stage-handler'
+import { chartProps } from '../props'
+import { highlightHandler } from '../render/heightlight-handler'
 import { getDropdownPosition } from '../utils'
-import { tableVars } from '../variable'
+import { tableVars, variableHandlder, type Prettify } from '../variable-handlder'
 
 export interface FilterDropdown {
   visible: boolean
@@ -15,26 +18,33 @@ export interface FilterDropdown {
   originalClientY: number
 }
 
-export const filterDropdownHandler = () => {
+/**
+ * 过滤下拉浮层状态（DOM）
+ */
+const filterDropdown = reactive<FilterDropdown>({
+  visible: false,
+  x: 0,
+  y: 0,
+  colName: '',
+  options: [],
+  selectedValues: [],
+  // 存储原始点击位置，用于滚动时重新计算
+  originalClientX: 0,
+  originalClientY: 0
+})
+
+interface FilterDropdownHandlerProps {
+  props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+}
+
+export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => {
+  const { filterState } = variableHandlder({ props })
+  const { clearGroups } = konvaStageHandler({ props })
+  const { updateHoverRects } = highlightHandler({ props })
   /**
    * 过滤下拉浮层元素
    */
   const filterDropdownRef = ref<HTMLDivElement | null>(null)
-
-  /**
-   * 过滤下拉浮层状态（DOM）
-   */
-  const filterDropdown = reactive<FilterDropdown>({
-    visible: false,
-    x: 0,
-    y: 0,
-    colName: '' as string,
-    options: [] as string[],
-    selectedValues: [] as string[],
-    // 存储原始点击位置，用于滚动时重新计算
-    originalClientX: 0,
-    originalClientY: 0
-  })
 
   /**
    * 过滤下拉浮层样式
@@ -115,8 +125,7 @@ export const filterDropdownHandler = () => {
     evt: KonvaEventObject<MouseEvent, Konva.Shape | Konva.Circle>,
     colName: string,
     options: string[],
-    selected: string[],
-    updateHoverRects: () => void
+    selected: string[]
   ) => {
     // 存储原始点击位置（转换为页面坐标，考虑滚动偏移）
     const { clientX, clientY } = evt.evt
@@ -124,8 +133,8 @@ export const filterDropdownHandler = () => {
     const scrollY = window.pageYOffset || document.documentElement.scrollTop
     filterDropdown.originalClientX = clientX + scrollX
     filterDropdown.originalClientY = clientY + scrollY
-
     filterDropdown.visible = true
+
     nextTick(() => {
       if (!filterDropdownRef.value) return
       const filterDropdownEl = filterDropdownRef.value
@@ -180,6 +189,21 @@ export const filterDropdownHandler = () => {
     }
   }
 
+  /**
+   * 应用过滤下拉浮层选中的选项
+   */
+  const handleSelectedFilter = () => {
+    const colName = filterDropdown.colName
+    const selectedValues = filterDropdown.selectedValues
+    if (!selectedValues || selectedValues.length === 0) {
+      delete filterState[colName]
+    } else {
+      filterState[colName] = new Set(selectedValues)
+    }
+    clearGroups()
+    // rebuildGroups()
+  }
+
   onMounted(() => {
     window.addEventListener('scroll', updateFilterDropdownPositionsInPage)
     document.addEventListener('scroll', updateFilterDropdownPositionsInPage)
@@ -197,7 +221,8 @@ export const filterDropdownHandler = () => {
     filterDropdownStyle,
     filterDropdown,
     updateFilterDropdownPositionsInTable,
+    openFilterDropdown,
     closeFilterDropdown,
-    openFilterDropdown
+    handleSelectedFilter
   }
 }
