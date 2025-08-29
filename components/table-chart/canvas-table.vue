@@ -1682,109 +1682,109 @@ watch(
   { deep: true }
 )
 
-// watch(
-//   () => [props.chartWidth, props.chartHeight],
-//   async () => {
-//     if (!tableVars.stage) return
-//     // 等待demo节点发生变更再触发该方法
-//     await nextTick()
-//     initStage()
-//     refreshTable(true)
-//   }
-// )
+watch(
+  () => [props.chartWidth, props.chartHeight],
+  async () => {
+    if (!tableVars.stage) return
+    // 等待demo节点发生变更再触发该方法
+    await nextTick()
+    initStage()
+    refreshTable(true)
+  }
+)
 
-// /**
-//  * header 相关（尺寸与样式）
-//  */
-// watch(
-//   () => [
-//     props.headerHeight,
-//     props.headerFontFamily,
-//     props.headerFontSize,
-//     props.headerTextColor,
-//     props.headerBackground,
-//     props.headerSortActiveBackground
-//   ],
-//   () => {
-//     if (!tableVars.stage) return
-//     refreshTable(false)
-//   }
-// )
+/**
+ * header 相关（尺寸与样式）
+ */
+watch(
+  () => [
+    props.headerHeight,
+    props.headerFontFamily,
+    props.headerFontSize,
+    props.headerTextColor,
+    props.headerBackground,
+    props.headerSortActiveBackground
+  ],
+  () => {
+    if (!tableVars.stage) return
+    refreshTable(false)
+  }
+)
 
-// /**
-//  * body 相关（行高与样式）
-//  */
-// watch(
-//   () => [
-//     props.bodyRowHeight,
-//     props.bodyBackgroundOdd,
-//     props.bodyBackgroundEven,
-//     props.borderColor,
-//     props.bodyTextColor,
-//     props.bodyFontSize,
-//     props.bodyFontFamily
-//   ],
-//   () => {
-//     if (!tableVars.stage) return
-//     refreshTable(false)
-//   }
-// )
+/**
+ * body 相关（行高与样式）
+ */
+watch(
+  () => [
+    props.bodyRowHeight,
+    props.bodyBackgroundOdd,
+    props.bodyBackgroundEven,
+    props.borderColor,
+    props.bodyTextColor,
+    props.bodyFontSize,
+    props.bodyFontFamily
+  ],
+  () => {
+    if (!tableVars.stage) return
+    refreshTable(false)
+  }
+)
 
-// /**
-//  * 汇总行相关
-//  */
-// watch(
-//   () => [
-//     props.enableSummary,
-//     props.summaryHeight,
-//     props.summaryFontFamily,
-//     props.summaryFontSize,
-//     props.summaryBackground,
-//     props.summaryTextColor
-//   ],
-//   () => {
-//     if (!tableVars.stage) return
-//     refreshTable(false)
-//   }
-// )
+/**
+ * 汇总行相关
+ */
+watch(
+  () => [
+    props.enableSummary,
+    props.summaryHeight,
+    props.summaryFontFamily,
+    props.summaryFontSize,
+    props.summaryBackground,
+    props.summaryTextColor
+  ],
+  () => {
+    if (!tableVars.stage) return
+    refreshTable(false)
+  }
+)
 
-// /**
-//  * 滚动条相关（样式与尺寸）
-//  */
-// watch(
-//   () => [props.scrollbarBackground, props.scrollbarThumb, props.scrollbarThumbHover, props.scrollbarSize],
-//   () => {
-//     if (!tableVars.stage) return
-//     refreshTable(false)
-//   }
-// )
+/**
+ * 滚动条相关（样式与尺寸）
+ */
+watch(
+  () => [props.scrollbarBackground, props.scrollbarThumb, props.scrollbarThumbHover, props.scrollbarSize],
+  () => {
+    if (!tableVars.stage) return
+    refreshTable(false)
+  }
+)
 
-// /**
-//  * 交互相关（悬浮高亮、排序指示等）
-//  */
-// watch(
-//   () => [
-//     props.enableRowHoverHighlight,
-//     props.enableColHoverHighlight,
-//     props.sortableColor,
-//     props.highlightCellBackground
-//   ],
-//   () => {
-//     if (!tableVars.stage) return
-//     refreshTable(false)
-//   }
-// )
+/**
+ * 交互相关（悬浮高亮、排序指示等）
+ */
+watch(
+  () => [
+    props.enableRowHoverHighlight,
+    props.enableColHoverHighlight,
+    props.sortableColor,
+    props.highlightCellBackground
+  ],
+  () => {
+    if (!tableVars.stage) return
+    refreshTable(false)
+  }
+)
 
-// /**
-//  * 虚拟滚动/性能相关
-//  */
-// watch(
-//   () => [props.bufferRows, props.scrollThreshold],
-//   () => {
-//     if (!tableVars.stage) return
-//     refreshTable(false)
-//   }
-// )
+/**
+ * 虚拟滚动/性能相关
+ */
+watch(
+  () => [props.bufferRows, props.scrollThreshold],
+  () => {
+    if (!tableVars.stage) return
+    refreshTable(false)
+  }
+)
 
 /**
  * 挂载
