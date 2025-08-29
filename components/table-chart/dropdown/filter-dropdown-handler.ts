@@ -1,8 +1,10 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, reactive, ref } from 'vue'
+import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
+// 避免循环依赖：不要在此处直接引入 rebuild-group-handler
 import { highlightHandler } from '../render/heightlight-handler'
 import { getDropdownPosition } from '../utils'
 import { tableVars, variableHandlder, type Prettify } from '../variable-handlder'
@@ -35,9 +37,10 @@ const filterDropdown = reactive<FilterDropdown>({
 
 interface FilterDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
-export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => {
+export const filterDropdownHandler = ({ props, emits }: FilterDropdownHandlerProps) => {
   const { filterState } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })
@@ -201,7 +204,8 @@ export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => 
       filterState[colName] = new Set(selectedValues)
     }
     clearGroups()
-    // rebuildGroups()
+    // 通过全局指针调用，避免 import 循环
+    tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
   }
 
   onMounted(() => {

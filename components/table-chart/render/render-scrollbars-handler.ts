@@ -24,7 +24,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   const { tableData } = variableHandlder({ props })
   const { getSummaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
   const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props })
-  const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
+  const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props, emits })
   const { updateHoverRects } = highlightHandler({ props })
 
   /**
@@ -360,6 +360,12 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         tableVars.bodyPositionMapList,
         leftWidth + centerWidth
       )
+
+      // 重新绘制后，确保点击高亮矩形位于最顶层
+      if (tableVars.highlightRect) {
+        tableVars.highlightRect.moveToTop()
+        tableVars.bodyLayer?.batchDraw()
+      }
     }
 
     const bodyY = props.headerHeight - tableVars.stageScrollY

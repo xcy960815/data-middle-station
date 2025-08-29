@@ -78,6 +78,10 @@ interface TableVars {
   verticalScrollbarThumb: Konva.Rect | null
   horizontalScrollbarThumb: Konva.Rect | null
   highlightRect: Konva.Rect | null
+  /**
+   * 对外暴露的重建分组函数指针，避免模块间循环依赖
+   */
+  rebuildGroupsFn?: (() => void) | null
   stageScrollY: number
   stageScrollX: number
   columnWidthOverrides: Record<string, number>
