@@ -5,8 +5,8 @@ import { renderBodyHandler } from './render/render-body-handler'
 import { renderHeaderHandler } from './render/render-header-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
 import { renderSummaryHandler } from './render/render-summary-handler'
-import { clearPool, getTableContainerElement } from './utils'
-import { tableVars, type Prettify } from './variable-handlder'
+import { clearPool, constrainToRange, getTableContainerElement, setPointerStyle } from './utils'
+import { tableVars, variableHandlder, type Prettify } from './variable-handlder'
 interface KonvaStageHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
   emits?: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
@@ -15,6 +15,12 @@ interface KonvaStageHandlerProps {
  * Konva Stage 和 Layer 管理器
  */
 export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
+  const ensureEmits = () => {
+    if (!emits) {
+      throw new Error('This operation requires emits to be provided to konvaStageHandler')
+    }
+    return emits
+  }
   /**
    * 初始化 Stage 和所有 Layer
    * @returns {void}
@@ -103,6 +109,174 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   }
 
   /**
+   * 刷新表格（可选重置滚动位置）
+   * @param resetScroll 是否重置滚动位置
+   */
+  const refreshTable = (resetScroll: boolean) => {
+    const { getScrollLimits, calculateVisibleRows } = renderBodyHandler({ props, emits: ensureEmits() })
+
+    if (resetScroll) {
+      tableVars.stageScrollX = 0
+      tableVars.stageScrollY = 0
+    } else {
+      const { maxScrollX, maxScrollY } = getScrollLimits()
+      tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX, 0, maxScrollX)
+      tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY, 0, maxScrollY)
+    }
+
+    calculateVisibleRows()
+    clearGroups()
+    rebuildGroups()
+  }
+
+  /**
+   * 全局鼠标移动处理
+   */
+  const handleGlobalMouseMove = (e: MouseEvent) => {
+    if (!tableVars.stage) return
+    tableVars.stage.setPointersPositions(e)
+
+    // 记录鼠标在屏幕中的坐标
+    tableVars.lastClientX = e.clientX
+    tableVars.lastClientY = e.clientY
+
+    const { drawBodyPart, recomputeHoverIndexFromPointer, calculateVisibleRows, getScrollLimits, getSplitColumns } =
+      renderBodyHandler({ props, emits: ensureEmits() })
+    const { updateScrollPositions } = renderScrollbarsHandler({ props, emits: ensureEmits() })
+    const { tableData } = variableHandlder({ props })
+
+    // 列宽拖拽中：实时更新覆盖宽度并重建分组
+    if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
+      const delta = e.clientX - tableVars.resizeStartX
+      const newWidth = Math.max(props.minAutoColWidth, tableVars.resizeStartWidth + delta)
+      tableVars.columnWidthOverrides[tableVars.resizingColumnName] = newWidth
+      if (tableVars.resizeNeighborColumnName) {
+        const neighborWidth = Math.max(props.minAutoColWidth, tableVars.resizeNeighborStartWidth - delta)
+        tableVars.columnWidthOverrides[tableVars.resizeNeighborColumnName] = neighborWidth
+      }
+      clearGroups()
+      rebuildGroups()
+      return
+    }
+
+    // 手动拖拽导致的垂直滚动
+    if (tableVars.isDraggingVerticalThumb) {
+      const deltaY = e.clientY - tableVars.dragStartY
+      const scrollThreshold = props.scrollThreshold
+      if (Math.abs(deltaY) < scrollThreshold) return
+
+      const { maxScrollY, maxScrollX } = getScrollLimits()
+      const stageHeight = tableVars.stage.height()
+      const trackHeight =
+        stageHeight -
+        props.headerHeight -
+        (props.enableSummary ? props.summaryHeight : 0) -
+        (maxScrollX > 0 ? props.scrollbarSize : 0)
+      const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
+      const scrollRatio = deltaY / (trackHeight - thumbHeight)
+      const newScrollY = tableVars.dragStartScrollY + scrollRatio * maxScrollY
+
+      const oldScrollY = tableVars.stageScrollY
+      tableVars.stageScrollY = constrainToRange(newScrollY, 0, maxScrollY)
+
+      // 检查是否需要重新渲染虚拟滚动内容
+      const oldVisibleStart = tableVars.visibleRowStart
+      const oldVisibleEnd = tableVars.visibleRowEnd
+      calculateVisibleRows()
+
+      const needsRerender =
+        tableVars.visibleRowStart !== oldVisibleStart ||
+        tableVars.visibleRowEnd !== oldVisibleEnd ||
+        Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 2
+
+      if (needsRerender) {
+        const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
+        tableVars.bodyPositionMapList.length = 0
+        drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
+        drawBodyPart(
+          tableVars.centerBodyGroup,
+          centerCols,
+          tableVars.centerBodyPools,
+          leftCols.length,
+          tableVars.bodyPositionMapList,
+          leftWidth
+        )
+        drawBodyPart(
+          tableVars.rightBodyGroup,
+          rightCols,
+          tableVars.rightBodyPools,
+          leftCols.length + centerCols.length,
+          tableVars.bodyPositionMapList,
+          leftWidth + centerWidth
+        )
+      }
+
+      updateScrollPositions()
+      return
+    }
+
+    // 手动拖拽导致的水平滚动
+    if (tableVars.isDraggingHorizontalThumb) {
+      const deltaX = e.clientX - tableVars.dragStartX
+      const scrollThreshold = props.scrollThreshold
+      if (Math.abs(deltaX) < scrollThreshold) return
+
+      const { maxScrollX } = getScrollLimits()
+      const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
+      const stageWidth = tableVars.stage.width()
+      const visibleWidth = stageWidth - leftWidth - rightWidth - props.scrollbarSize
+      const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
+      const scrollRatio = deltaX / (visibleWidth - thumbWidth)
+      const newScrollX = tableVars.dragStartScrollX + scrollRatio * maxScrollX
+
+      tableVars.stageScrollX = constrainToRange(newScrollX, 0, maxScrollX)
+      updateScrollPositions()
+      return
+    }
+    recomputeHoverIndexFromPointer()
+  }
+
+  /**
+   * 全局鼠标抬起处理
+   */
+  const handleGlobalMouseUp = (e: MouseEvent) => {
+    if (tableVars.stage) tableVars.stage.setPointersPositions(e)
+
+    // 滚动条拖拽结束
+    if (tableVars.isDraggingVerticalThumb || tableVars.isDraggingHorizontalThumb) {
+      tableVars.isDraggingVerticalThumb = false
+      tableVars.isDraggingHorizontalThumb = false
+      setPointerStyle(tableVars.stage, false, 'default')
+      if (tableVars.verticalScrollbarThumbRect && !tableVars.isDraggingVerticalThumb)
+        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumb)
+      if (tableVars.horizontalScrollbarThumbRect && !tableVars.isDraggingHorizontalThumb)
+        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumb)
+      tableVars.scrollbarLayer?.batchDraw()
+    }
+
+    // 列宽拖拽结束
+    if (tableVars.isResizingColumn) {
+      tableVars.isResizingColumn = false
+      tableVars.resizingColumnName = null
+      tableVars.resizeNeighborColumnName = null
+      setPointerStyle(tableVars.stage, false, 'default')
+      clearGroups()
+      rebuildGroups()
+    }
+  }
+
+  /**
+   * 全局窗口尺寸变化处理
+   */
+  const handleGlobalResize = () => {
+    initStage()
+    const { calculateVisibleRows } = renderBodyHandler({ props, emits: ensureEmits() })
+    calculateVisibleRows()
+    clearGroups()
+    rebuildGroups()
+  }
+
+  /**
    * 清除分组 清理所有分组
    * @returns {void}
    */
@@ -126,8 +300,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
      */
     tableVars.verticalScrollbarGroup = null
     tableVars.horizontalScrollbarGroup = null
-    tableVars.verticalScrollbarThumb = null
-    tableVars.horizontalScrollbarThumb = null
+    tableVars.verticalScrollbarThumbRect = null
+    tableVars.horizontalScrollbarThumbRect = null
 
     /**
      * 重置中心区域剪辑组引用
@@ -183,7 +357,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       throw new Error('rebuildGroups requires emits to be provided to konvaStageHandler')
     }
 
-    const { drawHeaderPart } = renderHeaderHandler({ props, emits })
+    const { drawHeaderPart } = renderHeaderHandler({ props })
     const { drawBodyPart, getSplitColumns, getScrollLimits } = renderBodyHandler({ props, emits })
     const { drawSummaryPart } = renderSummaryHandler({ props })
     const { createScrollbars } = renderScrollbarsHandler({ props, emits })
@@ -301,8 +475,10 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.scrollbarLayer?.batchDraw()
   }
 
-  // 暴露到全局状态，供其他模块调用
-  tableVars.rebuildGroupsFn = rebuildGroups
+  // 暴露到全局状态，供其他模块调用（仅在提供 emits 时设置，以避免无 emits 实例覆盖）
+  if (emits) {
+    tableVars.rebuildGroupsFn = rebuildGroups
+  }
 
   /**
    * 创建左侧表头组
@@ -465,11 +641,30 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     return centerBodyClipGroup
   }
 
+  onMounted(() => {
+    // 仅在提供 emits 时，注册依赖 emits 的全局事件监听器
+    if (!emits) return
+    window.addEventListener('resize', handleGlobalResize)
+    window.addEventListener('mousemove', handleGlobalMouseMove)
+    window.addEventListener('mouseup', handleGlobalMouseUp)
+  })
+
+  onUnmounted(() => {
+    if (!emits) return
+    window.removeEventListener('resize', handleGlobalResize)
+    window.removeEventListener('mousemove', handleGlobalMouseMove)
+    window.removeEventListener('mouseup', handleGlobalMouseUp)
+  })
+
   return {
     initStage,
     destroyStage,
     getStageAttr,
     rebuildGroups,
+    refreshTable,
+    handleGlobalMouseMove,
+    handleGlobalMouseUp,
+    handleGlobalResize,
     createHeaderLeftGroups,
     createHeaderCenterGroups,
     createHeaderRightGroups,
