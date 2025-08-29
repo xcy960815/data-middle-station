@@ -5,8 +5,7 @@ import { adjustHexColorBrightness, getFromPool, getTextX, returnToPool, setPoint
 import { tableVars, type KonvaNodePools, type Prettify } from '../variable'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  activeData: Array<ChartDataVo.ChartData>
-  tableColumns: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
+
   getSummaryRowHeight: () => number
 }
 
@@ -15,13 +14,13 @@ interface RenderBodyHandlerProps {
  * @param param0
  * @returns
  */
-export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryRowHeight }: RenderBodyHandlerProps) => {
+export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHandlerProps) => {
   const { getStageAttr } = konvaStageHandler()
   /**
    * 计算可视区域 数据的起始行和结束行
    * @returns {void}
    */
-  const calculateVisibleRows = () => {
+  const calculateVisibleRows = (activeData: Array<ChartDataVo.ChartData>) => {
     if (!tableVars.stage) return
     const stageHeight = tableVars.stage.height()
     const bodyHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - props.scrollbarSize
@@ -112,7 +111,13 @@ export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryR
    * 计算左右固定列与中间列的分组与宽度汇总
    * @returns
    */
-  const getSplitColumns = () => {
+  const getSplitColumns = ({
+    tableColumns,
+    activeData
+  }: {
+    tableColumns: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
+    activeData: Array<ChartDataVo.ChartData>
+  }) => {
     if (!tableVars.stage) {
       // 如果stage还没有初始化，返回默认值
       const leftCols = tableColumns.filter((c) => c.fixed === 'left')
@@ -156,7 +161,6 @@ export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryR
       const width = overrideWidth !== undefined ? overrideWidth : col.width !== undefined ? col.width : autoColumnWidth
       return { ...col, width }
     })
-
     const leftCols = columnsWithWidth.filter((c) => c.fixed === 'left')
     const centerCols = columnsWithWidth.filter((c) => !c.fixed)
     const rightCols = columnsWithWidth.filter((c) => c.fixed === 'right')
@@ -182,9 +186,15 @@ export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryR
    * 获取滚动限制
    * @returns {{ maxScrollX: number, maxScrollY: number }}
    */
-  const getScrollLimits = () => {
+  const getScrollLimits = ({
+    tableColumns,
+    activeData
+  }: {
+    tableColumns: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
+    activeData: Array<ChartDataVo.ChartData>
+  }) => {
     if (!tableVars.stage) return { maxScrollX: 0, maxScrollY: 0 }
-    const { totalWidth, leftWidth, rightWidth } = getSplitColumns()
+    const { totalWidth, leftWidth, rightWidth } = getSplitColumns({ tableColumns, activeData })
 
     const stageWidth = tableVars.stage.width()
     const stageHeight = tableVars.stage.height()
@@ -216,7 +226,13 @@ export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryR
    * @param clientY 客户端Y坐标
    * @returns 是否在表格区域内
    */
-  const isInTableArea = () => {
+  const isInTableArea = ({
+    tableColumns,
+    activeData
+  }: {
+    tableColumns: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
+    activeData: Array<ChartDataVo.ChartData>
+  }) => {
     if (!tableVars.stage) return false
 
     // 转换为 stage 坐标
@@ -224,7 +240,7 @@ export const renderBodyHandler = ({ props, activeData, tableColumns, getSummaryR
     if (!pointerPosition) return false
 
     const { width: stageWidth, height: stageHeight } = getStageAttr()
-    const { maxScrollX, maxScrollY } = getScrollLimits()
+    const { maxScrollX, maxScrollY } = getScrollLimits({ tableColumns: tableColumns, activeData: activeData })
 
     // 计算表格有效区域（排除滚动条）
     const effectiveWidth = maxScrollY > 0 ? stageWidth - props.scrollbarSize : stageWidth

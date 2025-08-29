@@ -15,7 +15,7 @@ export const konvaStageHandler = () => {
     if (!tableContainer) return
     const width = tableContainer.clientWidth
     const height = tableContainer.clientHeight
-    debugger
+
     if (!tableVars.stage) {
       tableVars.stage = new Konva.Stage({ container: tableContainer, width, height })
     } else {
