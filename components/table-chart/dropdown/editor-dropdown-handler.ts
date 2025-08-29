@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, reactive } from 'vue'
+import { reactive } from 'vue'
 import type { CanvasTableEmits } from '../emits'
 import { chartProps } from '../props'
 import { getTableContainerElement } from '../utils'
@@ -10,8 +10,34 @@ interface EditorDropdownHandlerProps {
   emits?: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
+/**
+ * 单元格编辑器状态
+ */
+const cellEditorDropdown = reactive({
+  visible: false,
+  editType: 'input' as 'input' | 'select' | 'date' | 'datetime',
+  editOptions: [] as Array<{ label: string; value: string | number }>,
+  initialValue: '',
+  position: {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+  },
+  // 当前编辑的单元格信息
+  editingCell: {
+    rowIndex: -1,
+    colIndex: -1,
+    colKey: '',
+    column: null as GroupStore.GroupOption | DimensionStore.DimensionOption | null
+  }
+})
+
 export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerProps) => {
   const { tableData } = variableHandlder({ props })
+  /**
+   * 清空 Konva 节点
+   */
   const clearLayersForRebuild = () => {
     tableVars.headerLayer?.destroyChildren()
     tableVars.bodyLayer?.destroyChildren()
@@ -35,28 +61,7 @@ export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerPro
     tableVars.hoveredRowIndex = null
     tableVars.hoveredColIndex = null
   }
-  /**
-   * 单元格编辑器状态
-   */
-  const cellEditorDropdown = reactive({
-    visible: false,
-    editType: 'input' as 'input' | 'select' | 'date' | 'datetime',
-    editOptions: [] as Array<{ label: string; value: string | number }>,
-    initialValue: '',
-    position: {
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0
-    },
-    // 当前编辑的单元格信息
-    editingCell: {
-      rowIndex: -1,
-      colIndex: -1,
-      colKey: '',
-      column: null as GroupStore.GroupOption | DimensionStore.DimensionOption | null
-    }
-  })
+
   /**
    *
    */
@@ -71,13 +76,6 @@ export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerPro
   ) => {
     const tableContainer = getTableContainerElement()
     if (!tableContainer) return
-
-    // 边界检查：确保 rowIndex 在有效范围内
-    if (rowIndex < 0 || rowIndex >= tableData.value.length) {
-      console.warn(`Invalid rowIndex: ${rowIndex}, tableData length: ${tableData.value.length}`)
-      return
-    }
-
     const tableContainerRect = tableContainer.getBoundingClientRect()
     const offsetX = tableContainerRect.left
     const offsetY = tableContainerRect.top
@@ -88,10 +86,7 @@ export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerPro
 
     // 获取当前行数据
     const currentRowData = tableData.value[rowIndex]
-    if (!currentRowData) {
-      console.warn(`Row data not found for rowIndex: ${rowIndex}`)
-      return
-    }
+    if (!currentRowData) return
 
     // 设置编辑器状态
     cellEditorDropdown.editingCell = {
@@ -169,20 +164,29 @@ export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerPro
     cellEditorDropdown.editOptions = []
   }
 
-  onMounted(() => {
+  /**
+   * 初始化事件监听器
+   */
+  const initCellEditorListeners = () => {
     window.addEventListener('scroll', updateCellEditorPositionsInPage)
-    window.addEventListener('scroll', updateCellEditorPositionsInPage)
-  })
-  onUnmounted(() => {
+    document.addEventListener('scroll', updateCellEditorPositionsInPage)
+  }
+
+  /**
+   * 清理事件监听器
+   */
+  const cleanupCellEditorListeners = () => {
     window.removeEventListener('scroll', updateCellEditorPositionsInPage)
-    window.removeEventListener('scroll', updateCellEditorPositionsInPage)
-  })
+    document.removeEventListener('scroll', updateCellEditorPositionsInPage)
+  }
   return {
     cellEditorDropdown,
     openCellEditorDropdown,
     closeCellEditorDropdown,
     resetCellEditorDropdown,
     updateCellEditorPositionsInTable,
-    handleCellEditorSave
+    handleCellEditorSave,
+    initCellEditorListeners,
+    cleanupCellEditorListeners
   }
 }
