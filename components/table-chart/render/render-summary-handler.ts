@@ -1,12 +1,12 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
+import type { ComputedRef, ExtractPropTypes } from 'vue'
 import { chartProps } from '../props'
 import { getTextX, setPointerStyle, truncateText } from '../utils'
 import { numberOptions, tableVars, textOptions, type PositionMap, type Prettify } from '../variable'
 
 interface RenderSummaryHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  summaryState: Record<string, string>
   activeData: ComputedRef<Array<ChartDataVo.ChartData>>
   openSummaryDropdown: (
     evt: KonvaEventObject<MouseEvent, Konva.Rect>,
@@ -17,12 +17,7 @@ interface RenderSummaryHandlerProps {
   ) => void
 }
 
-export const renderSummaryHandler = ({
-  props,
-  summaryState,
-  activeData,
-  openSummaryDropdown
-}: RenderSummaryHandlerProps) => {
+export const renderSummaryHandler = ({ props, activeData, openSummaryDropdown }: RenderSummaryHandlerProps) => {
   const { $webworker } = useNuxtApp()
   /**
    * 计算某列的汇总显示值（异步版本）
@@ -129,7 +124,7 @@ export const renderSummaryHandler = ({
       })
 
       // 先显示占位文本，然后异步更新
-      const rule = summaryState[col.columnName] || 'nodisplay'
+      const rule = tableVars.summaryState[col.columnName] || 'nodisplay'
       const placeholderText = rule === 'nodisplay' ? '不显示' : '计算中...'
       const truncatedTitle = truncateText(
         placeholderText,
@@ -194,9 +189,9 @@ export const renderSummaryHandler = ({
         if (!tableVars.stage) return
         const isNumber = col.columnType === 'number'
         const options = isNumber ? numberOptions : textOptions
-        const prev = summaryState[col.columnName] || 'nodisplay'
+        const prev = tableVars.summaryState[col.columnName] || 'nodisplay'
         const valid = options.some((o) => o.value === prev) ? prev : 'nodisplay'
-        openSummaryDropdown(evt, col.columnName, options, () => { }, valid)
+        openSummaryDropdown(evt, col.columnName, options, () => {}, valid)
       })
 
       x += col.width || 0
