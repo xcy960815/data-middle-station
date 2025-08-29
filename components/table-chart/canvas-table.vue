@@ -83,19 +83,43 @@ const emits = defineEmits<ChartEmits>()
 
 const { tableContainerStyle, handleTableData, handleTableColumns } = variableHandlder({ props })
 
-const { initStage, destroyStage, refreshTable } = konvaStageHandler({ props, emits })
+const { initStage, destroyStage, refreshTable, initStageListeners, cleanupStageListeners } = konvaStageHandler({
+  props,
+  emits
+})
 
 renderBodyHandler({ props, emits })
 
-renderScrollbarsHandler({ props, emits })
+const { createScrollbars, updateScrollbarPosition, updateScrollPositions, initWheelListener, cleanupWheelListener } =
+  renderScrollbarsHandler({ props, emits })
 
-const { filterDropdownRef, filterDropdownStyle, filterDropdown, closeFilterDropdown, handleSelectedFilter } =
-  filterDropdownHandler({ props })
+const {
+  filterDropdownRef,
+  filterDropdownStyle,
+  filterDropdown,
+  closeFilterDropdown,
+  handleSelectedFilter,
+  initFilterDropdownListeners,
+  cleanupFilterDropdownListeners
+} = filterDropdownHandler({ props })
 
-const { summaryDropdownRef, summaryDropdownStyle, summaryDropdown, closeSummaryDropdown, handleSelectedSummary } =
-  summaryDropDownHandler({ props })
+const {
+  summaryDropdownRef,
+  summaryDropdownStyle,
+  summaryDropdown,
+  closeSummaryDropdown,
+  handleSelectedSummary,
+  initSummaryDropdownListeners,
+  cleanupSummaryDropdownListeners
+} = summaryDropDownHandler({ props })
 
-const { cellEditorDropdown, closeCellEditorDropdown, handleCellEditorSave } = editorDropdownHandler({ props, emits })
+const {
+  cellEditorDropdown,
+  closeCellEditorDropdown,
+  handleCellEditorSave,
+  initCellEditorListeners,
+  cleanupCellEditorListeners
+} = editorDropdownHandler({ props, emits })
 
 /**
  * 监听 props 变化
@@ -223,12 +247,22 @@ onMounted(() => {
   initStage()
   handleTableData(props.data)
   refreshTable(true)
+  initWheelListener()
+  initStageListeners()
+  initFilterDropdownListeners()
+  initSummaryDropdownListeners()
+  initCellEditorListeners()
 })
 
 /**
  * 卸载
  */
 onBeforeUnmount(() => {
+  cleanupWheelListener()
+  cleanupStageListeners()
+  cleanupFilterDropdownListeners()
+  cleanupSummaryDropdownListeners()
+  cleanupCellEditorListeners()
   destroyStage()
 })
 </script>

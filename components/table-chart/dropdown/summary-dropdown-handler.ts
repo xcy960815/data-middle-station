@@ -216,18 +216,24 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     }
   }
 
-  onMounted(() => {
+  /**
+   * 初始化事件监听器
+   */
+  const initSummaryDropdownListeners = () => {
     window.addEventListener('mousedown', onGlobalMousedown, true)
     // 添加滚动监听器，监听页面滚动
     window.addEventListener('scroll', updateSummaryDropdownPositionsInPage)
     document.addEventListener('scroll', updateSummaryDropdownPositionsInPage)
-  })
+  }
 
-  onUnmounted(() => {
+  /**
+   * 清理事件监听器
+   */
+  const cleanupSummaryDropdownListeners = () => {
     window.removeEventListener('mousedown', onGlobalMousedown, true)
     window.removeEventListener('scroll', updateSummaryDropdownPositionsInPage)
     document.removeEventListener('scroll', updateSummaryDropdownPositionsInPage)
-  })
+  }
 
   return {
     summaryDropdownStyle,
@@ -238,6 +244,8 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     closeSummaryDropdown,
     getSummaryRowHeight,
     openSummaryDropdown,
-    handleSelectedSummary
+    handleSelectedSummary,
+    initSummaryDropdownListeners,
+    cleanupSummaryDropdownListeners
   }
 }

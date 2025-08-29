@@ -641,20 +641,26 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     return centerBodyClipGroup
   }
 
-  onMounted(() => {
+  /**
+   * 初始化全局事件监听器
+   */
+  const initStageListeners = () => {
     // 仅在提供 emits 时，注册依赖 emits 的全局事件监听器
     if (!emits) return
     window.addEventListener('resize', handleGlobalResize)
     window.addEventListener('mousemove', handleGlobalMouseMove)
     window.addEventListener('mouseup', handleGlobalMouseUp)
-  })
+  }
 
-  onUnmounted(() => {
+  /**
+   * 清理全局事件监听器
+   */
+  const cleanupStageListeners = () => {
     if (!emits) return
     window.removeEventListener('resize', handleGlobalResize)
     window.removeEventListener('mousemove', handleGlobalMouseMove)
     window.removeEventListener('mouseup', handleGlobalMouseUp)
-  })
+  }
 
   return {
     initStage,
@@ -675,6 +681,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     createSummaryCenterGroups,
     createSummaryRightGroups,
     createCenterBodyClipGroup,
-    clearGroups
+    clearGroups,
+    initStageListeners,
+    cleanupStageListeners
   }
 }
