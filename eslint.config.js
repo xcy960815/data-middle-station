@@ -242,7 +242,7 @@ module.exports = [
         defineStore: 'readonly',
         // 项目自定义类型
         ChartDataVo: 'readonly',
-        ChartData: 'readonly',
+        ChartDataDao: 'readonly',
         GroupStore: 'readonly',
         DimensionStore: 'readonly',
         ColumnStore: 'readonly',

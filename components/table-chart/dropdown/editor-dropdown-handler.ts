@@ -5,10 +5,10 @@ import { tableVars } from '../variable'
 
 interface EditorDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  activeData: Array<ChartDataVo.ChartData>
+  tableData: Array<ChartDataVo.ChartData>
 }
 
-export const editorDropdownHandler = ({ props, activeData }: EditorDropdownHandlerProps) => {
+export const editorDropdownHandler = ({ props, tableData }: EditorDropdownHandlerProps) => {
   /**
    * 单元格编辑器状态
    */
@@ -61,7 +61,7 @@ export const editorDropdownHandler = ({ props, activeData }: EditorDropdownHandl
     }
     cellEditorDropdown.editType = column.editType || 'input'
     cellEditorDropdown.editOptions = column.editOptions || []
-    cellEditorDropdown.initialValue = String(activeData[rowIndex][column.columnName] ?? '')
+    cellEditorDropdown.initialValue = String(tableData[rowIndex][column.columnName] ?? '')
     cellEditorDropdown.position = {
       x: editorX,
       y: editorY,

@@ -1,13 +1,13 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import type { ComputedRef, ExtractPropTypes } from 'vue'
+import type { ExtractPropTypes } from 'vue'
 import { chartProps } from '../props'
 import { getTextX, setPointerStyle, truncateText } from '../utils'
-import { numberOptions, summaryState, tableVars, textOptions, type PositionMap, type Prettify } from '../variable'
+import type { PositionMap, Prettify } from '../variable'
+import { numberOptions, summaryState, tableData, tableVars, textOptions } from '../variable'
 
 interface RenderSummaryHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  activeData: ComputedRef<Array<ChartDataVo.ChartData>>
   openSummaryDropdown: (
     evt: KonvaEventObject<MouseEvent, Konva.Rect>,
     colName: string,
@@ -17,7 +17,7 @@ interface RenderSummaryHandlerProps {
   ) => void
 }
 
-export const renderSummaryHandler = ({ props, activeData, openSummaryDropdown }: RenderSummaryHandlerProps) => {
+export const renderSummaryHandler = ({ props, openSummaryDropdown }: RenderSummaryHandlerProps) => {
   const { $webworker } = useNuxtApp()
   /**
    * 计算某列的汇总显示值（异步版本）
@@ -31,7 +31,7 @@ export const renderSummaryHandler = ({ props, activeData, openSummaryDropdown }:
   ) => {
     if (rule === 'nodisplay') return '不显示'
     const key = col.columnName
-    const values = activeData.value.map((r) => r?.[key])
+    const values = tableData.value.map((r) => r?.[key])
     const isNumber = values.some((v) => typeof v === 'number')
     if (isNumber) {
       const nums = values
@@ -106,7 +106,7 @@ export const renderSummaryHandler = ({ props, activeData, openSummaryDropdown }:
         strokeWidth: 1,
         listening: true
       })
-      const realRowIndex = activeData.value.length + 1
+      const realRowIndex = tableData.value.length + 1
       const realColIndex = colIndex + startColIndex
       summaryCellRect.setAttr('col-index', realColIndex)
       summaryCellRect.setAttr('row-index', realRowIndex)
