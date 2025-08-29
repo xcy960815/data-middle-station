@@ -50,13 +50,13 @@
 
   <!-- 单元格编辑器 -->
   <CellEditor
-    :visible="cellEditor.visible"
-    :edit-type="cellEditor.editType"
-    :edit-options="cellEditor.editOptions"
-    :initial-value="cellEditor.initialValue"
-    :position="cellEditor.position"
+    :visible="cellEditorDropdown.visible"
+    :edit-type="cellEditorDropdown.editType"
+    :edit-options="cellEditorDropdown.editOptions"
+    :initial-value="cellEditorDropdown.initialValue"
+    :position="cellEditorDropdown.position"
     @save="handleCellEditorSave"
-    @cancel="handleCellEditorCancel"
+    @close="closeCellEditorDropdown"
   />
 </template>
 
@@ -280,15 +280,13 @@ const rebuildGroups = () => {
 const props = defineProps(chartProps)
 
 const {
-  filterState,
   filterDropdownRef,
   filterDropdownStyle,
   filterDropdown,
   updateFilterDropdownPositionsInTable,
   closeFilterDropdown,
-  updateFilterDropdownPositionsInPage,
   openFilterDropdown
-} = filterDropdownHandler({ updateHoverRects })
+} = filterDropdownHandler()
 
 /**
  * 应用过滤下拉浮层选中的选项
@@ -297,26 +295,23 @@ const handleSelectedFilter = () => {
   const colName = filterDropdown.colName
   const selectedValues = filterDropdown.selectedValues
   if (!selectedValues || selectedValues.length === 0) {
-    delete filterState[colName]
+    delete tableVars.filterState[colName]
   } else {
-    filterState[colName] = new Set(selectedValues)
+    tableVars.filterState[colName] = new Set(selectedValues)
   }
   clearGroups()
   rebuildGroups()
 }
 
-const { tableData, sortColumns, activeData, tableColumns, tableContainerStyle } = createTableState({
-  props,
-  filterState
+const { tableData, activeData, tableColumns, tableContainerStyle } = createTableState({
+  props
 })
 
 const {
-  summaryState,
   summaryDropdownRef,
   summaryDropdownStyle,
   summaryDropdown,
   updateSummaryDropdownPositionsInTable,
-  updateSummaryDropdownPositionsInPage,
   closeSummaryDropdown,
   getSummaryRowHeight,
   openSummaryDropdown
@@ -329,26 +324,46 @@ const {
 const handleSelectedSummary = () => {
   const colName = summaryDropdown.colName
   const selected = summaryDropdown.selectedValue
-  summaryState[colName] = selected
+  tableVars.summaryState[colName] = selected
   clearGroups()
   rebuildGroups()
   // 选择后关闭弹框
   summaryDropdown.visible = false
 }
 
-const { startCellEditImmediate, cellEditor } = editorDropdownHandler({ props, activeData: activeData.value })
+const {
+  cellEditorDropdown,
+  openCellEditorDropdown,
+  closeCellEditorDropdown,
+  resetCellEditorDropdown,
+  updateCellEditorPositionsInTable
+} = editorDropdownHandler({ props, activeData: activeData.value })
 
+/**
+ * 保存单元格编辑
+ */
+const handleCellEditorSave = (newValue: string | number) => {
+  const { rowIndex, colKey, column } = cellEditorDropdown.editingCell
+  if (rowIndex >= 0 && colKey && column) {
+    const rowData = activeData.value[rowIndex]
+    const oldValue = rowData[colKey]
+    // 更新数据
+    rowData[colKey] = newValue
+    // 发送编辑事件
+    emits('cell-edit', { rowIndex, colKey, oldValue, newValue, rowData })
+    clearGroups()
+    rebuildGroups()
+  }
+  resetCellEditorDropdown()
+}
 const { resetHighlightRects, getColOrRowHighlightRects } = highlightHandler({ props })
 
 const { drawSummaryPart } = renderSummaryHandler({
   props,
-  summaryState,
   activeData,
   openSummaryDropdown: (evt, colName, options, updateHoverRects, selected) =>
     openSummaryDropdown(evt, colName, options, updateHoverRects, selected)
 })
-
-// const { drawHeaderPart } = renderHeaderHandler({ props, sortColumns })
 
 const {
   createHighlightRect,
@@ -377,113 +392,6 @@ const emits = defineEmits<{
   'render-chart-start': []
   'render-chart-end': []
 }>()
-
-/**
- * 保存单元格编辑
- */
-const handleCellEditorSave = (newValue: any) => {
-  const { rowIndex, colKey, column } = cellEditor.editingCell
-  if (rowIndex >= 0 && colKey && column) {
-    const rowData = activeData.value[rowIndex]
-    const oldValue = rowData[colKey]
-
-    // 更新数据
-    rowData[colKey] = newValue
-
-    // 发送编辑事件
-    emits('cell-edit', { rowIndex, colKey, oldValue, newValue, rowData })
-
-    // 重新渲染表格
-    clearGroups()
-    rebuildGroups()
-  }
-
-  // 关闭编辑器
-  resetCellEditor()
-}
-
-/**
- * 重置编辑器状态
- */
-const resetCellEditor = () => {
-  cellEditor.visible = false
-  cellEditor.editingCell = {
-    rowIndex: -1,
-    colIndex: -1,
-    colKey: '',
-    column: null
-  }
-  cellEditor.initialValue = ''
-  cellEditor.editOptions = []
-}
-
-/**
- * 取消单元格编辑
- */
-const handleCellEditorCancel = () => {
-  resetCellEditor()
-}
-
-/**
- * 更新编辑器位置（当表格滚动时调用）
- */
-const updateCellEditorPosition = () => {
-  if (!cellEditor.visible) return
-  // console.log("updateCellEditorPosition");
-  // const { rowIndex, colIndex } = cellEditor.editingCell
-  // if (rowIndex < 0 || colIndex < 0) return
-
-  // // 查找对应单元格的位置
-  // const positionMapList = [...tableVars.bodyPositionMapList]
-
-  // const positionOption = positionMapList.find((item) => item.rowIndex === rowIndex + 1 && item.colIndex === colIndex)
-
-  // if (positionOption) {
-  //   const tableContainer = getTableContainerElement()
-  //   if (tableContainer) {
-  //     const containerRect = tableContainer.getBoundingClientRect()
-  //     cellEditor.position.x = containerRect.left + positionOption.x
-  //     cellEditor.position.y = containerRect.top + positionOption.y
-  //   }
-  // } else {
-  //   // 如果单元格不在可视区域，关闭编辑器
-  //   resetCellEditor()
-  // }
-}
-
-/**
- * 点击外部关闭（允许点击 Element Plus 下拉面板）
- * @param e 鼠标事件
- * @returns {void}
- */
-const onGlobalMousedown = (e: MouseEvent) => {
-  if (tableVars.stage) tableVars.stage.setPointersPositions(e)
-
-  const target = e.target as HTMLElement | null
-  if (!target) return
-
-  // 检查是否点击了编辑器区域
-  if (cellEditor.visible) {
-    const editorElement = target.closest('.dms-cell-editor')
-    const isElSelectDropdown = target.closest('.el-select-dropdown, .el-popper, .el-picker-panel')
-    if (!editorElement && !isElSelectDropdown) {
-      resetCellEditor()
-    }
-  }
-
-  if (!filterDropdown.visible && !summaryDropdown.visible) return
-  const panel = filterDropdownRef.value
-  const panelSummary = summaryDropdownRef.value
-
-  // 点击自身面板内：不关闭
-  if ((panel && panel.contains(target)) || (panelSummary && panelSummary.contains(target))) return
-  // 点击 el-select 下拉面板：不关闭
-  const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
-  if (!inElSelectDropdown) {
-    filterDropdown.visible = false
-    summaryDropdown.visible = false
-  }
-}
 
 const drawHeaderPart = (
   headerGroup: Konva.Group | null,
@@ -532,7 +440,7 @@ const drawHeaderPart = (
     })
 
     // 如果该列当前参与排序，则给表头单元格一个高亮背景（多列排序）
-    const isSortColumn = sortColumns.value.find((s) => s.columnName === col.columnName)
+    const isSortColumn = tableVars.sortColumns.find((s) => s.columnName === col.columnName)
     headerCellRect.fill(isSortColumn ? props.headerSortActiveBackground : props.headerBackground)
 
     // 预留右侧区域（排序箭头 + 过滤图标），避免与文本重叠
@@ -561,7 +469,7 @@ const drawHeaderPart = (
     // 如果用户当前列开启排序
     if (col.sortable) {
       // 排序箭头（三角形 ▲/▼），更紧凑与清晰（多列排序）
-      const foundSort = sortColumns.value.find((s) => s.columnName === col.columnName)
+      const foundSort = tableVars.sortColumns.find((s) => s.columnName === col.columnName)
       const inactiveColor = '#C0C4CC'
       const upColor = foundSort?.order === 'asc' ? props.sortableColor : inactiveColor
       const downColor = foundSort?.order === 'desc' ? props.sortableColor : inactiveColor
@@ -605,14 +513,14 @@ const drawHeaderPart = (
         if (tableVars.isResizingColumn) return
         const e = event.evt
         const hasModifier = !!(e && (e.shiftKey || e.ctrlKey || e.metaKey))
-        const idx = sortColumns.value.findIndex((s) => s.columnName === col.columnName)
+        const idx = tableVars.sortColumns.findIndex((s) => s.columnName === col.columnName)
 
         if (hasModifier) {
           // 多列模式：在原序列中追加/切换/移除该列
           if (idx === -1) {
-            sortColumns.value = [...sortColumns.value, { columnName: col.columnName, order }]
+            tableVars.sortColumns = [...tableVars.sortColumns, { columnName: col.columnName, order }]
           } else {
-            const next = [...sortColumns.value]
+            const next = [...tableVars.sortColumns]
             if (next[idx].order === order) {
               // 如果点击的是相同顺序，则移除该列
               next.splice(idx, 1)
@@ -620,18 +528,18 @@ const drawHeaderPart = (
               // 否则切换到新顺序
               next[idx] = { columnName: col.columnName, order }
             }
-            sortColumns.value = next
+            tableVars.sortColumns = next
           }
         } else {
           // 单列模式：仅对当前列循环 asc -> desc -> remove
           if (idx === -1) {
-            sortColumns.value = [{ columnName: col.columnName, order }]
-          } else if (sortColumns.value[idx].order === order) {
+            tableVars.sortColumns = [{ columnName: col.columnName, order }]
+          } else if (tableVars.sortColumns[idx].order === order) {
             // 如果点击的是相同顺序，则移除该列
-            sortColumns.value = []
+            tableVars.sortColumns = []
           } else {
             // 否则切换到新顺序
-            sortColumns.value = [{ columnName: col.columnName, order }]
+            tableVars.sortColumns = [{ columnName: col.columnName, order }]
           }
         }
         clearGroups()
@@ -646,7 +554,7 @@ const drawHeaderPart = (
 
     // 如果用户当前列开启过滤
     if (col.filterable) {
-      const hasFilter = !!(filterState[col.columnName] && filterState[col.columnName].size > 0)
+      const hasFilter = !!(tableVars.filterState[col.columnName] && tableVars.filterState[col.columnName].size > 0)
       const filterColor = hasFilter ? props.sortableColor : '#C0C4CC'
       const filterX = x + (col.width || 0) - 12
       // 绘制过滤器图标（漏斗形状）
@@ -688,7 +596,7 @@ const drawHeaderPart = (
         const values = new Set<string>()
         tableData.value.forEach((r) => values.add(String(r[col.columnName] ?? '')))
         const options = Array.from(values)
-        const current = filterState[col.columnName] ? Array.from(filterState[col.columnName]!) : []
+        const current = tableVars.filterState[col.columnName] ? Array.from(tableVars.filterState[col.columnName]!) : []
         const optionUnion = Array.from(new Set<string>([...options, ...current]))
         openFilterDropdown(evt, col.columnName, optionUnion, current, updateHoverRects)
       })
@@ -735,13 +643,6 @@ const drawHeaderPart = (
 }
 
 /**
- * 双击计时器
- */
-let doubleClickTimer: NodeJS.Timeout | null = null
-let lastClickTime = 0
-let lastClickCell = { rowIndex: -1, colIndex: -1 }
-
-/**
  * 处理单元格点击，更新选中状态并抛出事件
  * @param {number} rowIndex 行索引
  * @param {number} colIndex 列索引
@@ -784,16 +685,16 @@ const handleCellDoubleClick = (
     return
   }
   // 如果已经在编辑，先重置
-  if (cellEditor.visible) {
-    resetCellEditor()
+  if (cellEditorDropdown.visible) {
+    resetCellEditorDropdown()
     // 添加小延时确保重置完成
     setTimeout(() => {
-      startCellEditImmediate(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
+      openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
     }, 10)
     return
   }
 
-  startCellEditImmediate(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
+  openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
 }
 
 /**
@@ -1085,7 +986,15 @@ const drawBodyPart = (
           }, 250) // 250ms 内未发生第二次点击 → 认定为单击
         })
         cellRect.on('dblclick', () => {
-          handleCellDoubleClick(rowIndex, colIndex, col, cellRect.x(), cellRect.y(), cellWidth, cellHeight)
+          handleCellDoubleClick(
+            rowIndex,
+            colIndex + startColIndex,
+            col,
+            cellRect.x(),
+            cellRect.y(),
+            cellWidth,
+            cellHeight
+          )
         })
 
         bodyGroup.add(cellRect)
@@ -1317,8 +1226,7 @@ const updateVerticalScroll = (offsetY: number) => {
   tableVars.centerBodyGroup.y(centerY)
   updateScrollbarPosition()
   recomputeHoverIndexFromPointer()
-  updateCellEditorPosition()
-
+  updateCellEditorPositionsInTable()
   tableVars.bodyLayer?.batchDraw()
   tableVars.fixedBodyLayer?.batchDraw()
   tableVars.summaryLayer?.batchDraw()
@@ -1351,7 +1259,7 @@ const updateHorizontalScroll = (offsetX: number) => {
   // tableVars.fixedSummaryLayer?.batchDraw()
   recomputeHoverIndexFromPointer()
   updateHoverRects()
-  updateCellEditorPosition()
+  updateCellEditorPositionsInTable()
   // 横向滚动时更新弹框位置
   updateFilterDropdownPositionsInTable()
   updateSummaryDropdownPositionsInTable()
@@ -1640,7 +1548,7 @@ const updateScrollPositions = () => {
  * 处理窗口大小改变
  * @returns {void}
  */
-const handleResize = () => {
+const handleWindowResize = () => {
   initStage()
   calculateVisibleRows(activeData.value)
   clearGroups()
@@ -1796,35 +1704,22 @@ watch(
 onMounted(() => {
   initStage()
   refreshTable(true)
-  window.addEventListener('mousedown', onGlobalMousedown, true)
   const tableContainer = getTableContainerElement()
   tableContainer?.addEventListener('wheel', handleMouseWheel, { passive: false })
-  window.addEventListener('resize', handleResize)
+  window.addEventListener('resize', handleWindowResize)
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('mouseup', handleMouseUp)
-  // 添加滚动监听器，监听页面滚动
-  window.addEventListener('scroll', updateFilterDropdownPositionsInPage)
-  window.addEventListener('scroll', updateSummaryDropdownPositionsInPage)
-  document.addEventListener('scroll', updateFilterDropdownPositionsInPage)
-  document.addEventListener('scroll', updateSummaryDropdownPositionsInPage)
 })
 
 /**
  * 卸载
  */
 onBeforeUnmount(() => {
-  window.removeEventListener('mousedown', onGlobalMousedown, true)
   const tableContainer = getTableContainerElement()
   tableContainer?.removeEventListener('wheel', handleMouseWheel)
-  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('resize', handleWindowResize)
   window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('mouseup', handleMouseUp)
-  // 移除滚动监听器
-  window.removeEventListener('scroll', updateFilterDropdownPositionsInPage)
-  window.removeEventListener('scroll', updateSummaryDropdownPositionsInPage)
-  document.removeEventListener('scroll', updateFilterDropdownPositionsInPage)
-  document.removeEventListener('scroll', updateSummaryDropdownPositionsInPage)
-
   destroyStage()
 })
 </script>

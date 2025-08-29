@@ -15,24 +15,11 @@ export interface FilterDropdown {
   originalClientY: number
 }
 
-interface FilterDropdownHandlerProps {
-  // updateHoverRects: () => void
-}
-
-export const filterDropdownHandler = (
-  {
-    // updateHoverRects
-  }: FilterDropdownHandlerProps
-) => {
+export const filterDropdownHandler = () => {
   /**
    * 过滤下拉浮层元素
    */
   const filterDropdownRef = ref<HTMLDivElement | null>(null)
-
-  /**
-   * 过滤状态：列名 -> 选中的离散值集合（使用 Set 便于判定）
-   */
-  const filterState = reactive<Record<string, Set<string>>>({})
 
   /**
    * 过滤下拉浮层状态（DOM）
@@ -164,13 +151,52 @@ export const filterDropdownHandler = (
     })
   }
 
+  /**
+   * 点击外部关闭（允许点击 Element Plus 下拉面板）
+   * @param e 鼠标事件
+   * @returns {void}
+   */
+  const onGlobalMousedown = (e: MouseEvent) => {
+    if (tableVars.stage) tableVars.stage.setPointersPositions(e)
+    const target = e.target as HTMLElement | null
+    if (!target) return
+
+    // // 检查是否点击了编辑器区域
+    // if (cellEditor.visible) {
+    //   const editorElement = target.closest('.dms-cell-editor')
+    //   const isElSelectDropdown = target.closest('.el-select-dropdown, .el-popper, .el-picker-panel')
+    //   if (!editorElement && !isElSelectDropdown) {
+    //     resetCellEditor()
+    //   }
+    // }
+
+    if (!filterDropdown.visible) return
+    const panel = filterDropdownRef.value
+
+    if (panel && panel.contains(target)) return
+    const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
+    if (!inElSelectDropdown) {
+      filterDropdown.visible = false
+    }
+  }
+
+  onMounted(() => {
+    window.addEventListener('scroll', updateFilterDropdownPositionsInPage)
+    document.addEventListener('scroll', updateFilterDropdownPositionsInPage)
+    document.addEventListener('mousedown', onGlobalMousedown, true)
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('scroll', updateFilterDropdownPositionsInPage)
+    document.removeEventListener('scroll', updateFilterDropdownPositionsInPage)
+    document.removeEventListener('mousedown', onGlobalMousedown, true)
+  })
+
   return {
-    filterState,
     filterDropdownRef,
     filterDropdownStyle,
     filterDropdown,
     updateFilterDropdownPositionsInTable,
-    updateFilterDropdownPositionsInPage,
     closeFilterDropdown,
     openFilterDropdown
   }

@@ -6,7 +6,7 @@
       class="dms-cell-editor"
       :style="editorStyle"
       @keydown.enter="handleSaveEditorValue"
-      @keydown.esc="handleCancel"
+      @keydown.esc="handleCloseEditor"
       @click.stop
     >
       <!-- 输入框编辑器 -->
@@ -14,7 +14,7 @@
         v-if="editType === 'input'"
         ref="inputRef"
         v-model="editValue"
-        @blur="handleSaveEditorValue"
+        @change="handleSaveEditorValue"
         @keydown.stop
       />
 
@@ -37,8 +37,7 @@
         type="date"
         format="YYYY-MM-DD"
         value-format="YYYY-MM-DD"
-        @change="handleSaveEditorValue"
-        @blur="handleCancel"
+        @blur="handleSaveEditorValue"
         @keydown.stop
       />
 
@@ -50,8 +49,7 @@
         type="datetime"
         format="YYYY-MM-DD HH:mm:ss"
         value-format="YYYY-MM-DD HH:mm:ss"
-        @change="handleSaveEditorValue"
-        @blur="handleCancel"
+        @blur="handleSaveEditorValue"
         @keydown.stop
       />
     </div>
@@ -70,7 +68,7 @@ interface Props {
   visible: boolean
   editType: 'input' | 'select' | 'date' | 'datetime'
   editOptions?: EditOptions[]
-  initialValue: any
+  initialValue: string | number
   position: {
     x: number
     y: number
@@ -80,8 +78,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'save', value: number | string): void
-  (e: 'cancel'): void
+  (eventName: 'save', value: number | string): void
+  (eventName: 'close'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -103,13 +101,13 @@ const editorStyle = computed(() => {
   const { x, y, width, height } = props.position
   return {
     position: 'fixed' as const,
-    left: `${x}px`,
-    top: `${y}px`,
-    width: `${width}px`,
-    height: `${height}px`,
+    left: `${x + 1}px`,
+    top: `${y + 1}px`,
+    width: `${width - 2}px`,
+    height: `${height - 2}px`,
     zIndex: 9999,
     background: '#fff',
-    border: '1px solid #409eff',
+    border: 'none',
     padding: 0,
     margin: 0,
     boxSizing: 'border-box' as const,
@@ -130,30 +128,18 @@ watch(
   }
 )
 
-// 监听初始值变化
-watch(
-  () => props.initialValue,
-  (newValue) => {
-    editValue.value = newValue
-  }
-)
-
 // 聚焦编辑器
 const focusEditor = () => {
   nextTick(() => {
     switch (props.editType) {
       case 'input':
         inputRef.value?.focus()
-        inputRef.value?.select()
         break
       case 'select':
-        selectRef.value?.focus()
         break
       case 'date':
-        // Date picker 通过点击打开，不需要手动focus
         break
       case 'datetime':
-        // DateTime picker 通过点击打开，不需要手动focus
         break
     }
   })
@@ -161,12 +147,18 @@ const focusEditor = () => {
 
 // 保存编辑
 const handleSaveEditorValue = () => {
-  emits('save', editValue.value)
+  // 只有当值发生变化时才保存
+  if (editValue.value !== props.initialValue) {
+    emits('save', editValue.value)
+  } else {
+    // 值没有变化，直接取消编辑
+    emits('close')
+  }
 }
 
 // 取消编辑
-const handleCancel = () => {
-  emits('cancel')
+const handleCloseEditor = () => {
+  emits('close')
 }
 
 // 点击外部关闭编辑器
@@ -176,7 +168,8 @@ const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as HTMLElement
     const isElSelectDropdown = target.closest('.el-select-dropdown, .el-popper, .el-picker-panel')
     if (!isElSelectDropdown) {
-      handleCancel()
+      // 点击外部时保存数据而不是取消
+      handleSaveEditorValue()
     }
   }
 }
@@ -206,6 +199,12 @@ onBeforeUnmount(() => {
       line-height: 1;
       display: flex;
       align-items: center;
+      &:hover,
+      &:focus,
+      &.is-focus {
+        border: none !important;
+        box-shadow: none !important;
+      }
     }
 
     .el-input__inner {
@@ -214,6 +213,12 @@ onBeforeUnmount(() => {
       padding: 0;
       font-size: 14px;
       line-height: 1;
+      &:hover,
+      &:focus {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+      }
     }
   }
 
@@ -221,25 +226,63 @@ onBeforeUnmount(() => {
   :deep(.el-select) {
     height: 100%;
     width: 100%;
+    border: none !important;
+
+    &:hover,
+    &:focus,
+    &.is-focus,
+    &.is-focused {
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+
+    .el-input {
+      border: none !important;
+      box-shadow: none !important;
+
+      &:hover,
+      &:focus,
+      &.is-focus {
+        border: none !important;
+        box-shadow: none !important;
+      }
+    }
 
     .el-input__wrapper {
       height: 100%;
-      border: none;
-      box-shadow: none;
+      border: none !important;
+      box-shadow: none !important;
       background: transparent;
       border-radius: 0;
       padding: 0 8px;
       line-height: 1;
       display: flex;
       align-items: center;
+
+      &:hover,
+      &:focus,
+      &.is-focus,
+      &.is-focused {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+      }
     }
 
     .el-input__inner {
       height: 100%;
-      border: none;
+      border: none !important;
       padding: 0;
       font-size: 14px;
       line-height: 1;
+
+      &:hover,
+      &:focus {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+      }
     }
 
     .el-input__suffix {
@@ -263,6 +306,13 @@ onBeforeUnmount(() => {
       line-height: 1;
       display: flex;
       align-items: center;
+
+      &:hover,
+      &:focus,
+      &.is-focus {
+        border: none !important;
+        box-shadow: none !important;
+      }
     }
 
     .el-input__inner {
@@ -271,12 +321,101 @@ onBeforeUnmount(() => {
       padding: 0;
       font-size: 14px;
       line-height: 1;
+
+      &:hover,
+      &:focus {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+      }
     }
 
     .el-input__prefix,
     .el-input__suffix {
       display: flex;
       align-items: center;
+    }
+  }
+}
+</style>
+
+<style lang="scss">
+// 全局样式：彻底移除所有 Element Plus 组件的边框
+.el-select-dropdown {
+  border: none !important;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+// 强力覆盖所有可能的 select 边框状态
+.el-select,
+.el-select:hover,
+.el-select:focus,
+.el-select.is-focus,
+.el-select.is-focused {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  .el-input,
+  .el-input:hover,
+  .el-input:focus,
+  .el-input.is-focus,
+  .el-input.is-focused {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+
+    .el-input__wrapper,
+    .el-input__wrapper:hover,
+    .el-input__wrapper:focus,
+    .el-input__wrapper.is-focus,
+    .el-input__wrapper.is-focused {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .el-input__inner,
+    .el-input__inner:hover,
+    .el-input__inner:focus {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
+}
+
+// 针对表格编辑器中的所有输入组件
+.cell-editor {
+  .el-select,
+  .el-input,
+  .el-date-editor {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+
+    &:hover,
+    &:focus,
+    &.is-focus,
+    &.is-focused {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .el-input__wrapper {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+
+      &:hover,
+      &:focus,
+      &.is-focus,
+      &.is-focused {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
     }
   }
 }

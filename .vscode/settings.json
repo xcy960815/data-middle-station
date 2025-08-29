@@ -6,38 +6,38 @@
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
   },
-  // 设置默认格式化工具为 Prettier
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  // 为不同文件类型指定格式化工具
+  // 设置默认格式化工具为 Prettier (如果已安装)
+  "editor.defaultFormatter": null,
+  // 为不同文件类型指定格式化工具 (使用已安装的扩展)
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
   "[vue]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "Vue.volar"
   },
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.html-language-features"
   },
   "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.css-language-features"
   },
   "[scss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.css-language-features"
   },
   "[less]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.css-language-features"
   },
   "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.markdown-language-features"
   },
   // ESLint 配置
   "eslint.enable": true,
@@ -47,9 +47,9 @@
     "vue"
   ],
   "eslint.useFlatConfig": true,
-  // Prettier 配置
-  "prettier.enable": true,
-  "prettier.requireConfig": true,
+  // Prettier 配置 (如果已安装扩展)
+  // "prettier.enable": true,
+  // "prettier.requireConfig": true,
   // Vue 文件支持 (Volar 推荐配置)
   "vue.updateImportsOnFileMove.enabled": true,
   "vue.autoInsert.dotValue": true,
