@@ -75,8 +75,8 @@ interface TableVars {
   rightSummaryGroup: Konva.Group | null
   verticalScrollbarGroup: Konva.Group | null
   horizontalScrollbarGroup: Konva.Group | null
-  verticalScrollbarThumb: Konva.Rect | null
-  horizontalScrollbarThumb: Konva.Rect | null
+  verticalScrollbarThumbRect: Konva.Rect | null
+  horizontalScrollbarThumbRect: Konva.Rect | null
   highlightRect: Konva.Rect | null
   /**
    * 对外暴露的重建分组函数指针，避免模块间循环依赖
@@ -246,12 +246,12 @@ export const tableVars: TableVars = {
   /**
    * 垂直滚动条滑块
    */
-  verticalScrollbarThumb: null,
+  verticalScrollbarThumbRect: null,
 
   /**
    * 水平滚动条滑块
    */
-  horizontalScrollbarThumb: null,
+  horizontalScrollbarThumbRect: null,
 
   /**
    * 高亮矩形
@@ -524,8 +524,8 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     tableVars.rightSummaryGroup = null
     tableVars.verticalScrollbarGroup = null
     tableVars.horizontalScrollbarGroup = null
-    tableVars.verticalScrollbarThumb = null
-    tableVars.horizontalScrollbarThumb = null
+    tableVars.verticalScrollbarThumbRect = null
+    tableVars.horizontalScrollbarThumbRect = null
     tableVars.highlightRect = null
 
     // 重置滚动相关
