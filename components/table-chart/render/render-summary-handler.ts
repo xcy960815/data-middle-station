@@ -3,7 +3,7 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 import type { ComputedRef, ExtractPropTypes } from 'vue'
 import { chartProps } from '../props'
 import { getTextX, setPointerStyle, truncateText } from '../utils'
-import { numberOptions, tableVars, textOptions, type PositionMap, type Prettify } from '../variable'
+import { numberOptions, summaryState, tableVars, textOptions, type PositionMap, type Prettify } from '../variable'
 
 interface RenderSummaryHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -124,7 +124,7 @@ export const renderSummaryHandler = ({ props, activeData, openSummaryDropdown }:
       })
 
       // 先显示占位文本，然后异步更新
-      const rule = tableVars.summaryState[col.columnName] || 'nodisplay'
+      const rule = summaryState[col.columnName] || 'nodisplay'
       const placeholderText = rule === 'nodisplay' ? '不显示' : '计算中...'
       const truncatedTitle = truncateText(
         placeholderText,
@@ -189,7 +189,7 @@ export const renderSummaryHandler = ({ props, activeData, openSummaryDropdown }:
         if (!tableVars.stage) return
         const isNumber = col.columnType === 'number'
         const options = isNumber ? numberOptions : textOptions
-        const prev = tableVars.summaryState[col.columnName] || 'nodisplay'
+        const prev = summaryState[col.columnName] || 'nodisplay'
         const valid = options.some((o) => o.value === prev) ? prev : 'nodisplay'
         openSummaryDropdown(evt, col.columnName, options, () => {}, valid)
       })

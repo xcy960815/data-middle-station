@@ -83,7 +83,15 @@ import {
   setPointerStyle,
   truncateText
 } from './utils'
-import { type KonvaNodePools, type PositionMap, createTableState, tableVars } from './variable'
+import {
+  type KonvaNodePools,
+  type PositionMap,
+  createTableState,
+  filterState,
+  sortColumns,
+  summaryState,
+  tableVars
+} from './variable'
 
 const {
   initStage,
@@ -295,9 +303,9 @@ const handleSelectedFilter = () => {
   const colName = filterDropdown.colName
   const selectedValues = filterDropdown.selectedValues
   if (!selectedValues || selectedValues.length === 0) {
-    delete tableVars.filterState[colName]
+    delete filterState[colName]
   } else {
-    tableVars.filterState[colName] = new Set(selectedValues)
+    filterState[colName] = new Set(selectedValues)
   }
   clearGroups()
   rebuildGroups()
@@ -324,7 +332,7 @@ const {
 const handleSelectedSummary = () => {
   const colName = summaryDropdown.colName
   const selected = summaryDropdown.selectedValue
-  tableVars.summaryState[colName] = selected
+  summaryState[colName] = selected
   clearGroups()
   rebuildGroups()
   // 选择后关闭弹框
@@ -440,7 +448,7 @@ const drawHeaderPart = (
     })
 
     // 如果该列当前参与排序，则给表头单元格一个高亮背景（多列排序）
-    const isSortColumn = tableVars.sortColumns.find((s) => s.columnName === col.columnName)
+    const isSortColumn = sortColumns.value.find((s) => s.columnName === col.columnName)
     headerCellRect.fill(isSortColumn ? props.headerSortActiveBackground : props.headerBackground)
 
     // 预留右侧区域（排序箭头 + 过滤图标），避免与文本重叠
@@ -469,7 +477,7 @@ const drawHeaderPart = (
     // 如果用户当前列开启排序
     if (col.sortable) {
       // 排序箭头（三角形 ▲/▼），更紧凑与清晰（多列排序）
-      const foundSort = tableVars.sortColumns.find((s) => s.columnName === col.columnName)
+      const foundSort = sortColumns.value.find((s) => s.columnName === col.columnName)
       const inactiveColor = '#C0C4CC'
       const upColor = foundSort?.order === 'asc' ? props.sortableColor : inactiveColor
       const downColor = foundSort?.order === 'desc' ? props.sortableColor : inactiveColor
@@ -513,14 +521,14 @@ const drawHeaderPart = (
         if (tableVars.isResizingColumn) return
         const e = event.evt
         const hasModifier = !!(e && (e.shiftKey || e.ctrlKey || e.metaKey))
-        const idx = tableVars.sortColumns.findIndex((s) => s.columnName === col.columnName)
+        const idx = sortColumns.value.findIndex((s) => s.columnName === col.columnName)
 
         if (hasModifier) {
           // 多列模式：在原序列中追加/切换/移除该列
           if (idx === -1) {
-            tableVars.sortColumns = [...tableVars.sortColumns, { columnName: col.columnName, order }]
+            sortColumns.value = [...sortColumns.value, { columnName: col.columnName, order }]
           } else {
-            const next = [...tableVars.sortColumns]
+            const next = [...sortColumns.value]
             if (next[idx].order === order) {
               // 如果点击的是相同顺序，则移除该列
               next.splice(idx, 1)
@@ -528,18 +536,18 @@ const drawHeaderPart = (
               // 否则切换到新顺序
               next[idx] = { columnName: col.columnName, order }
             }
-            tableVars.sortColumns = next
+            sortColumns.value = next
           }
         } else {
           // 单列模式：仅对当前列循环 asc -> desc -> remove
           if (idx === -1) {
-            tableVars.sortColumns = [{ columnName: col.columnName, order }]
-          } else if (tableVars.sortColumns[idx].order === order) {
+            sortColumns.value = [{ columnName: col.columnName, order }]
+          } else if (sortColumns.value[idx].order === order) {
             // 如果点击的是相同顺序，则移除该列
-            tableVars.sortColumns = []
+            sortColumns.value = []
           } else {
             // 否则切换到新顺序
-            tableVars.sortColumns = [{ columnName: col.columnName, order }]
+            sortColumns.value = [{ columnName: col.columnName, order }]
           }
         }
         clearGroups()
@@ -554,7 +562,7 @@ const drawHeaderPart = (
 
     // 如果用户当前列开启过滤
     if (col.filterable) {
-      const hasFilter = !!(tableVars.filterState[col.columnName] && tableVars.filterState[col.columnName].size > 0)
+      const hasFilter = !!(filterState[col.columnName] && filterState[col.columnName].size > 0)
       const filterColor = hasFilter ? props.sortableColor : '#C0C4CC'
       const filterX = x + (col.width || 0) - 12
       // 绘制过滤器图标（漏斗形状）
@@ -596,7 +604,7 @@ const drawHeaderPart = (
         const values = new Set<string>()
         tableData.value.forEach((r) => values.add(String(r[col.columnName] ?? '')))
         const options = Array.from(values)
-        const current = tableVars.filterState[col.columnName] ? Array.from(tableVars.filterState[col.columnName]!) : []
+        const current = filterState[col.columnName] ? Array.from(filterState[col.columnName]!) : []
         const optionUnion = Array.from(new Set<string>([...options, ...current]))
         openFilterDropdown(evt, col.columnName, optionUnion, current, updateHoverRects)
       })
