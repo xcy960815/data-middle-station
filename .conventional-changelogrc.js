@@ -10,9 +10,7 @@ module.exports = {
     { type: 'perf', section: '⚡ Performance' },
     { type: 'build', section: '🏗️ Build' }
   ],
-  commitUrlFormat:
-    'https://github.com/xcy960815/blog-home-nuxt/commit/{{hash}}',
-  issueUrlFormat:
-    'https://github.com/xcy960815/blog-home-nuxt/issues/{{id}}',
+  commitUrlFormat: 'https://github.com/xcy960815/blog-home-nuxt/commit/{{hash}}',
+  issueUrlFormat: 'https://github.com/xcy960815/blog-home-nuxt/issues/{{id}}',
   template: './changelog.hbs'
 }

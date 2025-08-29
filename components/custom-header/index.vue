@@ -1,19 +1,12 @@
 <template>
-  <div
-    class="header h-[50px] min-h-[50px] w-full flex items-center box-border pl-5 pr-5"
-  >
-    <div
-      class="header-left flex items-center cursor-pointer"
-      @click="handleClickAppName"
-    >
+  <div class="header h-[50px] min-h-[50px] w-full flex items-center box-border pl-5 pr-5">
+    <div class="header-left flex items-center cursor-pointer" @click="handleClickAppName">
       <h4 class="app-name">{{ appName }}</h4>
     </div>
     <div class="flex-1 flex items-center justify-center">
       <slot name="chart-name"></slot>
     </div>
-    <header-right
-      class="header-right w-[190px] flex items-center justify-between"
-    >
+    <header-right class="header-right w-[190px] flex items-center justify-between">
       <template #header-right>
         <slot name="header-right"></slot>
       </template>
@@ -83,12 +76,7 @@ const handleClickAppName = () => {
       left: 0;
       width: 100%;
       height: 2px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        theme.getVar('primaryColor'),
-        transparent
-      );
+      background: linear-gradient(90deg, transparent, theme.getVar('primaryColor'), transparent);
       opacity: 0;
       transition: opacity 0.3s ease;
     }

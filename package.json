@@ -25,7 +25,11 @@
     "restart:prod": "pm2 restart ecosystem.config.js --env prod",
     "changelog": "conventional-changelog -c changelog.config.js -i CHANGELOG.md -s --commit-path . --date-format YYYY-MM-DD --output-unreleased",
     "changelog:first": "conventional-changelog -c changelog.config.js -i CHANGELOG.md -s -r 0 --date-format YYYY-MM-DD --output-unreleased",
-    "changelog:version": "conventional-changelog -c changelog.config.js -i CHANGELOG.md -s -r 0 --release-count 0 --date-format YYYY-MM-DD --output-unreleased"
+    "changelog:version": "conventional-changelog -c changelog.config.js -i CHANGELOG.md -s -r 0 --release-count 0 --date-format YYYY-MM-DD --output-unreleased",
+    "format": "prettier --write \"**/*.{js,ts,vue,json,css,scss,less,html,md}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,vue,json,css,scss,less,html,md}\"",
+    "lint": "eslint --ext .js,.ts,.vue .",
+    "lint:fix": "eslint --ext .js,.ts,.vue . --fix"
   },
   "overrides": {
     "vue": "latest"
@@ -90,7 +94,11 @@
     "node": "18.15.0"
   },
   "lint-staged": {
-    "*.{js,vue,ts}": [
+    "*.{js,ts,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,scss,less,html,md}": [
       "prettier --write"
     ]
   }

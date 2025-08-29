@@ -12,12 +12,12 @@ export const useOrderStore = defineStore<
   BaseStore.Actions<OrderStore.OrderState, OrderStore.OrderActions>
 >(StoreNames.ORDER, {
   state: () => ({
-    orders: [],
+    orders: []
   }),
   getters: {
     getOrders(state) {
       return state.orders
-    },
+    }
   },
   actions: {
     setOrders(orders) {
@@ -47,6 +47,6 @@ export const useOrderStore = defineStore<
      */
     removeOrder(index: number) {
       this.orders.splice(index, 1)
-    },
-  },
+    }
+  }
 })

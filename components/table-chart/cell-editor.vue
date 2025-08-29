@@ -24,7 +24,6 @@
         ref="selectRef"
         v-model="editValue"
         @change="handleSaveEditorValue"
-        @blur="handleCancel"
         @keydown.stop
       >
         <el-option v-for="option in editOptions" :key="option.value" :label="option.label" :value="option.value" />
@@ -123,8 +122,6 @@ watch(
   () => props.visible,
   (visible) => {
     if (visible) {
-      console.log('editType', props.editType)
-
       editValue.value = props.initialValue
       nextTick(() => {
         focusEditor()

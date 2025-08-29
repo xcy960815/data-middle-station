@@ -103,7 +103,7 @@ const {
 } = konvaStageHandler()
 
 /**
- * 创建或更新行和列的 hover 高亮矩形
+ * 更新行和列的 hover 高亮矩形
  */
 const updateHoverRects = () => {
   resetHighlightRects('row')
@@ -320,7 +320,7 @@ const {
   closeSummaryDropdown,
   getSummaryRowHeight,
   openSummaryDropdown
-} = summaryDropDownHandler({ updateHoverRects, props })
+} = summaryDropDownHandler({ props })
 
 /**
  * 应用汇总选择
@@ -340,7 +340,13 @@ const { startCellEditImmediate, cellEditor } = editorDropdownHandler({ props, ac
 
 const { resetHighlightRects, getColOrRowHighlightRects } = highlightHandler({ props })
 
-const { drawSummaryPart } = renderSummaryHandler({ props, summaryState, activeData, openSummaryDropdown })
+const { drawSummaryPart } = renderSummaryHandler({
+  props,
+  summaryState,
+  activeData,
+  openSummaryDropdown: (evt, colName, options, updateHoverRects, selected) =>
+    openSummaryDropdown(evt, colName, options, updateHoverRects, selected)
+})
 
 // const { drawHeaderPart } = renderHeaderHandler({ props, sortColumns })
 
@@ -400,7 +406,6 @@ const handleCellEditorSave = (newValue: any) => {
  * 重置编辑器状态
  */
 const resetCellEditor = () => {
-  console.log('重置编辑器状态')
   cellEditor.visible = false
   cellEditor.editingCell = {
     rowIndex: -1,
@@ -424,26 +429,26 @@ const handleCellEditorCancel = () => {
  */
 const updateCellEditorPosition = () => {
   if (!cellEditor.visible) return
+  // console.log("updateCellEditorPosition");
+  // const { rowIndex, colIndex } = cellEditor.editingCell
+  // if (rowIndex < 0 || colIndex < 0) return
 
-  const { rowIndex, colIndex } = cellEditor.editingCell
-  if (rowIndex < 0 || colIndex < 0) return
+  // // 查找对应单元格的位置
+  // const positionMapList = [...tableVars.bodyPositionMapList]
 
-  // 查找对应单元格的位置
-  const positionMapList = [...tableVars.bodyPositionMapList]
+  // const positionOption = positionMapList.find((item) => item.rowIndex === rowIndex + 1 && item.colIndex === colIndex)
 
-  const positionOption = positionMapList.find((item) => item.rowIndex === rowIndex + 1 && item.colIndex === colIndex)
-
-  if (positionOption) {
-    const tableContainer = getTableContainerElement()
-    if (tableContainer) {
-      const containerRect = tableContainer.getBoundingClientRect()
-      cellEditor.position.x = containerRect.left + positionOption.x
-      cellEditor.position.y = containerRect.top + positionOption.y
-    }
-  } else {
-    // 如果单元格不在可视区域，关闭编辑器
-    resetCellEditor()
-  }
+  // if (positionOption) {
+  //   const tableContainer = getTableContainerElement()
+  //   if (tableContainer) {
+  //     const containerRect = tableContainer.getBoundingClientRect()
+  //     cellEditor.position.x = containerRect.left + positionOption.x
+  //     cellEditor.position.y = containerRect.top + positionOption.y
+  //   }
+  // } else {
+  //   // 如果单元格不在可视区域，关闭编辑器
+  //   resetCellEditor()
+  // }
 }
 
 /**
@@ -685,7 +690,7 @@ const drawHeaderPart = (
         const options = Array.from(values)
         const current = filterState[col.columnName] ? Array.from(filterState[col.columnName]!) : []
         const optionUnion = Array.from(new Set<string>([...options, ...current]))
-        openFilterDropdown(evt, col.columnName, optionUnion, current)
+        openFilterDropdown(evt, col.columnName, optionUnion, current, updateHoverRects)
       })
     }
 
@@ -1310,9 +1315,8 @@ const updateVerticalScroll = (offsetY: number) => {
   tableVars.leftBodyGroup.y(bodyY)
   tableVars.rightBodyGroup.y(bodyY)
   tableVars.centerBodyGroup.y(centerY)
-  updateScrollbars()
+  updateScrollbarPosition()
   recomputeHoverIndexFromPointer()
-  updateHoverRects()
   updateCellEditorPosition()
 
   tableVars.bodyLayer?.batchDraw()
@@ -1339,7 +1343,7 @@ const updateHorizontalScroll = (offsetX: number) => {
   tableVars.centerBodyGroup.x(centerX)
   tableVars.centerSummaryGroup?.x(headerX)
 
-  updateScrollbars()
+  updateScrollbarPosition()
 
   tableVars.headerLayer?.batchDraw()
   tableVars.bodyLayer?.batchDraw()
@@ -1354,13 +1358,12 @@ const updateHorizontalScroll = (offsetX: number) => {
 }
 
 /**
- * 更新滚动条
+ * 更新横纵滚动条位置
  */
-const updateScrollbars = () => {
+const updateScrollbarPosition = () => {
   if (!tableVars.stage) return
 
-  const stageWidth = tableVars.stage.width()
-  const stageHeight = tableVars.stage.height()
+  const { width: stageWidth, height: stageHeight } = getStageAttr()
   const { maxScrollX, maxScrollY } = getScrollLimits({ tableColumns: tableColumns.value, activeData: activeData.value })
 
   // 更新垂直滚动条位置
@@ -1442,7 +1445,7 @@ const handleMouseMove = (e: MouseEvent) => {
   }
 
   /**
-   * 垂直滚动
+   * 手动拖拽导致的垂直滚动
    */
   if (tableVars.isDraggingVerticalThumb) {
     const deltaY = e.clientY - tableVars.dragStartY
@@ -1506,7 +1509,7 @@ const handleMouseMove = (e: MouseEvent) => {
   }
 
   /**
-   * 水平滚动
+   * 手动拖拽导致的水平滚动
    */
   if (tableVars.isDraggingHorizontalThumb) {
     const deltaX = e.clientX - tableVars.dragStartX
@@ -1620,7 +1623,7 @@ const updateScrollPositions = () => {
   if (tableVars.rightSummaryGroup) tableVars.rightSummaryGroup.y(summaryY)
   if (tableVars.centerSummaryGroup) tableVars.centerSummaryGroup.y(summaryY)
 
-  updateScrollbars()
+  updateScrollbarPosition()
   tableVars.headerLayer?.batchDraw()
   tableVars.bodyLayer?.batchDraw()
   tableVars.fixedBodyLayer?.batchDraw()

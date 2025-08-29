@@ -1,243 +1,189 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-
-        {
-            "name": "Nuxt3: 开发模式调试",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
-            "args": ["dev", "--dotenv", "env/.env.daily"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "development",
-                "NUXT_DEBUG": "1",
-                "DEBUG": "nuxt:*"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/.nuxt/**/*.js",
-                "${workspaceFolder}/.output/**/*.js"
-            ],
-            "resolveSourceMapLocations": [
-                "${workspaceFolder}/**",
-                "!**/node_modules/**"
-            ]
-        },
-        {
-            "name": "Nuxt3: 预发布环境调试",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
-            "args": ["dev", "--dotenv", "env/.env.pre"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "development",
-                "NUXT_DEBUG": "1",
-                "DEBUG": "nuxt:*"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/.nuxt/**/*.js",
-                "${workspaceFolder}/.output/**/*.js"
-            ]
-        },
-        {
-            "name": "Nuxt3: 生产环境调试",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
-            "args": ["dev", "--dotenv", "env/.env.prod"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "development",
-                "NUXT_DEBUG": "1",
-                "DEBUG": "nuxt:*"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/.nuxt/**/*.js",
-                "${workspaceFolder}/.output/**/*.js"
-            ]
-        },
-        {
-            "name": "Nuxt3: 构建调试",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
-            "args": ["build", "--dotenv", "env/.env.daily"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "production",
-                "NUXT_DEBUG": "1",
-                "DEBUG": "nuxt:*"
-            },
-            "console": "integratedTerminal",
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ]
-        },
-        {
-            "name": "Nuxt3: 生产启动调试",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
-            "args": ["start", "--dotenv", "env/.env.daily"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "production",
-                "NUXT_DEBUG": "1",
-                "DEBUG": "nuxt:*"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/.output/**/*.js"
-            ]
-        },
-        {
-            "name": "Nuxt3: 服务器端调试",
-            "type": "node",
-            "request": "attach",
-            "port": 9229,
-            "address": "localhost",
-            "localRoot": "${workspaceFolder}",
-            "remoteRoot": "${workspaceFolder}",
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/.nuxt/**/*.js",
-                "${workspaceFolder}/.output/**/*.js"
-            ]
-        },
-        {
-            "name": "Nuxt3: 客户端调试 (Chrome)",
-            "type": "chrome",
-            "request": "launch",
-            "url": "http://localhost:3000",
-            "webRoot": "${workspaceFolder}",
-            "sourceMapPathOverrides": {
-                "webpack:///./*": "${webRoot}/*",
-                "webpack:///src/*": "${webRoot}/*",
-                "webpack:///*": "*",
-                "webpack:///./~/*": "${webRoot}/node_modules/*"
-            },
-            "userDataDir": "${workspaceFolder}/.vscode/chrome-debug-profile",
-            "runtimeArgs": [
-                "--disable-web-security",
-                "--disable-features=VizDisplayCompositor"
-            ]
-        },
-        {
-            "name": "Nuxt3: 客户端调试 (Edge)",
-            "type": "msedge",
-            "request": "launch",
-            "url": "http://localhost:3000",
-            "webRoot": "${workspaceFolder}",
-            "sourceMapPathOverrides": {
-                "webpack:///./*": "${webRoot}/*",
-                "webpack:///src/*": "${webRoot}/*",
-                "webpack:///*": "*",
-                "webpack:///./~/*": "${webRoot}/node_modules/*"
-            },
-            "userDataDir": "${workspaceFolder}/.vscode/edge-debug-profile"
-        },
-        {
-            "name": "Nuxt3: 性能分析调试",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
-            "args": ["dev", "--dotenv", "env/.env.daily"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "development",
-                "NUXT_DEBUG": "1",
-                "DEBUG": "nuxt:*",
-                "NODE_OPTIONS": "--prof --prof-process"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ]
-        },
-        {
-            "name": "Nuxt3: 内存泄漏检测",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
-            "args": ["dev", "--dotenv", "env/.env.daily"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "development",
-                "NUXT_DEBUG": "1",
-                "DEBUG": "nuxt:*",
-                "NODE_OPTIONS": "--inspect=localhost:9235 --expose-gc --max-old-space-size=4096"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ]
-        },
-        {
-            "name": "Nuxt3: 测试调试",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
-            "args": ["test"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "test",
-                "NUXT_DEBUG": "1"
-            },
-            "console": "integratedTerminal",
-            "skipFiles": [
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**"
-            ]
-        }
-    ],
-    "compounds": [
-        {
-            "name": "Nuxt3: 全栈调试 (服务器 + 客户端)",
-            "configurations": [
-                "Nuxt3: 开发模式调试",
-                "Nuxt3: 客户端调试 (Chrome)"
-            ],
-            "stopAll": true
-        },
-        {
-            "name": "Nuxt3: 全栈调试 (Edge)",
-            "configurations": [
-                "Nuxt3: 开发模式调试",
-                "Nuxt3: 客户端调试 (Edge)"
-            ],
-            "stopAll": true
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Nuxt3: 开发模式调试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["dev", "--dotenv", "env/.env.daily"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development",
+        "NUXT_DEBUG": "1",
+        "DEBUG": "nuxt:*"
+      },
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"],
+      "outFiles": ["${workspaceFolder}/.nuxt/**/*.js", "${workspaceFolder}/.output/**/*.js"],
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"]
+    },
+    {
+      "name": "Nuxt3: 预发布环境调试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["dev", "--dotenv", "env/.env.pre"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development",
+        "NUXT_DEBUG": "1",
+        "DEBUG": "nuxt:*"
+      },
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"],
+      "outFiles": ["${workspaceFolder}/.nuxt/**/*.js", "${workspaceFolder}/.output/**/*.js"]
+    },
+    {
+      "name": "Nuxt3: 生产环境调试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["dev", "--dotenv", "env/.env.prod"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development",
+        "NUXT_DEBUG": "1",
+        "DEBUG": "nuxt:*"
+      },
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"],
+      "outFiles": ["${workspaceFolder}/.nuxt/**/*.js", "${workspaceFolder}/.output/**/*.js"]
+    },
+    {
+      "name": "Nuxt3: 构建调试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["build", "--dotenv", "env/.env.daily"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "production",
+        "NUXT_DEBUG": "1",
+        "DEBUG": "nuxt:*"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    },
+    {
+      "name": "Nuxt3: 生产启动调试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["start", "--dotenv", "env/.env.daily"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "production",
+        "NUXT_DEBUG": "1",
+        "DEBUG": "nuxt:*"
+      },
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"],
+      "outFiles": ["${workspaceFolder}/.output/**/*.js"]
+    },
+    {
+      "name": "Nuxt3: 服务器端调试",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"],
+      "outFiles": ["${workspaceFolder}/.nuxt/**/*.js", "${workspaceFolder}/.output/**/*.js"]
+    },
+    {
+      "name": "Nuxt3: 客户端调试 (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/*",
+        "webpack:///*": "*",
+        "webpack:///./~/*": "${webRoot}/node_modules/*"
+      },
+      "userDataDir": "${workspaceFolder}/.vscode/chrome-debug-profile",
+      "runtimeArgs": ["--disable-web-security", "--disable-features=VizDisplayCompositor"]
+    },
+    {
+      "name": "Nuxt3: 客户端调试 (Edge)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/*",
+        "webpack:///*": "*",
+        "webpack:///./~/*": "${webRoot}/node_modules/*"
+      },
+      "userDataDir": "${workspaceFolder}/.vscode/edge-debug-profile"
+    },
+    {
+      "name": "Nuxt3: 性能分析调试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["dev", "--dotenv", "env/.env.daily"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development",
+        "NUXT_DEBUG": "1",
+        "DEBUG": "nuxt:*",
+        "NODE_OPTIONS": "--prof --prof-process"
+      },
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    },
+    {
+      "name": "Nuxt3: 内存泄漏检测",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["dev", "--dotenv", "env/.env.daily"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development",
+        "NUXT_DEBUG": "1",
+        "DEBUG": "nuxt:*",
+        "NODE_OPTIONS": "--inspect=localhost:9235 --expose-gc --max-old-space-size=4096"
+      },
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    },
+    {
+      "name": "Nuxt3: 测试调试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+      "args": ["test"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "test",
+        "NUXT_DEBUG": "1"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Nuxt3: 全栈调试 (服务器 + 客户端)",
+      "configurations": ["Nuxt3: 开发模式调试", "Nuxt3: 客户端调试 (Chrome)"],
+      "stopAll": true
+    },
+    {
+      "name": "Nuxt3: 全栈调试 (Edge)",
+      "configurations": ["Nuxt3: 开发模式调试", "Nuxt3: 客户端调试 (Edge)"],
+      "stopAll": true
+    }
+  ]
 }
