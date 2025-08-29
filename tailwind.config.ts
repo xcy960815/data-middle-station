@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
-import type { Config as TailwindcssConfig } from 'tailwindcss';
-import defaultTheme from 'tailwindcss/defaultTheme';
-import colors from 'tailwindcss/colors';
+import type { Config as TailwindcssConfig } from 'tailwindcss'
+import defaultTheme from 'tailwindcss/defaultTheme'
+import colors from 'tailwindcss/colors'
 /**
  * @desc TailwindCSS 配置文件
  */
@@ -12,7 +12,7 @@ export default <Partial<TailwindcssConfig>>{
     './pages/**/*.vue',
     './plugins/**/*.{js,ts}',
     './app.vue',
-    "./error.vue",
+    './error.vue'
   ],
   theme: {
     extend: {
@@ -25,15 +25,15 @@ export default <Partial<TailwindcssConfig>>{
         orange: colors.orange,
         teal: colors.teal,
         cyan: colors.cyan,
-        violet: colors.violet,
+        violet: colors.violet
       },
       padding: {
-        '10%': '10%',
+        '10%': '10%'
       },
       fontFamily: {
-        sans: ['Inter var', ...defaultTheme.fontFamily.sans],
-      },
-    },
+        sans: ['Inter var', ...defaultTheme.fontFamily.sans]
+      }
+    }
   },
-  plugins: [],
-};
+  plugins: []
+}

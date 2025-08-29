@@ -1,8 +1,6 @@
 <template>
   <!-- 欢迎页面的layout布局 -->
-  <div
-    class="layout-welcome-main h-full w-full !flex !flex-col flex-1 border-box"
-  >
+  <div class="layout-welcome-main h-full w-full !flex !flex-col flex-1 border-box">
     <slot />
   </div>
 </template>

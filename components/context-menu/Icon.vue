@@ -7,9 +7,9 @@ const props = defineProps({
   name: {
     type: String,
     default: () => '',
-    required: true,
-  },
-});
+    required: true
+  }
+})
 </script>
 
 <style scoped lang="scss"></style>

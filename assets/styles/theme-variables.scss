@@ -1,29 +1,29 @@
 // 主题通用配色
 
 $themes: (
-    light: ( 
-        // 背景颜色
-        bgColor: #fff,
-        // 文字颜色
-        textColor: #313131,
-        // 阴影颜色
-        shadowColor: rgba(0, 0, 0, 0.3),
-        // border 颜色
-        borderColor: #eaeaea,
-        // card 背景颜色
-        // cardBgColor: #fff,
-    ),
+  light: (
+    // 背景颜色
+    bgColor: #fff,
+    // 文字颜色
+    textColor: #313131,
+    // 阴影颜色
+    shadowColor: rgba(0, 0, 0, 0.3),
+    // border 颜色
+    borderColor: #eaeaea,
+    // card 背景颜色
+     // cardBgColor: #fff,
+  ),
 
-    dark:( 
-        // 背景颜色
-        bgColor: #313131,
-        // 文字颜色
-        textColor: #fff,
-        // 阴影颜色
-        shadowColor: rgba(255, 255, 255, 1),
-        // border 颜色
-        borderColor: #333,
-        // card 背景颜色
-        // cardBgColor: #313131,
-    )
+  dark: (
+    // 背景颜色
+    bgColor: #313131,
+    // 文字颜色
+    textColor: #fff,
+    // 阴影颜色
+    shadowColor: rgba(255, 255, 255, 1),
+    // border 颜色
+    borderColor: #333,
+    // card 背景颜色
+     // cardBgColor: #313131,
+  )
 );

@@ -414,28 +414,28 @@
  * @desc table-sticky 指令
  */
 export default defineNuxtPlugin((nuxtApp) => {
-//   const tableStickyPlugin = new TableStickyPlugin();
-//   nuxtApp.vueApp.directive('sticky', {
-//     mounted(
-//       tableElement: HTMLElement,
-//       binding: TableStickyModule.TableStickyBinding,
-//       vnode: VNode,
-//     ) {
-//       tableStickyPlugin.mounted({ tableElement, binding, vnode });
-//     },
-//     updated(
-//       tableElement: HTMLElement,
-//       binding: TableStickyModule.TableStickyBinding,
-//       vnode: VNode,
-//     ) {
-//       tableStickyPlugin.updated({ tableElement, binding, vnode });
-//     },
-//     unmounted(
-//       tableElement: HTMLElement,
-//       binding: TableStickyModule.TableStickyBinding,
-//       vnode: VNode,
-//     ) {
-//       tableStickyPlugin.unmounted({ tableElement, binding, vnode });
-//     },
-//   });
-});
+  //   const tableStickyPlugin = new TableStickyPlugin();
+  //   nuxtApp.vueApp.directive('sticky', {
+  //     mounted(
+  //       tableElement: HTMLElement,
+  //       binding: TableStickyModule.TableStickyBinding,
+  //       vnode: VNode,
+  //     ) {
+  //       tableStickyPlugin.mounted({ tableElement, binding, vnode });
+  //     },
+  //     updated(
+  //       tableElement: HTMLElement,
+  //       binding: TableStickyModule.TableStickyBinding,
+  //       vnode: VNode,
+  //     ) {
+  //       tableStickyPlugin.updated({ tableElement, binding, vnode });
+  //     },
+  //     unmounted(
+  //       tableElement: HTMLElement,
+  //       binding: TableStickyModule.TableStickyBinding,
+  //       vnode: VNode,
+  //     ) {
+  //       tableStickyPlugin.unmounted({ tableElement, binding, vnode });
+  //     },
+  //   });
+})

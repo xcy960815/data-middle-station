@@ -1,210 +1,69 @@
 {
-    // Nuxt3 项目设置
-    "typescript.preferences.includePackageJsonAutoImports": "on",
-    "typescript.suggest.autoImports": true,
-    "typescript.updateImportsOnFileMove.enabled": "always",
-
-    // Vue 相关设置
-    "vetur.validation.template": false,
-    "vetur.validation.script": false,
-    "vetur.validation.style": false,
-    "vetur.experimental.templateInterpolationService": true,
-
-    // 文件关联
-    "files.associations": {
-        "*.vue": "vue",
-        "*.nuxt": "json",
-        "*.nuxi": "json"
-    },
-
-    // 搜索排除
-    "search.exclude": {
-        "**/node_modules": true,
-        "**/dist": true,
-        "**/.nuxt": true,
-        "**/.output": true,
-        "**/coverage": true,
-        "**/.git": true,
-        "**/pnpm-lock.yaml": true,
-        "**/package-lock.json": true,
-        "**/yarn.lock": true
-    },
-
-    // 文件监视排除
-    "files.watcherExclude": {
-        "**/node_modules/**": true,
-        "**/dist/**": true,
-        "**/.nuxt/**": true,
-        "**/.output/**": true,
-        "**/coverage/**": true,
-        "**/.git/**": true
-    },
-
-    // 自动保存
-    // "files.autoSave": "afterDelay",
-    // "files.autoSaveDelay": 1000,
-
-    // 格式化设置
-    "editor.formatOnSave": true,
-    "editor.formatOnPaste": true,
-    "editor.formatOnType": true,
-    "editor.defaultFormatter": "Vue.volar",
-
-    // Prettier 设置
-    "prettier.singleQuote": true,
-    "prettier.semi": false,
-    "prettier.tabWidth": 2,
-    "prettier.useTabs": false,
-    "prettier.trailingComma": "es5",
-    "prettier.printWidth": 100,
-    "prettier.bracketSpacing": true,
-    "prettier.arrowParens": "avoid",
-    "prettier.endOfLine": "lf",
-
-    // ESLint 设置
-    "eslint.validate": [
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-        "vue"
-    ],
-    "eslint.workingDirectories": [
-        "."
-    ],
-    "eslint.format.enable": true,
-
-    // 编辑器设置
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true,
-    "editor.detectIndentation": false,
-    "editor.rulers": [100],
-    "editor.wordWrap": "on",
-    "editor.minimap.enabled": true,
-    "editor.suggestSelection": "first",
-    "editor.acceptSuggestionOnEnter": "on",
-    "editor.quickSuggestions": {
-        "other": true,
-        "comments": true,
-        "strings": true
-    },
-
-    // 终端设置
-    "terminal.integrated.defaultProfile.osx": "zsh",
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "terminal.integrated.defaultProfile.windows": "PowerShell",
-    "terminal.integrated.cwd": "${workspaceFolder}",
-
-    // 调试设置
-    "debug.allowBreakpointsEverywhere": true,
-    "debug.inlineValues": "on",
-    "debug.showBreakpointsInOverviewRuler": true,
-    "debug.showInlineBreakpointCandidates": true,
-
-    // 工作台设置
-    "workbench.editor.enablePreview": false,
-    "workbench.editor.enablePreviewFromQuickOpen": false,
-    "workbench.startupEditor": "newUntitledFile",
-
-
-
-    // 文件资源管理器设置
-    "explorer.confirmDelete": false,
-    "explorer.confirmDragAndDrop": false,
-    "explorer.incrementalNaming": "smart",
-
-    // 面包屑设置
-    "breadcrumbs.enabled": true,
-    "breadcrumbs.showFiles": true,
-    "breadcrumbs.showSymbols": true,
-    "breadcrumbs.showModules": true,
-
-    // 代码片段设置
-    "editor.snippetSuggestions": "top",
-    "editor.tabCompletion": "on",
-
-    // 自动导入设置
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit",
-        "source.organizeImports": "explicit"
-    },
-
-    // 路径映射
-    "typescript.preferences.importModuleSpecifier": "relative",
-    "javascript.preferences.importModuleSpecifier": "relative",
-
-    // 错误显示
-    "typescript.reportStyleChecksAsWarnings": true,
-    "typescript.surveys.enabled": false,
-
-    // 扩展设置
-    "extensions.ignoreRecommendations": false,
-    "extensions.autoUpdate": true,
-
-    // Git 设置
-    "git.enableSmartCommit": true,
-    "git.autofetch": true,
-    "git.confirmSync": false,
-    "git.autorefresh": true,
-
-    // 任务设置
-    "task.autoDetect": "on",
-    "task.quickOpen.history": 10,
-
-    // 问题面板设置
-    "problems.decorations.enabled": true,
-    "problems.showCurrentInStatus": true,
-
-    // 输出面板设置
-    "output.smartScroll.enabled": true,
-
-    // 搜索设置
-    "search.followSymlinks": false,
-    "search.useGlobalIgnoreFiles": true,
-    "search.useParentIgnoreFiles": true,
-
-    // 文件设置
-    "files.trimTrailingWhitespace": true,
-    "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
-    "files.eol": "\n",
-
-    // 语言特定设置
-    "[vue]": {
-        "editor.defaultFormatter": "Vue.volar",
-        "editor.formatOnSave": true
-    },
-    "[typescript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features",
-        "editor.formatOnSave": true
-    },
-    "[javascript]": {
-        "editor.defaultFormatter": "Vue.volar",
-        "editor.formatOnSave": true
-    },
-    "[json]": {
-        "editor.defaultFormatter": "Vue.volar",
-        "editor.formatOnSave": true
-    },
-    "[css]": {
-        "editor.defaultFormatter": "Vue.volar",
-        "editor.formatOnSave": true
-    },
-    "[scss]": {
-        "editor.defaultFormatter": "vscode.css-language-features",
-        "editor.formatOnSave": true
-    },
-    "[less]": {
-        "editor.defaultFormatter": "Vue.volar",
-        "editor.formatOnSave": true
-    },
-    "[html]": {
-        "editor.defaultFormatter": "Vue.volar",
-        "editor.formatOnSave": true
-    },
-    "[markdown]": {
-        "editor.defaultFormatter": "Vue.volar",
-        "editor.formatOnSave": true,
-        "editor.wordWrap": "on"
-    }
+  // 保存时自动格式化
+  "editor.formatOnSave": true,
+  // 保存时自动修复 ESLint 错误
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  // 设置默认格式化工具为 Prettier (如果已安装)
+  "editor.defaultFormatter": null,
+  // 为不同文件类型指定格式化工具 (使用内置格式化器)
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[less]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "vscode.markdown-language-features"
+  },
+  // ESLint 配置
+  "eslint.validate": [
+    "javascript",
+    "typescript",
+    "vue"
+  ],
+  // Vue 文件支持
+  "vetur.format.defaultFormatter.html": "prettier",
+  "vetur.format.defaultFormatter.css": "prettier",
+  "vetur.format.defaultFormatter.postcss": "prettier",
+  "vetur.format.defaultFormatter.scss": "prettier",
+  "vetur.format.defaultFormatter.less": "prettier",
+  "vetur.format.defaultFormatter.stylus": "stylus-supremacy",
+  "vetur.format.defaultFormatter.js": "prettier",
+  "vetur.format.defaultFormatter.ts": "prettier",
+  // 编辑器设置与 .editorconfig 保持一致
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  // 排除不需要监听变化的文件
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.git/**": true
+  }
 }

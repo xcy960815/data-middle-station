@@ -11,12 +11,12 @@ export const useFilterStore = defineStore<
   BaseStore.Actions<FilterStore.FilterState, FilterStore.FilterActions>
 >(StoreNames.FILTER, {
   state: () => ({
-    filters: [],
+    filters: []
   }),
   getters: {
     getFilters(state) {
       return state.filters
-    },
+    }
   },
   actions: {
     /**
@@ -42,6 +42,6 @@ export const useFilterStore = defineStore<
      */
     removeFilter(index: number) {
       this.filters.splice(index, 1)
-    },
-  },
+    }
+  }
 })

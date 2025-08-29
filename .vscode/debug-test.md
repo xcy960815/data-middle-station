@@ -7,11 +7,13 @@
 ## ✅ 已修复的配置
 
 所有调试配置中的 `program` 路径已从：
+
 ```json
 "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.js"
 ```
 
 更新为：
+
 ```json
 "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs"
 ```
@@ -19,22 +21,26 @@
 ## 🧪 测试调试配置
 
 ### 1. 基本测试
+
 1. 按 `F5` 启动调试
 2. 选择 `Nuxt3: 开发模式调试`
 3. 应该能正常启动，不再出现 "MODULE_NOT_FOUND" 错误
 
 ### 2. 断点测试
+
 1. 在任意 `.vue` 文件中设置断点
 2. 启动调试
 3. 访问对应页面，断点应该能正常触发
 
 ### 3. 环境变量测试
+
 1. 确保 `env/.env.daily` 文件存在
 2. 启动调试后检查环境变量是否正确加载
 
 ## 🚨 如果仍有问题
 
 ### 检查依赖
+
 ```bash
 # 重新安装依赖
 pnpm install
@@ -44,6 +50,7 @@ pnpm list nuxt
 ```
 
 ### 检查环境文件
+
 ```bash
 # 确保环境文件存在
 ls -la env/.env.daily
@@ -52,6 +59,7 @@ ls -la env/.env.prod
 ```
 
 ### 检查Node.js版本
+
 ```bash
 # 确保Node.js版本兼容
 node --version

@@ -1,21 +1,10 @@
-import type {
-  ComponentInternalInstance,
-  DirectiveBinding,
-  Ref,
-  VNode
-} from 'vue'
+import type { ComponentInternalInstance, DirectiveBinding, Ref, VNode } from 'vue'
 
 /**
  * @desc table-sticky directive and component definition
  */
 declare namespace TableStickyModule {
-  type VNodeRef =
-    | string
-    | Ref
-    | ((
-        ref: object | null,
-        refs: Record<string, any>
-      ) => void)
+  type VNodeRef = string | Ref | ((ref: object | null, refs: Record<string, any>) => void)
 
   interface DirectiveBindingValue {
     top: number
@@ -23,8 +12,7 @@ declare namespace TableStickyModule {
     willBeChangeElementClasses?: Array<string>
   }
 
-  type TableStickyBinding =
-    DirectiveBinding<DirectiveBindingValue>
+  type TableStickyBinding = DirectiveBinding<DirectiveBindingValue>
 
   interface Option {
     tableElement: HTMLElement
@@ -36,15 +24,9 @@ declare namespace TableStickyModule {
     fixedTopValue: number
     tableHeaderElement: HTMLElement
     tableHeaderElementOriginalTop: number
-    tableHeaderElementOriginalStyle: Pick<
-      CSSStyleDeclaration,
-      'position' | 'zIndex' | 'top' | 'transition'
-    >
+    tableHeaderElementOriginalStyle: Pick<CSSStyleDeclaration, 'position' | 'zIndex' | 'top' | 'transition'>
     tableInnerWapperElement: HTMLElement
-    tableInnerWapperElementOriginalStyle: Pick<
-      CSSStyleDeclaration,
-      'marginTop'
-    >
+    tableInnerWapperElementOriginalStyle: Pick<CSSStyleDeclaration, 'marginTop'>
     tableBodyElement: HTMLElement
     scrollElement: HTMLElement
     tableElementOriginalWidth: string
@@ -54,8 +36,7 @@ declare namespace TableStickyModule {
     willChangeElementsResizeObserver: ResizeObserver[]
   }
 
-  interface StickyConfigs
-    extends Map<string, StickyConfig> {}
+  interface StickyConfigs extends Map<string, StickyConfig> {}
 
   interface VNodeNormalizedRefAtom {
     i: ComponentInternalInstance

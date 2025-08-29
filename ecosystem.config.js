@@ -22,23 +22,23 @@ module.exports = {
       env: {
         // 默认环境参数
         NODE_ENV: 'development',
-        PORT: '3000',
+        PORT: '3000'
       },
       env_daily: {
         // 日常环境参数
         NODE_ENV: 'daily',
-        PORT: '12581',
+        PORT: '12581'
       },
       env_pre: {
         // 预发环境参数
         NODE_ENV: 'pre',
-        PORT: '12582',
+        PORT: '12582'
       },
       env_prod: {
         // 生产环境参数
         NODE_ENV: 'prod',
-        PORT: '12583',
-      },
-    },
-  ],
+        PORT: '12583'
+      }
+    }
+  ]
 }

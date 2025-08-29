@@ -10,23 +10,23 @@
 </template>
 
 <script lang="ts" setup>
-import type { CSSProperties } from 'vue';
+import type { CSSProperties } from 'vue'
 const props = defineProps({
   title: {
     type: String,
-    default: undefined,
+    default: undefined
   },
   maxWidth: {
     type: [Number, String],
-    default: undefined,
-  },
-});
+    default: undefined
+  }
+})
 
 const style = computed<CSSProperties>(() => {
-  if (!props.maxWidth) return {};
+  if (!props.maxWidth) return {}
   return {
     'max-width': typeof props.maxWidth === 'number' ? `${props.maxWidth}px` : props.maxWidth,
-    'overflow-x': 'auto',
-  };
-});
+    'overflow-x': 'auto'
+  }
+})
 </script>
