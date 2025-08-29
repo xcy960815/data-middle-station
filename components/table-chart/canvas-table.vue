@@ -71,9 +71,7 @@ import type { ChartEmits } from './emits'
 import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
 import { renderBodyHandler } from './render/render-body-handler'
-import { renderHeaderHandler } from './render/render-header-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
-import { renderSummaryHandler } from './render/render-summary-handler'
 import { constrainToRange, setPointerStyle } from './utils'
 import { tableVars, variableHandlder } from './variable-handlder'
 
@@ -86,33 +84,18 @@ const emits = defineEmits<ChartEmits>()
 
 const { tableContainerStyle, tableData, handleTableData, handleTableColumns } = variableHandlder({ props })
 
-const {
-  initStage,
-  destroyStage,
-  getStageAttr,
-  clearGroups,
-  createHeaderLeftGroups,
-  createHeaderCenterGroups,
-  createHeaderRightGroups,
-  createBodyLeftGroups,
-  createBodyCenterGroups,
-  createBodyRightGroups,
-  createSummaryLeftGroups,
-  createSummaryCenterGroups,
-  createSummaryRightGroups,
-  createCenterBodyClipGroup
-} = konvaStageHandler({ props })
+const { initStage, destroyStage, clearGroups, rebuildGroups } = konvaStageHandler({ props, emits })
 
-const { drawHeaderPart } = renderHeaderHandler({ props })
+// const { drawHeaderPart } = renderHeaderHandler({ props, emits })
 
 const { drawBodyPart, recomputeHoverIndexFromPointer } = renderBodyHandler({ props, emits })
 
-const { drawSummaryPart } = renderSummaryHandler({ props })
+// const { drawSummaryPart } = renderSummaryHandler({ props })
 
 const { createScrollbars, updateScrollPositions } = renderScrollbarsHandler({ props, emits })
 
 const { filterDropdownRef, filterDropdownStyle, filterDropdown, closeFilterDropdown, handleSelectedFilter } =
-  filterDropdownHandler({ props })
+  filterDropdownHandler({ props, emits })
 
 const {
   summaryDropdownRef,
@@ -124,161 +107,6 @@ const {
 } = summaryDropDownHandler({ props })
 
 const { cellEditorDropdown, closeCellEditorDropdown, resetCellEditorDropdown } = editorDropdownHandler({ props })
-
-/**
- * 重建分组
- * @returns {void}
- */
-const rebuildGroups = () => {
-  if (
-    !tableVars.stage ||
-    !tableVars.headerLayer ||
-    !tableVars.fixedHeaderLayer ||
-    !tableVars.bodyLayer ||
-    !tableVars.fixedBodyLayer ||
-    !tableVars.summaryLayer ||
-    !tableVars.fixedSummaryLayer ||
-    !tableVars.scrollbarLayer
-  ) {
-    return
-  }
-  const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
-  const { width: stageWidth, height: stageHeight } = getStageAttr()
-  const { maxScrollX, maxScrollY } = getScrollLimits()
-  const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
-  const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
-
-  if (!tableVars.centerBodyClipGroup) {
-    const clipHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - horizontalScrollbarSpace
-    tableVars.centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
-      x: 0,
-      y: 0,
-      width: stageWidth - leftWidth - rightWidth - verticalScrollbarSpace,
-      height: clipHeight
-    })
-    tableVars.bodyLayer.add(tableVars.centerBodyClipGroup)
-  }
-
-  tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
-
-  tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth - tableVars.stageScrollX, 0)
-
-  tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, 0)
-
-  tableVars.leftBodyGroup = createBodyLeftGroups(0, props.headerHeight - tableVars.stageScrollY)
-
-  tableVars.centerBodyGroup = createBodyCenterGroups(-tableVars.stageScrollX, -tableVars.stageScrollY)
-
-  tableVars.rightBodyGroup = createBodyRightGroups(
-    stageWidth - rightWidth - verticalScrollbarSpace,
-    props.headerHeight - tableVars.stageScrollY
-  )
-
-  tableVars.headerLayer.add(tableVars.centerHeaderGroup)
-
-  tableVars.fixedHeaderLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup)
-
-  if (props.enableSummary) {
-    const summaryY = stageHeight - getSummaryRowHeight() - horizontalScrollbarSpace
-    tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
-
-    tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.stageScrollX, summaryY)
-
-    tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
-    tableVars.summaryLayer.add(tableVars.centerSummaryGroup)
-    tableVars.fixedSummaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
-  } else {
-    tableVars.leftSummaryGroup = null
-    tableVars.centerSummaryGroup = null
-    tableVars.rightSummaryGroup = null
-  }
-
-  tableVars.centerBodyClipGroup.add(tableVars.centerBodyGroup)
-
-  tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup)
-
-  tableVars.headerPositionMapList.length = 0
-
-  /**
-   * 绘制左侧表头部分
-   */
-  drawHeaderPart(tableVars.leftHeaderGroup, leftCols, 0, tableVars.headerPositionMapList, 0)
-  /**
-   * 绘制中间表头部分
-   */
-  drawHeaderPart(tableVars.centerHeaderGroup, centerCols, leftCols.length, tableVars.headerPositionMapList, leftWidth)
-  /**
-   * 绘制右侧表头部分
-   */
-  drawHeaderPart(
-    tableVars.rightHeaderGroup,
-    rightCols,
-    leftCols.length + centerCols.length,
-    tableVars.headerPositionMapList,
-    leftWidth + centerWidth
-  )
-
-  tableVars.bodyPositionMapList.length = 0
-  /**
-   * 绘制左侧主体部分
-   */
-  drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
-  /**
-   * 绘制中间主体部分
-   */
-  drawBodyPart(
-    tableVars.centerBodyGroup,
-    centerCols,
-    tableVars.centerBodyPools,
-    leftCols.length,
-    tableVars.bodyPositionMapList,
-    leftWidth
-  )
-  /**
-   * 绘制右侧主体部分
-   */
-  drawBodyPart(
-    tableVars.rightBodyGroup,
-    rightCols,
-    tableVars.rightBodyPools,
-    leftCols.length + centerCols.length,
-    tableVars.bodyPositionMapList,
-    leftWidth + centerWidth
-  )
-
-  /**
-   * 绘制底部 summary
-   */
-  if (props.enableSummary) {
-    tableVars.summaryPositionMapList.length = 0
-
-    drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
-    drawSummaryPart(
-      tableVars.centerSummaryGroup,
-      centerCols,
-      leftCols.length,
-      tableVars.summaryPositionMapList,
-      leftWidth
-    )
-    drawSummaryPart(
-      tableVars.rightSummaryGroup,
-      rightCols,
-      leftCols.length + centerCols.length,
-      tableVars.summaryPositionMapList,
-      leftWidth + centerWidth
-    )
-  }
-
-  createScrollbars()
-
-  tableVars.headerLayer.batchDraw()
-  tableVars.bodyLayer?.batchDraw()
-  tableVars.fixedBodyLayer?.batchDraw()
-  tableVars.fixedHeaderLayer?.batchDraw()
-  tableVars.summaryLayer?.batchDraw()
-  tableVars.fixedSummaryLayer?.batchDraw()
-  tableVars.scrollbarLayer?.batchDraw()
-}
 
 /**
  * 保存单元格编辑
@@ -297,8 +125,6 @@ const handleCellEditorSave = (newValue: string | number) => {
   }
   resetCellEditorDropdown()
 }
-
-// const { updateHoverRects } = highlightHandler({ props })
 
 const { calculateVisibleRows, getScrollLimits, getSplitColumns } = renderBodyHandler({ props, emits })
 

@@ -2,6 +2,7 @@ import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
+import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import {
@@ -19,12 +20,12 @@ import { tableVars, variableHandlder, type KonvaNodePools, type PositionMap, typ
 import { highlightHandler } from './heightlight-handler'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  emits: any
+  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
 export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   const { updateHoverRects } = highlightHandler({ props })
-  const { filterDropdown } = filterDropdownHandler({ props })
+  const { filterDropdown } = filterDropdownHandler({ props, emits })
   const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({ props })
   const { tableColumns, tableData } = variableHandlder({ props })
   const { getStageAttr } = konvaStageHandler({ props })
@@ -798,6 +799,13 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     }
     // 渲染完成后，重新计算 行下标 列下标
     recomputeHoverIndexFromPointer()
+
+    // 渲染完成后，若存在点击高亮，保持其在最顶层
+    if (tableVars.highlightRect) {
+      tableVars.highlightRect.moveToTop()
+      const layer = bodyGroup.getLayer()
+      layer?.batchDraw()
+    }
   }
 
   /**
