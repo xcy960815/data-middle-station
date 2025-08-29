@@ -1,5 +1,5 @@
 import Konva from 'konva'
-import { computed, ref } from 'vue'
+import { computed, reactive } from 'vue'
 import { chartProps } from './props'
 
 export type Prettify<T> = {
@@ -123,12 +123,21 @@ interface TableVars {
   headerPositionMapList: PositionMap[]
   bodyPositionMapList: PositionMap[]
   summaryPositionMapList: PositionMap[]
+  sortColumns: SortColumn[]
+  /**
+   * 过滤状态：列名 -> 选中的离散值集合
+   */
+  filterState: Record<string, Set<string>>
+  /**
+   * 汇总行选择状态：列名 -> 选中的规则
+   */
+  summaryState: Record<string, string>
 }
 
 /**
  * 表格全局状态变量
  */
-export const tableVars: TableVars = {
+export const tableVars: TableVars = reactive({
   /**
    * 行高亮矩形
    */
@@ -397,8 +406,25 @@ export const tableVars: TableVars = {
   // ========== 位置映射列表 ==========
   headerPositionMapList: [],
   bodyPositionMapList: [],
-  summaryPositionMapList: []
-}
+  summaryPositionMapList: [],
+
+  // ========== 排序相关 ==========
+  /**
+   * 排序状态
+   */
+  sortColumns: [],
+
+  // ========== 过滤和汇总相关 ==========
+  /**
+   * 过滤状态：列名 -> 选中的离散值集合
+   */
+  filterState: {},
+
+  /**
+   * 汇总行选择状态：列名 -> 选中的规则
+   */
+  summaryState: {}
+})
 
 export interface SortColumn {
   columnName: string
@@ -406,14 +432,13 @@ export interface SortColumn {
 }
 
 interface CreateTableStateProps {
-  filterState: Record<string, Set<string>>
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
 
 /**
  * 创建表格状态管理器
  */
-export const createTableState = ({ filterState, props }: CreateTableStateProps) => {
+export const createTableState = ({ props }: CreateTableStateProps) => {
   /**
    * 列别名映射
    * @returns {Record<string, string>}
@@ -451,22 +476,19 @@ export const createTableState = ({ filterState, props }: CreateTableStateProps) 
   const tableData = computed<Array<ChartDataVo.ChartData>>(() => props.data)
 
   /**
-   * 排序状态
-   */
-  const sortColumns = ref<Array<SortColumn>>([])
-
-  /**
    * 应用排序后的数据视图
    */
   const activeData = computed<Array<ChartDataVo.ChartData>>(() => {
     // 先按 filter 过滤
     let base = tableData.value.filter((row) => row && typeof row === 'object') // 过滤掉无效的行
-    const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
+    const filterKeys = Object.keys(tableVars.filterState).filter(
+      (k) => tableVars.filterState[k] && tableVars.filterState[k].size > 0
+    )
     if (filterKeys.length) {
       const aliasMap = columnAliasMap.value
       base = base.filter((row) => {
         for (const k of filterKeys) {
-          const set = filterState[k]
+          const set = tableVars.filterState[k]
           const alias = aliasMap[k]
           const val = row[k] !== undefined ? row[k] : alias ? row[alias] : undefined
           if (!set.has(String(val ?? ''))) return false
@@ -477,7 +499,7 @@ export const createTableState = ({ filterState, props }: CreateTableStateProps) 
     /**
      * 如果未排序，则直接返回原始数据
      */
-    if (!sortColumns.value.length) return base
+    if (!tableVars.sortColumns.length) return base
     const sorted = [...base]
     const toNum = (v: string | number | null | undefined) => {
       const n = Number(v)
@@ -494,7 +516,7 @@ export const createTableState = ({ filterState, props }: CreateTableStateProps) 
       return undefined
     }
     sorted.sort((a, b) => {
-      for (const s of sortColumns.value) {
+      for (const s of tableVars.sortColumns) {
         const key = s.columnName
         const av = getVal(a, key)
         const bv = getVal(b, key)
@@ -522,10 +544,9 @@ export const createTableState = ({ filterState, props }: CreateTableStateProps) 
       background: '#fff'
     }
   })
+
   return {
     tableData,
-    sortColumns,
-    filterState,
     activeData,
     tableColumns,
     columnAliasMap,
@@ -598,4 +619,11 @@ export const resetTableVars = () => {
   tableVars.headerPositionMapList.length = 0
   tableVars.bodyPositionMapList.length = 0
   tableVars.summaryPositionMapList.length = 0
+
+  // 重置排序相关
+  tableVars.sortColumns.length = 0
+
+  // 重置过滤和汇总相关
+  Object.keys(tableVars.filterState).forEach((key) => delete tableVars.filterState[key])
+  Object.keys(tableVars.summaryState).forEach((key) => delete tableVars.summaryState[key])
 }

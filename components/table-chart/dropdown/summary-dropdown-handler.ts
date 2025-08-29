@@ -5,12 +5,17 @@ import { chartProps } from '../props'
 import { getDropdownPosition } from '../utils'
 import { tableVars, type Prettify } from '../variable'
 
+interface SummaryDropdownOption {
+  label: string
+  value: string
+}
+
 export interface SummaryDropdown {
   visible: boolean
   x: number
   y: number
   colName: string
-  options: Array<{ label: string; value: string }>
+  options: Array<SummaryDropdownOption>
   selectedValue: string
   originalClientX: number
   originalClientY: number
@@ -18,15 +23,9 @@ export interface SummaryDropdown {
 
 interface SummaryDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  // updateHoverRects: () => void
 }
 
 export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
-  /**
-   * 汇总行选择状态：列名 -> 选中的规则
-   */
-  const summaryState = reactive<Record<string, string>>({})
-
   /**
    * 汇总下拉浮层元素
    */
@@ -38,7 +37,7 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     x: 0,
     y: 0,
     colName: '' as string,
-    options: [] as Array<{ label: string; value: string }>,
+    options: [] as Array<SummaryDropdownOption>,
     selectedValue: '' as string,
     // 存储原始点击位置，用于滚动时重新计算
     originalClientX: 0,
@@ -141,7 +140,7 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
   const openSummaryDropdown = (
     evt: KonvaEventObject<MouseEvent, Konva.Rect>,
     colName: string,
-    options: Array<{ label: string; value: string }>,
+    options: Array<SummaryDropdownOption>,
     updateHoverRects: () => void,
     selected?: string
   ) => {
@@ -177,8 +176,41 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     })
   }
 
+  /**
+   * 点击外部关闭（允许点击 Element Plus 下拉面板）
+   * @param e 鼠标事件
+   * @returns {void}
+   */
+  const onGlobalMousedown = (e: MouseEvent) => {
+    if (tableVars.stage) tableVars.stage.setPointersPositions(e)
+
+    const target = e.target as HTMLElement | null
+    if (!target) return
+
+    if (!summaryDropdown.visible) return
+    const panelSummary = summaryDropdownRef.value
+    // 点击自身面板内：不关闭
+    if (panelSummary && panelSummary.contains(target)) return
+    const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
+    if (!inElSelectDropdown) {
+      summaryDropdown.visible = false
+    }
+  }
+
+  onMounted(() => {
+    window.addEventListener('mousedown', onGlobalMousedown, true)
+    // 添加滚动监听器，监听页面滚动
+    window.addEventListener('scroll', updateSummaryDropdownPositionsInPage)
+    document.addEventListener('scroll', updateSummaryDropdownPositionsInPage)
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('mousedown', onGlobalMousedown, true)
+    window.removeEventListener('scroll', updateSummaryDropdownPositionsInPage)
+    document.removeEventListener('scroll', updateSummaryDropdownPositionsInPage)
+  })
+
   return {
-    summaryState,
     summaryDropdownStyle,
     summaryDropdownRef,
     summaryDropdown,
