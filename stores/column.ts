@@ -14,7 +14,7 @@ export const useColumnStore = defineStore<
   state: () => ({
     dataSource: '',
     dataSourceOptions: [],
-    columns: [],
+    columns: []
   }),
 
   getters: {
@@ -41,7 +41,7 @@ export const useColumnStore = defineStore<
      */
     getDataSourceOptions(state) {
       return state.dataSourceOptions
-    },
+    }
   },
 
   actions: {
@@ -55,9 +55,7 @@ export const useColumnStore = defineStore<
      * @desc 删除列名
      */
     removeColumns(columns) {
-      this.columns = this.columns.filter(
-        (column: ColumnStore.ColumnOption) => !columns.includes(column)
-      )
+      this.columns = this.columns.filter((column: ColumnStore.ColumnOption) => !columns.includes(column))
     },
     /**
      * @desc 更新列名
@@ -96,6 +94,6 @@ export const useColumnStore = defineStore<
      */
     removeDataSourceOptions(dataSourceOptions) {
       this.dataSourceOptions = dataSourceOptions
-    },
-  },
+    }
+  }
 })

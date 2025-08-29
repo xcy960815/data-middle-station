@@ -18,10 +18,10 @@ export interface SummaryDropdown {
 
 interface SummaryDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  updateHoverRects: () => void
+  // updateHoverRects: () => void
 }
 
-export const summaryDropDownHandler = ({ props, updateHoverRects }: SummaryDropdownHandlerProps) => {
+export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
   /**
    * 汇总行选择状态：列名 -> 选中的规则
    */
@@ -142,6 +142,7 @@ export const summaryDropDownHandler = ({ props, updateHoverRects }: SummaryDropd
     evt: KonvaEventObject<MouseEvent, Konva.Rect>,
     colName: string,
     options: Array<{ label: string; value: string }>,
+    updateHoverRects: () => void,
     selected?: string
   ) => {
     // 存储原始点击位置（转换为页面坐标，考虑滚动偏移）

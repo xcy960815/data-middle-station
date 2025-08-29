@@ -1,22 +1,13 @@
 <template>
   <!-- 分析页面的layout布局 -->
-  <div
-    class="layout-analyse-main h-full w-full !flex !flex-col flex-1 border-box"
-  >
+  <div class="layout-analyse-main h-full w-full !flex !flex-col flex-1 border-box">
     <slot name="header"></slot>
-    <div
-      class="layout-analyse-body !flex flex-1 overflow-hidden"
-    >
-      <div
-        class="layout-analyse-cloumn relative text-[14px]"
-        @mousedown.prevent="handleCloumnMouseDown"
-      >
+    <div class="layout-analyse-body !flex flex-1 overflow-hidden">
+      <div class="layout-analyse-cloumn relative text-[14px]" @mousedown.prevent="handleCloumnMouseDown">
         <slot name="cloumn"></slot>
       </div>
 
-      <div
-        class="layout-analyse-handler !flex flex-col !w-[180px] text-[12px] m-[14px]"
-      >
+      <div class="layout-analyse-handler !flex flex-col !w-[180px] text-[12px] m-[14px]">
         <div
           class="layout-filter relative h-[130px] !w-full bg-[#f5f5f5] rounded-[4px] p-[7px]"
           @mousedown.prevent="handleFilterMouseDown"
@@ -29,35 +20,25 @@
         >
           <slot name="order"></slot>
         </div>
-        <div
-          class="layout-analyse-dimension flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]"
-        >
+        <div class="layout-analyse-dimension flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]">
           <slot name="dimension"></slot>
         </div>
       </div>
 
-      <div
-        class="layout-analyse-content m-[14px] ml-0 !flex flex-1 flex-col overflow-hidden"
-      >
+      <div class="layout-analyse-content m-[14px] ml-0 !flex flex-1 flex-col overflow-hidden">
         <div class="layout-analyse-bar">
           <slot name="bar"></slot>
         </div>
 
-        <div
-          class="layout-analyse-chart flex-1 overflow-hidden"
-        >
+        <div class="layout-analyse-chart flex-1 overflow-hidden">
           <slot name="chart"></slot>
         </div>
 
-        <div
-          class="layout-analyse-group bg-[#f5f5f5] text-[12px] h-[40px] rounded-[4px] p-[7px]"
-        >
+        <div class="layout-analyse-group bg-[#f5f5f5] text-[12px] h-[40px] rounded-[4px] p-[7px]">
           <slot name="group"></slot>
         </div>
       </div>
-      <div
-        class="layout-analyse-chart-type !w-[140px] bg-[#f5f5f5]"
-      >
+      <div class="layout-analyse-chart-type !w-[140px] bg-[#f5f5f5]">
         <slot name="chart-type"></slot>
       </div>
       <slot name="chart-config"></slot>
@@ -73,21 +54,14 @@
  * @returns {void}
  */
 const handleCloumnMouseDown = (mouseEvent: MouseEvent) => {
-  const layoutCloumn = document.querySelector(
-    '.layout-analyse-cloumn'
-  ) as HTMLElement
+  const layoutCloumn = document.querySelector('.layout-analyse-cloumn') as HTMLElement
   const startWidth = mouseEvent.clientX
   const selfWidth = layoutCloumn.clientWidth
   const handleMouseMove = (e: MouseEvent) => {
-    layoutCloumn.style.width = `${
-      selfWidth + e.clientX - startWidth
-    }px`
+    layoutCloumn.style.width = `${selfWidth + e.clientX - startWidth}px`
   }
   const handleMouseUp = () => {
-    document.removeEventListener(
-      'mousemove',
-      handleMouseMove
-    )
+    document.removeEventListener('mousemove', handleMouseMove)
   }
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
@@ -98,21 +72,14 @@ const handleCloumnMouseDown = (mouseEvent: MouseEvent) => {
  * @returns {void}
  */
 const handleFilterMouseDown = (mouseEvent: MouseEvent) => {
-  const layoutFilter = document.querySelector(
-    '.layout-filter'
-  ) as HTMLElement
+  const layoutFilter = document.querySelector('.layout-filter') as HTMLElement
   const startHeight = mouseEvent.clientY
   const selfHeight = layoutFilter.clientHeight
   const handleMouseMove = (e: MouseEvent) => {
-    layoutFilter.style.height = `${
-      selfHeight + e.clientY - startHeight
-    }px`
+    layoutFilter.style.height = `${selfHeight + e.clientY - startHeight}px`
   }
   const handleMouseUp = () => {
-    document.removeEventListener(
-      'mousemove',
-      handleMouseMove
-    )
+    document.removeEventListener('mousemove', handleMouseMove)
   }
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
@@ -123,21 +90,14 @@ const handleFilterMouseDown = (mouseEvent: MouseEvent) => {
  * @returns {void}
  */
 const handleOrderMouseDown = (mouseEvent: MouseEvent) => {
-  const layoutOrder = document.querySelector(
-    '.layout-order'
-  ) as HTMLElement
+  const layoutOrder = document.querySelector('.layout-order') as HTMLElement
   const startHeight = mouseEvent.clientY
   const selfHeight = layoutOrder.clientHeight
   const handleMouseMove = (e: MouseEvent) => {
-    layoutOrder.style.height = `${
-      selfHeight + e.clientY - startHeight
-    }px`
+    layoutOrder.style.height = `${selfHeight + e.clientY - startHeight}px`
   }
   const handleMouseUp = () => {
-    document.removeEventListener(
-      'mousemove',
-      handleMouseMove
-    )
+    document.removeEventListener('mousemove', handleMouseMove)
   }
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)

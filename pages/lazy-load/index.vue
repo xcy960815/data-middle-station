@@ -12,9 +12,7 @@ onMounted(() => {
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add(
-            'lazy-load-item--loaded'
-          )
+          entry.target.classList.add('lazy-load-item--loaded')
           ob.unobserve(entry.target)
         }
       })
@@ -23,9 +21,7 @@ onMounted(() => {
       threshold: 1
     }
   )
-  const lazyLoadItems = document.querySelectorAll(
-    '.lazy-load-item'
-  )
+  const lazyLoadItems = document.querySelectorAll('.lazy-load-item')
   lazyLoadItems.forEach((item) => {
     ob.observe(item)
   })

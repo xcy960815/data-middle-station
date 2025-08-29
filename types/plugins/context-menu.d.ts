@@ -28,14 +28,9 @@ declare namespace ContextMenu {
     }> {}
 
   export interface ContextMenuInstance {
-    initContextMenuEvent(
-      contextMenuElement: ContextMenuElement,
-      options?: InitContextMenuOptions
-    ): void
+    initContextMenuEvent(contextMenuElement: ContextMenuElement, options?: InitContextMenuOptions): void
 
-    removeContextMenuEvent(
-      contextMenuElement: ContextMenuElement
-    ): void
+    removeContextMenuEvent(contextMenuElement: ContextMenuElement): void
   }
 
   export interface InitContextMenuOptions {

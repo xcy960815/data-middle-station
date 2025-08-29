@@ -119,7 +119,6 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     activeData: Array<ChartDataVo.ChartData>
   }) => {
     if (!tableVars.stage) {
-      // 如果stage还没有初始化，返回默认值
       const leftCols = tableColumns.filter((c) => c.fixed === 'left')
       const rightCols = tableColumns.filter((c) => c.fixed === 'right')
       const centerCols = tableColumns.filter((c) => !c.fixed)
@@ -133,10 +132,8 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
         totalWidth: 0
       }
     }
-    // 计算滚动条预留宽度
-    const stageWidthRaw = tableVars.stage.width()
-    // 计算滚动条预留高度
-    const stageHeightRaw = tableVars.stage.height()
+    // 计算滚动条预留宽度 高度
+    const { width: stageWidthRaw, height: stageHeightRaw } = getStageAttr()
     // 计算内容高度
     const contentHeight = activeData.length * props.bodyRowHeight
     // 计算垂直滚动条预留空间
@@ -196,8 +193,7 @@ export const renderBodyHandler = ({ props, getSummaryRowHeight }: RenderBodyHand
     if (!tableVars.stage) return { maxScrollX: 0, maxScrollY: 0 }
     const { totalWidth, leftWidth, rightWidth } = getSplitColumns({ tableColumns, activeData })
 
-    const stageWidth = tableVars.stage.width()
-    const stageHeight = tableVars.stage.height()
+    const { width: stageWidth, height: stageHeight } = getStageAttr()
 
     // 计算内容高度
     let contentHeight = activeData.length * props.bodyRowHeight

@@ -16,16 +16,14 @@ export interface FilterDropdown {
 }
 
 interface FilterDropdownHandlerProps {
-  updateHoverRects: () => void
-  // clearGroups: () => void
-  // rebuildGroups: () => void
+  // updateHoverRects: () => void
 }
 
-export const filterDropdownHandler = ({
-  // rebuildGroups,
-  // clearGroups,
-  updateHoverRects
-}: FilterDropdownHandlerProps) => {
+export const filterDropdownHandler = (
+  {
+    // updateHoverRects
+  }: FilterDropdownHandlerProps
+) => {
   /**
    * 过滤下拉浮层元素
    */
@@ -130,7 +128,8 @@ export const filterDropdownHandler = ({
     evt: KonvaEventObject<MouseEvent, Konva.Shape | Konva.Circle>,
     colName: string,
     options: string[],
-    selected: string[]
+    selected: string[],
+    updateHoverRects: () => void
   ) => {
     // 存储原始点击位置（转换为页面坐标，考虑滚动偏移）
     const { clientX, clientY } = evt.evt

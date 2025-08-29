@@ -68,10 +68,7 @@ export const editorDropdownHandler = ({ props, activeData }: EditorDropdownHandl
       width: cellWidth,
       height: cellHeight
     }
-    console.log('cellEditor.editType', cellEditor.editType)
-
     cellEditor.visible = true
-    console.log('编辑器已设置为可见')
   }
   return {
     cellEditor,

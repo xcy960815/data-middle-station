@@ -1,9 +1,6 @@
 <template>
   <NuxtLayout>
-    <div
-      class="eventsource-container"
-      ref="eventsourceBox"
-    ></div>
+    <div class="eventsource-container" ref="eventsourceBox"></div>
   </NuxtLayout>
 </template>
 
@@ -18,9 +15,7 @@ onMounted(() => {
   }
 
   //对服务端消息的监听
-  eventSource.onmessage = function (
-    event: MessageEvent<string>
-  ) {
+  eventSource.onmessage = function (event: MessageEvent<string>) {
     const timeNode = document.createElement('div')
     timeNode.innerText = JSON.parse(event.data)
     eventsourceBox.value?.append(timeNode)

@@ -1,4 +1,4 @@
-import { io } from 'socket.io-client';
+import { io } from 'socket.io-client'
 
 /**
  * @desc socket 客户端
@@ -7,7 +7,7 @@ import { io } from 'socket.io-client';
 export default defineNuxtPlugin(() => {
   return {
     provide: {
-      io: io,
-    },
-  };
-});
+      io: io
+    }
+  }
+})

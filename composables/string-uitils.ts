@@ -5,9 +5,7 @@
  */
 export const getTextWidth = (innerText: string): number => {
   if (process.client) {
-    const span = document.createElement(
-      'span'
-    ) as HTMLSpanElement
+    const span = document.createElement('span') as HTMLSpanElement
     span.innerText = innerText
     span.className = `get-text-width-${innerText.length}-${Math.random()}` // Use individualized class name
     // 向body添加每一行的节点 获取节点的宽度 完成之后在移除节点
@@ -24,9 +22,7 @@ export const getTextWidth = (innerText: string): number => {
  * @param strings {Array<string>}
  * @returns {number}
  */
-export const getMaxLength = (
-  strings: Array<string>
-): number => {
+export const getMaxLength = (strings: Array<string>): number => {
   return strings.reduce((maxWidth, item) => {
     if (item) {
       const currentWidth = getTextWidth(item)

@@ -31,12 +31,14 @@
 ## 项目设置
 
 1. 克隆项目
+
 ```bash
 git clone [项目地址]
 cd data-middle-station
 ```
 
 2. 安装依赖
+
 ```bash
 # 使用 pnpm（推荐）
 pnpm install
@@ -49,7 +51,8 @@ yarn install
 ```
 
 3. 环境配置
-创建 `.env` 文件并配置必要的环境变量：
+   创建 `.env` 文件并配置必要的环境变量：
+
 ```env
 # 数据库配置
 DB_HOST=localhost
@@ -65,6 +68,7 @@ DB_NAME=your_database
 ## 开发
 
 启动开发服务器：
+
 ```bash
 # 使用 pnpm
 pnpm run dev
@@ -81,6 +85,7 @@ yarn dev
 ## 构建和部署
 
 构建生产版本：
+
 ```bash
 # 使用 pnpm
 pnpm run build
@@ -93,6 +98,7 @@ yarn build
 ```
 
 预览生产构建：
+
 ```bash
 # 使用 pnpm
 pnpm run preview

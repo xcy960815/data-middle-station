@@ -1,7 +1,7 @@
 // import type { H3Event } from 'h3';
-import { createSSRApp } from 'vue';
-import { renderToString } from '@vue/server-renderer';
-import type { PropType } from "vue"
+import { createSSRApp } from 'vue'
+import { renderToString } from '@vue/server-renderer'
+import type { PropType } from 'vue'
 /**
  * @link https://github.com/nuxt/nuxt/blob/main/packages/nuxt/src/core/runtime/nitro/error.ts#L18-L20
  * @desc 错误页面
@@ -9,7 +9,7 @@ import type { PropType } from "vue"
 export default defineEventHandler(async (event) => {
   // console.log('error--page', event.node.res);
   // TODO 捕获 api 接口返回的状态码
-  return;
+  return
   const errorPageApp = createSSRApp(
     {
       template: `
@@ -29,42 +29,42 @@ export default defineEventHandler(async (event) => {
       props: {
         error: {
           type: Object as PropType<{
-            url: string;
-            statusCode: number;
-            statusMessage: string;
-            message: string;
-            stack: string;
+            url: string
+            statusCode: number
+            statusMessage: string
+            message: string
+            stack: string
           }>,
           default: () => ({
             statusCode: 404,
             statusMessage: 'Page not found',
             message: 'Page not found',
-            stack: '',
-          }),
-        },
+            stack: ''
+          })
+        }
       },
       setup(props) {
         const handleErrorClick = () => {
-          console.log('error click');
-        };
+          console.log('error click')
+        }
         return {
           handleErrorClick,
-          error: props.error,
-        };
-      },
+          error: props.error
+        }
+      }
     },
     {
       error: {
         statusCode: 404,
         statusMessage: 'Page not found',
         message: 'Page not found',
-        stack: '',
-      },
-    },
-  );
-  const errorPageHtml = await renderToString(errorPageApp);
-  event.node.res.statusCode = 200;
-  event.node.res.setHeader('Content-Type', 'text/html;charset=UTF-8');
+        stack: ''
+      }
+    }
+  )
+  const errorPageHtml = await renderToString(errorPageApp)
+  event.node.res.statusCode = 200
+  event.node.res.setHeader('Content-Type', 'text/html;charset=UTF-8')
   event.node.res.write(`
       <!DOCTYPE html>
         <html>
@@ -153,6 +153,6 @@ export default defineEventHandler(async (event) => {
           <body>
             ${errorPageHtml}
           </body>
-        </html>`);
-  event.node.res.end();
-});
+        </html>`)
+  event.node.res.end()
+})

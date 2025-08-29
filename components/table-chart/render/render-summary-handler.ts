@@ -12,6 +12,7 @@ interface RenderSummaryHandlerProps {
     evt: KonvaEventObject<MouseEvent, Konva.Rect>,
     colName: string,
     options: Array<{ label: string; value: string }>,
+    updateHoverRects: () => void,
     selected?: string
   ) => void
 }
@@ -195,7 +196,7 @@ export const renderSummaryHandler = ({
         const options = isNumber ? numberOptions : textOptions
         const prev = summaryState[col.columnName] || 'nodisplay'
         const valid = options.some((o) => o.value === prev) ? prev : 'nodisplay'
-        openSummaryDropdown(evt, col.columnName, options, valid)
+        openSummaryDropdown(evt, col.columnName, options, () => { }, valid)
       })
 
       x += col.width || 0

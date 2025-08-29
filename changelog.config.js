@@ -51,12 +51,8 @@ const formatCommit = (commit) => {
   }
 
   // 添加作者、日期和类型信息
-  const author = newCommit.authorName
-    ? ` - by ${newCommit.authorName}`
-    : ''
-  const date = newCommit.committerDate
-    ? ` (${formatDate(newCommit.committerDate)})`
-    : ''
+  const author = newCommit.authorName ? ` - by ${newCommit.authorName}` : ''
+  const date = newCommit.committerDate ? ` (${formatDate(newCommit.committerDate)})` : ''
   const type = newCommit.type ? ` [${newCommit.type}]` : ''
 
   if (typeof newCommit.subject === 'string') {
@@ -66,15 +62,13 @@ const formatCommit = (commit) => {
   // 处理引用
   if (newCommit.references?.length) {
     const issues = new Set()
-    newCommit.references = newCommit.references.filter(
-      (reference) => {
-        if (issues.has(reference.issue)) {
-          return false
-        }
-        issues.add(reference.issue)
-        return true
+    newCommit.references = newCommit.references.filter((reference) => {
+      if (issues.has(reference.issue)) {
+        return false
       }
-    )
+      issues.add(reference.issue)
+      return true
+    })
   }
 
   return newCommit

@@ -7,13 +7,7 @@ export default defineEventHandler((event) => {
   setResponseStatus(event, 200)
 
   setInterval(() => {
-    event.node.res.write(
-      'data: ' +
-        JSON.stringify(
-          dayjs().format('YYYY-MM-DD HH:mm:ss')
-        ) +
-        '\n\n'
-    )
+    event.node.res.write('data: ' + JSON.stringify(dayjs().format('YYYY-MM-DD HH:mm:ss')) + '\n\n')
   }, 3000)
 
   event._handled = true

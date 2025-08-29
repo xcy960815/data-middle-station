@@ -12,12 +12,12 @@ export const useHomepageStore = defineStore<
   BaseStore.Actions<HomePageStore.HomePageState, HomePageStore.HomePageActions>
 >(StoreNames.HOMEPAGE, {
   state: () => ({
-    analyses: [],
+    analyses: []
   }),
   getters: {
     getAnalyses(state) {
       return state.analyses
-    },
+    }
   },
   actions: {
     /**
@@ -25,6 +25,6 @@ export const useHomepageStore = defineStore<
      */
     setAnalyses(value) {
       this.analyses = value
-    },
-  },
+    }
+  }
 })

@@ -14,9 +14,7 @@ export const clearAllHandler = () => {
    * @desc 清空所有
    * @param type 类型
    */
-  const clearAll = (
-    type: 'order' | 'filter' | 'group' | 'dimension'
-  ) => {
+  const clearAll = (type: 'order' | 'filter' | 'group' | 'dimension') => {
     switch (type) {
       case 'order':
         orderStore.setOrders([])
@@ -41,9 +39,7 @@ export const clearAllHandler = () => {
    * @param type 类型
    * @returns 是否清空
    */
-  const hasClearAll = (
-    type: 'order' | 'filter' | 'group' | 'dimension'
-  ) => {
+  const hasClearAll = (type: 'order' | 'filter' | 'group' | 'dimension') => {
     switch (type) {
       case 'order':
         return orderStore.getOrders.length > 0

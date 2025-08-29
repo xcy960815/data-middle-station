@@ -41,8 +41,7 @@ export default defineEventHandler((event) => {
     /**
      * 允许的请求方法
      */
-    'Access-Control-Allow-Methods':
-      'GET,HEAD,PUT,PATCH,POST,DELETE',
+    'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Headers': '*',
