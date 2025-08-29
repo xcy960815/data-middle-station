@@ -21,7 +21,7 @@
           <el-input-number v-model="tableConfig.headerHeight" :step="10" />
         </el-form-item>
         <el-form-item label="表头字体大小">
-          <el-input-number v-model="tableConfig.headerFontSize" :step="10" />
+          <el-input-number v-model="tableConfig.headerFontSize" :step="2" />
         </el-form-item>
         <el-form-item label="表头字体">
           <el-select style="width: 200px" v-model="tableConfig.headerFontFamily" placeholder="请选择表头字体">
@@ -52,7 +52,6 @@
         <el-form-item label="滚动条滑块悬停颜色">
           <el-color-picker v-model="tableConfig.scrollbarThumbHover" show-alpha />
         </el-form-item>
-
         <el-form-item label="是否展示汇总">
           <el-switch v-model="tableConfig.enableSummary" />
         </el-form-item>
@@ -390,23 +389,15 @@ const handleActionClick = (payload: { rowIndex: number; action: string; rowData:
 /**
  * 单元格编辑事件
  */
-const handleCellEdit = (payload: {
-  rowIndex: number
-  colKey: string
-  oldValue: any
-  newValue: any
-  rowData: ChartDataVo.ChartData
-}) => {
+const handleCellEdit = (payload: { rowIndex: number; colKey: string; rowData: ChartDataVo.ChartData }) => {
   console.log('Cell edited:', {
     row: payload.rowIndex,
     column: payload.colKey,
-    oldValue: payload.oldValue,
-    newValue: payload.newValue,
     rowData: payload.rowData
   })
 
   // 这里可以添加数据持久化逻辑，例如调用API保存到后端
-  ElMessage.success(`成功修改 ${payload.colKey}: ${payload.oldValue} → ${payload.newValue}`)
+  ElMessage.success(`成功修改 ${payload.colKey}`)
 }
 
 const tableConfig = reactive({

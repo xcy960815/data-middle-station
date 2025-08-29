@@ -140,27 +140,6 @@ export const getTextX = (x: number) => {
 }
 
 /**
- * 判断当前指针位置的顶层元素是否属于表格容器
- * 若不属于，则认为表格被其它遮罩/弹层覆盖，此时不进行高亮
- * @param {number} clientX 鼠标点击位置的 X 坐标
- * @param {number} clientY 鼠标点击位置的 Y 坐标
- * @returns {boolean} 是否在表格容器内
- */
-export const isTopMostInTable = (clientX: number, clientY: number): boolean => {
-  const container = getTableContainerElement()
-  if (!container) return false
-  const topEl = document.elementFromPoint(clientX, clientY) as HTMLElement | null
-  if (!topEl) return false
-  if (!container.contains(topEl)) return false
-  // 仅当命中的元素为 Konva 的 canvas（或其包裹层）时，认为没有被遮罩覆盖
-  if (topEl.tagName === 'CANVAS') return true
-  const konvaContent = topEl.closest('.konvajs-content') as HTMLElement | null
-  if (konvaContent && container.contains(konvaContent)) return true
-  // 命中的虽然在容器内，但不是 Konva 画布，视为被遮罩覆盖
-  return false
-}
-
-/**
  * 调整十六进制颜色亮度
  * @param hex 颜色，如 #409EFF
  * @param percent 亮度百分比，正数变亮，负数变暗（-100~100）

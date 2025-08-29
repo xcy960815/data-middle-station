@@ -1,10 +1,11 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, reactive, ref, type ExtractPropTypes } from 'vue'
+import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
+import { highlightHandler } from '../render/heightlight-handler'
 import { getDropdownPosition } from '../utils'
-import { tableVars, type Prettify } from '../variable'
-
+import { tableVars, variableHandlder, type Prettify } from '../variable-handlder'
 interface SummaryDropdownOption {
   label: string
   value: string
@@ -21,28 +22,32 @@ export interface SummaryDropdown {
   originalClientY: number
 }
 
+// 汇总行下拉状态（DOM）
+export const summaryDropdown = reactive<SummaryDropdown>({
+  visible: false,
+  x: 0,
+  y: 0,
+  colName: '',
+  options: [],
+  selectedValue: '',
+  // 存储原始点击位置，用于滚动时重新计算
+  originalClientX: 0,
+  originalClientY: 0
+})
+
+/**
+ * 汇总下拉浮层元素
+ */
+const summaryDropdownRef = ref<HTMLDivElement | null>(null)
+
 interface SummaryDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
 
 export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
-  /**
-   * 汇总下拉浮层元素
-   */
-  const summaryDropdownRef = ref<HTMLDivElement | null>(null)
-
-  // 汇总行下拉状态（DOM）
-  const summaryDropdown = reactive<SummaryDropdown>({
-    visible: false,
-    x: 0,
-    y: 0,
-    colName: '' as string,
-    options: [] as Array<SummaryDropdownOption>,
-    selectedValue: '' as string,
-    // 存储原始点击位置，用于滚动时重新计算
-    originalClientX: 0,
-    originalClientY: 0
-  })
+  const { clearGroups } = konvaStageHandler({ props })
+  const { updateHoverRects } = highlightHandler({ props })
+  const { summaryState } = variableHandlder({ props })
 
   /**
    * 获取有效的汇总高度（受开关控制）
@@ -141,7 +146,6 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     evt: KonvaEventObject<MouseEvent, Konva.Rect>,
     colName: string,
     options: Array<SummaryDropdownOption>,
-    updateHoverRects: () => void,
     selected?: string
   ) => {
     // 存储原始点击位置（转换为页面坐标，考虑滚动偏移）
@@ -151,10 +155,10 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     summaryDropdown.originalClientX = clientX + scrollX
     summaryDropdown.originalClientY = clientY + scrollY
     summaryDropdown.visible = true
-    if (!summaryDropdownRef.value) return
-    const summaryDropdownEl = summaryDropdownRef.value
-    if (!summaryDropdownEl) return
     nextTick(() => {
+      if (!summaryDropdownRef.value) return
+      const summaryDropdownEl = summaryDropdownRef.value
+      if (!summaryDropdownEl) return
       const summaryDropdownElRect = summaryDropdownEl.getBoundingClientRect()
       const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
       const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
@@ -174,6 +178,20 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
       tableVars.hoveredColIndex = null
       updateHoverRects()
     })
+  }
+
+  /**
+   * 应用汇总选择
+   * @returns {void}
+   */
+  const handleSelectedSummary = () => {
+    const colName = summaryDropdown.colName
+    const selected = summaryDropdown.selectedValue
+    summaryState[colName] = selected
+    clearGroups()
+    // rebuildGroups()
+    // 选择后关闭弹框
+    summaryDropdown.visible = false
   }
 
   /**
@@ -218,6 +236,7 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     updateSummaryDropdownPositionsInTable,
     closeSummaryDropdown,
     getSummaryRowHeight,
-    openSummaryDropdown
+    openSummaryDropdown,
+    handleSelectedSummary
   }
 }
