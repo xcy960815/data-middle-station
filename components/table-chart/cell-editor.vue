@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import { ElDatePicker, ElInput, ElOption, ElSelect } from 'element-plus'
-import { computed, defineEmits, defineProps, nextTick, onBeforeUnmount, onMounted, ref, watch, withDefaults } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 interface EditOptions {
   label: string
@@ -107,7 +107,7 @@ const editorStyle = computed(() => {
     width: `${width - 3}px`,
     height: `${height - 2}px`,
     zIndex: 999999,
-    backgroundColor: 'red',
+
     background: '#fff',
     padding: 0,
     margin: 0,
@@ -230,10 +230,13 @@ onBeforeUnmount(() => {
   :deep(.el-select) {
     height: 100%;
     width: 100%;
-    border: none !important;
 
     .el-select__wrapper {
-      border: none !important;
+      // border: none !important;
+      box-shadow: none !important;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-radius: 0;
     }
   }
 
@@ -280,88 +283,6 @@ onBeforeUnmount(() => {
     .el-input__suffix {
       display: flex;
       align-items: center;
-    }
-  }
-}
-</style>
-
-<style lang="scss">
-// 全局样式：彻底移除所有 Element Plus 组件的边框
-.el-select-dropdown {
-  border: none !important;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1) !important;
-}
-
-// 强力覆盖所有可能的 select 边框状态
-.el-select,
-.el-select:hover,
-.el-select:focus,
-.el-select.is-focus,
-.el-select.is-focused {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-
-  .el-input,
-  .el-input:hover,
-  .el-input:focus,
-  .el-input.is-focus,
-  .el-input.is-focused {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-
-    .el-input__wrapper,
-    .el-input__wrapper:hover,
-    .el-input__wrapper:focus,
-    .el-input__wrapper.is-focus,
-    .el-input__wrapper.is-focused {
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
-    .el-input__inner,
-    .el-input__inner:hover,
-    .el-input__inner:focus {
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-  }
-}
-
-// 针对表格编辑器中的所有输入组件
-.cell-editor {
-  .el-select,
-  .el-input,
-  .el-date-editor {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-
-    &:hover,
-    &:focus,
-    &.is-focus,
-    &.is-focused {
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
-    .el-input__wrapper {
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-
-      &:hover,
-      &:focus,
-      &.is-focus,
-      &.is-focused {
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-      }
     }
   }
 }
