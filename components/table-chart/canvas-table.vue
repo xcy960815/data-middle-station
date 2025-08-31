@@ -2,51 +2,24 @@
   <div id="table-container" class="table-container" :style="tableContainerStyle"></div>
 
   <!-- 过滤器下拉（多选） -->
-  <teleport to="body">
-    <div
-      ref="filterDropdownRef"
-      v-show="filterDropdown.visible"
-      class="dms-filter-dropdown"
-      :style="filterDropdownStyle"
-    >
-      <el-select
-        v-model="filterDropdown.selectedValues"
-        multiple
-        filterable
-        collapse-tags
-        collapse-tags-tooltip
-        size="small"
-        placeholder="选择过滤值"
-        style="width: 160px"
-        @change="handleSelectedFilter"
-        @blur="closeFilterDropdown"
-        @keydown.stop
-      >
-        <el-option v-for="opt in filterDropdown.options" :key="opt" :label="opt === '' ? '(空)' : opt" :value="opt" />
-      </el-select>
-    </div>
-  </teleport>
+  <FilterDropdown
+    :visible="filterDropdown.visible"
+    :options="filterDropdown.options"
+    :selected-values="filterDropdown.selectedValues"
+    :position="filterDropdownPosition"
+    @change="handleSelectedFilter"
+    @close="closeFilterDropdown"
+  />
+
   <!-- 汇总行下拉（单选） -->
-  <teleport to="body">
-    <div
-      ref="summaryDropdownRef"
-      v-show="summaryDropdown.visible"
-      class="dms-summary-dropdown"
-      :style="summaryDropdownStyle"
-    >
-      <el-select
-        v-model="summaryDropdown.selectedValue"
-        size="small"
-        placeholder="选择汇总"
-        style="width: 160px"
-        @change="handleSelectedSummary"
-        @blur="closeSummaryDropdown"
-        @keydown.stop
-      >
-        <el-option v-for="opt in summaryDropdown.options" :key="opt.value" :label="opt.label" :value="opt.value" />
-      </el-select>
-    </div>
-  </teleport>
+  <SummaryDropdown
+    :visible="summaryDropdown.visible"
+    :options="summaryDropdown.options"
+    :selected-value="summaryDropdown.selectedValue"
+    :position="summaryDropdownPosition"
+    @change="handleSelectedSummary"
+    @close="closeSummaryDropdown"
+  />
 
   <!-- 单元格编辑器 -->
   <CellEditor
@@ -61,17 +34,18 @@
 </template>
 
 <script setup lang="ts">
-import { ElOption, ElSelect } from 'element-plus'
-import { nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import CellEditor from './cell-editor.vue'
 import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
 import type { ChartEmits } from './emits'
+import FilterDropdown from './filter-dropdown.vue'
 import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
 import { renderBodyHandler } from './render/render-body-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
+import SummaryDropdown from './summary-dropdown.vue'
 import { variableHandlder } from './variable-handlder'
 
 const props = defineProps(chartProps)
@@ -119,6 +93,21 @@ const {
   initCellEditorListeners,
   cleanupCellEditorListeners
 } = editorDropdownHandler({ props, emits })
+
+// 计算下拉框位置
+const filterDropdownPosition = computed(() => {
+  if (!filterDropdownStyle.value) return { x: 0, y: 0 }
+  const left = parseInt(filterDropdownStyle.value.left as string)
+  const top = parseInt(filterDropdownStyle.value.top as string)
+  return { x: left, y: top }
+})
+
+const summaryDropdownPosition = computed(() => {
+  if (!summaryDropdownStyle.value) return { x: 0, y: 0 }
+  const left = parseInt(summaryDropdownStyle.value.left as string)
+  const top = parseInt(summaryDropdownStyle.value.top as string)
+  return { x: left, y: top }
+})
 
 /**
  * 监听 props 变化
