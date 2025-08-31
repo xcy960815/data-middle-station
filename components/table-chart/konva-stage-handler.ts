@@ -5,8 +5,8 @@ import { renderBodyHandler } from './render/render-body-handler'
 import { renderHeaderHandler } from './render/render-header-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
 import { renderSummaryHandler } from './render/render-summary-handler'
-import { clearPool, constrainToRange, getTableContainerElement, setPointerStyle } from './utils'
-import { tableVars, variableHandlder, type Prettify } from './variable-handlder'
+import { clearPool, constrainToRange, getTableContainerElement } from './utils'
+import { variableHandlder, type Prettify } from './variable-handlder'
 interface KonvaStageHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
   emits?: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
@@ -15,6 +15,7 @@ interface KonvaStageHandlerProps {
  * Konva Stage 和 Layer 管理器
  */
 export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
+  const { tableVars } = variableHandlder({ props })
   const ensureEmits = () => {
     if (!emits) {
       throw new Error('This operation requires emits to be provided to konvaStageHandler')
@@ -57,7 +58,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       tableVars.stage.add(tableVars.fixedHeaderLayer)
     }
 
-    // 创建汇总图层与固定汇总图层（位于滚动条层之下）
     if (!tableVars.summaryLayer) {
       tableVars.summaryLayer = new Konva.Layer()
       tableVars.stage.add(tableVars.summaryLayer)
@@ -97,6 +97,14 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   }
 
   /**
+   * 设置指针样式的辅助函数
+   * @param on 是否显示指针
+   */
+  const setPointerStyle = (on: boolean, cursor: string) => {
+    if (tableVars.stage) tableVars.stage.container().style.cursor = on ? cursor : 'default'
+  }
+
+  /**
    * 获取 Stage 的属性
    * @returns {Object}
    */
@@ -132,13 +140,13 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   /**
    * 全局鼠标移动处理
    */
-  const handleGlobalMouseMove = (e: MouseEvent) => {
+  const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
     if (!tableVars.stage) return
-    tableVars.stage.setPointersPositions(e)
+    tableVars.stage.setPointersPositions(mouseEvent)
 
     // 记录鼠标在屏幕中的坐标
-    tableVars.lastClientX = e.clientX
-    tableVars.lastClientY = e.clientY
+    tableVars.lastClientX = mouseEvent.clientX
+    tableVars.lastClientY = mouseEvent.clientY
 
     const { drawBodyPart, recomputeHoverIndexFromPointer, calculateVisibleRows, getScrollLimits, getSplitColumns } =
       renderBodyHandler({ props, emits: ensureEmits() })
@@ -147,7 +155,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     // 列宽拖拽中：实时更新覆盖宽度并重建分组
     if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
-      const delta = e.clientX - tableVars.resizeStartX
+      const delta = mouseEvent.clientX - tableVars.resizeStartX
       const newWidth = Math.max(props.minAutoColWidth, tableVars.resizeStartWidth + delta)
       tableVars.columnWidthOverrides[tableVars.resizingColumnName] = newWidth
       if (tableVars.resizeNeighborColumnName) {
@@ -161,7 +169,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     // 手动拖拽导致的垂直滚动
     if (tableVars.isDraggingVerticalThumb) {
-      const deltaY = e.clientY - tableVars.dragStartY
+      const deltaY = mouseEvent.clientY - tableVars.dragStartY
       const scrollThreshold = props.scrollThreshold
       if (Math.abs(deltaY) < scrollThreshold) return
 
@@ -217,7 +225,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     // 手动拖拽导致的水平滚动
     if (tableVars.isDraggingHorizontalThumb) {
-      const deltaX = e.clientX - tableVars.dragStartX
+      const deltaX = mouseEvent.clientX - tableVars.dragStartX
       const scrollThreshold = props.scrollThreshold
       if (Math.abs(deltaX) < scrollThreshold) return
 
@@ -239,14 +247,14 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   /**
    * 全局鼠标抬起处理
    */
-  const handleGlobalMouseUp = (e: MouseEvent) => {
-    if (tableVars.stage) tableVars.stage.setPointersPositions(e)
+  const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
+    if (tableVars.stage) tableVars.stage.setPointersPositions(mouseEvent)
 
     // 滚动条拖拽结束
     if (tableVars.isDraggingVerticalThumb || tableVars.isDraggingHorizontalThumb) {
       tableVars.isDraggingVerticalThumb = false
       tableVars.isDraggingHorizontalThumb = false
-      setPointerStyle(tableVars.stage, false, 'default')
+      setPointerStyle(false, 'default')
       if (tableVars.verticalScrollbarThumbRect && !tableVars.isDraggingVerticalThumb)
         tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumb)
       if (tableVars.horizontalScrollbarThumbRect && !tableVars.isDraggingHorizontalThumb)
@@ -259,7 +267,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       tableVars.isResizingColumn = false
       tableVars.resizingColumnName = null
       tableVars.resizeNeighborColumnName = null
-      setPointerStyle(tableVars.stage, false, 'default')
+      setPointerStyle(false, 'default')
       clearGroups()
       rebuildGroups()
     }
@@ -671,18 +679,9 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     handleGlobalMouseMove,
     handleGlobalMouseUp,
     handleGlobalResize,
-    createHeaderLeftGroups,
-    createHeaderCenterGroups,
-    createHeaderRightGroups,
-    createBodyLeftGroups,
-    createBodyCenterGroups,
-    createBodyRightGroups,
-    createSummaryLeftGroups,
-    createSummaryCenterGroups,
-    createSummaryRightGroups,
-    createCenterBodyClipGroup,
     clearGroups,
     initStageListeners,
-    cleanupStageListeners
+    cleanupStageListeners,
+    setPointerStyle
   }
 }

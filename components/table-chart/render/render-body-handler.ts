@@ -11,12 +11,10 @@ import {
   getFromPool,
   getTableContainerElement,
   getTextX,
-  paletteOptions,
   returnToPool,
-  setPointerStyle,
   truncateText
 } from '../utils'
-import { tableVars, variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
+import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
 import { highlightHandler } from './heightlight-handler'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -30,9 +28,18 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     props,
     emits
   })
-  const { tableColumns, tableData } = variableHandlder({ props })
-  const { getStageAttr } = konvaStageHandler({ props })
+  const { tableColumns, tableData, tableVars } = variableHandlder({ props })
+  const { getStageAttr, setPointerStyle } = konvaStageHandler({ props })
   const { getSummaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
+
+  // Define button palette options
+  const paletteOptions = {
+    primary: { fill: '#1890ff', stroke: '#1890ff', text: '#fff' },
+    success: { fill: '#52c41a', stroke: '#52c41a', text: '#fff' },
+    warning: { fill: '#faad14', stroke: '#faad14', text: '#fff' },
+    danger: { fill: '#ff4d4f', stroke: '#ff4d4f', text: '#fff' },
+    default: { fill: '#f5f5f5', stroke: '#d9d9d9', text: '#000' }
+  }
   /**
    * 计算可视区域 数据的起始行和结束行
    * @returns {void}
@@ -327,10 +334,10 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     if (options.disabled) {
       buttonRect.opacity(0.6)
       buttonRect.on('mouseenter.buttonfx', () => {
-        setPointerStyle(tableVars.stage, false, 'not-allowed')
+        setPointerStyle(false, 'not-allowed')
       })
       buttonRect.on('mouseleave.buttonfx', () => {
-        setPointerStyle(tableVars.stage, false, 'default')
+        setPointerStyle(false, 'default')
       })
       return
     }
@@ -338,12 +345,12 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     buttonRect.opacity(1)
     buttonRect.on('mouseenter.buttonfx', () => {
       isHovering = true
-      setPointerStyle(tableVars.stage, true, 'pointer')
+      setPointerStyle(true, 'pointer')
       applyHover()
     })
     buttonRect.on('mouseleave.buttonfx', () => {
       isHovering = false
-      setPointerStyle(tableVars.stage, false, 'default')
+      setPointerStyle(false, 'default')
       applyNormal()
     })
     buttonRect.on('mousedown.buttonfx', () => {

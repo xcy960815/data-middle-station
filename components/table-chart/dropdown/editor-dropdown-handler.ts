@@ -3,7 +3,7 @@ import type { CanvasTableEmits } from '../emits'
 import { chartProps } from '../props'
 import { getTableContainerElement } from '../utils'
 import type { Prettify } from '../variable-handlder'
-import { tableVars, variableHandlder } from '../variable-handlder'
+import { variableHandlder } from '../variable-handlder'
 
 interface EditorDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -34,7 +34,7 @@ const cellEditorDropdown = reactive({
 })
 
 export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerProps) => {
-  const { tableData } = variableHandlder({ props })
+  const { tableData, tableVars } = variableHandlder({ props })
   /**
    * 清空 Konva 节点
    */

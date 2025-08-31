@@ -1,12 +1,13 @@
 import Konva from 'konva'
 import { chartProps } from '../props'
 import type { Prettify } from '../variable-handlder'
-import { tableVars } from '../variable-handlder'
+import { variableHandlder } from '../variable-handlder'
 
 interface HighlightHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
 export const highlightHandler = ({ props }: HighlightHandlerProps) => {
+  const { tableVars } = variableHandlder({ props })
   /**
    * 收集所有需要参与高亮判断的分组
    */

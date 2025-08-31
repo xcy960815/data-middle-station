@@ -7,7 +7,7 @@ import { chartProps } from '../props'
 import { highlightHandler } from '../render/heightlight-handler'
 import { constrainToRange, getTableContainerElement } from '../utils'
 import type { Prettify } from '../variable-handlder'
-import { tableVars, variableHandlder } from '../variable-handlder'
+import { variableHandlder } from '../variable-handlder'
 import { renderBodyHandler } from './render-body-handler'
 
 import type { CanvasTableEmits } from '../emits'
@@ -21,7 +21,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   const { getStageAttr } = konvaStageHandler({ props })
   const { getScrollLimits, getSplitColumns, recomputeHoverIndexFromPointer, drawBodyPart, calculateVisibleRows } =
     renderBodyHandler({ props, emits })
-  const { tableData } = variableHandlder({ props })
+  const { tableData, tableVars } = variableHandlder({ props })
   const { getSummaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
   const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props, emits })
   const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
