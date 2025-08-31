@@ -2,9 +2,9 @@ import Konva from 'konva'
 import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
 import { konvaStageHandler } from '../konva-stage-handler'
 import type { chartProps } from '../props'
-import { getTextX, setPointerStyle, truncateText } from '../utils'
+import { getTextX, truncateText } from '../utils'
 import type { PositionMap, Prettify } from '../variable-handlder'
-import { tableVars, variableHandlder } from '../variable-handlder'
+import { variableHandlder } from '../variable-handlder'
 
 // 常量定义
 const LAYOUT_CONSTANTS = {
@@ -27,9 +27,9 @@ interface RenderHeaderHandlerProps {
 
 export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
   const { openFilterDropdown } = filterDropdownHandler({ props })
-  const { sortColumns, tableData, handleTableData, filterState } = variableHandlder({ props })
+  const { sortColumns, tableData, handleTableData, filterState, tableVars } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
-
+  const { setPointerStyle } = konvaStageHandler({ props })
   /**
    * 创建表头单元格矩形
    */
@@ -189,8 +189,8 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
     // 添加鼠标交互
     const setupArrowInteraction = (arrow: Konva.RegularPolygon, order: 'asc' | 'desc') => {
-      arrow.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'pointer'))
-      arrow.on('mouseleave', () => setPointerStyle(tableVars.stage, false, 'default'))
+      arrow.on('mouseenter', () => setPointerStyle(true, 'pointer'))
+      arrow.on('mouseleave', () => setPointerStyle(false, 'default'))
       arrow.on('click', (evt) => {
         if (tableVars.isResizingColumn) return
         const hasModifier = !!(evt.evt && (evt.evt.shiftKey || evt.evt.ctrlKey || evt.evt.metaKey))
@@ -242,8 +242,8 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     })
 
     // 添加鼠标交互
-    filterIcon.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'pointer'))
-    filterIcon.on('mouseleave', () => setPointerStyle(tableVars.stage, false, 'default'))
+    filterIcon.on('mouseenter', () => setPointerStyle(true, 'pointer'))
+    filterIcon.on('mouseleave', () => setPointerStyle(false, 'default'))
     filterIcon.on('click', (evt) => {
       const uniqueValues = new Set<string>()
       tableData.value.forEach((row) => uniqueValues.add(String(row[col.columnName] ?? '')))
@@ -279,10 +279,10 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     })
 
     // 添加鼠标交互
-    resizer.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'col-resize'))
+    resizer.on('mouseenter', () => setPointerStyle(true, 'col-resize'))
     resizer.on('mouseleave', () => {
       if (!tableVars.isResizingColumn) {
-        setPointerStyle(tableVars.stage, false, 'default')
+        setPointerStyle(false, 'default')
       }
     })
 
@@ -302,7 +302,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
         tableVars.resizeNeighborStartWidth = 0
       }
 
-      setPointerStyle(tableVars.stage, true, 'col-resize')
+      setPointerStyle(true, 'col-resize')
     })
 
     return resizer

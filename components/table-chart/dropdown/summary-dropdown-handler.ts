@@ -5,7 +5,7 @@ import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { highlightHandler } from '../render/heightlight-handler'
 import { getDropdownPosition } from '../utils'
-import { tableVars, variableHandlder, type Prettify } from '../variable-handlder'
+import { variableHandlder, type Prettify } from '../variable-handlder'
 interface SummaryDropdownOption {
   label: string
   value: string
@@ -47,7 +47,7 @@ interface SummaryDropdownHandlerProps {
 export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
   const { clearGroups } = konvaStageHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })
-  const { summaryState } = variableHandlder({ props })
+  const { summaryState, tableVars } = variableHandlder({ props })
 
   /**
    * 获取有效的汇总高度（受开关控制）

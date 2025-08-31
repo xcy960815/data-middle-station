@@ -72,7 +72,7 @@ import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
 import { renderBodyHandler } from './render/render-body-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
-import { tableVars, variableHandlder } from './variable-handlder'
+import { variableHandlder } from './variable-handlder'
 
 const props = defineProps(chartProps)
 
@@ -81,7 +81,7 @@ const props = defineProps(chartProps)
  */
 const emits = defineEmits<ChartEmits>()
 
-const { tableContainerStyle, handleTableData, handleTableColumns } = variableHandlder({ props })
+const { tableVars, tableContainerStyle, handleTableData, handleTableColumns } = variableHandlder({ props })
 
 const { initStage, destroyStage, refreshTable, initStageListeners, cleanupStageListeners } = konvaStageHandler({
   props,
@@ -90,8 +90,7 @@ const { initStage, destroyStage, refreshTable, initStageListeners, cleanupStageL
 
 renderBodyHandler({ props, emits })
 
-const { createScrollbars, updateScrollbarPosition, updateScrollPositions, initWheelListener, cleanupWheelListener } =
-  renderScrollbarsHandler({ props, emits })
+const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ props, emits })
 
 const {
   filterDropdownRef,
@@ -254,9 +253,6 @@ onMounted(() => {
   initCellEditorListeners()
 })
 
-/**
- * 卸载
- */
 onBeforeUnmount(() => {
   cleanupWheelListener()
   cleanupStageListeners()

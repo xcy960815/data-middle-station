@@ -49,6 +49,17 @@ export const textOptions = [
   { label: '未填写', value: 'nofilled' }
 ]
 
+/**
+ * 按钮颜色
+ */
+export const paletteOptions: Record<string, { fill: string; stroke: string; text: string }> = {
+  primary: { fill: '#409EFF', stroke: '#2b74c7', text: '#fff' },
+  success: { fill: '#67C23A', stroke: '#4ea427', text: '#fff' },
+  warning: { fill: '#E6A23C', stroke: '#c9882f', text: '#fff' },
+  danger: { fill: '#F56C6C', stroke: '#d15858', text: '#fff' },
+  default: { fill: '#73767a', stroke: '#5b5e62', text: '#fff' }
+}
+
 interface TableVars {
   rowHighlightRects: Konva.Rect[] | null
   colHighlightRects: Konva.Rect[] | null
@@ -112,7 +123,7 @@ interface TableVars {
 /**
  * 表格全局状态变量
  */
-export const tableVars: TableVars = {
+const tableVars: TableVars = {
   /**
    * 行高亮矩形
    */
@@ -575,6 +586,7 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
   return {
     tableContainerStyle,
     handleTableColumns,
+    tableVars,
     tableColumns,
     tableData,
     filterState,

@@ -6,7 +6,7 @@ import { chartProps } from '../props'
 // 避免循环依赖：不要在此处直接引入 rebuild-group-handler
 import { highlightHandler } from '../render/heightlight-handler'
 import { getDropdownPosition } from '../utils'
-import { tableVars, variableHandlder, type Prettify } from '../variable-handlder'
+import { variableHandlder, type Prettify } from '../variable-handlder'
 
 export interface FilterDropdown {
   visible: boolean
@@ -44,7 +44,7 @@ interface FilterDropdownHandlerProps {
 }
 
 export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => {
-  const { filterState, handleTableData } = variableHandlder({ props })
+  const { filterState, handleTableData, tableVars } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })
 

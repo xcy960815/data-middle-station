@@ -3,16 +3,17 @@ import type { ExtractPropTypes } from 'vue'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
-import { getTextX, setPointerStyle, truncateText } from '../utils'
+import { getTextX, truncateText } from '../utils'
 import type { PositionMap, Prettify } from '../variable-handlder'
-import { numberOptions, tableVars, textOptions, variableHandlder } from '../variable-handlder'
+import { numberOptions, textOptions, variableHandlder } from '../variable-handlder'
 interface RenderSummaryHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
 
 export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
-  const { tableData, summaryState } = variableHandlder({ props })
+  const { tableData, summaryState, tableVars } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
+  const { setPointerStyle } = konvaStageHandler({ props })
   const { openSummaryDropdown } = summaryDropDownHandler({ props })
   const { $webworker } = useNuxtApp()
   /**
@@ -201,8 +202,8 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
           scheduleBatchDraw(layer)
         })
       }
-      summaryCellRect.on('mouseenter', () => setPointerStyle(tableVars.stage, true, 'pointer'))
-      summaryCellRect.on('mouseleave', () => setPointerStyle(tableVars.stage, false, 'default'))
+      summaryCellRect.on('mouseenter', () => setPointerStyle(true, 'pointer'))
+      summaryCellRect.on('mouseleave', () => setPointerStyle(false, 'default'))
 
       summaryCellRect.on('click', (evt) => {
         if (!tableVars.stage) return
