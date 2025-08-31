@@ -360,178 +360,156 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     })
   }
 
-  const drawMergedCellText = ({
-    pools,
-    row,
-    col,
-    x,
-    y,
-    cellWidth,
-    cellHeight
-  }: {
-    pools: KonvaNodePools
-    row: ChartDataVo.ChartData
-    col: GroupStore.GroupOption | DimensionStore.DimensionOption
-    x: number
-    y: number
-    cellWidth: number
-    cellHeight: number
-  }) => {
-    // 在合并单元格中绘制文本
-    const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
-    const value = String(rawValue ?? '')
-    const maxTextWidth = cellWidth - 16
-    const fontFamily = props.bodyFontFamily
-    const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-    const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
-    const mergedCellText = getFromPool(
-      pools.cellTexts,
-      () => new Konva.Text({ listening: false, name: 'merged-cell-text' })
-    )
-    mergedCellText.name('merged-cell-text')
-    mergedCellText.setAttr('row-index', null)
-    mergedCellText.setAttr('col-index', null)
-    mergedCellText.x(getTextX(x))
-    mergedCellText.y(y + cellHeight / 2)
-    mergedCellText.text(truncatedValue)
-    mergedCellText.fontSize(fontSize)
-    mergedCellText.fontFamily(fontFamily)
-    // 填充文字颜色
-    mergedCellText.fill(props.bodyTextColor)
-    mergedCellText.align('left')
-    mergedCellText.verticalAlign('middle')
-    mergedCellText.offsetY(mergedCellText.height() / 2)
-
-    return mergedCellText
-  }
-
   /**
-   * 绘制单元格矩形
-   * @param {KonvaNodePools} param0.pools
-   * @param {number} param0.rowIndex
-   * @param {number} param0.colIndex
-   * @param {number} param0.startColIndex
-   * @param {number} param0.x
-   * @param {number} param0.y
-   * @param {number} param0.cellWidth
-   * @param {number} param0.cellHeight
-   * @returns
+   * 统一的文本绘制函数
+   * @param config 文本绘制配置
+   * @returns Konva.Text 对象
    */
-  const drawCellRect = ({
-    pools,
-    rowIndex,
-    colIndex,
-    startColIndex,
-    x,
-    y,
-    cellWidth,
-    cellHeight
-  }: {
+  const drawUnifiedText = (config: {
     pools: KonvaNodePools
-    rowIndex: number
-    colIndex: number
-    startColIndex: number
+    name: string
+    text: string
     x: number
     y: number
-    cellWidth: number
-    cellHeight: number
-  }) => {
-    const background = rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
-    const cellRect = getFromPool(pools.cellRects, () => new Konva.Rect({ listening: true, name: 'cell-rect' }))
-    cellRect.name('cell-rect')
-    cellRect.setAttr('row-index', rowIndex + 1)
-    cellRect.setAttr('col-index', colIndex + startColIndex)
-    cellRect.x(x)
-    cellRect.y(y)
-    cellRect.setAttr('origin-fill', background)
-    cellRect.fill(background)
-    cellRect.width(cellWidth)
-    cellRect.height(cellHeight)
-    cellRect.stroke(props.borderColor)
-    cellRect.strokeWidth(1)
-    cellRect.off('click')
-    return cellRect
-  }
-
-  const drawCellText = ({
-    pools,
-    x,
-    y,
-    cellHeight,
-    truncatedValue,
-    fontSize,
-    fontFamily
-  }: {
-    pools: KonvaNodePools
-    x: number
-    y: number
-    cellHeight: number
-    truncatedValue: string
     fontSize: number
     fontFamily: string
+    fill: string
+    align?: 'left' | 'center' | 'right'
+    verticalAlign?: 'top' | 'middle' | 'bottom'
+    cellHeight?: number
+    useGetTextX?: boolean
+    opacity?: number
+    offsetX?: number
+    offsetY?: number
   }) => {
-    const cellText = getFromPool(pools.cellTexts, () => new Konva.Text({ listening: false, name: 'cell-text' }))
-    cellText.name('cell-text')
-    cellText.setAttr('row-index', null)
-    cellText.setAttr('col-index', null)
-    cellText.x(getTextX(x))
-    cellText.y(y + cellHeight / 2)
-    cellText.text(truncatedValue)
-    cellText.fontSize(fontSize)
-    cellText.fontFamily(fontFamily)
-    cellText.fill(props.bodyTextColor)
-    cellText.align('left')
-    cellText.verticalAlign('middle')
-    cellText.offsetY(cellText.height() / 2)
+    const {
+      pools,
+      name,
+      text,
+      x,
+      y,
+      fontSize,
+      fontFamily,
+      fill,
+      align = 'left',
+      verticalAlign = 'middle',
+      cellHeight,
+      useGetTextX = false,
+      opacity = 1,
+      offsetX = 0,
+      offsetY = 0
+    } = config
 
-    return cellText
+    const textNode = getFromPool(pools.cellTexts, () => new Konva.Text({ listening: false, name }))
+
+    textNode.name(name)
+    textNode.setAttr('row-index', null)
+    textNode.setAttr('col-index', null)
+
+    // 位置设置
+    if (useGetTextX) {
+      textNode.x(getTextX(x))
+      textNode.y(cellHeight ? y + cellHeight / 2 : y)
+    } else {
+      textNode.x(x)
+      textNode.y(y)
+    }
+
+    // 基础属性
+    textNode.text(text)
+    textNode.fontSize(fontSize)
+    textNode.fontFamily(fontFamily)
+    textNode.fill(fill)
+    textNode.opacity(opacity)
+    textNode.align(align)
+    textNode.verticalAlign(verticalAlign)
+
+    // 偏移处理
+    if (align === 'center' && verticalAlign === 'middle') {
+      // 使用文本自身尺寸居中（在设置内容后再次测量）
+      const w = textNode.width()
+      const h = textNode.height()
+      textNode.offset({ x: w / 2, y: h / 2 })
+    } else if (useGetTextX && verticalAlign === 'middle') {
+      textNode.offsetY(textNode.height() / 2)
+    }
+    // 允许外部额外偏移（如按钮文本基于矩形中心）
+    if (offsetX || offsetY) {
+      const prev = textNode.offset()
+      textNode.offset({ x: (prev.x || 0) + (offsetX || 0), y: (prev.y || 0) + (offsetY || 0) })
+    }
+
+    return textNode
+  }
+
+  /**
+   * 统一的矩形绘制函数（单元格、按钮等）
+   */
+  const drawUnifiedRect = (config: {
+    pools: KonvaNodePools
+    name: string
+    x: number
+    y: number
+    width: number
+    height: number
+    fill?: string
+    stroke?: string
+    strokeWidth?: number
+    cornerRadius?: number
+    listening?: boolean
+    rowIndex?: number | null
+    colIndex?: number | null
+    originFill?: string
+  }) => {
+    const {
+      pools,
+      name,
+      x,
+      y,
+      width,
+      height,
+      fill,
+      stroke,
+      strokeWidth = 1,
+      cornerRadius = 0,
+      listening = true,
+      rowIndex = null,
+      colIndex = null,
+      originFill
+    } = config
+
+    const rect = getFromPool(pools.cellRects, () => new Konva.Rect({ listening, name }))
+    rect.name(name)
+    rect.off('click')
+    rect.off('mouseenter')
+    rect.off('mouseleave')
+    rect.setAttr('row-index', rowIndex)
+    rect.setAttr('col-index', colIndex)
+    rect.x(x)
+    rect.y(y)
+    rect.width(width)
+    rect.height(height)
+    if (originFill !== undefined) rect.setAttr('origin-fill', originFill)
+    if (fill !== undefined) rect.fill(fill)
+    if (stroke !== undefined) rect.stroke(stroke)
+    rect.strokeWidth(strokeWidth)
+    if (cornerRadius) rect.cornerRadius(cornerRadius)
+    return rect
   }
   /**
-   * 绘制按钮矩形
-   * @param {KonvaNodePools} param0.pools
-   * @param {number} param0.startX
-   * @param {number} param0.centerY
-   * @param {number} param0.w
-   * @param {number} param0.buttonHeight
-   * @param {Object} param0.theme
+   * 绘制单元格文本
+   * @param {KonvaNodePools} param0.pools 对象池
+   * @param {number} param0.x 单元格X坐标
+   * @param {number} param0.y 单元格Y坐标
+   * @param {number} param0.cellWidth 单元格宽度
+   * @param {number} param0.cellHeight 单元格高度
+   * @param {string} param0.truncatedValue 截断的文本
+   * @param {number} param0.fontSize 字体大小
+   * @param {string} param0.fontFamily 字体家族
    * @returns
    */
-  const drawButtonRect = ({
-    pools,
-    startX,
-    centerY,
-    w,
-    buttonHeight,
-    theme
-  }: {
-    pools: KonvaNodePools
-    startX: number
-    centerY: number
-    w: number
-    buttonHeight: number
-    theme: { fill: string; stroke: string }
-  }) => {
-    const buttonRect = getFromPool(
-      pools.cellRects || [],
-      () => new Konva.Rect({ listening: true, name: `button-rect` })
-    )
-    buttonRect.name('button-rect')
-    buttonRect.off('click')
-    buttonRect.off('mouseenter')
-    buttonRect.off('mouseleave')
-    buttonRect.setAttr('row-index', null)
-    buttonRect.setAttr('col-index', null)
-    buttonRect.x(startX)
-    buttonRect.y(centerY)
-    buttonRect.width(w)
-    buttonRect.height(buttonHeight)
-    buttonRect.cornerRadius(4)
-    buttonRect.fill(theme.fill)
-    buttonRect.stroke(theme.stroke)
-    buttonRect.strokeWidth(1)
-
-    return buttonRect
-  }
+  // removed drawCellText (merged into drawUnifiedText)
+  // 合并后的按钮/单元格矩形统一由 drawUnifiedRect 负责
 
   /**
    * 绘制按钮文本
@@ -547,47 +525,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
    * @param {number} param0.offsetY
    * @returns
    */
-  const drawButtonText = ({
-    pools,
-    x,
-    y,
-    buttonName,
-    fontSize,
-    fontFamily,
-    opacity,
-    textColor,
-    offsetX,
-    offsetY
-  }: {
-    pools: KonvaNodePools
-    x: number
-    y: number
-    buttonName: string
-    fontSize: number
-    fontFamily: string
-    opacity: number
-    textColor: string
-    offsetX: number
-    offsetY: number
-  }) => {
-    const buttonCellText = getFromPool(
-      pools.cellTexts,
-      () => new Konva.Text({ listening: false, name: 'button-cell-text' })
-    )
-    buttonCellText.name('button-cell-text')
-    buttonCellText.x(x)
-    buttonCellText.y(y)
-    buttonCellText.text(buttonName)
-    buttonCellText.fontSize(fontSize)
-    buttonCellText.fontFamily(fontFamily)
-    buttonCellText.fill(textColor)
-    buttonCellText.opacity(opacity)
-    buttonCellText.align('center')
-    buttonCellText.verticalAlign('middle')
-    buttonCellText.offset({ x: offsetX, y: offsetY })
-
-    return buttonCellText
-  }
+  // removed drawButtonText (merged into drawUnifiedText)
 
   /**
    *
@@ -692,37 +630,57 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
         })
         // 若为合并单元格（跨行或跨列），在行斑马纹之上绘制统一背景色，避免内部出现条纹断层
         if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
-          const mergedCellRect = drawCellRect({
+          const mergedCellRect = drawUnifiedRect({
             pools,
-            rowIndex,
-            colIndex,
-            startColIndex,
+            name: 'cell-rect',
             x,
             y,
-            cellWidth,
-            cellHeight
+            width: cellWidth,
+            height: cellHeight,
+            fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
+            stroke: props.borderColor,
+            strokeWidth: 1,
+            rowIndex: rowIndex + 1,
+            colIndex: colIndex + startColIndex,
+            originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
           })
           bodyGroup.add(mergedCellRect)
-          const mergedCellText = drawMergedCellText({
+          const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
+          const value = String(rawValue ?? '')
+          const maxTextWidth = cellWidth - 16
+          const fontFamily = props.bodyFontFamily
+          const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
+          const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
+
+          const mergedCellText = drawUnifiedText({
             pools,
-            row,
-            col,
+            name: 'merged-cell-text',
+            text: truncatedValue,
             x,
             y,
-            cellWidth,
-            cellHeight
+            fontSize,
+            fontFamily,
+            fill: props.bodyTextColor,
+            align: 'left',
+            verticalAlign: 'middle',
+            cellHeight,
+            useGetTextX: true
           })
           bodyGroup.add(mergedCellText)
         } else {
-          const cellRect = drawCellRect({
+          const cellRect = drawUnifiedRect({
             pools,
-            rowIndex,
-            colIndex,
-            startColIndex,
+            name: 'cell-rect',
             x,
             y,
-            cellWidth,
-            cellHeight
+            width: cellWidth,
+            height: cellHeight,
+            fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
+            stroke: props.borderColor,
+            strokeWidth: 1,
+            rowIndex: rowIndex + 1,
+            colIndex: colIndex + startColIndex,
+            originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
           })
           let clickTimeout: NodeJS.Timeout | null = null
           // 添加点击事件
@@ -752,14 +710,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
           bodyGroup.add(cellRect)
           // 如果是操作列，绘制按钮；否则绘制文本
           if (col.columnName === 'action') {
-            const actions = col.actions as
-              | Array<{
-                  key: string
-                  label: string
-                  type?: keyof typeof paletteOptions
-                  disabled?: boolean | ((row: any, rowIndex: number) => boolean)
-                }>
-              | undefined
+            const actions = col.actions
             const buttonHeight = Math.max(22, Math.min(28, cellHeight - 8))
             if (actions && actions.length > 0) {
               const preset = actionWidthsMap.get(col.columnName as string)
@@ -770,50 +721,61 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
                 ? preset.totalWidth
                 : widths.reduce((a, b) => a + b, 0) + buttonGap * (actions.length - 1)
               let startX = x + (cellWidth - totalButtonsWidth) / 2
-              const centerY = y + (cellHeight - buttonHeight) / 2
+              const startY = y + (cellHeight - buttonHeight) / 2
               actions.forEach((action, idx) => {
-                const w = widths[idx]
-                const theme = paletteOptions[action.type || 'primary'] || paletteOptions.primary
-                const buttonRect = drawButtonRect({ pools, startX, centerY, w, buttonHeight, theme })
+                const currentWidth = widths[idx]
+                const paletteOption = paletteOptions[action.type || 'primary'] || paletteOptions.primary
+                const buttonCellRect = drawUnifiedRect({
+                  pools,
+                  name: 'button-rect',
+                  x: startX,
+                  y: startY,
+                  width: currentWidth,
+                  height: buttonHeight,
+                  fill: paletteOption.fill,
+                  stroke: paletteOption.stroke,
+                  cornerRadius: 4,
+                  rowIndex: null,
+                  colIndex: null
+                })
                 const isDisabled =
                   typeof action.disabled === 'function'
                     ? action.disabled(tableData.value[rowIndex], rowIndex)
                     : !!action.disabled
-                bindButtonInteractions(buttonRect, {
-                  baseFill: theme.fill,
-                  baseStroke: theme.stroke,
+                bindButtonInteractions(buttonCellRect, {
+                  baseFill: paletteOption.fill,
+                  baseStroke: paletteOption.stroke,
                   layer: bodyGroup.getLayer(),
                   disabled: isDisabled
                 })
-                buttonRect.on('click', () => {
+                buttonCellRect.on('click', () => {
                   if (isDisabled) return
                   const rowData = tableData.value[rowIndex]
                   emits('action-click', { rowIndex, action: action.key, rowData })
                 })
-                bodyGroup.add(buttonRect)
-                const x = startX + w / 2
-                const y = centerY + buttonHeight / 2
+                bodyGroup.add(buttonCellRect)
+                const x = startX + currentWidth / 2
+                const y = startY + buttonHeight / 2
                 const buttonName = action.label
                 const fontFamily = bodyFontFamily
                 const opacity = isDisabled ? 0.6 : 1
-                const textColor = theme.text
-                const offsetX = buttonRect.width() / 2
-                const offsetY = buttonRect.height() / 2
-                const buttonText = drawButtonText({
+                const textColor = paletteOption.text
+                const buttonText = drawUnifiedText({
                   pools,
+                  name: 'button-cell-text',
+                  text: buttonName,
                   x,
                   y,
-                  buttonName,
                   fontSize: bodyFontSizeNumber,
                   fontFamily,
-                  opacity,
-                  textColor,
-                  offsetX,
-                  offsetY
+                  fill: textColor,
+                  align: 'center',
+                  verticalAlign: 'middle',
+                  opacity
                 })
                 bodyGroup.add(buttonText)
 
-                startX += w + buttonGap
+                startX += currentWidth + buttonGap
               })
             }
           } else {
@@ -826,14 +788,19 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
 
             const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
 
-            const cellText = drawCellText({
+            const cellText = drawUnifiedText({
               pools,
+              name: 'cell-text',
+              text: truncatedValue,
               x,
               y,
-              cellHeight,
-              truncatedValue,
               fontSize,
-              fontFamily
+              fontFamily,
+              fill: props.bodyTextColor,
+              align: 'left',
+              verticalAlign: 'middle',
+              cellHeight,
+              useGetTextX: true
             })
             bodyGroup.add(cellText)
 
@@ -1023,96 +990,9 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
 
   return {
     recomputeHoverIndexFromPointer,
-    createHighlightRect,
     calculateVisibleRows,
-    recoverKonvaNode,
     getScrollLimits,
     getSplitColumns,
-    isInTableArea,
-    bindButtonInteractions,
-    drawMergedCellText,
-    drawCellRect,
-    drawCellText,
-    drawButtonRect,
-    drawButtonText,
     drawBodyPart
   }
 }
-
-// /**
-//  * 统一的文本绘制函数
-//  * @param config 文本绘制配置
-//  * @returns Konva.Text 对象
-//  */
-// const drawUnifiedText = (config: {
-//   pools: KonvaNodePools
-//   name: string
-//   text: string
-//   x: number
-//   y: number
-//   fontSize: number
-//   fontFamily: string
-//   fill: string
-//   align?: 'left' | 'center' | 'right'
-//   verticalAlign?: 'top' | 'middle' | 'bottom'
-//   cellHeight?: number
-//   useGetTextX?: boolean
-//   opacity?: number
-//   offsetX?: number
-//   offsetY?: number
-// }) => {
-//   const {
-//     pools,
-//     name,
-//     text,
-//     x,
-//     y,
-//     fontSize,
-//     fontFamily,
-//     fill,
-//     align = 'left',
-//     verticalAlign = 'middle',
-//     cellHeight,
-//     useGetTextX = false,
-//     opacity = 1,
-//     offsetX = 0,
-//     offsetY = 0
-//   } = config
-
-//   const textNode = getFromPool(
-//     pools.cellTexts,
-//     () => new Konva.Text({ listening: false, name })
-//   )
-
-//   textNode.name(name)
-//   textNode.setAttr('row-index', null)
-//   textNode.setAttr('col-index', null)
-
-//   // 位置设置
-//   if (useGetTextX) {
-//     textNode.x(getTextX(x))
-//     textNode.y(cellHeight ? y + cellHeight / 2 : y)
-//   } else {
-//     textNode.x(x)
-//     textNode.y(y)
-//   }
-
-//   // 基础属性
-//   textNode.text(text)
-//   textNode.fontSize(fontSize)
-//   textNode.fontFamily(fontFamily)
-//   textNode.fill(fill)
-//   textNode.opacity(opacity)
-//   textNode.align(align)
-//   textNode.verticalAlign(verticalAlign)
-
-//   // 偏移处理
-//   if (useGetTextX && verticalAlign === 'middle') {
-//     textNode.offsetY(textNode.height() / 2)
-//   }
-//   if (offsetX !== 0 || offsetY !== 0) {
-//     textNode.offset({ x: offsetX, y: offsetY })
-//   }
-
-//   return textNode
-// }
