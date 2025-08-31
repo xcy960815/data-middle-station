@@ -36,7 +36,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   })
   const { tableColumns, tableData, tableVars } = variableHandlder({ props })
   const { getStageAttr, setPointerStyle } = konvaStageHandler({ props })
-  const { getSummaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
+  const { summaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
 
   /**
    * 计算可视区域 数据的起始行和结束行
@@ -45,7 +45,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   const calculateVisibleRows = () => {
     if (!tableVars.stage) return
     const stageHeight = tableVars.stage.height()
-    const bodyHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - props.scrollbarSize
+    const bodyHeight = stageHeight - props.headerHeight - summaryRowHeight.value - props.scrollbarSize
 
     // 计算可视区域能显示的行数
     tableVars.visibleRowCount = Math.ceil(bodyHeight / props.bodyRowHeight)
@@ -153,7 +153,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const contentHeight = tableData.value.length * props.bodyRowHeight
     // 计算垂直滚动条预留空间
     const verticalScrollbarSpace =
-      contentHeight > stageHeightRaw - props.headerHeight - getSummaryRowHeight() ? props.scrollbarSize : 0
+      contentHeight > stageHeightRaw - props.headerHeight - summaryRowHeight.value ? props.scrollbarSize : 0
     // 计算内容宽度
     const stageWidth = stageWidthRaw - verticalScrollbarSpace
 
@@ -209,7 +209,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
 
     // 初步估算：不预留滚动条空间
     const visibleContentWidthNoV = stageWidth - leftWidth - rightWidth
-    const contentHeightNoH = stageHeight - props.headerHeight - getSummaryRowHeight()
+    const contentHeightNoH = stageHeight - props.headerHeight - summaryRowHeight.value
     const prelimMaxX = Math.max(0, totalWidth - leftWidth - rightWidth - visibleContentWidthNoV)
     const prelimMaxY = Math.max(0, contentHeight - contentHeightNoH)
     const verticalScrollbarSpace = prelimMaxY > 0 ? props.scrollbarSize : 0
@@ -219,7 +219,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const maxScrollX = Math.max(0, totalWidth - leftWidth - rightWidth - visibleContentWidth)
     const maxScrollY = Math.max(
       0,
-      contentHeight - (stageHeight - props.headerHeight - getSummaryRowHeight() - horizontalScrollbarSpace)
+      contentHeight - (stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarSpace)
     )
 
     return { maxScrollX, maxScrollY }
@@ -486,7 +486,16 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
 
     return cellText
   }
-
+  /**
+   * 绘制按钮矩形
+   * @param {KonvaNodePools} param0.pools
+   * @param {number} param0.startX
+   * @param {number} param0.centerY
+   * @param {number} param0.w
+   * @param {number} param0.buttonHeight
+   * @param {Object} param0.theme
+   * @returns
+   */
   const drawButtonRect = ({
     pools,
     startX,
@@ -524,6 +533,20 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     return buttonRect
   }
 
+  /**
+   * 绘制按钮文本
+   * @param {KonvaNodePools} param0.pools
+   * @param {number} param0.x
+   * @param {number} param0.y
+   * @param {string} param0.buttonName
+   * @param {number} param0.fontSize
+   * @param {string} param0.fontFamily
+   * @param {number} param0.opacity
+   * @param {string} param0.textColor
+   * @param {number} param0.offsetX
+   * @param {number} param0.offsetY
+   * @returns
+   */
   const drawButtonText = ({
     pools,
     x,
@@ -1015,3 +1038,81 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     drawBodyPart
   }
 }
+
+// /**
+//  * 统一的文本绘制函数
+//  * @param config 文本绘制配置
+//  * @returns Konva.Text 对象
+//  */
+// const drawUnifiedText = (config: {
+//   pools: KonvaNodePools
+//   name: string
+//   text: string
+//   x: number
+//   y: number
+//   fontSize: number
+//   fontFamily: string
+//   fill: string
+//   align?: 'left' | 'center' | 'right'
+//   verticalAlign?: 'top' | 'middle' | 'bottom'
+//   cellHeight?: number
+//   useGetTextX?: boolean
+//   opacity?: number
+//   offsetX?: number
+//   offsetY?: number
+// }) => {
+//   const {
+//     pools,
+//     name,
+//     text,
+//     x,
+//     y,
+//     fontSize,
+//     fontFamily,
+//     fill,
+//     align = 'left',
+//     verticalAlign = 'middle',
+//     cellHeight,
+//     useGetTextX = false,
+//     opacity = 1,
+//     offsetX = 0,
+//     offsetY = 0
+//   } = config
+
+//   const textNode = getFromPool(
+//     pools.cellTexts,
+//     () => new Konva.Text({ listening: false, name })
+//   )
+
+//   textNode.name(name)
+//   textNode.setAttr('row-index', null)
+//   textNode.setAttr('col-index', null)
+
+//   // 位置设置
+//   if (useGetTextX) {
+//     textNode.x(getTextX(x))
+//     textNode.y(cellHeight ? y + cellHeight / 2 : y)
+//   } else {
+//     textNode.x(x)
+//     textNode.y(y)
+//   }
+
+//   // 基础属性
+//   textNode.text(text)
+//   textNode.fontSize(fontSize)
+//   textNode.fontFamily(fontFamily)
+//   textNode.fill(fill)
+//   textNode.opacity(opacity)
+//   textNode.align(align)
+//   textNode.verticalAlign(verticalAlign)
+
+//   // 偏移处理
+//   if (useGetTextX && verticalAlign === 'middle') {
+//     textNode.offsetY(textNode.height() / 2)
+//   }
+//   if (offsetX !== 0 || offsetY !== 0) {
+//     textNode.offset({ x: offsetX, y: offsetY })
+//   }
+
+//   return textNode
+// }

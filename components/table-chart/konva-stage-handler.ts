@@ -16,6 +16,7 @@ interface KonvaStageHandlerProps {
  */
 export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const { tableVars } = variableHandlder({ props })
+  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryHeight : 0))
   const ensureEmits = () => {
     if (!emits) {
       throw new Error('This operation requires emits to be provided to konvaStageHandler')
@@ -370,9 +371,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const { drawSummaryPart } = renderSummaryHandler({ props })
     const { createScrollbars } = renderScrollbarsHandler({ props, emits })
 
-    // 本地计算汇总行高度，避免依赖下拉处理模块
-    const getSummaryRowHeight = () => (props.enableSummary ? props.summaryHeight : 0)
-
     const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
     const { width: stageWidth, height: stageHeight } = getStageAttr()
     const { maxScrollX, maxScrollY } = getScrollLimits()
@@ -380,7 +378,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
 
     if (!tableVars.centerBodyClipGroup) {
-      const clipHeight = stageHeight - props.headerHeight - getSummaryRowHeight() - horizontalScrollbarSpace
+      const clipHeight = stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarSpace
       tableVars.centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
         x: 0,
         y: 0,
@@ -405,7 +403,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.fixedHeaderLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup)
 
     if (props.enableSummary) {
-      const summaryY = stageHeight - getSummaryRowHeight() - horizontalScrollbarSpace
+      const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarSpace
       tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
       tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.stageScrollX, summaryY)
       tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
