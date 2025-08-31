@@ -70,7 +70,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     const displayName = col.displayName || col.columnName
     const truncatedTitle = truncateText(displayName, maxTextWidth, fontSize, props.headerFontFamily)
 
-    const text = new Konva.Text({
+    const cellText = new Konva.Text({
       x: getTextX(x),
       y: props.headerHeight / 2,
       text: truncatedTitle,
@@ -82,8 +82,8 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       listening: false
     })
 
-    text.offsetY(text.height() / 2)
-    return text
+    cellText.offsetY(cellText.height() / 2)
+    return cellText
   }
 
   /**

@@ -22,7 +22,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   const { getScrollLimits, getSplitColumns, recomputeHoverIndexFromPointer, drawBodyPart, calculateVisibleRows } =
     renderBodyHandler({ props, emits })
   const { tableData, tableVars } = variableHandlder({ props })
-  const { getSummaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
+  const { summaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
   const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props, emits })
   const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })
@@ -48,15 +48,15 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       // 绘制垂直滚动条底部遮罩
       const verticalScrollbarFooterMask = new Konva.Rect({
         x: stageWidth - props.scrollbarSize,
-        y: stageHeight - getSummaryRowHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0),
+        y: stageHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
         width: props.scrollbarSize,
-        height: getSummaryRowHeight(),
+        height: summaryRowHeight.value,
         fill: props.summaryBackground,
         stroke: props.borderColor,
         strokeWidth: 1
       })
 
-      if (getSummaryRowHeight() > 0) tableVars.scrollbarLayer.add(verticalScrollbarFooterMask)
+      if (summaryRowHeight.value > 0) tableVars.scrollbarLayer.add(verticalScrollbarFooterMask)
 
       // 创建垂直滚动条组
       tableVars.verticalScrollbarGroup = new Konva.Group()
@@ -66,7 +66,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         x: stageWidth - props.scrollbarSize,
         y: props.headerHeight,
         width: props.scrollbarSize,
-        height: stageHeight - props.headerHeight - getSummaryRowHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0),
+        height: stageHeight - props.headerHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
         fill: props.scrollbarBackground,
         stroke: props.borderColor,
         strokeWidth: 1
@@ -75,7 +75,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
       // 计算垂直滚动条高度
       const trackHeight =
-        stageHeight - props.headerHeight - getSummaryRowHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0)
+        stageHeight - props.headerHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
       // 计算垂直滚动条 Y 坐标
       const thumbY = props.headerHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
@@ -218,7 +218,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     const centerX = -tableVars.stageScrollX
     const headerX = leftWidth - tableVars.stageScrollX
     const summaryY = tableVars.stage
-      ? tableVars.stage.height() - getSummaryRowHeight() - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
+      ? tableVars.stage.height() - summaryRowHeight.value - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
       : 0
 
     /**
@@ -270,7 +270,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     // 更新垂直滚动条位置
     if (tableVars.verticalScrollbarThumbRect && maxScrollY > 0) {
       const trackHeight =
-        stageHeight - props.headerHeight - getSummaryRowHeight() - (maxScrollX > 0 ? props.scrollbarSize : 0)
+        stageHeight - props.headerHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
       const thumbY = props.headerHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
       tableVars.verticalScrollbarThumbRect.y(thumbY)

@@ -268,12 +268,12 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     displayName: '操作',
     width: 220,
     fixed: 'right' as const,
-    align: 'center' as const
-    // actions: [
-    //   { key: 'view', label: '查看', type: 'primary' },
-    //   { key: 'edit', label: '编辑', type: 'success' },
-    //   { key: 'delete', label: '删除', type: 'danger' }
-    // ]
+    align: 'center' as const,
+    actions: [
+      { key: 'view', label: '查看', type: 'primary' },
+      { key: 'edit', label: '编辑', type: 'success' },
+      { key: 'delete', label: '删除', type: 'danger' }
+    ]
   },
   {
     columnName: 'address',
