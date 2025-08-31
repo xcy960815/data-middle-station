@@ -22,7 +22,9 @@ export interface SummaryDropdown {
   originalClientY: number
 }
 
-// 汇总行下拉状态（DOM）
+/**
+ * 汇总行下拉状态
+ */
 export const summaryDropdown = reactive<SummaryDropdown>({
   visible: false,
   x: 0,
@@ -44,6 +46,11 @@ interface SummaryDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
 
+/**
+ * 汇总下拉浮层处理函数
+ * @param {SummaryDropdownHandlerProps} props 组件 props
+ * @returns 汇总下拉浮层处理函数
+ */
 export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
   const { clearGroups } = konvaStageHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })

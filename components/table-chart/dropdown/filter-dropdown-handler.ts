@@ -43,6 +43,11 @@ interface FilterDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
 
+/**
+ * 过滤下拉浮层处理函数
+ * @param {FilterDropdownHandlerProps} props 组件 props
+ * @returns 过滤下拉浮层处理函数
+ */
 export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => {
   const { filterState, handleTableData, tableVars } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
