@@ -14,7 +14,13 @@ import {
   returnToPool,
   truncateText
 } from '../utils'
-import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
+import {
+  paletteOptions,
+  variableHandlder,
+  type KonvaNodePools,
+  type PositionMap,
+  type Prettify
+} from '../variable-handlder'
 import { highlightHandler } from './heightlight-handler'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -32,14 +38,6 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   const { getStageAttr, setPointerStyle } = konvaStageHandler({ props })
   const { getSummaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
 
-  // Define button palette options
-  const paletteOptions = {
-    primary: { fill: '#1890ff', stroke: '#1890ff', text: '#fff' },
-    success: { fill: '#52c41a', stroke: '#52c41a', text: '#fff' },
-    warning: { fill: '#faad14', stroke: '#faad14', text: '#fff' },
-    danger: { fill: '#ff4d4f', stroke: '#ff4d4f', text: '#fff' },
-    default: { fill: '#f5f5f5', stroke: '#d9d9d9', text: '#000' }
-  }
   /**
    * 计算可视区域 数据的起始行和结束行
    * @returns {void}
