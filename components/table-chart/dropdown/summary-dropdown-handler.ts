@@ -53,14 +53,12 @@ interface SummaryDropdownHandlerProps {
  */
 export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
   const { clearGroups } = konvaStageHandler({ props })
+
   const { updateHoverRects } = highlightHandler({ props })
+
   const { summaryState, tableVars } = variableHandlder({ props })
 
-  /**
-   * 获取有效的汇总高度（受开关控制）
-   * @returns {number}
-   */
-  const getSummaryRowHeight = () => (props.enableSummary ? props.summaryHeight : 0)
+  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryHeight : 0))
 
   /**
    * 汇总下拉浮层样式
@@ -249,7 +247,7 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     updateSummaryDropdownPositionsInPage,
     updateSummaryDropdownPositionsInTable,
     closeSummaryDropdown,
-    getSummaryRowHeight,
+    summaryRowHeight,
     openSummaryDropdown,
     handleSelectedSummary,
     initSummaryDropdownListeners,

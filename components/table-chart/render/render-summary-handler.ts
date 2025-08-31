@@ -12,7 +12,6 @@ interface RenderSummaryHandlerProps {
 
 export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
   const { tableData, summaryState, tableVars } = variableHandlder({ props })
-  const { clearGroups } = konvaStageHandler({ props })
   const { setPointerStyle } = konvaStageHandler({ props })
   const { openSummaryDropdown } = summaryDropDownHandler({ props })
   const { $webworker } = useNuxtApp()
