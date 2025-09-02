@@ -11,7 +11,7 @@ services:
     ports:
       - '12583:12583'
     volumes:
-      - ./logs:/data-middle-station-container/logs
+      - ./logs:/app/logs
     # env_file:
     #   - ./env/.env.prod # 替换变量，注释掉的
     extra_hosts:
