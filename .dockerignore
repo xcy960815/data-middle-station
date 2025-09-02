@@ -26,11 +26,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# 环境和配置
-.env
-.env.*
-!.env.example
-env/.env.*
 
 # IDE 和编辑器
 .vscode
@@ -79,7 +74,7 @@ eslint.config.js
 .prettierrc*
 prettier.config.*
 commitlint.config.js
-tailwind.config.ts
+; tailwind.config.ts
 tsconfig.json
 server/tsconfig.json
 
@@ -101,7 +96,7 @@ sql/
 .volta
 .nvmrc
 changelog.config.js
-ecosystem.config.js
+
 
 # 其他不需要的文件
 *.tgz

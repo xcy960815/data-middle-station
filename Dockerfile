@@ -1,8 +1,8 @@
 # 构建阶段
-FROM node:18 AS builder
+FROM node:18-alpine AS builder
 
 # 设置工作目录
-WORKDIR /data-middle-station
+WORKDIR /app
 
 # 设置环境变量
 ENV NODE_ENV=prod
@@ -23,10 +23,10 @@ RUN rm -rf node_modules package-lock.json .nuxt .output
 RUN npm install -g pnpm@10
 
 # 创建logs目录
-RUN mkdir -p /data-middle-station/logs
+RUN mkdir -p /app/logs
 
 # 安装依赖
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # 复制项目文件
 COPY . .
@@ -45,7 +45,7 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:12583/ || exit 1
 
 # 启动命令
-CMD ["sh", "-c", "ls -la /data-middle-station/.output/server/ && pm2 start ecosystem.config.js --env prod --no-daemon"]
+CMD ["sh", "-c", "ls -la /app/.output/server/ && pm2 start ecosystem.config.js --env prod --no-daemon"]
 
 
 
