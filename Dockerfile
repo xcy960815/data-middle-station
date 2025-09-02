@@ -25,6 +25,9 @@ RUN npm install -g pnpm@10
 # 创建logs目录
 RUN mkdir -p /app/logs
 
+
+
+
 # 安装依赖
 RUN pnpm install --frozen-lockfile
 
