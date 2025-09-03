@@ -1,146 +1,35 @@
 <template>
   <NuxtLayout :name="layoutName">
     <div class="indexdb-container">
-      <el-card class="status-card" shadow="hover">
-        <template #header>
-          <div class="card-header">
-            <span>数据库状态</span>
-            <el-button type="primary" size="small" @click="initDatabase" :loading="isInitializing">
-              {{ database ? '重新初始化' : '初始化数据库' }}
-            </el-button>
-          </div>
-        </template>
-        <div class="status-info">
-          <el-row :gutter="20">
-            <el-col :span="8">
-              <div class="status-item">
-                <span class="label">数据库状态:</span>
-                <el-tag :type="database ? 'success' : 'danger'">
-                  {{ database ? '已连接' : '未连接' }}
-                </el-tag>
-              </div>
-            </el-col>
-            <el-col :span="8">
-              <div class="status-item">
-                <span class="label">数据库名称:</span>
-                <span>{{ dbName }}</span>
-              </div>
-            </el-col>
-            <el-col :span="8">
-              <div class="status-item">
-                <span class="label">版本:</span>
-                <span>{{ dbVersion }}</span>
-              </div>
-            </el-col>
-          </el-row>
-        </div>
-      </el-card>
-      <el-row :gutter="20" style="margin-top: 20px">
-        <el-col :span="12">
-          <el-form :model="newUser" label-width="auto">
-            <el-form-item label="用户名">
-              <el-input v-model="newUser.name" placeholder="请输入用户名" />
-            </el-form-item>
-            <el-form-item label="邮箱">
-              <el-input v-model="newUser.email" placeholder="请输入邮箱" />
-            </el-form-item>
-            <el-form-item label="年龄">
-              <el-input-number v-model="newUser.age" :min="1" :max="120" />
-            </el-form-item>
-            <el-form-item label="城市">
-              <ClientOnly>
-                <el-select v-model="newUser.city" placeholder="请选择城市">
-                  <el-option label="北京" value="北京" />
-                  <el-option label="上海" value="上海" />
-                  <el-option label="广州" value="广州" />
-                  <el-option label="深圳" value="深圳" />
-                  <el-option label="杭州" value="杭州" />
-                </el-select>
-                <template #fallback>
-                  <el-input v-model="newUser.city" placeholder="请选择城市" readonly />
-                </template>
-              </ClientOnly>
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="addUser" :loading="isAdding"> 添加用户 </el-button>
-              <el-button @click="generateRandomUsers"> 生成测试数据 </el-button>
-            </el-form-item>
-          </el-form>
-        </el-col>
-
-        <!-- <el-col :span="12">
-          <el-card shadow="hover">
-            <template #header>
-              <span>数据统计</span>
-            </template>
-            <div class="stats-container">
-              <div class="stat-item">
-                <div class="stat-number">{{ totalUsers }}</div>
-                <div class="stat-label">总用户数</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">{{ citiesCount }}</div>
-                <div class="stat-label">城市数量</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">{{ avgAge }}</div>
-                <div class="stat-label">平均年龄</div>
-              </div>
-            </div>
-            <el-divider />
-            <div class="action-buttons">
-              <el-button type="success" @click="refreshData" :loading="isLoading">
-                刷新数据
-              </el-button>
-              <el-button type="warning" @click="clearAllData" :loading="isClearing">
-                清空数据
-              </el-button>
-              <el-button type="danger" @click="deleteDatabase">
-                删除数据库
-              </el-button>
-            </div>
-          </el-card>
-        </el-col> -->
-      </el-row>
-
-      <el-card class="search-card" shadow="hover" style="margin-top: 20px">
-        <template #header>
-          <span>数据查询</span>
-        </template>
-        <el-row :gutter="20">
-          <el-col :span="6">
-            <el-input v-model="searchQuery.name" placeholder="按姓名搜索" clearable @input="handleSearch" />
-          </el-col>
-          <el-col :span="6">
-            <el-select v-model="searchQuery.city" placeholder="按城市筛选" clearable @change="handleSearch">
-              <el-option label="全部" value="" />
+      <el-form :model="newUser" label-width="auto">
+        <el-form-item label="用户名">
+          <el-input v-model="newUser.name" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="newUser.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="年龄">
+          <el-input-number v-model="newUser.age" :min="1" :max="120" />
+        </el-form-item>
+        <el-form-item label="城市">
+          <ClientOnly>
+            <el-select v-model="newUser.city" placeholder="请选择城市">
               <el-option label="北京" value="北京" />
               <el-option label="上海" value="上海" />
               <el-option label="广州" value="广州" />
               <el-option label="深圳" value="深圳" />
               <el-option label="杭州" value="杭州" />
             </el-select>
-          </el-col>
-          <el-col :span="6">
-            <el-input-number
-              v-model="searchQuery.minAge"
-              placeholder="最小年龄"
-              :min="1"
-              :max="120"
-              @change="handleSearch"
-            />
-          </el-col>
-          <el-col :span="6">
-            <el-input-number
-              v-model="searchQuery.maxAge"
-              placeholder="最大年龄"
-              :min="1"
-              :max="120"
-              @change="handleSearch"
-            />
-          </el-col>
-        </el-row>
-      </el-card>
+            <template #fallback>
+              <el-input v-model="newUser.city" placeholder="请选择城市" readonly />
+            </template>
+          </ClientOnly>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="addUser" :loading="isAdding"> 添加用户 </el-button>
+          <el-button @click="generateRandomUsers"> 生成测试数据 </el-button>
+        </el-form-item>
+      </el-form>
 
       <el-card shadow="hover" style="margin-top: 20px">
         <template #header>
@@ -160,7 +49,7 @@
           </div>
         </template>
 
-        <el-table :data="displayUsers" style="width: 100%" v-loading="isLoading" stripe border>
+        <el-table :data="displayUsers" style="width: 100%" stripe border>
           <el-table-column prop="id" label="ID" width="200" />
           <el-table-column prop="name" label="姓名" />
           <el-table-column prop="email" label="邮箱" />
@@ -218,22 +107,6 @@
           <el-button type="primary" @click="updateUser" :loading="isUpdating"> 保存 </el-button>
         </template>
       </el-dialog>
-
-      <el-card shadow="hover" style="margin-top: 20px">
-        <template #header>
-          <div class="card-header">
-            <span>操作日志</span>
-            <el-button size="small" @click="clearLogs">清空日志</el-button>
-          </div>
-        </template>
-        <div class="logs-container">
-          <div v-for="(log, index) in logs" :key="index" class="log-item" :class="log.type">
-            <span class="log-time">{{ formatTime(log.time) }}</span>
-            <span class="log-message">{{ log.message }}</span>
-          </div>
-          <div v-if="logs.length === 0" class="no-logs">暂无操作日志</div>
-        </div>
-      </el-card>
     </div>
   </NuxtLayout>
 </template>
@@ -248,12 +121,6 @@ interface User {
   age: number
   city: string
   createTime?: string
-}
-
-interface LogItem {
-  time: Date
-  message: string
-  type: 'success' | 'error' | 'info'
 }
 
 interface SearchQuery {
@@ -304,27 +171,13 @@ const searchQuery = ref<SearchQuery>({
 const sortField = ref('')
 const sortOrder = ref<'asc' | 'desc'>('desc')
 
-// UI状态
-const isMounted = ref(false)
-const isInitializing = ref(false)
-const isLoading = ref(false)
 const isAdding = ref(false)
 const isUpdating = ref(false)
 const isClearing = ref(false)
 const editDialogVisible = ref(false)
 
-// 日志
-const logs = ref<LogItem[]>([])
-
-const avgAge = computed(() => {
-  if (users.value.length === 0) return 0
-  const total = users.value.reduce((sum, user) => sum + user.age, 0)
-  return Math.round(total / users.value.length)
-})
-
 // 生命周期
 onMounted(async () => {
-  isMounted.value = true
   await initDatabase()
 })
 
@@ -334,62 +187,27 @@ onBeforeUnmount(() => {
   }
 })
 
-// 方法
-const addLog = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-  logs.value.unshift({
-    time: new Date(),
-    message,
-    type
-  })
-
-  // 保持最多100条日志
-  if (logs.value.length > 100) {
-    logs.value = logs.value.slice(0, 100)
-  }
-}
-
 const initDatabase = async () => {
-  isInitializing.value = true
-  addLog('正在初始化数据库...', 'info')
-
-  try {
-    database.value = await $indexdb.openDatabase(dbName, dbVersion)
-    if (database.value) {
-      addLog('数据库初始化成功', 'success')
-      await refreshData()
-    } else {
-      throw new Error('数据库初始化失败')
-    }
-  } catch (error: any) {
-    addLog(`数据库初始化失败: ${error.message}`, 'error')
-  } finally {
-    isInitializing.value = false
+  database.value = await $indexdb.openDatabase(dbName, dbVersion)
+  if (database.value) {
+    await refreshData()
+  } else {
+    throw new Error('数据库初始化失败')
   }
 }
 
 const refreshData = async () => {
   if (!database.value) {
-    addLog('数据库未初始化', 'error')
     return
   }
-
-  isLoading.value = true
-  try {
-    const allUsers = await $indexdb.getAllData(database.value, tableName)
-    users.value = allUsers as unknown as User[]
-    totalUsers.value = users.value.length
-    handleSearch() // 应用当前搜索条件
-    addLog(`成功加载 ${users.value.length} 条用户数据`, 'success')
-  } catch (error: any) {
-    addLog(`加载数据失败: ${error.message}`, 'error')
-  } finally {
-    isLoading.value = false
-  }
+  const allUsers = await $indexdb.getAllData(database.value, tableName)
+  users.value = allUsers as unknown as User[]
+  totalUsers.value = users.value.length
+  handleSearch() // 应用当前搜索条件
 }
 
 const addUser = async () => {
   if (!database.value) {
-    addLog('数据库未初始化', 'error')
     return
   }
 
@@ -407,7 +225,6 @@ const addUser = async () => {
     }
 
     await $indexdb.addDataAsync(database.value, tableName, [userData as any])
-    addLog(`成功添加用户: ${userData.name}`, 'success')
 
     // 重置表单
     newUser.value = {
@@ -420,7 +237,6 @@ const addUser = async () => {
     await refreshData()
     ElMessage.success('用户添加成功')
   } catch (error: any) {
-    addLog(`添加用户失败: ${error.message}`, 'error')
     ElMessage.error('用户添加失败')
   } finally {
     isAdding.value = false
@@ -429,7 +245,6 @@ const addUser = async () => {
 
 const generateRandomUsers = async () => {
   if (!database.value) {
-    addLog('数据库未初始化', 'error')
     return
   }
 
@@ -456,11 +271,9 @@ const generateRandomUsers = async () => {
 
   try {
     await $indexdb.addDataAsync(database.value, tableName, testUsers as any[])
-    addLog(`成功生成 ${testUsers.length} 条测试数据`, 'success')
     await refreshData()
     ElMessage.success('测试数据生成成功')
   } catch (error: any) {
-    addLog(`生成测试数据失败: ${error.message}`, 'error')
     ElMessage.error('生成测试数据失败')
   }
 }
@@ -472,19 +285,16 @@ const editUser = (user: User) => {
 
 const updateUser = async () => {
   if (!database.value) {
-    addLog('数据库未初始化', 'error')
     return
   }
 
   isUpdating.value = true
   try {
     await $indexdb.updateData(database.value, tableName, [editingUser.value as any])
-    addLog(`成功更新用户: ${editingUser.value.name}`, 'success')
     editDialogVisible.value = false
     await refreshData()
     ElMessage.success('用户更新成功')
   } catch (error: any) {
-    addLog(`更新用户失败: ${error.message}`, 'error')
     ElMessage.error('用户更新失败')
   } finally {
     isUpdating.value = false
@@ -493,7 +303,6 @@ const updateUser = async () => {
 
 const deleteUser = async (userId: string) => {
   if (!database.value) {
-    addLog('数据库未初始化', 'error')
     return
   }
 
@@ -503,12 +312,10 @@ const deleteUser = async (userId: string) => {
     })
 
     await $indexdb.deleteDataByCondition(database.value, tableName, 'id', userId)
-    addLog(`成功删除用户ID: ${userId}`, 'success')
     await refreshData()
     ElMessage.success('用户删除成功')
   } catch (error: any) {
     if (error !== 'cancel') {
-      addLog(`删除用户失败: ${error.message}`, 'error')
       ElMessage.error('用户删除失败')
     }
   }
@@ -516,7 +323,6 @@ const deleteUser = async (userId: string) => {
 
 const clearAllData = async () => {
   if (!database.value) {
-    addLog('数据库未初始化', 'error')
     return
   }
 
@@ -527,12 +333,10 @@ const clearAllData = async () => {
 
     isClearing.value = true
     await $indexdb.clearData(database.value, tableName)
-    addLog('成功清空所有数据', 'success')
     await refreshData()
     ElMessage.success('数据清空成功')
   } catch (error: any) {
     if (error !== 'cancel') {
-      addLog(`清空数据失败: ${error.message}`, 'error')
       ElMessage.error('清空数据失败')
     }
   } finally {
@@ -553,7 +357,6 @@ const deleteDatabase = async () => {
 
     const success = await $indexdb.deleteDatabase(dbName)
     if (success) {
-      addLog('数据库删除成功', 'success')
       users.value = []
       displayUsers.value = []
       totalUsers.value = 0
@@ -563,7 +366,6 @@ const deleteDatabase = async () => {
     }
   } catch (error: any) {
     if (error !== 'cancel') {
-      addLog(`删除数据库失败: ${error.message}`, 'error')
       ElMessage.error('删除数据库失败')
     }
   }
@@ -637,9 +439,7 @@ const handleCurrentChange = (newPage: number) => {
   currentPage.value = newPage
 }
 
-const clearLogs = () => {
-  logs.value = []
-}
+//
 
 const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
@@ -649,9 +449,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('zh-CN')
 }
 
-const formatTime = (date: Date) => {
-  return date.toLocaleTimeString('zh-CN')
-}
+//
 </script>
 
 <style lang="scss" scoped>
