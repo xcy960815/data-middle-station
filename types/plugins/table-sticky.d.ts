@@ -1,9 +1,9 @@
-import type { ComponentInternalInstance, DirectiveBinding, Ref, VNode } from 'vue'
-
 /**
  * @desc table-sticky directive and component definition
  */
-declare namespace TableStickyModule {
+declare namespace TableSticky {
+  import type { ComponentInternalInstance, DirectiveBinding, Ref, VNode } from 'vue'
+
   type VNodeRef = string | Ref | ((ref: object | null, refs: Record<string, any>) => void)
 
   interface DirectiveBindingValue {
