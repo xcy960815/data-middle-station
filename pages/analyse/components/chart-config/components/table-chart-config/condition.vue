@@ -3,9 +3,7 @@
   <!-- <client-only>
     <el-dialog v-model="conditionDialogVisible" title="条件格式设置" width="50%">
       <el-form label-position="left" label-width="auto">
-        <el-icon :size="18" class="cursor-pointer" @click="handleAddCondition">
-          <CirclePlus />
-        </el-icon>
+        <icon-park type="AddOne" theme="outline" :size="18" class="cursor-pointer" @click="handleAddCondition" />
         <el-row v-for="(condition, index) in conditionsState.conditions">
           <el-col :span="3">
             <el-form-item>
@@ -67,9 +65,7 @@
           </el-col>
           <el-col :span="1">
             <el-button type="danger" circle @click="handleDeleteCondition(index)">
-              <el-icon class="cursor-pointer" :size="14">
-                <Delete />
-              </el-icon>
+              <icon-park type="Delete" theme="outline" :size="14" class="cursor-pointer" />
             </el-button>
           </el-col>
         </el-row>
