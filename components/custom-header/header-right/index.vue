@@ -32,8 +32,7 @@
   </ClientOnly>
 </template>
 <script lang="ts" setup>
-import { IconPark } from '@icon-park/vue-next/es/all'
-import { ElDropdown, ElDropdownMenu, ElDropdownItem, ElAvatar, ElTooltip, ElSelect, ElOption } from 'element-plus'
+import { ElAvatar, ElDropdown, ElDropdownItem, ElDropdownMenu, ElOption, ElSelect, ElTooltip } from 'element-plus'
 
 type Theme = 'light' | 'dark' | 'auto'
 /**
