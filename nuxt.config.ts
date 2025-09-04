@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  ssr: true,
+  ssr: false,
   experimental: {
     renderJsonPayloads: false
   },
@@ -97,6 +97,14 @@ export default defineNuxtConfig({
     // JWT配置
     jwtSecretKey: process.env.JWT_SECRET_KEY,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+
+    // 邮件SMTP配置
+    smtpHost: process.env.SMTP_HOST,
+    smtpPort: String(process.env.SMTP_PORT),
+    smtpSecure: String(process.env.SMTP_SECURE),
+    smtpUser: process.env.SMTP_USER,
+    smtpPass: process.env.SMTP_PASS,
+    smtpFrom: process.env.SMTP_FROM,
 
     // 公共键（在客户端和服务器端都可用）
     public: {
