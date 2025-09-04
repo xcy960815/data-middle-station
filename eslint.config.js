@@ -164,7 +164,6 @@ module.exports = [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
       'no-unused-vars': 'off',
-      'no-undef': 'off',
       'no-case-declarations': 'warn',
       'no-empty-pattern': 'warn'
     }
@@ -320,7 +319,6 @@ module.exports = [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
       'no-unused-vars': 'off',
-      'no-undef': 'off',
       'no-case-declarations': 'warn',
       'no-empty-pattern': 'warn'
     }
@@ -330,8 +328,7 @@ module.exports = [
   {
     files: ['**/*.d.ts'],
     rules: {
-      '@typescript-eslint/no-unused-vars': 'off',
-      'no-undef': 'off'
+      '@typescript-eslint/no-unused-vars': 'off'
     }
   },
 
