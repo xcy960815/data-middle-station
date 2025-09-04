@@ -122,6 +122,7 @@ module.exports = [
         AnalyseDao: 'readonly',
         DatabaseDao: 'readonly',
         LoginDto: 'readonly',
+        SendEmailDto: 'readonly',
         LoginVo: 'readonly',
         ApiResponse: 'readonly',
         // 工具类
@@ -242,7 +243,6 @@ module.exports = [
         defineStore: 'readonly',
         // 项目自定义类型
         ChartDataVo: 'readonly',
-        ChartDataDao: 'readonly',
         GroupStore: 'readonly',
         DimensionStore: 'readonly',
         ColumnStore: 'readonly',
@@ -259,13 +259,13 @@ module.exports = [
         UserInfoVo: 'readonly',
         RequestCodeEnum: 'readonly',
         ChartDataDto: 'readonly',
-        ChartDataDao: 'readonly',
         ChartConfigDto: 'readonly',
         ChartConfigDao: 'readonly',
         AnalyseDto: 'readonly',
         AnalyseDao: 'readonly',
         DatabaseDao: 'readonly',
         LoginDto: 'readonly',
+        SendEmailDto: 'readonly',
         LoginVo: 'readonly',
         ApiResponse: 'readonly',
         // 工具类
