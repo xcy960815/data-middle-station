@@ -4,13 +4,16 @@
   </ClientOnly>
 </template>
 <script lang="ts" setup>
+import * as monaco from 'monaco-editor'
 import type * as MonacoNS from 'monaco-editor/esm/vs/editor/editor.api'
 // 拦截 command + f 快捷键
 // import "monaco-editor/esm/vs/editor/contrib/find/findController";
 // sql 语法高亮
 // import "monaco-editor/esm/vs/editor/contrib/hover/hover";
 
-// 语法贡献在客户端动态加载，避免 SSR 触发浏览器 API
+import 'monaco-editor/esm/vs/basic-languages/css/css.contribution'
+import 'monaco-editor/esm/vs/basic-languages/xml/xml.contribution'
+import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution'
 
 /* 语法联想模块 */
 import { SqlSnippets } from './snippets'
@@ -59,7 +62,7 @@ const props = defineProps({
 
   /* 编译器主题 */
   monacoEditorTheme: {
-    type: String as PropType<MonacoNS.editor.BuiltinTheme>,
+    type: String as PropType<monaco.ThemeType>,
     default: 'vs'
   }
 })
@@ -72,9 +75,6 @@ const monacoEditorDom = ref<HTMLDivElement>()
 const monacoEditor = ref<MonacoNS.editor.IStandaloneCodeEditor | null>(null)
 
 const completionItemProvider = ref<MonacoNS.IDisposable>()
-
-// 在客户端动态注入 monaco，避免 SSR 访问 navigator.userAgent
-let monaco: typeof import('monaco-editor') | null = null
 
 // 编译器的默认配置
 const monacoEditorDefaultOption: MonacoNS.editor.IStandaloneEditorConstructionOptions = {
@@ -121,8 +121,8 @@ watch(
  */
 watch(
   () => props.monacoEditorTheme,
-  (monacoEditorTheme: MonacoNS.editor.BuiltinTheme) => {
-    if (monaco) monaco.editor.setTheme(monacoEditorTheme)
+  (monacoEditorTheme: monaco.ThemeType) => {
+    monaco.editor.setTheme(monacoEditorTheme)
   }
 )
 
@@ -143,14 +143,16 @@ const setMonacoEditorStyle = () => {
  * @desc 初始化 editor
  */
 const initEditor = () => {
-  if (!monaco) return
   const sqlSnippets = new SqlSnippets(props.customKeywords, props.databaseOptions)
   completionItemProvider.value = monaco.languages.registerCompletionItemProvider('sql', {
     // 提示的触发字符
     triggerCharacters: [' ', '.', ...props.triggerCharacters],
     // 因为在js代码中 range 属性不配置也可以正常显示  所以 在这里避免代码抛错  使用了一个 别名
     provideCompletionItems: (model: MonacoNS.editor.ITextModel, position: MonacoNS.Position) =>
-      sqlSnippets.provideCompletionItems(model, position) as any
+      sqlSnippets.provideCompletionItems(
+        model,
+        position
+      ) as monaco.languages.ProviderResult<monaco.languages.CompletionList>
   })
 
   const monacoEditorOptionIsEmpty =
@@ -173,20 +175,9 @@ const resetEditor = () => {
 
 onMounted(() => {
   // 解决通过dialog 弹出的组件 无法正常渲染的问题
-  // 只在客户端环境初始化
-  if (process.client) {
-    nextTick(async () => {
-      // 动态加载 monaco 及语言贡献，确保仅在客户端执行
-      const monacoModule = await import('monaco-editor')
-      monaco = monacoModule
-      await Promise.all([
-        import('monaco-editor/esm/vs/basic-languages/css/css.contribution'),
-        import('monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution'),
-        import('monaco-editor/esm/vs/basic-languages/xml/xml.contribution')
-      ])
-      initEditor()
-    })
-  }
+  nextTick(() => {
+    initEditor()
+  })
 })
 
 // 离开时销毁
@@ -198,27 +189,3 @@ defineExpose({
   resetEditor
 })
 </script>
-
-<style scoped>
-.monaco-editor-dom {
-  width: 100%;
-  height: 100%;
-  min-height: 200px;
-}
-
-.monaco-editor-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 200px;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.loading-text {
-  color: #666;
-  font-size: 14px;
-}
-</style>

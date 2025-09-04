@@ -3,7 +3,7 @@
  * @parameter {RouteLocationNormalized} to
  */
 export default defineNuxtRouteMiddleware((to) => {
-  // if (to.path === '/' || to.path === '') {
-  //   return navigateTo('/welcome')
-  // }
+  if (to.path === '/' || to.path === '') {
+    return navigateTo('/welcome')
+  }
 })
