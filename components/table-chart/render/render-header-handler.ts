@@ -2,9 +2,10 @@ import Konva from 'konva'
 import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
 import { konvaStageHandler } from '../konva-stage-handler'
 import type { chartProps } from '../props'
-import { getTextX, truncateText } from '../utils'
+import { truncateText } from '../utils'
 import type { PositionMap, Prettify } from '../variable-handlder'
 import { variableHandlder } from '../variable-handlder'
+import { drawUnifiedRect, drawUnifiedText } from './draw'
 
 // 常量定义
 const LAYOUT_CONSTANTS = {
@@ -39,50 +40,58 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     colIndex: number,
     startColIndex: number
   ) => {
-    const rect = new Konva.Rect({
+    const pools = tableVars.leftBodyPools // 复用任一池子（header也只需要 rect/text 对象池）
+    const isSortColumn = sortColumns.value.find((s) => s.columnName === col.columnName)
+    const rect = drawUnifiedRect({
+      pools,
+      name: 'header-cell-rect',
       x,
       y: 0,
-      name: 'header-cell-rect',
       width: col.width || 0,
       height: props.headerHeight,
+      fill: isSortColumn ? props.headerSortActiveBackground : props.headerBackground,
       stroke: props.borderColor,
       strokeWidth: 1,
-      listening: false
+      listening: false,
+      rowIndex: 0,
+      colIndex: colIndex + startColIndex,
+      originFill: props.headerBackground
     })
-
-    rect.setAttr('col-index', colIndex + startColIndex)
-    rect.setAttr('row-index', 0)
-    rect.setAttr('origin-fill', props.headerBackground)
-
-    // 设置排序高亮背景
-    const isSortColumn = sortColumns.value.find((s) => s.columnName === col.columnName)
-    rect.fill(isSortColumn ? props.headerSortActiveBackground : props.headerBackground)
 
     return rect
   }
 
   /**
    * 创建表头文本
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {number} x 列的x坐标
+   * @returns {Konva.Text} 表头文本
    */
   const createHeaderText = (col: GroupStore.GroupOption | DimensionStore.DimensionOption, x: number) => {
     const maxTextWidth = (col.width || 0) - LAYOUT_CONSTANTS.ICON_AREA_WIDTH
     const fontSize = typeof props.headerFontSize === 'string' ? parseFloat(props.headerFontSize) : props.headerFontSize
-    const displayName = col.displayName || col.columnName
+    const displayName =
+      col.displayName && col.displayName.trim().length > 0
+        ? col.displayName
+        : col.columnName === '__index__'
+          ? '序号'
+          : col.columnName
     const truncatedTitle = truncateText(displayName, maxTextWidth, fontSize, props.headerFontFamily)
-
-    const cellText = new Konva.Text({
-      x: getTextX(x),
-      y: props.headerHeight / 2,
+    const pools = tableVars.leftBodyPools
+    const cellText = drawUnifiedText({
+      pools,
+      name: 'header-cell-text',
       text: truncatedTitle,
+      x,
+      y: 0,
       fontSize,
       fontFamily: props.headerFontFamily,
       fill: props.headerTextColor,
       align: col.align || 'left',
       verticalAlign: 'middle',
-      listening: false
+      cellHeight: props.headerHeight,
+      useGetTextX: true
     })
-
-    cellText.offsetY(cellText.height() / 2)
     return cellText
   }
 
