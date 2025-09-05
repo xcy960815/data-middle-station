@@ -61,11 +61,12 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
   /**
    * 在指定分组内创建单元格高亮矩形
-   * @param x 矩形 X 坐标
-   * @param y 矩形 Y 坐标
-   * @param width 矩形宽度
-   * @param height 矩形高度
-   * @param group 分组
+   * @param {number} x 矩形 X 坐标
+   * @param {number} y 矩形 Y 坐标
+   * @param {number} width 矩形 X 坐标
+   * @param {number} height 矩形高度
+   * @param {Konva.Group} bodyGroup 分组
+   * @returns {void}
    */
   const createHighlightRect = (x: number, y: number, width: number, height: number, bodyGroup: Konva.Group) => {
     if (tableVars.highlightRect) {
@@ -88,6 +89,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     tableVars.highlightRect.moveToTop()
 
     const layer = bodyGroup.getLayer()
+
     layer?.batchDraw()
   }
 
@@ -129,7 +131,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
 
   /**
    * 计算左右固定列与中间列的分组与宽度汇总
-   * @returns
+   * @returns {Object} 分组与宽度汇总
    */
   const getSplitColumns = () => {
     if (!tableVars.stage) {
@@ -195,7 +197,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
   /**
    * 获取滚动限制
-   * @returns {{ maxScrollX: number, maxScrollY: number }}
+   * @returns {Object} 滚动限制
    */
   const getScrollLimits = () => {
     if (!tableVars.stage) return { maxScrollX: 0, maxScrollY: 0 }
@@ -228,7 +230,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
    * 判断坐标是否在表格区域内（排除滚动条区域）
    * @param clientX 客户端X坐标
    * @param clientY 客户端Y坐标
-   * @returns 是否在表格区域内
+   * @returns {boolean} 是否在表格区域内
    */
   const isInTableArea = () => {
     if (!tableVars.stage) return false
@@ -254,6 +256,9 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
 
   /**
    * 为按钮矩形绑定“原生按钮”式动效（hover/active 阴影与亮度变化）
+   * @param {Konva.Rect} buttonRect 按钮矩形
+   * @param {Object} options 选项
+   * @returns {void}
    */
   const bindButtonInteractions = (
     buttonRect: Konva.Rect,
@@ -646,6 +651,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
               cellHeight,
               useGetTextX: true
             })
+
             bodyGroup.add(cellText)
 
             const colShowOverflow = col.showOverflowTooltip
@@ -711,6 +717,14 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
 
   /**
    * 处理单元格双击
+   * @param {number} rowIndex 行索引
+   * @param {number} colIndex 列索引
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} column 列配置
+   * @param {number} cellX 单元格 X 坐标
+   * @param {number} cellY 单元格 Y 坐标
+   * @param {number} cellWidth 单元格宽度
+   * @param {number} cellHeight 单元格高度
+   * @returns {void}
    */
   const handleCellDoubleClick = (
     rowIndex: number,
