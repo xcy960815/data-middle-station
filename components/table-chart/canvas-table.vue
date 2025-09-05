@@ -49,7 +49,7 @@
   </teleport>
 
   <!-- 单元格编辑器 -->
-  <CellEditor
+  <cell-editor
     :visible="cellEditorDropdown.visible"
     :edit-type="cellEditorDropdown.editType"
     :edit-options="cellEditorDropdown.editOptions"

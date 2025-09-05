@@ -8,9 +8,7 @@ import { chartProps } from '../props'
 import {
   adjustHexColorBrightness,
   estimateButtonWidth,
-  getFromPool,
   getTableContainerElement,
-  getTextX,
   returnToPool,
   truncateText
 } from '../utils'
@@ -21,6 +19,7 @@ import {
   type PositionMap,
   type Prettify
 } from '../variable-handlder'
+import { drawUnifiedRect, drawUnifiedText } from './draw'
 import { highlightHandler } from './heightlight-handler'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -360,172 +359,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     })
   }
 
-  /**
-   * 统一的文本绘制函数
-   * @param config 文本绘制配置
-   * @returns Konva.Text 对象
-   */
-  const drawUnifiedText = (config: {
-    pools: KonvaNodePools
-    name: string
-    text: string
-    x: number
-    y: number
-    fontSize: number
-    fontFamily: string
-    fill: string
-    align?: 'left' | 'center' | 'right'
-    verticalAlign?: 'top' | 'middle' | 'bottom'
-    cellHeight?: number
-    useGetTextX?: boolean
-    opacity?: number
-    offsetX?: number
-    offsetY?: number
-  }) => {
-    const {
-      pools,
-      name,
-      text,
-      x,
-      y,
-      fontSize,
-      fontFamily,
-      fill,
-      align = 'left',
-      verticalAlign = 'middle',
-      cellHeight,
-      useGetTextX = false,
-      opacity = 1,
-      offsetX = 0,
-      offsetY = 0
-    } = config
-
-    const textNode = getFromPool(pools.cellTexts, () => new Konva.Text({ listening: false, name }))
-
-    textNode.name(name)
-    textNode.setAttr('row-index', null)
-    textNode.setAttr('col-index', null)
-
-    // 位置设置
-    if (useGetTextX) {
-      textNode.x(getTextX(x))
-      textNode.y(cellHeight ? y + cellHeight / 2 : y)
-    } else {
-      textNode.x(x)
-      textNode.y(y)
-    }
-
-    // 基础属性
-    textNode.text(text)
-    textNode.fontSize(fontSize)
-    textNode.fontFamily(fontFamily)
-    textNode.fill(fill)
-    textNode.opacity(opacity)
-    textNode.align(align)
-    textNode.verticalAlign(verticalAlign)
-
-    // 偏移处理
-    if (align === 'center' && verticalAlign === 'middle') {
-      // 使用文本自身尺寸居中（在设置内容后再次测量）
-      const w = textNode.width()
-      const h = textNode.height()
-      textNode.offset({ x: w / 2, y: h / 2 })
-    } else if (useGetTextX && verticalAlign === 'middle') {
-      textNode.offsetY(textNode.height() / 2)
-    }
-    // 允许外部额外偏移（如按钮文本基于矩形中心）
-    if (offsetX || offsetY) {
-      const prev = textNode.offset()
-      textNode.offset({ x: (prev.x || 0) + (offsetX || 0), y: (prev.y || 0) + (offsetY || 0) })
-    }
-
-    return textNode
-  }
-
-  /**
-   * 统一的矩形绘制函数（单元格、按钮等）
-   */
-  const drawUnifiedRect = (config: {
-    pools: KonvaNodePools
-    name: string
-    x: number
-    y: number
-    width: number
-    height: number
-    fill?: string
-    stroke?: string
-    strokeWidth?: number
-    cornerRadius?: number
-    listening?: boolean
-    rowIndex?: number | null
-    colIndex?: number | null
-    originFill?: string
-  }) => {
-    const {
-      pools,
-      name,
-      x,
-      y,
-      width,
-      height,
-      fill,
-      stroke,
-      strokeWidth = 1,
-      cornerRadius = 0,
-      listening = true,
-      rowIndex = null,
-      colIndex = null,
-      originFill
-    } = config
-
-    const rect = getFromPool(pools.cellRects, () => new Konva.Rect({ listening, name }))
-    rect.name(name)
-    rect.off('click')
-    rect.off('mouseenter')
-    rect.off('mouseleave')
-    rect.setAttr('row-index', rowIndex)
-    rect.setAttr('col-index', colIndex)
-    rect.x(x)
-    rect.y(y)
-    rect.width(width)
-    rect.height(height)
-    if (originFill !== undefined) rect.setAttr('origin-fill', originFill)
-    if (fill !== undefined) rect.fill(fill)
-    if (stroke !== undefined) rect.stroke(stroke)
-    rect.strokeWidth(strokeWidth)
-    if (cornerRadius) rect.cornerRadius(cornerRadius)
-    return rect
-  }
-  /**
-   * 绘制单元格文本
-   * @param {KonvaNodePools} param0.pools 对象池
-   * @param {number} param0.x 单元格X坐标
-   * @param {number} param0.y 单元格Y坐标
-   * @param {number} param0.cellWidth 单元格宽度
-   * @param {number} param0.cellHeight 单元格高度
-   * @param {string} param0.truncatedValue 截断的文本
-   * @param {number} param0.fontSize 字体大小
-   * @param {string} param0.fontFamily 字体家族
-   * @returns
-   */
-  // removed drawCellText (merged into drawUnifiedText)
-  // 合并后的按钮/单元格矩形统一由 drawUnifiedRect 负责
-
-  /**
-   * 绘制按钮文本
-   * @param {KonvaNodePools} param0.pools
-   * @param {number} param0.x
-   * @param {number} param0.y
-   * @param {string} param0.buttonName
-   * @param {number} param0.fontSize
-   * @param {string} param0.fontFamily
-   * @param {number} param0.opacity
-   * @param {string} param0.textColor
-   * @param {number} param0.offsetX
-   * @param {number} param0.offsetY
-   * @returns
-   */
-  // removed drawButtonText (merged into drawUnifiedText)
+  // drawUnifiedText and drawUnifiedRect moved to shared draw.ts and imported above
 
   /**
    *
@@ -645,7 +479,12 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
             originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
           })
           bodyGroup.add(mergedCellRect)
-          const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
+          const rawValue =
+            col.columnName === '__index__'
+              ? String(rowIndex + 1)
+              : row && typeof row === 'object'
+                ? row[col.columnName]
+                : undefined
           const value = String(rawValue ?? '')
           const maxTextWidth = cellWidth - 16
           const fontFamily = props.bodyFontFamily
@@ -780,7 +619,12 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
             }
           } else {
             // 创建文本
-            const rawValue = row && typeof row === 'object' ? row[col.columnName] : undefined
+            const rawValue =
+              col.columnName === '__index__'
+                ? String(rowIndex + 1)
+                : row && typeof row === 'object'
+                  ? row[col.columnName]
+                  : undefined
             const value = String(rawValue ?? '')
             const maxTextWidth = cellWidth - 16
             const fontFamily = bodyFontFamily
