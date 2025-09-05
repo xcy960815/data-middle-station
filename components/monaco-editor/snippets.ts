@@ -1,6 +1,7 @@
 import * as monaco from 'monaco-editor'
 // import parser from "@babel/parser"
 // import traverse from "@babel/traverse"
+
 import type { DatabaseOption, FieldOption, SortText, SuggestOption, TableOption } from 'monaco-editor'
 
 import { language as Language } from 'monaco-editor/esm/vs/basic-languages/sql/sql.js'
