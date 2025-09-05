@@ -1,6 +1,6 @@
-import type { H3Event, EventHandlerRequest } from 'h3'
-import { RequestCodeEnum } from '~/utils/request-enmu'
+import type { EventHandlerRequest, H3Event } from 'h3'
 import pkg from 'jsonwebtoken'
+import { RequestCodeEnum } from '~/utils/request-enmu'
 const { TokenExpiredError, JsonWebTokenError } = pkg
 // 创建认证中间件专用的日志实例
 const logger = new Logger({
@@ -12,7 +12,7 @@ const logger = new Logger({
  * 不需要验证token的路由白名单
  * 支持精确匹配和前缀匹配
  */
-const whiteList = ['/api/login', '/api/register', '/api/health', '/api/public', '/api/seedBigData']
+const whiteList = ['/api/login', '/api/register', '/api/health', '/api/public', '/api/seedBigData', '/api/sendEmail']
 
 /**
  * 检查路径是否在白名单中

@@ -165,6 +165,7 @@ const xAxisFields = ref<GroupStore.GroupOption[]>([])
  * 维度列
  */
 const yAxisFields = ref<DimensionStore.DimensionOption[]>([
+  // { columnName: '__index__', columnType: 'number', columnComment: '序号', displayName: '序号', width: 100, fixed: 'left', align: 'center' },
   {
     columnName: 'id',
     columnType: 'number',
@@ -174,7 +175,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     filterable: true,
     editable: true,
     editType: 'input'
-    // fixed: 'left' as const
   },
   {
     columnName: 'name',

@@ -1,6 +1,7 @@
 import * as monaco from 'monaco-editor'
 // import parser from "@babel/parser"
 // import traverse from "@babel/traverse"
+
 import type { DatabaseOption, FieldOption, SortText, SuggestOption, TableOption } from 'monaco-editor'
 
 import { language as Language } from 'monaco-editor/esm/vs/basic-languages/sql/sql.js'
@@ -81,14 +82,14 @@ export class SqlSnippets {
     // 光标前面当前行文本
     const textBeforePointer = model.getValueInRange({
       startLineNumber: lineNumber,
-      startColumn: 0,
+      startColumn: 1,
       endLineNumber: lineNumber,
       endColumn: column
     })
     // 光标前第一行到光标位置所有的文本
     const textBeforePointerMulti = model.getValueInRange({
       startLineNumber: 1,
-      startColumn: 0,
+      startColumn: 1,
       endLineNumber: lineNumber,
       endColumn: column
     })
@@ -97,7 +98,7 @@ export class SqlSnippets {
       startLineNumber: lineNumber,
       startColumn: column,
       endLineNumber: lineNumber,
-      endColumn: model.getLineMaxColumn(model.getLineCount())
+      endColumn: model.getLineMaxColumn(lineNumber)
     })
     // 光标后到最后一行 最后一列 所有的文本
     const textAfterPointerMulti = model.getValueInRange({
@@ -170,7 +171,7 @@ export class SqlSnippets {
         // <别名>.<字段> 联想
         if (currentTable && currentTable.tableName) {
           return {
-            suggestions: this.getFieldOptionsSuggestByTableAlia()
+            suggestions: this.getFieldOptionsSuggestByTableAlia(currentTable.tableName)
           }
         } else {
           return {
@@ -274,7 +275,7 @@ export class SqlSnippets {
   getTableOptionsSuggestions = (): Array<SuggestOption> => {
     const suggestOptions: Array<SuggestOption> = []
     this.databaseOptions.forEach((databaseOption: DatabaseOption) => {
-      databaseOption.tableOptions.forEach((tableOption: TableOption) => {
+      databaseOption.tableOptions?.forEach((tableOption: TableOption) => {
         suggestOptions.push({
           label: tableOption.tableName || '',
           kind: this.monaco.languages.CompletionItemKind.Struct,
@@ -298,7 +299,7 @@ export class SqlSnippets {
       (databaseOption: DatabaseOption) => databaseOption.databaseName.toLowerCase() === databaseName
     )
     // console.log("currentDatabase", currentDatabase, databaseName);
-    return currentDatabase
+    return currentDatabase && currentDatabase.tableOptions
       ? currentDatabase.tableOptions.map((tableOption: TableOption) => ({
           label: tableOption.tableName || '',
           kind: this.monaco.languages.CompletionItemKind.Struct,
@@ -316,7 +317,7 @@ export class SqlSnippets {
   getFieldOptionsSuggestions = (): Array<SuggestOption> => {
     const defaultFieldOptions: Array<SuggestOption> = []
     this.databaseOptions.forEach((databaseOption: DatabaseOption) => {
-      databaseOption.tableOptions.forEach((tableOption: TableOption) => {
+      databaseOption.tableOptions?.forEach((tableOption: TableOption) => {
         tableOption.fieldOptions &&
           tableOption.fieldOptions.forEach((fieldOption: FieldOption) => {
             defaultFieldOptions.push({
@@ -338,29 +339,32 @@ export class SqlSnippets {
     return defaultFieldOptions
   }
   /**
-   * @desc 根据别名获取所有表字段
+   * @desc 根据表名获取该表字段（用于别名解析后）
+   * @param { string } tableName 表名
    * @return {Array<SuggestOption>} []
    */
-  getFieldOptionsSuggestByTableAlia = (): Array<SuggestOption> => {
+  getFieldOptionsSuggestByTableAlia = (tableName: string): Array<SuggestOption> => {
     const defaultFieldOptions: Array<SuggestOption> = []
     this.databaseOptions.forEach((databaseOption: DatabaseOption) => {
-      databaseOption.tableOptions.forEach((tableOption: TableOption) => {
-        tableOption.fieldOptions &&
-          tableOption.fieldOptions.forEach((fieldOption: FieldOption) => {
-            defaultFieldOptions.push({
-              label: fieldOption.fieldName || '',
-              kind: this.monaco.languages.CompletionItemKind.Field,
-              detail: `<字段> ${fieldOption.fieldComment || ''} <${fieldOption.fieldType}>`,
-              sortText: this.sortText.Column,
-              insertText: fieldOption.fieldName || '',
-              documentation: {
-                value: `
+      databaseOption.tableOptions?.forEach((tableOption: TableOption) => {
+        if ((tableOption.tableName || '').toLowerCase() === (tableName || '').toLowerCase()) {
+          tableOption.fieldOptions &&
+            tableOption.fieldOptions.forEach((fieldOption: FieldOption) => {
+              defaultFieldOptions.push({
+                label: fieldOption.fieldName || '',
+                kind: this.monaco.languages.CompletionItemKind.Field,
+                detail: `<字段> ${fieldOption.fieldComment || ''} <${fieldOption.fieldType}>`,
+                sortText: this.sortText.Column,
+                insertText: fieldOption.fieldName || '',
+                documentation: {
+                  value: `
     ### 数据库: ${fieldOption.databaseName}
     ### 表: ${fieldOption.tableName}
     ### 注释: ${fieldOption.fieldComment || ''}`
-              }
+                }
+              })
             })
-          })
+        }
       })
     })
     return defaultFieldOptions
