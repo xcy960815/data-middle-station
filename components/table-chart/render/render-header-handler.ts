@@ -33,6 +33,11 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
   const { setPointerStyle } = konvaStageHandler({ props })
   /**
    * 创建表头单元格矩形
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {number} x 列的x坐标
+   * @param {number} colIndex 列索引
+   * @param {number} startColIndex 起始列索引
+   * @returns {Konva.Rect} 表头单元格矩形
    */
   const createHeaderCell = (
     col: GroupStore.GroupOption | DimensionStore.DimensionOption,
@@ -97,6 +102,9 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
   /**
    * 处理排序逻辑
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {string} order 排序顺序
+   * @param {boolean} hasModifier 是否按住修饰键
    */
   const handleSortAction = (
     col: GroupStore.GroupOption | DimensionStore.DimensionOption,
@@ -121,6 +129,9 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
   /**
    * 多列排序处理
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {string} order 排序顺序
+   * @param {number} currentIndex 当前索引
    */
   const handleMultiColumnSort = (
     col: GroupStore.GroupOption | DimensionStore.DimensionOption,
@@ -145,6 +156,9 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
   /**
    * 单列排序处理
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {string} order 排序顺序
+   * @param {number} currentIndex 当前索引
    */
   const handleSingleColumnSort = (
     col: GroupStore.GroupOption | DimensionStore.DimensionOption,
@@ -165,6 +179,10 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
   /**
    * 创建排序箭头
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {number} x 列的x坐标
+   * @param {number} centerY 中心y坐标
+   * @returns {Object} 排序箭头{ upTriangle, downTriangle }
    */
   const createSortArrows = (
     col: GroupStore.GroupOption | DimensionStore.DimensionOption,
@@ -215,6 +233,10 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
   /**
    * 创建过滤图标
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {number} x 列的x坐标
+   * @param {number} centerY 中心y坐标
+   * @returns {Konva.Shape} 过滤图标filterIcon
    */
   const createFilterIcon = (
     col: GroupStore.GroupOption | DimensionStore.DimensionOption,
@@ -269,6 +291,11 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
   /**
    * 创建列宽调整手柄
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} headerCols 表头列
+   * @param {number} x 列的x坐标
+   * @param {number} colIndex 列索引
+   * @returns {Konva.Rect} 列宽调整手柄resizer
    */
   const createColumnResizer = (
     col: GroupStore.GroupOption | DimensionStore.DimensionOption,
@@ -319,6 +346,15 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
   /**
    * 绘制单个表头列
+   * @param {Konva.Group} headerGroup 表头组
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
+   * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} headerCols 表头列
+   * @param {number} x 列的x坐标
+   * @param {number} colIndex 列索引
+   * @param {number} startColIndex 起始列索引
+   * @param {PositionMap[]} positionMapList 位置映射列表
+   * @param {number} stageStartX 舞台起始X坐标
+   * @returns {void}
    */
   const drawSingleColumn = (
     headerGroup: Konva.Group,
@@ -370,6 +406,12 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
   /**
    * 绘制表头部分
+   * @param {Konva.Group | null} headerGroup 表头组
+   * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} headerCols 表头列
+   * @param {number} startColIndex 起始列索引
+   * @param {PositionMap[]} positionMapList 位置映射列表
+   * @param {number} stageStartX 舞台起始X坐标
+   * @returns {void}
    */
   const drawHeaderPart = (
     headerGroup: Konva.Group | null,
