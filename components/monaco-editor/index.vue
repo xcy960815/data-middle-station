@@ -199,8 +199,6 @@ const initResizeObserver = () => {
  * @desc 初始化 editor
  */
 const initEditor = () => {
-  console.log('initEditor')
-
   const sqlSnippets = new SqlSnippets(props.customKeywords, props.databaseOptions)
   completionItemProvider.value = monaco.languages.registerCompletionItemProvider('sql', {
     // 提示的触发字符
