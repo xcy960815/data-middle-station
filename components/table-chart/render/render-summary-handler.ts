@@ -3,9 +3,10 @@ import type { ExtractPropTypes } from 'vue'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
-import { getTextX, truncateText } from '../utils'
+import { truncateText } from '../utils'
 import type { PositionMap, Prettify } from '../variable-handlder'
 import { numberOptions, textOptions, variableHandlder } from '../variable-handlder'
+import { drawUnifiedRect, drawUnifiedText } from './draw'
 interface RenderSummaryHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
 }
@@ -86,6 +87,8 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
   }
   /**
    * 汇总规则的中文标签
+   * @param {string} rule 汇总规则
+   * @returns {string} 汇总规则的中文标签
    */
   const getRuleLabel = (rule: string) => {
     switch (rule) {
@@ -105,10 +108,13 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         return ''
     }
   }
+
   /**
    * 统一调度一次重绘，避免异步多次 batchDraw 造成抖动
+   * @param {Konva.Layer | null} layer 层
    */
   let drawingScheduled = false
+
   const scheduleBatchDraw = (layer?: Konva.Layer | null) => {
     if (drawingScheduled) return
     drawingScheduled = true
@@ -144,7 +150,11 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
 
     let x = 0
     summaryCols.forEach((col, colIndex) => {
-      const summaryCellRect = new Konva.Rect({
+      const pools = tableVars.leftBodyPools
+      const realColIndex = colIndex + startColIndex
+      const summaryCellRect = drawUnifiedRect({
+        pools,
+        name: 'summary-cell-rect',
         x,
         y: 0,
         width: col.width || 0,
@@ -152,12 +162,11 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         fill: summaryBackground,
         stroke: borderColor,
         strokeWidth: 1,
-        listening: true
+        listening: true,
+        rowIndex: realRowIndex,
+        colIndex: realColIndex,
+        originFill: summaryBackground
       })
-      summaryCellRect.setAttr('origin-fill', summaryBackground)
-      const realColIndex = colIndex + startColIndex
-      summaryCellRect.setAttr('col-index', realColIndex)
-      summaryCellRect.setAttr('row-index', realRowIndex)
       summaryGroup.add(summaryCellRect)
 
       const colWidth = col.width || 0
@@ -176,18 +185,20 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
       const rule = summaryState[col.columnName] || 'nodisplay'
       const placeholderText = rule === 'nodisplay' ? '不显示' : '计算中...'
       const truncatedTitle = truncateText(placeholderText, textMaxWidth, props.summaryFontSize, summaryFontFamily)
-      const summaryCellText = new Konva.Text({
-        x: getTextX(x),
-        y: summaryHeight / 2,
+      const summaryCellText = drawUnifiedText({
+        pools,
+        name: 'summary-cell-text',
         text: truncatedTitle,
+        x,
+        y: 0,
         fontSize: fontSizeNumber,
         fontFamily: summaryFontFamily,
         fill: summaryTextColor,
         align: col.align || 'left',
         verticalAlign: 'middle',
-        listening: false
+        cellHeight: summaryHeight,
+        useGetTextX: true
       })
-      summaryCellText.offsetY(summaryCellText.height() / 2)
       summaryGroup.add(summaryCellText)
 
       // 异步计算汇总值并更新文本
