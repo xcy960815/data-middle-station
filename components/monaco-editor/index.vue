@@ -2,6 +2,7 @@
   <div ref="monacoEditorDom" class="monaco-editor-dom"></div>
 </template>
 <script lang="ts" setup>
+import { shallowRef, markRaw } from 'vue'
 import * as monaco from 'monaco-editor'
 import type * as MonacoNS from 'monaco-editor/esm/vs/editor/editor.api'
 // 拦截 command + f 快捷键
@@ -76,17 +77,17 @@ const monacoEditorDom = ref<HTMLDivElement | null>(null)
 /**
  * @desc monacoEditor
  */
-const monacoEditor = ref<MonacoNS.editor.IStandaloneCodeEditor | null>(null)
+const monacoEditor = shallowRef<MonacoNS.editor.IStandaloneCodeEditor | null>(null)
 
 /**
  * @desc completionItemProvider
  */
-const completionItemProvider = ref<MonacoNS.IDisposable>()
+const completionItemProvider = shallowRef<MonacoNS.IDisposable>()
 
 /**
  * @desc resizeObserver for percent-based sizing
  */
-const resizeObserver = ref<ResizeObserver | null>(null)
+const resizeObserver = shallowRef<ResizeObserver | null>(null)
 
 /**
  * @desc 编译器的默认配置
@@ -100,7 +101,7 @@ const monacoEditorDefaultOption: MonacoNS.editor.IStandaloneEditorConstructionOp
   language: 'sql',
   theme: 'vs-dark',
   selectOnLineNumbers: true,
-  contextmenu: false, //关闭右键
+  contextmenu: false, // 关闭右键
   suggestOnTriggerCharacters: true,
   fontSize: 14,
   folding: false, // 是否折叠
@@ -116,10 +117,8 @@ const monacoEditorDefaultOption: MonacoNS.editor.IStandaloneEditorConstructionOp
 watch(
   () => props.modelValue,
   (newSql: string) => {
-    console.log('newSql', newSql, monacoEditor.value)
-
     const hasTextFocus = monacoEditor.value?.hasTextFocus()
-    if (!hasTextFocus) toRaw(monacoEditor.value)?.setValue(newSql)
+    if (!hasTextFocus) monacoEditor.value?.setValue(newSql)
   }
 )
 /**
@@ -171,7 +170,7 @@ const setMonacoEditorStyle = () => {
     editorHeight = parentElementHeight
   }
 
-  toRaw(monacoEditor.value)?.layout({
+  monacoEditor.value?.layout({
     width: editorWidth,
     height: editorHeight
   })
@@ -188,9 +187,11 @@ const initResizeObserver = () => {
   const parentElement = monacoEditorDom.value?.parentElement
   if (!parentElement) return
   if (typeof window !== 'undefined' && 'ResizeObserver' in window) {
-    resizeObserver.value = new ResizeObserver(() => {
-      setMonacoEditorStyle()
-    })
+    resizeObserver.value = markRaw(
+      new ResizeObserver(() => {
+        setMonacoEditorStyle()
+      })
+    )
     resizeObserver.value.observe(parentElement)
   }
 }
@@ -200,28 +201,30 @@ const initResizeObserver = () => {
  */
 const initEditor = () => {
   const sqlSnippets = new SqlSnippets(props.customKeywords, props.databaseOptions)
-  completionItemProvider.value = monaco.languages.registerCompletionItemProvider('sql', {
-    // 提示的触发字符
-    triggerCharacters: [' ', '.', ...props.triggerCharacters],
-    // 因为在js代码中 range 属性不配置也可以正常显示  所以 在这里避免代码抛错  使用了一个 别名
-    provideCompletionItems: (model: MonacoNS.editor.ITextModel, position: MonacoNS.Position) =>
-      sqlSnippets.provideCompletionItems(
-        model,
-        position
-      ) as monaco.languages.ProviderResult<monaco.languages.CompletionList>
-  })
+  completionItemProvider.value = markRaw(
+    monaco.languages.registerCompletionItemProvider('sql', {
+      // 提示的触发字符
+      triggerCharacters: [' ', '.', ...props.triggerCharacters],
+      // 因为在js代码中 range 属性不配置也可以正常显示  所以 在这里避免代码抛错  使用了一个 别名
+      provideCompletionItems: (model: MonacoNS.editor.ITextModel, position: MonacoNS.Position) =>
+        sqlSnippets.provideCompletionItems(
+          model,
+          position
+        ) as monaco.languages.ProviderResult<monaco.languages.CompletionList>
+    })
+  )
 
   const monacoEditorOptionIsEmpty =
     Object.keys(props.monacoEditorOption).length === 0 && props.monacoEditorOption.constructor === Object
   const monacoEditorOption = monacoEditorOptionIsEmpty ? monacoEditorDefaultOption : props.monacoEditorOption
   /* 创建editor实例 */
-  monacoEditor.value = monaco.editor.create(monacoEditorDom.value!, monacoEditorOption)
+  monacoEditor.value = markRaw(monaco.editor.create(monacoEditorDom.value!, monacoEditorOption))
   /*  渲染 编译器 宽高 */
   if (props.height) setMonacoEditorStyle()
 
   /* 监听编译器里面的值的变化 */
   monacoEditor.value.onDidChangeModelContent(() => {
-    emits('update:modelValue', toRaw(monacoEditor.value!).getValue())
+    emits('update:modelValue', monacoEditor.value!.getValue())
   })
 }
 
@@ -229,7 +232,7 @@ const initEditor = () => {
  * 重置 编译器 内容
  */
 const resetEditor = () => {
-  toRaw(monacoEditor.value)?.setValue('')
+  monacoEditor.value?.setValue('')
 }
 
 onMounted(() => {
