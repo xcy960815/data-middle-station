@@ -2,9 +2,9 @@
   <div ref="monacoEditorDom" class="monaco-editor-dom"></div>
 </template>
 <script lang="ts" setup>
-import { shallowRef, markRaw } from 'vue'
 import * as monaco from 'monaco-editor'
 import type * as MonacoNS from 'monaco-editor/esm/vs/editor/editor.api'
+import { markRaw, shallowRef } from 'vue'
 // 拦截 command + f 快捷键
 // import "monaco-editor/esm/vs/editor/contrib/find/findController";
 // sql 语法高亮
