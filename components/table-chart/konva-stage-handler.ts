@@ -196,7 +196,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       const needsRerender =
         tableVars.visibleRowStart !== oldVisibleStart ||
         tableVars.visibleRowEnd !== oldVisibleEnd ||
-        Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 2
+        Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 5 // 配合更大的缓冲行数，减少重新渲染频率
 
       if (needsRerender) {
         const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
