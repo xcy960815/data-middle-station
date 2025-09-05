@@ -27,6 +27,12 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
   const { updateHoverRects } = highlightHandler({ props })
 
+  // 添加滚动优化相关变量
+  let scrollAnimationId: number | null = null
+  let lastScrollTime = 0
+  const scrollThrottleDelay = 8 // 约120fps，更流畅
+  let accumulatedScrollY = 0 // 累积的滚动偏移
+
   /**
    * 创建滚动条
    */
@@ -203,6 +209,23 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   }
 
   /**
+   * 批量绘制所有层级
+   */
+  const scheduleAllLayersBatchDraw = () => {
+    if (scrollAnimationId) return
+
+    scrollAnimationId = requestAnimationFrame(() => {
+      scrollAnimationId = null
+      tableVars.headerLayer?.batchDraw()
+      tableVars.bodyLayer?.batchDraw()
+      tableVars.fixedBodyLayer?.batchDraw()
+      tableVars.fixedHeaderLayer?.batchDraw()
+      tableVars.summaryLayer?.batchDraw()
+      tableVars.fixedSummaryLayer?.batchDraw()
+    })
+  }
+
+  /**
    * 更新滚动位置
    * @returns {void}
    */
@@ -248,12 +271,9 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     if (tableVars.centerSummaryGroup) tableVars.centerSummaryGroup.y(summaryY)
 
     updateScrollbarPosition()
-    tableVars.headerLayer?.batchDraw()
-    tableVars.bodyLayer?.batchDraw()
-    tableVars.fixedBodyLayer?.batchDraw()
-    tableVars.fixedHeaderLayer?.batchDraw()
-    tableVars.summaryLayer?.batchDraw()
-    tableVars.fixedSummaryLayer?.batchDraw()
+
+    // 使用优化后的批量绘制
+    scheduleAllLayersBatchDraw()
 
     // 滚动时更新弹框位置
     // updateFilterDropdownPositionsInTable()
@@ -322,16 +342,46 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   }
 
   /**
+   * 优化后的批量绘制函数，避免频繁重绘
+   */
+  const scheduleBatchDraw = () => {
+    if (scrollAnimationId) return // 已有待执行的绘制任务
+
+    scrollAnimationId = requestAnimationFrame(() => {
+      scrollAnimationId = null
+      tableVars.bodyLayer?.batchDraw()
+      tableVars.fixedBodyLayer?.batchDraw()
+      tableVars.summaryLayer?.batchDraw()
+      tableVars.fixedSummaryLayer?.batchDraw()
+    })
+  }
+
+  /**
    * 更新垂直滚动
    * @param offsetY 滚动偏移量
    */
   const updateVerticalScroll = (offsetY: number) => {
     if (!tableVars.stage || !tableVars.leftBodyGroup || !tableVars.centerBodyGroup || !tableVars.rightBodyGroup) return
+
+    // 累积滚动偏移，避免小的滚动丢失
+    accumulatedScrollY += offsetY
+
+    const now = Date.now()
+    // 如果累积的滚动偏移太小且时间间隔不足，暂时不处理
+    if (now - lastScrollTime < scrollThrottleDelay && Math.abs(accumulatedScrollY) < 1) {
+      return
+    }
+
+    // 使用累积的滚动偏移
+    const actualOffsetY = accumulatedScrollY
+    accumulatedScrollY = 0 // 重置累积偏移
+    lastScrollTime = now
+
     const { maxScrollY } = getScrollLimits()
     const oldScrollY = tableVars.stageScrollY
-    tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY + offsetY, 0, maxScrollY)
+    tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY + actualOffsetY, 0, maxScrollY)
 
-    // 检查是否需要重新渲染（滚动超过一定阈值或可视区域改变）
+    // 检查是否需要重新渲染（调整阈值，减少重新渲染频率）
     const oldVisibleStart = tableVars.visibleRowStart
     const oldVisibleEnd = tableVars.visibleRowEnd
     calculateVisibleRows()
@@ -339,7 +389,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     const needsRerender =
       tableVars.visibleRowStart !== oldVisibleStart ||
       tableVars.visibleRowEnd !== oldVisibleEnd ||
-      Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 2 // 滚动超过2行时强制重新渲染
+      Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 5 // 配合更大的缓冲行数，减少重新渲染频率
 
     if (needsRerender) {
       // 重新渲染可视区域
@@ -366,7 +416,6 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       // 重新绘制后，确保点击高亮矩形位于最顶层
       if (tableVars.highlightRect) {
         tableVars.highlightRect.moveToTop()
-        tableVars.bodyLayer?.batchDraw()
       }
     }
 
@@ -380,10 +429,9 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     updateScrollbarPosition()
     recomputeHoverIndexFromPointer()
     updateCellEditorPositionsInTable()
-    tableVars.bodyLayer?.batchDraw()
-    tableVars.fixedBodyLayer?.batchDraw()
-    tableVars.summaryLayer?.batchDraw()
-    tableVars.fixedSummaryLayer?.batchDraw()
+
+    // 使用优化后的批量绘制
+    scheduleBatchDraw()
   }
 
   /**
@@ -424,6 +472,12 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   const cleanupWheelListener = () => {
     const tableContainer = getTableContainerElement()
     tableContainer?.removeEventListener('wheel', handleMouseWheel)
+
+    // 清理待执行的动画帧
+    if (scrollAnimationId) {
+      cancelAnimationFrame(scrollAnimationId)
+      scrollAnimationId = null
+    }
   }
 
   return {
