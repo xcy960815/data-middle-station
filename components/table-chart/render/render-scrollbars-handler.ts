@@ -36,17 +36,19 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     const { maxScrollX, maxScrollY } = getScrollLimits()
 
     if (maxScrollY > 0) {
-      // 绘制垂直滚动条顶部遮罩
-      const scrollbarRect = new Konva.Rect({
+      // 绘制垂直滚动条顶部遮罩（覆盖表头部分）
+      const verticalScrollbarTopMask = new Konva.Rect({
         x: stageWidth - props.scrollbarSize,
         y: 0,
         width: props.scrollbarSize,
         height: props.headerHeight,
-        fill: props.headerBackground
+        fill: props.headerBackground,
+        stroke: props.borderColor,
+        strokeWidth: 1
       })
-      tableVars.scrollbarLayer.add(scrollbarRect)
-      // 绘制垂直滚动条底部遮罩
-      const verticalScrollbarFooterMask = new Konva.Rect({
+      tableVars.scrollbarLayer.add(verticalScrollbarTopMask)
+      // 绘制垂直滚动条底部遮罩（覆盖汇总行部分）
+      const verticalScrollbarBottomMask = new Konva.Rect({
         x: stageWidth - props.scrollbarSize,
         y: stageHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
         width: props.scrollbarSize,
@@ -56,7 +58,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         strokeWidth: 1
       })
 
-      if (summaryRowHeight.value > 0) tableVars.scrollbarLayer.add(verticalScrollbarFooterMask)
+      if (summaryRowHeight.value > 0) tableVars.scrollbarLayer.add(verticalScrollbarBottomMask)
 
       // 创建垂直滚动条组
       tableVars.verticalScrollbarGroup = new Konva.Group()
