@@ -369,16 +369,16 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
     const { width: stageWidth, height: stageHeight } = getStageAttr()
     const { maxScrollX, maxScrollY } = getScrollLimits()
-    const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
-    const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
+    const verticalScrollbarWidth = maxScrollY > 0 ? props.scrollbarSize : 0
+    const horizontalScrollbarHeight = maxScrollX > 0 ? props.scrollbarSize : 0
 
     // 为中间可滚动区域创建裁剪组，防止遮挡固定列
     if (!tableVars.centerBodyClipGroup) {
-      const clipHeight = stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarSpace
+      const clipHeight = stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
       tableVars.centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
         x: 0,
         y: 0,
-        width: stageWidth - leftWidth - rightWidth - verticalScrollbarSpace,
+        width: stageWidth - leftWidth - rightWidth - verticalScrollbarWidth,
         height: clipHeight
       })
       tableVars.bodyLayer.add(tableVars.centerBodyClipGroup)
@@ -392,22 +392,32 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       clip: {
         x: 0,
         y: 0,
-        width: stageWidth - rightWidth - verticalScrollbarSpace,
+        width: stageWidth - rightWidth - verticalScrollbarWidth,
         height: props.headerHeight
       }
     })
     tableVars.headerLayer.add(centerHeaderClipGroup)
 
+    // 示例：使用统一的分组创建方法（可以选择使用批量创建或单独创建）
+
+    // 方式1：单独创建（保持原有方式）
     tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
     tableVars.centerHeaderGroup = createHeaderCenterGroups(-tableVars.stageScrollX, 0) // 修复：移除多余的 leftWidth 偏移
-    tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, 0)
+    tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarWidth, 0)
 
-    tableVars.leftBodyGroup = createBodyLeftGroups(0, props.headerHeight - tableVars.stageScrollY)
+    tableVars.leftBodyGroup = createBodyLeftGroups(0, 0) // 现在相对于裁剪组，初始位置为0
     tableVars.centerBodyGroup = createBodyCenterGroups(-tableVars.stageScrollX, -tableVars.stageScrollY)
-    tableVars.rightBodyGroup = createBodyRightGroups(
-      stageWidth - rightWidth - verticalScrollbarSpace,
-      props.headerHeight - tableVars.stageScrollY
-    )
+    tableVars.rightBodyGroup = createBodyRightGroups(0, 0) // 现在相对于裁剪组，初始位置为0
+
+    // 方式2：使用新的统一创建方法（备选方案，注释展示用法）
+    // const bodyGroups = createGroupsByType('body', [
+    //   { position: 'left', x: 0, y: 0 }, // 左侧body组相对于裁剪组
+    //   { position: 'center', x: -tableVars.stageScrollX, y: -tableVars.stageScrollY },
+    //   { position: 'right', x: 0, y: 0 } // 右侧body组相对于裁剪组
+    // ])
+    // tableVars.leftBodyGroup = bodyGroups.leftBodyGroup
+    // tableVars.centerBodyGroup = bodyGroups.centerBodyGroup
+    // tableVars.rightBodyGroup = bodyGroups.rightBodyGroup
 
     // 修复表头Group分配：使用裁剪组防止遮挡
     centerHeaderClipGroup.add(tableVars.centerHeaderGroup) // 中间表头放入裁剪组
@@ -415,7 +425,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     // 创建汇总行组（像header一样统一管理）
     if (props.enableSummary) {
-      const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarSpace
+      const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarHeight
 
       // 为中间汇总也创建裁剪组，防止汇总横向滚动时遮挡固定列
       const centerSummaryClipGroup = new Konva.Group({
@@ -425,7 +435,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
         clip: {
           x: 0,
           y: 0,
-          width: stageWidth - rightWidth - verticalScrollbarSpace,
+          width: stageWidth - rightWidth - verticalScrollbarWidth,
           height: summaryRowHeight.value
         }
       })
@@ -433,7 +443,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
       tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
       tableVars.centerSummaryGroup = createSummaryCenterGroups(-tableVars.stageScrollX, 0) // 相对于裁剪组的位置
-      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
+      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarWidth, summaryY)
 
       // 像header一样：中间汇总放入裁剪组，固定汇总直接加到汇总层
       centerSummaryClipGroup.add(tableVars.centerSummaryGroup)
@@ -445,7 +455,43 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     }
 
     tableVars.centerBodyClipGroup.add(tableVars.centerBodyGroup)
-    tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup) // 固定列body也在固定层
+
+    // 为左侧和右侧固定列body组也创建裁剪组，防止延伸到滚动条区域
+    const leftBodyClipGroup = new Konva.Group({
+      x: 0,
+      y: props.headerHeight,
+      name: 'left-body-clip-group',
+      clip: {
+        x: 0,
+        y: 0,
+        width: leftWidth,
+        height: stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
+      }
+    })
+
+    const rightBodyClipGroup = new Konva.Group({
+      x: stageWidth - rightWidth - verticalScrollbarWidth,
+      y: props.headerHeight,
+      name: 'right-body-clip-group',
+      clip: {
+        x: 0,
+        y: 0,
+        width: rightWidth,
+        height: stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
+      }
+    })
+
+    // 将左右body组放入各自的裁剪组中，并调整组的位置为相对于裁剪组
+    leftBodyClipGroup.add(tableVars.leftBodyGroup)
+    rightBodyClipGroup.add(tableVars.rightBodyGroup)
+
+    // 调整左右body组的位置，使其相对于裁剪组
+    tableVars.leftBodyGroup.x(0)
+    tableVars.leftBodyGroup.y(-tableVars.stageScrollY)
+    tableVars.rightBodyGroup.x(0)
+    tableVars.rightBodyGroup.y(-tableVars.stageScrollY)
+
+    tableVars.fixedBodyLayer.add(leftBodyClipGroup, rightBodyClipGroup) // 添加裁剪组到固定层
 
     tableVars.headerPositionMapList.length = 0
     // 绘制表头
@@ -515,145 +561,49 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   }
 
   /**
-   * 创建左侧表头组
-   * @param {number} x
-   * @param {number} y
+   * 统一的分组创建工厂方法
+   * @param groupType 分组类型
+   * @param position 左中右位置
+   * @param x x坐标
+   * @param y y坐标
+   * @param options 可选配置（如裁剪参数）
    * @returns {Konva.Group}
    */
-  const createHeaderLeftGroups = (x: number, y: number) => {
-    const leftHeaderGroup = new Konva.Group({
-      x: 0,
-      y: 0,
-      name: 'left-header-group'
-    })
-    return leftHeaderGroup
+  const createGroup = (
+    groupType: 'header' | 'body' | 'summary',
+    position: 'left' | 'center' | 'right',
+    x: number,
+    y: number,
+    options?: {
+      clip?: {
+        x: number
+        y: number
+        width: number
+        height: number
+      }
+    }
+  ): Konva.Group => {
+    const groupName = `${position}-${groupType}-group`
+
+    const groupConfig: Konva.GroupConfig = {
+      x: position === 'left' ? 0 : x, // 左侧固定列的x永远为0
+      y: position === 'center' && groupType !== 'header' ? y : groupType === 'header' ? 0 : y,
+      name: groupName
+    }
+
+    // 如果是裁剪组，添加裁剪配置
+    if (options?.clip) {
+      groupConfig.clip = options.clip
+    }
+
+    return new Konva.Group(groupConfig)
   }
 
   /**
-   * 创建中间表头组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createHeaderCenterGroups = (x: number, y: number) => {
-    const centerHeaderGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'center-header-group'
-    })
-    return centerHeaderGroup
-  }
-
-  /**
-   * 创建右侧表头组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createHeaderRightGroups = (x: number, y: number) => {
-    const rightHeaderGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'right-header-group'
-    })
-    return rightHeaderGroup
-  }
-
-  /**
-   * 创建左侧表体组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createBodyLeftGroups = (x: number, y: number) => {
-    const leftBodyGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'left-body-group'
-    })
-    return leftBodyGroup
-  }
-
-  /**
-   * 创建中间表体组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createBodyCenterGroups = (x: number, y: number) => {
-    const centerBodyGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'center-body-group'
-    })
-    return centerBodyGroup
-  }
-
-  /**
-   * 创建右侧表体组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createBodyRightGroups = (x: number, y: number) => {
-    const rightBodyGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'right-body-group'
-    })
-    return rightBodyGroup
-  }
-
-  /**
-   * 创建左侧汇总组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createSummaryLeftGroups = (x: number, y: number) => {
-    const leftSummaryGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'left-summary-group'
-    })
-    return leftSummaryGroup
-  }
-
-  /**
-   * 创建中间汇总组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createSummaryCenterGroups = (x: number, y: number) => {
-    const centerSummaryGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'center-summary-group'
-    })
-    return centerSummaryGroup
-  }
-
-  /**
-   * 创建右侧汇总组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createSummaryRightGroups = (x: number, y: number) => {
-    const rightSummaryGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'right-summary-group'
-    })
-    return rightSummaryGroup
-  }
-
-  /**
-   * 创建中间表体剪辑组
-   * @param x
-   * @param y
-   * @param clip
+   * 创建中间表体剪辑组（特殊方法，因为需要裁剪功能）
+   * @param x x坐标
+   * @param y y坐标
+   * @param clip 裁剪区域
    * @returns {Konva.Group}
    */
   const createCenterBodyClipGroup = (
@@ -665,15 +615,61 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       width: number
       height: number
     }
-  ) => {
-    const centerBodyClipGroup = new Konva.Group({
+  ): Konva.Group => {
+    return new Konva.Group({
       x: x,
       y: y,
       name: 'center-body-clip-group',
       clip: clip
     })
-    return centerBodyClipGroup
   }
+
+  /**
+   * 批量创建同类型分组的方法
+   * @param groupType 分组类型
+   * @param positions 位置配置数组
+   * @returns 创建的分组对象映射
+   */
+  const createGroupsByType = (
+    groupType: 'header' | 'body' | 'summary',
+    positions: Array<{
+      position: 'left' | 'center' | 'right'
+      x: number
+      y: number
+      options?: {
+        clip?: {
+          x: number
+          y: number
+          width: number
+          height: number
+        }
+      }
+    }>
+  ) => {
+    const groups: Record<string, Konva.Group> = {}
+
+    positions.forEach(({ position, x, y, options }) => {
+      const key = `${position}${groupType.charAt(0).toUpperCase() + groupType.slice(1)}Group`
+      groups[key] = createGroup(groupType, position, x, y, options)
+    })
+
+    return groups
+  }
+
+  // 快捷方法 - 表头分组
+  const createHeaderLeftGroups = (x: number, y: number) => createGroup('header', 'left', x, y)
+  const createHeaderCenterGroups = (x: number, y: number) => createGroup('header', 'center', x, y)
+  const createHeaderRightGroups = (x: number, y: number) => createGroup('header', 'right', x, y)
+
+  // 快捷方法 - 表体分组
+  const createBodyLeftGroups = (x: number, y: number) => createGroup('body', 'left', x, y)
+  const createBodyCenterGroups = (x: number, y: number) => createGroup('body', 'center', x, y)
+  const createBodyRightGroups = (x: number, y: number) => createGroup('body', 'right', x, y)
+
+  // 快捷方法 - 汇总分组
+  const createSummaryLeftGroups = (x: number, y: number) => createGroup('summary', 'left', x, y)
+  const createSummaryCenterGroups = (x: number, y: number) => createGroup('summary', 'center', x, y)
+  const createSummaryRightGroups = (x: number, y: number) => createGroup('summary', 'right', x, y)
 
   /**
    * 初始化全局事件监听器
@@ -710,6 +706,9 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     clearGroups,
     initStageListeners,
     cleanupStageListeners,
-    setPointerStyle
+    setPointerStyle,
+    createGroup,
+    createGroupsByType,
+    createCenterBodyClipGroup
   }
 }

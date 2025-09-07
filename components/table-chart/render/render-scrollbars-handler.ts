@@ -255,9 +255,10 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     /**
      * 更新左侧和右侧主体（只有 Y 位置变化）
+     * 注意：由于左右body组现在在裁剪组中，Y位置应该相对于裁剪组
      */
-    tableVars.leftBodyGroup.y(bodyY)
-    tableVars.rightBodyGroup.y(bodyY)
+    tableVars.leftBodyGroup.y(-tableVars.stageScrollY)
+    tableVars.rightBodyGroup.y(-tableVars.stageScrollY)
 
     /**
      * 更新中间主体（X 和 Y 位置变化）
@@ -429,12 +430,13 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       }
     }
 
-    const bodyY = props.headerHeight - tableVars.stageScrollY
+    // 修复：统一使用相对于裁剪组的坐标系统
+    const fixedColumnsY = -tableVars.stageScrollY // 左右固定列相对于裁剪组
     const centerY = -tableVars.stageScrollY
 
     // 固定列和中间列随垂直滚动
-    tableVars.leftBodyGroup.y(bodyY)
-    tableVars.rightBodyGroup.y(bodyY)
+    tableVars.leftBodyGroup.y(fixedColumnsY)
+    tableVars.rightBodyGroup.y(fixedColumnsY)
     tableVars.centerBodyGroup.y(centerY)
     updateScrollbarPosition()
     // 注释高亮相关调用以提升性能
