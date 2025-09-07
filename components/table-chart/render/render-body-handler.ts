@@ -1,5 +1,6 @@
 import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
+import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
@@ -24,9 +25,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   })
   const { tableColumns, tableData, tableVars } = variableHandlder({ props })
   const { getStageAttr, setPointerStyle } = konvaStageHandler({ props })
-  // 注释汇总功能以提升性能
-  // const { summaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
-  const summaryRowHeight = { value: 0 } // 硬编码为0，禁用汇总行
+  const { summaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
 
   /**
    * 计算可视区域 数据的起始行和结束行
@@ -172,6 +171,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const leftCols = columnsWithWidth.filter((c) => c.fixed === 'left')
     const centerCols = columnsWithWidth.filter((c) => !c.fixed)
     const rightCols = columnsWithWidth.filter((c) => c.fixed === 'right')
+
     /**
      * 计算列宽总和
      * @param columns 列数组
