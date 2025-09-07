@@ -189,6 +189,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'name',
     displayName: 'name',
+    filterable: true,
     editable: true,
     editType: 'input'
   },
@@ -197,6 +198,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'number',
     columnComment: 'age',
     displayName: 'age',
+    filterable: true,
     editable: true,
     editType: 'input'
     // fixed: 'left' as const

@@ -78,7 +78,7 @@ const props = defineProps(chartProps)
  */
 const emits = defineEmits<ChartEmits>()
 
-const { tableVars, tableContainerStyle, handleTableData, handleTableColumns } = variableHandlder({ props })
+const { tableVars, tableContainerStyle, handleTableData, handleTableColumns, sortColumns } = variableHandlder({ props })
 
 const { initStage, destroyStage, refreshTable, initStageListeners, cleanupStageListeners } = konvaStageHandler({
   props,
@@ -237,6 +237,20 @@ watch(
   () => {
     if (!tableVars.stage) return
     refreshTable(false)
+  }
+)
+
+/**
+ * 排序状态变化时重新渲染表格
+ */
+watch(
+  () => sortColumns.value,
+  () => {
+    if (!tableVars.stage) return
+    refreshTable(false)
+  },
+  {
+    deep: true
   }
 )
 
