@@ -68,7 +68,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     }
 
     // 设置引用关系 - 简化层级管理
-    tableVars.fixedHeaderLayer = tableVars.headerLayer // 所有表头都在表头层
     tableVars.summaryLayer = tableVars.bodyLayer // 汇总使用body层（已禁用）
     tableVars.fixedSummaryLayer = tableVars.fixedBodyLayer // 固定汇总使用固定层
 
@@ -91,7 +90,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.scrollbarLayer = null
     // 这些只是引用，设为null即可
     tableVars.summaryLayer = null
-    tableVars.fixedHeaderLayer = null
     tableVars.fixedSummaryLayer = null
     tableVars.centerBodyClipGroup = null
     tableVars.highlightRect = null
@@ -351,7 +349,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     if (
       !tableVars.stage ||
       !tableVars.headerLayer ||
-      !tableVars.fixedHeaderLayer ||
       !tableVars.bodyLayer ||
       !tableVars.fixedBodyLayer ||
       !tableVars.summaryLayer ||
@@ -416,7 +413,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     // 修复表头Group分配：使用裁剪组防止遮挡
     centerHeaderClipGroup.add(tableVars.centerHeaderGroup) // 中间表头放入裁剪组
-    tableVars.fixedBodyLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup) // 固定表头在固定层（更高层）
+    tableVars.headerLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup) // 固定表头必须在表头层，确保不被body层遮挡
 
     // 注释汇总行相关代码以提升性能
     // if (props.enableSummary) {
@@ -493,7 +490,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.headerLayer.batchDraw()
     tableVars.bodyLayer?.batchDraw()
     tableVars.fixedBodyLayer?.batchDraw()
-    tableVars.fixedHeaderLayer?.batchDraw()
     tableVars.summaryLayer?.batchDraw()
     tableVars.fixedSummaryLayer?.batchDraw()
     tableVars.scrollbarLayer?.batchDraw()

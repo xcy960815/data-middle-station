@@ -166,6 +166,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const columnsWithWidth = tableColumns.value.map((col) => {
       const overrideWidth = tableVars.columnWidthOverrides[col.columnName as string]
       const width = overrideWidth !== undefined ? overrideWidth : col.width !== undefined ? col.width : autoColumnWidth
+
       return { ...col, width }
     })
     const leftCols = columnsWithWidth.filter((c) => c.fixed === 'left')
