@@ -101,7 +101,7 @@
         :highlight-col-background="tableConfig.highlightColBackground"
         :span-method="spanMethod"
         @cell-click="handleCellClick"
-        @action-click="handleActionClick"
+        @action-click="() => {}"
         @cell-edit="handleCellEdit"
       >
       </CanvasTable>
@@ -165,7 +165,15 @@ const xAxisFields = ref<GroupStore.GroupOption[]>([])
  * 维度列
  */
 const yAxisFields = ref<DimensionStore.DimensionOption[]>([
-  // { columnName: '__index__', columnType: 'number', columnComment: '序号', displayName: '序号', width: 100, fixed: 'left', align: 'center' },
+  {
+    columnName: '__index__',
+    columnType: 'number',
+    columnComment: '序号',
+    displayName: '序号',
+    width: 100,
+    fixed: 'left',
+    align: 'center'
+  },
   {
     columnName: 'id',
     columnType: 'number',
@@ -190,8 +198,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'age',
     displayName: 'age',
     editable: true,
-    editType: 'input'
-    // fixed: 'left' as const
+    editType: 'input',
+    fixed: 'left' as const
   },
   {
     columnName: 'gender',
@@ -258,23 +266,24 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     editable: true,
-    editType: 'input'
-    // fixed: 'right' as const
+    editType: 'input',
+    fixed: 'right' as const
   },
-  {
-    columnName: 'action',
-    columnType: 'string',
-    columnComment: '操作',
-    displayName: '操作',
-    width: 220,
-    fixed: 'right' as const,
-    align: 'center' as const,
-    actions: [
-      { key: 'view', label: '查看', type: 'primary' },
-      { key: 'edit', label: '编辑', type: 'success' },
-      { key: 'delete', label: '删除', type: 'danger' }
-    ]
-  },
+  // 注释掉action列以提升性能
+  // {
+  //   columnName: 'action',
+  //   columnType: 'string',
+  //   columnComment: '操作',
+  //   displayName: '操作',
+  //   width: 220,
+  //   fixed: 'right' as const,
+  //   align: 'center' as const,
+  //   actions: [
+  //     { key: 'view', label: '查看', type: 'primary' },
+  //     { key: 'edit', label: '编辑', type: 'success' },
+  //     { key: 'delete', label: '删除', type: 'danger' }
+  //   ]
+  // },
   {
     columnName: 'address',
     columnType: 'string',
@@ -319,7 +328,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     displayName: '最后登录时间',
     width: 180,
     editable: true,
-    editType: 'datetime'
+    editType: 'datetime',
+    fixed: 'right' as const
   }
 ])
 
@@ -382,9 +392,10 @@ const handleCellClick = (cell: { rowIndex: number; colIndex: number }) => {
   console.log('Cell clicked:', cell)
 }
 
-const handleActionClick = (payload: { rowIndex: number; action: string; rowData: ChartDataVo.ChartData }) => {
-  console.log('Action clicked:', payload.rowIndex, payload.action, payload.rowData)
-}
+// 注释掉action事件处理函数
+// const handleActionClick = (payload: { rowIndex: number; action: string; rowData: ChartDataVo.ChartData }) => {
+//   console.log('Action clicked:', payload.rowIndex, payload.action, payload.rowData)
+// }
 
 /**
  * 单元格编辑事件

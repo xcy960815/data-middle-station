@@ -3,7 +3,6 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, reactive, ref, type ExtractPropTypes } from 'vue'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
-import { highlightHandler } from '../render/heightlight-handler'
 import { getDropdownPosition } from '../utils'
 import { variableHandlder, type Prettify } from '../variable-handlder'
 interface SummaryDropdownOption {
@@ -54,7 +53,8 @@ interface SummaryDropdownHandlerProps {
 export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
   const { clearGroups } = konvaStageHandler({ props })
 
-  const { updateHoverRects } = highlightHandler({ props })
+  // 注释高亮功能以提升性能
+  // const { updateHoverRects } = highlightHandler({ props })
 
   const { summaryState, tableVars } = variableHandlder({ props })
 
@@ -179,9 +179,10 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
       summaryDropdown.options = options
       summaryDropdown.selectedValue = selected || 'nodisplay'
       // 打开下拉时取消 hover 高亮，避免视觉干扰
-      tableVars.hoveredRowIndex = null
-      tableVars.hoveredColIndex = null
-      updateHoverRects()
+      // 注释高亮重置以提升性能
+      // tableVars.hoveredRowIndex = null
+      // tableVars.hoveredColIndex = null
+      // updateHoverRects()
     })
   }
 

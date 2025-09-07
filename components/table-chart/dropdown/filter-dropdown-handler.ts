@@ -4,7 +4,6 @@ import { computed, nextTick, reactive, ref } from 'vue'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 // 避免循环依赖：不要在此处直接引入 rebuild-group-handler
-import { highlightHandler } from '../render/heightlight-handler'
 import { getDropdownPosition } from '../utils'
 import { variableHandlder, type Prettify } from '../variable-handlder'
 
@@ -51,7 +50,8 @@ interface FilterDropdownHandlerProps {
 export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => {
   const { filterState, handleTableData, tableVars } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
-  const { updateHoverRects } = highlightHandler({ props })
+  // 注释高亮功能以提升性能
+  // const { updateHoverRects } = highlightHandler({ props })
 
   /**
    * 过滤下拉浮层样式
@@ -161,9 +161,10 @@ export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => 
       filterDropdown.options = options
       filterDropdown.selectedValues = [...selected]
       // 打开下拉时取消 hover 高亮，避免视觉干扰
-      tableVars.hoveredRowIndex = null
-      tableVars.hoveredColIndex = null
-      updateHoverRects()
+      // 注释高亮重置以提升性能
+      // tableVars.hoveredRowIndex = null
+      // tableVars.hoveredColIndex = null
+      // updateHoverRects()
     })
   }
 

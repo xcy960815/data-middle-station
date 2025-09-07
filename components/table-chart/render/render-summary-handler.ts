@@ -212,8 +212,9 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
           scheduleBatchDraw(layer)
         })
       }
-      summaryCellRect.on('mouseenter', () => setPointerStyle(true, 'pointer'))
-      summaryCellRect.on('mouseleave', () => setPointerStyle(false, 'default'))
+      // 注释悬停效果以提升性能
+      // summaryCellRect.on('mouseenter', () => setPointerStyle(true, 'pointer'))
+      // summaryCellRect.on('mouseleave', () => setPointerStyle(false, 'default'))
 
       summaryCellRect.on('click', (evt) => {
         if (!tableVars.stage) return

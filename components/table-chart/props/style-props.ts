@@ -41,7 +41,7 @@ export const styleProps = {
   /**
    * 表头字体大小
    */
-  headerFontSize: { type: [Number, String], default: 14 },
+  headerFontSize: { type: [Number], default: 14 },
 
   /**
    * 表格行高度
