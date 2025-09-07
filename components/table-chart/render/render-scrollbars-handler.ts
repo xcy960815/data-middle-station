@@ -1,6 +1,7 @@
 import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
+import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { constrainToRange, getTableContainerElement } from '../utils'
@@ -20,10 +21,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   const { getScrollLimits, getSplitColumns, recomputeHoverIndexFromPointer, drawBodyPart, calculateVisibleRows } =
     renderBodyHandler({ props, emits })
   const { tableData, tableVars } = variableHandlder({ props })
-  // 注释汇总功能以提升性能
-  // const { summaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
-  const summaryRowHeight = { value: 0 } // 硬编码为0，禁用汇总行
-  const updateSummaryDropdownPositionsInTable = () => {} // 空函数
+  const { summaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
   const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props, emits })
   const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
   // 注释高亮功能以提升性能
@@ -250,7 +248,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     const { leftWidth } = getSplitColumns()
     const bodyY = props.headerHeight - tableVars.stageScrollY
     const centerX = -tableVars.stageScrollX
-    const headerX = leftWidth - tableVars.stageScrollX
+    const headerX = -tableVars.stageScrollX // 修复：header 和 body 应该使用相同的 X 偏移计算
     const summaryY = tableVars.stage
       ? tableVars.stage.height() - summaryRowHeight.value - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
       : 0
@@ -281,8 +279,8 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     updateScrollbarPosition()
 
-    // 仅重绘body层和滚动条层
-    scheduleLayersBatchDraw(['body', 'scrollbar'])
+    // 水平滚动时也需要重绘固定层，确保固定列正确显示
+    scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar'])
 
     // 滚动时更新弹框位置
     // updateFilterDropdownPositionsInTable()
@@ -445,7 +443,8 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     // 根据是否重渲染决定重绘范围
     if (needsRerender) {
-      scheduleLayersBatchDraw(['body', 'scrollbar'])
+      // 重渲染时需要绘制所有相关层，确保固定列正确显示
+      scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar'])
     } else {
       // 仅位置更新时，只重绘滚动条
       scheduleLayersBatchDraw(['scrollbar'])

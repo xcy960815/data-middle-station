@@ -1,8 +1,8 @@
 export const featureProps = {
-  // /**
-  //  * 是否启用汇总 - 注释以提升性能
-  //  */
-  // enableSummary: { type: Boolean, default: false },
+  /**
+   * 是否启用汇总
+   */
+  enableSummary: { type: Boolean, default: false },
   /**
    * 缓冲行数 - 减少缓冲行数以提升性能
    */

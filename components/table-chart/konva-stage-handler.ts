@@ -16,9 +16,7 @@ interface KonvaStageHandlerProps {
  */
 export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const { tableVars } = variableHandlder({ props })
-  // 注释汇总行高度计算
-  // const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryHeight : 0))
-  const summaryRowHeight = { value: 0 } // 禁用汇总行
+  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryHeight : 0))
   const ensureEmits = () => {
     if (!emits) {
       throw new Error('This operation requires emits to be provided to konvaStageHandler')
@@ -67,9 +65,11 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       tableVars.stage.add(tableVars.scrollbarLayer)
     }
 
-    // 设置引用关系 - 简化层级管理
-    tableVars.summaryLayer = tableVars.bodyLayer // 汇总使用body层（已禁用）
-    tableVars.fixedSummaryLayer = tableVars.fixedBodyLayer // 固定汇总使用固定层
+    // 5. 汇总层（像header一样，统一管理）
+    if (!tableVars.summaryLayer) {
+      tableVars.summaryLayer = new Konva.Layer()
+      tableVars.stage.add(tableVars.summaryLayer)
+    }
 
     tableVars.stage.setPointersPositions({
       clientX: 0,
@@ -90,7 +90,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.scrollbarLayer = null
     // 这些只是引用，设为null即可
     tableVars.summaryLayer = null
-    tableVars.fixedSummaryLayer = null
     tableVars.centerBodyClipGroup = null
     tableVars.highlightRect = null
   }
@@ -352,7 +351,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       !tableVars.bodyLayer ||
       !tableVars.fixedBodyLayer ||
       !tableVars.summaryLayer ||
-      !tableVars.fixedSummaryLayer ||
       !tableVars.scrollbarLayer
     ) {
       return
@@ -388,20 +386,20 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     // 为中间表头也创建裁剪组，防止表头横向滚动时遮挡固定列
     const centerHeaderClipGroup = new Konva.Group({
-      x: leftWidth,
+      x: 0,
       y: 0,
       name: 'center-header-clip-group',
       clip: {
         x: 0,
         y: 0,
-        width: stageWidth - leftWidth - rightWidth - verticalScrollbarSpace,
+        width: stageWidth - rightWidth - verticalScrollbarSpace,
         height: props.headerHeight
       }
     })
     tableVars.headerLayer.add(centerHeaderClipGroup)
 
     tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
-    tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth - tableVars.stageScrollX, 0)
+    tableVars.centerHeaderGroup = createHeaderCenterGroups(-tableVars.stageScrollX, 0) // 修复：移除多余的 leftWidth 偏移
     tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, 0)
 
     tableVars.leftBodyGroup = createBodyLeftGroups(0, props.headerHeight - tableVars.stageScrollY)
@@ -415,19 +413,36 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     centerHeaderClipGroup.add(tableVars.centerHeaderGroup) // 中间表头放入裁剪组
     tableVars.headerLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup) // 固定表头必须在表头层，确保不被body层遮挡
 
-    // 注释汇总行相关代码以提升性能
-    // if (props.enableSummary) {
-    //   const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarSpace
-    //   tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
-    //   tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.stageScrollX, summaryY)
-    //   tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
-    //   tableVars.summaryLayer.add(tableVars.centerSummaryGroup)
-    //   tableVars.fixedSummaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
-    // } else {
-    tableVars.leftSummaryGroup = null
-    tableVars.centerSummaryGroup = null
-    tableVars.rightSummaryGroup = null
-    // }
+    // 创建汇总行组（像header一样统一管理）
+    if (props.enableSummary) {
+      const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarSpace
+
+      // 为中间汇总也创建裁剪组，防止汇总横向滚动时遮挡固定列
+      const centerSummaryClipGroup = new Konva.Group({
+        x: 0,
+        y: summaryY,
+        name: 'center-summary-clip-group',
+        clip: {
+          x: 0,
+          y: 0,
+          width: stageWidth - rightWidth - verticalScrollbarSpace,
+          height: summaryRowHeight.value
+        }
+      })
+      tableVars.summaryLayer.add(centerSummaryClipGroup)
+
+      tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
+      tableVars.centerSummaryGroup = createSummaryCenterGroups(-tableVars.stageScrollX, 0) // 相对于裁剪组的位置
+      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
+
+      // 像header一样：中间汇总放入裁剪组，固定汇总直接加到汇总层
+      centerSummaryClipGroup.add(tableVars.centerSummaryGroup)
+      tableVars.summaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
+    } else {
+      tableVars.leftSummaryGroup = null
+      tableVars.centerSummaryGroup = null
+      tableVars.rightSummaryGroup = null
+    }
 
     tableVars.centerBodyClipGroup.add(tableVars.centerBodyGroup)
     tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup) // 固定列body也在固定层
@@ -464,35 +479,34 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       leftWidth + centerWidth
     )
 
-    // 绘制底部 summary
-    // 注释汇总行绘制代码
-    // if (props.enableSummary) {
-    //   tableVars.summaryPositionMapList.length = 0
-    //   drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
-    //   drawSummaryPart(
-    //     tableVars.centerSummaryGroup,
-    //     centerCols,
-    //     leftCols.length,
-    //     tableVars.summaryPositionMapList,
-    //     leftWidth
-    //   )
-    //   drawSummaryPart(
-    //     tableVars.rightSummaryGroup,
-    //     rightCols,
-    //     leftCols.length + centerCols.length,
-    //     tableVars.summaryPositionMapList,
-    //     leftWidth + centerWidth
-    //   )
-    // }
+    // 绘制汇总行
+    if (props.enableSummary) {
+      tableVars.summaryPositionMapList.length = 0
+      drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
+      drawSummaryPart(
+        tableVars.centerSummaryGroup,
+        centerCols,
+        leftCols.length,
+        tableVars.summaryPositionMapList,
+        leftWidth
+      )
+      drawSummaryPart(
+        tableVars.rightSummaryGroup,
+        rightCols,
+        leftCols.length + centerCols.length,
+        tableVars.summaryPositionMapList,
+        leftWidth + centerWidth
+      )
+    }
 
     createScrollbars()
 
-    tableVars.headerLayer.batchDraw()
-    tableVars.bodyLayer?.batchDraw()
-    tableVars.fixedBodyLayer?.batchDraw()
-    tableVars.summaryLayer?.batchDraw()
-    tableVars.fixedSummaryLayer?.batchDraw()
-    tableVars.scrollbarLayer?.batchDraw()
+    // 确保层级绘制顺序正确：固定列在上层
+    tableVars.bodyLayer?.batchDraw() // 1. 先绘制可滚动的中间内容
+    tableVars.fixedBodyLayer?.batchDraw() // 2. 再绘制固定列（覆盖在上面）
+    tableVars.headerLayer.batchDraw() // 3. 表头在最上层
+    tableVars.summaryLayer?.batchDraw() // 4. 汇总层（像header一样统一管理）
+    tableVars.scrollbarLayer?.batchDraw() // 5. 滚动条在最顶层
   }
 
   // 暴露到全局状态，供其他模块调用（仅在提供 emits 时设置，以避免无 emits 实例覆盖）
