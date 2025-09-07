@@ -73,7 +73,6 @@ interface TableVars {
   bodyLayer: Konva.Layer | null
   summaryLayer: Konva.Layer | null
   fixedBodyLayer: Konva.Layer | null
-  fixedSummaryLayer: Konva.Layer | null
   leftHeaderGroup: Konva.Group | null
   centerHeaderGroup: Konva.Group | null
   rightHeaderGroup: Konva.Group | null
@@ -187,11 +186,6 @@ const tableVars: TableVars = {
    * 固定表body层（固定表body）
    */
   fixedBodyLayer: null,
-
-  /**
-   * 固定汇总层（固定汇总）
-   */
-  fixedSummaryLayer: null,
 
   /**
    * 左侧表头组（左侧表头）
@@ -516,7 +510,6 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     tableVars.bodyLayer = null
     tableVars.summaryLayer = null
     tableVars.fixedBodyLayer = null
-    tableVars.fixedSummaryLayer = null
     tableVars.leftHeaderGroup = null
     tableVars.centerHeaderGroup = null
     tableVars.rightHeaderGroup = null

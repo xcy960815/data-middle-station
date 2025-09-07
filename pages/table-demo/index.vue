@@ -174,16 +174,16 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     fixed: 'left',
     align: 'center'
   },
-  {
-    columnName: 'id',
-    columnType: 'number',
-    columnComment: 'id',
-    displayName: 'id',
-    width: 200,
-    filterable: true,
-    editable: true,
-    editType: 'input'
-  },
+  // {
+  //   columnName: 'id',
+  //   columnType: 'number',
+  //   columnComment: 'id',
+  //   displayName: 'id',
+  //   width: 200,
+  //   filterable: true,
+  //   editable: true,
+  //   editType: 'input'
+  // },
   {
     columnName: 'name',
     columnType: 'string',
@@ -198,8 +198,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'age',
     displayName: 'age',
     editable: true,
-    editType: 'input',
-    fixed: 'left' as const
+    editType: 'input'
+    // fixed: 'left' as const
   },
   {
     columnName: 'gender',
@@ -266,8 +266,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     editable: true,
-    editType: 'input',
-    fixed: 'right' as const
+    editType: 'input'
+    // fixed: 'right' as const
   },
   // 注释掉action列以提升性能
   // {
