@@ -1,8 +1,8 @@
 <template>
   <div id="table-container" class="table-container" :style="tableContainerStyle"></div>
 
-  <!-- 过滤器下拉（多选） -->
-  <teleport to="body">
+  <!-- 注释过滤器以提升性能 -->
+  <!-- <teleport to="body">
     <div
       ref="filterDropdownRef"
       v-show="filterDropdown.visible"
@@ -25,9 +25,9 @@
         <el-option v-for="opt in filterDropdown.options" :key="opt" :label="opt === '' ? '(空)' : opt" :value="opt" />
       </el-select>
     </div>
-  </teleport>
-  <!-- 汇总行下拉（单选） -->
-  <teleport to="body">
+  </teleport> -->
+  <!-- 注释汇总功能以提升性能 -->
+  <!-- <teleport to="body">
     <div
       ref="summaryDropdownRef"
       v-show="summaryDropdown.visible"
@@ -46,7 +46,7 @@
         <el-option v-for="opt in summaryDropdown.options" :key="opt.value" :label="opt.label" :value="opt.value" />
       </el-select>
     </div>
-  </teleport>
+  </teleport> -->
 
   <!-- 单元格编辑器 -->
   <cell-editor
@@ -61,12 +61,9 @@
 </template>
 
 <script setup lang="ts">
-import { ElOption, ElSelect } from 'element-plus'
 import { nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import CellEditor from './cell-editor.vue'
 import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
-import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
-import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
 import type { ChartEmits } from './emits'
 import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
@@ -92,25 +89,27 @@ renderBodyHandler({ props, emits })
 
 const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ props, emits })
 
-const {
-  filterDropdownRef,
-  filterDropdownStyle,
-  filterDropdown,
-  closeFilterDropdown,
-  handleSelectedFilter,
-  initFilterDropdownListeners,
-  cleanupFilterDropdownListeners
-} = filterDropdownHandler({ props })
+// 注释过滤功能以提升性能
+// const {
+//   filterDropdownRef,
+//   filterDropdownStyle,
+//   filterDropdown,
+//   closeFilterDropdown,
+//   handleSelectedFilter,
+//   initFilterDropdownListeners,
+//   cleanupFilterDropdownListeners
+// } = filterDropdownHandler({ props })
 
-const {
-  summaryDropdownRef,
-  summaryDropdownStyle,
-  summaryDropdown,
-  closeSummaryDropdown,
-  handleSelectedSummary,
-  initSummaryDropdownListeners,
-  cleanupSummaryDropdownListeners
-} = summaryDropDownHandler({ props })
+// 注释汇总功能以提升性能
+// const {
+//   summaryDropdownRef,
+//   summaryDropdownStyle,
+//   summaryDropdown,
+//   closeSummaryDropdown,
+//   handleSelectedSummary,
+//   initSummaryDropdownListeners,
+//   cleanupSummaryDropdownListeners
+// } = summaryDropDownHandler({ props })
 
 const {
   cellEditorDropdown,
@@ -185,23 +184,23 @@ watch(
   }
 )
 
-/**
- * 汇总行相关
- */
-watch(
-  () => [
-    props.enableSummary,
-    props.summaryHeight,
-    props.summaryFontFamily,
-    props.summaryFontSize,
-    props.summaryBackground,
-    props.summaryTextColor
-  ],
-  () => {
-    if (!tableVars.stage) return
-    refreshTable(false)
-  }
-)
+// /**
+//  * 汇总行相关 - 注释以提升性能
+//  */
+// watch(
+//   () => [
+//     props.enableSummary,
+//     props.summaryHeight,
+//     props.summaryFontFamily,
+//     props.summaryFontSize,
+//     props.summaryBackground,
+//     props.summaryTextColor
+//   ],
+//   () => {
+//     if (!tableVars.stage) return
+//     refreshTable(false)
+//   }
+// )
 
 /**
  * 滚动条相关（样式与尺寸）
@@ -215,12 +214,12 @@ watch(
 )
 
 /**
- * 交互相关（悬浮高亮、排序指示等）
+ * 交互相关（排序指示等） - 注释高亮相关以提升性能
  */
 watch(
   () => [
-    props.enableRowHoverHighlight,
-    props.enableColHoverHighlight,
+    // props.enableRowHoverHighlight, // 注释以提升性能
+    // props.enableColHoverHighlight, // 注释以提升性能
     props.sortableColor,
     props.highlightCellBackground
   ],
@@ -248,16 +247,16 @@ onMounted(() => {
   refreshTable(true)
   initWheelListener()
   initStageListeners()
-  initFilterDropdownListeners()
-  initSummaryDropdownListeners()
+  // initFilterDropdownListeners() // 注释过滤功能
+  // initSummaryDropdownListeners() // 注释汇总功能
   initCellEditorListeners()
 })
 
 onBeforeUnmount(() => {
   cleanupWheelListener()
   cleanupStageListeners()
-  cleanupFilterDropdownListeners()
-  cleanupSummaryDropdownListeners()
+  // cleanupFilterDropdownListeners() // 注释过滤功能
+  // cleanupSummaryDropdownListeners() // 注释汇总功能
   cleanupCellEditorListeners()
   destroyStage()
 })

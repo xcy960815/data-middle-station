@@ -16,7 +16,9 @@ interface KonvaStageHandlerProps {
  */
 export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const { tableVars } = variableHandlder({ props })
-  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryHeight : 0))
+  // 注释汇总行高度计算
+  // const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryHeight : 0))
+  const summaryRowHeight = { value: 0 } // 禁用汇总行
   const ensureEmits = () => {
     if (!emits) {
       throw new Error('This operation requires emits to be provided to konvaStageHandler')
@@ -39,40 +41,36 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       tableVars.stage.size({ width, height })
     }
 
-    if (!tableVars.headerLayer) {
-      tableVars.headerLayer = new Konva.Layer()
-      tableVars.stage.add(tableVars.headerLayer)
-    }
+    // 修复Layer层级顺序：确保表头在最上层不被遮挡
 
+    // 1. 主体内容层（最底层 - 可滚动的body部分）
     if (!tableVars.bodyLayer) {
       tableVars.bodyLayer = new Konva.Layer()
       tableVars.stage.add(tableVars.bodyLayer)
     }
 
+    // 2. 固定列body层（中间层 - 左右固定列的body部分）
     if (!tableVars.fixedBodyLayer) {
       tableVars.fixedBodyLayer = new Konva.Layer()
       tableVars.stage.add(tableVars.fixedBodyLayer)
     }
 
-    if (!tableVars.fixedHeaderLayer) {
-      tableVars.fixedHeaderLayer = new Konva.Layer()
-      tableVars.stage.add(tableVars.fixedHeaderLayer)
+    // 3. 表头层（高层 - 所有表头，不被遮挡）
+    if (!tableVars.headerLayer) {
+      tableVars.headerLayer = new Konva.Layer()
+      tableVars.stage.add(tableVars.headerLayer)
     }
 
-    if (!tableVars.summaryLayer) {
-      tableVars.summaryLayer = new Konva.Layer()
-      tableVars.stage.add(tableVars.summaryLayer)
-    }
-
-    if (!tableVars.fixedSummaryLayer) {
-      tableVars.fixedSummaryLayer = new Konva.Layer()
-      tableVars.stage.add(tableVars.fixedSummaryLayer)
-    }
-
+    // 4. 滚动条层（最高层）
     if (!tableVars.scrollbarLayer) {
       tableVars.scrollbarLayer = new Konva.Layer()
       tableVars.stage.add(tableVars.scrollbarLayer)
     }
+
+    // 设置引用关系 - 简化层级管理
+    tableVars.fixedHeaderLayer = tableVars.headerLayer // 所有表头都在表头层
+    tableVars.summaryLayer = tableVars.bodyLayer // 汇总使用body层（已禁用）
+    tableVars.fixedSummaryLayer = tableVars.fixedBodyLayer // 固定汇总使用固定层
 
     tableVars.stage.setPointersPositions({
       clientX: 0,
@@ -86,13 +84,15 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const destroyStage = () => {
     tableVars.stage?.destroy()
     tableVars.stage = null
+    // 修复后有4个真实的Layer
     tableVars.headerLayer = null
     tableVars.bodyLayer = null
     tableVars.fixedBodyLayer = null
-    tableVars.fixedHeaderLayer = null
-    tableVars.summaryLayer = null
-    tableVars.fixedSummaryLayer = null
     tableVars.scrollbarLayer = null
+    // 这些只是引用，设为null即可
+    tableVars.summaryLayer = null
+    tableVars.fixedHeaderLayer = null
+    tableVars.fixedSummaryLayer = null
     tableVars.centerBodyClipGroup = null
     tableVars.highlightRect = null
   }
@@ -179,7 +179,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       const trackHeight =
         stageHeight -
         props.headerHeight -
-        (props.enableSummary ? props.summaryHeight : 0) -
+        // (props.enableSummary ? props.summaryHeight : 0) - // 注释汇总高度
+        0 - // 禁用汇总行
         (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
       const scrollRatio = deltaY / (trackHeight - thumbHeight)
@@ -242,7 +243,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       updateScrollPositions()
       return
     }
-    recomputeHoverIndexFromPointer()
+    // 注释高亮重计算以提升性能
+    // recomputeHoverIndexFromPointer()
   }
 
   /**
@@ -290,12 +292,10 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
    * @returns {void}
    */
   const clearGroups = () => {
+    // 清理4个真实的Layer
     tableVars.headerLayer?.destroyChildren()
     tableVars.bodyLayer?.destroyChildren()
-    tableVars.summaryLayer?.destroyChildren()
-    tableVars.fixedHeaderLayer?.destroyChildren()
     tableVars.fixedBodyLayer?.destroyChildren()
-    tableVars.fixedSummaryLayer?.destroyChildren()
     tableVars.scrollbarLayer?.destroyChildren()
     clearPool(tableVars.leftBodyPools.cellRects)
     clearPool(tableVars.leftBodyPools.cellTexts)
@@ -377,6 +377,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
     const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
 
+    // 为中间可滚动区域创建裁剪组，防止遮挡固定列
     if (!tableVars.centerBodyClipGroup) {
       const clipHeight = stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarSpace
       tableVars.centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
@@ -387,6 +388,20 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       })
       tableVars.bodyLayer.add(tableVars.centerBodyClipGroup)
     }
+
+    // 为中间表头也创建裁剪组，防止表头横向滚动时遮挡固定列
+    const centerHeaderClipGroup = new Konva.Group({
+      x: leftWidth,
+      y: 0,
+      name: 'center-header-clip-group',
+      clip: {
+        x: 0,
+        y: 0,
+        width: stageWidth - leftWidth - rightWidth - verticalScrollbarSpace,
+        height: props.headerHeight
+      }
+    })
+    tableVars.headerLayer.add(centerHeaderClipGroup)
 
     tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
     tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth - tableVars.stageScrollX, 0)
@@ -399,24 +414,26 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       props.headerHeight - tableVars.stageScrollY
     )
 
-    tableVars.headerLayer.add(tableVars.centerHeaderGroup)
-    tableVars.fixedHeaderLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup)
+    // 修复表头Group分配：使用裁剪组防止遮挡
+    centerHeaderClipGroup.add(tableVars.centerHeaderGroup) // 中间表头放入裁剪组
+    tableVars.fixedBodyLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup) // 固定表头在固定层（更高层）
 
-    if (props.enableSummary) {
-      const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarSpace
-      tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
-      tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.stageScrollX, summaryY)
-      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
-      tableVars.summaryLayer.add(tableVars.centerSummaryGroup)
-      tableVars.fixedSummaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
-    } else {
-      tableVars.leftSummaryGroup = null
-      tableVars.centerSummaryGroup = null
-      tableVars.rightSummaryGroup = null
-    }
+    // 注释汇总行相关代码以提升性能
+    // if (props.enableSummary) {
+    //   const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarSpace
+    //   tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
+    //   tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.stageScrollX, summaryY)
+    //   tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
+    //   tableVars.summaryLayer.add(tableVars.centerSummaryGroup)
+    //   tableVars.fixedSummaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
+    // } else {
+    tableVars.leftSummaryGroup = null
+    tableVars.centerSummaryGroup = null
+    tableVars.rightSummaryGroup = null
+    // }
 
     tableVars.centerBodyClipGroup.add(tableVars.centerBodyGroup)
-    tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup)
+    tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup) // 固定列body也在固定层
 
     tableVars.headerPositionMapList.length = 0
     // 绘制表头
@@ -451,24 +468,25 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     )
 
     // 绘制底部 summary
-    if (props.enableSummary) {
-      tableVars.summaryPositionMapList.length = 0
-      drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
-      drawSummaryPart(
-        tableVars.centerSummaryGroup,
-        centerCols,
-        leftCols.length,
-        tableVars.summaryPositionMapList,
-        leftWidth
-      )
-      drawSummaryPart(
-        tableVars.rightSummaryGroup,
-        rightCols,
-        leftCols.length + centerCols.length,
-        tableVars.summaryPositionMapList,
-        leftWidth + centerWidth
-      )
-    }
+    // 注释汇总行绘制代码
+    // if (props.enableSummary) {
+    //   tableVars.summaryPositionMapList.length = 0
+    //   drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
+    //   drawSummaryPart(
+    //     tableVars.centerSummaryGroup,
+    //     centerCols,
+    //     leftCols.length,
+    //     tableVars.summaryPositionMapList,
+    //     leftWidth
+    //   )
+    //   drawSummaryPart(
+    //     tableVars.rightSummaryGroup,
+    //     rightCols,
+    //     leftCols.length + centerCols.length,
+    //     tableVars.summaryPositionMapList,
+    //     leftWidth + centerWidth
+    //   )
+    // }
 
     createScrollbars()
 
@@ -654,7 +672,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     // 仅在提供 emits 时，注册依赖 emits 的全局事件监听器
     if (!emits) return
     window.addEventListener('resize', handleGlobalResize)
-    window.addEventListener('mousemove', handleGlobalMouseMove)
+    // 注释鼠标移动监听以提升性能 - 这是主要的性能瓶颈
+    // window.addEventListener('mousemove', handleGlobalMouseMove)
     window.addEventListener('mouseup', handleGlobalMouseUp)
   }
 
@@ -664,7 +683,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const cleanupStageListeners = () => {
     if (!emits) return
     window.removeEventListener('resize', handleGlobalResize)
-    window.removeEventListener('mousemove', handleGlobalMouseMove)
+    // 注释鼠标移动监听清理
+    // window.removeEventListener('mousemove', handleGlobalMouseMove)
     window.removeEventListener('mouseup', handleGlobalMouseUp)
   }
 
