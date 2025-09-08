@@ -206,9 +206,9 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   }
 
   /**
-   * 修复的Layer批量绘制 - 4个真实的Layer，确保表头固定
+   * 修复的Layer批量绘制 - 5个真实的Layer，确保表头和汇总固定
    */
-  const scheduleLayersBatchDraw = (layers: Array<'header' | 'body' | 'fixed' | 'scrollbar'> = ['body']) => {
+  const scheduleLayersBatchDraw = (layers: Array<'header' | 'body' | 'fixed' | 'scrollbar' | 'summary'> = ['body']) => {
     if (batchDrawAnimationId) return
 
     batchDrawAnimationId = requestAnimationFrame(() => {
@@ -226,6 +226,9 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
             break
           case 'scrollbar':
             tableVars.scrollbarLayer?.batchDraw() // 滚动条层
+            break
+          case 'summary':
+            tableVars.summaryLayer?.batchDraw() // 汇总行层（底部固定）
             break
         }
       })
@@ -276,12 +279,15 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
      */
     if (tableVars.leftSummaryGroup) tableVars.leftSummaryGroup.y(summaryY)
     if (tableVars.rightSummaryGroup) tableVars.rightSummaryGroup.y(summaryY)
-    if (tableVars.centerSummaryGroup) tableVars.centerSummaryGroup.y(summaryY)
+    if (tableVars.centerSummaryGroup) {
+      tableVars.centerSummaryGroup.x(centerX) // 修复：中间汇总行也需要跟随水平滚动
+      tableVars.centerSummaryGroup.y(summaryY)
+    }
 
     updateScrollbarPosition()
 
     // 水平滚动时也需要重绘固定层，确保固定列正确显示
-    scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar'])
+    scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar', 'summary'])
 
     // 滚动时更新弹框位置
     // updateFilterDropdownPositionsInTable()
@@ -334,12 +340,12 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     // 中间区域随横向滚动
     tableVars.centerHeaderGroup.x(headerX)
     tableVars.centerBodyGroup.x(centerX)
-    tableVars.centerSummaryGroup?.x(headerX)
+    tableVars.centerSummaryGroup?.x(centerX) // 修复：汇总行应该和主体内容使用相同的X坐标
 
     updateScrollbarPosition()
 
-    // 水平滚动需要更新表头、主体和固定列
-    scheduleLayersBatchDraw(['header', 'body', 'fixed', 'scrollbar'])
+    // 水平滚动需要更新表头、主体、固定列和汇总行
+    scheduleLayersBatchDraw(['header', 'body', 'fixed', 'scrollbar', 'summary'])
     // 注释高亮相关调用以提升性能
     // recomputeHoverIndexFromPointer()
     // updateHoverRects()
@@ -445,8 +451,8 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     // 根据是否重渲染决定重绘范围
     if (needsRerender) {
-      // 重渲染时需要绘制所有相关层，确保固定列正确显示
-      scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar'])
+      // 重渲染时需要绘制所有相关层，确保固定列和汇总行正确显示
+      scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar', 'summary'])
     } else {
       // 仅位置更新时，只重绘滚动条
       scheduleLayersBatchDraw(['scrollbar'])

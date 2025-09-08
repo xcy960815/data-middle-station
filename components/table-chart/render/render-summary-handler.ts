@@ -157,7 +157,7 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
     const realRowIndex = tableData.value.length + 1
     const summaryY = stage.height() - summaryHeight
 
-    let x = 0
+    let x = stageStartX
     summaryCols.forEach((col, colIndex) => {
       const pools = tableVars.leftBodyPools
       const realColIndex = colIndex + startColIndex
@@ -222,8 +222,8 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         })
       }
       // 注释悬停效果以提升性能
-      // summaryCellRect.on('mouseenter', () => setPointerStyle(true, 'pointer'))
-      // summaryCellRect.on('mouseleave', () => setPointerStyle(false, 'default'))
+      summaryCellRect.on('mouseenter', () => setPointerStyle(true, 'pointer'))
+      summaryCellRect.on('mouseleave', () => setPointerStyle(false, 'default'))
 
       summaryCellRect.on('click', (evt) => {
         if (!tableVars.stage) return
