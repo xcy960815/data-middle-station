@@ -411,18 +411,6 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
   ) => {
     if (!headerGroup || !tableVars.stage) return
 
-    // 清空现有内容
-    const children = headerGroup.children.slice()
-    children.forEach((child) => {
-      if (child instanceof Konva.Text && child.name() === 'header-cell-text') {
-        child.remove()
-      } else if (child instanceof Konva.Rect && child.name() === 'header-cell-rect') {
-        child.remove()
-      } else if (child instanceof Konva.Path && child.name() === 'sort-indicator') {
-        child.remove()
-      }
-    })
-
     // 绘制简化的表头
     let x = 0
     for (let colIndex = 0; colIndex < headerCols.length; colIndex++) {

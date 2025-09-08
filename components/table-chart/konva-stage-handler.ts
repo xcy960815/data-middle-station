@@ -90,7 +90,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.scrollbarLayer = null
     // 这些只是引用，设为null即可
     tableVars.summaryLayer = null
-    tableVars.centerBodyClipGroup = null
     tableVars.highlightRect = null
   }
 
@@ -325,11 +324,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.horizontalScrollbarThumbRect = null
 
     /**
-     * 重置中心区域剪辑组引用
-     */
-    tableVars.centerBodyClipGroup = null
-
-    /**
      * 重置单元格选择
      */
     tableVars.highlightRect = null
@@ -379,25 +373,13 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const { drawHeaderPart } = renderHeaderHandler({ props, emits })
     const { drawBodyPart, getSplitColumns, getScrollLimits } = renderBodyHandler({ props, emits })
     const { drawSummaryPart } = renderSummaryHandler({ props })
-    const { createScrollbars } = renderScrollbarsHandler({ props, emits })
+    const { drawSrollerbars } = renderScrollbarsHandler({ props, emits })
 
     const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
     const { width: stageWidth, height: stageHeight } = getStageAttr()
     const { maxScrollX, maxScrollY } = getScrollLimits()
     const verticalScrollbarWidth = maxScrollY > 0 ? props.scrollbarSize : 0
     const horizontalScrollbarHeight = maxScrollX > 0 ? props.scrollbarSize : 0
-
-    // 为中间可滚动区域创建裁剪组，防止遮挡固定列
-    if (!tableVars.centerBodyClipGroup) {
-      const clipHeight = stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
-      tableVars.centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
-        x: 0,
-        y: 0,
-        width: stageWidth - leftWidth - rightWidth - verticalScrollbarWidth,
-        height: clipHeight
-      })
-      tableVars.bodyLayer.add(tableVars.centerBodyClipGroup)
-    }
 
     // 为中间表头也创建裁剪组，防止表头横向滚动时遮挡固定列
     const centerHeaderClipGroup = new Konva.Group({
@@ -418,47 +400,38 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
     tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth, 0)
     tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarWidth, 0)
+    centerHeaderClipGroup.add(tableVars.centerHeaderGroup)
+
+    tableVars.headerLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup) // 固定表头必须在表头层，确保不被body层遮挡
+
+    tableVars.headerPositionMapList.length = 0
+    // 绘制表头
+    drawHeaderPart(tableVars.leftHeaderGroup, leftCols, 0, tableVars.headerPositionMapList, 0)
+    drawHeaderPart(tableVars.centerHeaderGroup, centerCols, leftCols.length, tableVars.headerPositionMapList, leftWidth)
+    drawHeaderPart(
+      tableVars.rightHeaderGroup,
+      rightCols,
+      leftCols.length + centerCols.length,
+      tableVars.headerPositionMapList,
+      leftWidth + centerWidth
+    )
+
+    // 为中间可滚动区域创建裁剪组，防止遮挡固定列
+    const centerBodyClipGroupHeight =
+      stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
+    const centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
+      x: 0,
+      y: 0,
+      width: stageWidth - leftWidth - rightWidth - verticalScrollbarWidth,
+      height: centerBodyClipGroupHeight
+    })
+    tableVars.bodyLayer.add(centerBodyClipGroup)
 
     tableVars.leftBodyGroup = createBodyLeftGroups(0, 0) // 现在相对于裁剪组，初始位置为0
     tableVars.centerBodyGroup = createBodyCenterGroups(-tableVars.stageScrollX, -tableVars.stageScrollY)
     tableVars.rightBodyGroup = createBodyRightGroups(0, 0) // 现在相对于裁剪组，初始位置为0
 
-    // 修复表头Group分配：使用裁剪组防止遮挡
-    centerHeaderClipGroup.add(tableVars.centerHeaderGroup) // 中间表头放入裁剪组
-    tableVars.headerLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup) // 固定表头必须在表头层，确保不被body层遮挡
-
-    // 创建汇总行组（像header一样统一管理）
-    if (props.enableSummary) {
-      const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarHeight
-
-      // 为中间汇总也创建裁剪组，防止汇总横向滚动时遮挡固定列
-      const centerSummaryClipGroup = new Konva.Group({
-        x: 0,
-        y: summaryY,
-        name: 'center-summary-clip-group',
-        clip: {
-          x: 0,
-          y: 0,
-          width: stageWidth - rightWidth - verticalScrollbarWidth,
-          height: summaryRowHeight.value
-        }
-      })
-      tableVars.summaryLayer.add(centerSummaryClipGroup)
-
-      tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
-      tableVars.centerSummaryGroup = createSummaryCenterGroups(-tableVars.stageScrollX, 0) // 相对于裁剪组的位置
-      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarWidth, summaryY)
-
-      // 像header一样：中间汇总放入裁剪组，固定汇总直接加到汇总层
-      centerSummaryClipGroup.add(tableVars.centerSummaryGroup)
-      tableVars.summaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
-    } else {
-      tableVars.leftSummaryGroup = null
-      tableVars.centerSummaryGroup = null
-      tableVars.rightSummaryGroup = null
-    }
-
-    tableVars.centerBodyClipGroup.add(tableVars.centerBodyGroup)
+    centerBodyClipGroup.add(tableVars.centerBodyGroup)
 
     // 为左侧和右侧固定列body组也创建裁剪组，防止延伸到滚动条区域
     const leftBodyClipGroup = new Konva.Group({
@@ -497,18 +470,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     tableVars.fixedBodyLayer.add(leftBodyClipGroup, rightBodyClipGroup) // 添加裁剪组到固定层
 
-    tableVars.headerPositionMapList.length = 0
-    // 绘制表头
-    drawHeaderPart(tableVars.leftHeaderGroup, leftCols, 0, tableVars.headerPositionMapList, 0)
-    drawHeaderPart(tableVars.centerHeaderGroup, centerCols, leftCols.length, tableVars.headerPositionMapList, leftWidth)
-    drawHeaderPart(
-      tableVars.rightHeaderGroup,
-      rightCols,
-      leftCols.length + centerCols.length,
-      tableVars.headerPositionMapList,
-      leftWidth + centerWidth
-    )
-
     tableVars.bodyPositionMapList.length = 0
     // 绘制主体
     drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
@@ -529,8 +490,31 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       leftWidth + centerWidth
     )
 
-    // 绘制汇总行
+    // 创建汇总行组（完全参考header的实现方式）
     if (props.enableSummary) {
+      const y = stageHeight - summaryRowHeight.value - horizontalScrollbarHeight
+
+      // 为中间汇总也创建裁剪组，防止汇总横向滚动时遮挡固定列（与表头保持一致）
+      const centerSummaryClipGroup = new Konva.Group({
+        x: 0,
+        y,
+        name: 'center-summary-clip-group',
+        clip: {
+          x: 0,
+          y: 0,
+          width: stageWidth - rightWidth - verticalScrollbarWidth,
+          height: summaryRowHeight.value
+        }
+      })
+      tableVars.summaryLayer.add(centerSummaryClipGroup)
+      // 完全参考表头的实现方式：左右组直接添加到层，中间组使用裁剪组
+      tableVars.leftSummaryGroup = createSummaryLeftGroups(0, y) // 直接定位到汇总行位置
+      tableVars.centerSummaryGroup = createSummaryCenterGroups(-tableVars.stageScrollX, 0) // 相对于裁剪组，跟随滚动
+      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarWidth, y) // 直接定位
+
+      // 将中间汇总组放入裁剪组中，左右汇总组直接添加到汇总层（与表头一致）
+      centerSummaryClipGroup.add(tableVars.centerSummaryGroup)
+      tableVars.summaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup) // 固定汇总组直接添加到汇总层
       tableVars.summaryPositionMapList.length = 0
       drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
       drawSummaryPart(
@@ -547,9 +531,24 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
         tableVars.summaryPositionMapList,
         leftWidth + centerWidth
       )
+    } else {
+      tableVars.leftSummaryGroup = null
+      tableVars.centerSummaryGroup = null
+      tableVars.rightSummaryGroup = null
     }
 
-    createScrollbars()
+    // 创建滚动条分组
+    if (maxScrollY > 0) {
+      tableVars.verticalScrollbarGroup = new Konva.Group()
+      tableVars.scrollbarLayer.add(tableVars.verticalScrollbarGroup)
+    }
+
+    if (maxScrollX > 0) {
+      tableVars.horizontalScrollbarGroup = new Konva.Group()
+      tableVars.scrollbarLayer.add(tableVars.horizontalScrollbarGroup)
+    }
+
+    drawSrollerbars()
 
     // 确保层级绘制顺序正确：固定列在上层
     tableVars.bodyLayer?.batchDraw() // 1. 先绘制可滚动的中间内容

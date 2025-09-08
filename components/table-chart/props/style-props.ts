@@ -66,7 +66,7 @@ export const styleProps = {
   /**
    * 表格行字体大小
    */
-  bodyFontSize: { type: [Number, String], default: 13 },
+  bodyFontSize: { type: Number, default: 13 },
 
   /**
    * 表格边框颜色
@@ -92,7 +92,7 @@ export const styleProps = {
   /**
    * 汇总字体大小
    */
-  summaryFontSize: { type: [Number, String], default: 14 },
+  summaryFontSize: { type: Number, default: 14 },
 
   /**
    * 滚动条大小
