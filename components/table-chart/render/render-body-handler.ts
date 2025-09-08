@@ -7,7 +7,6 @@ import { chartProps } from '../props'
 import { estimateButtonWidth, getTableContainerElement, returnToPool, truncateText } from '../utils'
 import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
-import { highlightHandler } from './heightlight-handler'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
   emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
@@ -16,7 +15,7 @@ interface RenderBodyHandlerProps {
 export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   // 注释高亮功能以提升性能
   // const { updateHoverRects, invalidateHighlightCache } = highlightHandler({ props })
-  const { invalidateHighlightCache } = highlightHandler({ props })
+  // const { invalidateHighlightCache } = highlightHandler({ props })
   // 注释过滤功能以提升性能
   // const { filterDropdown } = filterDropdownHandler({ props })
   const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({
@@ -119,7 +118,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     rectsToRecover.forEach((rect) => returnToPool(pools.cellRects, rect))
 
     // 清空高亮缓存
-    invalidateHighlightCache()
+    // invalidateHighlightCache()
   }
 
   /**
@@ -409,7 +408,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     // 渲染可视区域的行
     for (let rowIndex = tableVars.visibleRowStart; rowIndex <= tableVars.visibleRowEnd; rowIndex++) {
       const row = tableData.value[rowIndex]
-      // y坐标
+      // y坐标 - 使用绝对行位置，bodyGroup会通过y偏移处理滚动
       const y = rowIndex * props.bodyRowHeight
       // 渲染每列的单元格
       let x = 0
