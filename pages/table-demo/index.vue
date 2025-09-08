@@ -65,6 +65,23 @@
           <el-input-number v-model="tableConfig.chartWidth" :step="100" />
         </el-form-item>
       </el-form>
+
+      <!-- 合并单元格配置 -->
+      <el-divider content-position="left">合并单元格配置</el-divider>
+      <el-form label-width="auto" :model="spanConfig" inline>
+        <el-form-item label="启用合并单元格">
+          <el-switch v-model="spanConfig.enableSpan" />
+        </el-form-item>
+        <el-form-item label="第一列合并行数">
+          <el-input-number v-model="spanConfig.firstColSpan" :min="1" :max="5" />
+        </el-form-item>
+        <el-form-item label="第二列合并行数">
+          <el-input-number v-model="spanConfig.secondColSpan" :min="1" :max="5" />
+        </el-form-item>
+        <el-form-item label="启用列合并示例">
+          <el-switch v-model="spanConfig.enableColSpan" />
+        </el-form-item>
+      </el-form>
       <CanvasTable
         :enable-summary="tableConfig.enableSummary"
         :summary-height="tableConfig.summaryHeight"
@@ -113,6 +130,14 @@
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
 import { ElMessage } from 'element-plus'
 
+// 合并单元格配置
+const spanConfig = reactive({
+  enableSpan: true,
+  firstColSpan: 3, // 第一列合并行数
+  secondColSpan: 2, // 第二列合并行数
+  enableColSpan: false // 是否启用列合并
+})
+
 const spanMethod = ({
   row,
   column,
@@ -124,10 +149,16 @@ const spanMethod = ({
   rowIndex: number
   colIndex: number
 }): { rowspan: number; colspan: number } => {
-  if (colIndex === 0) {
-    if (rowIndex % 3 === 0) {
+  // 如果禁用合并，直接返回不合并
+  if (!spanConfig.enableSpan) {
+    return { rowspan: 1, colspan: 1 }
+  }
+
+  // 第一列（序号列）- 可配置合并行数
+  if (colIndex === 0 && spanConfig.firstColSpan > 1) {
+    if (rowIndex % spanConfig.firstColSpan === 0) {
       return {
-        rowspan: 3, // 合并3行
+        rowspan: spanConfig.firstColSpan,
         colspan: 1
       }
     } else {
@@ -137,11 +168,12 @@ const spanMethod = ({
       }
     }
   }
-  // 新增：第二列按2行一组合并
-  if (colIndex === 1) {
-    if (rowIndex % 2 === 0) {
+
+  // 第二列（name列）- 可配置合并行数
+  if (colIndex === 1 && spanConfig.secondColSpan > 1) {
+    if (rowIndex % spanConfig.secondColSpan === 0) {
       return {
-        rowspan: 2,
+        rowspan: spanConfig.secondColSpan,
         colspan: 1
       }
     } else {
@@ -151,6 +183,47 @@ const spanMethod = ({
       }
     }
   }
+
+  // 第三列（age列）- 演示列合并
+  if (colIndex === 2 && spanConfig.enableColSpan) {
+    if (rowIndex % 4 === 0) {
+      return {
+        rowspan: 1,
+        colspan: 2 // 合并2列
+      }
+    }
+    if (rowIndex % 4 === 1) {
+      return {
+        rowspan: 0,
+        colspan: 0 // 被合并的列
+      }
+    }
+  }
+
+  // 第四列 - 当第三列合并时需要处理
+  if (colIndex === 3 && spanConfig.enableColSpan) {
+    if (rowIndex % 4 === 0) {
+      return {
+        rowspan: 0,
+        colspan: 0 // 被第三列合并
+      }
+    }
+  }
+
+  // 演示复杂合并：某些特定位置的行列同时合并
+  if (colIndex === 4 && rowIndex % 6 === 0) {
+    return {
+      rowspan: 2,
+      colspan: 2
+    }
+  }
+  if ((colIndex === 4 && rowIndex % 6 === 1) || (colIndex === 5 && (rowIndex % 6 === 0 || rowIndex % 6 === 1))) {
+    return {
+      rowspan: 0,
+      colspan: 0
+    }
+  }
+
   return {
     rowspan: 1,
     colspan: 1

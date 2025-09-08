@@ -94,12 +94,13 @@ interface TableVars {
   stageScrollY: number
   stageScrollX: number
   columnWidthOverrides: Record<string, number>
-  isResizingColumn: boolean
-  resizingColumnName: string | null
-  resizeStartX: number
-  resizeStartWidth: number
-  resizeNeighborColumnName: string | null
-  resizeNeighborStartWidth: number
+  // 列宽拖拽相关变量 - 已注释掉
+  // isResizingColumn: boolean
+  // resizingColumnName: string | null
+  // resizeStartX: number
+  // resizeStartWidth: number
+  // resizeNeighborColumnName: string | null
+  // resizeNeighborStartWidth: number
   isDraggingVerticalThumb: boolean
   isDraggingHorizontalThumb: boolean
   dragStartY: number
@@ -275,34 +276,34 @@ const tableVars: TableVars = {
   columnWidthOverrides: {},
 
   /**
-   * 列宽拖拽状态
+   * 列宽拖拽状态 - 已注释掉
    */
-  isResizingColumn: false,
+  // isResizingColumn: false,
 
   /**
-   * 列宽拖拽列名
+   * 列宽拖拽列名 - 已注释掉
    */
-  resizingColumnName: null,
+  // resizingColumnName: null,
 
   /**
-   * 列宽拖拽起始 X 坐标
+   * 列宽拖拽起始 X 坐标 - 已注释掉
    */
-  resizeStartX: 0,
+  // resizeStartX: 0,
 
   /**
-   * 列宽拖拽起始宽度
+   * 列宽拖拽起始宽度 - 已注释掉
    */
-  resizeStartWidth: 0,
+  // resizeStartWidth: 0,
 
   /**
-   * 列宽拖拽邻居列名
+   * 列宽拖拽邻居列名 - 已注释掉
    */
-  resizeNeighborColumnName: null,
+  // resizeNeighborColumnName: null,
 
   /**
-   * 列宽拖拽邻居起始宽度
+   * 列宽拖拽邻居起始宽度 - 已注释掉
    */
-  resizeNeighborStartWidth: 0,
+  // resizeNeighborStartWidth: 0,
 
   // ========== 滚动条拖拽相关 ==========
   /**
@@ -539,14 +540,14 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     tableVars.stageScrollY = 0
     tableVars.stageScrollX = 0
 
-    // 重置列宽拖拽相关
+    // 重置列宽拖拽相关 - 已注释掉
     tableVars.columnWidthOverrides = {}
-    tableVars.isResizingColumn = false
-    tableVars.resizingColumnName = null
-    tableVars.resizeStartX = 0
-    tableVars.resizeStartWidth = 0
-    tableVars.resizeNeighborColumnName = null
-    tableVars.resizeNeighborStartWidth = 0
+    // tableVars.isResizingColumn = false
+    // tableVars.resizingColumnName = null
+    // tableVars.resizeStartX = 0
+    // tableVars.resizeStartWidth = 0
+    // tableVars.resizeNeighborColumnName = null
+    // tableVars.resizeNeighborStartWidth = 0
 
     // 重置滚动条拖拽相关
     tableVars.isDraggingVerticalThumb = false

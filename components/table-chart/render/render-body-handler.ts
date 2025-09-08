@@ -98,16 +98,14 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     children.forEach((child) => {
       if (child instanceof Konva.Text) {
         const name = child.name()
-        // 注释合并单元格文本节点回收，只处理普通单元格
-        // if (name === 'merged-cell-text' || name === 'cell-text') {
-        if (name === 'cell-text') {
+        // 处理合并单元格和普通单元格文本节点回收
+        if (name === 'merged-cell-text' || name === 'cell-text') {
           textsToRecover.push(child)
         }
       } else if (child instanceof Konva.Rect) {
         const name = child.name()
-        // 注释合并单元格矩形节点回收，只处理普通单元格
-        // if (name === 'merged-cell-rect' || name === 'cell-rect') {
-        if (name === 'cell-rect') {
+        // 处理合并单元格和普通单元格矩形节点回收
+        if (name === 'merged-cell-rect' || name === 'cell-rect') {
           rectsToRecover.push(child)
         }
       }
@@ -383,10 +381,9 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const bodyFontFamily = props.bodyFontFamily
     const bodyFontSizeNumber =
       typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-    // 注释合并单元格相关代码
-    // const spanMethod = typeof props.spanMethod === 'function' ? props.spanMethod : null
-    // const hasSpanMethod = !!spanMethod
-    const hasSpanMethod = false // 禁用合并单元格功能
+    // 恢复合并单元格相关代码
+    const spanMethod = typeof props.spanMethod === 'function' ? props.spanMethod : null
+    const hasSpanMethod = !!spanMethod
 
     const globalIndexByColName = new Map<string, number>()
     tableColumns.value.forEach((c, idx) => globalIndexByColName.set(c.columnName as string, idx))
@@ -420,44 +417,47 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
           x += columnWidth
           continue
         }
-        // 注释合并单元格逻辑
-        // let spanRow = 1
-        // let spanCol = 1
-        // let coveredBySpanMethod = false
-        // const globalColIndex = globalIndexByColName.get(col.columnName as string) ?? colIndex
-        // if (hasSpanMethod && spanMethod) {
-        //   const res = spanMethod({ row, column: col, rowIndex, colIndex: globalColIndex })
-        //   if (Array.isArray(res)) {
-        //     spanRow = Math.max(0, Number(res[0]) || 0)
-        //     spanCol = Math.max(0, Number(res[1]) || 0)
-        //   } else if (res && typeof res === 'object') {
-        //     spanRow = Math.max(0, Number(res.rowspan) || 0)
-        //     spanCol = Math.max(0, Number(res.colspan) || 0)
-        //   }
-        //   // 只要任一维度为 0，即视为被合并覆盖（与常见表格合并语义一致）
-        //   if (spanRow === 0 || spanCol === 0) coveredBySpanMethod = true
-        // }
-
-        // 禁用合并功能后的默认值
+        // 恢复合并单元格逻辑
         let spanRow = 1
         let spanCol = 1
         let coveredBySpanMethod = false
+        const globalColIndex = globalIndexByColName.get(col.columnName as string) ?? colIndex
+        if (hasSpanMethod && spanMethod) {
+          const res = spanMethod({ row, column: col, rowIndex, colIndex: globalColIndex })
+          if (Array.isArray(res)) {
+            spanRow = Math.max(0, Number(res[0]) || 0)
+            spanCol = Math.max(0, Number(res[1]) || 0)
+          } else if (res && typeof res === 'object') {
+            spanRow = Math.max(0, Number(res.rowspan) || 0)
+            spanCol = Math.max(0, Number(res.colspan) || 0)
+          }
+          // 只要任一维度为 0，即视为被合并覆盖（与常见表格合并语义一致）
+          if (spanRow === 0 || spanCol === 0) coveredBySpanMethod = true
+        }
 
-        // const shouldDraw = !hasSpanMethod || !coveredBySpanMethod
-        const shouldDraw = true // 禁用合并后总是绘制单元格
+        const shouldDraw = !hasSpanMethod || !coveredBySpanMethod
 
         if (!shouldDraw) {
           x += columnWidth
           continue
         }
 
-        // const computedRowSpan = hasSpanMethod ? spanRow : 1
-        const computedRowSpan = 1 // 禁用合并后总是1行
+        const computedRowSpan = hasSpanMethod ? spanRow : 1
+        // const computedRowSpan = 1 // 禁用合并后总是1行
 
         const cellHeight = computedRowSpan * props.bodyRowHeight
 
-        // 禁用合并后的单元格宽度计算
+        // 计算合并单元格的总宽度
         let cellWidth = columnWidth
+        if (hasSpanMethod && spanCol > 1) {
+          // 计算跨列的总宽度
+          let totalWidth = 0
+          for (let i = 0; i < spanCol && colIndex + i < bodyCols.length; i++) {
+            const colInfo = bodyCols[colIndex + i]
+            totalWidth += colInfo.width || 0
+          }
+          cellWidth = totalWidth
+        }
 
         // 记录可视区域内主体单元格位置信息（使用舞台坐标）
         positionMapList.push({
@@ -468,53 +468,51 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
           rowIndex: rowIndex + 1,
           colIndex: colIndex + startColIndex
         })
-        // 注释合并单元格特殊处理逻辑
-        // if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
-        if (false) {
-          // 禁用合并单元格特殊处理
-          // 注释合并单元格特殊绘制逻辑
-          // const mergedCellRect = drawUnifiedRect({
-          //   pools,
-          //   name: 'cell-rect',
-          //   x,
-          //   y,
-          //   width: cellWidth,
-          //   height: cellHeight,
-          //   fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
-          //   stroke: props.borderColor,
-          //   strokeWidth: 1,
-          //   rowIndex: rowIndex + 1,
-          //   colIndex: colIndex + startColIndex,
-          //   originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
-          // })
-          // bodyGroup.add(mergedCellRect)
-          // const rawValue =
-          //   col.columnName === '__index__'
-          //     ? String(rowIndex + 1)
-          //     : row && typeof row === 'object'
-          //       ? row[col.columnName]
-          //       : undefined
-          // const value = String(rawValue ?? '')
-          // const maxTextWidth = cellWidth - 16
-          // const fontFamily = props.bodyFontFamily
-          // const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-          // const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
-          //
-          // const mergedCellText = drawUnifiedText({
-          //   pools,
-          //   name: 'merged-cell-text',
-          //   text: truncatedValue,
-          //   x,
-          //   y,
-          //   fontSize,
-          //   fontFamily,
-          //   fill: props.bodyTextColor,
-          //   align: 'left',
-          //   verticalAlign: 'middle',
-          //   cellHeight,
-          //   useGetTextX: true
-          // })
-          // bodyGroup.add(mergedCellText)
+        // 合并单元格特殊处理逻辑
+        if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
+          // 合并单元格特殊绘制逻辑
+          const mergedCellRect = drawUnifiedRect({
+            pools,
+            name: 'cell-rect',
+            x,
+            y,
+            width: cellWidth,
+            height: cellHeight,
+            fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
+            stroke: props.borderColor,
+            strokeWidth: 1,
+            rowIndex: rowIndex + 1,
+            colIndex: colIndex + startColIndex,
+            originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
+          })
+          bodyGroup.add(mergedCellRect)
+          const rawValue =
+            col.columnName === '__index__'
+              ? String(rowIndex + 1)
+              : row && typeof row === 'object'
+                ? row[col.columnName]
+                : undefined
+          const value = String(rawValue ?? '')
+          const maxTextWidth = cellWidth - 16
+          const fontFamily = props.bodyFontFamily
+          const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
+          const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
+
+          const mergedCellText = drawUnifiedText({
+            pools,
+            name: 'merged-cell-text',
+            text: truncatedValue,
+            x,
+            y,
+            fontSize,
+            fontFamily,
+            fill: props.bodyTextColor,
+            align: 'left',
+            verticalAlign: 'middle',
+            cellHeight,
+            useGetTextX: true
+          })
+          bodyGroup.add(mergedCellText)
         } else {
           const cellRect = drawUnifiedRect({
             pools,
@@ -705,7 +703,16 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
             // }
           }
         }
-        x += col.width || 0
+
+        // 对于合并单元格，需要跳过被合并的列
+        if (hasSpanMethod && spanCol > 1) {
+          // 跳过被合并的列，x坐标已经通过cellWidth计算了正确位置
+          x += cellWidth
+          // 同时需要跳过循环中被合并的列
+          colIndex += spanCol - 1
+        } else {
+          x += col.width || 0
+        }
       }
     }
     // 注释高亮重计算以提升性能

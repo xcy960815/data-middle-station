@@ -1,5 +1,6 @@
 import Konva from 'konva'
 import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
+import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import type { chartProps } from '../props'
 import { truncateText } from '../utils'
@@ -23,14 +24,15 @@ const COLORS = {
 
 interface RenderHeaderHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
+  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
-export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
+export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) => {
   // 添加排序功能支持
   const { tableData, handleTableData, filterState, sortColumns, tableVars, handleHeaderSort, getColumnSortOrder } =
     variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
-  const { setPointerStyle } = konvaStageHandler({ props })
+  const { setPointerStyle } = konvaStageHandler({ props, emits })
   const { openFilterDropdown } = filterDropdownHandler({ props })
 
   /**
@@ -229,59 +231,55 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
   }
 
   /**
-   * 创建列宽调整手柄
+   * 创建列宽调整手柄 - 已注释掉
    */
-  const createColumnResizer = (
-    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
-    x: number,
-    headerGroup: Konva.Group
-  ) => {
-    const resizer = new Konva.Rect({
-      x: x + (columnOption.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
-      y: 0,
-      width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
-      height: props.headerHeight,
-      fill: 'transparent',
-      listening: true,
-      draggable: false,
-      name: `col-resizer-${columnOption.columnName}`
-    })
+  // const createColumnResizer = (
+  //   columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  //   headerCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
+  //   x: number,
+  //   colIndex: number,
+  //   headerGroup: Konva.Group
+  // ) => {
+  //   const resizer = new Konva.Rect({
+  //     x: x + (columnOption.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
+  //     y: 0,
+  //     width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
+  //     height: props.headerHeight,
+  //     fill: 'transparent',
+  //     listening: true,
+  //     draggable: false,
+  //     name: `col-resizer-${columnOption.columnName}`
+  //   })
 
-    // 添加鼠标交互
-    resizer.on('mouseenter', () => setPointerStyle(true, 'col-resize'))
-    resizer.on('mouseleave', () => {
-      if (!tableVars.isResizingColumn) {
-        setPointerStyle(false, 'default')
-      }
-    })
+  //   // 添加鼠标交互
+  //   resizer.on('mouseenter', () => setPointerStyle(true, 'col-resize'))
+  //   resizer.on('mouseleave', () => {
+  //     if (!tableVars.isResizingColumn) {
+  //       setPointerStyle(false, 'default')
+  //     }
+  //   })
 
-    headerGroup.add(resizer)
+  //   headerGroup.add(resizer)
 
-    resizer.on('mousedown', (evt) => {
-      tableVars.isResizingColumn = true
-      tableVars.resizingColumnName = columnOption.columnName
-      tableVars.resizeStartX = evt.evt.clientX
-      tableVars.resizeStartWidth = columnOption.width || 0
+  //   resizer.on('mousedown', (evt) => {
+  //     tableVars.isResizingColumn = true
+  //     tableVars.resizingColumnName = columnOption.columnName
+  //     tableVars.resizeStartX = evt.evt.clientX
+  //     tableVars.resizeStartWidth = columnOption.width || 0
 
-      setPointerStyle(true, 'col-resize')
-    })
+  //     // 设置邻近列信息（右侧列）
+  //     const neighborColumn = headerCols[colIndex + 1]
+  //     if (neighborColumn) {
+  //       tableVars.resizeNeighborColumnName = neighborColumn.columnName
+  //       tableVars.resizeNeighborStartWidth = neighborColumn.width || 0
+  //     } else {
+  //       tableVars.resizeNeighborColumnName = null
+  //       tableVars.resizeNeighborStartWidth = 0
+  //     }
 
-    resizer.on('mousemove', (evt) => {
-      if (tableVars.isResizingColumn) {
-        const delta = evt.evt.clientX - tableVars.resizeStartX
-        console.log('delta', delta)
-      }
-    })
-
-    resizer.on('mouseup', (evt) => {
-      tableVars.isResizingColumn = false
-      tableVars.resizingColumnName = null
-      tableVars.resizeStartX = 0
-      tableVars.resizeStartWidth = 0
-    })
-
-    headerGroup.add(resizer)
-  }
+  //     setPointerStyle(true, 'col-resize')
+  //   })
+  // }
 
   /**
    * 创建过滤图标
@@ -457,8 +455,8 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       // 添加过滤icon
       createFilterIcon(columnOption, x, 0, columnWidth, props.headerHeight, headerGroup)
 
-      // 添加列宽调整手柄
-      createColumnResizer(columnOption, x, headerGroup)
+      // 添加列宽调整手柄 - 已注释掉
+      // createColumnResizer(columnOption, headerCols, x, colIndex, headerGroup)
 
       x += columnWidth
     }
@@ -473,7 +471,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 //   const { openFilterDropdown } = filterDropdownHandler({ props })
 //   const { sortColumns, tableData, handleTableData, filterState, tableVars } = variableHandlder({ props })
 //   const { clearGroups } = konvaStageHandler({ props })
-//   const { setPointerStyle } = konvaStageHandler({ props })
+//   const { setPointerStyle } = konvaStageHandler({ props, emits })
 //   /**
 //    * 创建表头单元格矩形
 //    */
