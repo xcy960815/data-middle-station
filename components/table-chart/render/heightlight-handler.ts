@@ -8,6 +8,11 @@ interface HighlightHandlerProps {
 }
 export const highlightHandler = ({ props }: HighlightHandlerProps) => {
   const { tableVars } = variableHandlder({ props })
+
+  // 缓存高亮矩形的索引映射，避免重复遍历
+  const rowHighlightCache = new Map<number, Konva.Rect[]>()
+  const colHighlightCache = new Map<number, Konva.Rect[]>()
+  let cacheVersion = 0 // 版本号，用于判断缓存是否过期
   /**
    * 收集所有需要参与高亮判断的分组
    */
@@ -46,44 +51,77 @@ export const highlightHandler = ({ props }: HighlightHandlerProps) => {
     }
   }
   /**
-   * 获取指定行需要高亮的所有矩形
-   * @param rowIndex 行索引
+   * 清空高亮缓存（在表格重渲染时调用）
+   */
+  const invalidateHighlightCache = () => {
+    rowHighlightCache.clear()
+    colHighlightCache.clear()
+    cacheVersion++
+  }
+
+  /**
+   * 优化的获取指定行/列高亮矩形（使用缓存）
+   * @param type 类型：row 行，column 列
+   * @param index 索引
    * @returns 矩形数组
    */
   const getColOrRowHighlightRects = (type: 'row' | 'column', index: number) => {
-    // 初始化高亮矩形数组与去重集合
+    const cache = type === 'row' ? rowHighlightCache : colHighlightCache
+
+    // 检查缓存
+    if (cache.has(index)) {
+      const cachedRects = cache.get(index)!
+      // 验证缓存的矩形是否仍然有效（检查是否在DOM中）
+      const validRects = cachedRects.filter((rect) => {
+        try {
+          // 检查节点是否仍在父级中
+          return rect.getParent() !== null
+        } catch {
+          return false
+        }
+      })
+      if (validRects.length === cachedRects.length) {
+        // 缓存有效，直接使用
+        if (type === 'row') {
+          tableVars.rowHighlightRects = validRects
+        } else {
+          tableVars.colHighlightRects = validRects
+        }
+        applyHighlightToAllRects()
+        return
+      } else {
+        // 缓存部分失效，清除
+        cache.delete(index)
+      }
+    }
+
+    // 缓存未命中或失效，重新计算
+    const rects: Konva.Rect[] = []
+    const seen = new Set<Konva.Rect>()
+
+    getAllGroups().forEach((group) => {
+      group.children.forEach((child) => {
+        if (!(child instanceof Konva.Rect)) return
+        const originFill = child.getAttr('origin-fill')
+        if (originFill === undefined) return
+
+        const attrName = type === 'row' ? 'row-index' : 'col-index'
+        const attr = child.getAttr(attrName)
+        if (typeof attr === 'number' && attr === index && !seen.has(child)) {
+          rects.push(child)
+          seen.add(child)
+        }
+      })
+    })
+
+    // 更新缓存
+    cache.set(index, rects)
+
+    // 更新全局变量
     if (type === 'row') {
-      if (!tableVars.rowHighlightRects) tableVars.rowHighlightRects = []
-      const seen = new Set<Konva.Rect>(tableVars.rowHighlightRects)
-      getAllGroups().forEach((group) => {
-        group.children.forEach((child) => {
-          if (!(child instanceof Konva.Rect)) return
-          const originFill = child.getAttr('origin-fill')
-          if (originFill === undefined) return
-          if (type === 'row') {
-            const attr = child.getAttr('row-index')
-            if (typeof attr === 'number' && attr === index && !seen.has(child)) {
-              tableVars.rowHighlightRects!.push(child)
-              seen.add(child)
-            }
-          }
-        })
-      })
+      tableVars.rowHighlightRects = rects
     } else {
-      if (!tableVars.colHighlightRects) tableVars.colHighlightRects = []
-      const seen = new Set<Konva.Rect>(tableVars.colHighlightRects)
-      getAllGroups().forEach((group) => {
-        group.children.forEach((child) => {
-          if (!(child instanceof Konva.Rect)) return
-          const originFill = child.getAttr('origin-fill')
-          if (originFill === undefined) return
-          const attr = child.getAttr('col-index')
-          if (typeof attr === 'number' && attr === index && !seen.has(child)) {
-            tableVars.colHighlightRects!.push(child)
-            seen.add(child)
-          }
-        })
-      })
+      tableVars.colHighlightRects = rects
     }
 
     // 应用高亮效果
@@ -113,19 +151,20 @@ export const highlightHandler = ({ props }: HighlightHandlerProps) => {
     resetHighlightRects('row')
     // 清除之前的高亮
     resetHighlightRects('column')
-    // 根据配置和当前悬停状态创建高亮效果
-    if (props.enableRowHoverHighlight && tableVars.hoveredRowIndex !== null) {
-      // 清除之前的高亮
-      getColOrRowHighlightRects('row', tableVars.hoveredRowIndex)
-    }
-    if (props.enableColHoverHighlight && tableVars.hoveredColIndex !== null) {
-      getColOrRowHighlightRects('column', tableVars.hoveredColIndex)
-    }
+    // 注释高亮功能以提升性能
+    // if (props.enableRowHoverHighlight && tableVars.hoveredRowIndex !== null) {
+    //   // 清除之前的高亮
+    //   getColOrRowHighlightRects('row', tableVars.hoveredRowIndex)
+    // }
+    // if (props.enableColHoverHighlight && tableVars.hoveredColIndex !== null) {
+    //   getColOrRowHighlightRects('column', tableVars.hoveredColIndex)
+    // }
   }
 
   return {
     resetHighlightRects,
     getColOrRowHighlightRects,
-    updateHoverRects
+    updateHoverRects,
+    invalidateHighlightCache
   }
 }

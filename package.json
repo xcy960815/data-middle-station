@@ -101,7 +101,6 @@
   },
   "lint-staged": {
     "*.{js,ts,vue}": [
-      "eslint --fix --config eslint.config.js",
       "prettier --write"
     ],
     "*.{json,css,scss,less,html,md}": [

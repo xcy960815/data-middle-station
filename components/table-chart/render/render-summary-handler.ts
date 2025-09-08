@@ -137,6 +137,15 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
     stageStartX: number
   ) => {
     if (!tableVars.stage || !summaryGroup) return
+    // 清空现有内容
+    const children = summaryGroup.children.slice()
+    children.forEach((child) => {
+      if (child instanceof Konva.Text && child.name() === 'summary-cell-text') {
+        child.remove()
+      } else if (child instanceof Konva.Rect && child.name() === 'summary-cell-rect') {
+        child.remove()
+      }
+    })
     const stage = tableVars.stage
     const summaryHeight = props.summaryHeight
     const summaryBackground = props.summaryBackground
@@ -212,8 +221,9 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
           scheduleBatchDraw(layer)
         })
       }
-      summaryCellRect.on('mouseenter', () => setPointerStyle(true, 'pointer'))
-      summaryCellRect.on('mouseleave', () => setPointerStyle(false, 'default'))
+      // 注释悬停效果以提升性能
+      // summaryCellRect.on('mouseenter', () => setPointerStyle(true, 'pointer'))
+      // summaryCellRect.on('mouseleave', () => setPointerStyle(false, 'default'))
 
       summaryCellRect.on('click', (evt) => {
         if (!tableVars.stage) return

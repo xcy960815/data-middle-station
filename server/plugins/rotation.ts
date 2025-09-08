@@ -1,4 +1,3 @@
-import chalk from 'chalk'
 import dayjs from 'dayjs'
 
 const logger = new Logger({
@@ -19,6 +18,6 @@ async function queryTasks() {
  * @returns {Promise<void>}
  */
 export default defineNitroPlugin(() => {
-  logger.info('开启轮询任务')
+  logger.info('其他调度任务开启')
   queryTasks()
 })

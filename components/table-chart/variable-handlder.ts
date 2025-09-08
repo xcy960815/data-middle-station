@@ -72,9 +72,7 @@ interface TableVars {
   headerLayer: Konva.Layer | null
   bodyLayer: Konva.Layer | null
   summaryLayer: Konva.Layer | null
-  fixedHeaderLayer: Konva.Layer | null
   fixedBodyLayer: Konva.Layer | null
-  fixedSummaryLayer: Konva.Layer | null
   leftHeaderGroup: Konva.Group | null
   centerHeaderGroup: Konva.Group | null
   rightHeaderGroup: Konva.Group | null
@@ -96,12 +94,13 @@ interface TableVars {
   stageScrollY: number
   stageScrollX: number
   columnWidthOverrides: Record<string, number>
-  isResizingColumn: boolean
-  resizingColumnName: string | null
-  resizeStartX: number
-  resizeStartWidth: number
-  resizeNeighborColumnName: string | null
-  resizeNeighborStartWidth: number
+  // 列宽拖拽相关变量 - 已注释掉
+  // isResizingColumn: boolean
+  // resizingColumnName: string | null
+  // resizeStartX: number
+  // resizeStartWidth: number
+  // resizeNeighborColumnName: string | null
+  // resizeNeighborStartWidth: number
   isDraggingVerticalThumb: boolean
   isDraggingHorizontalThumb: boolean
   dragStartY: number
@@ -185,19 +184,9 @@ const tableVars: TableVars = {
   summaryLayer: null,
 
   /**
-   * 固定表头层（固定表头）
-   */
-  fixedHeaderLayer: null,
-
-  /**
    * 固定表body层（固定表body）
    */
   fixedBodyLayer: null,
-
-  /**
-   * 固定汇总层（固定汇总）
-   */
-  fixedSummaryLayer: null,
 
   /**
    * 左侧表头组（左侧表头）
@@ -287,34 +276,34 @@ const tableVars: TableVars = {
   columnWidthOverrides: {},
 
   /**
-   * 列宽拖拽状态
+   * 列宽拖拽状态 - 已注释掉
    */
-  isResizingColumn: false,
+  // isResizingColumn: false,
 
   /**
-   * 列宽拖拽列名
+   * 列宽拖拽列名 - 已注释掉
    */
-  resizingColumnName: null,
+  // resizingColumnName: null,
 
   /**
-   * 列宽拖拽起始 X 坐标
+   * 列宽拖拽起始 X 坐标 - 已注释掉
    */
-  resizeStartX: 0,
+  // resizeStartX: 0,
 
   /**
-   * 列宽拖拽起始宽度
+   * 列宽拖拽起始宽度 - 已注释掉
    */
-  resizeStartWidth: 0,
+  // resizeStartWidth: 0,
 
   /**
-   * 列宽拖拽邻居列名
+   * 列宽拖拽邻居列名 - 已注释掉
    */
-  resizeNeighborColumnName: null,
+  // resizeNeighborColumnName: null,
 
   /**
-   * 列宽拖拽邻居起始宽度
+   * 列宽拖拽邻居起始宽度 - 已注释掉
    */
-  resizeNeighborStartWidth: 0,
+  // resizeNeighborStartWidth: 0,
 
   // ========== 滚动条拖拽相关 ==========
   /**
@@ -460,16 +449,26 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
       .concat(rightColsy)
   }
   /**
+   * 原始数据存储 - 不被排序或过滤修改
+   */
+  const originalData = ref<Array<ChartDataVo.ChartData>>([])
+
+  /**
    * 处理表格数据
    * @param data 表格数据
    * @returns {void}
    */
   const handleTableData = (data: Array<ChartDataVo.ChartData>) => {
-    tableData.value = data.filter((row) => row && typeof row === 'object')
-    const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
+    // 保存原始数据
+    originalData.value = data.filter((row) => row && typeof row === 'object')
 
+    // 开始处理数据
+    let processedData = [...originalData.value]
+
+    // 应用过滤
+    const filterKeys = Object.keys(filterState).filter((k) => filterState[k] && filterState[k].size > 0)
     if (filterKeys.length) {
-      tableData.value = tableData.value.filter((row) => {
+      processedData = processedData.filter((row) => {
         for (const k of filterKeys) {
           const set = filterState[k]
           const val = row[k]
@@ -478,11 +477,9 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
         return true
       })
     }
-    /**
-     * 如果未排序，则直接返回原始数据
-     */
+
+    // 应用排序
     if (sortColumns.value.length) {
-      const sorted = [...tableData.value]
       const toNum = (v: string | number | null | undefined) => {
         const n = Number(v)
         return Number.isFinite(n) ? n : null
@@ -492,7 +489,7 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
         if (typeof val === 'string' || typeof val === 'number') return val
         return undefined
       }
-      sorted.sort((a, b) => {
+      processedData.sort((a, b) => {
         for (const s of sortColumns.value) {
           const key = s.columnName
           const av = getVal(a, key)
@@ -506,8 +503,10 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
         }
         return 0
       })
-      tableData.value = sorted
     }
+
+    // 更新最终数据
+    tableData.value = processedData
   }
   /**
    * 重置表格变量
@@ -521,9 +520,7 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     tableVars.headerLayer = null
     tableVars.bodyLayer = null
     tableVars.summaryLayer = null
-    tableVars.fixedHeaderLayer = null
     tableVars.fixedBodyLayer = null
-    tableVars.fixedSummaryLayer = null
     tableVars.leftHeaderGroup = null
     tableVars.centerHeaderGroup = null
     tableVars.rightHeaderGroup = null
@@ -543,14 +540,14 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     tableVars.stageScrollY = 0
     tableVars.stageScrollX = 0
 
-    // 重置列宽拖拽相关
+    // 重置列宽拖拽相关 - 已注释掉
     tableVars.columnWidthOverrides = {}
-    tableVars.isResizingColumn = false
-    tableVars.resizingColumnName = null
-    tableVars.resizeStartX = 0
-    tableVars.resizeStartWidth = 0
-    tableVars.resizeNeighborColumnName = null
-    tableVars.resizeNeighborStartWidth = 0
+    // tableVars.isResizingColumn = false
+    // tableVars.resizingColumnName = null
+    // tableVars.resizeStartX = 0
+    // tableVars.resizeStartWidth = 0
+    // tableVars.resizeNeighborColumnName = null
+    // tableVars.resizeNeighborStartWidth = 0
 
     // 重置滚动条拖拽相关
     tableVars.isDraggingVerticalThumb = false
@@ -583,6 +580,46 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     Object.keys(filterState).forEach((key) => delete filterState[key])
     Object.keys(summaryState).forEach((key) => delete summaryState[key])
   }
+
+  /**
+   * 处理表头排序点击
+   * @param {string} columnName 列名
+   * @returns {void}
+   */
+  const handleHeaderSort = (columnName: string) => {
+    const existingIndex = sortColumns.value.findIndex((s) => s.columnName === columnName)
+
+    if (existingIndex >= 0) {
+      // 如果已经存在，切换排序方向
+      const current = sortColumns.value[existingIndex]
+      if (current.order === 'asc') {
+        current.order = 'desc'
+      } else {
+        // 移除排序
+        sortColumns.value.splice(existingIndex, 1)
+      }
+    } else {
+      // 新增排序（默认降序）
+      sortColumns.value.push({
+        columnName,
+        order: 'desc'
+      })
+    }
+
+    // 重新处理数据 - 使用原始数据重新排序
+    handleTableData(originalData.value)
+  }
+
+  /**
+   * 获取列的排序状态
+   * @param {string} columnName 列名
+   * @returns {'asc' | 'desc' | null} 排序状态
+   */
+  const getColumnSortOrder = (columnName: string): 'asc' | 'desc' | null => {
+    const sortColumn = sortColumns.value.find((s) => s.columnName === columnName)
+    return sortColumn ? sortColumn.order : null
+  }
+
   return {
     tableContainerStyle,
     handleTableColumns,
@@ -593,6 +630,8 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     summaryState,
     sortColumns,
     handleTableData,
-    resetTableVars
+    resetTableVars,
+    handleHeaderSort,
+    getColumnSortOrder
   }
 }
