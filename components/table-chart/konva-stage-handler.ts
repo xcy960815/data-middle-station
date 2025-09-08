@@ -151,19 +151,22 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const { updateScrollPositions } = renderScrollbarsHandler({ props, emits: ensureEmits() })
     const { tableData } = variableHandlder({ props })
 
-    // 列宽拖拽中：实时更新覆盖宽度并重建分组
-    if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
-      const delta = mouseEvent.clientX - tableVars.resizeStartX
-      const newWidth = Math.max(props.minAutoColWidth, tableVars.resizeStartWidth + delta)
-      tableVars.columnWidthOverrides[tableVars.resizingColumnName] = newWidth
-      if (tableVars.resizeNeighborColumnName) {
-        const neighborWidth = Math.max(props.minAutoColWidth, tableVars.resizeNeighborStartWidth - delta)
-        tableVars.columnWidthOverrides[tableVars.resizeNeighborColumnName] = neighborWidth
-      }
-      clearGroups()
-      rebuildGroups()
-      return
-    }
+    // 列宽拖拽中：实时更新覆盖宽度并重建分组 - 已注释掉
+    // if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
+    //   console.log('🔄 Resizing column: ', tableVars.resizingColumnName);
+
+    //   const delta = mouseEvent.clientX - tableVars.resizeStartX
+    //   const newWidth = Math.max(props.minAutoColWidth, tableVars.resizeStartWidth + delta)
+    //   tableVars.columnWidthOverrides[tableVars.resizingColumnName] = newWidth
+    //   if (tableVars.resizeNeighborColumnName) {
+    //     const neighborWidth = Math.max(props.minAutoColWidth, tableVars.resizeNeighborStartWidth - delta)
+    //     tableVars.columnWidthOverrides[tableVars.resizeNeighborColumnName] = neighborWidth
+    //   }
+
+    //   clearGroups()
+    //   rebuildGroups()
+    //   return
+    // }
 
     // 手动拖拽导致的垂直滚动
     if (tableVars.isDraggingVerticalThumb) {
@@ -176,8 +179,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       const trackHeight =
         stageHeight -
         props.headerHeight -
-        // (props.enableSummary ? props.summaryHeight : 0) - // 注释汇总高度
-        0 - // 禁用汇总行
+        (props.enableSummary ? props.summaryHeight : 0) - // 注释汇总高度
         (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
       const scrollRatio = deltaY / (trackHeight - thumbHeight)
@@ -262,15 +264,27 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       tableVars.scrollbarLayer?.batchDraw()
     }
 
-    // 列宽拖拽结束
-    if (tableVars.isResizingColumn) {
-      tableVars.isResizingColumn = false
-      tableVars.resizingColumnName = null
-      tableVars.resizeNeighborColumnName = null
-      setPointerStyle(false, 'default')
-      clearGroups()
-      rebuildGroups()
-    }
+    // 列宽拖拽结束 - 已注释掉
+    // if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
+    //   const resizingColumnName = tableVars.resizingColumnName
+    //   const currentWidth = tableVars.columnWidthOverrides[resizingColumnName]
+
+    //   // 触发列宽改变事件，让父组件可以保存列宽配置
+    //   if (emits && currentWidth !== undefined) {
+    //     emits('column-width-change', {
+    //       columnName: resizingColumnName,
+    //       width: currentWidth,
+    //       columnWidthOverrides: { ...tableVars.columnWidthOverrides }
+    //     })
+    //   }
+
+    //   tableVars.isResizingColumn = false
+    //   tableVars.resizingColumnName = null
+    //   tableVars.resizeNeighborColumnName = null
+    //   setPointerStyle(false, 'default')
+    //   clearGroups()
+    //   rebuildGroups()
+    // }
   }
 
   /**
@@ -289,11 +303,12 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
    * @returns {void}
    */
   const clearGroups = () => {
-    // 清理4个真实的Layer
+    // 清理5个真实的Layer
     tableVars.headerLayer?.destroyChildren()
     tableVars.bodyLayer?.destroyChildren()
     tableVars.fixedBodyLayer?.destroyChildren()
     tableVars.scrollbarLayer?.destroyChildren()
+    tableVars.summaryLayer?.destroyChildren()
     clearPool(tableVars.leftBodyPools.cellRects)
     clearPool(tableVars.leftBodyPools.cellTexts)
     clearPool(tableVars.centerBodyPools.cellRects)
@@ -361,7 +376,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       throw new Error('rebuildGroups requires emits to be provided to konvaStageHandler')
     }
 
-    const { drawHeaderPart } = renderHeaderHandler({ props })
+    const { drawHeaderPart } = renderHeaderHandler({ props, emits })
     const { drawBodyPart, getSplitColumns, getScrollLimits } = renderBodyHandler({ props, emits })
     const { drawSummaryPart } = renderSummaryHandler({ props })
     const { createScrollbars } = renderScrollbarsHandler({ props, emits })
@@ -667,8 +682,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     // 仅在提供 emits 时，注册依赖 emits 的全局事件监听器
     if (!emits) return
     window.addEventListener('resize', handleGlobalResize)
-    // 注释鼠标移动监听以提升性能 - 这是主要的性能瓶颈
-    // window.addEventListener('mousemove', handleGlobalMouseMove)
+    // 需要保留鼠标移动监听以支持列宽拖拽功能
+    window.addEventListener('mousemove', handleGlobalMouseMove)
     window.addEventListener('mouseup', handleGlobalMouseUp)
   }
 
@@ -678,9 +693,22 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const cleanupStageListeners = () => {
     if (!emits) return
     window.removeEventListener('resize', handleGlobalResize)
-    // 注释鼠标移动监听清理
-    // window.removeEventListener('mousemove', handleGlobalMouseMove)
+    // 清理鼠标移动监听
+    window.removeEventListener('mousemove', handleGlobalMouseMove)
     window.removeEventListener('mouseup', handleGlobalMouseUp)
+  }
+
+  /**
+   * 设置列宽覆盖配置（用于从外部恢复保存的列宽）
+   * @param overrides 列宽覆盖配置
+   */
+  const setColumnWidthOverrides = (overrides: Record<string, number>) => {
+    tableVars.columnWidthOverrides = { ...overrides }
+    // 如果已经初始化，则刷新表格
+    if (tableVars.stage) {
+      clearGroups()
+      rebuildGroups()
+    }
   }
 
   return {
@@ -696,6 +724,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     initStageListeners,
     cleanupStageListeners,
     setPointerStyle,
+    setColumnWidthOverrides,
     createGroup,
     createGroupsByType,
     createCenterBodyClipGroup
