@@ -39,7 +39,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   /**
    * 创建滚动条
    */
-  const createScrollbars = () => {
+  const drawSrollerbars = () => {
     if (!tableVars.stage || !tableVars.scrollbarLayer) return
     const { width: stageWidth, height: stageHeight } = getStageAttr()
     const { maxScrollX, maxScrollY } = getScrollLimits()
@@ -69,9 +69,6 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
       if (summaryRowHeight.value > 0) tableVars.scrollbarLayer.add(verticalScrollbarBottomMask)
 
-      // 创建垂直滚动条组
-      tableVars.verticalScrollbarGroup = new Konva.Group()
-      tableVars.scrollbarLayer.add(tableVars.verticalScrollbarGroup)
       // 绘制垂直滚动条轨道
       const verticalScrollbarRect = new Konva.Rect({
         x: stageWidth - props.scrollbarSize,
@@ -82,7 +79,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         stroke: props.borderColor,
         strokeWidth: 1
       })
-      tableVars.verticalScrollbarGroup.add(verticalScrollbarRect)
+      tableVars.verticalScrollbarGroup?.add(verticalScrollbarRect)
 
       // 计算垂直滚动条高度
       const trackHeight =
@@ -101,7 +98,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         cornerRadius: 2,
         draggable: false
       })
-      tableVars.verticalScrollbarGroup.add(tableVars.verticalScrollbarThumbRect)
+      tableVars.verticalScrollbarGroup?.add(tableVars.verticalScrollbarThumbRect)
 
       // 设置垂直滚动条事件
       setupVerticalScrollbarEvents()
@@ -109,10 +106,6 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     // 水平滚动条
     if (maxScrollX > 0) {
-      // 创建水平滚动条组
-      tableVars.horizontalScrollbarGroup = new Konva.Group()
-      tableVars.scrollbarLayer.add(tableVars.horizontalScrollbarGroup)
-
       const verticalScrollbarSpaceForHorizontal = maxScrollY > 0 ? props.scrollbarSize : 0
       // 绘制水平滚动条轨道
       const horizontalScrollbarTrack = new Konva.Rect({
@@ -124,7 +117,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         stroke: props.borderColor,
         strokeWidth: 1
       })
-      tableVars.horizontalScrollbarGroup.add(horizontalScrollbarTrack)
+      tableVars.horizontalScrollbarGroup?.add(horizontalScrollbarTrack)
 
       // 计算水平滚动条宽度
       const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
@@ -144,7 +137,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         cornerRadius: 2,
         draggable: false
       })
-      tableVars.horizontalScrollbarGroup.add(tableVars.horizontalScrollbarThumbRect)
+      tableVars.horizontalScrollbarGroup?.add(tableVars.horizontalScrollbarThumbRect)
       // 设置水平滚动条事件
       setupHorizontalScrollbarEvents()
     }
@@ -275,13 +268,22 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     tableVars.centerHeaderGroup.x(headerX)
 
     /**
-     * 更新底部 summary 组位置
+     * 更新汇总组位置（完全参考表头的实现方式）
+     * 左右汇总组：固定位置，不滚动
+     * 中间汇总组：在裁剪组中，只需要更新x位置跟随滚动
      */
-    if (tableVars.leftSummaryGroup) tableVars.leftSummaryGroup.y(summaryY)
-    if (tableVars.rightSummaryGroup) tableVars.rightSummaryGroup.y(summaryY)
+    if (tableVars.leftSummaryGroup) {
+      // 左侧汇总组：固定位置，不需要更新（与左侧表头一样）
+      // 位置已在创建时设置，保持不变
+    }
+    if (tableVars.rightSummaryGroup) {
+      // 右侧汇总组：固定位置，不需要更新（与右侧表头一样）
+      // 位置已在创建时设置，保持不变
+    }
     if (tableVars.centerSummaryGroup) {
-      tableVars.centerSummaryGroup.x(centerX) // 修复：中间汇总行也需要跟随水平滚动
-      tableVars.centerSummaryGroup.y(summaryY)
+      // 中间汇总组：在裁剪组中，需要跟随水平滚动（与中间表头一致）
+      tableVars.centerSummaryGroup.x(headerX)
+      tableVars.centerSummaryGroup.y(0) // 相对于裁剪组
     }
 
     updateScrollbarPosition()
@@ -340,7 +342,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     // 中间区域随横向滚动
     tableVars.centerHeaderGroup.x(headerX)
     tableVars.centerBodyGroup.x(centerX)
-    tableVars.centerSummaryGroup?.x(centerX) // 修复：汇总行应该和主体内容使用相同的X坐标
+    tableVars.centerSummaryGroup?.x(headerX) // 修复：汇总行应该和表头使用相同的X坐标（headerX）
 
     updateScrollbarPosition()
 
@@ -510,7 +512,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   }
 
   return {
-    createScrollbars,
+    drawSrollerbars,
     updateScrollbarPosition,
     updateScrollPositions,
     initWheelListener,

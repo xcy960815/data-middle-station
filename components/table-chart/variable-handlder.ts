@@ -68,17 +68,21 @@ interface TableVars {
   rightBodyPools: KonvaNodePools
   stage: Konva.Stage | null
   scrollbarLayer: Konva.Layer | null
-  centerBodyClipGroup: Konva.Group | null
+
   headerLayer: Konva.Layer | null
   bodyLayer: Konva.Layer | null
-  summaryLayer: Konva.Layer | null
   fixedBodyLayer: Konva.Layer | null
+  summaryLayer: Konva.Layer | null
+
   leftHeaderGroup: Konva.Group | null
+  centerBodyClipGroup: Konva.Group | null
   centerHeaderGroup: Konva.Group | null
   rightHeaderGroup: Konva.Group | null
+
   leftBodyGroup: Konva.Group | null
   centerBodyGroup: Konva.Group | null
   rightBodyGroup: Konva.Group | null
+
   leftSummaryGroup: Konva.Group | null
   centerSummaryGroup: Konva.Group | null
   rightSummaryGroup: Konva.Group | null
@@ -516,7 +520,6 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     // 重置 Konva 对象
     tableVars.stage = null
     tableVars.scrollbarLayer = null
-    tableVars.centerBodyClipGroup = null
     tableVars.headerLayer = null
     tableVars.bodyLayer = null
     tableVars.summaryLayer = null
