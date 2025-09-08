@@ -5,7 +5,13 @@ import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { estimateButtonWidth, getTableContainerElement, returnToPool, truncateText } from '../utils'
-import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
+import {
+  paletteOptions,
+  variableHandlder,
+  type KonvaNodePools,
+  type PositionMap,
+  type Prettify
+} from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -562,10 +568,9 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
           // cellRect.on('dblclick.cell', handleDoubleClick) // 注释双击事件
 
           bodyGroup.add(cellRect)
-          // 注释操作按钮功能以提升性能
-          if (false) {
-            // 完全禁用操作按钮相关代码
-            /*
+          // 启用操作按钮功能
+          if (col.columnName === 'action') {
+            // 操作按钮相关代码
             const actions = col.actions
             const buttonHeight = Math.max(22, Math.min(28, cellHeight - 8))
             if (actions && actions.length > 0) {
@@ -649,7 +654,6 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
                 startX += currentWidth + buttonGap
               })
             }
-            */
           } else {
             // 创建文本
             const rawValue =
