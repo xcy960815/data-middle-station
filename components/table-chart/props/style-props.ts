@@ -41,7 +41,7 @@ export const styleProps = {
   /**
    * 表头字体大小
    */
-  headerFontSize: { type: [Number], default: 14 },
+  headerFontSize: { type: Number, default: 14 },
 
   /**
    * 表格行高度
@@ -116,7 +116,7 @@ export const styleProps = {
    */
   headerSortActiveBackground: { type: String, default: '#ecf5ff' },
   /**
-   * 可排序颜色
+   * 排序箭头颜色
    */
   sortableColor: { type: String, default: '#409EFF' }
 }
