@@ -55,22 +55,28 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       originFill: isSorted ? props.headerSortActiveBackground : props.headerBackground
     })
 
-    // 添加点击事件
+    // 添加点击事件 - 只有可排序的列才能点击排序
     rect.on('click', () => {
-      handleHeaderSort(col.columnName)
+      if (col.sortable) {
+        handleHeaderSort(col.columnName)
+      }
     })
 
-    // 添加悬停效果
+    // 添加悬停效果 - 只有可排序的列才显示交互效果
     rect.on('mouseenter', () => {
-      rect.fill(isSorted ? props.headerSortActiveBackground : '#f0f0f0')
-      setPointerStyle(true, 'pointer')
+      if (col.sortable) {
+        rect.fill(isSorted ? props.headerSortActiveBackground : '#f0f0f0')
+        setPointerStyle(true, 'pointer')
+      }
       const layer = bodyGroup.getLayer()
       layer?.batchDraw()
     })
 
     rect.on('mouseleave', () => {
-      rect.fill(isSorted ? props.headerSortActiveBackground : props.headerBackground)
-      setPointerStyle(false, 'default')
+      if (col.sortable) {
+        rect.fill(isSorted ? props.headerSortActiveBackground : props.headerBackground)
+        setPointerStyle(false, 'default')
+      }
       const layer = bodyGroup.getLayer()
       layer?.batchDraw()
     })
@@ -101,30 +107,34 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     height: number,
     bodyGroup: Konva.Group
   ) => {
-    console.log('createSortIndicator')
-
-    const sortOrder = getColumnSortOrder(col.columnName)
-    if (!sortOrder) return null
-
-    const pools = tableVars.leftBodyPools
+    // 检查列是否可排序
+    if (!col.sortable) {
+      return
+    }
+    // 箭头尺寸 8px
     const arrowSize = 8
+    // 箭头位置 x + width - arrowSize - 8
     const arrowX = x + width - arrowSize - 8
+    // 箭头位置 y + height / 2
     const arrowY = y + height / 2
-
-    // 创建箭头路径
-    const arrowPath =
+    const sortOrder = getColumnSortOrder(col.columnName)
+    // 创建箭头指向
+    const arrowPointTo =
       sortOrder === 'asc'
         ? `M ${arrowX} ${arrowY + 2} L ${arrowX + arrowSize / 2} ${arrowY - 2} L ${arrowX + arrowSize} ${arrowY + 2} Z`
-        : `M ${arrowX} ${arrowY - 2} L ${arrowX + arrowSize / 2} ${arrowY + 2} L ${arrowX + arrowSize} ${arrowY - 2} Z`
+        : sortOrder === 'desc'
+          ? `M ${arrowX} ${arrowY - 2} L ${arrowX + arrowSize / 2} ${arrowY + 2} L ${arrowX + arrowSize} ${arrowY - 2} Z`
+          : ''
 
-    const arrow = new Konva.Path({
-      data: arrowPath,
+    const arrowPointToPath = new Konva.Path({
+      data: arrowPointTo,
       fill: props.sortableColor,
       name: 'sort-indicator'
     })
 
-    bodyGroup.add(arrow)
-    return arrow
+    bodyGroup.add(arrowPointToPath)
+
+    return arrowPointToPath
   }
 
   /**
@@ -162,9 +172,6 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     })
     bodyGroup.add(headerText)
 
-    // 添加排序指示器
-    createSortIndicator(col, x, y, width, height, bodyGroup)
-
     return headerText
   }
 
@@ -180,7 +187,6 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
   ) => {
     if (!headerGroup || !tableVars.stage) return
 
-    const pools = tableVars.leftBodyPools
     // 清空现有内容
     const children = headerGroup.children.slice()
     children.forEach((child) => {
@@ -203,7 +209,6 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
         x += columnWidth
         continue
       }
-
       // 创建背景矩形
       createHeaderCellRect(
         col,
@@ -219,6 +224,9 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
 
       // 创建文本
       createHeaderCellText(col, x, 0, columnWidth, props.headerHeight, headerGroup)
+
+      // 添加排序指示器
+      createSortIndicator(col, x, 0, columnWidth, props.headerHeight, headerGroup)
 
       x += columnWidth
     }
