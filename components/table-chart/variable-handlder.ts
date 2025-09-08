@@ -618,6 +618,7 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     const sortColumn = sortColumns.value.find((s) => s.columnName === columnName)
     return sortColumn ? sortColumn.order : null
   }
+
   return {
     tableContainerStyle,
     handleTableColumns,
