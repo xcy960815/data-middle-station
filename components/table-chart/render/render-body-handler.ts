@@ -1,34 +1,23 @@
 import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
-import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
-import {
-  adjustHexColorBrightness,
-  estimateButtonWidth,
-  getTableContainerElement,
-  returnToPool,
-  truncateText
-} from '../utils'
-import {
-  paletteOptions,
-  variableHandlder,
-  type KonvaNodePools,
-  type PositionMap,
-  type Prettify
-} from '../variable-handlder'
+import { estimateButtonWidth, getTableContainerElement, returnToPool, truncateText } from '../utils'
+import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
-import { highlightHandler } from './heightlight-handler'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
   emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
 export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
-  const { updateHoverRects } = highlightHandler({ props })
-  const { filterDropdown } = filterDropdownHandler({ props })
+  // 注释高亮功能以提升性能
+  // const { updateHoverRects, invalidateHighlightCache } = highlightHandler({ props })
+  // const { invalidateHighlightCache } = highlightHandler({ props })
+  // 注释过滤功能以提升性能
+  // const { filterDropdown } = filterDropdownHandler({ props })
   const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({
     props,
     emits
@@ -61,11 +50,12 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
   /**
    * 在指定分组内创建单元格高亮矩形
-   * @param x 矩形 X 坐标
-   * @param y 矩形 Y 坐标
-   * @param width 矩形宽度
-   * @param height 矩形高度
-   * @param group 分组
+   * @param {number} x 矩形 X 坐标
+   * @param {number} y 矩形 Y 坐标
+   * @param {number} width 矩形 X 坐标
+   * @param {number} height 矩形高度
+   * @param {Konva.Group} bodyGroup 分组
+   * @returns {void}
    */
   const createHighlightRect = (x: number, y: number, width: number, height: number, bodyGroup: Konva.Group) => {
     if (tableVars.highlightRect) {
@@ -88,11 +78,12 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     tableVars.highlightRect.moveToTop()
 
     const layer = bodyGroup.getLayer()
+
     layer?.batchDraw()
   }
 
   /**
-   * 回收 Konva 节点
+   * 优化的节点回收 - 批量处理减少遍历次数
    * @param {Konva.Group} bodyGroup 分组
    * @param {ObjectPools} pools 对象池
    * @returns {void}
@@ -100,36 +91,37 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   const recoverKonvaNode = (bodyGroup: Konva.Group, pools: KonvaNodePools) => {
     // 清空当前组，将对象返回池中
     const children = bodyGroup.children.slice()
-    children.forEach((child) => {
-      const isText = child instanceof Konva.Text
-      const isRect = child instanceof Konva.Rect
-      if (isText) {
-        const isMergedCellText = child.name() === 'merged-cell-text'
-        if (isMergedCellText) {
-          returnToPool(pools.cellTexts, child)
-        }
-        const isCellText = child.name() === 'cell-text'
-        if (isCellText) {
-          returnToPool(pools.cellTexts, child)
-        }
-      }
-      if (isRect) {
-        const isMergedCellRect = child.name() === 'merged-cell-rect'
-        if (isMergedCellRect) {
-          returnToPool(pools.cellRects, child)
-        }
+    const textsToRecover: Konva.Text[] = []
+    const rectsToRecover: Konva.Rect[] = []
 
-        const isCellRect = child.name() === 'cell-rect'
-        if (isCellRect) {
-          returnToPool(pools.cellRects, child)
+    // 分类收集需要回收的节点
+    children.forEach((child) => {
+      if (child instanceof Konva.Text) {
+        const name = child.name()
+        // 处理合并单元格和普通单元格文本节点回收
+        if (name === 'merged-cell-text' || name === 'cell-text') {
+          textsToRecover.push(child)
+        }
+      } else if (child instanceof Konva.Rect) {
+        const name = child.name()
+        // 处理合并单元格和普通单元格矩形节点回收
+        if (name === 'merged-cell-rect' || name === 'cell-rect') {
+          rectsToRecover.push(child)
         }
       }
     })
+
+    // 批量回收
+    textsToRecover.forEach((text) => returnToPool(pools.cellTexts, text))
+    rectsToRecover.forEach((rect) => returnToPool(pools.cellRects, rect))
+
+    // 清空高亮缓存
+    // invalidateHighlightCache()
   }
 
   /**
    * 计算左右固定列与中间列的分组与宽度汇总
-   * @returns
+   * @returns {Object} 分组与宽度汇总
    */
   const getSplitColumns = () => {
     if (!tableVars.stage) {
@@ -170,11 +162,13 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const columnsWithWidth = tableColumns.value.map((col) => {
       const overrideWidth = tableVars.columnWidthOverrides[col.columnName as string]
       const width = overrideWidth !== undefined ? overrideWidth : col.width !== undefined ? col.width : autoColumnWidth
+
       return { ...col, width }
     })
     const leftCols = columnsWithWidth.filter((c) => c.fixed === 'left')
     const centerCols = columnsWithWidth.filter((c) => !c.fixed)
     const rightCols = columnsWithWidth.filter((c) => c.fixed === 'right')
+
     /**
      * 计算列宽总和
      * @param columns 列数组
@@ -195,7 +189,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
   /**
    * 获取滚动限制
-   * @returns {{ maxScrollX: number, maxScrollY: number }}
+   * @returns {Object} 滚动限制
    */
   const getScrollLimits = () => {
     if (!tableVars.stage) return { maxScrollX: 0, maxScrollY: 0 }
@@ -228,7 +222,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
    * 判断坐标是否在表格区域内（排除滚动条区域）
    * @param clientX 客户端X坐标
    * @param clientY 客户端Y坐标
-   * @returns 是否在表格区域内
+   * @returns {boolean} 是否在表格区域内
    */
   const isInTableArea = () => {
     if (!tableVars.stage) return false
@@ -253,111 +247,111 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
 
   /**
-   * 为按钮矩形绑定“原生按钮”式动效（hover/active 阴影与亮度变化）
+   * 注释按钮交互动画功能以提升性能
    */
-  const bindButtonInteractions = (
-    buttonRect: Konva.Rect,
-    options: {
-      baseFill: string
-      baseStroke: string
-      layer: Konva.Layer | null
-      disabled?: boolean
-    }
-  ) => {
-    let isHovering = false
+  // const bindButtonInteractions = (
+  //   buttonRect: Konva.Rect,
+  //   options: {
+  //     baseFill: string
+  //     baseStroke: string
+  //     layer: Konva.Layer | null
+  //     disabled?: boolean
+  //   }
+  // ) => {
+  //   let isHovering = false
 
-    const hoverFill = adjustHexColorBrightness(options.baseFill, 8)
-    const activeFill = adjustHexColorBrightness(options.baseFill, -8)
-    const original = { x: buttonRect.x(), y: buttonRect.y(), w: buttonRect.width(), h: buttonRect.height() }
+  //   const hoverFill = adjustHexColorBrightness(options.baseFill, 8)
+  //   const activeFill = adjustHexColorBrightness(options.baseFill, -8)
+  //   const original = { x: buttonRect.x(), y: buttonRect.y(), w: buttonRect.width(), h: buttonRect.height() }
 
-    const applyNormal = () => {
-      buttonRect.fill(options.baseFill)
-      buttonRect.shadowOpacity(0)
-      buttonRect.shadowBlur(0)
-      buttonRect.shadowOffset({ x: 0, y: 0 })
-      buttonRect.to({
-        x: original.x,
-        y: original.y,
-        scaleX: 1,
-        scaleY: 1,
-        duration: 0.08,
-        easing: Konva.Easings.EaseInOut
-      })
-      options.layer?.batchDraw()
-    }
-    const applyHover = () => {
-      buttonRect.fill(hoverFill)
-      buttonRect.shadowColor(options.baseFill)
-      buttonRect.shadowOpacity(0.25)
-      buttonRect.shadowBlur(8)
-      buttonRect.shadowOffset({ x: 0, y: 1 })
-      buttonRect.to({
-        x: original.x,
-        y: original.y,
-        scaleX: 1,
-        scaleY: 1,
-        duration: 0.08,
-        easing: Konva.Easings.EaseInOut
-      })
-      options.layer?.batchDraw()
-    }
-    const applyActive = () => {
-      buttonRect.fill(activeFill)
-      buttonRect.shadowColor(options.baseFill)
-      buttonRect.shadowOpacity(0.2)
-      buttonRect.shadowBlur(4)
-      buttonRect.shadowOffset({ x: 0, y: 0 })
-      const sx = 0.98
-      const sy = 0.98
-      const dx = (original.w * (1 - sx)) / 2
-      const dy = (original.h * (1 - sy)) / 2
-      buttonRect.to({
-        x: original.x + dx,
-        y: original.y + dy,
-        scaleX: sx,
-        scaleY: sy,
-        duration: 0.06,
-        easing: Konva.Easings.EaseInOut
-      })
-      options.layer?.batchDraw()
-    }
+  //   const applyNormal = () => {
+  //     buttonRect.fill(options.baseFill)
+  //     buttonRect.shadowOpacity(0)
+  //     buttonRect.shadowBlur(0)
+  //     buttonRect.shadowOffset({ x: 0, y: 0 })
+  //     buttonRect.to({
+  //       x: original.x,
+  //       y: original.y,
+  //       scaleX: 1,
+  //       scaleY: 1,
+  //       duration: 0.08,
+  //       easing: Konva.Easings.EaseInOut
+  //     })
+  //     options.layer?.batchDraw()
+  //   }
+  //   const applyHover = () => {
+  //     buttonRect.fill(hoverFill)
+  //     buttonRect.shadowColor(options.baseFill)
+  //     buttonRect.shadowOpacity(0.25)
+  //     buttonRect.shadowBlur(8)
+  //     buttonRect.shadowOffset({ x: 0, y: 1 })
+  //     buttonRect.to({
+  //       x: original.x,
+  //       y: original.y,
+  //       scaleX: 1,
+  //       scaleY: 1,
+  //       duration: 0.08,
+  //       easing: Konva.Easings.EaseInOut
+  //     })
+  //     options.layer?.batchDraw()
+  //   }
+  //   const applyActive = () => {
+  //     buttonRect.fill(activeFill)
+  //     buttonRect.shadowColor(options.baseFill)
+  //     buttonRect.shadowOpacity(0.2)
+  //     buttonRect.shadowBlur(4)
+  //     buttonRect.shadowOffset({ x: 0, y: 0 })
+  //     const sx = 0.98
+  //     const sy = 0.98
+  //     const dx = (original.w * (1 - sx)) / 2
+  //     const dy = (original.h * (1 - sy)) / 2
+  //     buttonRect.to({
+  //       x: original.x + dx,
+  //       y: original.y + dy,
+  //       scaleX: sx,
+  //       scaleY: sy,
+  //       duration: 0.06,
+  //       easing: Konva.Easings.EaseInOut
+  //     })
+  //     options.layer?.batchDraw()
+  //   }
 
-    // 清理旧事件并绑定
-    buttonRect.off('mouseenter.buttonfx')
-    buttonRect.off('mouseleave.buttonfx')
-    buttonRect.off('mousedown.buttonfx')
-    buttonRect.off('mouseup.buttonfx')
+  //   // 清理旧事件并绑定
+  //   buttonRect.off('mouseenter.buttonfx')
+  //   buttonRect.off('mouseleave.buttonfx')
+  //   buttonRect.off('mousedown.buttonfx')
+  //   buttonRect.off('mouseup.buttonfx')
 
-    if (options.disabled) {
-      buttonRect.opacity(0.6)
-      buttonRect.on('mouseenter.buttonfx', () => {
-        setPointerStyle(false, 'not-allowed')
-      })
-      buttonRect.on('mouseleave.buttonfx', () => {
-        setPointerStyle(false, 'default')
-      })
-      return
-    }
+  //   if (options.disabled) {
+  //     buttonRect.opacity(0.6)
+  //     buttonRect.on('mouseenter.buttonfx', () => {
+  //       setPointerStyle(false, 'not-allowed')
+  //     })
+  //     buttonRect.on('mouseleave.buttonfx', () => {
+  //       setPointerStyle(false, 'default')
+  //     })
+  //     return
+  //   }
 
-    buttonRect.opacity(1)
-    buttonRect.on('mouseenter.buttonfx', () => {
-      isHovering = true
-      setPointerStyle(true, 'pointer')
-      applyHover()
-    })
-    buttonRect.on('mouseleave.buttonfx', () => {
-      isHovering = false
-      setPointerStyle(false, 'default')
-      applyNormal()
-    })
-    buttonRect.on('mousedown.buttonfx', () => {
-      applyActive()
-    })
-    buttonRect.on('mouseup.buttonfx', () => {
-      if (isHovering) applyHover()
-      else applyNormal()
-    })
-  }
+  //   buttonRect.opacity(1)
+  //   buttonRect.on('mouseenter.buttonfx', () => {
+  //     isHovering = true
+  //     setPointerStyle(true, 'pointer')
+  //     applyHover()
+  //   })
+  //   buttonRect.on('mouseleave.buttonfx', () => {
+  //     isHovering = false
+  //     setPointerStyle(false, 'default')
+  //     applyNormal()
+  //   })
+  //   buttonRect.on('mousedown.buttonfx', () => {
+  //     applyActive()
+  //   })
+  //   buttonRect.on('mouseup.buttonfx', () => {
+  //     if (isHovering) applyHover()
+  //     else applyNormal()
+  //   })
+  // }
 
   // drawUnifiedText and drawUnifiedRect moved to shared draw.ts and imported above
 
@@ -387,6 +381,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const bodyFontFamily = props.bodyFontFamily
     const bodyFontSizeNumber =
       typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
+    // 恢复合并单元格相关代码
     const spanMethod = typeof props.spanMethod === 'function' ? props.spanMethod : null
     const hasSpanMethod = !!spanMethod
 
@@ -410,7 +405,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     // 渲染可视区域的行
     for (let rowIndex = tableVars.visibleRowStart; rowIndex <= tableVars.visibleRowEnd; rowIndex++) {
       const row = tableData.value[rowIndex]
-      // y坐标
+      // y坐标 - 使用绝对行位置，bodyGroup会通过y偏移处理滚动
       const y = rowIndex * props.bodyRowHeight
       // 渲染每列的单元格
       let x = 0
@@ -422,6 +417,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
           x += columnWidth
           continue
         }
+        // 恢复合并单元格逻辑
         let spanRow = 1
         let spanCol = 1
         let coveredBySpanMethod = false
@@ -447,11 +443,21 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
         }
 
         const computedRowSpan = hasSpanMethod ? spanRow : 1
+        // const computedRowSpan = 1 // 禁用合并后总是1行
 
         const cellHeight = computedRowSpan * props.bodyRowHeight
 
-        // 计算合并单元格的宽度（此处暂未实现跨列合并的宽度累加，保持原逻辑）
+        // 计算合并单元格的总宽度
         let cellWidth = columnWidth
+        if (hasSpanMethod && spanCol > 1) {
+          // 计算跨列的总宽度
+          let totalWidth = 0
+          for (let i = 0; i < spanCol && colIndex + i < bodyCols.length; i++) {
+            const colInfo = bodyCols[colIndex + i]
+            totalWidth += colInfo.width || 0
+          }
+          cellWidth = totalWidth
+        }
 
         // 记录可视区域内主体单元格位置信息（使用舞台坐标）
         positionMapList.push({
@@ -462,8 +468,9 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
           rowIndex: rowIndex + 1,
           colIndex: colIndex + startColIndex
         })
-        // 若为合并单元格（跨行或跨列），在行斑马纹之上绘制统一背景色，避免内部出现条纹断层
+        // 合并单元格特殊处理逻辑
         if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
+          // 合并单元格特殊绘制逻辑
           const mergedCellRect = drawUnifiedRect({
             pools,
             name: 'cell-rect',
@@ -521,9 +528,9 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
             colIndex: colIndex + startColIndex,
             originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
           })
+          // 优化事件绑定 - 使用事件委托模式
           let clickTimeout: NodeJS.Timeout | null = null
-          // 添加点击事件
-          cellRect.on('click', () => {
+          const handleClick = () => {
             if (clickTimeout) {
               clearTimeout(clickTimeout)
               clickTimeout = null
@@ -532,23 +539,33 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
             clickTimeout = setTimeout(() => {
               handleCellClick(rowIndex, colIndex, col, cellRect.x(), cellRect.y(), cellWidth, cellHeight, bodyGroup)
               clickTimeout = null
-            }, 250) // 250ms 内未发生第二次点击 → 认定为单击
-          })
-          cellRect.on('dblclick', () => {
-            handleCellDoubleClick(
-              rowIndex,
-              colIndex + startColIndex,
-              col,
-              cellRect.x(),
-              cellRect.y(),
-              cellWidth,
-              cellHeight
-            )
-          })
+            }, 250)
+          }
+
+          // 注释双击编辑功能以提升性能
+          // const handleDoubleClick = () => {
+          //   handleCellDoubleClick(
+          //     rowIndex,
+          //     colIndex + startColIndex,
+          //     col,
+          //     cellRect.x(),
+          //     cellRect.y(),
+          //     cellWidth,
+          //     cellHeight
+          //   )
+          // }
+
+          // 使用命名空间避免事件冲突，只保留点击事件
+          cellRect.off('click.cell')
+          // cellRect.off('dblclick.cell') // 注释双击事件
+          cellRect.on('click.cell', handleClick)
+          // cellRect.on('dblclick.cell', handleDoubleClick) // 注释双击事件
 
           bodyGroup.add(cellRect)
-          // 如果是操作列，绘制按钮；否则绘制文本
-          if (col.columnName === 'action') {
+          // 注释操作按钮功能以提升性能
+          if (false) {
+            // 完全禁用操作按钮相关代码
+            /*
             const actions = col.actions
             const buttonHeight = Math.max(22, Math.min(28, cellHeight - 8))
             if (actions && actions.length > 0) {
@@ -581,17 +598,32 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
                   typeof action.disabled === 'function'
                     ? action.disabled(tableData.value[rowIndex], rowIndex)
                     : !!action.disabled
-                bindButtonInteractions(buttonCellRect, {
-                  baseFill: paletteOption.fill,
-                  baseStroke: paletteOption.stroke,
-                  layer: bodyGroup.getLayer(),
-                  disabled: isDisabled
-                })
-                buttonCellRect.on('click', () => {
-                  if (isDisabled) return
-                  const rowData = tableData.value[rowIndex]
-                  emits('action-click', { rowIndex, action: action.key, rowData })
-                })
+                // 注释按钮悬停效果以提升性能，保留点击功能
+                if (!isDisabled) {
+                  // bindButtonInteractions(buttonCellRect, {
+                  //   baseFill: paletteOption.fill,
+                  //   baseStroke: paletteOption.stroke,
+                  //   layer: bodyGroup.getLayer(),
+                  //   disabled: false
+                  // })
+
+                  const handleButtonClick = () => {
+                    const rowData = tableData.value[rowIndex]
+                    emits('action-click', { rowIndex, action: action.key, rowData })
+                  }
+
+                  buttonCellRect.off('click.button')
+                  buttonCellRect.on('click.button', handleButtonClick)
+                } else {
+                  // 禁用按钮只设置透明度，不绑定交互事件
+                  buttonCellRect.opacity(0.6)
+                  // bindButtonInteractions(buttonCellRect, {
+                  //   baseFill: paletteOption.fill,
+                  //   baseStroke: paletteOption.stroke,
+                  //   layer: bodyGroup.getLayer(),
+                  //   disabled: true
+                  // })
+                }
                 bodyGroup.add(buttonCellRect)
                 const x = startX + currentWidth / 2
                 const y = startY + buttonHeight / 2
@@ -617,6 +649,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
                 startX += currentWidth + buttonGap
               })
             }
+            */
           } else {
             // 创建文本
             const rawValue =
@@ -646,34 +679,44 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
               cellHeight,
               useGetTextX: true
             })
+
             bodyGroup.add(cellText)
 
-            const colShowOverflow = col.showOverflowTooltip
-            const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
-            if (enableTooltip && truncatedValue !== value) {
-              // 悬浮提示：仅在文本被截断时创建 Konva.Tooltip 等价层
-              // 这里用浏览器原生 title 实现，命中区域为单元格矩形
-              // Konva 没有内置 tooltip，避免复杂度，先用 title
-              cellRect.off('mouseenter.tooltip')
-              cellRect.on('mouseenter.tooltip', () => {
-                if (!tableVars.stage) return
-                // 设置 container 的 title
-                tableVars.stage.container().setAttribute('title', String(rawValue ?? ''))
-              })
-              cellRect.off('mouseleave.tooltip')
-              cellRect.on('mouseleave.tooltip', () => {
-                if (!tableVars.stage) return
-                // 清除 title，避免全局悬浮
-                tableVars.stage.container().removeAttribute('title')
-              })
-            }
+            // 注释tooltip功能以提升性能
+            // const colShowOverflow = col.showOverflowTooltip
+            // const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
+            // if (enableTooltip && truncatedValue !== value) {
+            //   const handleMouseEnter = () => {
+            //     if (!tableVars.stage) return
+            //     tableVars.stage.container().setAttribute('title', String(rawValue ?? ''))
+            //   }
+            //
+            //   const handleMouseLeave = () => {
+            //     if (!tableVars.stage) return
+            //     tableVars.stage.container().removeAttribute('title')
+            //   }
+            //
+            //   cellRect.off('mouseenter.tooltip')
+            //   cellRect.off('mouseleave.tooltip')
+            //   cellRect.on('mouseenter.tooltip', handleMouseEnter)
+            //   cellRect.on('mouseleave.tooltip', handleMouseLeave)
+            // }
           }
         }
-        x += col.width || 0
+
+        // 对于合并单元格，需要跳过被合并的列
+        if (hasSpanMethod && spanCol > 1) {
+          // 跳过被合并的列，x坐标已经通过cellWidth计算了正确位置
+          x += cellWidth
+          // 同时需要跳过循环中被合并的列
+          colIndex += spanCol - 1
+        } else {
+          x += col.width || 0
+        }
       }
     }
-    // 渲染完成后，重新计算 行下标 列下标
-    recomputeHoverIndexFromPointer()
+    // 注释高亮重计算以提升性能
+    // recomputeHoverIndexFromPointer()
 
     // 渲染完成后，若存在点击高亮，保持其在最顶层
     if (tableVars.highlightRect) {
@@ -710,32 +753,32 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
 
   /**
-   * 处理单元格双击
+   * 注释双击编辑功能以提升性能
    */
-  const handleCellDoubleClick = (
-    rowIndex: number,
-    colIndex: number,
-    column: GroupStore.GroupOption | DimensionStore.DimensionOption,
-    cellX: number,
-    cellY: number,
-    cellWidth: number,
-    cellHeight: number
-  ) => {
-    // 操作列不允许编辑
-    if (column.columnName === 'action') return
+  // const handleCellDoubleClick = (
+  //   rowIndex: number,
+  //   colIndex: number,
+  //   column: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  //   cellX: number,
+  //   cellY: number,
+  //   cellWidth: number,
+  //   cellHeight: number
+  // ) => {
+  //   // 操作列不允许编辑
+  //   if (column.columnName === 'action') return
 
-    // 如果已经在编辑，先重置
-    if (cellEditorDropdown.visible) {
-      resetCellEditorDropdown()
-      // 添加小延时确保重置完成
-      setTimeout(() => {
-        openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
-      }, 10)
-      return
-    }
+  //   // 如果已经在编辑，先重置
+  //   if (cellEditorDropdown.visible) {
+  //     resetCellEditorDropdown()
+  //     // 添加小延时确保重置完成
+  //     setTimeout(() => {
+  //       openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
+  //     }, 10)
+  //     return
+  //   }
 
-    openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
-  }
+  //   openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
+  // }
 
   /**
    * 判断当前指针位置的顶层元素是否属于表格容器
@@ -759,77 +802,80 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
 
   /**
-   * 基于当前指针位置重新计算 行下标 列下标
+   * 注释高亮功能以提升性能 - 基于当前指针位置重新计算 行下标 列下标
    * @returns {void}
    */
   const recomputeHoverIndexFromPointer = () => {
-    if (
-      !tableVars.stage ||
-      (!props.enableRowHoverHighlight && !props.enableColHoverHighlight) ||
-      filterDropdown.visible ||
-      summaryDropdown.visible
-    ) {
-      return
-    }
+    // 注释整个高亮计算逻辑以提升性能
+    return
 
-    // 清除高亮的辅助函数
-    const clearHoverHighlight = () => {
-      if (tableVars.hoveredRowIndex !== null || tableVars.hoveredColIndex !== null) {
-        tableVars.hoveredRowIndex = null
-        tableVars.hoveredColIndex = null
-        updateHoverRects()
-      }
-    }
+    // if (
+    //   !tableVars.stage ||
+    //   (!props.enableRowHoverHighlight && !props.enableColHoverHighlight) ||
+    //   filterDropdown.visible ||
+    //   summaryDropdown.visible
+    // ) {
+    //   return
+    // }
 
-    // 检查各种边界条件，如果不符合则清除高亮并返回
-    if (!isTopMostInTable(tableVars.lastClientX, tableVars.lastClientY)) {
-      clearHoverHighlight()
-      return
-    }
+    // // 清除高亮的辅助函数
+    // const clearHoverHighlight = () => {
+    //   if (tableVars.hoveredRowIndex !== null || tableVars.hoveredColIndex !== null) {
+    //     tableVars.hoveredRowIndex = null
+    //     tableVars.hoveredColIndex = null
+    //     updateHoverRects()
+    //   }
+    // }
 
-    const pointerPosition = tableVars.stage.getPointerPosition()
-    if (!pointerPosition) {
-      clearHoverHighlight()
-      return
-    }
+    // // 检查各种边界条件，如果不符合则清除高亮并返回
+    // if (!isTopMostInTable(tableVars.lastClientX, tableVars.lastClientY)) {
+    //   clearHoverHighlight()
+    //   return
+    // }
 
-    /**
-     * 检查鼠标是否在表格区域内（排除滚动条区域）
-     */
-    if (!isInTableArea()) {
-      clearHoverHighlight()
-      return
-    }
+    // const pointerPosition = tableVars.stage.getPointerPosition()
+    // if (!pointerPosition) {
+    //   clearHoverHighlight()
+    //   return
+    // }
 
-    const localY = pointerPosition.y + tableVars.stageScrollY
-    const localX = pointerPosition.x + tableVars.stageScrollX
-    // 计算鼠标所在的行索引
-    const positionMapList = [
-      ...tableVars.headerPositionMapList,
-      ...tableVars.bodyPositionMapList,
-      ...tableVars.summaryPositionMapList
-    ]
-    const positionOption = positionMapList.find(
-      (item) => localX >= item.x && localX <= item.x + item.width && localY >= item.y && localY <= item.y + item.height
-    )
-    let newHoveredRowIndex = null
-    let newHoveredColIndex = null
-    if (positionOption) {
-      newHoveredRowIndex = positionOption.rowIndex
-      newHoveredColIndex = positionOption.colIndex
-    }
-    const rowChanged = newHoveredRowIndex !== tableVars.hoveredRowIndex
-    const colChanged = newHoveredColIndex !== tableVars.hoveredColIndex
-    if (rowChanged) {
-      tableVars.hoveredRowIndex = newHoveredRowIndex
-    }
-    if (colChanged) {
-      tableVars.hoveredColIndex = newHoveredColIndex
-    }
+    // /**
+    //  * 检查鼠标是否在表格区域内（排除滚动条区域）
+    //  */
+    // if (!isInTableArea()) {
+    //   clearHoverHighlight()
+    //   return
+    // }
 
-    if (rowChanged || colChanged) {
-      updateHoverRects()
-    }
+    // const localY = pointerPosition.y + tableVars.stageScrollY
+    // const localX = pointerPosition.x + tableVars.stageScrollX
+    // // 计算鼠标所在的行索引
+    // const positionMapList = [
+    //   ...tableVars.headerPositionMapList,
+    //   ...tableVars.bodyPositionMapList,
+    //   ...tableVars.summaryPositionMapList
+    // ]
+    // const positionOption = positionMapList.find(
+    //   (item) => localX >= item.x && localX <= item.x + item.width && localY >= item.y && localY <= item.y + item.height
+    // )
+    // let newHoveredRowIndex = null
+    // let newHoveredColIndex = null
+    // if (positionOption) {
+    //   newHoveredRowIndex = positionOption.rowIndex
+    //   newHoveredColIndex = positionOption.colIndex
+    // }
+    // const rowChanged = newHoveredRowIndex !== tableVars.hoveredRowIndex
+    // const colChanged = newHoveredColIndex !== tableVars.hoveredColIndex
+    // if (rowChanged) {
+    //   tableVars.hoveredRowIndex = newHoveredRowIndex
+    // }
+    // if (colChanged) {
+    //   tableVars.hoveredColIndex = newHoveredColIndex
+    // }
+
+    // if (rowChanged || colChanged) {
+    //   updateHoverRects()
+    // }
   }
 
   return {

@@ -105,7 +105,7 @@ export const drawUnifiedText = (config: DrawTextConfig) => {
  * @param {DrawRectConfig} config 绘制矩形配置
  * @returns {Konva.Rect} 矩形节点
  */
-export const drawUnifiedRect = (config: DrawRectConfig) => {
+export const drawUnifiedRect = (config: DrawRectConfig): Konva.Rect => {
   const {
     pools,
     name,
@@ -123,7 +123,7 @@ export const drawUnifiedRect = (config: DrawRectConfig) => {
     originFill
   } = config
 
-  const rect = getFromPool(pools.cellRects, () => new Konva.Rect({ listening, name }))
+  const rect: Konva.Rect = getFromPool<Konva.Rect>(pools.cellRects, () => new Konva.Rect({ listening, name }))
   rect.name(name)
   rect.off('click')
   rect.off('mouseenter')

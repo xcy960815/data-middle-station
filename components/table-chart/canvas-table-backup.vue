@@ -1,7 +1,7 @@
 <template>
   <div id="table-container" class="table-container" :style="tableContainerStyle"></div>
 
-  <!-- 注释过滤器以提升性能 -->
+  <!-- 过滤器下拉（多选） -->
   <teleport to="body">
     <div
       ref="filterDropdownRef"
@@ -26,7 +26,7 @@
       </el-select>
     </div>
   </teleport>
-  <!-- 注释汇总功能以提升性能 -->
+  <!-- 汇总行下拉（单选） -->
   <teleport to="body">
     <div
       ref="summaryDropdownRef"
@@ -62,7 +62,6 @@
 
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
-import CellEditor from './cell-editor.vue'
 import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
@@ -80,7 +79,7 @@ const props = defineProps(chartProps)
  */
 const emits = defineEmits<ChartEmits>()
 
-const { tableVars, tableContainerStyle, handleTableData, handleTableColumns, sortColumns } = variableHandlder({ props })
+const { tableVars, tableContainerStyle, handleTableData, handleTableColumns } = variableHandlder({ props })
 
 const { initStage, destroyStage, refreshTable, initStageListeners, cleanupStageListeners } = konvaStageHandler({
   props,
@@ -91,7 +90,6 @@ renderBodyHandler({ props, emits })
 
 const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ props, emits })
 
-// 注释过滤功能以提升性能
 const {
   filterDropdownRef,
   filterDropdownStyle,
@@ -102,7 +100,6 @@ const {
   cleanupFilterDropdownListeners
 } = filterDropdownHandler({ props })
 
-// 注释汇总功能以提升性能
 const {
   summaryDropdownRef,
   summaryDropdownStyle,
@@ -187,7 +184,7 @@ watch(
 )
 
 /**
- * 汇总行相关 - 注释以提升性能
+ * 汇总行相关
  */
 watch(
   () => [
@@ -216,12 +213,12 @@ watch(
 )
 
 /**
- * 交互相关（排序指示等） - 注释高亮相关以提升性能
+ * 交互相关（悬浮高亮、排序指示等）
  */
 watch(
   () => [
-    // props.enableRowHoverHighlight, // 注释以提升性能
-    // props.enableColHoverHighlight, // 注释以提升性能
+    props.enableRowHoverHighlight,
+    props.enableColHoverHighlight,
     props.sortableColor,
     props.highlightCellBackground
   ],
@@ -242,20 +239,6 @@ watch(
   }
 )
 
-/**
- * 排序状态变化时重新渲染表格
- */
-watch(
-  () => sortColumns.value,
-  () => {
-    if (!tableVars.stage) return
-    refreshTable(false)
-  },
-  {
-    deep: true
-  }
-)
-
 onMounted(() => {
   handleTableColumns(props.xAxisFields, props.yAxisFields)
   initStage()
@@ -263,16 +246,16 @@ onMounted(() => {
   refreshTable(true)
   initWheelListener()
   initStageListeners()
-  // initFilterDropdownListeners() // 注释过滤功能
-  // initSummaryDropdownListeners() // 注释汇总功能
+  initFilterDropdownListeners()
+  initSummaryDropdownListeners()
   initCellEditorListeners()
 })
 
 onBeforeUnmount(() => {
   cleanupWheelListener()
   cleanupStageListeners()
-  // cleanupFilterDropdownListeners() // 注释过滤功能
-  // cleanupSummaryDropdownListeners() // 注释汇总功能
+  cleanupFilterDropdownListeners()
+  cleanupSummaryDropdownListeners()
   cleanupCellEditorListeners()
   destroyStage()
 })
@@ -292,3 +275,4 @@ onBeforeUnmount(() => {
   border-radius: 4px;
 }
 </style>
+-->
