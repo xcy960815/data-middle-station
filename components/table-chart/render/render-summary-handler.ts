@@ -137,27 +137,17 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
     stageStartX: number
   ) => {
     if (!tableVars.stage || !summaryGroup) return
-    // 清空现有内容
-    const children = summaryGroup.children.slice()
-    children.forEach((child) => {
-      if (child instanceof Konva.Text && child.name() === 'summary-cell-text') {
-        child.remove()
-      } else if (child instanceof Konva.Rect && child.name() === 'summary-cell-rect') {
-        child.remove()
-      }
-    })
     const stage = tableVars.stage
     const summaryHeight = props.summaryHeight
     const summaryBackground = props.summaryBackground
     const borderColor = props.borderColor
     const summaryFontFamily = props.summaryFontFamily
     const summaryTextColor = props.summaryTextColor
-    const fontSizeNumber =
-      typeof props.summaryFontSize === 'string' ? parseFloat(props.summaryFontSize) : props.summaryFontSize
-    const realRowIndex = tableData.value.length + 1
+    const fontSize = props.summaryFontSize
+    const rowIndex = tableData.value.length + 1
     const summaryY = stage.height() - summaryHeight
 
-    let x = stageStartX
+    let x = 0
     summaryCols.forEach((col, colIndex) => {
       const pools = tableVars.leftBodyPools
       const realColIndex = colIndex + startColIndex
@@ -172,7 +162,7 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         stroke: borderColor,
         strokeWidth: 1,
         listening: true,
-        rowIndex: realRowIndex,
+        rowIndex,
         colIndex: realColIndex,
         originFill: summaryBackground
       })
@@ -180,13 +170,14 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
 
       const colWidth = col.width || 0
       const textMaxWidth = colWidth - 16
+
       // 记录汇总单元格位置信息（使用舞台坐标）
       positionMapList.push({
         x: stageStartX + x,
         y: summaryY,
         width: colWidth,
         height: summaryHeight,
-        rowIndex: realRowIndex,
+        rowIndex,
         colIndex: realColIndex
       })
 
@@ -200,7 +191,7 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         text: truncatedTitle,
         x,
         y: 0,
-        fontSize: fontSizeNumber,
+        fontSize,
         fontFamily: summaryFontFamily,
         fill: summaryTextColor,
         align: col.align || 'left',
