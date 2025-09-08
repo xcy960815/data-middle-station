@@ -39,39 +39,36 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       tableVars.stage.size({ width, height })
     }
 
-    if (!tableVars.headerLayer) {
-      tableVars.headerLayer = new Konva.Layer()
-      tableVars.stage.add(tableVars.headerLayer)
-    }
+    // 修复Layer层级顺序：确保表头在最上层不被遮挡
 
+    // 1. 主体内容层（最底层 - 可滚动的body部分）
     if (!tableVars.bodyLayer) {
       tableVars.bodyLayer = new Konva.Layer()
       tableVars.stage.add(tableVars.bodyLayer)
     }
 
+    // 2. 固定列body层（中间层 - 左右固定列的body部分）
     if (!tableVars.fixedBodyLayer) {
       tableVars.fixedBodyLayer = new Konva.Layer()
       tableVars.stage.add(tableVars.fixedBodyLayer)
     }
 
-    if (!tableVars.fixedHeaderLayer) {
-      tableVars.fixedHeaderLayer = new Konva.Layer()
-      tableVars.stage.add(tableVars.fixedHeaderLayer)
+    // 3. 表头层（高层 - 所有表头，不被遮挡）
+    if (!tableVars.headerLayer) {
+      tableVars.headerLayer = new Konva.Layer()
+      tableVars.stage.add(tableVars.headerLayer)
     }
 
-    if (!tableVars.summaryLayer) {
-      tableVars.summaryLayer = new Konva.Layer()
-      tableVars.stage.add(tableVars.summaryLayer)
-    }
-
-    if (!tableVars.fixedSummaryLayer) {
-      tableVars.fixedSummaryLayer = new Konva.Layer()
-      tableVars.stage.add(tableVars.fixedSummaryLayer)
-    }
-
+    // 4. 滚动条层（最高层）
     if (!tableVars.scrollbarLayer) {
       tableVars.scrollbarLayer = new Konva.Layer()
       tableVars.stage.add(tableVars.scrollbarLayer)
+    }
+
+    // 5. 汇总层（像header一样，统一管理）
+    if (!tableVars.summaryLayer) {
+      tableVars.summaryLayer = new Konva.Layer()
+      tableVars.stage.add(tableVars.summaryLayer)
     }
 
     tableVars.stage.setPointersPositions({
@@ -86,13 +83,13 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const destroyStage = () => {
     tableVars.stage?.destroy()
     tableVars.stage = null
+    // 修复后有4个真实的Layer
     tableVars.headerLayer = null
     tableVars.bodyLayer = null
     tableVars.fixedBodyLayer = null
-    tableVars.fixedHeaderLayer = null
-    tableVars.summaryLayer = null
-    tableVars.fixedSummaryLayer = null
     tableVars.scrollbarLayer = null
+    // 这些只是引用，设为null即可
+    tableVars.summaryLayer = null
     tableVars.centerBodyClipGroup = null
     tableVars.highlightRect = null
   }
@@ -154,19 +151,22 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const { updateScrollPositions } = renderScrollbarsHandler({ props, emits: ensureEmits() })
     const { tableData } = variableHandlder({ props })
 
-    // 列宽拖拽中：实时更新覆盖宽度并重建分组
-    if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
-      const delta = mouseEvent.clientX - tableVars.resizeStartX
-      const newWidth = Math.max(props.minAutoColWidth, tableVars.resizeStartWidth + delta)
-      tableVars.columnWidthOverrides[tableVars.resizingColumnName] = newWidth
-      if (tableVars.resizeNeighborColumnName) {
-        const neighborWidth = Math.max(props.minAutoColWidth, tableVars.resizeNeighborStartWidth - delta)
-        tableVars.columnWidthOverrides[tableVars.resizeNeighborColumnName] = neighborWidth
-      }
-      clearGroups()
-      rebuildGroups()
-      return
-    }
+    // 列宽拖拽中：实时更新覆盖宽度并重建分组 - 已注释掉
+    // if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
+    //   console.log('🔄 Resizing column: ', tableVars.resizingColumnName);
+
+    //   const delta = mouseEvent.clientX - tableVars.resizeStartX
+    //   const newWidth = Math.max(props.minAutoColWidth, tableVars.resizeStartWidth + delta)
+    //   tableVars.columnWidthOverrides[tableVars.resizingColumnName] = newWidth
+    //   if (tableVars.resizeNeighborColumnName) {
+    //     const neighborWidth = Math.max(props.minAutoColWidth, tableVars.resizeNeighborStartWidth - delta)
+    //     tableVars.columnWidthOverrides[tableVars.resizeNeighborColumnName] = neighborWidth
+    //   }
+
+    //   clearGroups()
+    //   rebuildGroups()
+    //   return
+    // }
 
     // 手动拖拽导致的垂直滚动
     if (tableVars.isDraggingVerticalThumb) {
@@ -179,7 +179,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       const trackHeight =
         stageHeight -
         props.headerHeight -
-        (props.enableSummary ? props.summaryHeight : 0) -
+        (props.enableSummary ? props.summaryHeight : 0) - // 注释汇总高度
         (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
       const scrollRatio = deltaY / (trackHeight - thumbHeight)
@@ -196,7 +196,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       const needsRerender =
         tableVars.visibleRowStart !== oldVisibleStart ||
         tableVars.visibleRowEnd !== oldVisibleEnd ||
-        Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 2
+        Math.abs(tableVars.stageScrollY - oldScrollY) > props.bodyRowHeight * 5 // 配合更大的缓冲行数，减少重新渲染频率
 
       if (needsRerender) {
         const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
@@ -242,7 +242,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       updateScrollPositions()
       return
     }
-    recomputeHoverIndexFromPointer()
+    // 注释高亮重计算以提升性能
+    // recomputeHoverIndexFromPointer()
   }
 
   /**
@@ -263,15 +264,27 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       tableVars.scrollbarLayer?.batchDraw()
     }
 
-    // 列宽拖拽结束
-    if (tableVars.isResizingColumn) {
-      tableVars.isResizingColumn = false
-      tableVars.resizingColumnName = null
-      tableVars.resizeNeighborColumnName = null
-      setPointerStyle(false, 'default')
-      clearGroups()
-      rebuildGroups()
-    }
+    // 列宽拖拽结束 - 已注释掉
+    // if (tableVars.isResizingColumn && tableVars.resizingColumnName) {
+    //   const resizingColumnName = tableVars.resizingColumnName
+    //   const currentWidth = tableVars.columnWidthOverrides[resizingColumnName]
+
+    //   // 触发列宽改变事件，让父组件可以保存列宽配置
+    //   if (emits && currentWidth !== undefined) {
+    //     emits('column-width-change', {
+    //       columnName: resizingColumnName,
+    //       width: currentWidth,
+    //       columnWidthOverrides: { ...tableVars.columnWidthOverrides }
+    //     })
+    //   }
+
+    //   tableVars.isResizingColumn = false
+    //   tableVars.resizingColumnName = null
+    //   tableVars.resizeNeighborColumnName = null
+    //   setPointerStyle(false, 'default')
+    //   clearGroups()
+    //   rebuildGroups()
+    // }
   }
 
   /**
@@ -290,13 +303,12 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
    * @returns {void}
    */
   const clearGroups = () => {
+    // 清理5个真实的Layer
     tableVars.headerLayer?.destroyChildren()
     tableVars.bodyLayer?.destroyChildren()
-    tableVars.summaryLayer?.destroyChildren()
-    tableVars.fixedHeaderLayer?.destroyChildren()
     tableVars.fixedBodyLayer?.destroyChildren()
-    tableVars.fixedSummaryLayer?.destroyChildren()
     tableVars.scrollbarLayer?.destroyChildren()
+    tableVars.summaryLayer?.destroyChildren()
     clearPool(tableVars.leftBodyPools.cellRects)
     clearPool(tableVars.leftBodyPools.cellTexts)
     clearPool(tableVars.centerBodyPools.cellRects)
@@ -351,11 +363,9 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     if (
       !tableVars.stage ||
       !tableVars.headerLayer ||
-      !tableVars.fixedHeaderLayer ||
       !tableVars.bodyLayer ||
       !tableVars.fixedBodyLayer ||
       !tableVars.summaryLayer ||
-      !tableVars.fixedSummaryLayer ||
       !tableVars.scrollbarLayer
     ) {
       return
@@ -366,7 +376,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       throw new Error('rebuildGroups requires emits to be provided to konvaStageHandler')
     }
 
-    const { drawHeaderPart } = renderHeaderHandler({ props })
+    const { drawHeaderPart } = renderHeaderHandler({ props, emits })
     const { drawBodyPart, getSplitColumns, getScrollLimits } = renderBodyHandler({ props, emits })
     const { drawSummaryPart } = renderSummaryHandler({ props })
     const { createScrollbars } = renderScrollbarsHandler({ props, emits })
@@ -374,41 +384,74 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
     const { width: stageWidth, height: stageHeight } = getStageAttr()
     const { maxScrollX, maxScrollY } = getScrollLimits()
-    const verticalScrollbarSpace = maxScrollY > 0 ? props.scrollbarSize : 0
-    const horizontalScrollbarSpace = maxScrollX > 0 ? props.scrollbarSize : 0
+    const verticalScrollbarWidth = maxScrollY > 0 ? props.scrollbarSize : 0
+    const horizontalScrollbarHeight = maxScrollX > 0 ? props.scrollbarSize : 0
 
+    // 为中间可滚动区域创建裁剪组，防止遮挡固定列
     if (!tableVars.centerBodyClipGroup) {
-      const clipHeight = stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarSpace
+      const clipHeight = stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
       tableVars.centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
         x: 0,
         y: 0,
-        width: stageWidth - leftWidth - rightWidth - verticalScrollbarSpace,
+        width: stageWidth - leftWidth - rightWidth - verticalScrollbarWidth,
         height: clipHeight
       })
       tableVars.bodyLayer.add(tableVars.centerBodyClipGroup)
     }
 
+    // 为中间表头也创建裁剪组，防止表头横向滚动时遮挡固定列
+    const centerHeaderClipGroup = new Konva.Group({
+      x: 0,
+      y: 0,
+      name: 'center-header-clip-group',
+      clip: {
+        x: 0,
+        y: 0,
+        width: stageWidth - rightWidth - verticalScrollbarWidth,
+        height: props.headerHeight
+      }
+    })
+
+    tableVars.headerLayer.add(centerHeaderClipGroup)
+
+    // 方式1：单独创建（保持原有方式）
     tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
-    tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth - tableVars.stageScrollX, 0)
-    tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, 0)
+    tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth, 0)
+    tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarWidth, 0)
 
-    tableVars.leftBodyGroup = createBodyLeftGroups(0, props.headerHeight - tableVars.stageScrollY)
+    tableVars.leftBodyGroup = createBodyLeftGroups(0, 0) // 现在相对于裁剪组，初始位置为0
     tableVars.centerBodyGroup = createBodyCenterGroups(-tableVars.stageScrollX, -tableVars.stageScrollY)
-    tableVars.rightBodyGroup = createBodyRightGroups(
-      stageWidth - rightWidth - verticalScrollbarSpace,
-      props.headerHeight - tableVars.stageScrollY
-    )
+    tableVars.rightBodyGroup = createBodyRightGroups(0, 0) // 现在相对于裁剪组，初始位置为0
 
-    tableVars.headerLayer.add(tableVars.centerHeaderGroup)
-    tableVars.fixedHeaderLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup)
+    // 修复表头Group分配：使用裁剪组防止遮挡
+    centerHeaderClipGroup.add(tableVars.centerHeaderGroup) // 中间表头放入裁剪组
+    tableVars.headerLayer.add(tableVars.leftHeaderGroup, tableVars.rightHeaderGroup) // 固定表头必须在表头层，确保不被body层遮挡
 
+    // 创建汇总行组（像header一样统一管理）
     if (props.enableSummary) {
-      const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarSpace
+      const summaryY = stageHeight - summaryRowHeight.value - horizontalScrollbarHeight
+
+      // 为中间汇总也创建裁剪组，防止汇总横向滚动时遮挡固定列
+      const centerSummaryClipGroup = new Konva.Group({
+        x: 0,
+        y: summaryY,
+        name: 'center-summary-clip-group',
+        clip: {
+          x: 0,
+          y: 0,
+          width: stageWidth - rightWidth - verticalScrollbarWidth,
+          height: summaryRowHeight.value
+        }
+      })
+      tableVars.summaryLayer.add(centerSummaryClipGroup)
+
       tableVars.leftSummaryGroup = createSummaryLeftGroups(0, summaryY)
-      tableVars.centerSummaryGroup = createSummaryCenterGroups(leftWidth - tableVars.stageScrollX, summaryY)
-      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarSpace, summaryY)
-      tableVars.summaryLayer.add(tableVars.centerSummaryGroup)
-      tableVars.fixedSummaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
+      tableVars.centerSummaryGroup = createSummaryCenterGroups(-tableVars.stageScrollX, 0) // 相对于裁剪组的位置
+      tableVars.rightSummaryGroup = createSummaryRightGroups(stageWidth - rightWidth - verticalScrollbarWidth, summaryY)
+
+      // 像header一样：中间汇总放入裁剪组，固定汇总直接加到汇总层
+      centerSummaryClipGroup.add(tableVars.centerSummaryGroup)
+      tableVars.summaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
     } else {
       tableVars.leftSummaryGroup = null
       tableVars.centerSummaryGroup = null
@@ -416,7 +459,43 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     }
 
     tableVars.centerBodyClipGroup.add(tableVars.centerBodyGroup)
-    tableVars.fixedBodyLayer.add(tableVars.leftBodyGroup, tableVars.rightBodyGroup)
+
+    // 为左侧和右侧固定列body组也创建裁剪组，防止延伸到滚动条区域
+    const leftBodyClipGroup = new Konva.Group({
+      x: 0,
+      y: props.headerHeight,
+      name: 'left-body-clip-group',
+      clip: {
+        x: 0,
+        y: 0,
+        width: leftWidth,
+        height: stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
+      }
+    })
+
+    const rightBodyClipGroup = new Konva.Group({
+      x: stageWidth - rightWidth - verticalScrollbarWidth,
+      y: props.headerHeight,
+      name: 'right-body-clip-group',
+      clip: {
+        x: 0,
+        y: 0,
+        width: rightWidth,
+        height: stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
+      }
+    })
+
+    // 将左右body组放入各自的裁剪组中，并调整组的位置为相对于裁剪组
+    leftBodyClipGroup.add(tableVars.leftBodyGroup)
+    rightBodyClipGroup.add(tableVars.rightBodyGroup)
+
+    // 调整左右body组的位置，使其相对于裁剪组
+    tableVars.leftBodyGroup.x(0)
+    tableVars.leftBodyGroup.y(-tableVars.stageScrollY)
+    tableVars.rightBodyGroup.x(0)
+    tableVars.rightBodyGroup.y(-tableVars.stageScrollY)
+
+    tableVars.fixedBodyLayer.add(leftBodyClipGroup, rightBodyClipGroup) // 添加裁剪组到固定层
 
     tableVars.headerPositionMapList.length = 0
     // 绘制表头
@@ -450,7 +529,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       leftWidth + centerWidth
     )
 
-    // 绘制底部 summary
+    // 绘制汇总行
     if (props.enableSummary) {
       tableVars.summaryPositionMapList.length = 0
       drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
@@ -472,13 +551,12 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     createScrollbars()
 
-    tableVars.headerLayer.batchDraw()
-    tableVars.bodyLayer?.batchDraw()
-    tableVars.fixedBodyLayer?.batchDraw()
-    tableVars.fixedHeaderLayer?.batchDraw()
-    tableVars.summaryLayer?.batchDraw()
-    tableVars.fixedSummaryLayer?.batchDraw()
-    tableVars.scrollbarLayer?.batchDraw()
+    // 确保层级绘制顺序正确：固定列在上层
+    tableVars.bodyLayer?.batchDraw() // 1. 先绘制可滚动的中间内容
+    tableVars.fixedBodyLayer?.batchDraw() // 2. 再绘制固定列（覆盖在上面）
+    tableVars.headerLayer.batchDraw() // 3. 表头在最上层
+    tableVars.summaryLayer?.batchDraw() // 4. 汇总层（像header一样统一管理）
+    tableVars.scrollbarLayer?.batchDraw() // 5. 滚动条在最顶层
   }
 
   // 暴露到全局状态，供其他模块调用（仅在提供 emits 时设置，以避免无 emits 实例覆盖）
@@ -487,145 +565,49 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   }
 
   /**
-   * 创建左侧表头组
-   * @param {number} x
-   * @param {number} y
+   * 统一的分组创建工厂方法
+   * @param groupType 分组类型
+   * @param position 左中右位置
+   * @param x x坐标
+   * @param y y坐标
+   * @param options 可选配置（如裁剪参数）
    * @returns {Konva.Group}
    */
-  const createHeaderLeftGroups = (x: number, y: number) => {
-    const leftHeaderGroup = new Konva.Group({
-      x: 0,
-      y: 0,
-      name: 'left-header-group'
-    })
-    return leftHeaderGroup
+  const createGroup = (
+    groupType: 'header' | 'body' | 'summary',
+    position: 'left' | 'center' | 'right',
+    x: number,
+    y: number,
+    options?: {
+      clip?: {
+        x: number
+        y: number
+        width: number
+        height: number
+      }
+    }
+  ): Konva.Group => {
+    const groupName = `${position}-${groupType}-group`
+
+    const groupConfig: Konva.GroupConfig = {
+      x: position === 'left' ? 0 : x, // 左侧固定列的x永远为0
+      y: position === 'center' && groupType !== 'header' ? y : groupType === 'header' ? 0 : y,
+      name: groupName
+    }
+
+    // 如果是裁剪组，添加裁剪配置
+    if (options?.clip) {
+      groupConfig.clip = options.clip
+    }
+
+    return new Konva.Group(groupConfig)
   }
 
   /**
-   * 创建中间表头组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createHeaderCenterGroups = (x: number, y: number) => {
-    const centerHeaderGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'center-header-group'
-    })
-    return centerHeaderGroup
-  }
-
-  /**
-   * 创建右侧表头组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createHeaderRightGroups = (x: number, y: number) => {
-    const rightHeaderGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'right-header-group'
-    })
-    return rightHeaderGroup
-  }
-
-  /**
-   * 创建左侧表体组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createBodyLeftGroups = (x: number, y: number) => {
-    const leftBodyGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'left-body-group'
-    })
-    return leftBodyGroup
-  }
-
-  /**
-   * 创建中间表体组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createBodyCenterGroups = (x: number, y: number) => {
-    const centerBodyGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'center-body-group'
-    })
-    return centerBodyGroup
-  }
-
-  /**
-   * 创建右侧表体组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createBodyRightGroups = (x: number, y: number) => {
-    const rightBodyGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'right-body-group'
-    })
-    return rightBodyGroup
-  }
-
-  /**
-   * 创建左侧汇总组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createSummaryLeftGroups = (x: number, y: number) => {
-    const leftSummaryGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'left-summary-group'
-    })
-    return leftSummaryGroup
-  }
-
-  /**
-   * 创建中间汇总组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createSummaryCenterGroups = (x: number, y: number) => {
-    const centerSummaryGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'center-summary-group'
-    })
-    return centerSummaryGroup
-  }
-
-  /**
-   * 创建右侧汇总组
-   * @param {number} x
-   * @param {number} y
-   * @returns {Konva.Group}
-   */
-  const createSummaryRightGroups = (x: number, y: number) => {
-    const rightSummaryGroup = new Konva.Group({
-      x: x,
-      y: y,
-      name: 'right-summary-group'
-    })
-    return rightSummaryGroup
-  }
-
-  /**
-   * 创建中间表体剪辑组
-   * @param x
-   * @param y
-   * @param clip
+   * 创建中间表体剪辑组（特殊方法，因为需要裁剪功能）
+   * @param x x坐标
+   * @param y y坐标
+   * @param clip 裁剪区域
    * @returns {Konva.Group}
    */
   const createCenterBodyClipGroup = (
@@ -637,15 +619,61 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       width: number
       height: number
     }
-  ) => {
-    const centerBodyClipGroup = new Konva.Group({
+  ): Konva.Group => {
+    return new Konva.Group({
       x: x,
       y: y,
       name: 'center-body-clip-group',
       clip: clip
     })
-    return centerBodyClipGroup
   }
+
+  /**
+   * 批量创建同类型分组的方法
+   * @param groupType 分组类型
+   * @param positions 位置配置数组
+   * @returns 创建的分组对象映射
+   */
+  const createGroupsByType = (
+    groupType: 'header' | 'body' | 'summary',
+    positions: Array<{
+      position: 'left' | 'center' | 'right'
+      x: number
+      y: number
+      options?: {
+        clip?: {
+          x: number
+          y: number
+          width: number
+          height: number
+        }
+      }
+    }>
+  ) => {
+    const groups: Record<string, Konva.Group> = {}
+
+    positions.forEach(({ position, x, y, options }) => {
+      const key = `${position}${groupType.charAt(0).toUpperCase() + groupType.slice(1)}Group`
+      groups[key] = createGroup(groupType, position, x, y, options)
+    })
+
+    return groups
+  }
+
+  // 快捷方法 - 表头分组
+  const createHeaderLeftGroups = (x: number, y: number) => createGroup('header', 'left', x, y)
+  const createHeaderCenterGroups = (x: number, y: number) => createGroup('header', 'center', x, y)
+  const createHeaderRightGroups = (x: number, y: number) => createGroup('header', 'right', x, y)
+
+  // 快捷方法 - 表体分组
+  const createBodyLeftGroups = (x: number, y: number) => createGroup('body', 'left', x, y)
+  const createBodyCenterGroups = (x: number, y: number) => createGroup('body', 'center', x, y)
+  const createBodyRightGroups = (x: number, y: number) => createGroup('body', 'right', x, y)
+
+  // 快捷方法 - 汇总分组
+  const createSummaryLeftGroups = (x: number, y: number) => createGroup('summary', 'left', x, y)
+  const createSummaryCenterGroups = (x: number, y: number) => createGroup('summary', 'center', x, y)
+  const createSummaryRightGroups = (x: number, y: number) => createGroup('summary', 'right', x, y)
 
   /**
    * 初始化全局事件监听器
@@ -654,6 +682,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     // 仅在提供 emits 时，注册依赖 emits 的全局事件监听器
     if (!emits) return
     window.addEventListener('resize', handleGlobalResize)
+    // 需要保留鼠标移动监听以支持列宽拖拽功能
     window.addEventListener('mousemove', handleGlobalMouseMove)
     window.addEventListener('mouseup', handleGlobalMouseUp)
   }
@@ -664,8 +693,22 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const cleanupStageListeners = () => {
     if (!emits) return
     window.removeEventListener('resize', handleGlobalResize)
+    // 清理鼠标移动监听
     window.removeEventListener('mousemove', handleGlobalMouseMove)
     window.removeEventListener('mouseup', handleGlobalMouseUp)
+  }
+
+  /**
+   * 设置列宽覆盖配置（用于从外部恢复保存的列宽）
+   * @param overrides 列宽覆盖配置
+   */
+  const setColumnWidthOverrides = (overrides: Record<string, number>) => {
+    tableVars.columnWidthOverrides = { ...overrides }
+    // 如果已经初始化，则刷新表格
+    if (tableVars.stage) {
+      clearGroups()
+      rebuildGroups()
+    }
   }
 
   return {
@@ -680,6 +723,10 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     clearGroups,
     initStageListeners,
     cleanupStageListeners,
-    setPointerStyle
+    setPointerStyle,
+    setColumnWidthOverrides,
+    createGroup,
+    createGroupsByType,
+    createCenterBodyClipGroup
   }
 }
