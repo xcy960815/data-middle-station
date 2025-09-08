@@ -396,28 +396,17 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
         height: props.headerHeight
       }
     })
-    tableVars.headerLayer.add(centerHeaderClipGroup)
 
-    // 示例：使用统一的分组创建方法（可以选择使用批量创建或单独创建）
+    tableVars.headerLayer.add(centerHeaderClipGroup)
 
     // 方式1：单独创建（保持原有方式）
     tableVars.leftHeaderGroup = createHeaderLeftGroups(0, 0)
-    tableVars.centerHeaderGroup = createHeaderCenterGroups(-tableVars.stageScrollX, 0) // 修复：移除多余的 leftWidth 偏移
+    tableVars.centerHeaderGroup = createHeaderCenterGroups(leftWidth, 0)
     tableVars.rightHeaderGroup = createHeaderRightGroups(stageWidth - rightWidth - verticalScrollbarWidth, 0)
 
     tableVars.leftBodyGroup = createBodyLeftGroups(0, 0) // 现在相对于裁剪组，初始位置为0
     tableVars.centerBodyGroup = createBodyCenterGroups(-tableVars.stageScrollX, -tableVars.stageScrollY)
     tableVars.rightBodyGroup = createBodyRightGroups(0, 0) // 现在相对于裁剪组，初始位置为0
-
-    // 方式2：使用新的统一创建方法（备选方案，注释展示用法）
-    // const bodyGroups = createGroupsByType('body', [
-    //   { position: 'left', x: 0, y: 0 }, // 左侧body组相对于裁剪组
-    //   { position: 'center', x: -tableVars.stageScrollX, y: -tableVars.stageScrollY },
-    //   { position: 'right', x: 0, y: 0 } // 右侧body组相对于裁剪组
-    // ])
-    // tableVars.leftBodyGroup = bodyGroups.leftBodyGroup
-    // tableVars.centerBodyGroup = bodyGroups.centerBodyGroup
-    // tableVars.rightBodyGroup = bodyGroups.rightBodyGroup
 
     // 修复表头Group分配：使用裁剪组防止遮挡
     centerHeaderClipGroup.add(tableVars.centerHeaderGroup) // 中间表头放入裁剪组
