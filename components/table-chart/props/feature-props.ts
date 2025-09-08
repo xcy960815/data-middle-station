@@ -14,7 +14,7 @@ export const featureProps = {
   /**
    * 滚动阈值（进一步降低阈值以提升滚动响应性）
    */
-  scrollThreshold: { type: Number, default: 1 }
+  scrollThreshold: { type: Number, default: 1 },
   // /**
   //  * 是否启用行高亮 - 注释以提升性能
   //  */
@@ -24,20 +24,20 @@ export const featureProps = {
   //  */
   // enableColHoverHighlight: { type: Boolean, default: false },
 
-  // /**
-  //  * 合并单元格方法
-  //  * @param args 参数
-  //  * @returns 合并单元格信息
-  //  */
-  // spanMethod: {
-  //   type: Function as PropType<
-  //     (args: {
-  //       row: ChartDataVo.ChartData
-  //       column: GroupStore.GroupOption | DimensionStore.DimensionOption
-  //       rowIndex: number
-  //       colIndex: number
-  //     }) => { rowspan: number; colspan: number } | [number, number] | null | undefined
-  //   >,
-  //   default: undefined
-  // }
+  /**
+   * 合并单元格方法
+   * @param args 参数
+   * @returns 合并单元格信息
+   */
+  spanMethod: {
+    type: Function as PropType<
+      (args: {
+        row: ChartDataVo.ChartData
+        column: GroupStore.GroupOption | DimensionStore.DimensionOption
+        rowIndex: number
+        colIndex: number
+      }) => { rowspan: number; colspan: number } | [number, number] | null | undefined
+    >,
+    default: undefined
+  }
 }
