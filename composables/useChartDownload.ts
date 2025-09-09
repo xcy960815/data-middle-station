@@ -1,10 +1,4 @@
 import { ElCheckbox, ElCheckboxGroup, ElMessage, ElMessageBox } from 'element-plus'
-import { h, reactive } from 'vue'
-import { useAnalyseStore } from '~/stores/analyse'
-import { useColumnStore } from '~/stores/column'
-import { useDimensionStore } from '~/stores/dimension'
-import { useGroupStore } from '~/stores/group'
-import { exportToExcel } from '~/utils/export-excel'
 
 /**
  * 图表下载功能的 composable

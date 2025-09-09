@@ -4,7 +4,7 @@
 </template>
 <script setup lang="ts">
 import { Chart } from '@antv/g2'
-
+import type { ExportChartOptions } from '~/utils/chart-export'
 defineOptions({
   name: 'LineChart'
 })
@@ -41,17 +41,11 @@ defineExpose({
    * 导出图表为 Base64
    * @param options
    */
-  exportAsImage: async (options?: {
-    type?: 'image/png' | 'image/jpeg'
-    quality?: number
-    width?: number
-    height?: number
-    backgroundColor?: string
-    scale?: number
-  }) => {
+  exportAsImage: async (options?: ExportChartOptions) => {
     if (!chartInstance.value) {
       throw new Error('图表实例不存在')
     }
+
     const { ChartExporter } = await import('~/utils/chart-export')
     return ChartExporter.exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
   },
@@ -60,17 +54,7 @@ defineExpose({
    * @param filename 文件名
    * @param options 选项
    */
-  downloadChart: async (
-    filename: string,
-    options?: {
-      type?: 'image/png' | 'image/jpeg'
-      quality?: number
-      width?: number
-      height?: number
-      backgroundColor?: string
-      scale?: number
-    }
-  ) => {
+  downloadChart: async (filename: string, options?: ExportChartOptions) => {
     if (!chartInstance.value) {
       throw new Error('图表实例不存在')
     }
