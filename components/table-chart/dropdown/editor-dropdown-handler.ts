@@ -43,13 +43,11 @@ export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerPro
     tableVars.bodyLayer?.destroyChildren()
     tableVars.summaryLayer?.destroyChildren()
     tableVars.fixedBodyLayer?.destroyChildren()
-    tableVars.fixedSummaryLayer?.destroyChildren()
     tableVars.scrollbarLayer?.destroyChildren()
     tableVars.verticalScrollbarGroup = null
     tableVars.horizontalScrollbarGroup = null
     tableVars.verticalScrollbarThumbRect = null
     tableVars.horizontalScrollbarThumbRect = null
-    tableVars.centerBodyClipGroup = null
     tableVars.highlightRect = null
     tableVars.visibleRowStart = 0
     tableVars.visibleRowEnd = 0
