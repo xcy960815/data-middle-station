@@ -52,7 +52,18 @@ declare namespace SendEmailDto {
   }
 
   /**
-   * 发送图表邮件的请求接口
+   * 单个图表数据接口
+   */
+  interface ChartData {
+    id: string
+    title: string
+    imageData?: string
+    base64Image?: string
+    filename: string
+  }
+
+  /**
+   * 发送图表邮件的请求接口（简化版 - 只支持单个图表）
    */
   interface SendChartEmailRequest {
     to: string[]
@@ -61,13 +72,7 @@ declare namespace SendEmailDto {
     subject: string
     body?: string
     additionalContent?: string
-    charts: Array<{
-      id: string
-      title: string
-      imageData?: string
-      base64Image?: string
-      filename: string
-    }>
+    chart: ChartData
     attachments?: Array<{
       filename: string
       content: string

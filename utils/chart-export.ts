@@ -4,6 +4,15 @@ import html2canvas from 'html2canvas'
 // 定义 G2 v5 Chart 实例的正确类型
 type G2ChartInstance = InstanceType<typeof Chart>
 
+export interface ExportChartOptions {
+  type?: 'image/png' | 'image/jpeg'
+  quality?: number
+  width?: number
+  height?: number
+  backgroundColor?: string
+  scale?: number
+}
+
 /**
  * 图表导出工具类
  */
@@ -16,20 +25,11 @@ export class ChartExporter {
    */
   static async exportChartAsBase64(
     chartInstance: G2ChartInstance | null,
-    options: {
-      type?: 'image/png' | 'image/jpeg'
-      quality?: number
-      width?: number
-      height?: number
-      backgroundColor?: string
-    } = {}
+    options: ExportChartOptions = {}
   ): Promise<string> {
-    const { type = 'image/png', quality = 1, backgroundColor = '#ffffff' } = options
+    const { type = 'image/png', quality = 1, backgroundColor = '#ffffff', scale = 1 } = options
 
     try {
-      // 等待图表渲染完成
-      await chartInstance?.render()
-
       // 获取图表容器
       const container = chartInstance?.getContainer()
       if (!container) {
@@ -37,9 +37,9 @@ export class ChartExporter {
       }
 
       // 使用 html2canvas 截图
-      const canvas = await html2canvas(container as HTMLElement, {
+      const canvas = await html2canvas(container, {
         backgroundColor,
-        scale: 1,
+        scale,
         logging: false,
         useCORS: true,
         allowTaint: false,
@@ -80,13 +80,7 @@ export class ChartExporter {
    */
   static async exportChartAsBuffer(
     chartInstance: G2ChartInstance | null,
-    options: {
-      type?: 'image/png' | 'image/jpeg'
-      quality?: number
-      width?: number
-      height?: number
-      backgroundColor?: string
-    } = {}
+    options: ExportChartOptions = {}
   ): Promise<Buffer> {
     const base64Data = await this.exportChartAsBase64(chartInstance, options)
 
@@ -105,13 +99,7 @@ export class ChartExporter {
   static async downloadChart(
     chartInstance: G2ChartInstance | null,
     filename: string,
-    options: {
-      type?: 'image/png' | 'image/jpeg'
-      quality?: number
-      width?: number
-      height?: number
-      backgroundColor?: string
-    } = {}
+    options: ExportChartOptions = {}
   ): Promise<void> {
     const { type = 'image/png' } = options
     const base64Data = await this.exportChartAsBase64(chartInstance, options)
@@ -133,17 +121,7 @@ export class ChartExporter {
    * @param options 导出选项
    * @returns Promise<string> Base64 格式的图片数据
    */
-  static async exportElementAsBase64(
-    element: HTMLElement,
-    options: {
-      type?: 'image/png' | 'image/jpeg'
-      quality?: number
-      width?: number
-      height?: number
-      backgroundColor?: string
-      scale?: number
-    } = {}
-  ): Promise<string> {
+  static async exportElementAsBase64(element: HTMLElement, options: ExportChartOptions = {}): Promise<string> {
     const { type = 'image/png', quality = 1, backgroundColor = '#ffffff', scale = 1 } = options
 
     try {
