@@ -3,7 +3,7 @@ import type { ChartEmailExportData } from '~/utils/chart-export'
 /**
  * 图表邮件发送组合式函数
  */
-export function useChartEmail() {
+export function useSendChartEmail() {
   /**
    * 从图表组件引用中导出图表
    * @param chartRef 图表组件引用

@@ -10,7 +10,10 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
-import { ref } from 'vue'
+
+defineOptions({
+  name: 'IntervalChart'
+})
 
 const props = defineProps({
   title: {
@@ -197,7 +200,7 @@ const initChart = () => {
     .interaction('tooltip', {
       shared: true,
       // 自定义tooltip内容
-      customContent: (title: string, data: any[]) => {
+      customContent: (title: string, data: ChartDataVo.ChartData[]) => {
         if (!data || data.length === 0) return ''
         const seriesFieldForTooltip = useFold ? 'key' : groupFieldName || ''
         const valueFieldForTooltip = useFold ? 'value' : measureFields[0]
@@ -209,8 +212,8 @@ const initChart = () => {
               (item) => `
             <div style="display: flex; align-items: center; padding: 4px 0;">
               <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
-              <span style="margin-right: 12px;">${seriesFieldForTooltip ? (item.data?.[seriesFieldForTooltip] ?? '') : ''}</span>
-              <span style="font-weight: bold;">${item.data?.[valueFieldForTooltip] ?? ''}</span>
+              <span style="margin-right: 12px;">${seriesFieldForTooltip ? ((item.data as Record<string, any>)?.[seriesFieldForTooltip] ?? '') : ''}</span>
+              <span style="font-weight: bold;">${(item.data as Record<string, any>)?.[valueFieldForTooltip] ?? ''}</span>
             </div>
           `
             )

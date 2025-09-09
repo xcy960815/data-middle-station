@@ -4,7 +4,10 @@
 </template>
 <script setup lang="ts">
 import { Chart } from '@antv/g2'
-import { ref } from 'vue'
+
+defineOptions({
+  name: 'LineChart'
+})
 
 const props = defineProps({
   title: {

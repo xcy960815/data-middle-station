@@ -78,7 +78,7 @@ declare namespace SendEmailDto {
   /**
    * 通用邮件发送选项
    */
-  interface SendEmailDtoOption {
+  interface SendEmailOption {
     to: string[]
     cc?: string[]
     bcc?: string[]

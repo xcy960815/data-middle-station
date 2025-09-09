@@ -76,8 +76,11 @@ const dialogVisible = computed({
   set: (value) => emits('update:visible', value)
 })
 
+/**
+ * @desc 邮件表单数据
+ */
 const emailFormData = reactive<EmailFormData>({
-  recipients: '',
+  recipients: 'xinxin87v5@icloud.com',
   emailSubject: '',
   messageContent: ''
 })
@@ -86,7 +89,7 @@ const emailFormData = reactive<EmailFormData>({
 const emailFormRef = ref<FormInstance | null>(null)
 
 // 获取邮件相关函数
-const { validateEmails, sendEmailFromChartRef } = useChartEmail()
+const { validateEmails, sendEmailFromChartRef } = useSendChartEmail()
 
 // 发送状态
 const isSending = ref(false)
@@ -96,7 +99,7 @@ const emailFormRules: FormRules<EmailFormData> = {
   recipients: [
     { required: true, message: '请输入收件人邮箱', trigger: 'blur' },
     {
-      validator: (rule, value: string, callback: Function) => {
+      validator: (_rule, value: string, callback: Function) => {
         if (!value) {
           callback(new Error('请输入收件人邮箱'))
           return
@@ -143,56 +146,51 @@ watch(
  * @desc 确认发送邮件
  */
 const handleConfirm = async () => {
-  // // 表单验证
-  // const valid = await emailFormRef.value?.validate().catch(() => false)
-  // if (!valid) {
-  //   return
-  // }
+  // 表单验证
+  const valid = await emailFormRef.value?.validate().catch(() => false)
+  if (!valid) {
+    return
+  }
 
   // 检查必要的参数
-  // if (!props.chartRef) {
-  //   ElMessage.error('无法获取图表引用，请稍后重试')
-  //   emits('error', new Error('图表引用不存在'))
-  //   return
-  // }
+  if (!props.chartRef) {
+    ElMessage.error('无法获取图表引用，请稍后重试')
+    emits('error', new Error('图表引用不存在'))
+    return
+  }
 
-  const analyseName = analyseStore.getAnalyseName
-
-  // if (!analyseName) {
-  //   ElMessage.error('无法获取分析名称，请稍后重试')
-  //   emits('error', new Error('分析名称不存在'))
-  //   return
-  // }
+  // const analyseName = analyseStore.getAnalyseName
 
   isSending.value = true
-  ElMessage.info('正在导出图表并发送邮件...')
+  ElMessage.info('正在发送邮件...')
+  console.log('props.chartRef', props.chartRef)
 
-  try {
-    // 发送邮件
-    const result = await sendEmailFromChartRef(
-      props.chartRef || null,
-      analyseName,
-      {
-        to: emailFormData.recipients.split(',').map((email) => email.trim()),
-        subject: emailFormData.emailSubject,
-        additionalContent: emailFormData.messageContent
-      },
-      `${analyseName}_${new Date().getTime()}`
-    )
+  // try {
+  //   // 发送邮件
+  //   const result = await sendEmailFromChartRef(
+  //     props.chartRef,
+  //     analyseName,
+  //     {
+  //       to: emailFormData.recipients.split(',').map((email) => email.trim()),
+  //       subject: emailFormData.emailSubject,
+  //       additionalContent: emailFormData.messageContent
+  //     },
+  //     `${analyseName}_${new Date().getTime()}`
+  //   )
 
-    ElMessage.success(`邮件发送成功！消息ID: ${result.messageId}`)
-    emits('success', result.messageId)
-    emits('update:visible', false)
+  //   ElMessage.success(`邮件发送成功！消息ID: ${result.messageId}`)
+  //   emits('success', result.messageId)
+  //   emits('update:visible', false)
 
-    // 重置表单
-    resetEmailForm()
-  } catch (error) {
-    ElMessage.error('邮件发送失败，请稍后重试')
-    console.error('邮件发送错误:', error)
-    emits('error', error)
-  } finally {
-    isSending.value = false
-  }
+  //   // 重置表单
+  //   resetEmailForm()
+  // } catch (error) {
+  //   ElMessage.error('邮件发送失败，请稍后重试')
+  //   console.error('邮件发送错误:', error)
+  //   emits('error', error)
+  // } finally {
+  //   isSending.value = false
+  // }
 }
 
 /**
@@ -212,7 +210,7 @@ const resetEmailForm = () => {
   if (emailFormRef.value) {
     emailFormRef.value.resetFields()
   }
-  emailFormData.recipients = ''
+  emailFormData.recipients = 'xinxin87v5@icloud.com'
   emailFormData.emailSubject = ''
   emailFormData.messageContent = ''
 }
