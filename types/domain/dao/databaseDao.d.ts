@@ -6,18 +6,18 @@ declare namespace DatabaseDao {
    * @desc 左侧数据源列表
    */
   export type TableOption = {
-    tableName: string //| ((value: string) => string)
-    tableType: string //| ((value: string) => string)
+    tableName: string
+    tableType: string
     tableComment: string
-    createTime: string //| ((value: string) => string)
-    updateTime: string //| ((value: string) => string)
+    createTime: string
+    updateTime: string
     tableRows: number
     avgRowLength: number
     dataLength: number
     indexLength: number
     autoIncrement: number
-    engine: string //| ((value: string) => string)
-    tableCollation: string //| ((value: string) => string)
+    engine: string
+    tableCollation: string
     tableSize: number
   }
 
@@ -25,9 +25,8 @@ declare namespace DatabaseDao {
    * @desc 左侧数据源字段类型 刚从数据库出来的字段
    */
   type TableColumnOption = {
-    columnName: string //| ((value: string) => string)
-    columnType: string //| ((value: string) => string)
+    columnName: string
+    columnType: string
     columnComment: string
-    displayName?: string
   }
 }

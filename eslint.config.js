@@ -122,7 +122,7 @@ module.exports = [
         AnalyseDao: 'readonly',
         DatabaseDao: 'readonly',
         LoginDto: 'readonly',
-        SendEmailDto: 'readonly',
+        SendEmailDtoDto: 'readonly',
         LoginVo: 'readonly',
         ApiResponse: 'readonly',
         // 工具类
@@ -131,7 +131,6 @@ module.exports = [
         RedisStorage: 'readonly',
         CustomResponse: 'readonly',
         // 工具函数
-        getChartColors: 'readonly',
         exportToExcel: 'readonly',
         toLine: 'readonly',
         convertToSqlProperties: 'readonly',
@@ -265,7 +264,7 @@ module.exports = [
         AnalyseDao: 'readonly',
         DatabaseDao: 'readonly',
         LoginDto: 'readonly',
-        SendEmailDto: 'readonly',
+        SendEmailDtoDto: 'readonly',
         LoginVo: 'readonly',
         ApiResponse: 'readonly',
         // 工具类
@@ -274,7 +273,6 @@ module.exports = [
         RedisStorage: 'readonly',
         CustomResponse: 'readonly',
         // 工具函数
-        getChartColors: 'readonly',
         exportToExcel: 'readonly',
         toLine: 'readonly',
         convertToSqlProperties: 'readonly',
