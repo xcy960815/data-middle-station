@@ -53,10 +53,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
-import { ElPopover, ElTable, ElTableColumn, ElInput, ElButton, ElMessage } from 'element-plus'
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { ElButton, ElInput, ElMessage, ElPopover, ElTable, ElTableColumn } from 'element-plus'
+import { computed, ref, watch } from 'vue'
 /**
  * @desc 列存储
  */
@@ -124,7 +124,6 @@ const rowClassName = ({ row }: { row: DatabaseVo.TableOption }) => {
  */
 const queryTable = async () => {
   const result = await $fetch('/api/queryTable', {
-    method: 'GET',
     params: {
       tableName: searchKeyword.value
     }

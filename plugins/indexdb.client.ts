@@ -1,4 +1,4 @@
-// 类型定义已移至 types/plugins/indexdb.d.ts
+// 类型定义已移至 types/plugins/IndexDB.d.ts
 
 // 常量配置
 const DB_TABLES: Record<string, IndexDB.TableConfig> = {
@@ -77,7 +77,7 @@ const DB_TABLES: Record<string, IndexDB.TableConfig> = {
     keyPath: 'id',
     indexes: ['id', 'tradeNo', 'syncType']
   }
-};
+}
 
 // 错误消息常量
 const ERROR_MESSAGES = {
@@ -93,14 +93,15 @@ const ERROR_MESSAGES = {
   DELETE_ERROR: '删除数据时发生错误',
   TRAVERSE_ERROR: '遍历数据时发生错误',
   QUERY_ERROR: '查询数据时发生错误'
-};
+}
 
 class IndexDBManager {
   // indexedDB兼容
-  private indexedDB = (window as IndexDB.WindowWithIndexedDB).indexedDB ||
+  private indexedDB =
+    (window as IndexDB.WindowWithIndexedDB).indexedDB ||
     (window as IndexDB.WindowWithIndexedDB).webkitIndexedDB ||
     (window as IndexDB.WindowWithIndexedDB).msIndexedDB ||
-    (window as IndexDB.WindowWithIndexedDB).mozIndexedDB;
+    (window as IndexDB.WindowWithIndexedDB).mozIndexedDB
 
   /**
    * 打开数据库
@@ -112,43 +113,43 @@ class IndexDBManager {
    */
   openDatabase(databaseName: string, version: number): Promise<IDBDatabase | null> {
     return new Promise((resolve) => {
-      let db: IDBDatabase;
-      const finalVersion = version || 1;
+      let db: IDBDatabase
+      const finalVersion = version || 1
       if (!this.indexedDB) {
-        console.error(ERROR_MESSAGES.BROWSER_NOT_SUPPORT);
-        resolve(null);
-        return;
+        console.error(ERROR_MESSAGES.BROWSER_NOT_SUPPORT)
+        resolve(null)
+        return
       }
-      const request = this.indexedDB.open(databaseName, finalVersion);
+      const request = this.indexedDB.open(databaseName, finalVersion)
 
       request.onerror = function () {
-        console.error(ERROR_MESSAGES.DB_OPEN_ERROR);
-        resolve(null);
-      };
+        console.error(ERROR_MESSAGES.DB_OPEN_ERROR)
+        resolve(null)
+      }
 
       request.onsuccess = function (event: Event) {
-        db = (event.target as IDBOpenDBRequest).result;
-        console.log(`数据库 ${databaseName} 打开成功`);
-        resolve(db);
-      };
+        db = (event.target as IDBOpenDBRequest).result
+        console.log(`数据库 ${databaseName} 打开成功`)
+        resolve(db)
+      }
 
       // onupgradeneeded，调用创建新的储存空间
       request.onupgradeneeded = function (event: IDBVersionChangeEvent) {
-        db = (event.target as IDBOpenDBRequest).result;
+        db = (event.target as IDBOpenDBRequest).result
 
         // 使用配置化方式创建所有表
-        Object.values(DB_TABLES).forEach(tableConfig => {
+        Object.values(DB_TABLES).forEach((tableConfig) => {
           if (!db.objectStoreNames.contains(tableConfig.name)) {
-            const objectStore = db.createObjectStore(tableConfig.name, { keyPath: tableConfig.keyPath });
+            const objectStore = db.createObjectStore(tableConfig.name, { keyPath: tableConfig.keyPath })
 
             // 为每个字段创建索引
-            tableConfig.indexes.forEach(index => {
-              objectStore.createIndex(index, index, { unique: false });
-            });
+            tableConfig.indexes.forEach((index) => {
+              objectStore.createIndex(index, index, { unique: false })
+            })
           }
-        });
-      };
-    });
+        })
+      }
+    })
   }
 
   /**
@@ -159,20 +160,20 @@ class IndexDBManager {
   deleteDatabase(databaseName: string): Promise<boolean> {
     return new Promise((resolve) => {
       if (!this.indexedDB) {
-        console.error(ERROR_MESSAGES.BROWSER_NOT_SUPPORT);
-        resolve(false);
-        return;
+        console.error(ERROR_MESSAGES.BROWSER_NOT_SUPPORT)
+        resolve(false)
+        return
       }
-      const deleteRequest = this.indexedDB.deleteDatabase(databaseName);
+      const deleteRequest = this.indexedDB.deleteDatabase(databaseName)
       deleteRequest.onerror = function () {
-        console.error(ERROR_MESSAGES.DB_DELETE_ERROR);
-        resolve(false);
-      };
+        console.error(ERROR_MESSAGES.DB_DELETE_ERROR)
+        resolve(false)
+      }
       deleteRequest.onsuccess = function () {
-        console.log(`数据库 ${databaseName} 删除成功`);
-        resolve(true);
-      };
-    });
+        console.log(`数据库 ${databaseName} 删除成功`)
+        resolve(true)
+      }
+    })
   }
 
   /**
@@ -181,8 +182,8 @@ class IndexDBManager {
    * @returns {void} 无返回值
    */
   closeDatabase(database: IDBDatabase) {
-    database.close();
-    console.log(ERROR_MESSAGES.DB_CLOSED);
+    database.close()
+    console.log(ERROR_MESSAGES.DB_CLOSED)
   }
 
   /**
@@ -193,28 +194,33 @@ class IndexDBManager {
    * @param {string | number} searchValue - 要删除的数据的查询值
    * @returns {Promise<boolean>} 返回删除操作是否成功
    */
-  deleteData(database: IDBDatabase, storeName: string, indexName: string, searchValue: string | number): Promise<boolean> {
+  deleteData(
+    database: IDBDatabase,
+    storeName: string,
+    indexName: string,
+    searchValue: string | number
+  ): Promise<boolean> {
     return new Promise((resolve) => {
-      const store = database.transaction(storeName, 'readwrite').objectStore(storeName);
-      const index = store.index(indexName);
-      const request = index.openCursor(IDBKeyRange.only(searchValue));
+      const store = database.transaction(storeName, 'readwrite').objectStore(storeName)
+      const index = store.index(indexName)
+      const request = index.openCursor(IDBKeyRange.only(searchValue))
 
       request.onsuccess = function (event: Event) {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
-          cursor.delete();
-          cursor.continue(); // 继续查找其他匹配的项
+          cursor.delete()
+          cursor.continue() // 继续查找其他匹配的项
         } else {
-          console.log(`数据删除成功: ${indexName}=${searchValue}`);
-          resolve(true);
+          console.log(`数据删除成功: ${indexName}=${searchValue}`)
+          resolve(true)
         }
-      };
+      }
 
       request.onerror = function () {
-        console.error(ERROR_MESSAGES.DELETE_ERROR);
-        resolve(false);
-      };
-    });
+        console.error(ERROR_MESSAGES.DELETE_ERROR)
+        resolve(false)
+      }
+    })
   }
 
   /**
@@ -225,19 +231,19 @@ class IndexDBManager {
    */
   clearData(database: IDBDatabase, storeName: string): Promise<boolean> {
     return new Promise((resolve) => {
-      const store = database.transaction(storeName, 'readwrite').objectStore(storeName);
-      const request = store.clear();
+      const store = database.transaction(storeName, 'readwrite').objectStore(storeName)
+      const request = store.clear()
 
       request.onsuccess = function () {
-        console.log(`数据表 ${storeName} 清空成功`);
-        resolve(true);
-      };
+        console.log(`数据表 ${storeName} 清空成功`)
+        resolve(true)
+      }
 
       request.onerror = function () {
-        console.error(ERROR_MESSAGES.CLEAR_DATA_ERROR);
-        resolve(false);
-      };
-    });
+        console.error(ERROR_MESSAGES.CLEAR_DATA_ERROR)
+        resolve(false)
+      }
+    })
   }
 
   /**
@@ -248,16 +254,16 @@ class IndexDBManager {
    * @returns {void} 无返回值，操作结果通过控制台输出
    */
   addData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]) {
-    const store = database.transaction([storeName], 'readwrite').objectStore(storeName);
-    dataList.forEach(item => {
-      const request = store.add(item);
+    const store = database.transaction([storeName], 'readwrite').objectStore(storeName)
+    dataList.forEach((item) => {
+      const request = store.add(item)
       request.onsuccess = function () {
-        console.log(ERROR_MESSAGES.DATA_WRITE_SUCCESS);
-      };
+        console.log(ERROR_MESSAGES.DATA_WRITE_SUCCESS)
+      }
       request.onerror = function () {
-        console.error(ERROR_MESSAGES.DATA_WRITE_ERROR);
-      };
-    });
+        console.error(ERROR_MESSAGES.DATA_WRITE_ERROR)
+      }
+    })
   }
 
   /**
@@ -269,38 +275,38 @@ class IndexDBManager {
    */
   addDataAsync(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<void> {
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([storeName], 'readwrite');
-      const store = transaction.objectStore(storeName);
-      let completedCount = 0;
-      const totalCount = dataList.length;
+      const transaction = database.transaction([storeName], 'readwrite')
+      const store = transaction.objectStore(storeName)
+      let completedCount = 0
+      const totalCount = dataList.length
 
       if (totalCount === 0) {
-        resolve();
-        return;
+        resolve()
+        return
       }
 
-      dataList.forEach(item => {
-        const request = store.add(item);
+      dataList.forEach((item) => {
+        const request = store.add(item)
         request.onsuccess = function () {
-          completedCount++;
+          completedCount++
           if (completedCount === totalCount) {
-            console.log(ERROR_MESSAGES.DATA_WRITE_SUCCESS);
-            resolve();
+            console.log(ERROR_MESSAGES.DATA_WRITE_SUCCESS)
+            resolve()
           }
-        };
+        }
         request.onerror = function () {
-          console.error(ERROR_MESSAGES.DATA_WRITE_ERROR);
-          reject(new Error(ERROR_MESSAGES.DATA_WRITE_ERROR));
-        };
-      });
-    });
+          console.error(ERROR_MESSAGES.DATA_WRITE_ERROR)
+          reject(new Error(ERROR_MESSAGES.DATA_WRITE_ERROR))
+        }
+      })
+    })
   }
 
   /**
    * @deprecated 使用 addDataAsync 替代
    */
   newAddData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<void> {
-    return this.addDataAsync(database, storeName, dataList);
+    return this.addDataAsync(database, storeName, dataList)
   }
 
   /**
@@ -312,31 +318,31 @@ class IndexDBManager {
    */
   updateData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<boolean> {
     return new Promise((resolve) => {
-      const transaction = database.transaction([storeName], 'readwrite');
-      const store = transaction.objectStore(storeName);
-      let completedCount = 0;
-      const totalCount = dataList.length;
+      const transaction = database.transaction([storeName], 'readwrite')
+      const store = transaction.objectStore(storeName)
+      let completedCount = 0
+      const totalCount = dataList.length
 
       if (totalCount === 0) {
-        resolve(true);
-        return;
+        resolve(true)
+        return
       }
 
-      dataList.forEach(item => {
-        const request = store.put(item);
+      dataList.forEach((item) => {
+        const request = store.put(item)
         request.onsuccess = function () {
-          completedCount++;
+          completedCount++
           if (completedCount === totalCount) {
-            console.log(`数据更新成功，共更新 ${totalCount} 条记录`);
-            resolve(true);
+            console.log(`数据更新成功，共更新 ${totalCount} 条记录`)
+            resolve(true)
           }
-        };
+        }
         request.onerror = function () {
-          console.error('数据更新失败');
-          resolve(false);
-        };
-      });
-    });
+          console.error('数据更新失败')
+          resolve(false)
+        }
+      })
+    })
   }
 
   /**
@@ -347,18 +353,18 @@ class IndexDBManager {
    * @returns {Promise<IndexDB.DataRecord | undefined>} 返回查询到的数据记录或undefined
    */
   getData(database: IDBDatabase, storeName: string, primaryKey: IDBValidKey): Promise<IndexDB.DataRecord | undefined> {
-    const objectStore = database.transaction(storeName).objectStore(storeName);
-    const request = objectStore.get(primaryKey);
+    const objectStore = database.transaction(storeName).objectStore(storeName)
+    const request = objectStore.get(primaryKey)
 
     request.onerror = function () {
-      console.error(ERROR_MESSAGES.TRANSACTION_ERROR);
-    };
+      console.error(ERROR_MESSAGES.TRANSACTION_ERROR)
+    }
 
     return new Promise((resolve) => {
       request.onsuccess = function (e: Event) {
-        resolve((e.target as IDBRequest<IndexDB.DataRecord | undefined>).result);
-      };
-    });
+        resolve((e.target as IDBRequest<IndexDB.DataRecord | undefined>).result)
+      }
+    })
   }
 
   /**
@@ -371,51 +377,60 @@ class IndexDBManager {
    * @param {number} pageSize - 每页条数(可选，默认10)
    * @returns {Promise<IndexDB.QueryResult>} 返回分页查询结果，包含总数和数据数组
    */
-  getDataByPage(database: IDBDatabase, storeName: string, indexName: string, searchValue: IDBValidKey, page?: number, pageSize?: number): Promise<IndexDB.QueryResult> {
+  getDataByPage(
+    database: IDBDatabase,
+    storeName: string,
+    indexName: string,
+    searchValue: IDBValidKey,
+    page?: number,
+    pageSize?: number
+  ): Promise<IndexDB.QueryResult> {
     const data: IndexDB.QueryResult = {
       total: 0,
-      rows: [],
-    };
+      rows: []
+    }
 
-    const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName);
-    const indexes = objectStore.index(indexName);
-    const range = IDBKeyRange.only(searchValue);
+    const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName)
+    const indexes = objectStore.index(indexName)
+    const range = IDBKeyRange.only(searchValue)
 
     // 创建一个count请求获取条数
-    const countRequest = indexes.count(range);
+    const countRequest = indexes.count(range)
     countRequest.onsuccess = function (event: Event) {
-      data.total = (event.target as IDBRequest<number>).result;
-    };
+      data.total = (event.target as IDBRequest<number>).result
+    }
 
-    const request = indexes.openCursor(range, 'prev');
-    let isFirst = true;
+    const request = indexes.openCursor(range, 'prev')
+    let isFirst = true
 
     return new Promise((resolve) => {
       request.onsuccess = function (e: Event) {
-        const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result;
+        const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result
         if (page !== undefined && pageSize !== undefined) {
-          if (isFirst && page > 0 && cursor) { // 只需要移动一次就行了 如果是第一页 不需要移动
-            cursor.advance(page * pageSize); // 移动到第几条
-            isFirst = false;
-            return;
+          if (isFirst && page > 0 && cursor) {
+            // 只需要移动一次就行了 如果是第一页 不需要移动
+            cursor.advance(page * pageSize) // 移动到第几条
+            isFirst = false
+            return
           }
-          if (cursor === null) return resolve(data); // 数据到底
-          data.rows.push(cursor.value as IndexDB.DataRecord);
-          if (pageSize > data.rows.length) { // 数据还没到10条
-            cursor.continue();
+          if (cursor === null) return resolve(data) // 数据到底
+          data.rows.push(cursor.value as IndexDB.DataRecord)
+          if (pageSize > data.rows.length) {
+            // 数据还没到10条
+            cursor.continue()
           } else {
-            resolve(data); // 拿到10条了
+            resolve(data) // 拿到10条了
           }
         } else {
           if (cursor) {
-            data.rows.push(cursor.value as IndexDB.DataRecord);
-            cursor.continue(); // 继续查找其他记录
+            data.rows.push(cursor.value as IndexDB.DataRecord)
+            cursor.continue() // 继续查找其他记录
           } else {
-            resolve(data);
+            resolve(data)
           }
         }
-      };
-    });
+      }
+    })
   }
 
   /**
@@ -424,7 +439,7 @@ class IndexDBManager {
    * @returns {string} 返回ISO格式的UTC日期字符串
    */
   utcDate(val: string | number | Date): string {
-    return new Date(val).toISOString();
+    return new Date(val).toISOString()
   }
 
   /**
@@ -435,24 +450,29 @@ class IndexDBManager {
    * @param {IDBValidKey} searchValue - 查询的值
    * @returns {Promise<IndexDB.DataRecord[]>} 返回匹配条件的数据记录数组
    */
-  getDataByone(database: IDBDatabase, storeName: string, indexName: string, searchValue: IDBValidKey): Promise<IndexDB.DataRecord[]> {
-    const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName);
-    const indexes = objectStore.index(indexName);
-    const range = IDBKeyRange.only(searchValue);
-    const request = indexes.openCursor(range, 'prev');
-    const data: IndexDB.DataRecord[] = [];
+  getDataByone(
+    database: IDBDatabase,
+    storeName: string,
+    indexName: string,
+    searchValue: IDBValidKey
+  ): Promise<IndexDB.DataRecord[]> {
+    const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName)
+    const indexes = objectStore.index(indexName)
+    const range = IDBKeyRange.only(searchValue)
+    const request = indexes.openCursor(range, 'prev')
+    const data: IndexDB.DataRecord[] = []
 
     return new Promise((resolve) => {
       request.onsuccess = function (e: Event) {
-        const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result;
+        const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
-          data.push(cursor.value as IndexDB.DataRecord);
-          cursor.continue(); // 继续查找其他记录
+          data.push(cursor.value as IndexDB.DataRecord)
+          cursor.continue() // 继续查找其他记录
         } else {
-          resolve(data);
+          resolve(data)
         }
-      };
-    });
+      }
+    })
   }
 
   /**
@@ -462,14 +482,14 @@ class IndexDBManager {
    * @returns {Promise<IndexDB.DataRecord[]>} 返回存储表中的所有数据记录
    */
   getAllData(database: IDBDatabase, storeName: string): Promise<IndexDB.DataRecord[]> {
-    const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName);
-    const request = objectStore.getAll();
+    const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName)
+    const request = objectStore.getAll()
 
     return new Promise((resolve) => {
       request.onsuccess = function (e: Event) {
-        resolve((e.target as IDBRequest<IndexDB.DataRecord[]>).result);
-      };
-    });
+        resolve((e.target as IDBRequest<IndexDB.DataRecord[]>).result)
+      }
+    })
   }
 
   /**
@@ -481,34 +501,40 @@ class IndexDBManager {
    * @param {string} sortField - 排序字段名称(默认为createTime)
    * @returns {Promise<IndexDB.DataRecord[]>} 返回按指定字段排序的数据记录数组
    */
-  getDataByoneWithSort(database: IDBDatabase, storeName: string, indexName: string, searchValue: IDBValidKey, sortField: string = 'createTime'): Promise<IndexDB.DataRecord[]> {
-    const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName);
-    const indexes = objectStore.index(indexName);
-    const range = IDBKeyRange.only(searchValue);
-    const request = indexes.openCursor(range);
-    const data: IndexDB.DataRecord[] = [];
+  getDataByoneWithSort(
+    database: IDBDatabase,
+    storeName: string,
+    indexName: string,
+    searchValue: IDBValidKey,
+    sortField: string = 'createTime'
+  ): Promise<IndexDB.DataRecord[]> {
+    const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName)
+    const indexes = objectStore.index(indexName)
+    const range = IDBKeyRange.only(searchValue)
+    const request = indexes.openCursor(range)
+    const data: IndexDB.DataRecord[] = []
 
     return new Promise((resolve, reject) => {
       request.onsuccess = function (e: Event) {
-        const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result;
+        const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
-          data.push(cursor.value as IndexDB.DataRecord);
-          cursor.continue();
+          data.push(cursor.value as IndexDB.DataRecord)
+          cursor.continue()
         } else {
           // Sort data by sortField in descending order
           data.sort((a, b) => {
-            const aValue = a[sortField] as string;
-            const bValue = b[sortField] as string;
-            return new Date(bValue).getTime() - new Date(aValue).getTime();
-          });
-          resolve(data);
+            const aValue = a[sortField] as string
+            const bValue = b[sortField] as string
+            return new Date(bValue).getTime() - new Date(aValue).getTime()
+          })
+          resolve(data)
         }
-      };
+      }
 
       request.onerror = function (e: Event) {
-        reject((e.target as IDBRequest).error);
-      };
-    });
+        reject((e.target as IDBRequest).error)
+      }
+    })
   }
 
   /**
@@ -520,19 +546,27 @@ class IndexDBManager {
    * @param {IndexDB.DataRecord} dataRecord - 要添加的数据记录
    * @returns {Promise<string>} 返回"已存在"或"添加成功"
    */
-  checkAndAdd(database: IDBDatabase, storeName: string, fieldName: string, fieldValue: IDBValidKey, dataRecord: IndexDB.DataRecord): Promise<string> {
+  checkAndAdd(
+    database: IDBDatabase,
+    storeName: string,
+    fieldName: string,
+    fieldValue: IDBValidKey,
+    dataRecord: IndexDB.DataRecord
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
-      this.getDataByone(database, storeName, fieldName, fieldValue).then(res => {
-        if (res && res.length > 0) {
-          resolve("已存在");
-        } else {
-          this.addData(database, storeName, [dataRecord]);
-          resolve("添加成功");
-        }
-      }).catch(err => {
-        reject(err);
-      });
-    });
+      this.getDataByone(database, storeName, fieldName, fieldValue)
+        .then((res) => {
+          if (res && res.length > 0) {
+            resolve('已存在')
+          } else {
+            this.addData(database, storeName, [dataRecord])
+            resolve('添加成功')
+          }
+        })
+        .catch((err) => {
+          reject(err)
+        })
+    })
   }
 
   /**
@@ -543,22 +577,24 @@ class IndexDBManager {
    */
   getEarliestByCreateTime(database: IDBDatabase, storeName: string): Promise<IndexDB.DataRecord | null> {
     return new Promise((resolve, reject) => {
-      this.getAllData(database, storeName).then(allData => {
-        if (allData.length === 0) {
-          resolve(null);
-          return;
-        }
-        // 按createTime升序排序
-        const sorted = allData.sort((a, b) => {
-          const aValue = a.createTime as string;
-          const bValue = b.createTime as string;
-          return new Date(aValue).getTime() - new Date(bValue).getTime();
-        });
-        resolve(sorted[0]);
-      }).catch(err => {
-        reject(err);
-      });
-    });
+      this.getAllData(database, storeName)
+        .then((allData) => {
+          if (allData.length === 0) {
+            resolve(null)
+            return
+          }
+          // 按createTime升序排序
+          const sorted = allData.sort((a, b) => {
+            const aValue = a.createTime as string
+            const bValue = b.createTime as string
+            return new Date(aValue).getTime() - new Date(bValue).getTime()
+          })
+          resolve(sorted[0])
+        })
+        .catch((err) => {
+          reject(err)
+        })
+    })
   }
 
   /**
@@ -569,52 +605,57 @@ class IndexDBManager {
    * @param {unknown} fieldValue - 要匹配的字段值
    * @returns {Promise<number>} 返回删除的记录数
    */
-  deleteDataByCondition(database: IDBDatabase, storeName: string, fieldName: string, fieldValue: unknown): Promise<number> {
+  deleteDataByCondition(
+    database: IDBDatabase,
+    storeName: string,
+    fieldName: string,
+    fieldValue: unknown
+  ): Promise<number> {
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction(storeName, 'readwrite');
-      const store = transaction.objectStore(storeName);
-      const request = store.openCursor();
-      const keysToDelete: IDBValidKey[] = [];
+      const transaction = database.transaction(storeName, 'readwrite')
+      const store = transaction.objectStore(storeName)
+      const request = store.openCursor()
+      const keysToDelete: IDBValidKey[] = []
 
       request.onsuccess = function (event: Event) {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
-          const cursorValue = cursor.value as IndexDB.DataRecord;
+          const cursorValue = cursor.value as IndexDB.DataRecord
           if (cursorValue[fieldName] === fieldValue) {
-            keysToDelete.push(cursor.primaryKey);
+            keysToDelete.push(cursor.primaryKey)
           }
-          cursor.continue();
+          cursor.continue()
         } else {
           // 遍历完成，开始删除
           if (keysToDelete.length === 0) {
-            resolve(0);
-            return;
+            resolve(0)
+            return
           }
 
-          let deletedCount = 0;
+          let deletedCount = 0
           const deleteNext = () => {
             if (deletedCount < keysToDelete.length) {
-              const deleteRequest = store.delete(keysToDelete[deletedCount]);
+              const deleteRequest = store.delete(keysToDelete[deletedCount])
               deleteRequest.onsuccess = () => {
-                deletedCount++;
-                deleteNext();
-              };
+                deletedCount++
+                deleteNext()
+              }
               deleteRequest.onerror = () => {
-                reject(new Error(ERROR_MESSAGES.DELETE_ERROR));
-              };
+                reject(new Error(ERROR_MESSAGES.DELETE_ERROR))
+              }
             } else {
-              resolve(deletedCount);
+              resolve(deletedCount)
             }
-          };
+          }
 
-          deleteNext();
+          deleteNext()
         }
-      };
+      }
 
       request.onerror = function () {
-        reject(new Error(ERROR_MESSAGES.TRAVERSE_ERROR));
-      };
-    });
+        reject(new Error(ERROR_MESSAGES.TRAVERSE_ERROR))
+      }
+    })
   }
 
   /**
@@ -624,51 +665,55 @@ class IndexDBManager {
    * @param {IndexDB.DataRecord} queryConditions - 查询条件对象 {field1: value1, field2: value2}
    * @returns {Promise<IndexDB.DataRecord[]>} 返回匹配的数据记录数组
    */
-  getDataByConditions(database: IDBDatabase, storeName: string, queryConditions: IndexDB.DataRecord): Promise<IndexDB.DataRecord[]> {
+  getDataByConditions(
+    database: IDBDatabase,
+    storeName: string,
+    queryConditions: IndexDB.DataRecord
+  ): Promise<IndexDB.DataRecord[]> {
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction(storeName, 'readonly');
-      const store = transaction.objectStore(storeName);
-      const request = store.openCursor();
-      const results: IndexDB.DataRecord[] = [];
+      const transaction = database.transaction(storeName, 'readonly')
+      const store = transaction.objectStore(storeName)
+      const request = store.openCursor()
+      const results: IndexDB.DataRecord[] = []
 
       request.onsuccess = function (event: Event) {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
-          const data = cursor.value as IndexDB.DataRecord;
-          let match = true;
+          const data = cursor.value as IndexDB.DataRecord
+          let match = true
 
           // 检查所有条件
           for (const key in queryConditions) {
             if (data[key] !== queryConditions[key]) {
-              match = false;
-              break;
+              match = false
+              break
             }
           }
 
           if (match) {
-            results.push(data);
+            results.push(data)
           }
-          cursor.continue();
+          cursor.continue()
         } else {
           // 遍历完成
-          resolve(results);
+          resolve(results)
         }
-      };
+      }
 
       request.onerror = function () {
-        reject(new Error(ERROR_MESSAGES.QUERY_ERROR));
-      };
-    });
+        reject(new Error(ERROR_MESSAGES.QUERY_ERROR))
+      }
+    })
   }
 }
 
 // 创建单例实例
-const indexDBManager = new IndexDBManager();
+const indexDBManager = new IndexDBManager()
 
 export default defineNuxtPlugin(() => {
   return {
     provide: {
       indexdb: indexDBManager
     }
-  };
-});
+  }
+})

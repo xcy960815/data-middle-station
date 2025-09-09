@@ -331,7 +331,6 @@ watch(
  */
 const queryTableColumn = async (tableName: string) => {
   const result = await $fetch('/api/queryTableColumn', {
-    method: 'GET',
     params: {
       tableName
     }

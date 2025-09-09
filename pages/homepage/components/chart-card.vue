@@ -28,7 +28,6 @@
 
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
-const router = useRouter()
 const emit = defineEmits(['delete', 'edit'])
 const props = defineProps({
   id: {
@@ -67,12 +66,7 @@ const props = defineProps({
  * @desc 点击卡片跳转到对应的分析页面
  */
 const handleClickCard = () => {
-  router.push({
-    path: '/analyse',
-    query: {
-      id: props.id
-    }
-  })
+  navigateTo(`/analyse?id=${props.id}`)
 }
 /**
  * @desc 编辑分析
