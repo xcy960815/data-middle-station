@@ -13,6 +13,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { RequestCodeEnum } from '~/utils/request-enmu'
 
 /**
  * 字符配置接口，定义了字符动画所需的所有配置参数
@@ -248,6 +249,7 @@ onUnmounted(() => {
 })
 
 const userStore = useUserStore()
+
 /**
  * 导航到主页的处理函数
  */

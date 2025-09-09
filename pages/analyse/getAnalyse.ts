@@ -1,4 +1,3 @@
-import { fetch } from '~/composables/request'
 /**
  * @desc 获取图表配置 handler
  */
@@ -16,7 +15,7 @@ export const getAnalyseHandler = () => {
     const router = useRouter()
     const id = router.currentRoute.value.query.id
     if (!id) return
-    const result = await fetch('/api/getAnalyse', {
+    const result = await $fetch('/api/getAnalyse', {
       method: 'post',
       body: {
         id
@@ -51,7 +50,6 @@ export const getAnalyseHandler = () => {
   }
 
   onMounted(() => {
-    // console.log('getChartConfigHandler')
     getAnalyse()
   })
 }
