@@ -10,7 +10,10 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
-import { ref } from 'vue'
+
+defineOptions({
+  name: 'PieChart'
+})
 
 const props = defineProps({
   title: {

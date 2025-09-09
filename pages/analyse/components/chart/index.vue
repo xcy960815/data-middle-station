@@ -9,6 +9,7 @@
     </template>
     <template v-else>
       <component
+        ref="currentChartRef"
         v-loading="chartLoading"
         element-loading-text="数据加载中..."
         :element-loading-spinner="svg"
@@ -183,6 +184,59 @@ onMounted(() => {
  */
 onUnmounted(() => {
   chartResizeObserver.value?.disconnect()
+})
+
+/**
+ * 当前图表组件的引用
+ */
+const currentChartRef = ref<SendEmailDto.ChartComponentRef>()
+
+// 暴露导出方法给父组件
+defineExpose({
+  /**
+   * 导出图表为 Base64
+   * @param options
+   */
+  exportAsImage: async (options?: {
+    type?: 'image/png' | 'image/jpeg'
+    quality?: number
+    width?: number
+    height?: number
+    backgroundColor?: string
+    scale?: number
+  }) => {
+    if (!currentChartRef.value) {
+      throw new Error('图表组件实例不存在')
+    }
+    if (typeof currentChartRef.value.exportAsImage !== 'function') {
+      throw new Error('当前图表组件不支持导出功能')
+    }
+    return currentChartRef.value.exportAsImage(options)
+  },
+  /**
+   * 下载图表
+   * @param filename 文件名
+   * @param options 选项
+   */
+  downloadChart: async (
+    filename: string,
+    options?: {
+      type?: 'image/png' | 'image/jpeg'
+      quality?: number
+      width?: number
+      height?: number
+      backgroundColor?: string
+      scale?: number
+    }
+  ) => {
+    if (!currentChartRef.value) {
+      throw new Error('图表组件实例不存在')
+    }
+    if (typeof currentChartRef.value.downloadChart !== 'function') {
+      throw new Error('当前图表组件不支持下载功能')
+    }
+    return currentChartRef.value.downloadChart(filename, options)
+  }
 })
 </script>
 

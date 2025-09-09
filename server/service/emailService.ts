@@ -44,6 +44,7 @@ export class EmailService {
     }
 
     const config = useRuntimeConfig()
+
     const from = config.smtpFrom || config.smtpUser
 
     const result = await this.transporter!.sendMail({
