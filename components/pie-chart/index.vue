@@ -31,6 +31,50 @@ const props = defineProps({
   }
 })
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
+
+// 使用图表格式化组合式函数
+const { getDefaultChartColors } = useChartFormat()
+
+/**
+ * 初始化图表实例
+ */
+const chartInstance = ref<InstanceType<typeof Chart> | null>(null)
+
+// 暴露图表实例和导出方法给父组件
+defineExpose({
+  chartInstance,
+  exportAsImage: async (options?: {
+    type?: 'image/png' | 'image/jpeg'
+    quality?: number
+    width?: number
+    height?: number
+    backgroundColor?: string
+    scale?: number
+  }) => {
+    if (!chartInstance.value) {
+      throw new Error('图表实例不存在')
+    }
+    const { ChartExporter } = await import('~/utils/chart-export')
+    return ChartExporter.exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
+  },
+  downloadChart: async (
+    filename: string,
+    options?: {
+      type?: 'image/png' | 'image/jpeg'
+      quality?: number
+      width?: number
+      height?: number
+      backgroundColor?: string
+      scale?: number
+    }
+  ) => {
+    if (!chartInstance.value) {
+      throw new Error('图表实例不存在')
+    }
+    const { ChartExporter } = await import('~/utils/chart-export')
+    return ChartExporter.downloadChart(chartInstance.value as InstanceType<typeof Chart>, filename, options)
+  }
+})
 const chartConfigStore = useChartConfigStore()
 
 const defaultPieConfig = {
@@ -50,11 +94,6 @@ watch(
     deep: true
   }
 )
-
-/**
- * 初始化图表
- */
-const chartInstance = ref<Chart | null>(null)
 
 const initChart = () => {
   emits('renderChartStart')
@@ -106,7 +145,7 @@ const initChart = () => {
     .encode('y', valueField)
     .encode('color', categoryField)
     .scale('color', {
-      range: getChartColors()
+      range: getDefaultChartColors()
     })
     .style('stroke', '#fff')
     .style('strokeWidth', 2)

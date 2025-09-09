@@ -35,6 +35,11 @@ const props = defineProps({
  */
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
+/**
+ * 初始化图表实例
+ */
+const chartInstance = ref<Chart | null>(null)
+
 const chartConfigStore = useChartConfigStore()
 /**
  * 默认配置
@@ -68,10 +73,6 @@ watch(
 /**
  * 初始化图表
  */
-const chartInstance = ref<Chart | null>(null)
-/**
- *
- */
 const initChart = () => {
   emits('renderChartStart')
 
@@ -103,6 +104,7 @@ const initChart = () => {
     theme: 'classic',
     autoFit: true
   })
+
   chartInstance.value = chart
 
   // 配置图表标题
@@ -255,5 +257,45 @@ watch(
     deep: true
   }
 )
+
+// 暴露图表实例和导出方法给父组件
+defineExpose({
+  chartInstance,
+  /**
+   * 导出图表为 Base64
+   * @param options
+   */
+  exportAsImage: async (options?: {
+    type?: 'image/png' | 'image/jpeg'
+    quality?: number
+    width?: number
+    height?: number
+    backgroundColor?: string
+    scale?: number
+  }) => {
+    if (!chartInstance.value) {
+      throw new Error('图表实例不存在')
+    }
+    const { ChartExporter } = await import('~/utils/chart-export')
+    return ChartExporter.exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
+  },
+  downloadChart: async (
+    filename: string,
+    options?: {
+      type?: 'image/png' | 'image/jpeg'
+      quality?: number
+      width?: number
+      height?: number
+      backgroundColor?: string
+      scale?: number
+    }
+  ) => {
+    if (!chartInstance.value) {
+      throw new Error('图表实例不存在')
+    }
+    const { ChartExporter } = await import('~/utils/chart-export')
+    return ChartExporter.downloadChart(chartInstance.value as InstanceType<typeof Chart>, filename, options)
+  }
+})
 </script>
 <style lang="scss" scoped></style>
