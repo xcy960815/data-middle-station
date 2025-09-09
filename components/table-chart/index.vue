@@ -2,6 +2,7 @@
   <div class="canvas-table-chart h-full">
     <client-only>
       <CanvasTable
+        ref="canvasTableRef"
         :data="data"
         :x-axis-fields="xAxisFields"
         :y-axis-fields="yAxisFields"
@@ -78,6 +79,53 @@ const props = defineProps({
  */
 const tableChartConfig = computed(() => {
   return chartConfigStore.privateChartConfig?.table
+})
+
+/**
+ * CanvasTable 组件引用
+ */
+const canvasTableRef = ref<InstanceType<typeof CanvasTable> | null>(null)
+
+// 暴露导出方法给父组件
+defineExpose({
+  /**
+   * 导出图表为 Base64
+   * @param options
+   */
+  exportAsImage: async (options?: {
+    type?: 'image/png' | 'image/jpeg'
+    quality?: number
+    width?: number
+    height?: number
+    backgroundColor?: string
+    scale?: number
+  }) => {
+    if (!canvasTableRef.value) {
+      throw new Error('表格组件实例不存在')
+    }
+    return canvasTableRef.value.exportAsImage(options)
+  },
+  /**
+   * 下载图表
+   * @param filename 文件名
+   * @param options 选项
+   */
+  downloadChart: async (
+    filename: string,
+    options?: {
+      type?: 'image/png' | 'image/jpeg'
+      quality?: number
+      width?: number
+      height?: number
+      backgroundColor?: string
+      scale?: number
+    }
+  ) => {
+    if (!canvasTableRef.value) {
+      throw new Error('表格组件实例不存在')
+    }
+    return canvasTableRef.value.downloadChart(filename, options)
+  }
 })
 </script>
 
