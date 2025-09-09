@@ -93,10 +93,7 @@ export const getChartDataHandler = () => {
 
     const result = await $fetch('/api/getChartData', {
       method: 'POST',
-      // 请求参数
-      body: {
-        ...queryChartDataParams.value
-      }
+      body: queryChartDataParams.value
     }).finally(() => {
       /**
        * 统一处理的逻辑
