@@ -5,7 +5,7 @@
  * @param {string} message 响应消息
  * @return {Response}
  */
-declare interface ApiResponse<D = any> {
+declare interface ApiResponse<D extends Object = any> {
   code: 200 | 404 | 500 | 401 | 403
   data: D | null
   message: string
