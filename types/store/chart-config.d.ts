@@ -47,11 +47,11 @@ declare namespace ChartConfigStore {
     /**
      * @desc 图表公共配置
      */
-    commonChartConfig: CommonChartConfig
+    commonChartConfig: CommonChartConfig | null
     /**
      * @desc 私有图表配置
      */
-    privateChartConfig: PrivateChartConfig
+    privateChartConfig: PrivateChartConfig | null
   }
 
   /**

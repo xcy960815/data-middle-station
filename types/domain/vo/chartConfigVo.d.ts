@@ -5,12 +5,14 @@ declare namespace ChartConfigVo {
   /**
    * 列配置
    */
-  type ColumnOption = ChartConfigDao.ColumnOption
+  type ColumnOption = DatabaseVo.TableColumnOption
 
   /**
    * 维度配置
    */
-  type DimensionOption = ChartConfigDao.DimensionOption
+  type DimensionOption = DatabaseVo.TableColumnOption & {
+    __invalid?: boolean
+  }
 
   /**
    * 过滤类型
@@ -25,12 +27,16 @@ declare namespace ChartConfigVo {
   /**
    * 过滤配置
    */
-  type FilterOption = ChartConfigDao.FilterOption
+  type FilterOption = ChartConfigDao.FilterOption & {
+    displayName: string
+  }
 
   /**
    * 分组配置
    */
-  type GroupOption = ChartConfigDao.GroupOption
+  type GroupOption = DatabaseVo.TableColumnOption & {
+    __invalid?: boolean
+  }
 
   /**
    * 排序类型
@@ -45,7 +51,9 @@ declare namespace ChartConfigVo {
   /**
    * 排序配置
    */
-  type OrderOption = ChartConfigDao.OrderOption
+  type OrderOption = ChartConfigDao.OrderOption & {
+    displayName: string
+  }
 
   /**
    * @desc 公共图表配置
