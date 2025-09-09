@@ -170,7 +170,7 @@ const handleConfirm = async () => {
   try {
     // 发送邮件
     const result = await sendEmailFromChartRef(
-      props.chartRef,
+      props.chartRef || null,
       analyseName,
       {
         to: emailFormData.recipients.split(',').map((email) => email.trim()),
