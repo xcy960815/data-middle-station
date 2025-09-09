@@ -34,6 +34,7 @@
         >
         </chart-card>
       </div>
+
       <!-- 创建&编辑分析 -->
       <el-dialog v-model="addOrEditAnalyseDialogVisible" :title="addOrEditAnalyseTitle" width="30%">
         <el-form
@@ -63,7 +64,6 @@
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { fetch } from '~/composables/request'
 import ChartCard from './components/chart-card.vue'
 const layoutName = 'homepage'
 
@@ -120,7 +120,7 @@ const container = ref<HTMLDivElement>()
  * @description 获取所有的分析
  */
 const getAnalyses = async () => {
-  const res = await fetch('/api/getAnalyses', {
+  const res = await $fetch('/api/getAnalyses', {
     method: 'POST'
   })
   if (res.code === 200) {
@@ -152,7 +152,7 @@ const handleDeleteAnalyse = (id: number, analyseName: string) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消'
   }).then(async () => {
-    const res = await fetch('/api/deleteAnalyse', {
+    const res = await $fetch('/api/deleteAnalyse', {
       method: 'DELETE',
       body: {
         id
@@ -171,7 +171,7 @@ const handleDeleteAnalyse = (id: number, analyseName: string) => {
  * @desc 编辑分析 打开弹窗
  */
 const handleEditAnalyse = async (id: number) => {
-  const res = await fetch('/api/getAnalyse', {
+  const res = await $fetch('/api/getAnalyse', {
     method: 'POST',
     body: {
       id
@@ -208,7 +208,7 @@ const handleSaveAnalyse = async () => {
   const valid = await addOrEditAnalyseFormRef.value.validate().catch(() => false)
   if (!valid) return
   if (addOrEditAnalyseFormData.id) {
-    const res = await fetch('/api/updateAnalyse', {
+    const res = await $fetch('/api/updateAnalyse', {
       method: 'POST',
       body: {
         id: addOrEditAnalyseFormData.id,
@@ -224,7 +224,7 @@ const handleSaveAnalyse = async () => {
       ElMessage.error(res.message || '更新失败')
     }
   } else {
-    const res = await fetch('/api/createAnalyse', {
+    const res = await $fetch('/api/createAnalyse', {
       method: 'POST',
       body: {
         analyseName: addOrEditAnalyseFormData.analyseName,

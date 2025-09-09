@@ -61,7 +61,7 @@ export interface EmailFormData {
 
 const props = defineProps<{
   visible: boolean
-  chartRef?: any
+  chartRef?: SendEmailDto.ChartComponentRef
 }>()
 
 const emits = defineEmits<{

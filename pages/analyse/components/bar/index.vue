@@ -4,7 +4,8 @@
     <el-button link @click="handleClickAlarm">报警</el-button>
     <el-button link @click="handleClickSetting">设置</el-button>
     <el-button link @click="handleClickFullScreen">全屏</el-button>
-    <el-button link @click="handleClickDownload">下载</el-button>
+    <el-button link @click="handleDownload">下载</el-button>
+    <el-button link @click="handleClickSendEmailDto">邮件</el-button>
     <el-button link @click="handleAnalyse">保存</el-button>
     <el-tag v-show="chartUpdateTakesTime" size="small" class="pr-[10px] ml-[10px]" type="info"
       >更新耗时 ：{{ chartUpdateTakesTime }}</el-tag
@@ -13,21 +14,37 @@
       >更新时间 ：{{ chartUpdateTime }}</el-tag
     >
   </div>
+
+  <!-- 邮件发送对话框 -->
+  <SendEmailDtoDialog v-model:visible="emailDialogVisible" :chart-ref="props.chartRef" ref="emailDialogRef" />
 </template>
 
 <script setup lang="ts">
-import { ElButton, ElCheckbox, ElCheckboxGroup, ElMessage, ElMessageBox, ElTag } from 'element-plus'
+import { ElButton, ElMessage, ElTag } from 'element-plus'
 import { getChartDataHandler } from '../../getChartData'
 import { updateAnalyseHandler } from '../../updateAnalyse'
+import SendEmailDtoDialog from './components/send-email-dialog.vue'
 const { queryChartData } = getChartDataHandler()
 const { handleUpdateAnalyse } = updateAnalyseHandler()
 const analyseStore = useAnalyseStore()
-const columnStore = useColumnStore()
 const chartConfigStore = useChartConfigStore()
-const dimensionStore = useDimensionStore()
-const groupStore = useGroupStore()
+const { handleDownload } = useChartDownload()
 const chartUpdateTime = computed(() => analyseStore.getChartUpdateTime)
 const chartUpdateTakesTime = computed(() => analyseStore.getChartUpdateTakesTime)
+
+// 发送邮件对话框相关状态
+const emailDialogVisible = ref(false)
+
+const emailDialogRef = ref<InstanceType<typeof SendEmailDtoDialog> | null>(null)
+
+// 图表组件引用（需要从父组件传入）
+const props = defineProps<{
+  chartRef?: SendEmailDto.ChartComponentRef
+}>()
+
+const emits = defineEmits<{
+  requestChartRef: []
+}>()
 
 /**
  * @desc 键盘事件处理
@@ -117,88 +134,12 @@ const handleAnalyse = () => {
 }
 
 /**
- * @desc 点下载按钮
- * @returns void
+ * @desc 发送邮件按钮点击事件
  */
-const handleClickDownload = () => {
-  // 获取所有的维度和分组
-  const feilds = dimensionStore.getDimensions.concat(groupStore.getGroups)
-  if (feilds.length === 0) {
-    ElMessage.warning('请先选择维度或分组')
-    return
-  }
-
-  // 绑定参数
-  const selectFeildsState = reactive<{
-    selectFeilds: string[]
-  }>({
-    selectFeilds: feilds.map((feild) => {
-      return feild.columnName || ''
-    })
-  })
-
-  /**
-   * @desc
-   */
-  ElMessageBox({
-    title: '请选择需要下载的字段',
-    message: () =>
-      h(
-        ElCheckboxGroup,
-        {
-          modelValue: selectFeildsState.selectFeilds,
-          'onUpdate:modelValue': (value) => {
-            selectFeildsState.selectFeilds = value.map((item) => item.toString())
-          },
-          style: 'width: 100%;display: grid;'
-        },
-        () => {
-          return feilds.map((feild) => {
-            return h(ElCheckbox, {
-              label: feild.displayName || feild.columnName,
-              value: feild.columnName || ''
-            })
-          })
-        }
-      ),
-    showCancelButton: false,
-    confirmButtonText: '下载',
-    cancelButtonText: '取消'
-  })
-    .then(async (action) => {
-      if (action === 'confirm') {
-        const data = analyseStore.getChartData
-        const columns = selectFeildsState.selectFeilds
-        const fileName = `${analyseStore.getAnalyseName}.xlsx`
-        const sheetName = columnStore.getDataSource
-
-        // 显示下载开始提示
-        ElMessage.success(
-          h('div', [
-            '开始下载文件：',
-            h(
-              'span',
-              {
-                style: {
-                  color: '#67c23a',
-                  fontWeight: 'bold',
-                  backgroundColor: '#f0f9ff',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  margin: '0 4px'
-                }
-              },
-              fileName
-            )
-          ])
-        )
-
-        exportToExcel(data, fileName, sheetName, columns)
-      }
-    })
-    .catch(() => {
-      ElMessage.info('取消下载')
-    })
+const handleClickSendEmailDto = () => {
+  // 确保图表引用可用
+  emits('requestChartRef')
+  emailDialogVisible.value = true
 }
 </script>
 
