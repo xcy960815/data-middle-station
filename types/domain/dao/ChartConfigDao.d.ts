@@ -5,7 +5,7 @@ declare namespace ChartConfigDao {
   /**
    * 列配置
    */
-  type ColumnOption = DatabaseDao.TableColumnOption
+  type ColumnOption = DatabaseVo.TableColumnOption
 
   /**
    * 维度配置
@@ -78,7 +78,7 @@ declare namespace ChartConfigDao {
   /**
    * 分组配置
    */
-  type GroupOption = DatabaseDao.TableColumnOption & {
+  type GroupOption = ColumnOption & {
     __invalid?: boolean
   }
 

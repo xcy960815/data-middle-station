@@ -1,24 +1,16 @@
 import nodemailer, { type SentMessageInfo, type Transporter } from 'nodemailer'
 
-export interface SendMailOptions {
-  to: string | string[]
-  subject: string
-  html?: string
-  text?: string
-  cc?: string | string[]
-  bcc?: string | string[]
-  attachments?: Array<{ filename: string; content: Buffer | string; contentType?: string }>
-}
-
+const logger = new Logger({ fileName: 'email', folderName: 'server' })
 /**
  * @desc 邮件服务
  */
 export class EmailService {
+  /**
+   * @desc 邮件传输器
+   */
   private transporter: Transporter<SentMessageInfo> | null = null
-  private logger: Logger
 
   constructor() {
-    this.logger = new Logger({ fileName: 'email', folderName: 'server' })
     this.createTransporter()
   }
 
@@ -43,10 +35,10 @@ export class EmailService {
 
   /**
    * @desc 发送邮件
-   * @param options {SendMailOptions}
+   * @param options {SendEmailDto.SendMailOptions}
    * @returns {Promise<string>} messageId
    */
-  public async sendMail(options: SendMailOptions): Promise<string> {
+  public async sendMail(options: SendEmailDto.SendMailOptions): Promise<string> {
     if (!this.transporter) {
       this.createTransporter()
     }
@@ -65,7 +57,7 @@ export class EmailService {
       attachments: options.attachments
     })
 
-    this.logger.info(`邮件已发送，messageId=${result.messageId}`)
+    logger.info(`邮件已发送，messageId=${result.messageId}`)
     return result.messageId
   }
 }
