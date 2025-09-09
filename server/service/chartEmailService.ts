@@ -4,7 +4,7 @@ import { EmailService } from './emailService'
 export interface ChartEmailOptions {
   to: string | string[]
   subject: string
-  charts: ChartEmailExportData[]
+  chart: ChartEmailExportData
   additionalContent?: string
   cc?: string | string[]
   bcc?: string | string[]
@@ -31,31 +31,31 @@ export class ChartEmailService {
    * @returns Promise<string> messageId
    */
   async sendChartEmail(options: ChartEmailOptions): Promise<string> {
-    const { to, subject, charts, additionalContent = '', cc, bcc } = options
+    const { to, subject, additionalContent = '', cc, bcc, chart } = options
 
     try {
       // 生成邮件HTML内容
-      const htmlContent = this.generateEmailHTML(charts, additionalContent)
+      const htmlContent = this.generateEmailHTML(chart, additionalContent)
 
       // 准备附件
-      const attachments = charts.map((chart, index) => ({
+      const attachment = {
         filename: `${chart.filename}.png`,
         content: this.base64ToBuffer(chart.base64Image),
         contentType: 'image/png',
         cid: chart.chartId // 用于在HTML中引用
-      }))
+      }
 
       // 发送邮件
       const messageId = await this.emailService.sendMail({
         to,
         subject,
         html: htmlContent,
-        attachments,
+        attachments: [attachment],
         cc,
         bcc
       })
 
-      logger.info(`图表邮件发送成功，messageId=${messageId}，包含${charts.length}个图表`)
+      logger.info(`图表邮件发送成功，messageId=${messageId}，图表标题：${chart.title}`)
       return messageId
     } catch (error: any) {
       logger.error('图表邮件发送失败:' + error + ' ' + error.message)
@@ -65,14 +65,12 @@ export class ChartEmailService {
 
   /**
    * 生成邮件HTML内容
-   * @param charts 图表数据
+   * @param chart 图表数据
    * @param additionalContent 额外内容
    * @returns HTML字符串
    */
-  private generateEmailHTML(charts: ChartEmailExportData[], additionalContent: string): string {
-    const chartHTML = charts
-      .map(
-        (chart) => `
+  private generateEmailHTML(chart: ChartEmailExportData, additionalContent: string): string {
+    const chartHTML = `
       <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #e5e5e5; border-radius: 8px; background-color: #fafafa;">
         <h3 style="color: #333; margin-bottom: 15px; font-size: 18px;">${chart.title}</h3>
         <div style="text-align: center;">
@@ -80,8 +78,6 @@ export class ChartEmailService {
         </div>
       </div>
     `
-      )
-      .join('')
 
     return `
       <!DOCTYPE html>
@@ -146,11 +142,11 @@ export class ChartEmailService {
   async sendScheduledReport(reportData: {
     recipient: string | string[]
     reportTitle: string
-    charts: ChartEmailExportData[]
+    chart: ChartEmailExportData
     summary?: string
     period?: string
   }): Promise<string> {
-    const { recipient, reportTitle, charts, summary = '', period = '每日' } = reportData
+    const { recipient, reportTitle, chart, summary = '', period = '每日' } = reportData
 
     const subject = `${period}数据报告 - ${reportTitle} (${new Date().toLocaleDateString('zh-CN')})`
 
@@ -164,7 +160,7 @@ export class ChartEmailService {
     return this.sendChartEmail({
       to: recipient,
       subject,
-      charts,
+      chart,
       additionalContent
     })
   }

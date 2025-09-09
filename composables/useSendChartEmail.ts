@@ -3,7 +3,7 @@ import type { ChartEmailExportData } from '~/utils/chart-export'
 /**
  * 图表邮件发送组合式函数
  */
-export function useChartEmail() {
+export function useSendChartEmail() {
   /**
    * 从图表组件引用中导出图表
    * @param chartRef 图表组件引用
@@ -34,18 +34,45 @@ export function useChartEmail() {
       }
     } catch (error) {
       console.error(`导出图表 ${title} 失败:`, error)
-      throw error
+
+      // 根据错误类型提供更具体的错误信息
+      const errorStr = String(error)
+      let errorMessage = '图表导出失败'
+      let userTip = '请稍后重试'
+
+      if (errorStr.includes('interaction')) {
+        errorMessage = '图表交互状态异常'
+        userTip = '请等待图表完全加载后重试'
+      } else if (errorStr.includes('容器')) {
+        errorMessage = '图表容器未找到'
+        userTip = '请确保图表已正确渲染'
+      } else if (errorStr.includes('实例不存在')) {
+        errorMessage = '图表实例不存在'
+        userTip = '请刷新页面后重试'
+      } else if (errorStr.includes('DOM')) {
+        errorMessage = '图表DOM结构异常'
+        userTip = '请稍后重试'
+      } else if (errorStr.includes('Cannot read properties of undefined')) {
+        errorMessage = '图表内部状态异常'
+        userTip = '请等待图表加载完成后重试'
+      } else if (errorStr.includes('html2canvas')) {
+        errorMessage = '图表截图失败'
+        userTip = '请检查浏览器设置或稍后重试'
+      }
+
+      // 抛出包含具体信息和用户提示的错误
+      throw new Error(`${errorMessage}，${userTip}`)
     }
   }
 
   /**
    * 发送图表邮件
-   * @param charts 图表数据
+   * @param chart 图表数据
    * @param emailOptions 邮件选项
    * @returns Promise<{ success: boolean; messageId: string; message: string }>
    */
-  const sendChartEmail = async (charts: ChartEmailExportData[], emailOptions: SendEmailDto.EmailChartOptions) => {
-    if (!charts || charts.length === 0) {
+  const sendChartEmail = async (chart: ChartEmailExportData, emailOptions: SendEmailDto.EmailChartOptions) => {
+    if (!chart) {
       throw new Error('没有可发送的图表')
     }
 
@@ -53,11 +80,12 @@ export function useChartEmail() {
       method: 'POST',
       body: {
         ...emailOptions,
-        charts: charts.map((chart) => ({
+        chart: {
+          id: chart.chartId,
           title: chart.title,
           base64Image: chart.base64Image,
           filename: chart.filename
-        }))
+        }
       }
     })
 
@@ -82,36 +110,28 @@ export function useChartEmail() {
     const chart = await exportChartsFromRef(chartRef, title, filename)
 
     // 2. 发送邮件
-    return sendChartEmail([chart], emailOptions)
+    return sendChartEmail(chart, emailOptions)
   }
 
   /**
-   * 批量下载图表
-   * @param chartRefs 图表组件引用数组
-   * @param filenames 文件名数组
+   * 下载单个图表
+   * @param chartRef 图表组件引用
+   * @param filename 文件名
    * @returns Promise<void>
    */
-  const downloadCharts = async (
-    chartRefs: Array<SendEmailDto.ChartComponentRef | null>,
-    filenames: string[]
-  ): Promise<void> => {
-    for (let i = 0; i < chartRefs.length; i++) {
-      const chartRef = chartRefs[i]
-      const filename = filenames[i]
+  const downloadChart = async (chartRef: SendEmailDto.ChartComponentRef | null, filename: string): Promise<void> => {
+    if (!chartRef) {
+      throw new Error('图表引用不存在')
+    }
 
-      if (!chartRef) {
-        console.warn(`图表 ${i + 1} 的引用不存在，跳过下载`)
-        continue
-      }
-
-      try {
-        await chartRef.downloadChart(filename, {
-          type: 'image/png',
-          quality: 1
-        })
-      } catch (error) {
-        console.error(`下载图表 ${filename} 失败:`, error)
-      }
+    try {
+      await chartRef.downloadChart(filename, {
+        type: 'image/png',
+        quality: 1
+      })
+    } catch (error) {
+      console.error(`下载图表 ${filename} 失败:`, error)
+      throw error
     }
   }
 
@@ -144,7 +164,7 @@ export function useChartEmail() {
     exportChartsFromRef,
     sendChartEmail,
     sendEmailFromChartRef,
-    downloadCharts,
+    downloadChart,
     validateEmail,
     validateEmails
   }
