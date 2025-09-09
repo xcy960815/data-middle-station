@@ -66,8 +66,6 @@ const props = defineProps<{
 
 const emits = defineEmits<{
   'update:visible': [value: boolean]
-  success: [messageId: string]
-  error: [error: any]
 }>()
 
 // 响应式状态
@@ -155,42 +153,38 @@ const handleConfirm = async () => {
   // 检查必要的参数
   if (!props.chartRef) {
     ElMessage.error('无法获取图表引用，请稍后重试')
-    emits('error', new Error('图表引用不存在'))
     return
   }
 
-  // const analyseName = analyseStore.getAnalyseName
+  const analyseName = analyseStore.getAnalyseName
 
   isSending.value = true
   ElMessage.info('正在发送邮件...')
-  console.log('props.chartRef', props.chartRef)
 
-  // try {
-  //   // 发送邮件
-  //   const result = await sendEmailFromChartRef(
-  //     props.chartRef,
-  //     analyseName,
-  //     {
-  //       to: emailFormData.recipients.split(',').map((email) => email.trim()),
-  //       subject: emailFormData.emailSubject,
-  //       additionalContent: emailFormData.messageContent
-  //     },
-  //     `${analyseName}_${new Date().getTime()}`
-  //   )
+  try {
+    // 发送邮件
+    const result = await sendEmailFromChartRef(
+      props.chartRef,
+      analyseName || '图表分析',
+      {
+        to: emailFormData.recipients.split(',').map((email) => email.trim()),
+        subject: emailFormData.emailSubject,
+        additionalContent: emailFormData.messageContent
+      },
+      `${analyseName || 'chart'}_${new Date().getTime()}`
+    )
 
-  //   ElMessage.success(`邮件发送成功！消息ID: ${result.messageId}`)
-  //   emits('success', result.messageId)
-  //   emits('update:visible', false)
+    ElMessage.success(`邮件发送成功！消息ID: ${result.data?.messageId}`)
+    emits('update:visible', false)
 
-  //   // 重置表单
-  //   resetEmailForm()
-  // } catch (error) {
-  //   ElMessage.error('邮件发送失败，请稍后重试')
-  //   console.error('邮件发送错误:', error)
-  //   emits('error', error)
-  // } finally {
-  //   isSending.value = false
-  // }
+    // 重置表单
+    resetEmailForm()
+  } catch (error) {
+    ElMessage.error('邮件发送失败，请稍后重试')
+    console.error('邮件发送错误:', error)
+  } finally {
+    isSending.value = false
+  }
 }
 
 /**
