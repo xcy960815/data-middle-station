@@ -1,4 +1,4 @@
-import { EmailService } from './emailService'
+import { SendEmailService } from './sendEmailService'
 
 const logger = new Logger({
   fileName: 'chart-email',
@@ -9,10 +9,10 @@ const logger = new Logger({
  * 图表邮件发送服务
  */
 export class ChartEmailService {
-  private emailService: EmailService
+  private sendEmailService: SendEmailService
 
   constructor() {
-    this.emailService = new EmailService()
+    this.sendEmailService = new SendEmailService()
   }
 
   /**
@@ -35,7 +35,7 @@ export class ChartEmailService {
       }
 
       // 发送邮件
-      const result = await this.emailService.sendMail({
+      const result = await this.sendEmailService.sendMail({
         to,
         subject,
         html: htmlContent,
@@ -121,6 +121,35 @@ export class ChartEmailService {
     // 移除 data:image/png;base64, 前缀（如果存在）
     const base64Data = base64String.replace(/^data:image\/[a-z]+;base64,/, '')
     return Buffer.from(base64Data, 'base64')
+  }
+
+  /**
+   * 根据分析ID和图表IDs发送邮件
+   * @param options 发送选项
+   * @returns Promise<number> 发送的邮件数量
+   */
+  async sendAnalyseChartsByIds(options: {
+    analyseId: string
+    chartIds: string[]
+    to: string
+    cc?: string
+    bcc?: string
+    subject: string
+    additionalContent?: string
+  }): Promise<number> {
+    const { to, cc, bcc, subject, additionalContent } = options
+
+    // 这里应该根据 analyseId 和 chartIds 获取实际的图表数据
+    // 目前返回固定值，需要根据实际业务逻辑实现
+    logger.info(`发送分析图表邮件: analyseId=${options.analyseId}, chartIds=${options.chartIds.join(',')}`)
+
+    // TODO: 实现实际的图表数据获取和邮件发送逻辑
+    // 这里应该:
+    // 1. 根据 analyseId 和 chartIds 获取图表数据
+    // 2. 生成包含多个图表的邮件内容
+    // 3. 发送邮件
+
+    return 1 // 暂时返回固定值
   }
 
   /**

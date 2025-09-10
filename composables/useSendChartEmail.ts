@@ -257,7 +257,9 @@ export function useSendChartEmail() {
     const response = await $fetch('/api/sendChartEmail', {
       method: 'POST',
       body: {
-        ...emailOptions,
+        to: emailOptions.to,
+        subject: emailOptions.subject,
+        additionalContent: emailOptions.additionalContent,
         chart: {
           id: chart.chartId,
           title: chart.title,
