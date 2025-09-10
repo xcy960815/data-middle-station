@@ -7,9 +7,9 @@
       label-width="100px"
       label-position="left"
     >
-      <el-form-item label="收件人" prop="recipients">
+      <el-form-item label="收件人" prop="to">
         <el-input
-          v-model="emailFormData.recipients"
+          v-model="emailFormData.to"
           placeholder="请输入收件人邮箱，多个邮箱用逗号分隔"
           type="textarea"
           :rows="2"
@@ -17,13 +17,13 @@
         <div class="text-sm text-gray-500 mt-1">支持多个邮箱地址，用逗号分隔</div>
       </el-form-item>
 
-      <el-form-item label="邮件主题" prop="emailSubject">
-        <el-input v-model="emailFormData.emailSubject" placeholder="请输入邮件主题" />
+      <el-form-item label="邮件主题" prop="subject">
+        <el-input v-model="emailFormData.subject" placeholder="请输入邮件主题" />
       </el-form-item>
 
       <el-form-item label="额外说明">
         <el-input
-          v-model="emailFormData.messageContent"
+          v-model="emailFormData.additionalContent"
           placeholder="可添加额外的说明内容（可选）"
           type="textarea"
           :rows="3"
@@ -52,16 +52,17 @@
 <script setup lang="ts">
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage } from 'element-plus'
+import type { ChartComponentRef } from '~/composables/useSendChartEmail'
 
 export interface EmailFormData {
-  recipients: string // 收件人邮箱地址
-  emailSubject: string // 邮件主题
-  messageContent: string // 额外消息内容
+  to: string // 收件人邮箱地址
+  subject: string // 邮件主题
+  additionalContent: string // 额外消息内容
 }
 
 const props = defineProps<{
   visible: boolean
-  chartRef?: SendEmailDto.ChartComponentRef
+  chartRef?: ChartComponentRef
 }>()
 
 const emits = defineEmits<{
@@ -78,9 +79,9 @@ const dialogVisible = computed({
  * @desc 邮件表单数据
  */
 const emailFormData = reactive<EmailFormData>({
-  recipients: 'xinxin87v5@icloud.com',
-  emailSubject: '',
-  messageContent: ''
+  to: 'xinxin87v5@icloud.com',
+  subject: '',
+  additionalContent: ''
 })
 
 // 表单引用
@@ -94,7 +95,7 @@ const isSending = ref(false)
 
 // 表单验证规则
 const emailFormRules: FormRules<EmailFormData> = {
-  recipients: [
+  to: [
     { required: true, message: '请输入收件人邮箱', trigger: 'blur' },
     {
       validator: (_rule, value: string, callback: Function) => {
@@ -116,7 +117,7 @@ const emailFormRules: FormRules<EmailFormData> = {
       trigger: 'blur'
     }
   ],
-  emailSubject: [
+  subject: [
     { required: true, message: '请输入邮件主题', trigger: 'blur' },
     { min: 1, max: 200, message: '邮件主题长度应在 1 到 200 个字符之间', trigger: 'blur' }
   ]
@@ -135,7 +136,7 @@ watch(
   () => props.visible,
   (newVisible) => {
     if (newVisible) {
-      emailFormData.emailSubject = generateDefaultSubject()
+      emailFormData.subject = generateDefaultSubject()
     }
   }
 )
@@ -165,13 +166,13 @@ const handleConfirm = async () => {
     // 发送邮件
     const result = await sendEmailFromChartRef(
       props.chartRef,
-      analyseName || '图表分析',
+      analyseName,
       {
-        to: emailFormData.recipients.split(',').map((email) => email.trim()),
-        subject: emailFormData.emailSubject,
-        additionalContent: emailFormData.messageContent
+        to: emailFormData.to,
+        subject: emailFormData.subject,
+        additionalContent: emailFormData.additionalContent
       },
-      `${analyseName || 'chart'}_${new Date().getTime()}`
+      analyseName
     )
 
     ElMessage.success(`邮件发送成功！消息ID: ${result.data?.messageId}`)
@@ -204,9 +205,9 @@ const resetEmailForm = () => {
   if (emailFormRef.value) {
     emailFormRef.value.resetFields()
   }
-  emailFormData.recipients = 'xinxin87v5@icloud.com'
-  emailFormData.emailSubject = ''
-  emailFormData.messageContent = ''
+  emailFormData.to = 'xinxin87v5@icloud.com'
+  emailFormData.subject = ''
+  emailFormData.additionalContent = ''
 }
 
 // 暴露方法给父组件

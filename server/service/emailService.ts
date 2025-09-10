@@ -35,10 +35,10 @@ export class EmailService {
 
   /**
    * @desc 发送邮件
-   * @param options {SendEmailDto.SendMailOptions}
+   * @param options {SendEmailDto.SendEmailOptions}
    * @returns {Promise<string>} messageId
    */
-  public async sendMail(options: SendEmailDto.SendMailOptions): Promise<string> {
+  public async sendMail(options: SendEmailDto.SendEmailOptions): Promise<string> {
     if (!this.transporter) {
       this.createTransporter()
     }
