@@ -1,10 +1,11 @@
 import nodemailer, { type Transporter } from 'nodemailer'
 
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
+
 /**
  * @desc 邮件服务
  */
-export class EmailService {
+export class SendEmailService {
   /**
    * @desc 邮件传输器
    */
@@ -64,7 +65,7 @@ export class EmailService {
    * @param options {SendEmailDto.SendEmailOptions}
    * @returns {Promise<string>} messageId
    */
-  public async sendMail(options: SendEmailDto.SendEmailOptions): Promise<SendEmailDao.SendEmailOptions> {
+  public async sendMail(options: SendEmailDto.SendEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
     if (!this.transporter) {
       this.createTransporter()
     }
