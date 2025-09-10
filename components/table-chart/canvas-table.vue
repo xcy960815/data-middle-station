@@ -283,14 +283,7 @@ defineExpose({
    * 导出图表为 Base64
    * @param options
    */
-  exportAsImage: async (options?: {
-    type?: 'image/png' | 'image/jpeg'
-    quality?: number
-    width?: number
-    height?: number
-    backgroundColor?: string
-    scale?: number
-  }) => {
+  exportAsImage: async (options?: ExportChartOptions) => {
     if (!tableVars.stage) {
       throw new Error('表格实例不存在')
     }
@@ -310,21 +303,10 @@ defineExpose({
    * @param filename 文件名
    * @param options 选项
    */
-  downloadChart: async (
-    filename: string,
-    options?: {
-      type?: 'image/png' | 'image/jpeg'
-      quality?: number
-      width?: number
-      height?: number
-      backgroundColor?: string
-      scale?: number
-    }
-  ) => {
+  downloadChart: async (filename: string, options?: ExportChartOptions) => {
     if (!tableVars.stage) {
       throw new Error('表格实例不存在')
     }
-
     const mimeType = options?.type === 'image/jpeg' ? 'image/jpeg' : 'image/png'
     const quality = options?.quality || 1
     const backgroundColor = options?.backgroundColor || '#ffffff'
