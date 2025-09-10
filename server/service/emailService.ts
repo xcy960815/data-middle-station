@@ -1,4 +1,4 @@
-import nodemailer, { type SentMessageInfo, type Transporter } from 'nodemailer'
+import nodemailer, { type Transporter } from 'nodemailer'
 
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
 /**
@@ -8,9 +8,39 @@ export class EmailService {
   /**
    * @desc 邮件传输器
    */
-  private transporter: Transporter<SentMessageInfo> | null = null
+  private transporter: Transporter<SendEmailDao.SendEmailOptions> | null = null
+  /**
+   * @desc 邮件配置
+   */
+  private smtpHost: string | null = null
+  /**
+   * @desc 邮件端口
+   */
+  private smtpPort: number | null = null
+  /**
+   * @desc 邮件是否安全
+   */
+  private smtpSecure: boolean = false
+  /**
+   * @desc 邮件用户
+   */
+  private smtpUser: string | null = null
+  /**
+   * @desc 邮件密码
+   */
+  private smtpPass: string | null = null
+  /**
+   * @desc 邮件发件人
+   */
+  private smtpFrom: string | null = null
 
   constructor() {
+    this.smtpHost = useRuntimeConfig().smtpHost
+    this.smtpPort = useRuntimeConfig().smtpPort ? Number(useRuntimeConfig().smtpPort) : 465
+    this.smtpSecure = String(useRuntimeConfig().smtpSecure || 'true') === 'true'
+    this.smtpUser = useRuntimeConfig().smtpUser
+    this.smtpPass = useRuntimeConfig().smtpPass
+    this.smtpFrom = useRuntimeConfig().smtpFrom
     this.createTransporter()
   }
 
@@ -18,18 +48,14 @@ export class EmailService {
    * @desc 创建邮件传输器
    */
   private createTransporter(): void {
-    const config = useRuntimeConfig()
-    const host = config.smtpHost
-    const port = Number(config.smtpPort || 465)
-    const secure = String(config.smtpSecure || 'true') === 'true'
-    const user = config.smtpUser
-    const pass = config.smtpPass
-
     this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: { user, pass }
+      host: this.smtpHost!,
+      port: this.smtpPort!,
+      secure: this.smtpSecure,
+      auth: {
+        user: this.smtpUser!,
+        pass: this.smtpPass!
+      }
     })
   }
 
@@ -38,17 +64,12 @@ export class EmailService {
    * @param options {SendEmailDto.SendEmailOptions}
    * @returns {Promise<string>} messageId
    */
-  public async sendMail(options: SendEmailDto.SendEmailOptions): Promise<string> {
+  public async sendMail(options: SendEmailDto.SendEmailOptions): Promise<SendEmailDao.SendEmailOptions> {
     if (!this.transporter) {
       this.createTransporter()
     }
-
-    const config = useRuntimeConfig()
-
-    const from = config.smtpFrom || config.smtpUser
-
     const result = await this.transporter!.sendMail({
-      from,
+      from: this.smtpFrom || this.smtpUser!,
       to: options.to,
       subject: options.subject,
       html: options.html,
@@ -59,6 +80,7 @@ export class EmailService {
     })
 
     logger.info(`邮件已发送，messageId=${result.messageId}`)
-    return result.messageId
+
+    return result
   }
 }
