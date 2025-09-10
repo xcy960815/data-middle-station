@@ -270,13 +270,13 @@ defineExpose({
    * 导出图表为 Base64
    * @param options
    */
-  exportAsImage: async (options?: ExportChartOptions) => {
+  exportAsImage: async (options?: SendEmailDto.ExportChartConfigs) => {
     if (!chartInstance.value) {
       throw new Error('图表实例不存在')
     }
     return exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
   },
-  downloadChart: async (filename: string, options?: ExportChartOptions) => {
+  downloadChart: async (filename: string, options?: SendEmailDto.ExportChartConfigs) => {
     if (!chartInstance.value) {
       throw new Error('图表实例不存在')
     }
