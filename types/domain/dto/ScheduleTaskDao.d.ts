@@ -22,12 +22,30 @@ declare namespace ScheduleTaskDto {
   /**
    * 创建定时任务请求
    */
-  interface CreateScheduleTaskRequest {
-    taskName: string // 任务名称
+  interface ScheduleTaskOptions {
+    /**
+     * 任务名称
+     */
+    taskName: string
+    /**
+     * 任务类型
+     */
     taskType: 'email' // 任务类型
+    /**
+     * 计划执行时间
+     */
     scheduleTime: string // 计划执行时间 (YYYY-MM-DD HH:mm:ss)
+    /**
+     * 邮件配置
+     */
     emailConfig: EmailConfig // 邮件配置
+    /**
+     * 图表数据
+     */
     chartData: ChartData // 图表数据
+    /**
+     * 备注说明
+     */
     remark?: string // 备注说明
   }
 

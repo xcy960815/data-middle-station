@@ -4,6 +4,7 @@
 </template>
 <script setup lang="ts">
 import { Chart } from '@antv/g2'
+import type { G2ChartInstance } from '~/composables/useChartExport'
 
 defineOptions({
   name: 'LineChart'
@@ -33,35 +34,6 @@ const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
  * 初始化图表实例
  */
 const chartInstance = ref<Chart | null>(null)
-
-// 图表导出功能
-const { exportChartAsBase64, downloadChartAsImage } = useSendChartEmail()
-
-// 暴露图表实例和导出方法给父组件
-defineExpose({
-  chartInstance,
-  /**
-   * 导出图表为 Base64
-   * @param options
-   */
-  exportAsImage: async (options?: SendEmailDto.ExportChartConfigs) => {
-    if (!chartInstance.value) {
-      throw new Error('图表实例不存在')
-    }
-    return exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
-  },
-  /**
-   * 下载图表
-   * @param filename 文件名
-   * @param options 选项
-   */
-  downloadChart: async (filename: string, options?: SendEmailDto.ExportChartConfigs) => {
-    if (!chartInstance.value) {
-      throw new Error('图表实例不存在')
-    }
-    return downloadChartAsImage(chartInstance.value as InstanceType<typeof Chart>, filename, options)
-  }
-})
 
 const chartConfigStore = useChartConfigStore()
 
@@ -256,5 +228,11 @@ watch(
     deep: true
   }
 )
+
+// 图表导出功能
+const { getChartExpose } = useChartExport(chartInstance as Ref<G2ChartInstance>)
+
+// 暴露图表实例和导出方法给父组件
+defineExpose(getChartExpose())
 </script>
 <style lang="scss"></style>
