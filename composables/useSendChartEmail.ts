@@ -1,9 +1,225 @@
-import type { ChartEmailExportData } from '~/utils/chart-export'
+import type { Chart } from '@antv/g2'
+import html2canvas from 'html2canvas'
+import type { EmailFormData } from '~/pages/analyse/components/bar/components/send-email-dialog.vue'
+
+// 定义 G2 v5 Chart 实例的正确类型
+type G2ChartInstance = InstanceType<typeof Chart>
+
+/**
+ * 图表邮件导出接口
+ */
+export interface ChartEmailExportData {
+  chartId: string
+  title: string
+  base64Image: string
+  filename: string
+}
+
+/**
+ * 图表导出选项
+ */
+export interface ExportChartOptions {
+  type?: 'image/png' | 'image/jpeg'
+  quality?: number
+  width?: number
+  height?: number
+  backgroundColor?: string
+  scale?: number
+}
+
+/**
+ * 图表导出选项 - 使用共享类型
+ * @deprecated 使用 ExportChartOptions 替代
+ */
+export type ChartExportOptions = ExportChartOptions
+
+/**
+ * 统一的图表数据接口
+ */
+export interface ChartExportData {
+  id: string
+  title: string
+  base64Image: string
+  filename: string
+  /** @deprecated 兼容旧接口 */
+  imageData?: string
+}
+
+/**
+ * 图表组件引用接口
+ * 定义图表组件必须提供的导出方法
+ */
+export interface ChartComponentRef {
+  exportAsImage: (options?: ExportChartOptions) => Promise<string>
+  downloadChart: (filename: string, options?: ExportChartOptions) => Promise<void>
+}
 
 /**
  * 图表邮件发送组合式函数
  */
 export function useSendChartEmail() {
+  /**
+   * 将 G2 图表导出为 Base64 图片（使用 html2canvas）
+   * @param chartInstance G2 图表实例
+   * @param options 导出选项
+   * @returns Promise<string> Base64 格式的图片数据
+   */
+  const exportChartAsBase64 = async (
+    chartInstance: G2ChartInstance | null,
+    options: ExportChartOptions = {}
+  ): Promise<string> => {
+    const { type = 'image/png', quality = 1, backgroundColor = '#ffffff', scale = 1 } = options
+
+    try {
+      // 获取图表容器
+      const container = chartInstance?.getContainer()
+      if (!container) {
+        throw new Error('无法找到图表容器')
+      }
+
+      // 使用 html2canvas 截图
+      const canvas = await html2canvas(container, {
+        backgroundColor,
+        scale,
+        logging: false,
+        useCORS: true,
+        allowTaint: false,
+        width: options.width,
+        height: options.height
+      })
+
+      // 如果指定了自定义尺寸且与实际尺寸不同，则进行缩放
+      if ((options.width && options.width !== canvas.width) || (options.height && options.height !== canvas.height)) {
+        const newCanvas = document.createElement('canvas')
+        const ctx = newCanvas.getContext('2d')!
+
+        const targetWidth = options.width || canvas.width
+        const targetHeight = options.height || canvas.height
+
+        newCanvas.width = targetWidth
+        newCanvas.height = targetHeight
+
+        // 绘制缩放后的图表
+        ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, targetWidth, targetHeight)
+
+        return newCanvas.toDataURL(type, quality)
+      }
+
+      // 直接导出
+      return canvas.toDataURL(type, quality)
+    } catch (error) {
+      console.error('图表导出失败:', error)
+      throw new Error(`图表导出失败: ${error}`)
+    }
+  }
+
+  /**
+   * 通过 DOM 元素导出图片（使用 html2canvas）
+   * @param element DOM 元素
+   * @param options 导出选项
+   * @returns Promise<string> Base64 格式的图片数据
+   */
+  const exportElementAsBase64 = async (element: HTMLElement, options: ExportChartOptions = {}): Promise<string> => {
+    const { type = 'image/png', quality = 1, backgroundColor = '#ffffff', scale = 1 } = options
+
+    try {
+      // 使用 html2canvas 截图
+      const canvas = await html2canvas(element, {
+        backgroundColor,
+        scale,
+        logging: false,
+        useCORS: true,
+        allowTaint: false,
+        width: options.width,
+        height: options.height
+      })
+
+      // 如果指定了自定义尺寸且与实际尺寸不同，则进行缩放
+      if ((options.width && options.width !== canvas.width) || (options.height && options.height !== canvas.height)) {
+        const newCanvas = document.createElement('canvas')
+        const ctx = newCanvas.getContext('2d')!
+
+        const targetWidth = options.width || canvas.width
+        const targetHeight = options.height || canvas.height
+
+        newCanvas.width = targetWidth
+        newCanvas.height = targetHeight
+
+        // 绘制缩放后的图表
+        ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, targetWidth, targetHeight)
+
+        return newCanvas.toDataURL(type, quality)
+      }
+
+      // 直接导出
+      return canvas.toDataURL(type, quality)
+    } catch (error) {
+      console.error('元素导出失败:', error)
+      throw new Error(`元素导出失败: ${error}`)
+    }
+  }
+
+  /**
+   * 将 G2 图表导出为 Buffer（用于服务端）
+   * @param chartInstance G2 图表实例
+   * @param options 导出选项
+   * @returns Promise<Buffer> 图片 Buffer 数据
+   */
+  const exportChartAsBuffer = async (
+    chartInstance: G2ChartInstance | null,
+    options: ExportChartOptions = {}
+  ): Promise<Buffer> => {
+    const base64Data = await exportChartAsBase64(chartInstance, options)
+
+    // 移除 data:image/png;base64, 前缀
+    const base64WithoutPrefix = base64Data.replace(/^data:image\/[a-z]+;base64,/, '')
+
+    return Buffer.from(base64WithoutPrefix, 'base64')
+  }
+
+  /**
+   * 下载图表为图片文件
+   * @param chartInstance G2 图表实例
+   * @param filename 文件名（不包含扩展名）
+   * @param options 导出选项
+   */
+  const downloadChartAsImage = async (
+    chartInstance: G2ChartInstance | null,
+    filename: string,
+    options: ExportChartOptions = {}
+  ): Promise<void> => {
+    const { type = 'image/png' } = options
+    const base64Data = await exportChartAsBase64(chartInstance, options)
+
+    // 创建下载链接
+    const link = document.createElement('a')
+    link.href = base64Data
+    link.download = `${filename}.${type.split('/')[1]}`
+
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  /**
+   * 获取图表容器的精确尺寸
+   * @param containerId 图表容器ID
+   * @returns 容器尺寸信息
+   */
+  const getContainerSize = (containerId: string): { width: number; height: number } => {
+    const container = document.getElementById(containerId)
+    if (!container) {
+      throw new Error(`找不到容器: ${containerId}`)
+    }
+
+    const rect = container.getBoundingClientRect()
+    return {
+      width: rect.width,
+      height: rect.height
+    }
+  }
+
   /**
    * 从图表组件引用中导出图表
    * @param chartRef 图表组件引用
@@ -12,14 +228,13 @@ export function useSendChartEmail() {
    * @returns Promise<ChartEmailExportData>
    */
   const exportChartsFromRef = async (
-    chartRef: SendEmailDto.ChartComponentRef | null,
+    chartRef: ChartComponentRef | null,
     title: string,
     filename?: string
   ): Promise<ChartEmailExportData> => {
     if (!chartRef) {
       throw new Error('图表引用不存在')
     }
-
     try {
       const base64Image = await chartRef.exportAsImage({
         type: 'image/png',
@@ -69,9 +284,9 @@ export function useSendChartEmail() {
    * 发送图表邮件
    * @param chart 图表数据
    * @param emailOptions 邮件选项
-   * @returns Promise<{ success: boolean; messageId: string; message: string }>
+   * @returns Promise<Object>
    */
-  const sendChartEmail = async (chart: ChartEmailExportData, emailOptions: SendEmailDto.EmailChartOptions) => {
+  const sendChartEmail = async (chart: ChartEmailExportData, emailOptions: EmailFormData) => {
     if (!chart) {
       throw new Error('没有可发送的图表')
     }
@@ -98,12 +313,12 @@ export function useSendChartEmail() {
    * @param title 图表标题
    * @param emailOptions 邮件选项
    * @param filename 文件名（可选）
-   * @returns Promise<{ success: boolean; messageId: string; message: string }>
+   * @returns Promise<Object>
    */
   const sendEmailFromChartRef = async (
-    chartRef: SendEmailDto.ChartComponentRef | null,
+    chartRef: ChartComponentRef | null,
     title: string,
-    emailOptions: SendEmailDto.EmailChartOptions,
+    emailOptions: EmailFormData,
     filename?: string
   ) => {
     // 1. 导出图表
@@ -119,7 +334,7 @@ export function useSendChartEmail() {
    * @param filename 文件名
    * @returns Promise<void>
    */
-  const downloadChart = async (chartRef: SendEmailDto.ChartComponentRef | null, filename: string): Promise<void> => {
+  const downloadChart = async (chartRef: ChartComponentRef | null, filename: string): Promise<void> => {
     if (!chartRef) {
       throw new Error('图表引用不存在')
     }
@@ -161,10 +376,18 @@ export function useSendChartEmail() {
   }
 
   return {
+    // 图表导出相关
+    exportChartAsBase64,
+    exportChartAsBuffer,
+    exportElementAsBase64,
+    downloadChartAsImage,
+    getContainerSize,
+    // 邮件发送相关
     exportChartsFromRef,
     sendChartEmail,
     sendEmailFromChartRef,
     downloadChart,
+    // 工具函数
     validateEmail,
     validateEmails
   }
