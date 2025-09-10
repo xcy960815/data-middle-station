@@ -14,20 +14,10 @@
           type="textarea"
           :rows="2"
         />
-        <div class="text-sm text-gray-500 mt-1">支持多个邮箱地址，用逗号分隔</div>
       </el-form-item>
 
       <el-form-item label="邮件主题" prop="subject">
         <el-input v-model="emailFormData.subject" placeholder="请输入邮件主题" />
-      </el-form-item>
-
-      <el-form-item label="额外说明">
-        <el-input
-          v-model="emailFormData.additionalContent"
-          placeholder="可添加额外的说明内容（可选）"
-          type="textarea"
-          :rows="3"
-        />
       </el-form-item>
 
       <!-- 发送模式选择 -->
@@ -75,6 +65,15 @@
         </el-form-item>
       </template>
 
+      <el-form-item label="额外说明">
+        <el-input
+          v-model="emailFormData.additionalContent"
+          placeholder="可添加额外的说明内容（可选）"
+          type="textarea"
+          :rows="3"
+        />
+      </el-form-item>
+
       <el-form-item>
         <div class="text-sm text-gray-600">
           <p>📊 将会发送当前图表的高清图片</p>
@@ -107,7 +106,6 @@ import {
   ElRadio,
   ElRadioGroup
 } from 'element-plus'
-import type { ChartComponentRef } from '~/composables/useSendChartEmail'
 
 export interface EmailFormData {
   to: string // 收件人邮箱地址
@@ -347,7 +345,7 @@ const saveScheduledTask = async () => {
   )
 
   // 构建定时任务数据
-  const scheduleTaskData: ScheduleTaskDto.CreateScheduleTaskRequest = {
+  const scheduleTaskData: ScheduleTaskDto.ScheduleTaskOptions = {
     taskName: emailFormData.taskName || generateDefaultTaskName(),
     taskType: 'email',
     scheduleTime: emailFormData.scheduleTime!,

@@ -1,9 +1,6 @@
-import type { Chart } from '@antv/g2'
 import html2canvas from 'html2canvas'
 import type { EmailFormData } from '~/pages/analyse/components/bar/components/send-email-dialog.vue'
-
-// 定义 G2 v5 Chart 实例的正确类型
-type G2ChartInstance = InstanceType<typeof Chart>
+import type { G2ChartInstance } from './useChartExport'
 
 /**
  * 图表组件引用接口
