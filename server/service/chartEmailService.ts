@@ -1,5 +1,4 @@
-import type { ChartEmailExportData } from '~/utils/chart-export'
-import { EmailService } from './emailService'
+import { SendEmailService } from './sendEmailService'
 
 const logger = new Logger({
   fileName: 'chart-email',
@@ -10,10 +9,10 @@ const logger = new Logger({
  * 图表邮件发送服务
  */
 export class ChartEmailService {
-  private emailService: EmailService
+  private sendEmailService: SendEmailService
 
   constructor() {
-    this.emailService = new EmailService()
+    this.sendEmailService = new SendEmailService()
   }
 
   /**
@@ -21,7 +20,7 @@ export class ChartEmailService {
    * @param options 邮件选项
    * @returns Promise<string> messageId
    */
-  async sendChartEmail(options: SendEmailDto.SendChartEmailOptions): Promise<string> {
+  async sendChartEmail(options: SendEmailDto.SendChartEmailOptions): Promise<SendEmailDao.SendEmailOptions> {
     const { to, subject, additionalContent = '', cc, bcc, chart } = options
 
     try {
@@ -36,7 +35,7 @@ export class ChartEmailService {
       }
 
       // 发送邮件
-      const messageId = await this.emailService.sendMail({
+      const result = await this.sendEmailService.sendMail({
         to,
         subject,
         html: htmlContent,
@@ -45,8 +44,8 @@ export class ChartEmailService {
         bcc
       })
 
-      logger.info(`图表邮件发送成功，messageId=${messageId}，图表标题：${chart.title}`)
-      return messageId
+      logger.info(`图表邮件发送成功，messageId=${result.messageId}，图表标题：${chart.title}`)
+      return result
     } catch (error: any) {
       logger.error('图表邮件发送失败:' + error + ' ' + error.message)
       throw new Error(`图表邮件发送失败: ${error}`)
@@ -59,7 +58,7 @@ export class ChartEmailService {
    * @param additionalContent 额外内容
    * @returns HTML字符串
    */
-  private generateEmailHTML(chart: ChartEmailExportData, additionalContent: string): string {
+  private generateEmailHTML(chart: SendEmailDto.ChartEmailExportData, additionalContent: string): string {
     const chartHTML = `
       <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #e5e5e5; border-radius: 8px; background-color: #fafafa;">
         <h3 style="color: #333; margin-bottom: 15px; font-size: 18px;">${chart.title}</h3>
@@ -125,6 +124,35 @@ export class ChartEmailService {
   }
 
   /**
+   * 根据分析ID和图表IDs发送邮件
+   * @param options 发送选项
+   * @returns Promise<number> 发送的邮件数量
+   */
+  async sendAnalyseChartsByIds(options: {
+    analyseId: string
+    chartIds: string[]
+    to: string
+    cc?: string
+    bcc?: string
+    subject: string
+    additionalContent?: string
+  }): Promise<number> {
+    const { to, cc, bcc, subject, additionalContent } = options
+
+    // 这里应该根据 analyseId 和 chartIds 获取实际的图表数据
+    // 目前返回固定值，需要根据实际业务逻辑实现
+    logger.info(`发送分析图表邮件: analyseId=${options.analyseId}, chartIds=${options.chartIds.join(',')}`)
+
+    // TODO: 实现实际的图表数据获取和邮件发送逻辑
+    // 这里应该:
+    // 1. 根据 analyseId 和 chartIds 获取图表数据
+    // 2. 生成包含多个图表的邮件内容
+    // 3. 发送邮件
+
+    return 1 // 暂时返回固定值
+  }
+
+  /**
    * 生成定时报告邮件
    * @param reportData 报告数据
    * @returns Promise<string>
@@ -132,10 +160,10 @@ export class ChartEmailService {
   async sendScheduledReport(reportData: {
     recipient: string | string[]
     reportTitle: string
-    chart: ChartEmailExportData
+    chart: SendEmailDto.ChartEmailExportData
     summary?: string
     period?: string
-  }): Promise<string> {
+  }): Promise<SendEmailDao.SendEmailOptions> {
     const { recipient, reportTitle, chart, summary = '', period = '每日' } = reportData
 
     const subject = `${period}数据报告 - ${reportTitle} (${new Date().toLocaleDateString('zh-CN')})`
