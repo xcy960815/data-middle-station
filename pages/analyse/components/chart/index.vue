@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ChartComponentRef } from '~/composables/useSendChartEmail'
 const svg = `
         <path class="path" d="
           M 30 15
@@ -189,7 +190,7 @@ onUnmounted(() => {
 /**
  * 当前图表组件的引用
  */
-const currentChartRef = ref<SendEmailDto.ChartComponentRef>()
+const currentChartRef = ref<ChartComponentRef>()
 
 // 暴露导出方法给父组件
 defineExpose({
@@ -197,14 +198,7 @@ defineExpose({
    * 导出图表为 Base64
    * @param options
    */
-  exportAsImage: async (options?: {
-    type?: 'image/png' | 'image/jpeg'
-    quality?: number
-    width?: number
-    height?: number
-    backgroundColor?: string
-    scale?: number
-  }) => {
+  exportAsImage: async (options?: ExportChartOptions) => {
     if (!currentChartRef.value) {
       throw new Error('图表组件实例不存在')
     }
@@ -218,17 +212,7 @@ defineExpose({
    * @param filename 文件名
    * @param options 选项
    */
-  downloadChart: async (
-    filename: string,
-    options?: {
-      type?: 'image/png' | 'image/jpeg'
-      quality?: number
-      width?: number
-      height?: number
-      backgroundColor?: string
-      scale?: number
-    }
-  ) => {
+  downloadChart: async (filename: string, options?: ExportChartOptions) => {
     if (!currentChartRef.value) {
       throw new Error('图表组件实例不存在')
     }

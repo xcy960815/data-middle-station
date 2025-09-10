@@ -1,15 +1,6 @@
 import type { ChartEmailExportData } from '~/utils/chart-export'
 import { EmailService } from './emailService'
 
-export interface ChartEmailOptions {
-  to: string | string[]
-  subject: string
-  chart: ChartEmailExportData
-  additionalContent?: string
-  cc?: string | string[]
-  bcc?: string | string[]
-}
-
 const logger = new Logger({
   fileName: 'chart-email',
   folderName: 'server'
@@ -30,7 +21,7 @@ export class ChartEmailService {
    * @param options 邮件选项
    * @returns Promise<string> messageId
    */
-  async sendChartEmail(options: ChartEmailOptions): Promise<string> {
+  async sendChartEmail(options: SendEmailDto.SendChartEmailOptions): Promise<string> {
     const { to, subject, additionalContent = '', cc, bcc, chart } = options
 
     try {
@@ -41,8 +32,7 @@ export class ChartEmailService {
       const attachment = {
         filename: `${chart.filename}.png`,
         content: this.base64ToBuffer(chart.base64Image),
-        contentType: 'image/png',
-        cid: chart.chartId // 用于在HTML中引用
+        contentType: 'image/png'
       }
 
       // 发送邮件
