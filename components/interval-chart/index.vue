@@ -10,6 +10,8 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
+import type { G2ChartInstance } from '~/composables/useChartExport'
+
 defineOptions({
   name: 'IntervalChart'
 })
@@ -261,27 +263,9 @@ watch(
 )
 
 // 图表导出功能
-const { exportChartAsBase64, downloadChartAsImage } = useSendChartEmail()
+const { getChartExpose } = useChartExport(chartInstance as Ref<G2ChartInstance>)
 
 // 暴露图表实例和导出方法给父组件
-defineExpose({
-  chartInstance,
-  /**
-   * 导出图表为 Base64
-   * @param options
-   */
-  exportAsImage: async (options?: ExportChartOptions) => {
-    if (!chartInstance.value) {
-      throw new Error('图表实例不存在')
-    }
-    return exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
-  },
-  downloadChart: async (filename: string, options?: ExportChartOptions) => {
-    if (!chartInstance.value) {
-      throw new Error('图表实例不存在')
-    }
-    return downloadChartAsImage(chartInstance.value as InstanceType<typeof Chart>, filename, options)
-  }
-})
+defineExpose(getChartExpose())
 </script>
 <style lang="scss" scoped></style>

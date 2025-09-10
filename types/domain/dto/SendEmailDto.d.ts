@@ -22,9 +22,31 @@ declare namespace SendEmailDto {
   interface SendChartEmailOptions extends Omit<SendEmailOptions, 'attachments'> {
     body?: string
     additionalContent?: string
-    chart: ChartExportData
-    exportOptions?: ExportChartOptions
+    chart: ChartEmailExportData
+    exportOptions?: ExportChartConfigs
     attachments?: SendEmailOptions['attachments']
+  }
+
+  /**
+   * 图表导出配置
+   */
+  export interface ExportChartConfigs {
+    type?: 'image/png' | 'image/jpeg'
+    quality?: number
+    width?: number
+    height?: number
+    backgroundColor?: string
+    scale?: number
+  }
+
+  /**
+   * 图表邮件导出接口
+   */
+  export interface ChartEmailExportData {
+    chartId: string
+    title: string
+    base64Image: string
+    filename: string
   }
 }
 
