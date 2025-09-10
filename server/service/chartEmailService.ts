@@ -1,4 +1,3 @@
-import type { ChartEmailExportData } from '~/utils/chart-export'
 import { EmailService } from './emailService'
 
 const logger = new Logger({
@@ -21,7 +20,7 @@ export class ChartEmailService {
    * @param options 邮件选项
    * @returns Promise<string> messageId
    */
-  async sendChartEmail(options: SendEmailDto.SendChartEmailOptions): Promise<string> {
+  async sendChartEmail(options: SendEmailDto.SendChartEmailOptions): Promise<SendEmailDao.SendEmailOptions> {
     const { to, subject, additionalContent = '', cc, bcc, chart } = options
 
     try {
@@ -36,7 +35,7 @@ export class ChartEmailService {
       }
 
       // 发送邮件
-      const messageId = await this.emailService.sendMail({
+      const result = await this.emailService.sendMail({
         to,
         subject,
         html: htmlContent,
@@ -45,8 +44,8 @@ export class ChartEmailService {
         bcc
       })
 
-      logger.info(`图表邮件发送成功，messageId=${messageId}，图表标题：${chart.title}`)
-      return messageId
+      logger.info(`图表邮件发送成功，messageId=${result.messageId}，图表标题：${chart.title}`)
+      return result
     } catch (error: any) {
       logger.error('图表邮件发送失败:' + error + ' ' + error.message)
       throw new Error(`图表邮件发送失败: ${error}`)
@@ -59,7 +58,7 @@ export class ChartEmailService {
    * @param additionalContent 额外内容
    * @returns HTML字符串
    */
-  private generateEmailHTML(chart: ChartEmailExportData, additionalContent: string): string {
+  private generateEmailHTML(chart: SendEmailDto.ChartEmailExportData, additionalContent: string): string {
     const chartHTML = `
       <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #e5e5e5; border-radius: 8px; background-color: #fafafa;">
         <h3 style="color: #333; margin-bottom: 15px; font-size: 18px;">${chart.title}</h3>
@@ -132,10 +131,10 @@ export class ChartEmailService {
   async sendScheduledReport(reportData: {
     recipient: string | string[]
     reportTitle: string
-    chart: ChartEmailExportData
+    chart: SendEmailDto.ChartEmailExportData
     summary?: string
     period?: string
-  }): Promise<string> {
+  }): Promise<SendEmailDao.SendEmailOptions> {
     const { recipient, reportTitle, chart, summary = '', period = '每日' } = reportData
 
     const subject = `${period}数据报告 - ${reportTitle} (${new Date().toLocaleDateString('zh-CN')})`

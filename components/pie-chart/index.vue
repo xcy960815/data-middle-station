@@ -48,13 +48,13 @@ const { exportChartAsBase64, downloadChartAsImage } = useSendChartEmail()
 // 暴露图表实例和导出方法给父组件
 defineExpose({
   chartInstance,
-  exportAsImage: async (options?: ExportChartOptions) => {
+  exportAsImage: async (options?: SendEmailDto.ExportChartConfigs) => {
     if (!chartInstance.value) {
       throw new Error('图表实例不存在')
     }
     return exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
   },
-  downloadChart: async (filename: string, options?: ExportChartOptions) => {
+  downloadChart: async (filename: string, options?: SendEmailDto.ExportChartConfigs) => {
     if (!chartInstance.value) {
       throw new Error('图表实例不存在')
     }

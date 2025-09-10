@@ -1,4 +1,3 @@
-import type { ChartEmailExportData } from '~/utils/chart-export'
 import { ChartEmailService } from '../service/chartEmailService'
 import { CustomResponse } from '../utils/customResponse'
 
@@ -19,7 +18,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // 验证图表数据
-    if (!chart || !chart.title || (!chart.base64Image && !chart.imageData) || !chart.filename) {
+    if (!chart || !chart.title || !chart.base64Image || !chart.filename) {
       throw createError({
         statusCode: 400,
         statusMessage: '图表缺少必要字段: title, (base64Image 或 imageData), filename'
@@ -27,10 +26,10 @@ export default defineEventHandler(async (event) => {
     }
 
     // 转换图表数据格式
-    const chartEmailData: ChartEmailExportData = {
-      chartId: chart.id,
+    const chartEmailData: SendEmailDto.ChartEmailExportData = {
+      chartId: chart.chartId,
       title: chart.title,
-      base64Image: chart.base64Image || chart.imageData || '',
+      base64Image: chart.base64Image || '',
       filename: chart.filename
     }
 
