@@ -10,6 +10,9 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
+import { ref } from 'vue'
+import type { G2ChartInstance } from '~/composables/useChartExport'
+
 defineOptions({
   name: 'PieChart'
 })
@@ -42,25 +45,6 @@ const { getDefaultChartColors } = useChartFormat()
  */
 const chartInstance = ref<InstanceType<typeof Chart> | null>(null)
 
-// 图表导出功能
-const { exportChartAsBase64, downloadChartAsImage } = useSendChartEmail()
-
-// 暴露图表实例和导出方法给父组件
-defineExpose({
-  chartInstance,
-  exportAsImage: async (options?: ExportChartOptions) => {
-    if (!chartInstance.value) {
-      throw new Error('图表实例不存在')
-    }
-    return exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
-  },
-  downloadChart: async (filename: string, options?: ExportChartOptions) => {
-    if (!chartInstance.value) {
-      throw new Error('图表实例不存在')
-    }
-    return downloadChartAsImage(chartInstance.value as InstanceType<typeof Chart>, filename, options)
-  }
-})
 const chartConfigStore = useChartConfigStore()
 
 const defaultPieConfig = {
@@ -175,15 +159,6 @@ const initChart = () => {
       const currentItem = data[0]
       if (!currentItem) return ''
 
-      // 添加调试信息
-      console.log('Tooltip Debug:', {
-        categoryField,
-        categoryDisplayName,
-        valueField,
-        valueDisplayName,
-        currentItem: currentItem.data
-      })
-
       return `
         <div style="padding: 8px; background: rgba(0, 0, 0, 0.8); color: white; border-radius: 4px; font-size: 12px;">
           <div style="margin-bottom: 4px; font-weight: bold;">${currentItem.data[categoryField]}</div>
@@ -234,6 +209,12 @@ watch(
     deep: true
   }
 )
+
+// 图表导出功能
+const { getChartExpose } = useChartExport(chartInstance as Ref<G2ChartInstance>)
+
+// 暴露图表实例和导出方法给父组件
+defineExpose(getChartExpose())
 </script>
 
 <style scoped lang="scss">

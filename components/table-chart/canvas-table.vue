@@ -283,7 +283,7 @@ defineExpose({
    * 导出图表为 Base64
    * @param options
    */
-  exportAsImage: async (options?: ExportChartOptions) => {
+  exportAsImage: async (options?: SendEmailDto.ExportChartConfigs) => {
     if (!tableVars.stage) {
       throw new Error('表格实例不存在')
     }
@@ -303,7 +303,7 @@ defineExpose({
    * @param filename 文件名
    * @param options 选项
    */
-  downloadChart: async (filename: string, options?: ExportChartOptions) => {
+  downloadChart: async (filename: string, options?: SendEmailDto.ExportChartConfigs) => {
     if (!tableVars.stage) {
       throw new Error('表格实例不存在')
     }

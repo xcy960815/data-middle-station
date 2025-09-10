@@ -1,57 +1,14 @@
-import type { Chart } from '@antv/g2'
 import html2canvas from 'html2canvas'
 import type { EmailFormData } from '~/pages/analyse/components/bar/components/send-email-dialog.vue'
-
-// 定义 G2 v5 Chart 实例的正确类型
-type G2ChartInstance = InstanceType<typeof Chart>
-
-/**
- * 图表邮件导出接口
- */
-export interface ChartEmailExportData {
-  chartId: string
-  title: string
-  base64Image: string
-  filename: string
-}
-
-/**
- * 图表导出选项
- */
-export interface ExportChartOptions {
-  type?: 'image/png' | 'image/jpeg'
-  quality?: number
-  width?: number
-  height?: number
-  backgroundColor?: string
-  scale?: number
-}
-
-/**
- * 图表导出选项 - 使用共享类型
- * @deprecated 使用 ExportChartOptions 替代
- */
-export type ChartExportOptions = ExportChartOptions
-
-/**
- * 统一的图表数据接口
- */
-export interface ChartExportData {
-  id: string
-  title: string
-  base64Image: string
-  filename: string
-  /** @deprecated 兼容旧接口 */
-  imageData?: string
-}
+import type { G2ChartInstance } from './useChartExport'
 
 /**
  * 图表组件引用接口
  * 定义图表组件必须提供的导出方法
  */
 export interface ChartComponentRef {
-  exportAsImage: (options?: ExportChartOptions) => Promise<string>
-  downloadChart: (filename: string, options?: ExportChartOptions) => Promise<void>
+  exportAsImage: (options?: SendEmailDto.ExportChartConfigs) => Promise<string>
+  downloadChart: (filename: string, options?: SendEmailDto.ExportChartConfigs) => Promise<void>
 }
 
 /**
@@ -66,7 +23,7 @@ export function useSendChartEmail() {
    */
   const exportChartAsBase64 = async (
     chartInstance: G2ChartInstance | null,
-    options: ExportChartOptions = {}
+    options: SendEmailDto.ExportChartConfigs = {}
   ): Promise<string> => {
     const { type = 'image/png', quality = 1, backgroundColor = '#ffffff', scale = 1 } = options
 
@@ -119,7 +76,10 @@ export function useSendChartEmail() {
    * @param options 导出选项
    * @returns Promise<string> Base64 格式的图片数据
    */
-  const exportElementAsBase64 = async (element: HTMLElement, options: ExportChartOptions = {}): Promise<string> => {
+  const exportElementAsBase64 = async (
+    element: HTMLElement,
+    options: SendEmailDto.ExportChartConfigs = {}
+  ): Promise<string> => {
     const { type = 'image/png', quality = 1, backgroundColor = '#ffffff', scale = 1 } = options
 
     try {
@@ -167,7 +127,7 @@ export function useSendChartEmail() {
    */
   const exportChartAsBuffer = async (
     chartInstance: G2ChartInstance | null,
-    options: ExportChartOptions = {}
+    options: SendEmailDto.ExportChartConfigs = {}
   ): Promise<Buffer> => {
     const base64Data = await exportChartAsBase64(chartInstance, options)
 
@@ -186,7 +146,7 @@ export function useSendChartEmail() {
   const downloadChartAsImage = async (
     chartInstance: G2ChartInstance | null,
     filename: string,
-    options: ExportChartOptions = {}
+    options: SendEmailDto.ExportChartConfigs = {}
   ): Promise<void> => {
     const { type = 'image/png' } = options
     const base64Data = await exportChartAsBase64(chartInstance, options)
@@ -231,7 +191,7 @@ export function useSendChartEmail() {
     chartRef: ChartComponentRef | null,
     title: string,
     filename?: string
-  ): Promise<ChartEmailExportData> => {
+  ): Promise<SendEmailDto.ChartEmailExportData> => {
     if (!chartRef) {
       throw new Error('图表引用不存在')
     }
@@ -286,7 +246,7 @@ export function useSendChartEmail() {
    * @param emailOptions 邮件选项
    * @returns Promise<Object>
    */
-  const sendChartEmail = async (chart: ChartEmailExportData, emailOptions: EmailFormData) => {
+  const sendChartEmail = async (chart: SendEmailDto.ChartEmailExportData, emailOptions: EmailFormData) => {
     if (!chart) {
       throw new Error('没有可发送的图表')
     }
@@ -294,7 +254,9 @@ export function useSendChartEmail() {
     const response = await $fetch('/api/sendChartEmail', {
       method: 'POST',
       body: {
-        ...emailOptions,
+        to: emailOptions.to,
+        subject: emailOptions.subject,
+        additionalContent: emailOptions.additionalContent,
         chart: {
           id: chart.chartId,
           title: chart.title,
