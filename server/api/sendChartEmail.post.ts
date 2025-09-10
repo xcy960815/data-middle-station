@@ -2,9 +2,12 @@ import type { ChartEmailExportData } from '~/utils/chart-export'
 import { ChartEmailService } from '../service/chartEmailService'
 import { CustomResponse } from '../utils/customResponse'
 
+// 发送邮件
+const chartEmailService = new ChartEmailService()
+
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody<SendEmailDto.SendChartEmailRequest>(event)
+    const body = await readBody<SendEmailDto.SendChartEmailOptions>(event)
     const { to, subject, additionalContent, cc, bcc, chart } = body
 
     // 验证必填字段
@@ -31,8 +34,6 @@ export default defineEventHandler(async (event) => {
       filename: chart.filename
     }
 
-    // 发送邮件
-    const chartEmailService = new ChartEmailService()
     const messageId = await chartEmailService.sendChartEmail({
       to,
       subject,

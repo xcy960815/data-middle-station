@@ -38,6 +38,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ChartComponentRef } from '~/composables/useSendChartEmail'
 import Bar from './components/bar/index.vue'
 import ChartConfig from './components/chart-config/index.vue'
 import analyseName from './components/chart-name/index.vue'
@@ -50,12 +51,11 @@ import GroupOption from './components/group/index.vue'
 import Order from './components/order/index.vue'
 import { getAnalyseHandler } from './getAnalyse'
 import { getChartDataHandler } from './getChartData'
-
 const layoutName = 'analyse'
 
 // 图表组件引用
 const chartComponentRef = ref()
-const chartRef = ref<SendEmailDto.ChartComponentRef>()
+const chartRef = ref<ChartComponentRef>()
 
 /**
  * @desc 处理 Bar 组件的图表引用请求

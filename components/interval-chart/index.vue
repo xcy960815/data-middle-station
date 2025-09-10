@@ -10,7 +10,6 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
-import type { ExportChartOptions } from '~/utils/chart-export'
 defineOptions({
   name: 'IntervalChart'
 })
@@ -261,6 +260,9 @@ watch(
   }
 )
 
+// 图表导出功能
+const { exportChartAsBase64, downloadChartAsImage } = useSendChartEmail()
+
 // 暴露图表实例和导出方法给父组件
 defineExpose({
   chartInstance,
@@ -272,16 +274,13 @@ defineExpose({
     if (!chartInstance.value) {
       throw new Error('图表实例不存在')
     }
-
-    const { ChartExporter } = await import('~/utils/chart-export')
-    return ChartExporter.exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
+    return exportChartAsBase64(chartInstance.value as InstanceType<typeof Chart>, options)
   },
   downloadChart: async (filename: string, options?: ExportChartOptions) => {
     if (!chartInstance.value) {
       throw new Error('图表实例不存在')
     }
-    const { ChartExporter } = await import('~/utils/chart-export')
-    return ChartExporter.downloadChart(chartInstance.value as InstanceType<typeof Chart>, filename, options)
+    return downloadChartAsImage(chartInstance.value as InstanceType<typeof Chart>, filename, options)
   }
 })
 </script>

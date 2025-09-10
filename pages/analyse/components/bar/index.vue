@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { ElButton, ElMessage, ElTag } from 'element-plus'
+import type { ChartComponentRef } from '~/composables/useSendChartEmail'
 import { getChartDataHandler } from '../../getChartData'
 import { updateAnalyseHandler } from '../../updateAnalyse'
 import SendEmailDtoDialog from './components/send-email-dialog.vue'
@@ -39,7 +40,7 @@ const emailDialogRef = ref<InstanceType<typeof SendEmailDtoDialog> | null>(null)
 
 // 图表组件引用（需要从父组件传入）
 const props = defineProps<{
-  chartRef?: SendEmailDto.ChartComponentRef
+  chartRef?: ChartComponentRef
 }>()
 
 const emits = defineEmits<{
