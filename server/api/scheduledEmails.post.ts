@@ -8,20 +8,20 @@ const logger = new Logger({
 /**
  * 创建定时邮件任务
  */
-export default defineEventHandler(async (event) => {
+export default defineEventHandler<Promise<ApiResponse<boolean>>>(async (event) => {
   try {
-    const body = await readBody<ScheduledEmailDto.CreateScheduledEmailRequest>(event)
+    const scheduledEmailOptions = await readBody<ScheduledEmailDto.CreateScheduledEmailOptions>(event)
 
     // 基础验证
-    if (!body.taskName || !body.scheduleTime || !body.emailConfig) {
+    if (!scheduledEmailOptions.taskName || !scheduledEmailOptions.scheduleTime || !scheduledEmailOptions.emailConfig) {
       throw new Error('必填参数不能为空')
     }
 
-    if (!body.emailConfig.to || !body.emailConfig.subject) {
+    if (!scheduledEmailOptions.emailConfig.to || !scheduledEmailOptions.emailConfig.subject) {
       throw new Error('邮件配置不完整')
     }
 
-    const result = await scheduledEmailService.createScheduledEmail(body)
+    const result = await scheduledEmailService.createScheduledEmail(scheduledEmailOptions)
 
     return CustomResponse.success(result)
   } catch (error: any) {

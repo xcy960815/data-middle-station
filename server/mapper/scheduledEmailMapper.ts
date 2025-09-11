@@ -10,41 +10,23 @@ const SCHEDULED_EMAIL_TASK_BASE_FIELDS = [
   'task_name',
   'schedule_time',
   'email_config',
-  'chart_data',
+  'analyse_options',
   'status',
   'remark',
-  'created_at',
-  'updated_at',
-  'executed_at',
+  'created_by',
+  'updated_by',
+  'created_time',
+  'updated_time',
+  'executed_time',
   'error_message',
   'retry_count',
   'max_retries'
 ]
 
 /**
- * @desc 执行日志基础字段
- */
-const SCHEDULED_EMAIL_LOG_BASE_FIELDS = [
-  'id',
-  'task_id',
-  'execution_time',
-  'status',
-  'message',
-  'error_details',
-  'email_message_id',
-  'execution_duration',
-  'created_at'
-]
-
-/**
  * @desc 定时邮件任务表名
  */
 const SCHEDULED_EMAIL_TASK_TABLE_NAME = 'scheduled_email_tasks'
-
-/**
- * @desc 执行日志表名
- */
-const SCHEDULED_EMAIL_LOG_TABLE_NAME = 'scheduled_email_logs'
 
 /**
  * @desc 数据源名称
@@ -71,23 +53,23 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
   @Column('email_config')
   emailConfig!: string
 
-  @Column('chart_data')
-  chartData!: string
+  @Column('analyse_options')
+  analyseOptions!: string
 
   @Column('status')
-  status!: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+  status!: ScheduledEmailDao.Status
 
   @Column('remark')
   remark?: string
 
-  @Column('created_at')
-  createdAt!: string
+  @Column('created_time')
+  createdTime!: string
 
-  @Column('updated_at')
-  updatedAt!: string
+  @Column('updated_time')
+  updatedTime!: string
 
-  @Column('executed_at')
-  executedAt?: string
+  @Column('executed_time')
+  executedTime?: string
 
   @Column('error_message')
   errorMessage?: string
@@ -97,42 +79,12 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
 
   @Column('max_retries')
   maxRetries!: number
-}
 
-/**
- * @desc 执行日志选项
- */
-export class ScheduledEmailLogMapping implements ScheduledEmailDao.ExecutionLogOption, IColumnTarget {
-  columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
-    return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
-  }
+  @Column('created_by')
+  createdBy!: string
 
-  @Column('id')
-  id!: number
-
-  @Column('task_id')
-  taskId!: number
-
-  @Column('execution_time')
-  executionTime!: string
-
-  @Column('status')
-  status!: 'success' | 'failed'
-
-  @Column('message')
-  message?: string
-
-  @Column('error_details')
-  errorDetails?: string
-
-  @Column('email_message_id')
-  emailMessageId?: string
-
-  @Column('execution_duration')
-  executionDuration?: number
-
-  @Column('created_at')
-  createdAt!: string
+  @Column('updated_by')
+  updatedBy!: string
 }
 
 export class ScheduledEmailMapper extends BaseMapper {
@@ -226,7 +178,7 @@ export class ScheduledEmailMapper extends BaseMapper {
       SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
       FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
       ${whereClause}
-      ORDER BY created_at DESC
+      ORDER BY created_time DESC
     `
 
     return this.exe<ScheduledEmailDao.ScheduledEmailOptions[]>(sql, whereValues)
@@ -288,42 +240,6 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 创建执行日志
-   * @param {ScheduledEmailDao.ExecutionLogOption} log  执行日志选项
-   * @returns {Promise<number>} 日志ID
-   */
-  public async createScheduledEmailLog(log: ScheduledEmailDao.ExecutionLogOption): Promise<number> {
-    const { keys, values } = convertToSqlProperties(log)
-    // 只使用数据库表中存在的字段
-    const validKeys = keys.filter((key) => SCHEDULED_EMAIL_LOG_BASE_FIELDS.includes(key))
-    const validValues = validKeys.map((key) => values[keys.indexOf(key)])
-    const sql = `insert into ${SCHEDULED_EMAIL_LOG_TABLE_NAME} (${batchFormatSqlKey(validKeys)}) values (${validKeys.map(() => '?').join(',')})`
-    const result = await this.exe<ResultSetHeader>(sql, validValues)
-    return result.insertId || 0
-  }
-
-  /**
-   * @desc 获取任务执行日志
-   * @param {number} taskId  任务ID
-   * @param limit {number} 限制数量
-   * @returns {Promise<ScheduledEmailDao.ExecutionLogOption[]>} 执行日志列表
-   */
-  @Mapping(ScheduledEmailLogMapping)
-  public async getScheduledEmailLogList(
-    taskId: number,
-    limit: number = 20
-  ): Promise<ScheduledEmailDao.ExecutionLogOption[]> {
-    const sql = `
-      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_LOG_BASE_FIELDS)}
-      FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME}
-      WHERE task_id = ?
-      ORDER BY execution_time DESC
-      LIMIT ?
-    `
-    return this.exe<ScheduledEmailDao.ExecutionLogOption[]>(sql, [taskId, limit])
-  }
-
-  /**
    * @desc 获取定时邮件任务统计信息
    * @returns {Promise<any>} 统计信息
    */
@@ -336,9 +252,9 @@ export class ScheduledEmailMapper extends BaseMapper {
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
         SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_tasks,
         SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_tasks,
-        SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) as today_tasks,
-        SUM(CASE WHEN YEARWEEK(created_at) = YEARWEEK(CURDATE()) THEN 1 ELSE 0 END) as this_week_tasks,
-        SUM(CASE WHEN YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE()) THEN 1 ELSE 0 END) as this_month_tasks
+        SUM(CASE WHEN DATE(created_time) = CURDATE() THEN 1 ELSE 0 END) as today_tasks,
+        SUM(CASE WHEN YEARWEEK(created_time) = YEARWEEK(CURDATE()) THEN 1 ELSE 0 END) as this_week_tasks,
+        SUM(CASE WHEN YEAR(created_time) = YEAR(CURDATE()) AND MONTH(created_time) = MONTH(CURDATE()) THEN 1 ELSE 0 END) as this_month_tasks
       FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
     `
 

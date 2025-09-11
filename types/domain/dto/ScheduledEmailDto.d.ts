@@ -1,73 +1,115 @@
 declare namespace ScheduledEmailDto {
+  type Status = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+  type EmailConfig = {
+    /**
+     * 收件人
+     */
+    to: string | string[]
+    /**
+     * 抄送
+     */
+    cc?: string | string[]
+    /**
+     * 密送
+     */
+    bcc?: string | string[]
+    /**
+     * 邮件主题
+     */
+    subject: string
+    /**
+     * HTML内容
+     */
+    html?: string
+    /**
+     * 文本内容
+     */
+    text?: string
+    /**
+     * 附加内容
+     */
+    additionalContent?: string
+    /**
+     * 附件
+     */
+    attachments?: Array<{
+      /**
+       * 附件名称
+       */
+      filename: string
+      /**
+       * 附件内容
+       */
+      content: string | Buffer
+      /**
+       * 附件内容类型
+       */
+      contentType?: string
+    }>
+  }
+  type ChartOptions = {
+    /**
+     * 附件名称
+     */
+    filename: string
+    /**
+     * 图表类型
+     */
+    chartType: string
+    /**
+     * 分析名称
+     */
+    analyseName?: string
+    /**
+     * 分析id
+     */
+    analyseId: string
+  }
   /**
    * 创建定时邮件任务请求
    */
-  interface CreateScheduledEmailRequest {
+  type CreateScheduledEmailOptions = {
+    /**
+     * 任务名称
+     */
     taskName: string
+    /**
+     * 计划执行时间
+     */
     scheduleTime: string
-    emailConfig: {
-      to: string | string[]
-      cc?: string | string[]
-      bcc?: string | string[]
-      subject: string
-      html?: string
-      text?: string
-      additionalContent?: string
-      attachments?: Array<{
-        filename: string
-        content: string | Buffer
-        contentType?: string
-      }>
-    }
-    chartData?: {
-      filename: string
-      base64Image: string
-      chartType: string
-      title?: string
-      analyseName?: string
-      chartConfig?: any
-    }
+    /**
+     * 邮件配置
+     */
+    emailConfig: EmailConfig
+    /**
+     * 图表数据
+     */
+    analyseOptions: ChartOptions
+    /**
+     * 任务状态
+     */
+    status: Status
+    /**
+     * 备注
+     */
     remark?: string
+    /**
+     * 最大重试次数
+     */
     maxRetries?: number
   }
 
   /**
    * 更新定时邮件任务请求
    */
-  interface UpdateScheduledEmailRequest {
-    taskName?: string
-    scheduleTime?: string
-    emailConfig?: {
-      to?: string | string[]
-      cc?: string | string[]
-      bcc?: string | string[]
-      subject?: string
-      html?: string
-      text?: string
-      additionalContent?: string
-      attachments?: Array<{
-        filename: string
-        content: string | Buffer
-        contentType?: string
-      }>
-    }
-    chartData?: {
-      filename: string
-      base64Image: string
-      chartType: string
-      title?: string
-      analyseName?: string
-      chartConfig?: any
-    }
-    status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
-    remark?: string
-    maxRetries?: number
+  type UpdateScheduledEmailOptions = CreateScheduledEmailOptions & {
+    id: number
   }
 
   /**
    * 定时邮件任务选项/响应
    */
-  interface ScheduledEmailOption {
+  interface ScheduledEmailOptions {
     id: number
     /**
      * 任务名称
@@ -80,35 +122,15 @@ declare namespace ScheduledEmailDto {
     /**
      * 邮件配置
      */
-    emailConfig: {
-      to: string | string[]
-      cc?: string | string[]
-      bcc?: string | string[]
-      subject: string
-      html?: string
-      text?: string
-      additionalContent?: string
-      attachments?: Array<{
-        filename: string
-        content: string | Buffer
-        contentType?: string
-      }>
-    }
+    emailConfig: EmailConfig
     /**
      * 图表数据
      */
-    chartData?: {
-      filename: string
-      base64Image: string
-      chartType: string
-      title?: string
-      analyseName?: string
-      chartConfig?: any
-    }
+    analyseOptions: ChartOptions
     /**
      * 任务状态
      */
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+    status: Status
     /**
      * 备注
      */
@@ -128,15 +150,23 @@ declare namespace ScheduledEmailDto {
     /**
      * 创建时间
      */
-    createdAt: string
+    createdTime: string
     /**
      * 更新时间
      */
-    updatedAt?: string
+    updatedTime?: string
     /**
      * 执行时间
      */
-    executedAt?: string
+    executedTime?: string
+    /**
+     * 创建人
+     */
+    createdBy: string
+    /**
+     * 更新人
+     */
+    updatedBy: string
   }
 
   /**
@@ -250,6 +280,7 @@ declare namespace ScheduledEmailDto {
    * 定时邮件列表查询参数
    */
   interface ScheduledEmailListQuery {
+    id?: number
     taskName?: string
     status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
   }
@@ -257,5 +288,5 @@ declare namespace ScheduledEmailDto {
   /**
    * 定时邮件列表响应
    */
-  type ScheduledEmailListResponse = ScheduledEmailOption[]
+  type ScheduledEmailList = ScheduledEmailOptions[]
 }

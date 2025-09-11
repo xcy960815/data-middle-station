@@ -1,11 +1,11 @@
 import { AnalyseMapper } from '../mapper/analyseMapper'
+import { BaseService } from './baseService'
 import { ChartConfigService } from './chartConfigService'
-import dayjs from 'dayjs'
 
 /**
  * @desc 分析服务
  */
-export class AnalyseService {
+export class AnalyseService extends BaseService {
   /**
    * 图表mapper
    */
@@ -17,6 +17,7 @@ export class AnalyseService {
   private chartConfigService: ChartConfigService
 
   constructor() {
+    super()
     this.analyseMapper = new AnalyseMapper()
     this.chartConfigService = new ChartConfigService()
   }
@@ -49,17 +50,6 @@ export class AnalyseService {
   }
 
   /**
-   * @desc 获取默认信息
-   * @returns {Promise<{createdBy: string, updatedBy: string, createTime: string, updateTime: string}>}
-   */
-  private async getDefaultInfo() {
-    const createdBy = (await RedisStorage.getItem<string>(`userName`)) || 'system'
-    const updatedBy = (await RedisStorage.getItem<string>(`userName`)) || 'system'
-    const createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    return { createdBy, updatedBy, createTime, updateTime }
-  }
-  /**
    * @desc 删除分析
    * @param id {number} 分析id
    * @returns {Promise<boolean>}
@@ -70,7 +60,7 @@ export class AnalyseService {
       // 删除图表配置
       await this.chartConfigService.deleteChartConfig(analyseOption.chartConfigId)
     }
-    const { updatedBy, updateTime } = await this.getDefaultInfo()
+    const { updatedBy, updateTime } = await super.getDefaultInfo()
     const deleteParams = {
       id,
       updatedBy,
@@ -134,7 +124,7 @@ export class AnalyseService {
       }
     }
     // 更新图表
-    const { updatedBy, updateTime } = await this.getDefaultInfo()
+    const { updatedBy, updateTime } = await super.getDefaultInfo()
     analyseOption.updateTime = updateTime
     analyseOption.updatedBy = updatedBy
     analyseOption.chartConfigId = chartConfigId
