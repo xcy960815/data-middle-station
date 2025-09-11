@@ -97,7 +97,8 @@ export class ChartConfigMapper extends BaseMapper {
   ): Promise<T> {
     const sql = `select
           ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
-            from ${CHART_CONFIG_TABLE_NAME} where id = ? and is_deleted = 0`
+            from ${CHART_CONFIG_TABLE_NAME}
+          where id = ? and is_deleted = 0`
     const result = await this.exe<Array<T>>(sql, [id])
     return result?.[0]
   }

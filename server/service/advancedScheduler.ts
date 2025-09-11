@@ -79,7 +79,7 @@ export class AdvancedScheduler {
   /**
    * 调度单个任务
    */
-  private async scheduleTask(task: ScheduledEmailDao.ScheduledEmailOption): Promise<void> {
+  private async scheduleTask(task: ScheduledEmailDao.ScheduledEmailOptions): Promise<void> {
     const taskId = task.id
     const scheduleTime = new Date(task.schedule_time)
     const now = new Date()
