@@ -1,8 +1,11 @@
-import type { ResultSetHeader } from 'mysql2'
-import { BaseMapper, Column, Mapping, Row, entityColumnsMap, mapToTarget, type IColumnTarget } from './baseMapper'
+import { ResultSetHeader } from 'mysql2'
+import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '../utils/databaseHelpper'
+import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
 
-// 定时邮件任务基础字段
-export const SCHEDULED_EMAIL_TASK_BASE_FIELDS = [
+/**
+ * @desc 定时邮件任务基础字段
+ */
+const SCHEDULED_EMAIL_TASK_BASE_FIELDS = [
   'id',
   'task_name',
   'schedule_time',
@@ -18,8 +21,10 @@ export const SCHEDULED_EMAIL_TASK_BASE_FIELDS = [
   'max_retries'
 ]
 
-// 执行日志基础字段
-export const SCHEDULED_EMAIL_LOG_BASE_FIELDS = [
+/**
+ * @desc 执行日志基础字段
+ */
+const SCHEDULED_EMAIL_LOG_BASE_FIELDS = [
   'id',
   'task_id',
   'execution_time',
@@ -32,8 +37,20 @@ export const SCHEDULED_EMAIL_LOG_BASE_FIELDS = [
 ]
 
 /**
- * 定时邮件任务映射类
+ * @desc 定时邮件任务表名
  */
+const SCHEDULED_EMAIL_TASK_TABLE_NAME = 'scheduled_email_tasks'
+
+/**
+ * @desc 执行日志表名
+ */
+const SCHEDULED_EMAIL_LOG_TABLE_NAME = 'scheduled_email_logs'
+
+/**
+ * @desc 数据源名称
+ */
+const DATA_SOURCE_NAME = 'data_middle_station'
+
 export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEmailOption, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
@@ -79,9 +96,6 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
   maxRetries!: number
 }
 
-/**
- * 定时邮件执行日志映射类
- */
 export class ScheduledEmailLogMapping implements ScheduledEmailDao.ExecutionLogOption, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
@@ -115,92 +129,72 @@ export class ScheduledEmailLogMapping implements ScheduledEmailDao.ExecutionLogO
   createdAt!: string
 }
 
-/**
- * 定时邮件任务数据访问层
- */
 export class ScheduledEmailMapper extends BaseMapper {
-  dataSourceName = 'default'
+  /**
+   * @desc 数据源名称
+   */
+  public dataSourceName = DATA_SOURCE_NAME
 
   /**
-   * 创建定时邮件任务
+   * @desc 创建定时邮件任务
+   * @param task {ScheduledEmailDao.ScheduledEmailOption} 定时邮件任务
+   * @returns {Promise<number>} 任务ID
    */
-  @Mapping(ScheduledEmailTaskMapping)
-  async createTask(params: ScheduledEmailDao.CreateTaskParams): Promise<ScheduledEmailDao.ScheduledEmailOption> {
-    const sql = `
-      INSERT INTO scheduled_email_tasks (
-        task_name, schedule_time, email_config, chart_data, remark, max_retries
-      ) VALUES (?, ?, ?, ?, ?, ?)
-    `
-    const result = await this.exe<ResultSetHeader>(sql, [
-      params.task_name,
-      params.schedule_time,
-      params.email_config,
-      params.chart_data,
-      params.remark || null,
-      params.max_retries || 3
-    ])
-
-    return this.getTaskById(result.insertId)
+  public async createTask(task: ScheduledEmailDao.ScheduledEmailOption): Promise<number> {
+    const { keys, values } = convertToSqlProperties(task)
+    // 只使用数据库表中存在的字段
+    const validKeys = keys.filter((key) => SCHEDULED_EMAIL_TASK_BASE_FIELDS.includes(key))
+    const validValues = validKeys.map((key) => values[keys.indexOf(key)])
+    const sql = `insert into ${SCHEDULED_EMAIL_TASK_TABLE_NAME} (${batchFormatSqlKey(validKeys)}) values (${validKeys.map(() => '?').join(',')})`
+    const result = await this.exe<ResultSetHeader>(sql, validValues)
+    return result.insertId || 0
   }
 
   /**
-   * 根据ID获取任务
+   * @desc 获取定时邮件任务
+   * @param id {number} 任务ID
+   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOption>} 定时邮件任务
    */
   @Mapping(ScheduledEmailTaskMapping)
-  async getTaskById(id: number): Promise<ScheduledEmailDao.ScheduledEmailOption> {
-    const sql = `
-      SELECT ${SCHEDULED_EMAIL_TASK_BASE_FIELDS.join(', ')}
-      FROM scheduled_email_tasks
-      WHERE id = ?
-    `
-    const result = await this.exe<ScheduledEmailDao.ScheduledEmailOption[]>(sql, [id])
-    return result[0]
+  public async getTaskById<T extends ScheduledEmailDao.ScheduledEmailOption = ScheduledEmailDao.ScheduledEmailOption>(
+    id: number
+  ): Promise<T> {
+    const sql = `select
+          ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
+            from ${SCHEDULED_EMAIL_TASK_TABLE_NAME} where id = ?`
+    const result = await this.exe<Array<T>>(sql, [id])
+    return result?.[0]
   }
 
   /**
-   * 更新任务
+   * @desc 更新定时邮件任务
+   * @param task {ScheduledEmailDao.ScheduledEmailOption} 定时邮件任务
+   * @returns {Promise<boolean>} 是否更新成功
    */
-  async updateTask(params: ScheduledEmailDao.UpdateTaskParams): Promise<boolean> {
-    const updateFields: string[] = []
-    const updateValues: any[] = []
+  public async updateTask(task: ScheduledEmailDao.ScheduledEmailOption): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(task)
+    const sql = `UPDATE ${SCHEDULED_EMAIL_TASK_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ?`
+    return (await this.exe<number>(sql, [...values, task.id])) > 0
+  }
 
-    // 动态构建更新字段
-    Object.entries(params).forEach(([key, value]) => {
-      if (key !== 'id' && value !== undefined) {
-        updateFields.push(`${key} = ?`)
-        updateValues.push(value)
-      }
-    })
-
-    if (updateFields.length === 0) {
-      return false
-    }
-
-    updateValues.push(params.id)
-    const sql = `
-      UPDATE scheduled_email_tasks
-      SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `
-
-    const result = await this.exe<ResultSetHeader>(sql, updateValues)
+  /**
+   * @desc 删除定时邮件任务(物理删除)
+   * @param deleteParams {number} 任务ID
+   * @returns {Promise<boolean>} 是否删除成功
+   */
+  public async deleteTask(deleteParams: { id: number }): Promise<boolean> {
+    const sql = `delete from ${SCHEDULED_EMAIL_TASK_TABLE_NAME} where id = ?`
+    const result = await this.exe<ResultSetHeader>(sql, [deleteParams.id])
     return result.affectedRows > 0
   }
 
   /**
-   * 删除任务
-   */
-  async deleteTask(id: number): Promise<boolean> {
-    const sql = 'DELETE FROM scheduled_email_tasks WHERE id = ?'
-    const result = await this.exe<ResultSetHeader>(sql, [id])
-    return result.affectedRows > 0
-  }
-
-  /**
-   * 查询任务列表
+   * @desc 查询任务列表
+   * @param params {ScheduledEmailDao.QueryParams} 查询参数
+   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOption[]>} 任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
-  async getTaskList(params: ScheduledEmailDao.QueryParams): Promise<ScheduledEmailDao.ScheduledEmailOption[]> {
+  public async getTaskList(params: ScheduledEmailDao.QueryParams): Promise<ScheduledEmailDao.ScheduledEmailOption[]> {
     const whereConditions: string[] = []
     const whereValues: any[] = []
 
@@ -210,26 +204,26 @@ export class ScheduledEmailMapper extends BaseMapper {
       whereValues.push(params.status)
     }
 
-    if (params.task_name) {
+    if (params.taskName) {
       whereConditions.push('task_name LIKE ?')
-      whereValues.push(`%${params.task_name}%`)
+      whereValues.push(`%${params.taskName}%`)
     }
 
-    if (params.start_time) {
+    if (params.startTime) {
       whereConditions.push('schedule_time >= ?')
-      whereValues.push(params.start_time)
+      whereValues.push(params.startTime)
     }
 
-    if (params.end_time) {
+    if (params.endTime) {
       whereConditions.push('schedule_time <= ?')
-      whereValues.push(params.end_time)
+      whereValues.push(params.endTime)
     }
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : ''
 
     let sql = `
-      SELECT ${SCHEDULED_EMAIL_TASK_BASE_FIELDS.join(', ')}
-      FROM scheduled_email_tasks
+      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
+      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
       ${whereClause}
       ORDER BY created_at DESC
     `
@@ -246,9 +240,11 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * 获取任务总数
+   * @desc 获取任务总数
+   * @param params {ScheduledEmailDao.QueryParams} 查询参数
+   * @returns {Promise<number>} 任务总数
    */
-  async getTaskCount(params: ScheduledEmailDao.QueryParams): Promise<number> {
+  public async getTaskCount(params: ScheduledEmailDao.QueryParams): Promise<number> {
     const whereConditions: string[] = []
     const whereValues: any[] = []
 
@@ -257,26 +253,26 @@ export class ScheduledEmailMapper extends BaseMapper {
       whereValues.push(params.status)
     }
 
-    if (params.task_name) {
+    if (params.taskName) {
       whereConditions.push('task_name LIKE ?')
-      whereValues.push(`%${params.task_name}%`)
+      whereValues.push(`%${params.taskName}%`)
     }
 
-    if (params.start_time) {
+    if (params.startTime) {
       whereConditions.push('schedule_time >= ?')
-      whereValues.push(params.start_time)
+      whereValues.push(params.startTime)
     }
 
-    if (params.end_time) {
+    if (params.endTime) {
       whereConditions.push('schedule_time <= ?')
-      whereValues.push(params.end_time)
+      whereValues.push(params.endTime)
     }
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : ''
 
     const sql = `
       SELECT COUNT(*) as count
-      FROM scheduled_email_tasks
+      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
       ${whereClause}
     `
 
@@ -285,13 +281,15 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * 获取待执行的任务
+   * @desc 获取待执行的任务
+   * @param currentTime {string} 当前时间
+   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOption[]>} 待执行任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
-  async getPendingTasks(currentTime: string): Promise<ScheduledEmailDao.ScheduledEmailOption[]> {
+  public async getPendingTasks(currentTime: string): Promise<ScheduledEmailDao.ScheduledEmailOption[]> {
     const sql = `
-      SELECT ${SCHEDULED_EMAIL_TASK_BASE_FIELDS.join(', ')}
-      FROM scheduled_email_tasks
+      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
+      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
       WHERE status = 'pending'
         AND schedule_time <= ?
       ORDER BY schedule_time ASC
@@ -300,13 +298,36 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * 获取需要重试的失败任务
+   * @desc 获取精确时间范围内的任务
+   * @param startTime {string} 开始时间
+   * @param endTime {string} 结束时间
+   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOption[]>} 任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
-  async getRetryableTasks(): Promise<ScheduledEmailDao.ScheduledEmailOption[]> {
+  public async getExactTimeTasks(
+    startTime: string,
+    endTime: string
+  ): Promise<ScheduledEmailDao.ScheduledEmailOption[]> {
     const sql = `
-      SELECT ${SCHEDULED_EMAIL_TASK_BASE_FIELDS.join(', ')}
-      FROM scheduled_email_tasks
+      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
+      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
+      WHERE status = 'pending'
+        AND schedule_time > ?
+        AND schedule_time <= ?
+      ORDER BY schedule_time ASC
+    `
+    return this.exe<ScheduledEmailDao.ScheduledEmailOption[]>(sql, [startTime, endTime])
+  }
+
+  /**
+   * @desc 获取需要重试的失败任务
+   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOption[]>} 可重试任务列表
+   */
+  @Mapping(ScheduledEmailTaskMapping)
+  public async getRetryableTasks(): Promise<ScheduledEmailDao.ScheduledEmailOption[]> {
+    const sql = `
+      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
+      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
       WHERE status = 'failed'
         AND retry_count < max_retries
       ORDER BY schedule_time ASC
@@ -315,35 +336,31 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * 创建执行日志
+   * @desc 创建执行日志
+   * @param log {ScheduledEmailDao.ExecutionLogOption} 执行日志
+   * @returns {Promise<number>} 日志ID
    */
-  async createExecutionLog(params: ScheduledEmailDao.CreateLogParams): Promise<number> {
-    const sql = `
-      INSERT INTO scheduled_email_logs (
-        task_id, execution_time, status, message, error_details, email_message_id, execution_duration
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `
-    const result = await this.exe<ResultSetHeader>(sql, [
-      params.task_id,
-      params.execution_time,
-      params.status,
-      params.message || null,
-      params.error_details || null,
-      params.email_message_id || null,
-      params.execution_duration || null
-    ])
-
-    return result.insertId
+  public async createExecutionLog(log: ScheduledEmailDao.ExecutionLogOption): Promise<number> {
+    const { keys, values } = convertToSqlProperties(log)
+    // 只使用数据库表中存在的字段
+    const validKeys = keys.filter((key) => SCHEDULED_EMAIL_LOG_BASE_FIELDS.includes(key))
+    const validValues = validKeys.map((key) => values[keys.indexOf(key)])
+    const sql = `insert into ${SCHEDULED_EMAIL_LOG_TABLE_NAME} (${batchFormatSqlKey(validKeys)}) values (${validKeys.map(() => '?').join(',')})`
+    const result = await this.exe<ResultSetHeader>(sql, validValues)
+    return result.insertId || 0
   }
 
   /**
-   * 获取任务执行日志
+   * @desc 获取任务执行日志
+   * @param taskId {number} 任务ID
+   * @param limit {number} 限制数量
+   * @returns {Promise<ScheduledEmailDao.ExecutionLogOption[]>} 执行日志列表
    */
   @Mapping(ScheduledEmailLogMapping)
-  async getTaskLogs(taskId: number, limit: number = 20): Promise<ScheduledEmailDao.ExecutionLogOption[]> {
+  public async getTaskLogs(taskId: number, limit: number = 20): Promise<ScheduledEmailDao.ExecutionLogOption[]> {
     const sql = `
-      SELECT ${SCHEDULED_EMAIL_LOG_BASE_FIELDS.join(', ')}
-      FROM scheduled_email_logs
+      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_LOG_BASE_FIELDS)}
+      FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME}
       WHERE task_id = ?
       ORDER BY execution_time DESC
       LIMIT ?
@@ -352,9 +369,10 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * 获取任务统计信息
+   * @desc 获取任务统计信息
+   * @returns {Promise<any>} 统计信息
    */
-  async getTaskStatistics(): Promise<ScheduledEmailDto.TaskStatistics> {
+  public async getTaskStatistics(): Promise<any> {
     const sql = `
       SELECT
         COUNT(*) as total_tasks,
@@ -366,7 +384,7 @@ export class ScheduledEmailMapper extends BaseMapper {
         SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) as today_tasks,
         SUM(CASE WHEN YEARWEEK(created_at) = YEARWEEK(CURDATE()) THEN 1 ELSE 0 END) as this_week_tasks,
         SUM(CASE WHEN YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE()) THEN 1 ELSE 0 END) as this_month_tasks
-      FROM scheduled_email_tasks
+      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
     `
 
     const result = await this.exe<any[]>(sql)

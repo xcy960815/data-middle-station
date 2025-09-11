@@ -1,89 +1,144 @@
+/**
+ * @desc 定时邮件任务数据访问层类型定义
+ */
 declare namespace ScheduledEmailDao {
   /**
-   * 数据库字段映射接口
+   * @desc 定时邮件任务选项
    */
-  interface ScheduledEmailOption {
-    id: number // 任务ID
-    task_name: string // 任务名称
-    schedule_time: string // 计划执行时间
-    email_config: string // 邮件配置(JSON字符串)
-    chart_data: string // 图表数据(JSON字符串)
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' // 任务状态
-    remark?: string // 备注说明
-    created_at: string // 创建时间
-    updated_at: string // 更新时间
-    executed_at?: string // 执行时间
-    error_message?: string // 错误信息
-    retry_count: number // 重试次数
-    max_retries: number // 最大重试次数
-  }
-
-  /**
-   * 创建任务参数
-   */
-  interface CreateTaskParams {
-    task_name: string
-    schedule_time: string
-    email_config: string // JSON字符串
-    chart_data: string // JSON字符串
-    remark?: string
-    max_retries?: number
-  }
-
-  /**
-   * 更新任务参数
-   */
-  interface UpdateTaskParams {
+  type ScheduledEmailOption = {
+    /** 任务ID */
     id: number
-    task_name?: string
-    schedule_time?: string
-    email_config?: string // JSON字符串
-    chart_data?: string // JSON字符串
-    status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+    /** 任务名称 */
+    taskName: string
+    /** 调度时间 */
+    scheduleTime: string
+    /** 邮件配置 */
+    emailConfig: string
+    /** 图表数据 */
+    chartData: string
+    /** 任务状态 */
+    status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+    /** 备注 */
     remark?: string
-    executed_at?: string
-    error_message?: string
-    retry_count?: number
-    max_retries?: number
+    /** 创建时间 */
+    createdAt: string
+    /** 更新时间 */
+    updatedAt: string
+    /** 执行时间 */
+    executedAt?: string
+    /** 错误信息 */
+    errorMessage?: string
+    /** 重试次数 */
+    retryCount: number
+    /** 最大重试次数 */
+    maxRetries: number
   }
 
   /**
-   * 查询参数
+   * @desc 执行日志选项
    */
-  interface QueryParams {
+  type ExecutionLogOption = {
+    /** 日志ID */
+    id: number
+    /** 任务ID */
+    taskId: number
+    /** 执行时间 */
+    executionTime: string
+    /** 执行状态 */
+    status: 'success' | 'failed'
+    /** 消息 */
+    message?: string
+    /** 错误详情 */
+    errorDetails?: string
+    /** 邮件消息ID */
+    emailMessageId?: string
+    /** 执行耗时(毫秒) */
+    executionDuration?: number
+    /** 创建时间 */
+    createdAt: string
+  }
+
+  /**
+   * @desc 创建任务参数
+   */
+  type CreateTaskParams = {
+    /**
+     * 任务名称
+     */
+    taskName: string
+    /** 调度时间 */
+    scheduleTime: string
+    /** 邮件配置 */
+    emailConfig: string
+    /** 图表数据 */
+    chartData: string
+    /** 备注 */
+    remark?: string
+    /** 最大重试次数 */
+    maxRetries?: number
+  }
+
+  /**
+   * @desc 更新任务参数
+   */
+  type UpdateTaskParams = {
+    /** 任务ID */
+    id: number
+    /** 任务名称 */
+    taskName?: string
+    /** 调度时间 */
+    scheduleTime?: string
+    /** 邮件配置 */
+    emailConfig?: string
+    /** 图表数据 */
+    chartData?: string
+    /** 任务状态 */
     status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
-    task_name?: string
-    start_time?: string
-    end_time?: string
+    /** 备注 */
+    remark?: string
+    /** 错误信息 */
+    errorMessage?: string
+    /** 重试次数 */
+    retryCount?: number
+    /** 最大重试次数 */
+    maxRetries?: number
+  }
+
+  /**
+   * @desc 查询参数
+   */
+  type QueryParams = {
+    /** 任务状态 */
+    status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+    /** 任务名称(模糊查询) */
+    taskName?: string
+    /** 开始时间 */
+    startTime?: string
+    /** 结束时间 */
+    endTime?: string
+    /** 分页限制 */
     limit?: number
+    /** 分页偏移 */
     offset?: number
   }
 
   /**
-   * 执行日志数据库字段
+   * @desc 创建日志参数
    */
-  interface ExecutionLogOption {
-    id: number
-    task_id: number
-    execution_time: string
+  type CreateLogParams = {
+    /** 任务ID */
+    taskId: number
+    /** 执行时间 */
+    executionTime: string
+    /** 执行状态 */
     status: 'success' | 'failed'
+    /** 消息 */
     message?: string
-    error_details?: string
-    email_message_id?: string
-    execution_duration?: number
-    created_at: string
-  }
-
-  /**
-   * 创建执行日志参数
-   */
-  interface CreateLogParams {
-    task_id: number
-    execution_time: string
-    status: 'success' | 'failed'
-    message?: string
-    error_details?: string
-    email_message_id?: string
-    execution_duration?: number
+    /** 错误详情 */
+    errorDetails?: string
+    /** 邮件消息ID */
+    emailMessageId?: string
+    /** 执行耗时(毫秒) */
+    executionDuration?: number
   }
 }
