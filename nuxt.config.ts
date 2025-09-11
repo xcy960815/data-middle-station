@@ -2,8 +2,8 @@
 import { type PreRenderedAsset } from 'rollup'
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  // 修复：明确设置为 SPA 模式，移除预渲染配置
-  ssr: false,
+  // 启用服务端渲染
+  ssr: true,
   app: {
     head: {
       title: process.env.APP_NAME,
@@ -34,10 +34,6 @@ export default defineNuxtConfig({
     }
   },
   css: ['~/assets/styles/main.css'],
-  // 移除可能导致构建问题的实验性功能
-  // experimental: {
-  //   renderJsonPayloads: false
-  // },
   modules: ['@pinia/nuxt', '@element-plus/nuxt'],
   postcss: {
     plugins: {
@@ -115,11 +111,22 @@ export default defineNuxtConfig({
       }
     },
     // 启用压缩
-    compressPublicAssets: true
-    // 移除预渲染配置，因为在 SPA 模式下可能导致构建卡住
-    // prerender: {
-    //   routes: ['/']
-    // }
+    compressPublicAssets: true,
+    // 服务端路由缓存
+    routeRules: {
+      // API 路由缓存配置
+      '/api/**': {
+        headers: {
+          'Cache-Control': 's-maxage=300' // 5分钟缓存
+        }
+      },
+      // 静态资源缓存
+      '/_nuxt/**': {
+        headers: {
+          'Cache-Control': 's-maxage=31536000' // 1年缓存
+        }
+      }
+    }
   },
   // 构建优化配置
   build: {},

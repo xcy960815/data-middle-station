@@ -1,4 +1,5 @@
 import { ScheduledEmailMapper } from '../mapper/scheduledEmailMapper'
+
 import { SendEmailService } from './sendEmailService'
 
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
@@ -31,20 +32,29 @@ export class ScheduledEmailService {
       }
 
       // 构建数据库参数
-      const createParams: ScheduledEmailDao.CreateTaskParams = {
-        task_name: request.taskName,
-        schedule_time: request.scheduleTime,
-        email_config: JSON.stringify(request.emailConfig),
-        chart_data: JSON.stringify(request.chartData),
+      const createParams: ScheduledEmailDao.ScheduledEmailOption = {
+        id: 0, // 临时值，数据库会自动生成
+        taskName: request.taskName,
+        scheduleTime: request.scheduleTime,
+        emailConfig: JSON.stringify(request.emailConfig),
+        chartData: JSON.stringify(request.chartData),
+        status: 'pending',
         remark: request.remark,
-        max_retries: request.maxRetries || 3
+        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        executedAt: undefined,
+        errorMessage: undefined,
+        retryCount: 0,
+        maxRetries: request.maxRetries || 3
       }
 
       // 创建任务
-      const task = await this.scheduledEmailMapper.createTask(createParams)
+      const taskId = await this.scheduledEmailMapper.createTask(createParams)
 
-      logger.info(`定时邮件任务创建成功: ${task.id}`)
+      logger.info(`定时邮件任务创建成功: ${taskId}`)
 
+      // 获取创建的任务
+      const task = await this.scheduledEmailMapper.getTaskById(taskId)
       return this.convertDaoToDto(task)
     } catch (error) {
       logger.error(`创建定时邮件任务失败: ${error}`)
@@ -92,31 +102,33 @@ export class ScheduledEmailService {
       }
 
       // 构建更新参数
-      const updateParams: ScheduledEmailDao.UpdateTaskParams = {
+      const updateParams: ScheduledEmailDao.ScheduledEmailOption = {
+        ...existingTask,
         id,
-        task_name: request.taskName,
-        schedule_time: request.scheduleTime,
-        email_config: request.emailConfig
+        taskName: request.taskName || existingTask.taskName,
+        scheduleTime: request.scheduleTime || existingTask.scheduleTime,
+        emailConfig: request.emailConfig
           ? JSON.stringify({
-              ...JSON.parse(existingTask.email_config),
+              ...JSON.parse(existingTask.emailConfig),
               ...request.emailConfig
             })
-          : undefined,
-        chart_data: request.chartData
+          : existingTask.emailConfig,
+        chartData: request.chartData
           ? JSON.stringify({
-              ...JSON.parse(existingTask.chart_data),
+              ...JSON.parse(existingTask.chartData),
               ...request.chartData
             })
-          : undefined,
-        status: request.status,
-        remark: request.remark,
-        max_retries: request.maxRetries
+          : existingTask.chartData,
+        status: request.status || existingTask.status,
+        remark: request.remark !== undefined ? request.remark : existingTask.remark,
+        maxRetries: request.maxRetries !== undefined ? request.maxRetries : existingTask.maxRetries,
+        updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
       }
 
       // 如果状态改为pending，重置错误信息和重试次数
       if (request.status === 'pending') {
-        updateParams.error_message = undefined
-        updateParams.retry_count = 0
+        updateParams.errorMessage = undefined
+        updateParams.retryCount = 0
       }
 
       const success = await this.scheduledEmailMapper.updateTask(updateParams)
@@ -148,7 +160,7 @@ export class ScheduledEmailService {
         throw new Error('正在执行的任务不能删除')
       }
 
-      const success = await this.scheduledEmailMapper.deleteTask(id)
+      const success = await this.scheduledEmailMapper.deleteTask({ id })
 
       if (success) {
         logger.info(`定时邮件任务删除成功: ${id}`)
@@ -168,31 +180,8 @@ export class ScheduledEmailService {
     query: ScheduledEmailDto.ScheduledEmailListQuery
   ): Promise<ScheduledEmailDto.ScheduledEmailListResponse> {
     try {
-      const page = query.page || 1
-      const pageSize = query.pageSize || 10
-      const offset = (page - 1) * pageSize
-
-      const queryParams: ScheduledEmailDao.QueryParams = {
-        status: query.status,
-        task_name: query.taskName,
-        start_time: query.startTime,
-        end_time: query.endTime,
-        limit: pageSize,
-        offset
-      }
-
-      const [tasks, total] = await Promise.all([
-        this.scheduledEmailMapper.getTaskList(queryParams),
-        this.scheduledEmailMapper.getTaskCount(queryParams)
-      ])
-
-      return {
-        tasks: tasks.map((task) => this.convertDaoToDto(task)),
-        total,
-        page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize)
-      }
+      const tasksList = await this.scheduledEmailMapper.getTaskList(query)
+      return tasksList.map((task) => this.convertDaoToDto(task))
     } catch (error) {
       logger.error(`获取定时邮件任务列表失败: ${error}`)
       throw error
@@ -216,7 +205,7 @@ export class ScheduledEmailService {
       } else if (task.status === 'cancelled') {
         newStatus = 'pending'
         // 验证执行时间是否仍然有效
-        const scheduleTime = new Date(task.schedule_time)
+        const scheduleTime = new Date(task.scheduleTime)
         const now = new Date()
 
         if (scheduleTime <= now) {
@@ -227,10 +216,12 @@ export class ScheduledEmailService {
       }
 
       const success = await this.scheduledEmailMapper.updateTask({
+        ...task,
         id,
         status: newStatus,
-        error_message: newStatus === 'pending' ? undefined : undefined,
-        retry_count: newStatus === 'pending' ? 0 : undefined
+        errorMessage: newStatus === 'pending' ? undefined : task.errorMessage,
+        retryCount: newStatus === 'pending' ? 0 : task.retryCount,
+        updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
       })
 
       if (success) {
@@ -284,6 +275,35 @@ export class ScheduledEmailService {
   }
 
   /**
+   * 处理精确时间任务（秒级精度）
+   */
+  async processExactTimeTasks(): Promise<void> {
+    try {
+      const now = new Date()
+      const currentTime = now.toISOString().slice(0, 19).replace('T', ' ')
+
+      // 获取未来30秒内需要执行的任务
+      const futureTime = new Date(now.getTime() + 30 * 1000).toISOString().slice(0, 19).replace('T', ' ')
+      const exactTasks = await this.scheduledEmailMapper.getExactTimeTasks(currentTime, futureTime)
+
+      logger.info(`发现 ${exactTasks.length} 个精确时间任务`)
+
+      for (const task of exactTasks) {
+        const scheduleTime = new Date(task.scheduleTime)
+        const timeDiff = scheduleTime.getTime() - now.getTime()
+
+        // 如果任务在10秒内需要执行，立即处理
+        if (timeDiff <= 10000 && timeDiff >= 0) {
+          logger.info(`执行精确时间任务: ${task.id}, 时间差: ${timeDiff}ms`)
+          await this.processTask(task)
+        }
+      }
+    } catch (error) {
+      logger.error(`处理精确时间任务失败: ${error}`)
+    }
+  }
+
+  /**
    * 重试失败的任务
    */
   async retryFailedTasks(): Promise<void> {
@@ -309,16 +329,30 @@ export class ScheduledEmailService {
     let errorMessage = ''
 
     try {
+      // 计算时间补偿
+      const scheduleTime = new Date(task.scheduleTime)
+      const now = new Date()
+      const timeDiff = now.getTime() - scheduleTime.getTime()
+
+      // 记录时间误差
+      if (timeDiff > 0) {
+        logger.warn(`任务 ${task.id} 延迟执行 ${timeDiff}ms`)
+      } else if (timeDiff < -1000) {
+        logger.warn(`任务 ${task.id} 提前执行 ${Math.abs(timeDiff)}ms`)
+      }
+
       // 更新任务状态为运行中
       await this.scheduledEmailMapper.updateTask({
+        ...task,
         id: task.id,
         status: 'running',
-        executed_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+        executedAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
       })
 
       // 解析配置
-      const emailConfig: ScheduledEmailDto.EmailConfig = JSON.parse(task.email_config)
-      const chartData: ScheduledEmailDto.ChartData = JSON.parse(task.chart_data)
+      const emailConfig: ScheduledEmailDto.EmailConfig = JSON.parse(task.emailConfig)
+      const chartData: ScheduledEmailDto.ChartData = JSON.parse(task.chartData)
 
       // 构建邮件内容
       const htmlContent = this.buildEmailContent(emailConfig, chartData)
@@ -341,19 +375,24 @@ export class ScheduledEmailService {
 
       // 更新任务状态为完成
       await this.scheduledEmailMapper.updateTask({
+        ...task,
         id: task.id,
         status: 'completed',
-        error_message: undefined
+        errorMessage: undefined,
+        updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
       })
 
       // 记录执行日志
       await this.scheduledEmailMapper.createExecutionLog({
-        task_id: task.id,
-        execution_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        id: 0, // 临时值，数据库会自动生成
+        taskId: task.id,
+        executionTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
         status: 'success',
         message: '邮件发送成功',
-        email_message_id: result.messageId,
-        execution_duration: Date.now() - startTime
+        errorDetails: undefined,
+        emailMessageId: result.messageId,
+        executionDuration: Date.now() - startTime,
+        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
       })
 
       success = true
@@ -362,28 +401,33 @@ export class ScheduledEmailService {
       errorMessage = error instanceof Error ? error.message : '未知错误'
 
       // 增加重试次数
-      const newRetryCount = task.retry_count + 1
-      const status = newRetryCount >= task.max_retries ? 'failed' : 'pending'
+      const newRetryCount = task.retryCount + 1
+      const status = newRetryCount >= task.maxRetries ? 'failed' : 'pending'
 
       // 更新任务状态
       await this.scheduledEmailMapper.updateTask({
+        ...task,
         id: task.id,
         status,
-        error_message: errorMessage,
-        retry_count: newRetryCount
+        errorMessage: errorMessage,
+        retryCount: newRetryCount,
+        updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
       })
 
       // 记录执行日志
       await this.scheduledEmailMapper.createExecutionLog({
-        task_id: task.id,
-        execution_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        id: 0, // 临时值，数据库会自动生成
+        taskId: task.id,
+        executionTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
         status: 'failed',
         message: '邮件发送失败',
-        error_details: errorMessage,
-        execution_duration: Date.now() - startTime
+        errorDetails: errorMessage,
+        emailMessageId: undefined,
+        executionDuration: Date.now() - startTime,
+        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
       })
 
-      logger.error(`任务执行失败: ${task.id}, 重试次数: ${newRetryCount}/${task.max_retries}, 错误: ${errorMessage}`)
+      logger.error(`任务执行失败: ${task.id}, 重试次数: ${newRetryCount}/${task.maxRetries}, 错误: ${errorMessage}`)
     }
 
     return success
@@ -460,12 +504,12 @@ export class ScheduledEmailService {
       const logs = await this.scheduledEmailMapper.getTaskLogs(taskId, limit)
       return logs.map((log) => ({
         id: log.id,
-        task_id: log.task_id,
-        execution_time: log.execution_time,
+        task_id: log.taskId,
+        execution_time: log.executionTime,
         status: log.status,
-        error_message: log.error_details,
-        duration: log.execution_duration,
-        created_at: log.created_at || log.execution_time
+        error_message: log.errorDetails,
+        duration: log.executionDuration,
+        created_at: log.createdAt || log.executionTime
       }))
     } catch (error) {
       logger.error(`获取任务执行日志失败: ${taskId}, ${error}`)
@@ -491,18 +535,18 @@ export class ScheduledEmailService {
   private convertDaoToDto(dao: ScheduledEmailDao.ScheduledEmailOption): ScheduledEmailDto.ScheduledEmailOption {
     return {
       id: dao.id,
-      taskName: dao.task_name,
-      scheduleTime: dao.schedule_time,
-      emailConfig: JSON.parse(dao.email_config),
-      chartData: JSON.parse(dao.chart_data),
+      taskName: dao.taskName,
+      scheduleTime: dao.scheduleTime,
+      emailConfig: JSON.parse(dao.emailConfig),
+      chartData: JSON.parse(dao.chartData),
       status: dao.status,
       remark: dao.remark,
-      createdAt: dao.created_at,
-      updatedAt: dao.updated_at,
-      executedAt: dao.executed_at,
-      errorMessage: dao.error_message,
-      retryCount: dao.retry_count,
-      maxRetries: dao.max_retries
+      createdAt: dao.createdAt,
+      updatedAt: dao.updatedAt,
+      executedAt: dao.executedAt,
+      errorMessage: dao.errorMessage,
+      retryCount: dao.retryCount,
+      maxRetries: dao.maxRetries
     }
   }
 }
