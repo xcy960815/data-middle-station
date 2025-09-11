@@ -168,15 +168,41 @@ import {
 } from 'element-plus'
 
 export interface EmailFormData {
-  to: string // 收件人邮箱地址
+  /**
+   * 收件人邮箱地址
+   */
+  to: string
+  /**
+   * 邮件主题
+   */
   subject: string // 邮件主题
-  additionalContent: string // 额外消息内容
-  sendMode: 'immediate' | 'scheduled' | 'recurring' // 发送模式：立即发送 | 定时发送 | 重复任务
-  taskName: string // 任务名称（定时发送时使用）
-  scheduleTime: string | null // 计划执行时间
-  remark: string // 备注说明
-  // 重复任务相关字段
-  recurringDays: string[] // 重复的星期几 (0=周日, 1=周一, ..., 6=周六)
+  /**
+   * 发送模式：立即发送 | 定时发送 | 重复任务
+   */
+  sendMode: 'immediate' | 'scheduled' | 'recurring'
+  /**
+   * 额外消息内容
+   */
+  additionalContent: string
+  /**
+   * 任务名称（定时发送时使用）
+   */
+  taskName: string
+  /**
+   * 计划执行时间
+   */
+  scheduleTime: string | null
+  /**
+   * 备注说明
+   */
+  remark: string
+  /**
+   * 重复的星期几 (0=周日, 1=周一, ..., 6=周六)
+   */
+  recurringDays: string[]
+  /**
+   * 重复任务的执行时间 (HH:mm格式)
+   */
   recurringTime: string | null // 重复任务的执行时间 (HH:mm格式)
 }
 

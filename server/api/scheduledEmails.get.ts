@@ -10,7 +10,7 @@ const logger = new Logger({
 /**
  * 查询定时邮件任务列表
  */
-export default defineEventHandler(async (event) => {
+export default defineEventHandler<Promise<ApiResponse<ScheduledEmailDto.ScheduledEmailList>>>(async (event) => {
   try {
     const scheduledEmailListQuery = getQuery<ScheduledEmailDto.ScheduledEmailListQuery>(event)
     const result = await scheduledEmailService.getScheduledEmailList(scheduledEmailListQuery)
