@@ -2,6 +2,7 @@
 import { type PreRenderedAsset } from 'rollup'
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  // 修复：明确设置为 SPA 模式，移除预渲染配置
   ssr: false,
   app: {
     head: {
@@ -33,10 +34,10 @@ export default defineNuxtConfig({
     }
   },
   css: ['~/assets/styles/main.css'],
-  // 静态资源优化
-  experimental: {
-    renderJsonPayloads: false
-  },
+  // 移除可能导致构建问题的实验性功能
+  // experimental: {
+  //   renderJsonPayloads: false
+  // },
   modules: ['@pinia/nuxt', '@element-plus/nuxt'],
   postcss: {
     plugins: {
@@ -70,120 +71,34 @@ export default defineNuxtConfig({
             }
             return `_nuxt/[name].[hash].[ext]`
           },
+          // 简化代码分割配置，避免构建卡住
           manualChunks: (id) => {
-            // Node modules 处理
+            // 只对主要的 node_modules 进行分割
             if (id.includes('node_modules')) {
-              // Element Plus 组件库
+              // 大型库单独分包
               if (id.includes('element-plus')) {
                 return 'element-plus'
               }
-
-              // Monaco Editor 相关
               if (id.includes('monaco-editor')) {
                 return 'monaco-editor'
-              }
-
-              // 图表库分离
-              if (id.includes('konva')) {
-                return 'konva'
               }
               if (id.includes('@antv/g2')) {
                 return 'antv-g2'
               }
-
-              // 图标库
-              if (id.includes('@icon-park')) {
-                return 'icon-park'
+              if (id.includes('konva')) {
+                return 'konva'
               }
-
-              // 工具库
-              if (id.includes('dayjs')) {
-                return 'dayjs'
-              }
-              if (id.includes('xlsx')) {
-                return 'xlsx'
-              }
-              if (id.includes('socket.io-client')) {
-                return 'socket-io'
-              }
-              if (id.includes('pinia')) {
-                return 'pinia'
-              }
-
-              // Vue 相关核心库
               if (id.includes('vue') && !id.includes('vue-router')) {
                 return 'vue-core'
               }
               if (id.includes('vue-router')) {
                 return 'vue-router'
               }
-
-              // 其他大型库
-              if (id.includes('lodash')) {
-                return 'lodash'
-              }
-
-              // 剩余的 node_modules 归为 vendor
+              // 其他库归为 vendor
               return 'vendor'
             }
-
-            // 更精细的业务组件分包
-
-            // Table Chart 组件细分
-            if (id.includes('components/table-chart/render/')) {
-              return 'table-chart-render'
-            }
-            if (id.includes('components/table-chart/dropdown/')) {
-              return 'table-chart-dropdown'
-            }
-            if (id.includes('components/table-chart/konva-stage-handler')) {
-              return 'table-chart-konva'
-            }
-            if (id.includes('components/table-chart/variable-handlder')) {
-              return 'table-chart-vars'
-            }
-            if (id.includes('components/table-chart')) {
-              return 'table-chart-core'
-            }
-
-            // Monaco Editor 组件
-            if (id.includes('components/monaco-editor')) {
-              return 'monaco-editor-comp'
-            }
-
-            // 其他图表组件
-            if (id.includes('components/chart')) {
-              return 'charts'
-            }
-
-            // 页面组件按路由分包
-            if (id.includes('pages/analyse')) {
-              return 'page-analyse'
-            }
-            if (id.includes('pages/indexdb')) {
-              return 'page-indexdb'
-            }
-            if (id.includes('pages/welcome')) {
-              return 'page-welcome'
-            }
-            if (id.includes('pages/')) {
-              return 'pages-other'
-            }
-
-            // Composables 分包
-            if (id.includes('composables/')) {
-              return 'composables'
-            }
-
-            // Utils 分包
-            if (id.includes('utils/')) {
-              return 'utils'
-            }
-
-            // Server API 分包
-            if (id.includes('server/')) {
-              return 'server-api'
-            }
+            // 业务代码不进行复杂分割，避免构建问题
+            return undefined
           }
         }
       }
@@ -200,11 +115,11 @@ export default defineNuxtConfig({
       }
     },
     // 启用压缩
-    compressPublicAssets: true,
-    // 预渲染路由以提高首屏加载速度
-    prerender: {
-      routes: ['/']
-    }
+    compressPublicAssets: true
+    // 移除预渲染配置，因为在 SPA 模式下可能导致构建卡住
+    // prerender: {
+    //   routes: ['/']
+    // }
   },
   // 构建优化配置
   build: {},
