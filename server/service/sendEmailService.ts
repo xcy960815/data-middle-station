@@ -3,7 +3,7 @@ import nodemailer, { type Transporter } from 'nodemailer'
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
 
 /**
- * @desc 邮件服务
+ * @desc 发送邮件服务
  */
 export class SendEmailService {
   /**
