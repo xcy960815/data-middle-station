@@ -84,7 +84,7 @@ declare namespace DimensionStore {
   /**
    * @desc 维度字段key
    */
-  type DimensionKey = 'dimension'
+  type DimensionKey = 'dimensions'
 
   /**
    * @desc 维度字段状态

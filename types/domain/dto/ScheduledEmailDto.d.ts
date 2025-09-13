@@ -1,124 +1,72 @@
+/**
+ * @desc 定时邮件任务数据传输层类型定义
+ */
 declare namespace ScheduledEmailDto {
-  type Status = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
-  type EmailConfig = {
-    /**
-     * 收件人
-     */
-    to: string | string[]
-    /**
-     * 抄送
-     */
-    cc?: string | string[]
-    /**
-     * 密送
-     */
-    bcc?: string | string[]
-    /**
-     * 邮件主题
-     */
+  /**
+   * @desc 任务类型
+   */
+  type TaskType = 'scheduled' | 'recurring'
+
+  /**
+   * @desc 邮件配置
+   */
+  interface EmailConfig {
+    to: string
     subject: string
-    /**
-     * HTML内容
-     */
-    html?: string
-    /**
-     * 文本内容
-     */
-    text?: string
-    /**
-     * 附加内容
-     */
     additionalContent?: string
-    /**
-     * 附件
-     */
-    attachments?: Array<{
-      /**
-       * 附件名称
-       */
-      filename: string
-      /**
-       * 附件内容
-       */
-      content: string | Buffer
-      /**
-       * 附件内容类型
-       */
-      contentType?: string
-    }>
   }
-  type ChartOptions = {
-    /**
-     * 附件名称
-     */
+
+  /**
+   * @desc 分析选项
+   */
+  interface AnalyseOptions {
     filename: string
-    /**
-     * 图表类型
-     */
     chartType: string
-    /**
-     * 分析名称
-     */
-    analyseName?: string
-    /**
-     * 分析id
-     */
-    analyseId: string
-  }
-  /**
-   * 创建定时邮件任务请求
-   */
-  type CreateScheduledEmailOptions = {
-    /**
-     * 任务名称
-     */
-    taskName: string
-    /**
-     * 计划执行时间
-     */
-    scheduleTime: string
-    /**
-     * 邮件配置
-     */
-    emailConfig: EmailConfig
-    /**
-     * 图表数据
-     */
-    analyseOptions: ChartOptions
-    /**
-     * 任务状态
-     */
-    status: Status
-    /**
-     * 备注
-     */
-    remark?: string
-    /**
-     * 最大重试次数
-     */
-    maxRetries?: number
+    analyseName: string
+    analyseId: number
   }
 
   /**
-   * 更新定时邮件任务请求
+   * @desc 任务状态
    */
-  type UpdateScheduledEmailOptions = CreateScheduledEmailOptions & {
-    id: number
-  }
+  type Status = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
 
   /**
-   * 定时邮件任务选项/响应
+   * @desc 定时邮件任务选项/响应
    */
   interface ScheduledEmailOptions {
+    /**
+     * 任务ID
+     */
     id: number
     /**
      * 任务名称
      */
     taskName: string
     /**
-     * 计划执行时间
+     * 计划执行时间（定时任务使用）
      */
-    scheduleTime: string
+    scheduleTime?: string | null
+    /**
+     * 任务类型
+     */
+    taskType: TaskType
+    /**
+     * 重复的星期几（重复任务使用）
+     */
+    recurringDays?: number[] | null
+    /**
+     * 重复任务的执行时间（重复任务使用）
+     */
+    recurringTime?: string | null
+    /**
+     * 是否启用任务
+     */
+    isActive: boolean
+    /**
+     * 下次执行时间（重复任务使用）
+     */
+    nextExecutionTime?: string | null
     /**
      * 邮件配置
      */
@@ -126,7 +74,7 @@ declare namespace ScheduledEmailDto {
     /**
      * 图表数据
      */
-    analyseOptions: ChartOptions
+    analyseOptions: AnalyseOptions
     /**
      * 任务状态
      */
@@ -146,7 +94,7 @@ declare namespace ScheduledEmailDto {
     /**
      * 错误信息
      */
-    errorMessage?: string
+    errorMessage?: string | null
     /**
      * 创建时间
      */
@@ -154,11 +102,11 @@ declare namespace ScheduledEmailDto {
     /**
      * 更新时间
      */
-    updatedTime?: string
+    updatedTime: string
     /**
      * 执行时间
      */
-    executedTime?: string
+    executedTime?: string | null
     /**
      * 创建人
      */
@@ -167,6 +115,46 @@ declare namespace ScheduledEmailDto {
      * 更新人
      */
     updatedBy: string
+  }
+
+  /**
+   * @desc 创建定时邮件任务请求
+   */
+  type CreateScheduledEmailOptions = Omit<
+    ScheduledEmailOptions,
+    | 'id'
+    | 'nextExecutionTime'
+    | 'createdTime'
+    | 'updatedTime'
+    | 'executedTime'
+    | 'errorMessage'
+    | 'createdBy'
+    | 'updatedBy'
+    | 'status'
+    | 'isActive'
+    | 'maxRetries'
+    | 'retryCount'
+  >
+
+  /**
+   * 更新定时邮件任务请求
+   */
+  type UpdateScheduledEmailOptions = Omit<
+    ScheduledEmailOptions,
+    | 'id'
+    | 'nextExecutionTime'
+    | 'createdTime'
+    | 'updatedTime'
+    | 'executedTime'
+    | 'errorMessage'
+    | 'createdBy'
+    | 'updatedBy'
+    | 'status'
+    | 'isActive'
+    | 'maxRetries'
+    | 'retryCount'
+  > & {
+    id: number
   }
 
   /**
@@ -247,36 +235,6 @@ declare namespace ScheduledEmailDto {
   }
 
   /**
-   * 邮件配置
-   */
-  interface EmailConfig {
-    to: string | string[]
-    cc?: string | string[]
-    bcc?: string | string[]
-    subject: string
-    html?: string
-    text?: string
-    additionalContent?: string
-    attachments?: Array<{
-      filename: string
-      content: string | Buffer
-      contentType?: string
-    }>
-  }
-
-  /**
-   * 图表数据
-   */
-  interface ChartData {
-    filename: string
-    base64Image: string
-    chartType: string
-    title?: string
-    analyseName?: string
-    chartConfig?: any
-  }
-
-  /**
    * 定时邮件列表查询参数
    */
   interface ScheduledEmailListQuery {
@@ -284,9 +242,4 @@ declare namespace ScheduledEmailDto {
     taskName?: string
     status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
   }
-
-  /**
-   * 定时邮件列表响应
-   */
-  type ScheduledEmailList = ScheduledEmailOptions[]
 }

@@ -2,7 +2,7 @@ import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarg
 
 import { ResultSetHeader } from 'mysql2'
 
-export class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTarget {
+class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -14,22 +14,22 @@ export class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTa
   dataSource!: string
 
   @Column('chart_type')
-  chartType: string = ''
+  chartType!: string
 
-  @Column('column')
-  column: ChartConfigDao.ColumnOption[] = []
+  @Column('columns')
+  columns: ChartConfigDao.ColumnOption[] = []
 
-  @Column('dimension')
-  dimension: ChartConfigDao.DimensionOption[] = []
+  @Column('dimensions')
+  dimensions: ChartConfigDao.DimensionOption[] = []
 
-  @Column('filter')
-  filter: ChartConfigDao.FilterOption[] = []
+  @Column('filters')
+  filters: ChartConfigDao.FilterOption[] = []
 
-  @Column('group')
-  group: ChartConfigDao.GroupOption[] = []
+  @Column('groups')
+  groups: ChartConfigDao.GroupOption[] = []
 
-  @Column('order')
-  order: ChartConfigDao.OrderOption[] = []
+  @Column('orders')
+  orders: ChartConfigDao.OrderOption[] = []
 
   @Column('common_chart_config')
   commonChartConfig!: ChartConfigDao.CommonChartConfig
@@ -38,20 +38,21 @@ export class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTa
   privateChartConfig!: ChartConfigDao.PrivateChartConfig
 
   @Column('create_time')
-  createTime: string = ''
+  createTime!: string
 
   @Column('update_time')
-  updateTime: string = ''
+  updateTime!: string
 
   @Column('created_by')
-  createdBy: string = ''
+  createdBy!: string
 
   @Column('updated_by')
-  updatedBy: string = ''
+  updatedBy!: string
 
   @Column('is_deleted')
-  isDeleted: number = 0
+  isDeleted!: number
 }
+
 /**
  * @desc 图表配置基础字段
  */
@@ -59,11 +60,11 @@ const CHART_CONFIG_BASE_FIELDS = [
   'id',
   'chart_type',
   'data_source',
-  'column',
-  'dimension',
-  'filter',
-  'group',
-  'order',
+  'columns',
+  'dimensions',
+  'filters',
+  'groups',
+  'orders',
   'common_chart_config',
   'private_chart_config',
   'create_time',

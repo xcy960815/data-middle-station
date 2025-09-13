@@ -4,14 +4,14 @@ const analyseService = new AnalyseService()
 /**
  * @Desc 删除分析
  * @param event
- * @returns {Promise<ApiResponse<boolean>>}
+ * @returns {Promise<ApiResponseI<boolean>>}
  */
-export default defineEventHandler<Promise<ApiResponse<boolean>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
   try {
     const { id } = await readBody<{ id: number }>(event)
     const analyse = await analyseService.deleteAnalyse(id)
-    return CustomResponse.success(analyse)
+    return ApiResponse.success(analyse)
   } catch (error: any) {
-    return CustomResponse.error(error.message)
+    return ApiResponse.error(error.message)
   }
 })

@@ -7,7 +7,7 @@ export const useColumnStore = defineStore<
   BaseStore.State<ColumnStore.ColumnState>,
   BaseStore.Getters<ColumnStore.ColumnState, ColumnStore.ColumnGetters>,
   BaseStore.Actions<ColumnStore.ColumnState, ColumnStore.ColumnActions>
->(StoreNames.COLUMN, {
+>(StoreNames.COLUMNS, {
   /**
    * @desc 关于列所哟的数据字段
    */

@@ -13,7 +13,7 @@ export const AVATAR = 'https://64.media.tumblr.com/d15e5f21577f659a395d84e49f4d7
 /**
  * 登录API
  */
-export default defineEventHandler<Promise<ApiResponse<LoginVo.LoginOption>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginOption>>>(async (event) => {
   try {
     // 获取请求体数据
     const body = await readBody<LoginDto.LoginOption>(event)
@@ -21,7 +21,7 @@ export default defineEventHandler<Promise<ApiResponse<LoginVo.LoginOption>>>(asy
      * @desc 判断用户名和密码是否为空
      */
     if (!body.userName || !body.password) {
-      return CustomResponse.error('用户名和密码不能为空')
+      return ApiResponse.error('用户名和密码不能为空')
     }
     /**
      * @desc 判断用户名和密码是否正确
@@ -54,17 +54,17 @@ export default defineEventHandler<Promise<ApiResponse<LoginVo.LoginOption>>>(asy
         maxAge: 60 * 60 * 24 * 7
       })
 
-      return CustomResponse.success({
+      return ApiResponse.success({
         userId: '1',
         userName: body.userName
       })
     } else {
       logger.warn(chalk.yellow(`用户 ${body.userName} 登录失败: 用户名或密码错误`))
-      return CustomResponse.error('用户名或密码错误')
+      return ApiResponse.error('用户名或密码错误')
     }
   } catch (error) {
     const err = error as Error
     logger.error(chalk.red(`登录异常: ${err.message}`))
-    return CustomResponse.error('服务器内部错误')
+    return ApiResponse.error('服务器内部错误')
   }
 })

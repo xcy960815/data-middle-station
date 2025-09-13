@@ -129,7 +129,7 @@ module.exports = [
         Logger: 'readonly',
         JwtUtils: 'readonly',
         RedisStorage: 'readonly',
-        CustomResponse: 'readonly',
+        ApiResponse: 'readonly',
         // 工具函数
         exportToExcel: 'readonly',
         toLine: 'readonly',
@@ -271,7 +271,7 @@ module.exports = [
         Logger: 'readonly',
         JwtUtils: 'readonly',
         RedisStorage: 'readonly',
-        CustomResponse: 'readonly',
+        ApiResponse: 'readonly',
         // 工具函数
         exportToExcel: 'readonly',
         toLine: 'readonly',

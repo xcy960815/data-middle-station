@@ -7,6 +7,82 @@ declare namespace ScheduledEmailDao {
    */
   type Status = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
   /**
+   * @desc 邮件配置
+   */
+  type EmailConfig = {
+    /**
+     * 收件人
+     */
+    to: string | string[]
+    /**
+     * 抄送
+     */
+    cc?: string | string[]
+    /**
+     * 密送
+     */
+    bcc?: string | string[]
+    /**
+     * 邮件主题
+     */
+    subject: string
+    /**
+     * HTML内容
+     */
+    html?: string
+    /**
+     * 文本内容
+     */
+    text?: string
+    /**
+     * 附加内容
+     */
+    additionalContent?: string
+    /**
+     * 附件
+     */
+    attachments?: Array<{
+      /**
+       * 附件名称
+       */
+      filename: string
+      /**
+       * 附件内容
+       */
+      content: string | Buffer
+      /**
+       * 附件内容类型
+       */
+      contentType?: string
+    }>
+  }
+  /**
+   * @desc 分析选项
+   */
+  type AnalyseOptions = {
+    /**
+     * 附件名称
+     */
+    filename: string
+    /**
+     * 图表类型
+     */
+    chartType: string
+    /**
+     * 分析名称
+     */
+    analyseName: string
+    /**
+     * 分析id
+     */
+    analyseId: number
+  }
+  /**
+   * @desc 任务类型
+   */
+  type TaskType = 'scheduled' | 'recurring'
+
+  /**
    * @desc 定时邮件任务选项
    */
   type ScheduledEmailOptions = {
@@ -15,21 +91,41 @@ declare namespace ScheduledEmailDao {
      */
     id: number
     /**
-     * 任务ID
+     * 任务名称
      */
     taskName: string
     /**
-     * 调度时间
+     * 调度时间（定时任务使用）
      */
-    scheduleTime: string
+    scheduleTime?: string | null
+    /**
+     * 任务类型
+     */
+    taskType: TaskType
+    /**
+     * 重复的星期几（重复任务使用）
+     */
+    recurringDays?: number[] | null
+    /**
+     * 重复任务的执行时间（重复任务使用）
+     */
+    recurringTime?: string | null
+    /**
+     * 是否启用任务
+     */
+    isActive: boolean
+    /**
+     * 下次执行时间（重复任务使用）
+     */
+    nextExecutionTime?: string | null
     /**
      * 邮件配置
      */
-    emailConfig: string
+    emailConfig: EmailConfig
     /**
      * 图表数据
      */
-    analyseOptions: string
+    analyseOptions: AnalyseOptions
     /**
      * 任务状态
      */
@@ -49,11 +145,11 @@ declare namespace ScheduledEmailDao {
     /**
      * 执行时间
      */
-    executedTime?: string
+    executedTime?: string | null
     /**
      * 错误信息
      */
-    errorMessage?: string
+    errorMessage?: string | null
     /**
      * 重试次数
      */
@@ -73,106 +169,17 @@ declare namespace ScheduledEmailDao {
   }
 
   /**
-   * @desc 执行日志选项
+   * @desc 创建任务参数
    */
-  type ExecutionLogOption = {
-    /**
-     * 日志ID
-     */
-    id: number
-    /**
-     * 任务ID
-     */
-    taskId: number
-    /**
-     * 执行时间
-     */
-    executionTime: string
-    /**
-     * 执行状态
-     */
-    status: 'success' | 'failed'
-    /**
-     * 消息
-     */
-    message?: string
-    /**
-     * 错误详情
-     */
-    errorDetails?: string
-    /**
-     * 邮件消息ID
-     */
-    emailMessageId?: string
-    /**
-     * 执行耗时(毫秒)
-     */
-    executionDuration?: number
-    /**
-     * 创建时间
-     */
-    createdTime: string
-  }
+  type CreateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'id'>
 
   /**
    * @desc 更新任务参数
    */
-  type UpdateScheduledEmailOptions = {
+  type UpdateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'id'> & {
     /**
      * 任务ID
      */
     id: number
-    /**
-     * 任务名称
-     */
-    taskName?: string
-    /**
-     * 调度时间
-     */
-    scheduleTime?: string
-    /**
-     * 邮件配置
-     */
-    emailConfig?: string
-    /**
-     * 图表数据
-     */
-    analyseOptions?: string
-    /**
-     * 任务状态
-     */
-    status?: Status
-    /**
-     * 备注
-     */
-    remark?: string
-    /**
-     * 错误信息
-     */
-    errorMessage?: string
-    /**
-     * 重试次数
-     */
-    retryCount?: number
-    /**
-     * 最大重试次数
-     */
-    maxRetries?: number
-    /**
-     * 执行时间
-     */
-    executedTime?: string
-    /**
-     * 创建人
-     */
-    createdBy?: string
-    /**
-     * 更新人
-     */
-    updatedBy?: string
-    /**
-     * 更新时间
-     */
-    updatedTime?: string
   }
 }

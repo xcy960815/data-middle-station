@@ -28,16 +28,16 @@ export const getAnalyseHandler = () => {
       const analyseDesc = data.analyseDesc
       analyseStore.setAnalyseDesc(analyseDesc)
       const id = data.id
-      analyseStore.setChartId(id)
+      analyseStore.setAnalyseId(id)
       const chartConfigId = data.chartConfigId
       analyseStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
       analyseStore.setChartType((chartConfig?.chartType as AnalyseStore.ChartType) || 'table')
-      columnStore.setColumns(chartConfig?.column || [])
-      dimensionStore.setDimensions(chartConfig?.dimension || [])
-      filterStore.setFilters((chartConfig?.filter as FilterStore.FilterOption[]) || [])
-      groupStore.setGroups(chartConfig?.group || [])
-      orderStore.setOrders(chartConfig?.order || [])
+      columnStore.setColumns(chartConfig?.columns || [])
+      dimensionStore.setDimensions(chartConfig?.dimensions || [])
+      filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
+      groupStore.setGroups(chartConfig?.groups || [])
+      orderStore.setOrders(chartConfig?.orders || [])
       // 设置公共配置与图表配置
       useChartConfigStore().setCommonChartConfig(
         chartConfig?.commonChartConfig || useChartConfigStore().$state.commonChartConfig

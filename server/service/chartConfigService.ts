@@ -1,4 +1,3 @@
-import dayjs from 'dayjs'
 import { ChartConfigMapper } from '../mapper/chartConfigMapper'
 import { BaseService } from './baseService'
 
@@ -25,51 +24,37 @@ export class ChartConfigService extends BaseService {
       /**
        * 列配置
        */
-      column: chartConfigOption.column.map((item) => ({
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
+      columns: chartConfigOption.columns.map((item) => ({
+        ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 维度配置
        */
-      dimension: chartConfigOption.dimension.map((item) => ({
+      dimensions: chartConfigOption.dimensions.map((item) => ({
         ...item,
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 过滤配置
        */
-      filter: chartConfigOption.filter.map((item) => ({
+      filters: chartConfigOption.filters.map((item) => ({
         ...item,
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
-        displayName: item.columnComment
+        displayName: item.displayName || item.columnComment
       })),
       /**
        * 分组配置
        */
-      group: chartConfigOption.group.map((item) => ({
+      groups: chartConfigOption.groups.map((item) => ({
         ...item,
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 排序配置
        */
-      order: chartConfigOption.order.map((item) => ({
+      orders: chartConfigOption.orders.map((item) => ({
         ...item,
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
-        displayName: item.columnComment
+        displayName: item.displayName || item.columnComment
       }))
     }
   }

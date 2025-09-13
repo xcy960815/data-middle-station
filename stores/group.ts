@@ -8,7 +8,7 @@ export const useGroupStore = defineStore<
   BaseStore.State<GroupStore.GroupState>,
   BaseStore.Getters<GroupStore.GroupState, GroupStore.GroupGetters>,
   BaseStore.Actions<GroupStore.GroupState, GroupStore.GroupActions>
->(StoreNames.GROUP, {
+>(StoreNames.GROUPS, {
   state: () => ({
     groups: []
   }),

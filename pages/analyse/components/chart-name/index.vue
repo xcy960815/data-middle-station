@@ -15,7 +15,7 @@
 import { ElMessage, ElMessageBox } from 'element-plus'
 const analyseStore = useAnalyseStore()
 const chartId = computed(() => {
-  return analyseStore.getChartId
+  return analyseStore.getAnalyseId
 })
 const analyseName = computed(() => {
   return analyseStore.getAnalyseName

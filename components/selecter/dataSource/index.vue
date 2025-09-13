@@ -111,10 +111,10 @@ const handleSelectedTable = (row: ColumnStore.DataSourceOption) => {
 
 /**
  * @desc 高亮当前选中行
- * @param {DatabaseVo.TableOption} row 表数据
+ * @param {DatabaseVo.TableOptions} row 表数据
  * @returns {string}
  */
-const rowClassName = ({ row }: { row: DatabaseVo.TableOption }) => {
+const rowClassName = ({ row }: { row: DatabaseVo.TableOptions }) => {
   return row.tableName === dataSource.value ? 'is-selected' : ''
 }
 

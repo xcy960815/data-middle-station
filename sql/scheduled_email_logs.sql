@@ -1,4 +1,5 @@
 -- 任务执行日志表
+-- 注意：此表依赖于 scheduled_email_tasks 表，请确保先创建 scheduled_email_tasks 表
 CREATE TABLE IF NOT EXISTS `scheduled_email_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '日志ID',
   `task_id` int(11) NOT NULL COMMENT '任务ID',
@@ -12,9 +13,11 @@ CREATE TABLE IF NOT EXISTS `scheduled_email_logs` (
   PRIMARY KEY (`id`),
   KEY `idx_task_id` (`task_id`),
   KEY `idx_execution_time` (`execution_time`),
-  KEY `idx_status` (`status`),
-  CONSTRAINT `fk_scheduled_email_logs_task_id` FOREIGN KEY (`task_id`) REFERENCES `scheduled_email_tasks` (`id`) ON DELETE CASCADE
+  KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时邮件任务执行日志表';
 
+-- 添加外键约束（如果 scheduled_email_tasks 表已存在）
+-- ALTER TABLE `scheduled_email_logs` ADD CONSTRAINT `fk_scheduled_email_logs_task_id` FOREIGN KEY (`task_id`) REFERENCES `scheduled_email_tasks` (`id`) ON DELETE CASCADE;
+
 -- 添加索引优化查询性能
-CREATE INDEX `idx_task_status` ON `scheduled_email_logs` (`task_id`, `status`);
+CREATE INDEX IF NOT EXISTS `idx_task_status` ON `scheduled_email_logs` (`task_id`, `status`);

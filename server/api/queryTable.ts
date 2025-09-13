@@ -6,12 +6,12 @@ const databaseService = new DatabaseService()
  * @desc 获取所有的表名
  * @returns {Promise<ResponseModule.Response<Array<TableOption>>>}
  */
-export default defineEventHandler<Promise<ApiResponse<Array<DatabaseVo.TableOptionVo>>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<Array<DatabaseVo.TableOptions>>>>(async (event) => {
   try {
     const { tableName } = getQuery<{ tableName: string }>(event)
     const tableList = await databaseService.queryTable(tableName)
-    return CustomResponse.success(tableList)
+    return ApiResponse.success(tableList)
   } catch (error: any) {
-    return CustomResponse.error(error.message)
+    return ApiResponse.error(error.message)
   }
 })

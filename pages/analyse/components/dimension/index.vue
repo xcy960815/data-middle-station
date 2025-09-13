@@ -4,11 +4,11 @@
       <span class="dimension__title">值</span>
       <icon-park
         class="cursor-pointer"
-        v-if="hasClearAll('dimension')"
+        v-if="hasClearAll('dimensions')"
         type="clear"
         size="12"
         fill="#333"
-        @click="clearAll('dimension')"
+        @click="clearAll('dimensions')"
       />
     </div>
     <div class="dimension__content flex-1">
@@ -104,7 +104,7 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
-      from: 'dimension',
+      from: 'dimensions',
       index,
       value: dimensions.value[index]
     })
@@ -163,7 +163,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   }
   const index = data.index
   switch (data.from) {
-    case 'dimension':
+    case 'dimensions':
       // 移动位置
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
