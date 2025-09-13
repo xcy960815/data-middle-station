@@ -2,7 +2,7 @@ import { StoreNames } from './store-names'
 /**
  * @desc 列 store
  */
-export const useColumnStore = defineStore<
+export const useColumnsStore = defineStore<
   ColumnStore.ColumnKey,
   BaseStore.State<ColumnStore.ColumnState>,
   BaseStore.Getters<ColumnStore.ColumnState, ColumnStore.ColumnGetters>,

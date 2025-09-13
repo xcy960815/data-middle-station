@@ -36,7 +36,7 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
-const orderStore = useOrderStore()
+const orderStore = useOrdersStore()
 /**
  * @desc orderList
  */
