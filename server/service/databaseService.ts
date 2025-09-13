@@ -72,11 +72,11 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中所有表
-   * @param tableName {string} 表名
+   * @param queryTableRequest {DatabaseDto.QueryTableRequest} 查询表请求参数
    * @returns {Promise<Array<DatabaseVo.TableOptionVo>>}
    */
-  public async queryTable(tableName: string): Promise<Array<DatabaseVo.TableOptions>> {
-    const result = await this.databaseMapper.queryTable(tableName)
+  public async queryTable(queryTableRequest: DatabaseDto.QueryTableRequest): Promise<Array<DatabaseVo.TableOptions>> {
+    const result = await this.databaseMapper.queryTable(queryTableRequest)
     return result.map((item) => ({
       ...item,
       createTime: item.createTime,
@@ -91,11 +91,13 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中表的列
-   * @param tableName {string} 表名
+   * @param {DatabaseDto.TableColumnRequest} tableColumnRequest 查询表请求参数
    * @returns {Promise<Array<DatabaseVo.TableColumnOption>>}
    */
-  public async queryTableColumn(tableName: string): Promise<Array<DatabaseVo.TableColumnOption>> {
-    const result = await this.databaseMapper.queryTableColumn(toLine(tableName))
+  public async queryTableColumn(
+    tableColumnRequest: DatabaseDto.TableColumnRequest
+  ): Promise<Array<DatabaseVo.TableColumnOption>> {
+    const result = await this.databaseMapper.queryTableColumn(tableColumnRequest)
     return result.map((item) => {
       const columnTypeValue = item.columnType
       let columnType = ''

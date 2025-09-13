@@ -9,7 +9,7 @@ const analyseService = new AnalyseService()
  */
 export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
   try {
-    const analyseParams = await readBody<AnalyseDto.AnalyseOption>(event)
+    const analyseParams = await readBody<AnalyseDto.CreateAnalyseRequest>(event)
     const analyse = await analyseService.createAnalyse(analyseParams)
     return ApiResponse.success(analyse)
   } catch (error: any) {
