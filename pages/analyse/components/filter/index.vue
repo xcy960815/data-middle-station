@@ -44,7 +44,7 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
-const filterStore = useFilterStore()
+const filterStore = useFiltersStore()
 const filterList = computed(() => filterStore.getFilters)
 /**
  * @desc addFilter

@@ -60,7 +60,7 @@ import { computed, ref, watch } from 'vue'
 /**
  * @desc 列存储
  */
-const columnStore = useColumnStore()
+const columnStore = useColumnsStore()
 const searchKeyword = ref('')
 /**
  * @desc 是否显示弹窗

@@ -42,9 +42,9 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
-const columnStore = useColumnStore()
-const dimensionStore = useDimensionStore()
-const groupStore = useGroupStore()
+const columnStore = useColumnsStore()
+const dimensionStore = useDimensionsStore()
+const groupStore = useGroupsStore()
 /**
  * @desc groupList
  */

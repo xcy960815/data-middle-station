@@ -3,7 +3,7 @@ import { StoreNames } from './store-names'
  * @desc 维度 store
  */
 import { defineStore } from 'pinia'
-export const useDimensionStore = defineStore<
+export const useDimensionsStore = defineStore<
   DimensionStore.DimensionKey,
   BaseStore.State<DimensionStore.DimensionState>,
   BaseStore.Getters<DimensionStore.DimensionState, DimensionStore.DimensionGetters>,
