@@ -101,7 +101,7 @@ ESLint 已配置以下全局变量，无需导入：
 #### Pinia Store 相关
 
 - `defineStore`
-- `useAnalyseStore`, `useColumnStore` 等项目自定义 store 函数
+- `useAnalyseStore`, `useColumnsStore` 等项目自定义 store 函数
 
 #### 项目自定义类型
 
@@ -123,7 +123,6 @@ ESLint 已配置以下全局变量，无需导入：
    ```
 
 3. **开发过程中**
-
    - VS Code 会自动在保存时格式化代码
    - ESLint 会实时提示代码问题
 
