@@ -9,6 +9,11 @@ const SCHEDULED_EMAIL_TASK_BASE_FIELDS = [
   'id',
   'task_name',
   'schedule_time',
+  'task_type',
+  'recurring_days',
+  'recurring_time',
+  'is_active',
+  'next_execution_time',
   'email_config',
   'analyse_options',
   'status',
@@ -48,13 +53,28 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
   taskName!: string
 
   @Column('schedule_time')
-  scheduleTime!: string
+  scheduleTime?: string | null
+
+  @Column('task_type')
+  taskType!: ScheduledEmailDao.TaskType
+
+  @Column('recurring_days')
+  recurringDays?: number[] | null
+
+  @Column('recurring_time')
+  recurringTime?: string | null
+
+  @Column('is_active')
+  isActive!: boolean
+
+  @Column('next_execution_time')
+  nextExecutionTime?: string | null
 
   @Column('email_config')
-  emailConfig!: string
+  emailConfig!: ScheduledEmailDao.EmailConfig
 
   @Column('analyse_options')
-  analyseOptions!: string
+  analyseOptions!: ScheduledEmailDao.AnalyseOptions
 
   @Column('status')
   status!: ScheduledEmailDao.Status
@@ -95,11 +115,13 @@ export class ScheduledEmailMapper extends BaseMapper {
 
   /**
    * @desc 创建定时邮件任务
-   * @param {ScheduledEmailDao.ScheduledEmailOptions} task  定时邮件任务选项
+   * @param {ScheduledEmailDao.CreateScheduledEmailOptions} scheduledEmailOptions  定时邮件任务选项
    * @returns {Promise<number>} 任务ID
    */
-  public async createScheduledEmailTask(task: ScheduledEmailDao.ScheduledEmailOptions): Promise<number> {
-    const { keys, values } = convertToSqlProperties(task)
+  public async createScheduledEmailTask(
+    scheduledEmailOptions: ScheduledEmailDao.CreateScheduledEmailOptions
+  ): Promise<number> {
+    const { keys, values } = convertToSqlProperties(scheduledEmailOptions)
     // 只使用数据库表中存在的字段
     const validKeys = keys.filter((key) => SCHEDULED_EMAIL_TASK_BASE_FIELDS.includes(key))
     const validValues = validKeys.map((key) => values[keys.indexOf(key)])
@@ -128,13 +150,15 @@ export class ScheduledEmailMapper extends BaseMapper {
 
   /**
    * @desc 更新定时邮件任务
-   * @param {ScheduledEmailDao.ScheduledEmailOptions} task  定时邮件任务选项
+   * @param {ScheduledEmailDao.UpdateScheduledEmailOptions} scheduledEmailOptions  定时邮件任务选项
    * @returns {Promise<boolean>} 是否更新成功
    */
-  public async updateScheduledEmailTask(task: ScheduledEmailDao.ScheduledEmailOptions): Promise<boolean> {
-    const { keys, values } = convertToSqlProperties(task)
+  public async updateScheduledEmailTask(
+    scheduledEmailOptions: ScheduledEmailDao.UpdateScheduledEmailOptions
+  ): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(scheduledEmailOptions)
     const sql = `UPDATE ${SCHEDULED_EMAIL_TASK_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ?`
-    return (await this.exe<number>(sql, [...values, task.id])) > 0
+    return (await this.exe<number>(sql, [...values, scheduledEmailOptions.id])) > 0
   }
 
   /**
@@ -237,38 +261,5 @@ export class ScheduledEmailMapper extends BaseMapper {
       ORDER BY schedule_time ASC
     `
     return this.exe<ScheduledEmailDao.ScheduledEmailOptions[]>(sql)
-  }
-
-  /**
-   * @desc 获取定时邮件任务统计信息
-   * @returns {Promise<any>} 统计信息
-   */
-  public async getScheduledEmailTaskStatistics(): Promise<any> {
-    const sql = `
-      SELECT
-        COUNT(*) as total_tasks,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
-        SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END) as running_tasks,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
-        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_tasks,
-        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_tasks,
-        SUM(CASE WHEN DATE(created_time) = CURDATE() THEN 1 ELSE 0 END) as today_tasks,
-        SUM(CASE WHEN YEARWEEK(created_time) = YEARWEEK(CURDATE()) THEN 1 ELSE 0 END) as this_week_tasks,
-        SUM(CASE WHEN YEAR(created_time) = YEAR(CURDATE()) AND MONTH(created_time) = MONTH(CURDATE()) THEN 1 ELSE 0 END) as this_month_tasks
-      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
-    `
-
-    const result = await this.exe<any[]>(sql)
-    return {
-      totalTasks: result[0].total_tasks || 0,
-      pendingTasks: result[0].pending_tasks || 0,
-      runningTasks: result[0].running_tasks || 0,
-      completedTasks: result[0].completed_tasks || 0,
-      failedTasks: result[0].failed_tasks || 0,
-      cancelledTasks: result[0].cancelled_tasks || 0,
-      todayTasks: result[0].today_tasks || 0,
-      thisWeekTasks: result[0].this_week_tasks || 0,
-      thisMonthTasks: result[0].this_month_tasks || 0
-    }
   }
 }
