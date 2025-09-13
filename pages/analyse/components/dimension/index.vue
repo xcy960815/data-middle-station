@@ -45,9 +45,9 @@ import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 // 初始化数据
-const columnStore = useColumnStore()
-const dimensionStore = useDimensionStore()
-const groupStore = useGroupStore()
+const columnStore = useColumnsStore()
+const dimensionStore = useDimensionsStore()
+const groupStore = useGroupsStore()
 
 /**
  * @desc dimensions

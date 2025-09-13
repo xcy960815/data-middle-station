@@ -38,7 +38,7 @@ const props = defineProps({
     default: () => ({})
   }
 })
-const dimensionStore = useDimensionStore()
+const dimensionStore = useDimensionsStore()
 const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 /**

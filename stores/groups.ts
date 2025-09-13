@@ -3,7 +3,7 @@ import { StoreNames } from './store-names'
  * @desc 分组 store
  */
 import { defineStore } from 'pinia'
-export const useGroupStore = defineStore<
+export const useGroupsStore = defineStore<
   GroupStore.GroupKey,
   BaseStore.State<GroupStore.GroupState>,
   BaseStore.Getters<GroupStore.GroupState, GroupStore.GroupGetters>,
