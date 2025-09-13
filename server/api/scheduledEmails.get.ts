@@ -10,13 +10,13 @@ const logger = new Logger({
 /**
  * 查询定时邮件任务列表
  */
-export default defineEventHandler<Promise<ApiResponse<ScheduledEmailDto.ScheduledEmailList>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<ScheduledEmailVo.ScheduledEmailOptions[]>>>(async (event) => {
   try {
     const scheduledEmailListQuery = getQuery<ScheduledEmailDto.ScheduledEmailListQuery>(event)
-    const result = await scheduledEmailService.getScheduledEmailList(scheduledEmailListQuery)
-    return CustomResponse.success(result)
+    const scheduledEmailList = await scheduledEmailService.getScheduledEmailList(scheduledEmailListQuery)
+    return ApiResponse.success(scheduledEmailList)
   } catch (error: any) {
     logger.error('查询定时邮件任务列表失败' + error.message)
-    return CustomResponse.error(error instanceof Error ? error.message : '查询定时邮件任务列表失败')
+    return ApiResponse.error(error instanceof Error ? error.message : '查询定时邮件任务列表失败')
   }
 })
