@@ -105,11 +105,11 @@ export class ChartConfigMapper extends BaseMapper {
   }
   /**
    * @desc 创建图表配置
-   * @param chartConfig {ChartConfigDao.ChartConfig} 图表配置
+   * @param chartConfig {ChartConfigDao.CreateChartConfigRequest} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
-  public async createChartConfig(chartConfig: ChartConfigDao.ChartConfig): Promise<number> {
-    const { keys, values } = convertToSqlProperties(chartConfig)
+  public async createChartConfig(createChartConfigRequest: ChartConfigDto.CreateChartConfigRequest): Promise<number> {
+    const { keys, values } = convertToSqlProperties(createChartConfigRequest)
     // 只使用数据库表中存在的字段
     const validKeys = keys.filter((key) => CHART_CONFIG_BASE_FIELDS.includes(key))
     const validValues = validKeys.map((key) => values[keys.indexOf(key)])
@@ -120,10 +120,10 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 更新图表配置
-   * @param chartConfig {ChartConfigDao.ChartConfig} 图表配置
+   * @param chartConfig {ChartConfigDao.CreateChartConfigRequest} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
-  public async updateChartConfig(chartConfig: ChartConfigDao.ChartConfig): Promise<boolean> {
+  public async updateChartConfig(chartConfig: ChartConfigDto.UpdateChartConfigRequest): Promise<boolean> {
     const { keys, values } = convertToSqlProperties(chartConfig)
     const sql = `UPDATE ${CHART_CONFIG_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ? and is_deleted = 0`
     return (await this.exe<number>(sql, [...values, chartConfig.id])) > 0
@@ -131,14 +131,10 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 删除图表配置(逻辑删除)
-   * @param deleteParams {number} 图表配置删除参数
+   * @param deleteParams {ChartConfigDto.ChartConfigDeleteRequest} 图表配置删除参数
    * @returns {Promise<boolean>} 是否删除成功
    */
-  public async deleteChartConfig(deleteParams: {
-    id: number
-    updatedBy: string
-    updateTime: string
-  }): Promise<boolean> {
+  public async deleteChartConfig(deleteParams: ChartConfigDto.DeleteChartConfigRequest): Promise<boolean> {
     const sql = `update ${CHART_CONFIG_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [
       deleteParams.updatedBy,

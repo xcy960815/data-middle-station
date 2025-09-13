@@ -8,7 +8,7 @@ const chartDataService = new ChartDataService()
  */
 export default defineEventHandler<Promise<ApiResponseI<ChartDataVo.ChartData[]>>>(async (event) => {
   try {
-    const chartDataParams = await readBody<ChartDataDto.GetChartDataRequestParams>(event)
+    const chartDataParams = await readBody<ChartDataDto.ChartDataRequest>(event)
 
     const data = await chartDataService.getChartData(chartDataParams)
 

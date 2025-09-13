@@ -8,7 +8,7 @@ const analyseService = new AnalyseService()
  */
 export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
   try {
-    const { id } = await readBody<{ id: number }>(event)
+    const { id } = await readBody<AnalyseDto.DeleteAnalyseRequest>(event)
     const analyse = await analyseService.deleteAnalyse(id)
     return ApiResponse.success(analyse)
   } catch (error: any) {

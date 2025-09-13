@@ -11,7 +11,7 @@ declare namespace AnalyseVo {
   /**
    * 分析配置
    */
-  type AnalyseOption = {
+  type GetAnalyseResponse = {
     id: number
     analyseName: string
     analyseDesc: string
@@ -21,6 +21,6 @@ declare namespace AnalyseVo {
     createdBy: string
     updatedBy: string
     chartConfigId: number | null
-    chartConfig: ChartConfigVo.ChartConfig | null
+    chartConfig: ChartConfigVo.ChartConfigResponse | null
   }
 }

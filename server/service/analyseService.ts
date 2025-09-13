@@ -25,27 +25,15 @@ export class AnalyseService extends BaseService {
   /**
    * @desc dao 转 vo
    * @param chart {AnalyseDao.AnalyseOption} 图表
-   * @returns {AnalyseVo.AnalyseOption}
+   * @returns {AnalyseVo.GetAnalyseResponse}
    */
   private dao2Vo(
     chart: AnalyseDao.AnalyseOption,
-    chartConfig: ChartConfigVo.ChartConfig | null
-  ): AnalyseVo.AnalyseOption {
+    chartConfig: ChartConfigVo.ChartConfigResponse | null
+  ): AnalyseVo.GetAnalyseResponse {
     return {
       ...chart,
       chartConfig: chartConfig
-    }
-  }
-
-  /**
-   * @desc 将vo对象转换为dao对象
-   * @param analyseOption {AnalyseVo.AnalyseOption}
-   * @returns {AnalyseDao.AnalyseOption}
-   */
-  private dto2Dao(analyseOption: Omit<AnalyseDto.AnalyseOption, 'chartConfig'>): AnalyseDao.AnalyseOption {
-    return {
-      ...analyseOption,
-      isDeleted: null
     }
   }
 
@@ -57,11 +45,16 @@ export class AnalyseService extends BaseService {
   public async deleteAnalyse(id: number): Promise<boolean> {
     const analyseOption = await this.getAnalyse(id)
     if (analyseOption.chartConfigId) {
+      const deleteChartConfigRequest: ChartConfigDto.DeleteChartConfigRequest = {
+        id: analyseOption.chartConfigId,
+        updatedBy: analyseOption.updatedBy,
+        updateTime: analyseOption.updateTime
+      }
       // 删除图表配置
-      await this.chartConfigService.deleteChartConfig(analyseOption.chartConfigId)
+      await this.chartConfigService.deleteChartConfig(deleteChartConfigRequest)
     }
     const { updatedBy, updateTime } = await super.getDefaultInfo()
-    const deleteParams = {
+    const deleteParams: AnalyseDto.DeleteAnalyseRequest = {
       id,
       updatedBy,
       updateTime
@@ -71,9 +64,9 @@ export class AnalyseService extends BaseService {
   /**
    * @desc 获取分析
    * @param id {number} 分析id
-   * @returns {Promise<AnalyseVo.AnalyseOption>}
+   * @returns {Promise<AnalyseVo.GetAnalyseResponse>}
    */
-  public async getAnalyse(id: number): Promise<AnalyseVo.AnalyseOption> {
+  public async getAnalyse(id: number): Promise<AnalyseVo.GetAnalyseResponse> {
     const AnalyseOption = await this.analyseMapper.getAnalyse(id)
     if (!AnalyseOption) {
       throw new Error('图表不存在')
@@ -89,7 +82,7 @@ export class AnalyseService extends BaseService {
    * @desc 获取所有图表
    * @returns {Promise<AnalyseVo.ChartsOption[]>}
    */
-  public async getAnalyses(): Promise<AnalyseVo.AnalyseOption[]> {
+  public async getAnalyses(): Promise<AnalyseVo.GetAnalyseResponse[]> {
     const analyseOptions = await this.analyseMapper.getAnalyses()
     const promises = analyseOptions.map(async (item) => {
       if (item.chartConfigId) {
@@ -107,7 +100,7 @@ export class AnalyseService extends BaseService {
    * @param chart {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyse(analyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
+  public async updateAnalyse(analyseOptionDto: AnalyseDto.UpdateAnalyseRequest): Promise<boolean> {
     // 解构图表配置，剩余的为图表配置
     const { chartConfig, ...analyseOption } = analyseOptionDto
     let chartConfigId = analyseOption.chartConfigId
@@ -128,7 +121,7 @@ export class AnalyseService extends BaseService {
     analyseOption.updateTime = updateTime
     analyseOption.updatedBy = updatedBy
     analyseOption.chartConfigId = chartConfigId
-    const updateAnalyseResult = await this.analyseMapper.updateAnalyse(this.dto2Dao(analyseOption))
+    const updateAnalyseResult = await this.analyseMapper.updateAnalyse(analyseOption)
 
     return updateAnalyseResult
   }
@@ -138,7 +131,7 @@ export class AnalyseService extends BaseService {
    * @param analyseOptionDto {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async createAnalyse(analyseOptionDto: AnalyseDto.AnalyseOption): Promise<boolean> {
+  public async createAnalyse(analyseOptionDto: AnalyseDto.CreateAnalyseRequest): Promise<boolean> {
     const { chartConfig, ...restOption } = analyseOptionDto
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
     let chartConfigId = analyseOptionDto.chartConfigId || null
@@ -151,7 +144,7 @@ export class AnalyseService extends BaseService {
     restOption.updatedBy = updatedBy
     restOption.createTime = createTime
     restOption.updateTime = updateTime
-    const createAnalyseResult = await this.analyseMapper.createAnalyse(this.dto2Dao(restOption))
+    const createAnalyseResult = await this.analyseMapper.createAnalyse(restOption)
     return createAnalyseResult
   }
 
@@ -160,24 +153,22 @@ export class AnalyseService extends BaseService {
    * @param analyseOption {AnalyseDto.AnalyseOption} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyseName(analyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
-    const { chartConfig, ...restOption } = analyseOption
+  public async updateAnalyseName(analyseOption: AnalyseDto.UpdateAnalyseNameRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    restOption.updatedBy = updatedBy
-    restOption.updateTime = updateTime
-    return this.analyseMapper.updateAnalyse(this.dto2Dao(restOption))
+    analyseOption.updatedBy = updatedBy
+    analyseOption.updateTime = updateTime
+    return this.analyseMapper.updateAnalyse(analyseOption)
   }
 
   /**
    * @desc 更新图表描述
-   * @param analyseOption {AnalyseDto.AnalyseOption} 图表
+   * @param analyseOption {AnalyseDto.UpdateAnalyseDescRequest} 图表
    * @returns {Promise<boolean>}
    */
-  public async updateAnalyseDesc(analyseOption: AnalyseDto.AnalyseOption): Promise<boolean> {
-    const { chartConfig, ...restOption } = analyseOption
+  public async updateAnalyseDesc(analyseOption: AnalyseDto.UpdateAnalyseDescRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    restOption.updatedBy = updatedBy
-    restOption.updateTime = updateTime
-    return this.analyseMapper.updateAnalyse(this.dto2Dao(restOption))
+    analyseOption.updatedBy = updatedBy
+    analyseOption.updateTime = updateTime
+    return this.analyseMapper.updateAnalyse(analyseOption)
   }
 }

@@ -58,35 +58,35 @@ declare namespace ChartConfigVo {
   /**
    * @desc 公共图表配置
    */
-  type CommonChartConfig = ChartConfigDao.CommonChartConfig
+  type CommonChartConfigResponse = ChartConfigDao.CommonChartConfig
 
   /**
    * @desc 私有图表配置
    */
-  type PrivateChartConfig = ChartConfigDao.PrivateChartConfig
+  type PrivateChartConfigResponse = ChartConfigDao.PrivateChartConfig
 
   /**
    * 图表配置
    */
-  type ChartConfig = ChartConfigDao.ChartConfig
+  type ChartConfigResponse = ChartConfigDao.ChartConfig
 
   /**
    * @desc 饼图配置
    */
-  type PieChartConfig = ChartConfigDao.PieChartConfig
+  type PieChartConfigResponse = ChartConfigDao.PieChartConfig
 
   /**
    * @desc 柱状图配置
    */
-  type IntervalChartConfig = ChartConfigDao.IntervalChartConfig
+  type IntervalChartConfigResponse = ChartConfigDao.IntervalChartConfig
 
   /**
    * @desc 折线图配置
    */
-  type LineChartConfig = ChartConfigDao.LineChartConfig
+  type LineChartConfigResponse = ChartConfigDao.LineChartConfig
 
   /**
    * @desc 表格配置
    */
-  type TableChartConfig = ChartConfigDao.TableChartConfig
+  type TableChartConfigResponse = ChartConfigDao.TableChartConfig
 }
