@@ -135,7 +135,7 @@ const dragstartHandler = (column: ColumnStore.ColumnOption, index: number, event
   event.dataTransfer.setData(
     'text/plain',
     JSON.stringify({
-      from: 'column',
+      from: 'columns',
       type: 'single',
       index,
       value: column
@@ -206,19 +206,19 @@ const dropHandler = (dragEvent: DragEvent) => {
   )
 
   switch (data.from) {
-    case 'dimension':
+    case 'dimensions':
       const dimensionSrore = useDimensionStore()
       dimensionSrore.removeDimension(data.index)
       break
-    case 'filter':
+    case 'filters':
       const filterStore = useFilterStore()
       filterStore.removeFilter(data.index)
       break
-    case 'order':
+    case 'orders':
       const orderStore = useOrderStore()
       orderStore.removeOrder(data.index)
       break
-    case 'group':
+    case 'groups':
       const groupStore = useGroupStore()
       groupStore.removeGroup(data.index)
       columnStore.updateColumn({
@@ -226,7 +226,7 @@ const dropHandler = (dragEvent: DragEvent) => {
         index: columnIndex
       })
       break
-    case 'column':
+    case 'columns':
       break
     default:
       console.error('未知拖拽类型', data.from)

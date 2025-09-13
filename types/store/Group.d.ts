@@ -6,7 +6,7 @@ declare namespace GroupStore {
   /**
    * @desc 分组key
    */
-  type GroupKey = 'group'
+  type GroupKey = 'groups'
   /**
    * @desc 左侧列字段
    * @interface GroupOption

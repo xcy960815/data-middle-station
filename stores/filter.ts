@@ -9,7 +9,7 @@ export const useFilterStore = defineStore<
   BaseStore.State<FilterStore.FilterState>,
   BaseStore.Getters<FilterStore.FilterState, FilterStore.FilterGetters>,
   BaseStore.Actions<FilterStore.FilterState, FilterStore.FilterActions>
->(StoreNames.FILTER, {
+>(StoreNames.FILTERS, {
   state: () => ({
     filters: []
   }),

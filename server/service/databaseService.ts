@@ -75,7 +75,7 @@ export class DatabaseService {
    * @param tableName {string} 表名
    * @returns {Promise<Array<DatabaseVo.TableOptionVo>>}
    */
-  public async queryTable(tableName: string): Promise<Array<DatabaseVo.TableOption>> {
+  public async queryTable(tableName: string): Promise<Array<DatabaseVo.TableOptions>> {
     const result = await this.databaseMapper.queryTable(tableName)
     return result.map((item) => ({
       ...item,

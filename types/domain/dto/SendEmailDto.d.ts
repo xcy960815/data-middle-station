@@ -1,32 +1,48 @@
 declare namespace SendEmailDto {
-  /**
-   * 通用邮件发送选项（统一版本）
-   */
-  interface SendEmailOptions {
-    to: string | string[]
-    cc?: string | string[]
-    bcc?: string | string[]
+  interface EmailConfig {
+    /**
+     * 收件人
+     */
+    to: string
+    /**
+     * 邮件主题
+     */
     subject: string
-    html?: string
-    text?: string
-    attachments?: Array<{
-      filename: string
-      content: Buffer | string
-      contentType?: string
-    }>
+    /**
+     * 额外内容
+     */
+    additionalContent: string
   }
 
-  /**
-   * 图表邮件发送特定选项
-   */
-  interface SendChartEmailOptions extends Omit<SendEmailOptions, 'attachments'> {
-    body?: string
-    additionalContent?: string
-    chart: ChartEmailExportData
-    exportOptions?: ExportChartConfigs
-    attachments?: SendEmailOptions['attachments']
+  interface AnalyseOptions {
+    /**
+     * 文件名
+     */
+    filename: string
+    /**
+     * 图表类型
+     */
+    chartType: string
+    /**
+     * 分析名称
+     */
+    analyseName: string
+    /**
+     * 分析ID
+     */
+    analyseId: number
   }
 
+  interface SendChartEmailOptions {
+    /**
+     * 邮件配置
+     */
+    emailConfig: EmailConfig
+    /**
+     * 分析选项
+     */
+    analyseOptions: AnalyseOptions
+  }
   /**
    * 图表导出配置
    */
@@ -37,16 +53,6 @@ declare namespace SendEmailDto {
     height?: number
     backgroundColor?: string
     scale?: number
-  }
-
-  /**
-   * 图表邮件导出接口
-   */
-  export interface ChartEmailExportData {
-    chartId: string
-    title: string
-    base64Image: string
-    filename: string
   }
 }
 

@@ -7,7 +7,7 @@ import { getQuery } from 'h3'
  */
 export default defineEventHandler(async (_event: H3Event) => {
   const pool = useNitroApp().mysqlPools.get(useRuntimeConfig().serviceDataDbName || useRuntimeConfig().serviceDbName)
-  if (!pool) return CustomResponse.error('数据库连接不存在')
+  if (!pool) return ApiResponse.error('数据库连接不存在')
 
   const createTableSQL = `
   CREATE TABLE IF NOT EXISTS big_data (
@@ -40,7 +40,7 @@ export default defineEventHandler(async (_event: H3Event) => {
   const [countRows] = (await pool.query('SELECT COUNT(1) as cnt FROM big_data')) as any
   const existing = Number(countRows?.[0]?.cnt ?? 0)
   if (existing > 0 && mode !== 'truncate') {
-    return CustomResponse.success({ message: 'big_data 已有数据，跳过插入', existing })
+    return ApiResponse.success({ message: 'big_data 已有数据，跳过插入', existing })
   }
   if (mode === 'truncate' && existing > 0) {
     await pool.query('TRUNCATE TABLE big_data')
@@ -138,5 +138,5 @@ export default defineEventHandler(async (_event: H3Event) => {
     await pool.query(insertSql, [rows])
   }
 
-  return CustomResponse.success({ message: 'Seed finished', total })
+  return ApiResponse.success({ message: 'Seed finished', total })
 })

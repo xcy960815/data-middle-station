@@ -10,7 +10,7 @@
 
 <script lang="ts" setup>
 import { Chart } from '@antv/g2'
-import type { G2ChartInstance } from '~/composables/useChartExport'
+import { renderIntervalChart, type IntervalChartConfig } from '~/composables/useChartRender'
 
 defineOptions({
   name: 'IntervalChart'
@@ -34,27 +34,25 @@ const props = defineProps({
     default: () => []
   }
 })
+
 /**
  * 定义事件
  */
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
-/**
- * 初始化图表实例
- */
-const chartInstance = ref<Chart | null>(null)
-
 const chartConfigStore = useChartConfigStore()
+
 /**
  * 默认配置
  */
-const defaultIntervalConfig = {
+const defaultIntervalConfig: IntervalChartConfig = {
   showPercentage: false,
   displayMode: 'levelDisplay',
   showLabel: false,
   horizontalDisplay: false,
   horizontalBar: false
 }
+
 /**
  * 属性配置
  */
@@ -74,6 +72,7 @@ watch(
     deep: true
   }
 )
+
 /**
  * 初始化图表
  */
@@ -86,22 +85,6 @@ const initChart = () => {
     return
   }
 
-  // 已存在则销毁，避免重复渲染叠加
-  if (chartInstance.value) {
-    chartInstance.value.destroy()
-    chartInstance.value = null
-  }
-
-  // 维度与度量：yAxisFields 最后一个为 X 轴，其余为度量
-  const xFieldName = props.yAxisFields[props.yAxisFields.length - 1].columnName
-  const measureFields = props.yAxisFields
-    .slice(0, props.yAxisFields.length - 1)
-    .map((item) => item.columnName) as string[]
-
-  // 可选分组（用于单度量或双层分组）
-  const groupFieldName = props.xAxisFields[0].columnName
-  const useFold = measureFields.length > 1
-
   // 初始化图表实例
   const chart = new Chart({
     container: 'interval-container',
@@ -109,127 +92,20 @@ const initChart = () => {
     autoFit: true
   })
 
-  chartInstance.value = chart
-
-  // 配置图表标题
-  chart.title({
-    title: props.title
-  })
-
-  const intervalChart = chart
-    .interval()
-    .data({
-      type: 'inline',
-      value: props.data,
-      transform: useFold ? [{ type: 'fold', fields: measureFields, key: 'key', value: 'value' }] : []
-    })
-    .encode('x', xFieldName)
-    .encode('y', useFold ? 'value' : measureFields[0] || 'value')
-    .scale('y', { nice: true })
-
-  // 轴标题（优先显示中文别名）
-  const xFieldOption = props.yAxisFields[props.yAxisFields.length - 1]
-  const xAxisTitle = xFieldOption?.displayName || xFieldOption?.columnComment || xFieldOption?.columnName || ''
-
-  let yAxisTitle = ''
-  if (!useFold) {
-    const yFieldOption = props.yAxisFields.find((item) => item.columnName === measureFields[0])
-    yAxisTitle = yFieldOption?.displayName || yFieldOption?.columnComment || yFieldOption?.columnName || ''
-  }
-
-  const yAxisOptions: { title: string; labelFormatter: string } = { title: yAxisTitle, labelFormatter: '~s' }
-  chart.axis('x', { title: xAxisTitle })
-  chart.axis('y', yAxisOptions)
-
-  // 颜色与分组：
-  if (useFold && groupFieldName) {
-    // 双层分组：城市 × 指标
-    intervalChart.encode('color', (d: ChartDataVo.ChartData) => `${d[groupFieldName]}-${d.key}`)
-  } else if (useFold) {
-    // 多指标分组
-    intervalChart.encode('color', 'key')
-  } else if (groupFieldName) {
-    // 单指标，按分组字段分组
-    intervalChart.encode('color', groupFieldName)
-  }
-
-  /**
-   * 显示模式配置
-   */
-  if (intervalChartConfig.value.displayMode === 'levelDisplay') {
-    // 平级展示
-    intervalChart.transform({ type: 'dodgeX' })
-  } else if (intervalChartConfig.value.displayMode === 'stackDisplay') {
-    // 叠加展示
-    intervalChart.transform({ type: 'stackY' })
-  }
-
-  /**
-   * 是否显示百分比
-   */
-  if (intervalChartConfig.value.showPercentage) {
-    intervalChart.axis('y', { ...yAxisOptions, labelFormatter: (d: number) => `${Number(d) / 100}%` })
-  }
-
-  /**
-   * 是否显示标题
-   */
-  if (intervalChartConfig.value.showLabel) {
-    intervalChart.label({
-      text: useFold ? 'value' : measureFields[0],
-      position: 'top'
-    })
-  }
-
-  /**
-   * 是否水平展示
-   */
-  if (intervalChartConfig.value.horizontalDisplay) {
-    intervalChart.coordinate({
-      transform: [{ type: 'transpose' }]
-    })
-  }
-
-  if (intervalChartConfig.value.horizontalBar) {
-    intervalChart.slider('x', true)
-  }
-
-  /**
-   * 配置图表交互
-   */
-  chart
-    .interaction('tooltip', {
-      shared: true,
-      // 自定义tooltip内容
-      customContent: (title: string, data: ChartDataVo.ChartData[]) => {
-        if (!data || data.length === 0) return ''
-        const seriesFieldForTooltip = useFold ? 'key' : groupFieldName || ''
-        const valueFieldForTooltip = useFold ? 'value' : measureFields[0]
-        return `
-        <div style="padding: 8px;">
-          <div style="margin-bottom: 4px;font-weight:bold;">${title}</div>
-          ${data
-            .map(
-              (item) => `
-            <div style="display: flex; align-items: center; padding: 4px 0;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; margin-right: 8px;"></span>
-              <span style="margin-right: 12px;">${seriesFieldForTooltip ? ((item.data as Record<string, any>)?.[seriesFieldForTooltip] ?? '') : ''}</span>
-              <span style="font-weight: bold;">${(item.data as Record<string, any>)?.[valueFieldForTooltip] ?? ''}</span>
-            </div>
-          `
-            )
-            .join('')}
-        </div>
-      `
-      }
-    })
-    // 按 X 轴整列显示背景带
-    .interaction('elementHighlightByX', { background: true })
-    // 保留同色高亮，但不绘制背景块
-    .interaction('elementHighlightByColor', { background: false })
+  // 使用共享的渲染逻辑
+  renderIntervalChart(
+    chart,
+    {
+      title: props.title,
+      data: props.data,
+      xAxisFields: props.xAxisFields,
+      yAxisFields: props.yAxisFields
+    },
+    intervalChartConfig.value
+  )
 
   chart.render()
-  chartInstance.value = chart
+
   emits('renderChartEnd')
 }
 
@@ -261,11 +137,5 @@ watch(
     deep: true
   }
 )
-
-// 图表导出功能
-const { getChartExpose } = useChartExport(chartInstance as Ref<G2ChartInstance>)
-
-// 暴露图表实例和导出方法给父组件
-defineExpose(getChartExpose())
 </script>
 <style lang="scss" scoped></style>

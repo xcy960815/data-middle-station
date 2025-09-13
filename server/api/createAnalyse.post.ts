@@ -5,14 +5,14 @@ const analyseService = new AnalyseService()
 /**
  * @Desc 创建或者更新图表
  * @param event
- * @returns {Promise<ApiResponse<number>>}
+ * @returns {Promise<ApiResponseI<boolean>>}
  */
-export default defineEventHandler<Promise<ApiResponse<boolean>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
   try {
     const analyseParams = await readBody<AnalyseDto.AnalyseOption>(event)
     const analyse = await analyseService.createAnalyse(analyseParams)
-    return CustomResponse.success(analyse)
+    return ApiResponse.success(analyse)
   } catch (error: any) {
-    return CustomResponse.error(error.message)
+    return ApiResponse.error(error.message)
   }
 })

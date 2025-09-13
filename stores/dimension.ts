@@ -1,5 +1,4 @@
 import { StoreNames } from './store-names'
-import cloneDeep from 'lodash/cloneDeep'
 /**
  * @desc 维度 store
  */
@@ -9,7 +8,7 @@ export const useDimensionStore = defineStore<
   BaseStore.State<DimensionStore.DimensionState>,
   BaseStore.Getters<DimensionStore.DimensionState, DimensionStore.DimensionGetters>,
   BaseStore.Actions<DimensionStore.DimensionState, DimensionStore.DimensionActions>
->(StoreNames.DIMENSION, {
+>(StoreNames.DIMENSIONS, {
   state: () => ({
     dimensions: []
   }),

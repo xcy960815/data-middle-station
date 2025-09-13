@@ -4,7 +4,7 @@
 </template>
 <script setup lang="ts">
 import { Chart } from '@antv/g2'
-import type { G2ChartInstance } from '~/composables/useChartExport'
+import { renderLineChart, type LineChartConfig } from '~/composables/useChartRender'
 
 defineOptions({
   name: 'LineChart'
@@ -28,29 +28,27 @@ const props = defineProps({
     default: () => []
   }
 })
-const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
-/**
- * 初始化图表实例
- */
-const chartInstance = ref<Chart | null>(null)
+const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
 const chartConfigStore = useChartConfigStore()
 
 /**
  * 默认配置
  */
-const defaultLineConfig = {
+const defaultLineConfig: LineChartConfig = {
   showPoint: false,
   showLabel: false,
   smooth: false,
   autoDualAxis: false,
   horizontalBar: false
 }
+
 /**
  * 属性配置
  */
 const lineChartConfig = computed(() => chartConfigStore.privateChartConfig?.line ?? defaultLineConfig)
+
 /**
  * 监听配置变化
  */
@@ -80,122 +78,33 @@ watch(
 
 const initChart = () => {
   emits('renderChartStart')
-
   // 如果没有数据，不渲染图表
   if (!props.data || props.data.length === 0) {
     emits('renderChartEnd')
     return
   }
 
-  // 已存在则销毁，避免重复渲染叠加
-  if (chartInstance.value) {
-    chartInstance.value.destroy()
-    chartInstance.value = null
-  }
-
-  // 维度与度量：yAxisFields 最后一个为 X 轴，其余为度量
-  const xFieldName = props.yAxisFields[props.yAxisFields.length - 1].columnName
-  const measureFields = props.yAxisFields
-    .slice(0, props.yAxisFields.length - 1)
-    .map((item) => item.columnName) as string[]
-
-  // 可选分组（用于单度量或双层分组）
-  const groupFieldName = props.xAxisFields[0].columnName
-  const useFold = measureFields.length > 1
-
   // 初始化图表实例
-  const chart = new Chart({
+  const lineChart = new Chart({
     container: 'line-container',
     theme: 'classic',
     autoFit: true
   })
-  chartInstance.value = chart
 
-  // 配置图表标题
-  chart.title({
-    title: props.title
-  })
+  // 使用共享的渲染逻辑
+  renderLineChart(
+    lineChart,
+    {
+      title: props.title,
+      data: props.data,
+      xAxisFields: props.xAxisFields,
+      yAxisFields: props.yAxisFields
+    },
+    lineChartConfig.value
+  )
 
-  // 设置公共数据和编码
-  chart
-    .data({
-      type: 'inline',
-      value: props.data,
-      transform: useFold ? [{ type: 'fold', fields: measureFields, key: 'key', value: 'value' }] : []
-    })
-    .encode('x', xFieldName)
-    .encode('y', (row: ChartDataVo.ChartData) => {
-      if (useFold) return row['value']
-      return row[measureFields[0]]
-    })
-    .scale('y', { nice: true })
+  lineChart.render()
 
-  // 轴标题（优先显示中文别名）
-  const xFieldOption = props.yAxisFields[props.yAxisFields.length - 1]
-  const xAxisTitle = xFieldOption.displayName || xFieldOption.columnComment || xFieldOption.columnName
-
-  let yAxisTitle = ''
-  if (!useFold) {
-    const yFieldOption = props.yAxisFields.find((item) => item.columnName === measureFields[0])
-    yAxisTitle = yFieldOption?.displayName || yFieldOption?.columnComment || yFieldOption?.columnName || ''
-  }
-  const yAxisOptions: { title: string; labelFormatter: string } = { title: yAxisTitle, labelFormatter: '~s' }
-  chart.axis('x', { title: xAxisTitle })
-  chart.axis('y', yAxisOptions)
-
-  // 颜色与分组编码
-  if (useFold && groupFieldName) {
-    const seriesEncoder = (row: ChartDataVo.ChartData) => `${String(row[groupFieldName])}-${String(row['key'])}`
-    chart.encode('color', seriesEncoder).encode('series', seriesEncoder)
-  } else if (useFold) {
-    chart.encode('color', 'key').encode('series', 'key')
-  } else if (groupFieldName) {
-    chart.encode('color', groupFieldName).encode('series', groupFieldName)
-  }
-
-  // 创建线条
-  const lineChart = chart.line().style('strokeWidth', 2)
-
-  // 是否画圆点
-  if (lineChartConfig.value.showPoint) {
-    chart.point().tooltip(false)
-  }
-
-  /**
-   * 是否平滑展示
-   */
-  if (lineChartConfig.value.smooth) {
-    lineChart.encode('shape', 'smooth')
-  }
-
-  /**
-   * 是否显示说明文字
-   */
-  if (lineChartConfig.value.showLabel) {
-    lineChart.label({
-      text: useFold ? 'value' : measureFields[0],
-      position: 'top',
-      dy: -10,
-      style: {
-        textAlign: 'center',
-        fontSize: 12,
-        fill: '#666',
-        stroke: '#fff',
-        strokeWidth: 2,
-        strokeOpacity: 0.8
-      },
-      transform: [{ type: 'overlapDodgeY' }]
-    })
-  }
-
-  /**
-   * 是否开启横向滚动
-   */
-  if (lineChartConfig.value.horizontalBar) {
-    lineChart.slider('x', true)
-  }
-
-  chart.render()
   emits('renderChartEnd')
 }
 onMounted(() => {
@@ -228,11 +137,5 @@ watch(
     deep: true
   }
 )
-
-// 图表导出功能
-const { getChartExpose } = useChartExport(chartInstance as Ref<G2ChartInstance>)
-
-// 暴露图表实例和导出方法给父组件
-defineExpose(getChartExpose())
 </script>
 <style lang="scss"></style>

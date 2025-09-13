@@ -10,7 +10,7 @@ export const useOrderStore = defineStore<
   BaseStore.State<OrderStore.OrderState>,
   BaseStore.Getters<OrderStore.OrderState, OrderStore.OrderGetters>,
   BaseStore.Actions<OrderStore.OrderState, OrderStore.OrderActions>
->(StoreNames.ORDER, {
+>(StoreNames.ORDERS, {
   state: () => ({
     orders: []
   }),
