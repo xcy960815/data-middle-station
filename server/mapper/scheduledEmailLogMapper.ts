@@ -31,7 +31,7 @@ const DATA_SOURCE_NAME = 'data_middle_station'
 /**
  * @desc 执行日志选项映射
  */
-export class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ExecutionLogOption, IColumnTarget {
+class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLogOptions, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -78,11 +78,13 @@ export class ScheduledEmailLogMapper extends BaseMapper {
 
   /**
    * @desc 创建执行日志
-   * @param {ScheduledEmailLogDao.ExecutionLogOption} log  执行日志选项
+   * @param {ScheduledEmailLogDao.CreateScheduledEmailLogOptions} log  执行日志选项
    * @returns {Promise<number>} 日志ID
    */
-  public async createScheduledEmailLog(log: ScheduledEmailLogDao.ExecutionLogOption): Promise<number> {
-    const { keys, values } = convertToSqlProperties(log)
+  public async createScheduledEmailLog(
+    scheduledEmailLogOptions: ScheduledEmailLogDao.CreateScheduledEmailLogOptions
+  ): Promise<number> {
+    const { keys, values } = convertToSqlProperties(scheduledEmailLogOptions)
     // 只使用数据库表中存在的字段
     const validKeys = keys.filter((key) => SCHEDULED_EMAIL_LOG_BASE_FIELDS.includes(key))
     const validValues = validKeys.map((key) => values[keys.indexOf(key)])
@@ -94,16 +96,18 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   /**
    * @desc 根据ID获取执行日志
    * @param {number} id  日志ID
-   * @returns {Promise<ScheduledEmailLogDao.ExecutionLogOption | null>} 执行日志
+   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogOptions | null>} 执行日志
    */
   @Mapping(ScheduledEmailLogMapping)
-  public async getScheduledEmailLogById(id: number): Promise<ScheduledEmailLogDao.ExecutionLogOption | null> {
+  public async getScheduledEmailLogById<
+    T extends ScheduledEmailLogDao.ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
+  >(id: number): Promise<T | null> {
     const sql = `
       SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_LOG_BASE_FIELDS)}
       FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME}
       WHERE id = ?
     `
-    const result = await this.exe<ScheduledEmailLogDao.ExecutionLogOption[]>(sql, [id])
+    const result = await this.exe<T[]>(sql, [id])
     return result?.[0] || null
   }
 
@@ -115,9 +119,9 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   @Mapping(ScheduledEmailLogMapping)
   public async getScheduledEmailLogList(
     query: ScheduledEmailLogDao.LogListQuery
-  ): Promise<ScheduledEmailLogDao.ExecutionLogOption[]> {
+  ): Promise<ScheduledEmailLogDao.ScheduledEmailLogOptions[]> {
     const whereConditions: string[] = []
-    const whereValues: any[] = []
+    const whereValues: (string | number | ScheduledEmailLogDao.Status)[] = []
 
     // 构建查询条件
     if (query.taskId) {
@@ -153,7 +157,7 @@ export class ScheduledEmailLogMapper extends BaseMapper {
       LIMIT ? OFFSET ?
     `
 
-    return this.exe<ScheduledEmailLogDao.ExecutionLogOption[]>(sql, [...whereValues, limit, offset])
+    return this.exe<ScheduledEmailLogDao.ScheduledEmailLogOptions[]>(sql, [...whereValues, limit, offset])
   }
 
   /**
@@ -163,7 +167,7 @@ export class ScheduledEmailLogMapper extends BaseMapper {
    */
   public async getScheduledEmailLogCount(query: ScheduledEmailLogDao.LogListQuery): Promise<number> {
     const whereConditions: string[] = []
-    const whereValues: any[] = []
+    const whereValues: (string | number | ScheduledEmailLogDao.Status)[] = []
 
     // 构建查询条件
     if (query.taskId) {
@@ -201,10 +205,12 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   /**
    * @desc 根据任务ID获取最新的执行日志
    * @param {number} taskId  任务ID
-   * @returns {Promise<ScheduledEmailLogDao.ExecutionLogOption | null>} 最新执行日志
+   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogOptions | null>} 最新执行日志
    */
   @Mapping(ScheduledEmailLogMapping)
-  public async getLatestLogByTaskId(taskId: number): Promise<ScheduledEmailLogDao.ExecutionLogOption | null> {
+  public async getLatestLogByTaskId<
+    T extends ScheduledEmailLogDao.ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
+  >(taskId: number): Promise<T | null> {
     const sql = `
       SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_LOG_BASE_FIELDS)}
       FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME}
@@ -212,7 +218,7 @@ export class ScheduledEmailLogMapper extends BaseMapper {
       ORDER BY execution_time DESC
       LIMIT 1
     `
-    const result = await this.exe<ScheduledEmailLogDao.ExecutionLogOption[]>(sql, [taskId])
+    const result = await this.exe<T[]>(sql, [taskId])
     return result?.[0] || null
   }
 
@@ -225,42 +231,6 @@ export class ScheduledEmailLogMapper extends BaseMapper {
     const sql = `DELETE FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME} WHERE task_id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [taskId])
     return result.affectedRows > 0
-  }
-
-  /**
-   * @desc 获取日志统计信息
-   * @param {number} taskId  任务ID(可选)
-   * @returns {Promise<ScheduledEmailLogDao.LogStatistics>} 统计信息
-   */
-  public async getLogStatistics(taskId?: number): Promise<ScheduledEmailLogDao.LogStatistics> {
-    const whereClause = taskId ? 'WHERE task_id = ?' : ''
-    const params = taskId ? [taskId] : []
-
-    const sql = `
-      SELECT
-        COUNT(*) as total_logs,
-        SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success_count,
-        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_count,
-        SUM(CASE WHEN DATE(execution_time) = CURDATE() THEN 1 ELSE 0 END) as today_count,
-        SUM(CASE WHEN YEARWEEK(execution_time) = YEARWEEK(CURDATE()) THEN 1 ELSE 0 END) as this_week_count,
-        SUM(CASE WHEN YEAR(execution_time) = YEAR(CURDATE()) AND MONTH(execution_time) = MONTH(CURDATE()) THEN 1 ELSE 0 END) as this_month_count,
-        COALESCE(AVG(execution_duration), 0) as avg_duration
-      FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME}
-      ${whereClause}
-    `
-
-    const result = await this.exe<any[]>(sql, params)
-    const stats = result[0]
-
-    return {
-      totalLogs: stats.total_logs || 0,
-      successCount: stats.success_count || 0,
-      failedCount: stats.failed_count || 0,
-      todayCount: stats.today_count || 0,
-      thisWeekCount: stats.this_week_count || 0,
-      thisMonthCount: stats.this_month_count || 0,
-      avgDuration: Math.round(stats.avg_duration || 0)
-    }
   }
 
   /**
