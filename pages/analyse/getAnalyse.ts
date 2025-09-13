@@ -3,11 +3,11 @@
  */
 export const getAnalyseHandler = () => {
   const analyseStore = useAnalyseStore()
-  const columnStore = useColumnStore()
-  const dimensionStore = useDimensionStore()
-  const filterStore = useFilterStore()
-  const groupStore = useGroupStore()
-  const orderStore = useOrderStore()
+  const columnStore = useColumnsStore()
+  const dimensionStore = useDimensionsStore()
+  const filterStore = useFiltersStore()
+  const groupStore = useGroupsStore()
+  const orderStore = useOrdersStore()
   /**
    * @desc 获取图表配置
    */
