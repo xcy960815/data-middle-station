@@ -87,11 +87,11 @@
 /**
  * @desc 维度store
  */
-const dimensionStore = useDimensionStore()
+const dimensionStore = useDimensionsStore()
 /**
  * @desc 分组store
  */
-const groupStore = useGroupStore()
+const groupStore = useGroupsStore()
 
 // /**
 //  * @desc 条件符号映射
