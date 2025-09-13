@@ -5,7 +5,7 @@ declare namespace ColumnStore {
   /**
    * @desc 列key
    */
-  type ColumnKey = 'column'
+  type ColumnKey = 'columns'
 
   /**
    * @desc 列选项
@@ -15,7 +15,7 @@ declare namespace ColumnStore {
   /**
    * @desc 数据源选项
    */
-  type DataSourceOption = DatabaseVo.TableOption
+  type DataSourceOption = DatabaseVo.TableOptions
 
   /**
    * @desc 列状态

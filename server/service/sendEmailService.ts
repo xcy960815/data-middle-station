@@ -62,22 +62,25 @@ export class SendEmailService {
 
   /**
    * @desc 发送邮件
-   * @param options {SendEmailDto.SendEmailOptions}
-   * @returns {Promise<string>} messageId
+   * @param options {SendEmailDto.SendChartEmailOptions}
+   * @returns {Promise<SendEmailVo.SendEmailOptions>} messageId
    */
-  public async sendMail(options: SendEmailDto.SendEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
+  public async sendMail(options: SendEmailDto.SendChartEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
     if (!this.transporter) {
       this.createTransporter()
     }
     const result = await this.transporter!.sendMail({
       from: this.smtpFrom || this.smtpUser!,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
-      cc: options.cc,
-      bcc: options.bcc,
-      attachments: options.attachments
+      to: options.emailConfig.to,
+      subject: options.emailConfig.subject,
+      html: options.emailConfig.additionalContent,
+      text: options.emailConfig.additionalContent,
+      attachments: [
+        {
+          filename: options.analyseOptions.filename,
+          contentType: 'image/png'
+        }
+      ]
     })
 
     logger.info(`邮件已发送，messageId=${result.messageId}`)

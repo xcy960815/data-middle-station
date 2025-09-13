@@ -12,11 +12,11 @@ const analyseService = new AnalyseService()
  * @apiVersion 1.0.0
  * @apiSampleRequest http://localhost:3000/api/getAnalyses
  */
-export default defineEventHandler<Promise<ApiResponse<Array<AnalyseVo.AnalyseOption>>>>(async () => {
+export default defineEventHandler<Promise<ApiResponseI<Array<AnalyseVo.AnalyseOption>>>>(async () => {
   try {
     const analyses = await analyseService.getAnalyses()
-    return CustomResponse.success(analyses)
+    return ApiResponse.success(analyses)
   } catch (e: any) {
-    return CustomResponse.error(e.message)
+    return ApiResponse.error(e.message)
   }
 })

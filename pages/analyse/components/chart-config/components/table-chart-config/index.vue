@@ -140,7 +140,7 @@
         </span>
       </template>
       <el-input
-        v-model="tableChartConfig.headerHeight"
+        v-model.number="tableChartConfig.headerHeight"
         placeholder="表头高度"
         @change="handleUpdateTableConfig"
       ></el-input>
@@ -192,7 +192,7 @@
         </span>
       </template>
       <el-input
-        v-model="tableChartConfig.headerFontSize"
+        v-model.number="tableChartConfig.headerFontSize"
         placeholder="表头字体大小"
         @change="handleUpdateTableConfig"
       ></el-input>
@@ -261,7 +261,7 @@
         </span>
       </template>
       <el-input
-        v-model="tableChartConfig.bodyRowHeight"
+        v-model.number="tableChartConfig.bodyRowHeight"
         placeholder="行高"
         @change="handleUpdateTableConfig"
       ></el-input>
@@ -313,7 +313,7 @@
         </span>
       </template>
       <el-input
-        v-model="tableChartConfig.bodyFontSize"
+        v-model.number="tableChartConfig.bodyFontSize"
         placeholder="表格字体大小"
         @blur="handleUpdateTableConfig"
       ></el-input>
@@ -450,7 +450,7 @@
         </span>
       </template>
       <el-input
-        v-model="tableChartConfig.summaryHeight"
+        v-model.number="tableChartConfig.summaryHeight"
         placeholder="汇总行高度"
         @blur="handleUpdateTableConfig"
       ></el-input>
@@ -502,7 +502,7 @@
         </span>
       </template>
       <el-input
-        v-model="tableChartConfig.summaryFontSize"
+        v-model.number="tableChartConfig.summaryFontSize"
         placeholder="汇总行字体大小"
         @blur="handleUpdateTableConfig"
       ></el-input>
@@ -683,7 +683,7 @@ const chartsConfigStore = useChartConfigStore()
 const tableChartConfig = reactive<ChartConfigStore.TableChartConfig>({ ...defaultTableChartConfig })
 
 onMounted(() => {
-  if (chartsConfigStore.privateChartConfig.table) {
+  if (chartsConfigStore.privateChartConfig?.table) {
     Object.assign(tableChartConfig, chartsConfigStore.privateChartConfig.table)
   }
 })

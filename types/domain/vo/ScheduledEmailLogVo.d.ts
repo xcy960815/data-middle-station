@@ -1,12 +1,11 @@
 /**
- * @desc 定时邮件日志数据访问层类型定义
+ * @desc 定时邮件日志数据传输对象类型定义
  */
-declare namespace ScheduledEmailLogDao {
-  type Status = 'success' | 'failed'
+declare namespace ScheduledEmailLogVo {
   /**
-   * @desc 执行日志选项
+   * @desc 执行日志
    */
-  type ScheduledEmailLogOptions = {
+  interface ExecutionLog {
     /**
      * 日志ID
      */
@@ -22,7 +21,7 @@ declare namespace ScheduledEmailLogDao {
     /**
      * 执行状态
      */
-    status: Status
+    status: 'success' | 'failed'
     /**
      * 消息
      */
@@ -50,14 +49,43 @@ declare namespace ScheduledEmailLogDao {
   }
 
   /**
-   * @desc 创建日志参数
+   * @desc 创建日志请求
    */
-  type CreateScheduledEmailLogOptions = Omit<ScheduledEmailLogOptions, 'id'>
+  interface CreateLogRequest {
+    /**
+     * 任务ID
+     */
+    taskId: number
+    /**
+     * 执行时间
+     */
+    executionTime: string
+    /**
+     * 执行状态
+     */
+    status: 'success' | 'failed'
+    /**
+     * 消息
+     */
+    message?: string
+    /**
+     * 错误详情
+     */
+    errorDetails?: string
+    /**
+     * 邮件消息ID
+     */
+    emailMessageId?: string
+    /**
+     * 执行耗时(毫秒)
+     */
+    executionDuration?: number
+  }
 
   /**
-   * @desc 日志查询参数
+   * @desc 日志查询请求
    */
-  type LogListQuery = {
+  interface LogListQuery {
     /**
      * 任务ID
      */
@@ -65,7 +93,7 @@ declare namespace ScheduledEmailLogDao {
     /**
      * 执行状态
      */
-    status?: Status
+    status?: 'success' | 'failed'
     /**
      * 开始时间
      */
@@ -87,7 +115,7 @@ declare namespace ScheduledEmailLogDao {
   /**
    * @desc 日志统计信息
    */
-  type LogStatistics = {
+  interface LogStatistics {
     /**
      * 总日志数
      */
@@ -116,5 +144,27 @@ declare namespace ScheduledEmailLogDao {
      * 平均执行时长(毫秒)
      */
     avgDuration: number
+  }
+
+  /**
+   * @desc 日志列表响应
+   */
+  interface LogListResponse {
+    /**
+     * 日志列表
+     */
+    logs: ExecutionLog[]
+    /**
+     * 总数
+     */
+    total: number
+    /**
+     * 分页信息
+     */
+    pagination: {
+      limit: number
+      offset: number
+      hasMore: boolean
+    }
   }
 }

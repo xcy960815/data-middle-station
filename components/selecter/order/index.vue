@@ -54,7 +54,7 @@ const props = defineProps({
   },
   // 通用参数
   cast: {
-    type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
+    type: String as PropType<'dimensions' | 'groups' | 'orders' | 'filters'>,
     default: ''
   },
   orderType: {

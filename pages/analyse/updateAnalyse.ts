@@ -21,7 +21,7 @@ export const updateAnalyseHandler = () => {
     const order = orderStore.getOrders
     const filter = filterStore.getFilters
     const commonChartConfig = chartConfigStore.getCommonChartConfig
-    const id = analyseStore.getChartId
+    const id = analyseStore.getAnalyseId
     const analyseName = analyseStore.getAnalyseName
     const analyseDesc = analyseStore.getAnalyseDesc
     const chartType = analyseStore.getChartType

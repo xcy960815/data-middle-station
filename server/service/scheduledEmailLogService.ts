@@ -21,8 +21,7 @@ export class ScheduledEmailLogService extends BaseService {
     try {
       const { createdBy, createTime } = await super.getDefaultInfo()
 
-      const logData: ScheduledEmailLogDao.ExecutionLogOption = {
-        id: 0, // 临时值，数据库会自动生成
+      const logData: ScheduledEmailLogDao.CreateScheduledEmailLogOptions = {
         taskId: logRequest.taskId,
         executionTime: logRequest.executionTime,
         status: logRequest.status,
@@ -50,7 +49,7 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 根据ID获取执行日志
    */
-  async getExecutionLogById(id: number): Promise<ScheduledEmailLogDto.ExecutionLog | null> {
+  async getExecutionLogById(id: number): Promise<ScheduledEmailLogDao.ScheduledEmailLogOptions | null> {
     try {
       const log = await this.scheduledEmailLogMapper.getScheduledEmailLogById(id)
       return log ? this.convertDaoToDto(log) : null
@@ -63,7 +62,9 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 获取任务执行日志列表
    */
-  async getExecutionLogList(query: ScheduledEmailLogDto.LogListQuery): Promise<ScheduledEmailLogDto.LogListResponse> {
+  async getExecutionLogList<
+    T extends ScheduledEmailLogDao.ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
+  >(query: ScheduledEmailLogDto.LogListQuery): Promise<ScheduledEmailLogDto.LogListResponse> {
     try {
       const limit = query.limit || 50
       const offset = query.offset || 0
@@ -75,7 +76,7 @@ export class ScheduledEmailLogService extends BaseService {
       ])
 
       return {
-        logs: logs.map((log) => this.convertDaoToDto(log)),
+        logs: logs.map((log) => this.convertDaoToDto(log as T)),
         total,
         pagination: {
           limit,
@@ -116,19 +117,6 @@ export class ScheduledEmailLogService extends BaseService {
       return success
     } catch (error) {
       logger.error(`删除任务日志失败: 任务ID ${taskId}, ${error}`)
-      throw error
-    }
-  }
-
-  /**
-   * 获取日志统计信息
-   */
-  async getLogStatistics(taskId?: number): Promise<ScheduledEmailLogDto.LogStatistics> {
-    try {
-      const stats = await this.scheduledEmailLogMapper.getLogStatistics(taskId)
-      return stats
-    } catch (error) {
-      logger.error(`获取日志统计信息失败: 任务ID ${taskId || 'ALL'}, ${error}`)
       throw error
     }
   }
@@ -207,40 +195,9 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 获取任务的执行历史摘要
-   */
-  async getTaskExecutionSummary(taskId: number): Promise<{
-    latestLog: ScheduledEmailLogDto.ExecutionLog | null
-    statistics: ScheduledEmailLogDto.LogStatistics
-    recentLogs: ScheduledEmailLogDto.ExecutionLog[]
-  }> {
-    try {
-      // 并行获取数据
-      const [latestLog, statistics, recentLogsResult] = await Promise.all([
-        this.getLatestExecutionLog(taskId),
-        this.getLogStatistics(taskId),
-        this.getExecutionLogList({
-          taskId,
-          limit: 10,
-          offset: 0
-        })
-      ])
-
-      return {
-        latestLog,
-        statistics,
-        recentLogs: recentLogsResult.logs
-      }
-    } catch (error) {
-      logger.error(`获取任务执行摘要失败: 任务ID ${taskId}, ${error}`)
-      throw error
-    }
-  }
-
-  /**
    * 转换DAO对象为DTO对象
    */
-  private convertDaoToDto(dao: ScheduledEmailLogDao.ExecutionLogOption): ScheduledEmailLogDto.ExecutionLog {
+  private convertDaoToDto(dao: ScheduledEmailLogDao.ScheduledEmailLogOptions): ScheduledEmailLogDto.ExecutionLog {
     return {
       id: dao.id,
       taskId: dao.taskId,

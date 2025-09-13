@@ -417,23 +417,23 @@ declare namespace ChartConfigDao {
     /**
      * 列配置
      */
-    column: ColumnOption[]
+    columns: ColumnOption[]
     /**
      * 维度配置
      */
-    dimension: DimensionOption[]
+    dimensions: DimensionOption[]
     /**
      * 过滤配置
      */
-    filter: FilterOption[]
+    filters: FilterOption[]
     /**
      * 分组配置
      */
-    group: GroupOption[]
+    groups: GroupOption[]
     /**
      * 排序配置
      */
-    order: OrderOption[]
+    orders: OrderOption[]
     /**
      * 公共图表配置
      */
