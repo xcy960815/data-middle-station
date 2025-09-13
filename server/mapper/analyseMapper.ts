@@ -1,5 +1,5 @@
 import type { ResultSetHeader } from 'mysql2'
-import { Column, Mapping, BaseMapper, Row, entityColumnsMap, mapToTarget, type IColumnTarget } from './baseMapper'
+import { BaseMapper, Column, Mapping, Row, entityColumnsMap, mapToTarget, type IColumnTarget } from './baseMapper'
 
 // 基础字段字典
 export const ANALYSE_BASE_FIELDS = [
@@ -92,10 +92,10 @@ export class AnalyseMapper extends BaseMapper {
 
   /**
    * @desc 新建分析
-   * @param analyseOption {AnalyseDao.AnalyseOption} 图表
+   * @param analyseOption {AnalyseDto.CreateAnalyseRequest} 图表
    * @returns {Promise<number>}
    */
-  public async createAnalyse(analyseOption: AnalyseDao.AnalyseOption): Promise<boolean> {
+  public async createAnalyse(analyseOption: AnalyseDto.CreateAnalyseRequest): Promise<boolean> {
     const { keys, values } = convertToSqlProperties(analyseOption)
     const sql = `INSERT INTO ${ANALYSE_TABLE_NAME} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`
     const result = await this.exe<ResultSetHeader>(sql, values)
@@ -104,10 +104,10 @@ export class AnalyseMapper extends BaseMapper {
 
   /**
    * @desc 更新分析
-   * @param AnalyseOptionDto {AnalyseDao.AnalyseOption} 图表
+   * @param AnalyseOptionDto {AnalyseDto.UpdateAnalyseRequest} 图表
    * @returns {Promise<void>}
    */
-  public async updateAnalyse(analyseOptionDao: AnalyseDao.AnalyseOption): Promise<boolean> {
+  public async updateAnalyse(analyseOptionDao: AnalyseDto.UpdateAnalyseRequest): Promise<boolean> {
     const { viewCount, createTime, createdBy, ...analyseOption } = analyseOptionDao
     const { keys: analyseOptionKeys, values: analyseOptionValues } = convertToSqlProperties(analyseOption)
     const analyseOptionSetClause = analyseOptionKeys.map((key) => `${key} = ?`).join(', ')
@@ -134,7 +134,7 @@ export class AnalyseMapper extends BaseMapper {
   @Mapping(AnalyzeMapping)
   public async getAnalyse<T extends AnalyseDao.AnalyseOption>(id: number): Promise<T> {
     await this.updateViewCount(id)
-    const sql = `select 
+    const sql = `select
       ${ANALYSE_BASE_FIELDS.join(',\n    ')}
     from ${ANALYSE_TABLE_NAME} where id = ? and is_deleted = 0`
     const result = await this.exe<Array<T>>(sql, [id])
@@ -143,14 +143,10 @@ export class AnalyseMapper extends BaseMapper {
 
   /**
    * @desc 删除图表(逻辑删除)
-   * @param analyseOption {
-   *  id: number;
-   *  updatedBy: string;
-   *  updateTime: string;
-   * } 删除参数
+   * @param {AnalyseDto.DeleteAnalyseRequest} analyseOption
    * @returns {Promise<number>}
    */
-  public async deleteAnalyse(analyseOption: { id: number; updatedBy: string; updateTime: string }): Promise<boolean> {
+  public async deleteAnalyse(analyseOption: AnalyseDto.DeleteAnalyseRequest): Promise<boolean> {
     const { id, updatedBy, updateTime } = analyseOption
     const sql = `update ${ANALYSE_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [updatedBy, updateTime, id])
@@ -164,9 +160,9 @@ export class AnalyseMapper extends BaseMapper {
   @Mapping(AnalyzeMapping)
   public async getAnalyses<T extends AnalyseDao.AnalyseOption = AnalyseDao.AnalyseOption>(): Promise<Array<T>> {
     const sql = `
-    select 
+    select
       ${ANALYSE_BASE_FIELDS.join(',\n    ')}
-    from ${ANALYSE_TABLE_NAME} 
+    from ${ANALYSE_TABLE_NAME}
     where is_deleted = 0`
     return await this.exe<Array<T>>(sql)
   }

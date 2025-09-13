@@ -6,7 +6,7 @@ declare namespace ChartDataDto {
   /**
    * @desc 获取图表数据请求参数
    */
-  type GetChartDataRequestParams = {
+  type ChartDataRequest = {
     filters: FilterStore.FilterOption[]
     orders: OrderStore.OrderOption[]
     groups: GroupStore.GroupOption[]

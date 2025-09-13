@@ -3,13 +3,6 @@
  */
 declare namespace AnalyseDao {
   /**
-   * 分析数据
-   */
-  type ChartData = Array<{
-    [key: string]: string | number
-  }>
-
-  /**
    * 分析配置
    */
   type AnalyseOption = {

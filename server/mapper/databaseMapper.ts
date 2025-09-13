@@ -1,6 +1,4 @@
-import { Column, Mapping, BaseMapper, Row, IColumnTarget, mapToTarget, entityColumnsMap } from './baseMapper'
-
-import dayjs from 'dayjs'
+import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
 
 /**
  * @desc 表列表映射
@@ -104,9 +102,9 @@ export class DatabaseMapper extends BaseMapper {
    */
   @Mapping(TableOptionMapping)
   public async queryTable<T extends DatabaseDao.TableOption = DatabaseDao.TableOption>(
-    tableName: string
+    queryTableRequest: DatabaseDto.QueryTableRequest
   ): Promise<Array<T>> {
-    const sql = `SELECT 
+    const sql = `SELECT
         table_name,
         table_type,
         table_comment,
@@ -119,30 +117,32 @@ export class DatabaseMapper extends BaseMapper {
         auto_increment,
         engine,
         table_collation
-      FROM information_schema.tables 
-      WHERE 
-        table_type = 'BASE TABLE' 
+      FROM information_schema.tables
+      WHERE
+        table_type = 'BASE TABLE'
         AND table_schema='${tableSchema}'
-        ${!!tableName ? `AND table_name like '%${tableName}%'` : ''}`
+        ${!!queryTableRequest.tableName ? `AND table_name like '%${queryTableRequest.tableName}%'` : ''}`
     const result = await this.exe<Array<T>>(sql)
     return result
   }
 
   /**
    * @desc 查询表的所有列
-   * @param tableName {string} 表名
+   * @param  tableColumnRequest  {DatabaseDto.TableColumnRequest} 查询表请求参数
    * @returns {Promise<Array<TableInfoDao.TableColumnOption>>}
    */
   @Mapping(TableColumnMapping)
-  public async queryTableColumn<T extends DatabaseDao.TableColumnOption>(tableName: string): Promise<Array<T>> {
-    const sql = `SELECT 
-        column_name, 
+  public async queryTableColumn<T extends DatabaseDao.TableColumnOption>(
+    tableColumnRequest: DatabaseDto.TableColumnRequest
+  ): Promise<Array<T>> {
+    const sql = `SELECT
+        column_name,
         column_type,
-        column_comment 
-      FROM 
-        information_schema.columns  
-      WHERE 
-        table_name = '${tableName}' 
+        column_comment
+      FROM
+        information_schema.columns
+      WHERE
+        table_name = '${toLine(tableColumnRequest.tableName)}'
         AND table_schema = '${tableSchema}';`
     const result = await this.exe<Array<T>>(sql)
     return result
