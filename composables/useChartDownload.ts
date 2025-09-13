@@ -5,10 +5,10 @@ import * as XLSX from 'xlsx'
  * 图表下载功能的 composable
  */
 export const useChartDownload = () => {
-  const dimensionStore = useDimensionStore()
-  const groupStore = useGroupStore()
+  const dimensionStore = useDimensionsStore()
+  const groupStore = useGroupsStore()
   const analyseStore = useAnalyseStore()
-  const columnStore = useColumnStore()
+  const columnStore = useColumnsStore()
 
   /**
    * 处理下载按钮点击事件
