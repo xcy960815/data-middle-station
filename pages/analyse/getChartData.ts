@@ -11,11 +11,11 @@ let sharedQueryChartDataDebounce: (() => Promise<void>) | null = null
  */
 export const getChartDataHandler = () => {
   const analyseStore = useAnalyseStore()
-  const dimensionStore = useDimensionStore()
-  const groupStore = useGroupStore()
-  const columnStore = useColumnStore()
-  const filterStore = useFilterStore()
-  const orderStore = useOrderStore()
+  const dimensionStore = useDimensionsStore()
+  const groupStore = useGroupsStore()
+  const columnStore = useColumnsStore()
+  const filterStore = useFiltersStore()
+  const orderStore = useOrdersStore()
   const chartConfigStore = useChartConfigStore()
 
   /**

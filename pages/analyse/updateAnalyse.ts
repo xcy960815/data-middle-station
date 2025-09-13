@@ -4,11 +4,11 @@ import { ElMessage } from 'element-plus'
 export const updateAnalyseHandler = () => {
   const chartConfigStore = useChartConfigStore()
   const analyseStore = useAnalyseStore()
-  const columnStore = useColumnStore()
-  const dimensionStore = useDimensionStore()
-  const groupStore = useGroupStore()
-  const orderStore = useOrderStore()
-  const filterStore = useFilterStore()
+  const columnStore = useColumnsStore()
+  const dimensionStore = useDimensionsStore()
+  const groupStore = useGroupsStore()
+  const orderStore = useOrdersStore()
+  const filterStore = useFiltersStore()
   /**
    * @desc 点击保存
    */

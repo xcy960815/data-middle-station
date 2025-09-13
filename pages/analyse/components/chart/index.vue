@@ -65,11 +65,11 @@ const analyseStore = useAnalyseStore()
 /**
  * @desc 维度 store
  */
-const dimensionStore = useDimensionStore()
+const dimensionStore = useDimensionsStore()
 /**
  * @desc 分组 store
  */
-const groupStore = useGroupStore()
+const groupStore = useGroupsStore()
 
 /**
  * @desc 图表宽度

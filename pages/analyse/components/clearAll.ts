@@ -3,10 +3,10 @@
  * @returns 清空所有
  */
 export const clearAllHandler = () => {
-  const orderStore = useOrderStore()
-  const filterStore = useFilterStore()
-  const groupStore = useGroupStore()
-  const dimensionStore = useDimensionStore()
+  const orderStore = useOrdersStore()
+  const filterStore = useFiltersStore()
+  const groupStore = useGroupsStore()
+  const dimensionStore = useDimensionsStore()
 
   /**
    * @desc 清空所有
