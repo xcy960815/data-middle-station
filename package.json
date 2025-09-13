@@ -66,7 +66,7 @@
     "vue-eslint-parser": "^10.0.1"
   },
   "dependencies": {
-    "@antv/g2": "^5.3.5",
+    "@antv/g2": "5.3.5",
     "@icon-park/vue-next": "^1.4.2",
     "@pinia/nuxt": "^0.5.1",
     "@popperjs/core": "npm:@sxzz/popperjs-es@^2.11.7",
