@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@antv/g2':
-        specifier: ^5.3.5
-        version: 5.4.0
+        specifier: 5.3.5
+        version: 5.3.5
       '@icon-park/vue-next':
         specifier: ^1.4.2
         version: 1.4.2(vue@3.5.21(typescript@5.9.2))
@@ -245,17 +245,14 @@ packages:
   '@antv/g-web-animations-api@2.1.28':
     resolution: {integrity: sha512-V5g8bO2D1hb8fRMMi5hXL/De+1UDRzW3C5EX07oazR0q71GONASP+sVwniZdt9R1HAmJSN5dvW3SqWeU3EEstQ==}
 
-  '@antv/g2@5.4.0':
-    resolution: {integrity: sha512-aNw4lvi9IdsdoMHZbrAhZbFy9y5Ppv6zyjtgTKHdMl8x4xnoweW/4YwryRZh2/2Z497dnobPcVyPu5Iwoz87Ww==}
+  '@antv/g2@5.3.5':
+    resolution: {integrity: sha512-Q2TPfWTf2fMwe02Uqk4Uvgy/RGXpGQXfSMPHKLkwTUh6WrFImpgzU4mHhUewKVu5ppPGGfvlwIbZcHeBnNb5ug==}
 
   '@antv/g@6.1.28':
     resolution: {integrity: sha512-BwavpbKGR4NEJD3BtVxfBFjCcxy5gsWoUNnBisfG1qfjhGTt7QvUYHFH46+mHJjHMIdYjuFw2T0ZYVtxBddxSg==}
 
   '@antv/scale@0.4.16':
     resolution: {integrity: sha512-5wg/zB5kXHxpTV5OYwJD3ja6R8yTiqIOkjOhmpEJiowkzRlbEC/BOyMvNUq5fqFIHnMCE9woO7+c3zxEQCKPjw==}
-
-  '@antv/scale@0.5.2':
-    resolution: {integrity: sha512-rTHRAwvpHWC5PGZF/mJ2ZuTDqwwvVBDRph0Uu5PV9BXwzV7K8+9lsqGJ+XHVLxe8c6bKog5nlzvV/dcYb0d5Ow==}
 
   '@antv/util@2.0.17':
     resolution: {integrity: sha512-o6I9hi5CIUvLGDhth0RxNSFDRwXeywmt6ExR4+RmVAzIi48ps6HUy+svxOCayvrPBN37uE6TAc2KDofRo0nK9Q==}
@@ -6119,7 +6116,7 @@ snapshots:
       '@babel/runtime': 7.28.4
       tslib: 2.8.1
 
-  '@antv/g2@5.4.0':
+  '@antv/g2@5.3.5':
     dependencies:
       '@antv/component': 2.1.7
       '@antv/coord': 0.4.7
@@ -6128,7 +6125,7 @@ snapshots:
       '@antv/g': 6.1.28
       '@antv/g-canvas': 2.0.48
       '@antv/g-plugin-dragndrop': 2.0.38
-      '@antv/scale': 0.5.2
+      '@antv/scale': 0.4.16
       '@antv/util': 3.3.11
       '@antv/vendor': 1.0.11
       flru: 1.0.2
@@ -6143,12 +6140,6 @@ snapshots:
       '@babel/runtime': 7.28.4
 
   '@antv/scale@0.4.16':
-    dependencies:
-      '@antv/util': 3.3.11
-      color-string: 1.9.1
-      fecha: 4.2.3
-
-  '@antv/scale@0.5.2':
     dependencies:
       '@antv/util': 3.3.11
       color-string: 1.9.1
@@ -6836,7 +6827,7 @@ snapshots:
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
       resolve-from: 5.0.0
-      ts-node: 10.9.2(@types/node@20.19.14)(typescript@5.9.2)
+      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.9.2)
       typescript: 5.9.2
     transitivePeerDependencies:
       - '@swc/core'
@@ -9103,7 +9094,7 @@ snapshots:
     dependencies:
       '@types/node': 20.5.1
       cosmiconfig: 8.3.6(typescript@5.9.2)
-      ts-node: 10.9.2(@types/node@20.19.14)(typescript@5.9.2)
+      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.9.2)
       typescript: 5.9.2
 
   cosmiconfig@8.3.6(typescript@5.9.2):
@@ -11359,7 +11350,7 @@ snapshots:
       yaml: 2.8.1
     optionalDependencies:
       postcss: 8.5.6
-      ts-node: 10.9.2(@types/node@20.19.14)(typescript@5.9.2)
+      ts-node: 10.9.2(@types/node@20.5.1)(typescript@5.9.2)
 
   postcss-merge-longhand@7.0.5(postcss@8.5.6):
     dependencies:
@@ -12264,14 +12255,14 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-node@10.9.2(@types/node@20.19.14)(typescript@5.9.2):
+  ts-node@10.9.2(@types/node@20.5.1)(typescript@5.9.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.19.14
+      '@types/node': 20.5.1
       acorn: 8.15.0
       acorn-walk: 8.3.4
       arg: 4.1.3
