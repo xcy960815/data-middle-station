@@ -11,7 +11,7 @@ declare namespace ChartDataDto {
     orders: OrderStore.OrderOption[]
     groups: GroupStore.GroupOption[]
     dimensions: DimensionStore.DimensionOption[]
-    commonChartConfig: CommonChartConfig
     dataSource: string
+    commonChartConfig?: CommonChartConfig
   }
 }

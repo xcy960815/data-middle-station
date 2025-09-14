@@ -33,7 +33,7 @@ declare namespace SendEmailDto {
     analyseId: number
   }
 
-  interface SendChartEmailOptions {
+  interface SendChartEmailRequest {
     /**
      * 邮件配置
      */

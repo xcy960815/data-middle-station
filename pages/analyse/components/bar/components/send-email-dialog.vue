@@ -528,14 +528,29 @@ const sendEmail = async () => {
     return
   }
   // 构建邮件数据
-  const emailData: SendEmailDto.SendChartEmailOptions = {
-    emailConfig: emailFormData,
+  const emailData: SendEmailDto.SendChartEmailRequest = {
+    emailConfig: {
+      to: emailFormData.to,
+      subject: emailFormData.subject,
+      additionalContent: emailFormData.additionalContent
+    },
     analyseOptions: {
       filename: analyseStore.getAnalyseName,
       chartType: analyseStore.getChartType,
       analyseName: analyseStore.getAnalyseName,
       analyseId: analyseStore.getAnalyseId!
     }
+  }
+  const response = await $fetch('/api/sendEmail', {
+    method: 'POST',
+    body: emailData
+  }).finally(() => {
+    isSending.value = false
+  })
+  if (response.code === 200) {
+    ElMessage.success('邮件发送成功！')
+  } else {
+    ElMessage.error('邮件发送失败！')
   }
 }
 

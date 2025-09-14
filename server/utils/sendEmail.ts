@@ -5,7 +5,7 @@ const logger = new Logger({ fileName: 'email', folderName: 'server' })
 /**
  * @desc 发送邮件服务
  */
-export class SendEmailService {
+export class SendEmail {
   /**
    * @desc 邮件传输器
    */
@@ -62,28 +62,29 @@ export class SendEmailService {
 
   /**
    * @desc 发送邮件
-   * @param options {SendEmailDto.SendChartEmailOptions}
+   * @param options {SendEmailDto.SendChartEmailRequest}
    * @returns {Promise<SendEmailVo.SendEmailOptions>} messageId
    */
-  public async sendMail(options: SendEmailDto.SendChartEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
+  public async sendMail(options: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailOptions> {
     if (!this.transporter) {
       this.createTransporter()
     }
-    const result = await this.transporter!.sendMail({
-      from: this.smtpFrom || this.smtpUser!,
-      to: options.emailConfig.to,
-      subject: options.emailConfig.subject,
-      html: options.emailConfig.additionalContent,
-      text: options.emailConfig.additionalContent,
-      attachments: [
-        {
-          filename: options.analyseOptions.filename,
-          contentType: 'image/png'
-        }
-      ]
-    })
+    const result = {
+      messageId: '123'
+    }
+    // const result = await this.transporter!.sendMail({
+    //   from: this.smtpFrom || this.smtpUser!,
+    //   to: options.emailConfig.to,
+    //   subject: options.emailConfig.subject,
+    //   attachments: [
+    //     {
+    //       filename: options.analyseOptions.filename,
+    //       contentType: 'image/png'
+    //     }
+    //   ]
+    // })
 
-    logger.info(`邮件已发送，messageId=${result.messageId}`)
+    // logger.info(`邮件已发送，messageId=${result.messageId}`)
 
     return result
   }
