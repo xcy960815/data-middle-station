@@ -93,7 +93,7 @@ export class ChartEmailService {
     // -> chart.png
 
     const base64Image = chart.toBuffer()
-
+    console.log('base64Image', base64Image)
     // chartHTML = `
     //   <div style="text-align: center; margin: 20px 0;">
     //     <h2>${analyseName}</h2>
@@ -109,7 +109,7 @@ export class ChartEmailService {
         ${additionalContent ? `<p>${additionalContent}</p>` : ''}
       </div>
     `
-    console.log('chartHTML', chartHTML)
+
     return chartHTML
   }
 }
