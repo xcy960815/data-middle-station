@@ -113,30 +113,26 @@ export class ChartDataService {
 
   public async getChartData(requestParams: ChartDataDto.ChartDataRequest): Promise<Array<ChartDataVo.ChartData>> {
     /**
-     * @desc 获取请求参数
-     */
-    const { filters, orders, groups, dimensions, dataSource, commonChartConfig } = requestParams
-    /**
      * @desc 构建select语句
      */
-    const selectClause = this.buildSelectClause(dimensions, groups)
+    const selectClause = this.buildSelectClause(requestParams.dimensions, requestParams.groups)
     /**
      * @desc 构建where语句
      */
-    const whereClause = this.buildWhereClause(filters)
+    const whereClause = this.buildWhereClause(requestParams.filters)
     /**
      * @desc 构建orderBy语句
      */
-    const orderByClause = this.buildOrderByClause(orders)
+    const orderByClause = this.buildOrderByClause(requestParams.orders)
     /**
      * @desc 构建groupBy语句
      */
-    const groupByClause = this.buildGroupByClause(groups, dimensions)
+    const groupByClause = this.buildGroupByClause(requestParams.groups, requestParams.dimensions)
 
     /**
      * @desc 构建sql语句
      */
-    const sql = `${selectClause} from ${toLine(dataSource)}${whereClause}${groupByClause}${orderByClause} limit ${commonChartConfig.limit}`
+    const sql = `${selectClause} from ${toLine(requestParams.dataSource)}${whereClause}${groupByClause}${orderByClause} limit ${requestParams.commonChartConfig?.limit || 1000}`
 
     /**
      * @desc 获取图表数据

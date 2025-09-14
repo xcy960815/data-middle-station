@@ -1,7 +1,7 @@
 import Joi from 'joi'
-import { SendEmailService } from '../service/sendEmailService'
+import { ChartEmailService } from '../service/chartEmailService'
 
-const sendEmailService = new SendEmailService()
+const chartEmailService = new ChartEmailService()
 
 const logger = new Logger({
   fileName: 'sendEmail',
@@ -9,7 +9,7 @@ const logger = new Logger({
 })
 
 // Joi 验证模式
-const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
+const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
     to: Joi.string().email().required(),
     subject: Joi.string().required(),
@@ -22,23 +22,13 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
     analyseId: Joi.number().required()
   })
 })
-  .custom((value, helpers) => {
-    // 自定义验证：html 和 text 至少提供一个
-    if (!value.emailConfig.additionalContent) {
-      return helpers.error('custom.contentRequired')
-    }
-    return value
-  })
-  .messages({
-    'custom.contentRequired': '邮件内容不能为空，请提供HTML内容或纯文本内容'
-  })
 
 export default defineEventHandler(async (event) => {
   try {
-    const requestBody = await readBody<SendEmailDto.SendChartEmailOptions>(event)
+    const sendChartEmailRequest = await readBody<SendEmailDto.SendChartEmailRequest>(event)
 
     // 使用 Joi 进行数据验证
-    const { error } = sendEmailSchema.validate(requestBody, {
+    const { error } = sendEmailSchema.validate(sendChartEmailRequest, {
       abortEarly: false, // 返回所有验证错误
       stripUnknown: true, // 移除未知字段
       convert: true // 自动类型转换
@@ -50,9 +40,9 @@ export default defineEventHandler(async (event) => {
       return ApiResponse.error(errorMessage)
     }
 
-    const sendEmailResult = await sendEmailService.sendMail(requestBody)
+    const sendEmailResult = await chartEmailService.sendChartEmail(sendChartEmailRequest)
 
-    logger.info(`邮件发送成功: ${requestBody.emailConfig.to}`)
+    logger.info(`邮件发送成功: ${sendChartEmailRequest.emailConfig.to}`)
     return ApiResponse.success(sendEmailResult)
   } catch (error: any) {
     logger.error('发送邮件失败: ' + error.message)
