@@ -114,9 +114,9 @@ export const styleProps = {
   /**
    * 排序激活背景色
    */
-  headerSortActiveBackground: { type: String, default: '#ecf5ff' },
+  sortActiveBackground: { type: String, default: '#ecf5ff' },
   /**
    * 排序箭头颜色
    */
-  sortableColor: { type: String, default: '#409EFF' }
+  sortActiveColor: { type: String, default: '#409EFF' }
 }

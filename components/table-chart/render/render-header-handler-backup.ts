@@ -54,7 +54,7 @@
 //       y: 0,
 //       width: col.width || 0,
 //       height: props.headerHeight,
-//       fill: isSortColumn ? props.headerSortActiveBackground : props.headerBackground,
+//       fill: isSortColumn ? props.sortActiveBackground : props.headerBackground,
 //       stroke: props.borderColor,
 //       strokeWidth: 1,
 //       listening: false,
@@ -190,8 +190,8 @@
 //     centerY: number
 //   ) => {
 //     const foundSort = sortColumns.value.find((s) => s.columnName === col.columnName)
-//     const upColor = foundSort?.order === 'asc' ? props.sortableColor : COLORS.INACTIVE
-//     const downColor = foundSort?.order === 'desc' ? props.sortableColor : COLORS.INACTIVE
+//     const upColor = foundSort?.order === 'asc' ? props.sortActiveColor : COLORS.INACTIVE
+//     const downColor = foundSort?.order === 'desc' ? props.sortActiveColor : COLORS.INACTIVE
 //     const arrowX = x + (col.width || 0) - LAYOUT_CONSTANTS.SORT_ARROW_OFFSET
 
 //     const upTriangle = new Konva.RegularPolygon({
@@ -244,7 +244,7 @@
 //     centerY: number
 //   ) => {
 //     const hasFilter = !!(filterState[col.columnName] && filterState[col.columnName].size > 0)
-//     const filterColor = hasFilter ? props.sortableColor : COLORS.INACTIVE
+//     const filterColor = hasFilter ? props.sortActiveColor : COLORS.INACTIVE
 //     const filterX = x + (col.width || 0) - LAYOUT_CONSTANTS.FILTER_ICON_OFFSET
 //     const iconSize = LAYOUT_CONSTANTS.FILTER_ICON_SIZE
 
