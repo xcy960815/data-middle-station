@@ -126,11 +126,11 @@ export const defaultTableChartConfig: ChartConfigVo.TableChartConfig = {
   /**
    * @desc 表头排序激活背景色
    */
-  headerSortActiveBackground: '#e5e7eb',
+  sortActiveBackground: '#e5e7eb',
   /**
    * @desc 可排序颜色
    */
-  sortableColor: '#6b7280'
+  sortActiveColor: '#6b7280'
 }
 
 /**

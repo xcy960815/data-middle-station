@@ -372,11 +372,11 @@ declare namespace ChartConfigDao {
     /**
      * 表头排序激活背景色
      */
-    headerSortActiveBackground: string
+    sortActiveBackground: string
     /**
      * 可排序颜色
      */
-    sortableColor: string
+    sortActiveColor: string
   }
 
   type PrivateChartConfig = {
