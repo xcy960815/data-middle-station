@@ -53,7 +53,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       x,
       y: 0,
       width: col.width || 0,
-      height: props.headerHeight,
+      height: props.headerRowHeight,
       fill: isSortColumn ? props.sortActiveBackground : props.headerBackground,
       stroke: props.borderColor,
       strokeWidth: 1,
@@ -94,7 +94,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       fill: props.headerTextColor,
       align: col.align || 'left',
       verticalAlign: 'middle',
-      cellHeight: props.headerHeight,
+      cellHeight: props.headerRowHeight,
       useGetTextX: true
     })
     return cellText
@@ -307,7 +307,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       x: x + (col.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
       y: 0,
       width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
-      height: props.headerHeight,
+      height: props.headerRowHeight,
       fill: 'transparent',
       listening: true,
       draggable: false,
@@ -375,7 +375,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       x: stageStartX + x,
       y: 0,
       width: col.width || 0,
-      height: props.headerHeight,
+      height: props.headerRowHeight,
       rowIndex: 0,
       colIndex: colIndex + startColIndex
     })
@@ -384,7 +384,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     const headerText = createHeaderText(col, x)
     headerGroup.add(headerText)
 
-    const centerY = props.headerHeight / 2
+    const centerY = props.headerRowHeight / 2
 
     // 添加排序功能
     if (col.sortable) {

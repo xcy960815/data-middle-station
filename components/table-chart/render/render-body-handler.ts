@@ -39,7 +39,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   const calculateVisibleRows = () => {
     if (!tableVars.stage) return
     const stageHeight = tableVars.stage.height()
-    const bodyHeight = stageHeight - props.headerHeight - summaryRowHeight.value - props.scrollbarSize
+    const bodyHeight = stageHeight - props.headerRowHeight - summaryRowHeight.value - props.scrollbarSize
 
     // 计算可视区域能显示的行数
     tableVars.visibleRowCount = Math.ceil(bodyHeight / props.bodyRowHeight)
@@ -150,7 +150,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const contentHeight = tableData.value.length * props.bodyRowHeight
     // 计算垂直滚动条预留空间
     const verticalScrollbarSpace =
-      contentHeight > stageHeightRaw - props.headerHeight - summaryRowHeight.value ? props.scrollbarSize : 0
+      contentHeight > stageHeightRaw - props.headerRowHeight - summaryRowHeight.value ? props.scrollbarSize : 0
     // 计算内容宽度
     const stageWidth = stageWidthRaw - verticalScrollbarSpace
 
@@ -208,7 +208,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
 
     // 初步估算：不预留滚动条空间
     const visibleContentWidthNoV = stageWidth - leftWidth - rightWidth
-    const contentHeightNoH = stageHeight - props.headerHeight - summaryRowHeight.value
+    const contentHeightNoH = stageHeight - props.headerRowHeight - summaryRowHeight.value
     const prelimMaxX = Math.max(0, totalWidth - leftWidth - rightWidth - visibleContentWidthNoV)
     const prelimMaxY = Math.max(0, contentHeight - contentHeightNoH)
     const verticalScrollbarSpace = prelimMaxY > 0 ? props.scrollbarSize : 0
@@ -218,7 +218,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const maxScrollX = Math.max(0, totalWidth - leftWidth - rightWidth - visibleContentWidth)
     const maxScrollY = Math.max(
       0,
-      contentHeight - (stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarSpace)
+      contentHeight - (stageHeight - props.headerRowHeight - summaryRowHeight.value - horizontalScrollbarSpace)
     )
 
     return { maxScrollX, maxScrollY }
@@ -468,7 +468,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
         // 记录可视区域内主体单元格位置信息（使用舞台坐标）
         positionMapList.push({
           x: stageStartX + x,
-          y: y + props.headerHeight,
+          y: y + props.headerRowHeight,
           width: cellWidth,
           height: cellHeight,
           rowIndex: rowIndex + 1,

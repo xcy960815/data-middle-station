@@ -134,13 +134,13 @@
               type="Refresh"
               size="16"
               fill="#666"
-              @click="handleResetTableConfig('headerHeight')"
+              @click="handleResetTableConfig('headerRowHeight')"
             />
           </el-tooltip>
         </span>
       </template>
       <el-input
-        v-model.number="tableChartConfig.headerHeight"
+        v-model.number="tableChartConfig.headerRowHeight"
         placeholder="表头高度"
         @change="handleUpdateTableConfig"
       ></el-input>
@@ -444,13 +444,13 @@
               type="Refresh"
               size="16"
               fill="#666"
-              @click="handleResetTableConfig('summaryHeight')"
+              @click="handleResetTableConfig('summaryRowHeight')"
             />
           </el-tooltip>
         </span>
       </template>
       <el-input
-        v-model.number="tableChartConfig.summaryHeight"
+        v-model.number="tableChartConfig.summaryRowHeight"
         placeholder="汇总行高度"
         @blur="handleUpdateTableConfig"
       ></el-input>
