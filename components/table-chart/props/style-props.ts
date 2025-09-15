@@ -25,7 +25,7 @@ export const styleProps = {
   /**
    * 表头高度
    */
-  headerHeight: { type: Number, default: 32 },
+  headerRowHeight: { type: Number, default: 32 },
   /**
    * 表头背景色
    */
@@ -76,7 +76,7 @@ export const styleProps = {
   /**
    * 汇总高度
    */
-  summaryHeight: { type: Number, default: 32 },
+  summaryRowHeight: { type: Number, default: 32 },
   /**
    * 汇总背景色
    */

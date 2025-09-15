@@ -244,7 +244,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
   //     x: x + (columnOption.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
   //     y: 0,
   //     width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
-  //     height: props.headerHeight,
+  //     height: props.headerRowHeight,
   //     fill: 'transparent',
   //     listening: true,
   //     draggable: false,
@@ -427,7 +427,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
         x,
         0,
         columnWidth,
-        props.headerHeight,
+        props.headerRowHeight,
         headerGroup,
         positionMapList,
         startColIndex,
@@ -435,13 +435,13 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       )
 
       // 创建文本
-      createHeaderCellText(columnOption, x, 0, columnWidth, props.headerHeight, headerGroup)
+      createHeaderCellText(columnOption, x, 0, columnWidth, props.headerRowHeight, headerGroup)
 
       // 添加排序icon
-      createSortIcon(columnOption, x, 0, columnWidth, props.headerHeight, headerGroup)
+      createSortIcon(columnOption, x, 0, columnWidth, props.headerRowHeight, headerGroup)
 
       // 添加过滤icon
-      createFilterIcon(columnOption, x, 0, columnWidth, props.headerHeight, headerGroup)
+      createFilterIcon(columnOption, x, 0, columnWidth, props.headerRowHeight, headerGroup)
 
       // 添加列宽调整手柄 - 已注释掉
       // createColumnResizer(columnOption, headerCols, x, colIndex, headerGroup)
@@ -477,7 +477,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //       x,
 //       y: 0,
 //       width: columnOption.width || 0,
-//       height: props.headerHeight,
+//       height: props.headerRowHeight,
 //       fill: isSortColumn ? props.sortActiveBackground : props.headerBackground,
 //       stroke: props.borderColor,
 //       strokeWidth: 1,
@@ -518,7 +518,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //       fill: props.headerTextColor,
 //       align: columnOption.align || 'left',
 //       verticalAlign: 'middle',
-//       cellHeight: props.headerHeight,
+//       cellHeight: props.headerRowHeight,
 //       useGetTextX: true
 //     })
 //     return cellText
@@ -709,7 +709,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //       x: x + (columnOption.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
 //       y: 0,
 //       width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
-//       height: props.headerHeight,
+//       height: props.headerRowHeight,
 //       fill: 'transparent',
 //       listening: true,
 //       draggable: false,
@@ -768,7 +768,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //       x: stageStartX + x,
 //       y: 0,
 //       width: columnOption.width || 0,
-//       height: props.headerHeight,
+//       height: props.headerRowHeight,
 //       rowIndex: 0,
 //       colIndex: colIndex + startColIndex
 //     })
@@ -777,7 +777,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //     const headerText = createHeaderText(columnOption, x)
 //     headerGroup.add(headerText)
 
-//     const centerY = props.headerHeight / 2
+//     const centerY = props.headerRowHeight / 2
 
 //     // 添加排序功能
 //     if (columnOption.sortable) {

@@ -79,7 +79,7 @@ export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerPro
 
     // 计算编辑器的绝对位置（相对于视口）
     const editorX = offsetX + cellX - tableVars.stageScrollX
-    const editorY = offsetY + cellY + props.headerHeight - tableVars.stageScrollY
+    const editorY = offsetY + cellY + props.headerRowHeight - tableVars.stageScrollY
 
     // 获取当前行数据
     const currentRowData = tableData.value[rowIndex]

@@ -26,11 +26,11 @@ export const defaultTableChartConfig: ChartConfigVo.TableChartConfig = {
   /**
    * @desc 表头高度
    */
-  headerHeight: 30,
+  headerRowHeight: 30,
   /**
    * @desc 汇总高度
    */
-  summaryHeight: 30,
+  summaryRowHeight: 30,
   /**
    * @desc 是否启用汇总
    */

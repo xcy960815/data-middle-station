@@ -129,7 +129,7 @@ watch(
  */
 watch(
   () => [
-    props.headerHeight,
+    props.headerRowHeight,
     props.headerFontFamily,
     props.headerFontSize,
     props.headerTextColor,
@@ -167,7 +167,7 @@ watch(
 watch(
   () => [
     props.enableSummary,
-    props.summaryHeight,
+    props.summaryRowHeight,
     props.summaryFontFamily,
     props.summaryFontSize,
     props.summaryBackground,
