@@ -245,6 +245,7 @@ declare namespace ChartConfigDao {
    * @desc 表格配置
    */
   type TableChartConfig = {
+    // ========== 功能开关配置 ==========
     /**
      * 是否显示汇总
      */
@@ -257,6 +258,88 @@ declare namespace ChartConfigDao {
      * 是否启用列高亮
      */
     enableColHoverHighlight: boolean
+
+    // ========== 尺寸配置 ==========
+    /**
+     * 表头高度
+     */
+    headerRowHeight: number
+    /**
+     * 行高
+     */
+    bodyRowHeight: number
+    /**
+     * 汇总高度
+     */
+    summaryRowHeight: number
+    /**
+     * 滚动条大小
+     */
+    scrollbarSize: number
+    /**
+     * 最小自动列宽度
+     */
+    minAutoColWidth: number
+
+    // ========== 表头样式配置 ==========
+    /**
+     * 表头背景色
+     */
+    headerBackground: string
+    /**
+     * 表头文本颜色
+     */
+    headerTextColor: string
+    /**
+     * 表头字体
+     */
+    headerFontFamily: string
+    /**
+     * 表头字体大小
+     */
+    headerFontSize: number
+
+    // ========== 表格内容样式配置 ==========
+    /**
+     * 表格奇数行背景色
+     */
+    bodyBackgroundOdd: string
+    /**
+     * 表格偶数行背景色
+     */
+    bodyBackgroundEven: string
+    /**
+     * 表格文本颜色
+     */
+    bodyTextColor: string
+    /**
+     * 表格内容字体
+     */
+    bodyFontFamily: string
+    /**
+     * 表格内容字体大小
+     */
+    bodyFontSize: number
+
+    // ========== 汇总行样式配置 ==========
+    /**
+     * 汇总背景色
+     */
+    summaryBackground: string
+    /**
+     * 汇总文本颜色
+     */
+    summaryTextColor: string
+    /**
+     * 汇总字体
+     */
+    summaryFontFamily: string
+    /**
+     * 汇总字体大小
+     */
+    summaryFontSize: number
+
+    // ========== 高亮样式配置 ==========
     /**
      * 悬停填充颜色
      */
@@ -269,82 +352,18 @@ declare namespace ChartConfigDao {
      * 列高亮背景色
      */
     highlightColBackground: string
+
+    // ========== 排序样式配置 ==========
     /**
-     * 表头高度
+     * 表头排序激活背景色
      */
-    headerHeight: number
+    sortActiveBackground: string
     /**
-     * 汇总高度
+     * 可排序颜色
      */
-    summaryHeight: number
-    /**
-     * 是否显示汇总
-     */
-    enableSummary: boolean
-    /**
-     * 行高
-     */
-    bodyRowHeight: number
-    /**
-     * 滚动条大小
-     */
-    scrollbarSize: number
-    /**
-     * 表头背景色
-     */
-    headerBackground: string
-    /**
-     * 表格奇数行背景色
-     */
-    bodyBackgroundOdd: string
-    /**
-     * 表格偶数行背景色
-     */
-    bodyBackgroundEven: string
-    /**
-     * 表格边框颜色
-     */
-    borderColor: string
-    /**
-     * 表头文本颜色
-     */
-    headerTextColor: string
-    /**
-     * 表格文本颜色
-     */
-    bodyTextColor: string
-    /**
-     * 表头字体
-     */
-    headerFontFamily: string
-    /**
-     * 表头字体大小
-     */
-    headerFontSize: number
-    /**
-     * 表格内容字体
-     */
-    bodyFontFamily: string
-    /**
-     * 表格内容字体大小
-     */
-    bodyFontSize: number
-    /**
-     * 汇总字体
-     */
-    summaryFontFamily: string
-    /**
-     * 汇总字体大小
-     */
-    summaryFontSize: number
-    /**
-     * 汇总背景色
-     */
-    summaryBackground: string
-    /**
-     * 汇总文本颜色
-     */
-    summaryTextColor: string
+    sortActiveColor: string
+
+    // ========== 滚动条样式配置 ==========
     /**
      * 滚动条背景色
      */
@@ -357,26 +376,20 @@ declare namespace ChartConfigDao {
      * 滚动条滑块悬停颜色
      */
     scrollbarThumbHover: string
+
+    // ========== 其他配置 ==========
+    /**
+     * 表格边框颜色
+     */
+    borderColor: string
     /**
      * 缓冲行数
      */
     bufferRows: number
     /**
-     * 最小自动列宽度
-     */
-    minAutoColWidth: number
-    /**
      * 滚动阈值
      */
     scrollThreshold: number
-    /**
-     * 表头排序激活背景色
-     */
-    sortActiveBackground: string
-    /**
-     * 可排序颜色
-     */
-    sortActiveColor: string
   }
 
   type PrivateChartConfig = {
