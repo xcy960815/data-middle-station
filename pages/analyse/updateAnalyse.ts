@@ -15,11 +15,11 @@ export const updateAnalyseHandler = () => {
   const handleUpdateAnalyse = async () => {
     const privateChartConfig = chartConfigStore.getPrivateChartConfig
     const chartConfigId = analyseStore.getChartConfigId
-    const column = columnStore.getColumns
-    const dimension = dimensionStore.getDimensions
-    const group = groupStore.getGroups
-    const order = orderStore.getOrders
-    const filter = filterStore.getFilters
+    const columns = columnStore.getColumns
+    const dimensions = dimensionStore.getDimensions
+    const groups = groupStore.getGroups
+    const orders = orderStore.getOrders
+    const filters = filterStore.getFilters
     const commonChartConfig = chartConfigStore.getCommonChartConfig
     const id = analyseStore.getAnalyseId
     const analyseName = analyseStore.getAnalyseName
@@ -35,11 +35,11 @@ export const updateAnalyseHandler = () => {
         chartConfigId,
         chartConfig: {
           dataSource,
-          column,
-          dimension,
-          group,
-          order,
-          filter,
+          columns,
+          dimensions,
+          groups,
+          orders,
+          filters,
           chartType,
           commonChartConfig,
           privateChartConfig
