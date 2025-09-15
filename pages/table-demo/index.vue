@@ -108,8 +108,8 @@
         :buffer-rows="tableConfig.bufferRows"
         :min-auto-col-width="tableConfig.minAutoColWidth"
         :scroll-threshold="tableConfig.scrollThreshold"
-        :header-sort-active-background="tableConfig.headerSortActiveBackground"
-        :sortable-color="tableConfig.sortableColor"
+        :header-sort-active-background="tableConfig.sortActiveBackground"
+        :sortable-color="tableConfig.sortActiveColor"
         :y-axis-fields="yAxisFields"
         :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
         :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
@@ -514,8 +514,8 @@ const tableConfig = reactive({
   bufferRows: 5,
   minAutoColWidth: 100,
   scrollThreshold: 10,
-  headerSortActiveBackground: '#ecf5ff',
-  sortableColor: '#409EFF',
+  sortActiveBackground: '#ecf5ff',
+  sortActiveColor: '#409EFF',
   chartHeight: 360,
   chartWidth: 1500,
   bodyRowHeight: 32
