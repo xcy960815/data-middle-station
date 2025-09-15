@@ -5,11 +5,11 @@
       <span class="group__title">分组</span>
       <icon-park
         class="cursor-pointer"
-        v-if="hasClearAll('group')"
+        v-if="hasClearAll('groups')"
         type="clear"
         size="12"
         fill="#333"
-        @click="clearAll('group')"
+        @click="clearAll('groups')"
       />
     </div>
     <div class="group__content flex items-center flex-1">
@@ -42,9 +42,9 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
-const columnStore = useColumnStore()
-const dimensionStore = useDimensionStore()
-const groupStore = useGroupStore()
+const columnStore = useColumnsStore()
+const dimensionStore = useDimensionsStore()
+const groupStore = useGroupsStore()
 /**
  * @desc groupList
  */
@@ -91,7 +91,7 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
-      from: 'group',
+      from: 'groups',
       index,
       value: groupList.value[index]
     })
@@ -147,7 +147,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   }
   const index = data.index
   switch (data.from) {
-    case 'group': {
+    case 'groups': {
       // relocate postion by dragging
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return

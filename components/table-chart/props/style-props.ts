@@ -25,7 +25,7 @@ export const styleProps = {
   /**
    * 表头高度
    */
-  headerHeight: { type: Number, default: 32 },
+  headerRowHeight: { type: Number, default: 32 },
   /**
    * 表头背景色
    */
@@ -41,12 +41,12 @@ export const styleProps = {
   /**
    * 表头字体大小
    */
-  headerFontSize: { type: Number, default: 14 },
+  headerFontSize: { type: Number, default: 13 },
 
   /**
    * 表格行高度
    */
-  bodyRowHeight: { type: Number, default: 32 },
+  bodyRowHeight: { type: Number, default: 30 },
   /**
    * 表格行背景色（奇数行）
    */
@@ -76,7 +76,7 @@ export const styleProps = {
   /**
    * 汇总高度
    */
-  summaryHeight: { type: Number, default: 32 },
+  summaryRowHeight: { type: Number, default: 30 },
   /**
    * 汇总背景色
    */
@@ -114,9 +114,9 @@ export const styleProps = {
   /**
    * 排序激活背景色
    */
-  headerSortActiveBackground: { type: String, default: '#ecf5ff' },
+  sortActiveBackground: { type: String, default: '#ecf5ff' },
   /**
    * 排序箭头颜色
    */
-  sortableColor: { type: String, default: '#409EFF' }
+  sortActiveColor: { type: String, default: '#409EFF' }
 }

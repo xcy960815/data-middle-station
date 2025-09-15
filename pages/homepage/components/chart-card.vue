@@ -128,7 +128,7 @@ const handleDeleteAnalyse = () => {
   .edit-icon {
     position: absolute;
     top: 10px;
-    right: 40px;
+    right: 50px;
     z-index: 10;
     background: #fff;
     border-radius: 50%;
@@ -139,6 +139,10 @@ const handleDeleteAnalyse = () => {
     height: 28px;
     transition: background 0.2s;
     display: none;
+
+    &:hover {
+      background: #f0f9ff;
+    }
   }
 
   .delete-icon {

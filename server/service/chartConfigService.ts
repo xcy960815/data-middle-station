@@ -1,32 +1,22 @@
-import dayjs from 'dayjs'
 import { ChartConfigMapper } from '../mapper/chartConfigMapper'
+import { BaseService } from './baseService'
 
 /**
  * @desc 分析服务
  */
-export class ChartConfigService {
+export class ChartConfigService extends BaseService {
   private chartConfigMapper: ChartConfigMapper
 
   constructor() {
+    super()
     this.chartConfigMapper = new ChartConfigMapper()
-  }
-  /**
-   * @desc 获取默认信息
-   * @returns {Promise<{createdBy: string, updatedBy: string, createTime: string, updateTime: string}>}
-   */
-  private async getDefaultInfo() {
-    const createdBy = (await RedisStorage.getItem<string>(`userName`)) || 'system'
-    const updatedBy = (await RedisStorage.getItem<string>(`userName`)) || 'system'
-    const createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-    return { createdBy, updatedBy, createTime, updateTime }
   }
   /**
    * @desc 将dao对象转换为vo对象
    * @param chartConfigOption {ChartConfigDao.ChartConfig} 图表配置
    * @returns {ChartConfigVo.ChartConfig} 图表配置
    */
-  private dao2Vo(chartConfigOption: ChartConfigDao.ChartConfig): ChartConfigVo.ChartConfig {
+  private dao2Vo(chartConfigOption: ChartConfigDao.ChartConfig): ChartConfigVo.ChartConfigResponse {
     return {
       ...chartConfigOption,
       commonChartConfig: chartConfigOption.commonChartConfig,
@@ -34,72 +24,47 @@ export class ChartConfigService {
       /**
        * 列配置
        */
-      column: chartConfigOption.column.map((item) => ({
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
+      columns: chartConfigOption.columns.map((item) => ({
+        ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 维度配置
        */
-      dimension: chartConfigOption.dimension.map((item) => ({
+      dimensions: chartConfigOption.dimensions.map((item) => ({
         ...item,
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 过滤配置
        */
-      filter: chartConfigOption.filter.map((item) => ({
+      filters: chartConfigOption.filters.map((item) => ({
         ...item,
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
-        displayName: item.columnComment
+        displayName: item.displayName || item.columnComment
       })),
       /**
        * 分组配置
        */
-      group: chartConfigOption.group.map((item) => ({
+      groups: chartConfigOption.groups.map((item) => ({
         ...item,
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 排序配置
        */
-      order: chartConfigOption.order.map((item) => ({
+      orders: chartConfigOption.orders.map((item) => ({
         ...item,
-        columnName: item.columnName,
-        columnType: item.columnType,
-        columnComment: item.columnComment,
-        displayName: item.columnComment
+        displayName: item.displayName || item.columnComment
       }))
-    }
-  }
-
-  /**
-   * @desc 将vo对象转换为dao对象
-   * @param chartConfigOption {ChartConfigDto.ChartConfig} 图表配置
-   * @returns {ChartConfigDao.ChartConfig} 图表配置
-   */
-  private vo2Dao(chartConfigOption: ChartConfigDto.ChartConfig): ChartConfigDao.ChartConfig {
-    return {
-      ...chartConfigOption
     }
   }
 
   /**
    * @desc 获取图表
    * @param id {number} 图表id
-   * @returns {Promise<ChartConfigVo.ChartConfig>}
+   * @returns {Promise<ChartConfigVo.ChartConfigResponse>}
    */
-  public async getChartConfig(id: number): Promise<ChartConfigVo.ChartConfig> {
+  public async getChartConfig(id: number): Promise<ChartConfigVo.ChartConfigResponse> {
     const chartConfigOption = await this.chartConfigMapper.getChartConfig(id)
     return this.dao2Vo(chartConfigOption)
   }
@@ -109,26 +74,27 @@ export class ChartConfigService {
    * @param chartConfig {ChartConfigDto.ChartConfig} 图表配置
    * @returns {Promise<boolean>}
    */
-  public async updateChartConfig(chartConfigDto: ChartConfigDto.ChartConfig): Promise<boolean> {
+  public async updateChartConfig(chartConfigRequest: ChartConfigDto.UpdateChartConfigRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    chartConfigDto.updatedBy = updatedBy
-    chartConfigDto.updateTime = updateTime
-    const updateChartResult = await this.chartConfigMapper.updateChartConfig(this.vo2Dao(chartConfigDto))
+    chartConfigRequest.updatedBy = updatedBy
+    chartConfigRequest.updateTime = updateTime
+    const updateChartResult = await this.chartConfigMapper.updateChartConfig(chartConfigRequest)
     return updateChartResult
   }
 
   /**
    * @desc 创建图表配置
-   * @param chartConfigDto {ChartConfigDto.ChartConfig} 图表配置
+   * @param chartConfigDto {ChartConfigDto.CreateChartConfigRequest} 图表配置
    * @returns {Promise<number>}
    */
-  public async createChartConfig(chartConfigDto: ChartConfigDto.ChartConfig): Promise<number> {
+  public async createChartConfig(chartConfigRequest: ChartConfigDto.CreateChartConfigRequest): Promise<number> {
     const { createdBy, createTime, updateTime, updatedBy } = await this.getDefaultInfo()
-    chartConfigDto.createdBy = createdBy
-    chartConfigDto.createTime = createTime
-    chartConfigDto.updateTime = updateTime
-    chartConfigDto.updatedBy = updatedBy
-    const chartConfigId = await this.chartConfigMapper.createChartConfig(this.vo2Dao(chartConfigDto))
+    chartConfigRequest.createdBy = createdBy
+    chartConfigRequest.createTime = createTime
+    chartConfigRequest.updateTime = updateTime
+    chartConfigRequest.updatedBy = updatedBy
+    chartConfigRequest.isDeleted = 0
+    const chartConfigId = await this.chartConfigMapper.createChartConfig(chartConfigRequest)
     return chartConfigId
   }
 
@@ -137,13 +103,7 @@ export class ChartConfigService {
    * @param id {number} 图表配置id
    * @returns {Promise<boolean>}
    */
-  public async deleteChartConfig(id: number): Promise<boolean> {
-    const { updatedBy, updateTime } = await this.getDefaultInfo()
-    const deleteParams = {
-      id,
-      updatedBy,
-      updateTime
-    }
+  public async deleteChartConfig(deleteParams: ChartConfigDto.DeleteChartConfigRequest): Promise<boolean> {
     return await this.chartConfigMapper.deleteChartConfig(deleteParams)
   }
 }

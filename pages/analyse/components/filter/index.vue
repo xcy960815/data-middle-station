@@ -4,11 +4,11 @@
       <span class="filter__title">筛选</span>
       <icon-park
         class="cursor-pointer"
-        v-if="hasClearAll('filter')"
+        v-if="hasClearAll('filters')"
         type="clear"
         size="12"
         fill="#333"
-        @click="clearAll('filter')"
+        @click="clearAll('filters')"
       />
     </div>
     <div class="filter__content flex-auto">
@@ -40,11 +40,11 @@
 </template>
 
 <script setup lang="ts">
-import { clearAllHandler } from '../clearAll'
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
-const filterStore = useFilterStore()
+const filterStore = useFiltersStore()
 const filterList = computed(() => filterStore.getFilters)
 /**
  * @desc addFilter
@@ -86,7 +86,7 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
-      from: 'filter',
+      from: 'filters',
       index,
       value: filterList.value[index]
     })
@@ -122,7 +122,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   const filter = data.value
 
   switch (data.from) {
-    case 'filter': {
+    case 'filters': {
       // 调整位置
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return

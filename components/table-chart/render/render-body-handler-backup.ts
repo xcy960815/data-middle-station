@@ -53,8 +53,8 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       x,
       y: 0,
       width: col.width || 0,
-      height: props.headerHeight,
-      fill: isSortColumn ? props.headerSortActiveBackground : props.headerBackground,
+      height: props.headerRowHeight,
+      fill: isSortColumn ? props.sortActiveBackground : props.headerBackground,
       stroke: props.borderColor,
       strokeWidth: 1,
       listening: false,
@@ -94,7 +94,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       fill: props.headerTextColor,
       align: col.align || 'left',
       verticalAlign: 'middle',
-      cellHeight: props.headerHeight,
+      cellHeight: props.headerRowHeight,
       useGetTextX: true
     })
     return cellText
@@ -190,8 +190,8 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     centerY: number
   ) => {
     const foundSort = sortColumns.value.find((s) => s.columnName === col.columnName)
-    const upColor = foundSort?.order === 'asc' ? props.sortableColor : COLORS.INACTIVE
-    const downColor = foundSort?.order === 'desc' ? props.sortableColor : COLORS.INACTIVE
+    const upColor = foundSort?.order === 'asc' ? props.sortActiveColor : COLORS.INACTIVE
+    const downColor = foundSort?.order === 'desc' ? props.sortActiveColor : COLORS.INACTIVE
     const arrowX = x + (col.width || 0) - LAYOUT_CONSTANTS.SORT_ARROW_OFFSET
 
     const upTriangle = new Konva.RegularPolygon({
@@ -244,7 +244,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     centerY: number
   ) => {
     const hasFilter = !!(filterState[col.columnName] && filterState[col.columnName].size > 0)
-    const filterColor = hasFilter ? props.sortableColor : COLORS.INACTIVE
+    const filterColor = hasFilter ? props.sortActiveColor : COLORS.INACTIVE
     const filterX = x + (col.width || 0) - LAYOUT_CONSTANTS.FILTER_ICON_OFFSET
     const iconSize = LAYOUT_CONSTANTS.FILTER_ICON_SIZE
 
@@ -307,7 +307,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       x: x + (col.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
       y: 0,
       width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
-      height: props.headerHeight,
+      height: props.headerRowHeight,
       fill: 'transparent',
       listening: true,
       draggable: false,
@@ -375,7 +375,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       x: stageStartX + x,
       y: 0,
       width: col.width || 0,
-      height: props.headerHeight,
+      height: props.headerRowHeight,
       rowIndex: 0,
       colIndex: colIndex + startColIndex
     })
@@ -384,7 +384,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
     const headerText = createHeaderText(col, x)
     headerGroup.add(headerText)
 
-    const centerY = props.headerHeight / 2
+    const centerY = props.headerRowHeight / 2
 
     // 添加排序功能
     if (col.sortable) {

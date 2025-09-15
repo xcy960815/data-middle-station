@@ -4,12 +4,12 @@ import { StoreNames } from './store-names'
  * @desc 过滤器 store
  */
 import { defineStore } from 'pinia'
-export const useFilterStore = defineStore<
+export const useFiltersStore = defineStore<
   FilterStore.FilterKey,
   BaseStore.State<FilterStore.FilterState>,
   BaseStore.Getters<FilterStore.FilterState, FilterStore.FilterGetters>,
   BaseStore.Actions<FilterStore.FilterState, FilterStore.FilterActions>
->(StoreNames.FILTER, {
+>(StoreNames.FILTERS, {
   state: () => ({
     filters: []
   }),

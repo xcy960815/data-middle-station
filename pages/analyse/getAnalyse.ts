@@ -3,11 +3,11 @@
  */
 export const getAnalyseHandler = () => {
   const analyseStore = useAnalyseStore()
-  const columnStore = useColumnStore()
-  const dimensionStore = useDimensionStore()
-  const filterStore = useFilterStore()
-  const groupStore = useGroupStore()
-  const orderStore = useOrderStore()
+  const columnStore = useColumnsStore()
+  const dimensionStore = useDimensionsStore()
+  const filterStore = useFiltersStore()
+  const groupStore = useGroupsStore()
+  const orderStore = useOrdersStore()
   /**
    * @desc 获取图表配置
    */
@@ -28,16 +28,16 @@ export const getAnalyseHandler = () => {
       const analyseDesc = data.analyseDesc
       analyseStore.setAnalyseDesc(analyseDesc)
       const id = data.id
-      analyseStore.setChartId(id)
+      analyseStore.setAnalyseId(id)
       const chartConfigId = data.chartConfigId
       analyseStore.setChartConfigId(chartConfigId)
       const chartConfig = data.chartConfig
       analyseStore.setChartType((chartConfig?.chartType as AnalyseStore.ChartType) || 'table')
-      columnStore.setColumns(chartConfig?.column || [])
-      dimensionStore.setDimensions(chartConfig?.dimension || [])
-      filterStore.setFilters((chartConfig?.filter as FilterStore.FilterOption[]) || [])
-      groupStore.setGroups(chartConfig?.group || [])
-      orderStore.setOrders(chartConfig?.order || [])
+      columnStore.setColumns(chartConfig?.columns || [])
+      dimensionStore.setDimensions(chartConfig?.dimensions || [])
+      filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
+      groupStore.setGroups(chartConfig?.groups || [])
+      orderStore.setOrders(chartConfig?.orders || [])
       // 设置公共配置与图表配置
       useChartConfigStore().setCommonChartConfig(
         chartConfig?.commonChartConfig || useChartConfigStore().$state.commonChartConfig

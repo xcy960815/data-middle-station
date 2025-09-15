@@ -1,15 +1,14 @@
 import { StoreNames } from './store-names'
-import cloneDeep from 'lodash/cloneDeep'
 /**
  * @desc 维度 store
  */
 import { defineStore } from 'pinia'
-export const useDimensionStore = defineStore<
+export const useDimensionsStore = defineStore<
   DimensionStore.DimensionKey,
   BaseStore.State<DimensionStore.DimensionState>,
   BaseStore.Getters<DimensionStore.DimensionState, DimensionStore.DimensionGetters>,
   BaseStore.Actions<DimensionStore.DimensionState, DimensionStore.DimensionActions>
->(StoreNames.DIMENSION, {
+>(StoreNames.DIMENSIONS, {
   state: () => ({
     dimensions: []
   }),

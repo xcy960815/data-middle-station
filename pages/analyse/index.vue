@@ -23,10 +23,10 @@
       <GroupOption></GroupOption>
     </template>
     <template #bar>
-      <Bar :chart-ref="chartRef" @request-chart-ref="handleRequestChartRef" />
+      <Bar />
     </template>
     <template #chart>
-      <Chart ref="chartComponentRef" />
+      <Chart />
     </template>
     <template #chart-type>
       <ChartType></ChartType>
@@ -38,7 +38,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ChartComponentRef } from '~/composables/useSendChartEmail'
 import Bar from './components/bar/index.vue'
 import ChartConfig from './components/chart-config/index.vue'
 import analyseName from './components/chart-name/index.vue'
@@ -52,18 +51,6 @@ import Order from './components/order/index.vue'
 import { getAnalyseHandler } from './getAnalyse'
 import { getChartDataHandler } from './getChartData'
 const layoutName = 'analyse'
-
-// 图表组件引用
-const chartComponentRef = ref()
-const chartRef = ref<ChartComponentRef>()
-
-/**
- * @desc 处理 Bar 组件的图表引用请求
- * @returns {void}
- */
-const handleRequestChartRef = () => {
-  chartRef.value = chartComponentRef.value
-}
 
 getAnalyseHandler()
 getChartDataHandler()

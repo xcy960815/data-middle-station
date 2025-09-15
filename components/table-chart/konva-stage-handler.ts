@@ -16,7 +16,7 @@ interface KonvaStageHandlerProps {
  */
 export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
   const { tableVars } = variableHandlder({ props })
-  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryHeight : 0))
+  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryRowHeight : 0))
   const ensureEmits = () => {
     if (!emits) {
       throw new Error('This operation requires emits to be provided to konvaStageHandler')
@@ -177,8 +177,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       const stageHeight = tableVars.stage.height()
       const trackHeight =
         stageHeight -
-        props.headerHeight -
-        (props.enableSummary ? props.summaryHeight : 0) - // 注释汇总高度
+        props.headerRowHeight -
+        (props.enableSummary ? props.summaryRowHeight : 0) - // 注释汇总高度
         (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
       const scrollRatio = deltaY / (trackHeight - thumbHeight)
@@ -390,7 +390,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
         x: 0,
         y: 0,
         width: stageWidth - rightWidth - verticalScrollbarWidth,
-        height: props.headerHeight
+        height: props.headerRowHeight
       }
     })
 
@@ -418,8 +418,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     // 为中间可滚动区域创建裁剪组，防止遮挡固定列
     const centerBodyClipGroupHeight =
-      stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
-    const centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerHeight, {
+      stageHeight - props.headerRowHeight - summaryRowHeight.value - horizontalScrollbarHeight
+    const centerBodyClipGroup = createCenterBodyClipGroup(leftWidth, props.headerRowHeight, {
       x: 0,
       y: 0,
       width: stageWidth - leftWidth - rightWidth - verticalScrollbarWidth,
@@ -436,25 +436,25 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     // 为左侧和右侧固定列body组也创建裁剪组，防止延伸到滚动条区域
     const leftBodyClipGroup = new Konva.Group({
       x: 0,
-      y: props.headerHeight,
+      y: props.headerRowHeight,
       name: 'left-body-clip-group',
       clip: {
         x: 0,
         y: 0,
         width: leftWidth,
-        height: stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
+        height: stageHeight - props.headerRowHeight - summaryRowHeight.value - horizontalScrollbarHeight
       }
     })
 
     const rightBodyClipGroup = new Konva.Group({
       x: stageWidth - rightWidth - verticalScrollbarWidth,
-      y: props.headerHeight,
+      y: props.headerRowHeight,
       name: 'right-body-clip-group',
       clip: {
         x: 0,
         y: 0,
         width: rightWidth,
-        height: stageHeight - props.headerHeight - summaryRowHeight.value - horizontalScrollbarHeight
+        height: stageHeight - props.headerRowHeight - summaryRowHeight.value - horizontalScrollbarHeight
       }
     })
 

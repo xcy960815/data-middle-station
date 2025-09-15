@@ -4,14 +4,14 @@ declare namespace ChartDataDto {
    */
   type CommonChartConfig = ChartConfigDao.CommonChartConfig
   /**
-   * @desc 请求参数
+   * @desc 获取图表数据请求参数
    */
-  type RequestParams = {
+  type ChartDataRequest = {
     filters: FilterStore.FilterOption[]
     orders: OrderStore.OrderOption[]
     groups: GroupStore.GroupOption[]
     dimensions: DimensionStore.DimensionOption[]
-    commonChartConfig: CommonChartConfig
     dataSource: string
+    commonChartConfig?: CommonChartConfig
   }
 }

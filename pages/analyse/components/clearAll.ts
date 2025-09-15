@@ -1,31 +1,29 @@
-import { sw } from 'element-plus/es/locales.mjs'
-
 /**
  * @desc 清空所有
  * @returns 清空所有
  */
 export const clearAllHandler = () => {
-  const orderStore = useOrderStore()
-  const filterStore = useFilterStore()
-  const groupStore = useGroupStore()
-  const dimensionStore = useDimensionStore()
+  const orderStore = useOrdersStore()
+  const filterStore = useFiltersStore()
+  const groupStore = useGroupsStore()
+  const dimensionStore = useDimensionsStore()
 
   /**
    * @desc 清空所有
    * @param type 类型
    */
-  const clearAll = (type: 'order' | 'filter' | 'group' | 'dimension') => {
+  const clearAll = (type: 'orders' | 'filters' | 'groups' | 'dimensions') => {
     switch (type) {
-      case 'order':
+      case 'orders':
         orderStore.setOrders([])
         break
-      case 'filter':
+      case 'filters':
         filterStore.setFilters([])
         break
-      case 'group':
+      case 'groups':
         groupStore.setGroups([])
         break
-      case 'dimension':
+      case 'dimensions':
         dimensionStore.setDimensions([])
         break
       default:
@@ -39,15 +37,15 @@ export const clearAllHandler = () => {
    * @param type 类型
    * @returns 是否清空
    */
-  const hasClearAll = (type: 'order' | 'filter' | 'group' | 'dimension') => {
+  const hasClearAll = (type: 'orders' | 'filters' | 'groups' | 'dimensions') => {
     switch (type) {
-      case 'order':
+      case 'orders':
         return orderStore.getOrders.length > 0
-      case 'filter':
+      case 'filters':
         return filterStore.getFilters.length > 0
-      case 'group':
+      case 'groups':
         return groupStore.getGroups.length > 0
-      case 'dimension':
+      case 'dimensions':
         return dimensionStore.getDimensions.length > 0
       default:
         return false

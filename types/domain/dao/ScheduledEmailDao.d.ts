@@ -1,89 +1,185 @@
+/**
+ * @desc 定时邮件任务数据访问层类型定义
+ */
 declare namespace ScheduledEmailDao {
   /**
-   * 数据库字段映射接口
+   * @desc 任务状态
    */
-  interface ScheduledEmailOption {
-    id: number // 任务ID
-    task_name: string // 任务名称
-    schedule_time: string // 计划执行时间
-    email_config: string // 邮件配置(JSON字符串)
-    chart_data: string // 图表数据(JSON字符串)
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' // 任务状态
-    remark?: string // 备注说明
-    created_at: string // 创建时间
-    updated_at: string // 更新时间
-    executed_at?: string // 执行时间
-    error_message?: string // 错误信息
-    retry_count: number // 重试次数
-    max_retries: number // 最大重试次数
+  type Status = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+  /**
+   * @desc 邮件配置
+   */
+  type EmailConfig = {
+    /**
+     * 收件人
+     */
+    to: string | string[]
+    /**
+     * 抄送
+     */
+    cc?: string | string[]
+    /**
+     * 密送
+     */
+    bcc?: string | string[]
+    /**
+     * 邮件主题
+     */
+    subject: string
+    /**
+     * HTML内容
+     */
+    html?: string
+    /**
+     * 文本内容
+     */
+    text?: string
+    /**
+     * 附加内容
+     */
+    additionalContent?: string
+    /**
+     * 附件
+     */
+    attachments?: Array<{
+      /**
+       * 附件名称
+       */
+      filename: string
+      /**
+       * 附件内容
+       */
+      content: string | Buffer
+      /**
+       * 附件内容类型
+       */
+      contentType?: string
+    }>
   }
+  /**
+   * @desc 分析选项
+   */
+  type AnalyseOptions = {
+    /**
+     * 附件名称
+     */
+    filename: string
+    /**
+     * 图表类型
+     */
+    chartType: string
+    /**
+     * 分析名称
+     */
+    analyseName: string
+    /**
+     * 分析id
+     */
+    analyseId: number
+  }
+  /**
+   * @desc 任务类型
+   */
+  type TaskType = 'scheduled' | 'recurring'
 
   /**
-   * 创建任务参数
+   * @desc 定时邮件任务选项
    */
-  interface CreateTaskParams {
-    task_name: string
-    schedule_time: string
-    email_config: string // JSON字符串
-    chart_data: string // JSON字符串
-    remark?: string
-    max_retries?: number
-  }
-
-  /**
-   * 更新任务参数
-   */
-  interface UpdateTaskParams {
+  type ScheduledEmailOptions = {
+    /**
+     * 任务ID
+     */
     id: number
-    task_name?: string
-    schedule_time?: string
-    email_config?: string // JSON字符串
-    chart_data?: string // JSON字符串
-    status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+    /**
+     * 任务名称
+     */
+    taskName: string
+    /**
+     * 调度时间（定时任务使用）
+     */
+    scheduleTime?: string | null
+    /**
+     * 任务类型
+     */
+    taskType: TaskType
+    /**
+     * 重复的星期几（重复任务使用）
+     */
+    recurringDays?: number[] | null
+    /**
+     * 重复任务的执行时间（重复任务使用）
+     */
+    recurringTime?: string | null
+    /**
+     * 是否启用任务
+     */
+    isActive: boolean
+    /**
+     * 下次执行时间（重复任务使用）
+     */
+    nextExecutionTime?: string | null
+    /**
+     * 邮件配置
+     */
+    emailConfig: EmailConfig
+    /**
+     * 图表数据
+     */
+    analyseOptions: AnalyseOptions
+    /**
+     * 任务状态
+     */
+    status: Status
+    /**
+     * 备注
+     */
     remark?: string
-    executed_at?: string
-    error_message?: string
-    retry_count?: number
-    max_retries?: number
+    /**
+     * 创建时间
+     */
+    createdTime: string
+    /**
+     * 更新时间
+     */
+    updatedTime: string
+    /**
+     * 执行时间
+     */
+    executedTime?: string | null
+    /**
+     * 错误信息
+     */
+    errorMessage?: string | null
+    /**
+     * 重试次数
+     */
+    retryCount: number
+    /**
+     * 最大重试次数
+     */
+    maxRetries: number
+    /**
+     * 创建人
+     */
+    createdBy: string
+    /**
+     * 更新人
+     */
+    updatedBy: string
   }
 
   /**
-   * 查询参数
+   * @desc 创建任务参数
    */
-  interface QueryParams {
-    status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
-    task_name?: string
-    start_time?: string
-    end_time?: string
-    limit?: number
-    offset?: number
-  }
+  type CreateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'id'>
 
   /**
-   * 执行日志数据库字段
+   * @desc 更新任务参数
    */
-  interface ExecutionLogOption {
+  type UpdateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'id'> & {
+    /**
+     * 任务ID
+     */
     id: number
-    task_id: number
-    execution_time: string
-    status: 'success' | 'failed'
-    message?: string
-    error_details?: string
-    email_message_id?: string
-    execution_duration?: number
-    created_at: string
-  }
-
-  /**
-   * 创建执行日志参数
-   */
-  interface CreateLogParams {
-    task_id: number
-    execution_time: string
-    status: 'success' | 'failed'
-    message?: string
-    error_details?: string
-    email_message_id?: string
-    execution_duration?: number
   }
 }

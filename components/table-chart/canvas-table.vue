@@ -1,52 +1,25 @@
 <template>
   <div id="table-container" class="table-container" :style="tableContainerStyle"></div>
 
-  <!-- 注释过滤器以提升性能 -->
-  <teleport to="body">
-    <div
-      ref="filterDropdownRef"
-      v-show="filterDropdown.visible"
-      class="dms-filter-dropdown"
-      :style="filterDropdownStyle"
-    >
-      <el-select
-        v-model="filterDropdown.selectedValues"
-        multiple
-        filterable
-        collapse-tags
-        collapse-tags-tooltip
-        size="small"
-        placeholder="选择过滤值"
-        style="width: 160px"
-        @change="handleSelectedFilter"
-        @blur="closeFilterDropdown"
-        @keydown.stop
-      >
-        <el-option v-for="opt in filterDropdown.options" :key="opt" :label="opt === '' ? '(空)' : opt" :value="opt" />
-      </el-select>
-    </div>
-  </teleport>
-  <!-- 注释汇总功能以提升性能 -->
-  <teleport to="body">
-    <div
-      ref="summaryDropdownRef"
-      v-show="summaryDropdown.visible"
-      class="dms-summary-dropdown"
-      :style="summaryDropdownStyle"
-    >
-      <el-select
-        v-model="summaryDropdown.selectedValue"
-        size="small"
-        placeholder="选择汇总"
-        style="width: 160px"
-        @change="handleSelectedSummary"
-        @blur="closeSummaryDropdown"
-        @keydown.stop
-      >
-        <el-option v-for="opt in summaryDropdown.options" :key="opt.value" :label="opt.label" :value="opt.value" />
-      </el-select>
-    </div>
-  </teleport>
+  <!-- 过滤器下拉组件 -->
+  <filter-dropdown
+    :visible="filterDropdown.visible"
+    :options="filterDropdown.options"
+    :selected-values="filterDropdown.selectedValues"
+    :dropdown-style="filterDropdownStyle"
+    @change="handleSelectedFilter"
+    @blur="closeFilterDropdown"
+  />
+
+  <!-- 汇总下拉组件 -->
+  <summary-dropdown
+    :visible="summaryDropdown.visible"
+    :options="summaryDropdown.options"
+    :selected-value="summaryDropdown.selectedValue"
+    :dropdown-style="summaryDropdownStyle"
+    @change="handleSelectedSummary"
+    @blur="closeSummaryDropdown"
+  />
 
   <!-- 单元格编辑器 -->
   <cell-editor
@@ -67,10 +40,12 @@ import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
 import type { ChartEmits } from './emits'
+import FilterDropdown from './filter-dropdown.vue'
 import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
 import { renderBodyHandler } from './render/render-body-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
+import SummaryDropdown from './summary-dropdown.vue'
 import { variableHandlder } from './variable-handlder'
 
 const props = defineProps(chartProps)
@@ -154,12 +129,12 @@ watch(
  */
 watch(
   () => [
-    props.headerHeight,
+    props.headerRowHeight,
     props.headerFontFamily,
     props.headerFontSize,
     props.headerTextColor,
     props.headerBackground,
-    props.headerSortActiveBackground
+    props.sortActiveBackground
   ],
   () => {
     if (!tableVars.stage) return
@@ -192,7 +167,7 @@ watch(
 watch(
   () => [
     props.enableSummary,
-    props.summaryHeight,
+    props.summaryRowHeight,
     props.summaryFontFamily,
     props.summaryFontSize,
     props.summaryBackground,
@@ -222,7 +197,7 @@ watch(
   () => [
     // props.enableRowHoverHighlight, // 注释以提升性能
     // props.enableColHoverHighlight, // 注释以提升性能
-    props.sortableColor,
+    props.sortActiveColor,
     props.highlightCellBackground
   ],
   () => {
@@ -275,56 +250,6 @@ onBeforeUnmount(() => {
   // cleanupSummaryDropdownListeners() // 注释汇总功能
   cleanupCellEditorListeners()
   destroyStage()
-})
-
-// 暴露导出方法给父组件
-defineExpose({
-  /**
-   * 导出图表为 Base64
-   * @param options
-   */
-  exportAsImage: async (options?: SendEmailDto.ExportChartConfigs) => {
-    if (!tableVars.stage) {
-      throw new Error('表格实例不存在')
-    }
-
-    const mimeType = options?.type === 'image/jpeg' ? 'image/jpeg' : 'image/png'
-    const quality = options?.quality || 1
-    const backgroundColor = options?.backgroundColor || '#ffffff'
-
-    // 使用 Konva Stage 的 toDataURL 方法导出
-    return tableVars.stage.toDataURL({
-      mimeType,
-      quality
-    })
-  },
-  /**
-   * 下载图表
-   * @param filename 文件名
-   * @param options 选项
-   */
-  downloadChart: async (filename: string, options?: SendEmailDto.ExportChartConfigs) => {
-    if (!tableVars.stage) {
-      throw new Error('表格实例不存在')
-    }
-    const mimeType = options?.type === 'image/jpeg' ? 'image/jpeg' : 'image/png'
-    const quality = options?.quality || 1
-    const backgroundColor = options?.backgroundColor || '#ffffff'
-
-    // 获取数据URL
-    const dataURL = tableVars.stage.toDataURL({
-      mimeType,
-      quality
-    })
-
-    // 创建下载链接
-    const link = document.createElement('a')
-    link.download = filename
-    link.href = dataURL
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
 })
 </script>
 

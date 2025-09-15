@@ -43,8 +43,7 @@
     "@element-plus/nuxt": "^1.1.4",
     "@eslint/js": "^9.28.0",
     "@nuxt/devtools": "latest",
-    "@types/html2canvas": "^1.0.0",
-    "@types/node": "^18.19.103",
+    "@types/node": "^20.19.0",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^7.0.1",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
@@ -67,7 +66,8 @@
     "vue-eslint-parser": "^10.0.1"
   },
   "dependencies": {
-    "@antv/g2": "^5.3.5",
+    "@antv/g2": "5.3.5",
+    "@antv/g2-ssr": "^0.1.2",
     "@icon-park/vue-next": "^1.4.2",
     "@pinia/nuxt": "^0.5.1",
     "@popperjs/core": "npm:@sxzz/popperjs-es@^2.11.7",
@@ -82,14 +82,15 @@
     "element-plus": "^2.11.1",
     "figlet": "^1.8.2",
     "gradient-string": "^3.0.0",
-    "html2canvas": "^1.4.1",
+    "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "konva": "^9.3.22",
     "monaco-editor": "^0.52.2",
     "mysql2": "^3.14.1",
     "node-cron": "^3.0.3",
+    "node-schedule": "^2.1.1",
     "nodemailer": "^7.0.6",
-    "nuxt": "^3.17.4",
+    "nuxt": "3.17.5",
     "pinia": "^2.1.7",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
@@ -99,7 +100,7 @@
     "xlsx": "^0.18.5"
   },
   "volta": {
-    "node": "18.15.0"
+    "node": "20.19.0"
   },
   "lint-staged": {
     "*.{js,ts,vue}": [

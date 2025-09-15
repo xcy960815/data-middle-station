@@ -46,11 +46,11 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { computed, ref, watch } from 'vue'
 import { useAnalyseStore } from '~/stores/analyse'
 import { useChartConfigStore } from '~/stores/chart-config'
-import { useColumnStore } from '~/stores/column'
-import { useDimensionStore } from '~/stores/dimension'
-import { useFilterStore } from '~/stores/filter'
-import { useGroupStore } from '~/stores/group'
-import { useOrderStore } from '~/stores/order'
+import { useColumnsStore } from '~/stores/columns'
+import { useDimensionsStore } from '~/stores/dimensions'
+import { useFiltersStore } from '~/stores/filters'
+import { useGroupsStore } from '~/stores/groups'
+import { useOrdersStore } from '~/stores/orders'
 
 // 数字图标
 const NUMBER_ICON_NAME = 'ListNumbers'
@@ -71,10 +71,10 @@ const columnDisplayNames = (column: ColumnStore.ColumnOption) => {
  * @returns {string} 类名
  */
 const columnClasses = computed(() => (column: ColumnStore.ColumnOption) => {
-  const dimensionChoosed = useDimensionStore().getDimensions.find(
+  const dimensionChoosed = useDimensionsStore().getDimensions.find(
     (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
-  const groupChoosed = useGroupStore().getGroups.find(
+  const groupChoosed = useGroupsStore().getGroups.find(
     (groupOption: GroupStore.GroupOption) => groupOption.columnName === column.columnName
   )
   return {
@@ -102,13 +102,13 @@ const columnIconName = computed(() => (column: ColumnStore.ColumnOption) => {
   }
 })
 
-const columnStore = useColumnStore()
+const columnStore = useColumnsStore()
 const analyseStore = useAnalyseStore()
-const filterStore = useFilterStore()
-const orderStore = useOrderStore()
+const filterStore = useFiltersStore()
+const orderStore = useOrdersStore()
 const chartConfigStore = useChartConfigStore()
-const dimensionStore = useDimensionStore()
-const groupStore = useGroupStore()
+const dimensionStore = useDimensionsStore()
+const groupStore = useGroupsStore()
 
 /**
  * @desc 列列表
@@ -135,7 +135,7 @@ const dragstartHandler = (column: ColumnStore.ColumnOption, index: number, event
   event.dataTransfer.setData(
     'text/plain',
     JSON.stringify({
-      from: 'column',
+      from: 'columns',
       type: 'single',
       index,
       value: column
@@ -206,27 +206,27 @@ const dropHandler = (dragEvent: DragEvent) => {
   )
 
   switch (data.from) {
-    case 'dimension':
-      const dimensionSrore = useDimensionStore()
+    case 'dimensions':
+      const dimensionSrore = useDimensionsStore()
       dimensionSrore.removeDimension(data.index)
       break
-    case 'filter':
-      const filterStore = useFilterStore()
+    case 'filters':
+      const filterStore = useFiltersStore()
       filterStore.removeFilter(data.index)
       break
-    case 'order':
-      const orderStore = useOrderStore()
+    case 'orders':
+      const orderStore = useOrdersStore()
       orderStore.removeOrder(data.index)
       break
-    case 'group':
-      const groupStore = useGroupStore()
+    case 'groups':
+      const groupStore = useGroupsStore()
       groupStore.removeGroup(data.index)
       columnStore.updateColumn({
         column: data.value,
         index: columnIndex
       })
       break
-    case 'column':
+    case 'columns':
       break
     default:
       console.error('未知拖拽类型', data.from)

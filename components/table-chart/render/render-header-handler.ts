@@ -70,12 +70,12 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       y,
       width,
       height,
-      fill: isSorted ? props.headerSortActiveBackground : props.headerBackground,
+      fill: isSorted ? props.sortActiveBackground : props.headerBackground,
       stroke: props.borderColor,
       strokeWidth: 1,
       rowIndex: 0,
       colIndex: colIndex + startColIndex,
-      originFill: isSorted ? props.headerSortActiveBackground : props.headerBackground
+      originFill: isSorted ? props.sortActiveBackground : props.headerBackground
     })
 
     headerGroup.add(rect)
@@ -201,7 +201,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
     // 创建上箭头
     const upArrow = new Konva.Path({
       data: upArrowPath,
-      fill: sortOrder === 'asc' ? props.sortableColor : COLORS.INACTIVE,
+      fill: sortOrder === 'asc' ? props.sortActiveColor : COLORS.INACTIVE,
       name: 'sort-indicator-up'
     })
 
@@ -214,7 +214,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
     // 创建下箭头
     const downArrow = new Konva.Path({
       data: downArrowPath,
-      fill: sortOrder === 'desc' ? props.sortableColor : COLORS.INACTIVE,
+      fill: sortOrder === 'desc' ? props.sortActiveColor : COLORS.INACTIVE,
       name: 'sort-indicator-down'
     })
 
@@ -244,7 +244,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
   //     x: x + (columnOption.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
   //     y: 0,
   //     width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
-  //     height: props.headerHeight,
+  //     height: props.headerRowHeight,
   //     fill: 'transparent',
   //     listening: true,
   //     draggable: false,
@@ -305,7 +305,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
     }
 
     const hasFilter = !!(filterState[col.columnName] && filterState[col.columnName].size > 0)
-    const filterColor = hasFilter ? props.sortableColor : COLORS.INACTIVE
+    const filterColor = hasFilter ? props.sortActiveColor : COLORS.INACTIVE
     const filterX = x + width - LAYOUT_CONSTANTS.FILTER_ICON_OFFSET
     const centerY = y + height / 2
     const iconSize = LAYOUT_CONSTANTS.FILTER_ICON_SIZE
@@ -427,7 +427,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
         x,
         0,
         columnWidth,
-        props.headerHeight,
+        props.headerRowHeight,
         headerGroup,
         positionMapList,
         startColIndex,
@@ -435,13 +435,13 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       )
 
       // 创建文本
-      createHeaderCellText(columnOption, x, 0, columnWidth, props.headerHeight, headerGroup)
+      createHeaderCellText(columnOption, x, 0, columnWidth, props.headerRowHeight, headerGroup)
 
       // 添加排序icon
-      createSortIcon(columnOption, x, 0, columnWidth, props.headerHeight, headerGroup)
+      createSortIcon(columnOption, x, 0, columnWidth, props.headerRowHeight, headerGroup)
 
       // 添加过滤icon
-      createFilterIcon(columnOption, x, 0, columnWidth, props.headerHeight, headerGroup)
+      createFilterIcon(columnOption, x, 0, columnWidth, props.headerRowHeight, headerGroup)
 
       // 添加列宽调整手柄 - 已注释掉
       // createColumnResizer(columnOption, headerCols, x, colIndex, headerGroup)
@@ -477,8 +477,8 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //       x,
 //       y: 0,
 //       width: columnOption.width || 0,
-//       height: props.headerHeight,
-//       fill: isSortColumn ? props.headerSortActiveBackground : props.headerBackground,
+//       height: props.headerRowHeight,
+//       fill: isSortColumn ? props.sortActiveBackground : props.headerBackground,
 //       stroke: props.borderColor,
 //       strokeWidth: 1,
 //       listening: false,
@@ -518,7 +518,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //       fill: props.headerTextColor,
 //       align: columnOption.align || 'left',
 //       verticalAlign: 'middle',
-//       cellHeight: props.headerHeight,
+//       cellHeight: props.headerRowHeight,
 //       useGetTextX: true
 //     })
 //     return cellText
@@ -601,8 +601,8 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //     centerY: number
 //   ) => {
 //     const foundSort = sortColumns.value.find((s) => s.columnName === columnOption.columnName)
-//     const upColor = foundSort?.order === 'asc' ? props.sortableColor : COLORS.INACTIVE
-//     const downColor = foundSort?.order === 'desc' ? props.sortableColor : COLORS.INACTIVE
+//     const upColor = foundSort?.order === 'asc' ? props.sortActiveColor : COLORS.INACTIVE
+//     const downColor = foundSort?.order === 'desc' ? props.sortActiveColor : COLORS.INACTIVE
 //     const arrowX = x + (columnOption.width || 0) - LAYOUT_CONSTANTS.SORT_ARROW_OFFSET
 
 //     const upTriangle = new Konva.RegularPolygon({
@@ -651,7 +651,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //     centerY: number
 //   ) => {
 //     const hasFilter = !!(filterState[columnOption.columnName] && filterState[columnOption.columnName].size > 0)
-//     const filterColor = hasFilter ? props.sortableColor : COLORS.INACTIVE
+//     const filterColor = hasFilter ? props.sortActiveColor : COLORS.INACTIVE
 //     const filterX = x + (columnOption.width || 0) - LAYOUT_CONSTANTS.FILTER_ICON_OFFSET
 //     const iconSize = LAYOUT_CONSTANTS.FILTER_ICON_SIZE
 
@@ -709,7 +709,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //       x: x + (columnOption.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
 //       y: 0,
 //       width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
-//       height: props.headerHeight,
+//       height: props.headerRowHeight,
 //       fill: 'transparent',
 //       listening: true,
 //       draggable: false,
@@ -768,7 +768,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //       x: stageStartX + x,
 //       y: 0,
 //       width: columnOption.width || 0,
-//       height: props.headerHeight,
+//       height: props.headerRowHeight,
 //       rowIndex: 0,
 //       colIndex: colIndex + startColIndex
 //     })
@@ -777,7 +777,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 //     const headerText = createHeaderText(columnOption, x)
 //     headerGroup.add(headerText)
 
-//     const centerY = props.headerHeight / 2
+//     const centerY = props.headerRowHeight / 2
 
 //     // 添加排序功能
 //     if (columnOption.sortable) {
