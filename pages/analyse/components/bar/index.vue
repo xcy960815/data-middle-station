@@ -16,12 +16,11 @@
   </div>
 
   <!-- 邮件发送对话框 -->
-  <SendEmailDtoDialog v-model:visible="emailDialogVisible" :chart-ref="props.chartRef" ref="emailDialogRef" />
+  <SendEmailDtoDialog v-model:visible="emailDialogVisible" ref="emailDialogRef" />
 </template>
 
 <script setup lang="ts">
-import { ElButton, ElMessage, ElTag } from 'element-plus'
-import type { ChartComponentRef } from '~/composables/useSendChartEmail'
+import { ElButton, ElMessage, ElMessageBox, ElTag } from 'element-plus'
 import { getChartDataHandler } from '../../getChartData'
 import { updateAnalyseHandler } from '../../updateAnalyse'
 import SendEmailDtoDialog from './components/send-email-dialog.vue'
@@ -37,11 +36,6 @@ const chartUpdateTakesTime = computed(() => analyseStore.getChartUpdateTakesTime
 const emailDialogVisible = ref(false)
 
 const emailDialogRef = ref<InstanceType<typeof SendEmailDtoDialog> | null>(null)
-
-// 图表组件引用（需要从父组件传入）
-const props = defineProps<{
-  chartRef?: ChartComponentRef
-}>()
 
 const emits = defineEmits<{
   requestChartRef: []
@@ -103,34 +97,113 @@ const handleClickFullScreen = () => {
 const handleAnalyse = () => {
   // 给用户提示
   ElMessageBox({
-    title: '请确认',
-    message: h('div', [
-      '确认保存分析',
-      h(
-        'span',
-        {
-          style: {
-            color: '#409eff',
-            fontWeight: 'bold',
-            backgroundColor: '#ecf5ff',
-            padding: '2px 6px',
-            borderRadius: '4px',
-            margin: '0 4px'
-          }
-        },
-        analyseStore.getAnalyseName
-      ),
-      '吗？'
-    ]),
+    title: '确认保存',
+    customClass: 'custom-message-box',
+    message: h(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px',
+          padding: '8px 0'
+        }
+      },
+      [
+        // 图标区域
+        h(
+          'div',
+          {
+            style: {
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              backgroundColor: '#e6f7ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px',
+              color: '#1890ff'
+            }
+          },
+          '💾'
+        ),
+
+        // 主要文本
+        h(
+          'div',
+          {
+            style: {
+              textAlign: 'center',
+              fontSize: '16px',
+              color: '#333',
+              lineHeight: '1.5'
+            }
+          },
+          [
+            h('div', { style: { marginBottom: '8px' } }, '即将保存分析'),
+            h(
+              'div',
+              {
+                style: {
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }
+              },
+              [
+                h('span', '「'),
+                h(
+                  'span',
+                  {
+                    style: {
+                      color: '#1890ff',
+                      fontWeight: '600',
+                      backgroundColor: '#f0f9ff',
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #bae7ff'
+                    }
+                  },
+                  analyseStore.getAnalyseName
+                ),
+                h('span', '」')
+              ]
+            )
+          ]
+        ),
+
+        // 提示文本
+        h(
+          'div',
+          {
+            style: {
+              color: '#666',
+              fontSize: '14px',
+              textAlign: 'center'
+            }
+          },
+          '确认要保存当前的分析配置吗？'
+        )
+      ]
+    ),
     showCancelButton: true,
-    confirmButtonText: '确认',
-    cancelButtonText: '取消'
+    confirmButtonText: '确认保存',
+    cancelButtonText: '取消',
+    confirmButtonClass: 'el-button--primary',
+    cancelButtonClass: 'el-button--default',
+    center: true,
+    customStyle: {
+      borderRadius: '12px',
+      padding: '24px'
+    }
   })
     .then(() => {
       handleUpdateAnalyse()
     })
     .catch(() => {
-      ElMessage.info('取消保存')
+      ElMessage.info('已取消保存')
     })
 }
 
@@ -148,5 +221,24 @@ const handleClickSendEmailDto = () => {
 .bar {
   display: flex;
   align-items: center;
+}
+</style>
+
+<style lang="scss">
+.custom-message-box {
+  .el-message-box__header {
+    text-align: center;
+    padding-bottom: 20px;
+
+    .el-message-box__title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  .el-message-box__content {
+    padding: 0 20px 20px;
+  }
 }
 </style>
