@@ -4,14 +4,14 @@ const databaseService = new DatabaseService()
 
 /**
  * @desc 获取所有的表名
- * @returns {Promise<ResponseModule.Response<Array<TableOption>>>}
+ * @returns {Promise<ApiResponseI<Array<DatabaseVo.TableOptions>>>}
  */
-export default defineEventHandler<Promise<ApiResponse<Array<DatabaseVo.TableOptionVo>>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<Array<DatabaseVo.TableOptions>>>>(async (event) => {
   try {
-    const { tableName } = getQuery<{ tableName: string }>(event)
-    const tableList = await databaseService.queryTable(tableName)
-    return CustomResponse.success(tableList)
+    const queryTableRequest = getQuery<DatabaseDto.QueryTableRequest>(event)
+    const tableList = await databaseService.queryTable(queryTableRequest)
+    return ApiResponse.success(tableList)
   } catch (error: any) {
-    return CustomResponse.error(error.message)
+    return ApiResponse.error(error.message)
   }
 })

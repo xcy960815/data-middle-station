@@ -58,7 +58,7 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
 
   const { summaryState, tableVars } = variableHandlder({ props })
 
-  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryHeight : 0))
+  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryRowHeight : 0))
 
   /**
    * 汇总下拉浮层样式

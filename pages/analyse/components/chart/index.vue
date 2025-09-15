@@ -30,7 +30,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ChartComponentRef } from '~/composables/useSendChartEmail'
 const svg = `
         <path class="path" d="
           M 30 15
@@ -65,11 +64,11 @@ const analyseStore = useAnalyseStore()
 /**
  * @desc 维度 store
  */
-const dimensionStore = useDimensionStore()
+const dimensionStore = useDimensionsStore()
 /**
  * @desc 分组 store
  */
-const groupStore = useGroupStore()
+const groupStore = useGroupsStore()
 
 /**
  * @desc 图表宽度
@@ -185,42 +184,6 @@ onMounted(() => {
  */
 onUnmounted(() => {
   chartResizeObserver.value?.disconnect()
-})
-
-/**
- * 当前图表组件的引用
- */
-const currentChartRef = ref<ChartComponentRef>()
-
-// 暴露导出方法给父组件
-defineExpose({
-  /**
-   * 导出图表为 Base64
-   * @param options
-   */
-  exportAsImage: async (options?: ExportChartConfigs) => {
-    if (!currentChartRef.value) {
-      throw new Error('图表组件实例不存在')
-    }
-    if (typeof currentChartRef.value.exportAsImage !== 'function') {
-      throw new Error('当前图表组件不支持导出功能')
-    }
-    return currentChartRef.value.exportAsImage(options)
-  },
-  /**
-   * 下载图表
-   * @param filename 文件名
-   * @param options 选项
-   */
-  downloadChart: async (filename: string, options?: ExportChartConfigs) => {
-    if (!currentChartRef.value) {
-      throw new Error('图表组件实例不存在')
-    }
-    if (typeof currentChartRef.value.downloadChart !== 'function') {
-      throw new Error('当前图表组件不支持下载功能')
-    }
-    return currentChartRef.value.downloadChart(filename, options)
-  }
 })
 </script>
 

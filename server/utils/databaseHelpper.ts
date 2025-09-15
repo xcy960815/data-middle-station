@@ -18,7 +18,7 @@ export const toLine = (name: string) => {
   return name.replace(/([A-Z])/g, '_$1').toLowerCase()
 }
 
-const specialKeys = ['order', 'group']
+const specialKeys = ['orders', 'groups']
 
 /**
  * @desc 获取对象的属性
@@ -54,7 +54,7 @@ export function convertToSqlProperties<T extends Record<string, any>>(
   }
 }
 
-const KEYWORDCOLUMNS = ['group', 'order', 'column', 'dimension', 'filter']
+const KEYWORDCOLUMNS = ['groups', 'orders', 'columns', 'dimensions', 'filters']
 
 // 工具函数：格式化 SQL 字段名
 export function formatSqlKey(key: string) {

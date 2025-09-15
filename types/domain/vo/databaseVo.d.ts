@@ -5,7 +5,7 @@ declare namespace DatabaseVo {
   /**
    * @desc 表配置
    */
-  type TableOption = DatabaseDao.TableOption
+  type TableOptions = DatabaseDao.TableOption
 
   /**
    * @desc 左侧数据源字段类型 刚从数据库出来的字段

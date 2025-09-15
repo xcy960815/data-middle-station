@@ -6,15 +6,15 @@ const chartDataService = new ChartDataService()
  * @param {QueryChartDataParams} params
  * @returns {Promise<ResponseModule.Response<ChartDataVo.ChartData[]>>}
  */
-export default defineEventHandler<Promise<ApiResponse<ChartDataVo.ChartData[]>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<ChartDataVo.ChartData[]>>>(async (event) => {
   try {
-    const chartDataParams = await readBody<ChartDataDto.RequestParams>(event)
+    const chartDataParams = await readBody<ChartDataDto.ChartDataRequest>(event)
 
     const data = await chartDataService.getChartData(chartDataParams)
 
-    return CustomResponse.success(data)
+    return ApiResponse.success(data)
   } catch (error: any) {
     console.error(error)
-    return CustomResponse.error(error.message)
+    return ApiResponse.error(error.message)
   }
 })

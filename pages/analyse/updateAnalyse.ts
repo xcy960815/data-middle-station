@@ -4,24 +4,24 @@ import { ElMessage } from 'element-plus'
 export const updateAnalyseHandler = () => {
   const chartConfigStore = useChartConfigStore()
   const analyseStore = useAnalyseStore()
-  const columnStore = useColumnStore()
-  const dimensionStore = useDimensionStore()
-  const groupStore = useGroupStore()
-  const orderStore = useOrderStore()
-  const filterStore = useFilterStore()
+  const columnStore = useColumnsStore()
+  const dimensionStore = useDimensionsStore()
+  const groupStore = useGroupsStore()
+  const orderStore = useOrdersStore()
+  const filterStore = useFiltersStore()
   /**
    * @desc 点击保存
    */
   const handleUpdateAnalyse = async () => {
     const privateChartConfig = chartConfigStore.getPrivateChartConfig
     const chartConfigId = analyseStore.getChartConfigId
-    const column = columnStore.getColumns
-    const dimension = dimensionStore.getDimensions
-    const group = groupStore.getGroups
-    const order = orderStore.getOrders
-    const filter = filterStore.getFilters
+    const columns = columnStore.getColumns
+    const dimensions = dimensionStore.getDimensions
+    const groups = groupStore.getGroups
+    const orders = orderStore.getOrders
+    const filters = filterStore.getFilters
     const commonChartConfig = chartConfigStore.getCommonChartConfig
-    const id = analyseStore.getChartId
+    const id = analyseStore.getAnalyseId
     const analyseName = analyseStore.getAnalyseName
     const analyseDesc = analyseStore.getAnalyseDesc
     const chartType = analyseStore.getChartType
@@ -35,11 +35,11 @@ export const updateAnalyseHandler = () => {
         chartConfigId,
         chartConfig: {
           dataSource,
-          column,
-          dimension,
-          group,
-          order,
-          filter,
+          columns,
+          dimensions,
+          groups,
+          orders,
+          filters,
           chartType,
           commonChartConfig,
           privateChartConfig

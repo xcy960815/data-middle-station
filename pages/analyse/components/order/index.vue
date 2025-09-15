@@ -2,7 +2,7 @@
   <div class="order relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="order__header flex items-center justify-between px-1">
       <span class="order__title">排序</span>
-      <icon-park v-if="hasClearAll('order')" type="clear" size="12" fill="#333" @click="clearAll('order')" />
+      <icon-park v-if="hasClearAll('orders')" type="clear" size="12" fill="#333" @click="clearAll('orders')" />
     </div>
     <div class="order__content flex-auto">
       <div
@@ -36,7 +36,7 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
-const orderStore = useOrderStore()
+const orderStore = useOrdersStore()
 /**
  * @desc orderList
  */
@@ -83,7 +83,7 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
-      from: 'order',
+      from: 'orders',
       index,
       value: orderList.value[index]
     })
@@ -129,7 +129,7 @@ const dropHandler = (dragEvent: DragEvent) => {
     orderOption.__invalidMessage = '该排序已存在'
   }
   switch (data.from) {
-    case 'order': {
+    case 'orders': {
       // 调整顺序
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return

@@ -5,7 +5,7 @@ declare namespace FilterStore {
   /**
    * @desc 过滤器key
    */
-  type FilterKey = 'filter'
+  type FilterKey = 'filters'
 
   /**
    * @desc 过滤器聚合方式

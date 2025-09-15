@@ -39,7 +39,7 @@ const props = defineProps({
   }
 })
 
-const groupStore = useGroupStore()
+const groupStore = useGroupsStore()
 
 const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 

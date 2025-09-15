@@ -51,11 +51,11 @@ declare namespace AnalyseStore {
      */
     chartType: ChartType
     /**
-     * 图表id
+     * 分析id
      */
-    chartId: number | null
+    analyseId: number | null
     /**
-     * 图表配置id
+     * 分析配置id
      */
     chartConfigId: number | null
     /**

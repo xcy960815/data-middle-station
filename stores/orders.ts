@@ -5,12 +5,12 @@ import { StoreNames } from './store-names'
 
 import { defineStore } from 'pinia'
 
-export const useOrderStore = defineStore<
+export const useOrdersStore = defineStore<
   OrderStore.OrderKey,
   BaseStore.State<OrderStore.OrderState>,
   BaseStore.Getters<OrderStore.OrderState, OrderStore.OrderGetters>,
   BaseStore.Actions<OrderStore.OrderState, OrderStore.OrderActions>
->(StoreNames.ORDER, {
+>(StoreNames.ORDERS, {
   state: () => ({
     orders: []
   }),
