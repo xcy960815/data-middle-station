@@ -92,7 +92,7 @@ const handleSetColumnWidth = () => {
   if (!currentDimension.value) return
 
   // 获取列的显示名称（优先使用别名，否则使用原始名称）
-  const columnName = currentDimension.value.displayName || currentDimension.value.name || '未知列'
+  const columnName = currentDimension.value.displayName || currentDimension.value.columnName || '未知列'
 
   ElMessageBox.prompt(`请输入列"${columnName}"的宽度`, {
     title: `设置列宽 - ${columnName}`,
