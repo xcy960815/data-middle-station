@@ -4,14 +4,8 @@ import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
-import { estimateButtonWidth, getTableContainerElement, returnToPool, truncateText } from '../utils'
-import {
-  paletteOptions,
-  variableHandlder,
-  type KonvaNodePools,
-  type PositionMap,
-  type Prettify
-} from '../variable-handlder'
+import { getTableContainerElement, returnToPool, truncateText } from '../utils'
+import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -394,19 +388,6 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const globalIndexByColName = new Map<string, number>()
     tableColumns.value.forEach((c, idx) => globalIndexByColName.set(c.columnName as string, idx))
 
-    const actionWidthsMap = new Map<string, { widths: number[]; totalWidth: number }>()
-    const buttonGap = 6
-    for (let i = 0; i < bodyCols.length; i++) {
-      const col = bodyCols[i]
-      // 仅为操作列预估按钮宽度（与行无关，避免在行循环中重复计算）
-      const actions = col.actions as Array<{ label: string }> | undefined
-      if (col.columnName === 'action' && actions && actions.length > 0) {
-        const widths = actions.map((a) => estimateButtonWidth(a.label, bodyFontSizeNumber, bodyFontFamily))
-        const totalWidth = widths.reduce((a, b) => a + b, 0) + buttonGap * (actions.length - 1)
-        actionWidthsMap.set(col.columnName as string, { widths, totalWidth })
-      }
-    }
-
     recoverKonvaNode(bodyGroup, pools)
     // 渲染可视区域的行
     for (let rowIndex = tableVars.visibleRowStart; rowIndex <= tableVars.visibleRowEnd; rowIndex++) {
@@ -568,144 +549,56 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
           // cellRect.on('dblclick.cell', handleDoubleClick) // 注释双击事件
 
           bodyGroup.add(cellRect)
-          // 启用操作按钮功能
-          if (col.columnName === 'action') {
-            // 操作按钮相关代码
-            const actions = col.actions
-            const buttonHeight = Math.max(22, Math.min(28, cellHeight - 8))
-            if (actions && actions.length > 0) {
-              const preset = actionWidthsMap.get(col.columnName as string)
-              const widths = preset
-                ? preset.widths
-                : actions.map((a) => estimateButtonWidth(a.label, bodyFontSizeNumber, bodyFontFamily))
-              const totalButtonsWidth = preset
-                ? preset.totalWidth
-                : widths.reduce((a, b) => a + b, 0) + buttonGap * (actions.length - 1)
-              let startX = x + (cellWidth - totalButtonsWidth) / 2
-              const startY = y + (cellHeight - buttonHeight) / 2
-              actions.forEach((action, idx) => {
-                const currentWidth = widths[idx]
-                const paletteOption = paletteOptions[action.type || 'primary'] || paletteOptions.primary
-                const buttonCellRect = drawUnifiedRect({
-                  pools,
-                  name: 'button-rect',
-                  x: startX,
-                  y: startY,
-                  width: currentWidth,
-                  height: buttonHeight,
-                  fill: paletteOption.fill,
-                  stroke: paletteOption.stroke,
-                  cornerRadius: 4,
-                  rowIndex: null,
-                  colIndex: null
-                })
-                const isDisabled =
-                  typeof action.disabled === 'function'
-                    ? action.disabled(tableData.value[rowIndex], rowIndex)
-                    : !!action.disabled
-                // 注释按钮悬停效果以提升性能，保留点击功能
-                if (!isDisabled) {
-                  // bindButtonInteractions(buttonCellRect, {
-                  //   baseFill: paletteOption.fill,
-                  //   baseStroke: paletteOption.stroke,
-                  //   layer: bodyGroup.getLayer(),
-                  //   disabled: false
-                  // })
+          // 创建文本
+          const rawValue =
+            col.columnName === '__index__'
+              ? String(rowIndex + 1)
+              : row && typeof row === 'object'
+                ? row[col.columnName]
+                : undefined
+          const value = String(rawValue ?? '')
+          const maxTextWidth = cellWidth - 16
+          const fontFamily = bodyFontFamily
+          const fontSize = bodyFontSizeNumber
 
-                  const handleButtonClick = () => {
-                    const rowData = tableData.value[rowIndex]
-                    emits('action-click', { rowIndex, action: action.key, rowData })
-                  }
+          const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
 
-                  buttonCellRect.off('click.button')
-                  buttonCellRect.on('click.button', handleButtonClick)
-                } else {
-                  // 禁用按钮只设置透明度，不绑定交互事件
-                  buttonCellRect.opacity(0.6)
-                  // bindButtonInteractions(buttonCellRect, {
-                  //   baseFill: paletteOption.fill,
-                  //   baseStroke: paletteOption.stroke,
-                  //   layer: bodyGroup.getLayer(),
-                  //   disabled: true
-                  // })
-                }
-                bodyGroup.add(buttonCellRect)
-                const x = startX + currentWidth / 2
-                const y = startY + buttonHeight / 2
-                const buttonName = action.label
-                const fontFamily = bodyFontFamily
-                const opacity = isDisabled ? 0.6 : 1
-                const textColor = paletteOption.text
-                const buttonText = drawUnifiedText({
-                  pools,
-                  name: 'button-cell-text',
-                  text: buttonName,
-                  x,
-                  y,
-                  fontSize: bodyFontSizeNumber,
-                  fontFamily,
-                  fill: textColor,
-                  align: 'center',
-                  verticalAlign: 'middle',
-                  opacity
-                })
-                bodyGroup.add(buttonText)
+          const cellText = drawUnifiedText({
+            pools,
+            name: 'cell-text',
+            text: truncatedValue,
+            x,
+            y,
+            fontSize,
+            fontFamily,
+            fill: props.bodyTextColor,
+            align: 'left',
+            verticalAlign: 'middle',
+            cellHeight,
+            useGetTextX: true
+          })
 
-                startX += currentWidth + buttonGap
-              })
-            }
-          } else {
-            // 创建文本
-            const rawValue =
-              col.columnName === '__index__'
-                ? String(rowIndex + 1)
-                : row && typeof row === 'object'
-                  ? row[col.columnName]
-                  : undefined
-            const value = String(rawValue ?? '')
-            const maxTextWidth = cellWidth - 16
-            const fontFamily = bodyFontFamily
-            const fontSize = bodyFontSizeNumber
+          bodyGroup.add(cellText)
 
-            const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
-
-            const cellText = drawUnifiedText({
-              pools,
-              name: 'cell-text',
-              text: truncatedValue,
-              x,
-              y,
-              fontSize,
-              fontFamily,
-              fill: props.bodyTextColor,
-              align: 'left',
-              verticalAlign: 'middle',
-              cellHeight,
-              useGetTextX: true
-            })
-
-            bodyGroup.add(cellText)
-
-            // 注释tooltip功能以提升性能
-            // const colShowOverflow = col.showOverflowTooltip
-            // const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
-            // if (enableTooltip && truncatedValue !== value) {
-            //   const handleMouseEnter = () => {
-            //     if (!tableVars.stage) return
-            //     tableVars.stage.container().setAttribute('title', String(rawValue ?? ''))
-            //   }
-            //
-            //   const handleMouseLeave = () => {
-            //     if (!tableVars.stage) return
-            //     tableVars.stage.container().removeAttribute('title')
-            //   }
-            //
-            //   cellRect.off('mouseenter.tooltip')
-            //   cellRect.off('mouseleave.tooltip')
-            //   cellRect.on('mouseenter.tooltip', handleMouseEnter)
-            //   cellRect.on('mouseleave.tooltip', handleMouseLeave)
-            // }
-          }
+          // 注释tooltip功能以提升性能
+          // const colShowOverflow = col.showOverflowTooltip
+          // const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
+          // if (enableTooltip && truncatedValue !== value) {
+          //   const handleMouseEnter = () => {
+          //     if (!tableVars.stage) return
+          //     tableVars.stage.container().setAttribute('title', String(rawValue ?? ''))
+          //   }
+          //
+          //   const handleMouseLeave = () => {
+          //     if (!tableVars.stage) return
+          //     tableVars.stage.container().removeAttribute('title')
+          //   }
+          //
+          //   cellRect.off('mouseenter.tooltip')
+          //   cellRect.off('mouseleave.tooltip')
+          //   cellRect.on('mouseenter.tooltip', handleMouseEnter)
+          //   cellRect.on('mouseleave.tooltip', handleMouseLeave)
+          // }
         }
 
         // 对于合并单元格，需要跳过被合并的列
