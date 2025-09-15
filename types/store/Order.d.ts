@@ -5,7 +5,7 @@ declare namespace OrderStore {
   /**
    * @desc 排序key
    */
-  type OrderKey = 'order'
+  type OrderKey = 'orders'
 
   /**
    * @desc 排序类型

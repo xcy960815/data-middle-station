@@ -8,12 +8,12 @@ export const useAnalyseStore = defineStore<
 >(StoreNames.CHART, {
   state: () => ({
     analyseName: '',
+    analyseId: null,
     analyseDesc: '',
     chartUpdateTime: '',
     chartUpdateTakesTime: '',
     chartErrorMessage: '',
     chartType: 'table',
-    chartId: null,
     chartConfigId: null,
     chartLoading: false,
     chartData: []
@@ -66,8 +66,8 @@ export const useAnalyseStore = defineStore<
     /**
      * @desc 获取图表id
      */
-    getChartId(state) {
-      return state.chartId
+    getAnalyseId(state) {
+      return state.analyseId
     },
     /**
      * @desc 获取图表配置id
@@ -132,12 +132,12 @@ export const useAnalyseStore = defineStore<
       this.chartLoading = chartLoading
     },
     /**
-     * @desc 设置图表id
-     * @param chartId {string | null}
+     * @desc 设置分析id
+     * @param analyseId {string | null}
      * @returns {void}
      */
-    setChartId(chartId) {
-      this.chartId = chartId
+    setAnalyseId(analyseId) {
+      this.analyseId = analyseId
     },
     /**
      * @desc 设置图表配置id

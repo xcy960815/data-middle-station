@@ -1,3 +1,6 @@
+/**
+ * @desc 健康检查
+ */
 export default defineEventHandler(() => {
   return {
     status: 'ok',

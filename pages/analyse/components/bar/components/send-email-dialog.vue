@@ -25,6 +25,7 @@
         <el-radio-group v-model="emailFormData.sendMode">
           <el-radio value="immediate">立即发送</el-radio>
           <el-radio value="scheduled">定时发送</el-radio>
+          <el-radio value="recurring">重复任务</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -65,6 +66,61 @@
         </el-form-item>
       </template>
 
+      <!-- 重复任务设置 -->
+      <template v-if="emailFormData.sendMode === 'recurring'">
+        <el-form-item label="重复周期" prop="recurringDays">
+          <div class="recurring-days">
+            <el-checkbox-group v-model="emailFormData.recurringDays">
+              <el-checkbox value="1">周一</el-checkbox>
+              <el-checkbox value="2">周二</el-checkbox>
+              <el-checkbox value="3">周三</el-checkbox>
+              <el-checkbox value="4">周四</el-checkbox>
+              <el-checkbox value="5">周五</el-checkbox>
+              <el-checkbox value="6">周六</el-checkbox>
+              <el-checkbox value="0">周日</el-checkbox>
+            </el-checkbox-group>
+            <div class="text-xs text-gray-500 mt-1">选择每周的哪几天执行任务</div>
+          </div>
+        </el-form-item>
+
+        <el-form-item label="执行时间" prop="recurringTime">
+          <el-time-picker
+            v-model="emailFormData.recurringTime"
+            placeholder="选择每日执行时间"
+            format="HH:mm"
+            value-format="HH:mm"
+            style="width: 200px"
+          />
+        </el-form-item>
+
+        <el-form-item label="任务名称" prop="taskName">
+          <el-input
+            v-model="emailFormData.taskName"
+            placeholder="为这个重复任务起个名字（可选）"
+            maxlength="100"
+            show-word-limit
+          />
+        </el-form-item>
+
+        <el-form-item label="备注说明">
+          <el-input
+            v-model="emailFormData.remark"
+            type="textarea"
+            placeholder="对这个重复任务的补充说明（可选）"
+            :rows="2"
+            maxlength="200"
+            show-word-limit
+          />
+        </el-form-item>
+
+        <!-- 下次执行时间预览 -->
+        <el-form-item v-if="nextExecutionTime" label="下次执行">
+          <div class="next-execution-preview">
+            <el-tag type="info" size="large"> 📅 {{ nextExecutionTime }} </el-tag>
+          </div>
+        </el-form-item>
+      </template>
+
       <el-form-item label="额外说明">
         <el-input
           v-model="emailFormData.additionalContent"
@@ -97,6 +153,8 @@
 import type { FormInstance, FormRules } from 'element-plus'
 import {
   ElButton,
+  ElCheckbox,
+  ElCheckboxGroup,
   ElDatePicker,
   ElDialog,
   ElForm,
@@ -104,22 +162,52 @@ import {
   ElInput,
   ElMessage,
   ElRadio,
-  ElRadioGroup
+  ElRadioGroup,
+  ElTag,
+  ElTimePicker
 } from 'element-plus'
 
 export interface EmailFormData {
-  to: string // 收件人邮箱地址
+  /**
+   * 收件人邮箱地址
+   */
+  to: string
+  /**
+   * 邮件主题
+   */
   subject: string // 邮件主题
-  additionalContent: string // 额外消息内容
-  sendMode: 'immediate' | 'scheduled' // 发送模式：立即发送 | 定时发送
-  taskName: string // 任务名称（定时发送时使用）
-  scheduleTime: string | null // 计划执行时间
-  remark: string // 备注说明
+  /**
+   * 发送模式：立即发送 | 定时发送 | 重复任务
+   */
+  sendMode: 'immediate' | 'scheduled' | 'recurring'
+  /**
+   * 额外消息内容
+   */
+  additionalContent: string
+  /**
+   * 任务名称（定时发送时使用）
+   */
+  taskName: string
+  /**
+   * 计划执行时间
+   */
+  scheduleTime: string | null
+  /**
+   * 备注说明
+   */
+  remark: string
+  /**
+   * 重复的星期几 (0=周日, 1=周一, ..., 6=周六)
+   */
+  recurringDays: string[]
+  /**
+   * 重复任务的执行时间 (HH:mm格式)
+   */
+  recurringTime: string | null // 重复任务的执行时间 (HH:mm格式)
 }
 
 const props = defineProps<{
   visible: boolean
-  chartRef?: ChartComponentRef
 }>()
 
 const emits = defineEmits<{
@@ -138,24 +226,78 @@ const dialogVisible = computed({
 const emailFormData = reactive<EmailFormData>({
   to: 'xinxin87v5@icloud.com',
   subject: '',
-  additionalContent: '',
+  additionalContent: '额外说明额外说明额外说明',
   sendMode: 'immediate',
   taskName: '',
   scheduleTime: null,
-  remark: ''
+  remark: '',
+  recurringDays: [],
+  recurringTime: null
 })
 
 // 表单引用
 const emailFormRef = ref<FormInstance | null>(null)
 
-// 获取邮件相关函数
-const { validateEmails, sendEmailFromChartRef, exportChartsFromRef } = useSendChartEmail()
-
 // 发送状态
 const isSending = ref(false)
 
+// 下次执行时间预览
+const nextExecutionTime = computed(() => {
+  if (
+    emailFormData.sendMode !== 'recurring' ||
+    !emailFormData.recurringTime ||
+    emailFormData.recurringDays.length === 0
+  ) {
+    return null
+  }
+
+  // 使用与后端相同的计算逻辑
+  const now = new Date()
+  const today = now.getDay() // 0=周日, 1=周一, ..., 6=周六
+  const currentTime24 = now.getHours() * 60 + now.getMinutes()
+
+  const [targetHour, targetMinute] = emailFormData.recurringTime.split(':').map(Number)
+  const targetTime24 = targetHour * 60 + targetMinute
+
+  const validDays = emailFormData.recurringDays.map(Number).filter((day) => day >= 0 && day <= 6)
+  if (validDays.length === 0) {
+    return null
+  }
+
+  // 找到下一个执行时间
+  for (let i = 0; i < 7; i++) {
+    const checkDay = (today + i) % 7
+
+    if (validDays.includes(checkDay)) {
+      // 如果是今天，需要检查时间是否已过
+      if (i === 0 && currentTime24 >= targetTime24) {
+        continue // 今天的时间已过，检查下一个匹配日期
+      }
+
+      // 计算目标日期
+      const targetDate = new Date(now)
+      targetDate.setDate(now.getDate() + i)
+      targetDate.setHours(targetHour, targetMinute, 0, 0)
+
+      return targetDate.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        weekday: 'short'
+      })
+    }
+  }
+
+  return null
+})
+
 // 表单验证规则
 const emailFormRules: FormRules<EmailFormData> = {
+  /**
+   * @desc 收件人
+   */
   to: [
     { required: true, message: '请输入收件人邮箱', trigger: 'blur' },
     {
@@ -164,27 +306,39 @@ const emailFormRules: FormRules<EmailFormData> = {
           callback(new Error('请输入收件人邮箱'))
           return
         }
-        const emails = value
-          .split(',')
-          .map((email) => email.trim())
-          .filter((email) => email)
-        const emailValidation = validateEmails(emails)
-        if (!emailValidation.valid) {
-          callback(new Error(`邮件地址格式错误: ${emailValidation.invalidEmails.join(', ')}`))
-        } else {
-          callback()
-        }
+        // const emails = value
+        //   .split(',')
+        //   .map((email) => email.trim())
+        //   .filter((email) => email)
+        // const emailValidation = validateEmails(emails)
+        // if (!emailValidation.valid) {
+        //   callback(new Error(`邮件地址格式错误: ${emailValidation.invalidEmails.join(', ')}`))
+        // } else {
+        //   callback()
+        // }
+        callback()
       },
       trigger: 'blur'
     }
   ],
+  /**
+   * @desc 邮件主题
+   */
   subject: [
     { required: true, message: '请输入邮件主题', trigger: 'blur' },
     { min: 1, max: 200, message: '邮件主题长度应在 1 到 200 个字符之间', trigger: 'blur' }
   ],
+  /**
+   * @desc 发送模式
+   */
   sendMode: [{ required: true, message: '请选择发送模式', trigger: 'change' }],
+  /**
+   * @desc 计划执行时间
+   */
   scheduleTime: [
+    { required: true, message: '请选择执行时间', trigger: 'change' },
     {
+      required: true,
       validator: (_rule: any, value: any, callback: Function) => {
         if (emailFormData.sendMode === 'scheduled') {
           if (!value) {
@@ -203,7 +357,49 @@ const emailFormRules: FormRules<EmailFormData> = {
       trigger: 'change'
     }
   ],
-  taskName: [{ max: 100, message: '任务名称不能超过100个字符', trigger: 'blur' }]
+  /**
+   * @desc 重复日期
+   */
+  recurringDays: [
+    {
+      required: true,
+      validator: (_rule: any, value: string[], callback: Function) => {
+        if (emailFormData.sendMode === 'recurring') {
+          if (!value || value.length === 0) {
+            callback(new Error('请选择至少一个重复日期'))
+            return
+          }
+        }
+        callback()
+      },
+      trigger: 'change'
+    }
+  ],
+  /**
+   * @desc 重复时间
+   */
+  recurringTime: [
+    {
+      required: true,
+      validator: (_rule: any, value: string, callback: Function) => {
+        if (emailFormData.sendMode === 'recurring') {
+          if (!value) {
+            callback(new Error('请选择执行时间'))
+            return
+          }
+        }
+        callback()
+      },
+      trigger: 'change'
+    }
+  ],
+  /**
+   * @desc 任务名称
+   */
+  taskName: [
+    { required: true, message: '请输入任务名称', trigger: 'blur' },
+    { max: 100, message: '任务名称不能超过100个字符', trigger: 'blur' }
+  ]
 }
 
 // 获取 store
@@ -222,9 +418,16 @@ const generateDefaultTaskName = () => {
 // 获取确认按钮文本
 const getConfirmButtonText = () => {
   if (isSending.value) {
-    return emailFormData.sendMode === 'immediate' ? '发送中...' : '保存中...'
+    if (emailFormData.sendMode === 'immediate') return '发送中...'
+    if (emailFormData.sendMode === 'scheduled') return '保存中...'
+    if (emailFormData.sendMode === 'recurring') return '保存中...'
   }
-  return emailFormData.sendMode === 'immediate' ? '发送邮件' : '保存定时任务'
+
+  if (emailFormData.sendMode === 'immediate') return '发送邮件'
+  if (emailFormData.sendMode === 'scheduled') return '保存定时任务'
+  if (emailFormData.sendMode === 'recurring') return '保存重复任务'
+
+  return '确认'
 }
 
 // 禁用过去的日期
@@ -269,7 +472,7 @@ const disabledMinutes = (hour: number) => {
 watch(
   () => emailFormData.sendMode,
   (newMode) => {
-    if (newMode === 'scheduled' && !emailFormData.taskName) {
+    if ((newMode === 'scheduled' || newMode === 'recurring') && !emailFormData.taskName) {
       emailFormData.taskName = generateDefaultTaskName()
     }
   }
@@ -280,11 +483,13 @@ watch(
   (newVisible) => {
     if (newVisible) {
       emailFormData.subject = generateDefaultSubject()
-      // 重置定时发送设置
+      // 重置发送设置
       emailFormData.sendMode = 'immediate'
       emailFormData.scheduleTime = null
       emailFormData.taskName = ''
       emailFormData.remark = ''
+      emailFormData.recurringDays = []
+      emailFormData.recurringTime = null
     }
   }
 )
@@ -299,37 +504,53 @@ const handleConfirm = async () => {
     return
   }
 
-  // 检查必要的参数
-  if (!props.chartRef) {
-    ElMessage.error('无法获取图表引用，请稍后重试')
-    return
+  isSending.value = true
+  if (emailFormData.sendMode === 'immediate') {
+    await sendEmail()
+  } else if (emailFormData.sendMode === 'scheduled') {
+    // 定时任务
+    await saveScheduledTask()
+  } else if (emailFormData.sendMode === 'recurring') {
+    // 重复任务
+    await saveRecurringTask()
   }
 
-  const analyseName = analyseStore.getAnalyseName
-  isSending.value = true
+  emits('update:visible', false)
+  resetEmailForm()
+}
 
-  try {
-    if (emailFormData.sendMode === 'immediate') {
-      // 立即发送
-      ElMessage.info('正在发送邮件...')
-      const result = await sendEmailFromChartRef(props.chartRef, analyseName, emailFormData, analyseName)
-      ElMessage.success(`邮件发送成功！消息ID: ${result.data?.messageId}`)
-    } else {
-      // 定时发送
-      ElMessage.info('正在保存定时任务...')
-      await saveScheduledTask()
-      ElMessage.success('定时任务保存成功！')
+/**
+ * 发送邮件
+ */
+const sendEmail = async () => {
+  const valid = await emailFormRef.value?.validate().catch(() => false)
+  if (!valid) {
+    return
+  }
+  // 构建邮件数据
+  const emailData: SendEmailDto.SendChartEmailRequest = {
+    emailConfig: {
+      to: emailFormData.to,
+      subject: emailFormData.subject,
+      additionalContent: emailFormData.additionalContent
+    },
+    analyseOptions: {
+      filename: analyseStore.getAnalyseName,
+      chartType: analyseStore.getChartType,
+      analyseName: analyseStore.getAnalyseName,
+      analyseId: analyseStore.getAnalyseId!
     }
-
-    emits('update:visible', false)
-    resetEmailForm()
-  } catch (error) {
-    const errorMessage =
-      emailFormData.sendMode === 'immediate' ? '邮件发送失败，请稍后重试' : '定时任务保存失败，请稍后重试'
-    ElMessage.error(errorMessage)
-    console.error('操作错误:', error)
-  } finally {
+  }
+  const response = await $fetch('/api/sendEmail', {
+    method: 'POST',
+    body: emailData
+  }).finally(() => {
     isSending.value = false
+  })
+  if (response.code === 200) {
+    ElMessage.success('邮件发送成功！')
+  } else {
+    ElMessage.error('邮件发送失败！')
   }
 }
 
@@ -337,40 +558,125 @@ const handleConfirm = async () => {
  * 保存定时任务
  */
 const saveScheduledTask = async () => {
-  // 导出图表数据
-  const chartData = await exportChartsFromRef(
-    props.chartRef!,
-    analyseStore.getAnalyseName || '图表',
-    analyseStore.getAnalyseName
-  )
-
+  const valid = await emailFormRef.value?.validate().catch(() => false)
+  if (!valid) {
+    return
+  }
   // 构建定时任务数据
-  const scheduleTaskData: ScheduleTaskDto.ScheduleTaskOptions = {
+  const scheduledEmailData: ScheduledEmailDto.CreateScheduledEmailOptions = {
     taskName: emailFormData.taskName || generateDefaultTaskName(),
-    taskType: 'email',
+    taskType: 'scheduled',
     scheduleTime: emailFormData.scheduleTime!,
+    recurringDays: null,
+    recurringTime: null,
     emailConfig: {
       to: emailFormData.to,
       subject: emailFormData.subject,
       additionalContent: emailFormData.additionalContent
     },
-    chartData: {
-      chartId: chartData.chartId,
-      title: chartData.title,
-      base64Image: chartData.base64Image,
-      filename: chartData.filename,
-      analyseName: analyseStore.getAnalyseName
+    analyseOptions: {
+      filename: analyseStore.getAnalyseName,
+      chartType: analyseStore.getChartType, // 图表类型
+      analyseName: analyseStore.getAnalyseName,
+      analyseId: analyseStore.getAnalyseId!
     },
     remark: emailFormData.remark
   }
 
   // 调用API保存定时任务
-  const response = await $fetch('/api/scheduleTasks', {
+  const response = await $fetch('/api/scheduledEmails', {
     method: 'POST',
-    body: scheduleTaskData
+    body: scheduledEmailData
+  }).finally(() => {
+    isSending.value = false
   })
 
-  return response
+  if (response.code === 200) {
+    ElMessage.success('定时任务保存成功！')
+  } else {
+    ElMessage.error('定时任务保存失败！')
+  }
+}
+
+/**
+ * 保存重复任务
+ */
+const saveRecurringTask = async () => {
+  const valid = await emailFormRef.value?.validate().catch(() => false)
+  if (!valid) {
+    return
+  }
+  // 构建重复任务数据
+  const recurringTaskData: ScheduledEmailDto.CreateScheduledEmailOptions = {
+    taskName: emailFormData.taskName || generateDefaultTaskName(),
+    taskType: 'recurring',
+    scheduleTime: null,
+    recurringDays: emailFormData.recurringDays.map(Number), // 转换为数字数组
+    recurringTime: emailFormData.recurringTime,
+    remark: emailFormData.remark,
+    emailConfig: {
+      to: emailFormData.to,
+      subject: emailFormData.subject,
+      additionalContent: emailFormData.additionalContent
+    },
+    analyseOptions: {
+      filename: analyseStore.getAnalyseName,
+      chartType: analyseStore.getChartType,
+      analyseName: analyseStore.getAnalyseName,
+      analyseId: analyseStore.getAnalyseId!
+    }
+  }
+
+  // 调用API保存重复任务
+  const response = await $fetch('/api/scheduledEmails', {
+    method: 'POST',
+    body: recurringTaskData
+  }).finally(() => {
+    isSending.value = false
+  })
+
+  if (response.code === 200) {
+    ElMessage.success('重复任务保存成功！')
+  } else {
+    ElMessage.error('重复任务保存失败！')
+  }
+}
+
+/**
+ * 计算下次执行时间
+ */
+const calculateNextExecutionTime = (recurringDays: number[], recurringTime: string): string => {
+  const now = new Date()
+  const today = now.getDay() // 0=周日, 1=周一, ..., 6=周六
+  const currentTime = now.getHours() * 60 + now.getMinutes()
+  const [targetHour, targetMinute] = recurringTime.split(':').map(Number)
+  const targetTime = targetHour * 60 + targetMinute
+
+  // 找到下一个执行时间
+  for (let i = 0; i < 7; i++) {
+    const checkDay = (today + i) % 7
+
+    if (recurringDays.includes(checkDay)) {
+      const checkDate = new Date(now)
+      checkDate.setDate(now.getDate() + i)
+      checkDate.setHours(targetHour, targetMinute, 0, 0)
+
+      // 如果是今天，需要检查时间是否已过
+      if (i === 0 && targetTime <= currentTime) {
+        continue
+      }
+
+      return checkDate.toISOString().slice(0, 19).replace('T', ' ')
+    }
+  }
+
+  // 如果没有找到，返回下周的第一个执行日
+  const firstDay = Math.min(...recurringDays)
+  const nextWeekDate = new Date(now)
+  nextWeekDate.setDate(now.getDate() + 7 + firstDay - today)
+  nextWeekDate.setHours(targetHour, targetMinute, 0, 0)
+
+  return nextWeekDate.toISOString().slice(0, 19).replace('T', ' ')
 }
 
 /**
@@ -397,6 +703,8 @@ const resetEmailForm = () => {
   emailFormData.taskName = ''
   emailFormData.scheduleTime = null
   emailFormData.remark = ''
+  emailFormData.recurringDays = []
+  emailFormData.recurringTime = null
 }
 
 // 暴露方法给父组件
@@ -404,3 +712,23 @@ defineExpose({
   resetEmailForm
 })
 </script>
+
+<style scoped>
+.recurring-days {
+  .el-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .el-checkbox {
+    margin-right: 0;
+  }
+}
+
+.next-execution-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>

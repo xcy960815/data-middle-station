@@ -58,10 +58,10 @@ const props = defineProps({
     required: true
   }
 })
-const filterStore = useFilterStore()
-const orderStore = useOrderStore()
-const dimensionStore = useDimensionStore()
-const groupStore = useGroupStore()
+const filterStore = useFiltersStore()
+const orderStore = useOrdersStore()
+const dimensionStore = useDimensionsStore()
+const groupStore = useGroupsStore()
 const selecterVisible = ref(false)
 /**
  * @desc 无效样式
