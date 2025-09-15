@@ -18,7 +18,7 @@
           <el-color-picker v-model="tableConfig.highlightColBackground" show-alpha />
         </el-form-item>
         <el-form-item label="表头高度">
-          <el-input-number v-model="tableConfig.headerHeight" :step="10" />
+          <el-input-number v-model="tableConfig.headerRowHeight" :step="10" />
         </el-form-item>
         <el-form-item label="表头字体大小">
           <el-input-number v-model="tableConfig.headerFontSize" :step="2" />
@@ -56,7 +56,7 @@
           <el-switch v-model="tableConfig.enableSummary" />
         </el-form-item>
         <el-form-item label="汇总高度">
-          <el-input-number v-model="tableConfig.summaryHeight" :step="10" />
+          <el-input-number v-model="tableConfig.summaryRowHeight" :step="10" />
         </el-form-item>
         <el-form-item label="表格高度">
           <el-input-number v-model="tableConfig.chartHeight" :step="100" />
@@ -84,7 +84,7 @@
       </el-form>
       <CanvasTable
         :enable-summary="tableConfig.enableSummary"
-        :summary-height="tableConfig.summaryHeight"
+        :summary-height="tableConfig.summaryRowHeight"
         :chart-height="tableConfig.chartHeight"
         :chart-width="tableConfig.chartWidth"
         :x-axis-fields="xAxisFields"
@@ -93,7 +93,7 @@
         :body-text-color="tableConfig.bodyTextColor"
         :header-font-family="tableConfig.headerFontFamily"
         :header-font-size="tableConfig.headerFontSize"
-        :header-height="tableConfig.headerHeight"
+        :header-height="tableConfig.headerRowHeight"
         :body-font-family="tableConfig.bodyFontFamily"
         :body-font-size="tableConfig.bodyFontSize"
         :summary-font-family="tableConfig.summaryFontFamily"
@@ -488,13 +488,13 @@ const handleCellEdit = (payload: { rowIndex: number; colKey: string; rowData: Ch
 
 const tableConfig = reactive({
   enableSummary: true,
-  summaryHeight: 32,
+  summaryRowHeight: 32,
   enableRowHoverHighlight: false,
   enableColHoverHighlight: false,
   highlightRowBackground: 'rgba(24, 144, 255, 0.15)',
   highlightColBackground: 'rgba(24, 144, 255, 0.15)',
   highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
-  headerHeight: 32,
+  headerRowHeight: 32,
   headerTextColor: '#303133',
   headerFontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, Ubuntu, sans-serif',
   headerFontSize: 14,

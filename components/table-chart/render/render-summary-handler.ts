@@ -138,14 +138,14 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
   ) => {
     if (!tableVars.stage || !summaryGroup) return
     const stage = tableVars.stage
-    const summaryHeight = props.summaryHeight
+    const summaryRowHeight = props.summaryRowHeight
     const summaryBackground = props.summaryBackground
     const borderColor = props.borderColor
     const summaryFontFamily = props.summaryFontFamily
     const summaryTextColor = props.summaryTextColor
     const fontSize = props.summaryFontSize
     const rowIndex = tableData.value.length + 1
-    const summaryY = stage.height() - summaryHeight
+    const summaryY = stage.height() - summaryRowHeight
 
     let x = 0
     summaryCols.forEach((col, colIndex) => {
@@ -157,7 +157,7 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         x,
         y: 0,
         width: col.width || 0,
-        height: summaryHeight,
+        height: summaryRowHeight,
         fill: summaryBackground,
         stroke: borderColor,
         strokeWidth: 1,
@@ -176,7 +176,7 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         x: stageStartX + x,
         y: summaryY,
         width: colWidth,
-        height: summaryHeight,
+        height: summaryRowHeight,
         rowIndex,
         colIndex: realColIndex
       })
@@ -196,7 +196,7 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         fill: summaryTextColor,
         align: col.align || 'left',
         verticalAlign: 'middle',
-        cellHeight: summaryHeight,
+        cellHeight: summaryRowHeight,
         useGetTextX: true
       })
       summaryGroup.add(summaryCellText)

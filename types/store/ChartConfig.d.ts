@@ -34,7 +34,7 @@ declare namespace ChartConfigStore {
   /**
    * @desc 私有图表配置
    */
-  type PrivateChartConfig = ChartConfigVo.PrivateChartConfig
+  type PrivateChartConfig = ChartConfigVo.PrivateChartConfigResponse
 
   /**
    * @desc 图表配置状态

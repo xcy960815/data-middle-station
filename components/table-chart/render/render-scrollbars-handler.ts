@@ -50,7 +50,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
         x: stageWidth - props.scrollbarSize,
         y: 0,
         width: props.scrollbarSize,
-        height: props.headerHeight,
+        height: props.headerRowHeight,
         fill: props.headerBackground,
         stroke: props.borderColor,
         strokeWidth: 1
@@ -72,9 +72,10 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       // 绘制垂直滚动条轨道
       const verticalScrollbarRect = new Konva.Rect({
         x: stageWidth - props.scrollbarSize,
-        y: props.headerHeight,
+        y: props.headerRowHeight,
         width: props.scrollbarSize,
-        height: stageHeight - props.headerHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
+        height:
+          stageHeight - props.headerRowHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
         fill: props.scrollbarBackground,
         stroke: props.borderColor,
         strokeWidth: 1
@@ -83,10 +84,10 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
       // 计算垂直滚动条高度
       const trackHeight =
-        stageHeight - props.headerHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0)
+        stageHeight - props.headerRowHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
       // 计算垂直滚动条 Y 坐标
-      const thumbY = props.headerHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
+      const thumbY = props.headerRowHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
 
       // 绘制垂直滚动条滑块
       tableVars.verticalScrollbarThumbRect = new Konva.Rect({
@@ -242,7 +243,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       return
 
     const { leftWidth } = getSplitColumns()
-    const bodyY = props.headerHeight - tableVars.stageScrollY
+    const bodyY = props.headerRowHeight - tableVars.stageScrollY
     const centerX = -tableVars.stageScrollX
     const headerX = -tableVars.stageScrollX // 修复：header 和 body 应该使用相同的 X 偏移计算
     const summaryY = tableVars.stage
@@ -308,9 +309,9 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     // 更新垂直滚动条位置
     if (tableVars.verticalScrollbarThumbRect && maxScrollY > 0) {
       const trackHeight =
-        stageHeight - props.headerHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0)
+        stageHeight - props.headerRowHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0)
       const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
-      const thumbY = props.headerHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
+      const thumbY = props.headerRowHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
       tableVars.verticalScrollbarThumbRect.y(thumbY)
     }
 
