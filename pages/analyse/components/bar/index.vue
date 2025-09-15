@@ -94,117 +94,137 @@ const handleClickFullScreen = () => {
  * @desc 点保存按钮
  * @returns void
  */
-const handleAnalyse = () => {
-  // 给用户提示
-  ElMessageBox({
-    title: '确认保存',
-    customClass: 'custom-message-box',
-    message: h(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '16px',
-          padding: '8px 0'
-        }
-      },
-      [
-        // 图标区域
-        h(
-          'div',
-          {
-            style: {
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              backgroundColor: '#e6f7ff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px',
-              color: '#1890ff'
-            }
-          },
-          '💾'
-        ),
+const handleAnalyse = async () => {
+  try {
+    // 给用户提示
+    await ElMessageBox({
+      title: '确认保存',
+      customClass: 'custom-message-box',
+      message: h(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px',
+            padding: '8px 0'
+          }
+        },
+        [
+          // 图标区域
+          h(
+            'div',
+            {
+              style: {
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: '#e6f7ff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                color: '#1890ff'
+              }
+            },
+            '💾'
+          ),
 
-        // 主要文本
-        h(
-          'div',
-          {
-            style: {
-              textAlign: 'center',
-              fontSize: '16px',
-              color: '#333',
-              lineHeight: '1.5'
-            }
-          },
-          [
-            h('div', { style: { marginBottom: '8px' } }, '即将保存分析'),
-            h(
-              'div',
-              {
-                style: {
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }
-              },
-              [
-                h('span', '「'),
-                h(
-                  'span',
-                  {
-                    style: {
-                      color: '#1890ff',
-                      fontWeight: '600',
-                      backgroundColor: '#f0f9ff',
-                      padding: '4px 12px',
-                      borderRadius: '6px',
-                      border: '1px solid #bae7ff'
-                    }
-                  },
-                  analyseStore.getAnalyseName
-                ),
-                h('span', '」')
-              ]
-            )
-          ]
-        ),
+          // 主要文本
+          h(
+            'div',
+            {
+              style: {
+                textAlign: 'center',
+                fontSize: '16px',
+                color: '#333',
+                lineHeight: '1.5'
+              }
+            },
+            [
+              h('div', { style: { marginBottom: '8px' } }, '即将保存分析'),
+              h(
+                'div',
+                {
+                  style: {
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }
+                },
+                [
+                  h('span', '「'),
+                  h(
+                    'span',
+                    {
+                      style: {
+                        color: '#1890ff',
+                        fontWeight: '600',
+                        backgroundColor: '#f0f9ff',
+                        padding: '4px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #bae7ff'
+                      }
+                    },
+                    analyseStore.getAnalyseName
+                  ),
+                  h('span', '」')
+                ]
+              )
+            ]
+          ),
 
-        // 提示文本
-        h(
-          'div',
-          {
-            style: {
-              color: '#666',
-              fontSize: '14px',
-              textAlign: 'center'
-            }
-          },
-          '确认要保存当前的分析配置吗？'
-        )
-      ]
-    ),
-    showCancelButton: true,
-    confirmButtonText: '确认保存',
-    cancelButtonText: '取消',
-    confirmButtonClass: 'el-button--primary',
-    cancelButtonClass: 'el-button--default',
-    center: true,
-    customStyle: {
-      borderRadius: '12px',
-      padding: '24px'
-    }
-  })
-    .then(() => {
-      handleUpdateAnalyse()
+          // 提示文本
+          h(
+            'div',
+            {
+              style: {
+                color: '#666',
+                fontSize: '14px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+              }
+            },
+            [
+              h('div', '确认要保存当前的分析配置吗？'),
+              h(
+                'div',
+                {
+                  style: {
+                    fontSize: '12px',
+                    color: '#999',
+                    marginTop: '8px',
+                    fontStyle: 'italic'
+                  }
+                },
+                '按 Enter 键确认，Esc 键取消'
+              )
+            ]
+          )
+        ]
+      ),
+      showCancelButton: true,
+      confirmButtonText: '确认保存',
+      cancelButtonText: '取消',
+      confirmButtonClass: 'el-button--primary',
+      cancelButtonClass: 'el-button--default',
+      center: true,
+      closeOnPressEscape: true,
+      distinguishCancelAndClose: false,
+      autofocus: true,
+      customStyle: {
+        borderRadius: '12px',
+        padding: '24px'
+      }
     })
-    .catch(() => {
-      ElMessage.info('已取消保存')
-    })
+
+    // 用户确认保存
+    handleUpdateAnalyse()
+  } catch (error) {
+    // 用户取消或关闭对话框
+    ElMessage.info('已取消保存')
+  }
 }
 
 /**
