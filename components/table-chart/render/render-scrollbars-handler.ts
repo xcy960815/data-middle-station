@@ -17,7 +17,7 @@ interface RenderScrollbarsHandlerProps {
 }
 
 export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandlerProps) => {
-  const { getStageAttr } = konvaStageHandler({ props })
+  const { getStageAttr, setPointerStyle } = konvaStageHandler({ props })
   const { getScrollLimits, getSplitColumns, recomputeHoverIndexFromPointer, drawBodyPart, calculateVisibleRows } =
     renderBodyHandler({ props, emits })
   const { tableData, tableVars } = variableHandlder({ props })
@@ -160,16 +160,21 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       tableVars.stage!.container().style.cursor = 'grabbing'
       tableVars.stage!.setPointersPositions(event.evt)
     })
-    // 注释滚动条悬停效果以提升性能
-    // tableVars.verticalScrollbarThumbRect.on('mouseenter', () => {
-    //   if (tableVars.verticalScrollbarThumbRect) tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumbHover)
-    //   tableVars.scrollbarLayer?.batchDraw()
-    // })
-    // tableVars.verticalScrollbarThumbRect.on('mouseleave', () => {
-    //   if (tableVars.verticalScrollbarThumbRect && !tableVars.isDraggingVerticalThumb)
-    //     tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumb)
-    //   tableVars.scrollbarLayer?.batchDraw()
-    // })
+    // 启用滚动条悬停效果
+    tableVars.verticalScrollbarThumbRect.on('mouseenter', () => {
+      if (tableVars.verticalScrollbarThumbRect) {
+        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumbHover)
+        setPointerStyle(true, 'grab')
+      }
+      tableVars.scrollbarLayer?.batchDraw()
+    })
+    tableVars.verticalScrollbarThumbRect.on('mouseleave', () => {
+      if (tableVars.verticalScrollbarThumbRect && !tableVars.isDraggingVerticalThumb) {
+        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumb)
+        setPointerStyle(false, 'grab')
+      }
+      tableVars.scrollbarLayer?.batchDraw()
+    })
   }
   /**
    * 设置水平滚动条事件
@@ -187,16 +192,21 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       tableVars.stage!.setPointersPositions(event.evt)
     })
 
-    // 注释滚动条悬停效果以提升性能
-    // tableVars.horizontalScrollbarThumbRect.on('mouseenter', () => {
-    //   if (tableVars.horizontalScrollbarThumbRect) tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumbHover)
-    //   tableVars.scrollbarLayer?.batchDraw()
-    // })
-    // tableVars.horizontalScrollbarThumbRect.on('mouseleave', () => {
-    //   if (tableVars.horizontalScrollbarThumbRect && !tableVars.isDraggingHorizontalThumb)
-    //     tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumb)
-    //   tableVars.scrollbarLayer?.batchDraw()
-    // })
+    // 启用滚动条悬停效果
+    tableVars.horizontalScrollbarThumbRect.on('mouseenter', () => {
+      if (tableVars.horizontalScrollbarThumbRect) {
+        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumbHover)
+        setPointerStyle(true, 'grab')
+      }
+      tableVars.scrollbarLayer?.batchDraw()
+    })
+    tableVars.horizontalScrollbarThumbRect.on('mouseleave', () => {
+      if (tableVars.horizontalScrollbarThumbRect && !tableVars.isDraggingHorizontalThumb) {
+        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumb)
+        setPointerStyle(false, 'grab')
+      }
+      tableVars.scrollbarLayer?.batchDraw()
+    })
   }
 
   /**

@@ -5,7 +5,7 @@
   <!-- 字段的操作选项 -->
   <context-menu ref="contextmenuRef">
     <context-menu-item @click="handleSetAlias">设置别名</context-menu-item>
-    <context-menu-item @click="handleSetWidth">设置列宽</context-menu-item>
+    <context-menu-item @click="handleSetColumnWidth">设置列宽</context-menu-item>
     <!-- 开启排序 -->
     <context-menu-item @click="handleSetSortable">开启排序</context-menu-item>
     <!-- 开启表头过滤 -->
@@ -88,14 +88,19 @@ const handleSetAlias = () => {
 /**
  * @desc 设置列宽
  */
-const handleSetWidth = () => {
-  ElMessageBox.prompt('请输入列宽', {
-    title: '设置列宽',
+const handleSetColumnWidth = () => {
+  if (!currentDimension.value) return
+
+  // 获取列的显示名称（优先使用别名，否则使用原始名称）
+  const columnName = currentDimension.value.displayName || currentDimension.value.name || '未知列'
+
+  ElMessageBox.prompt(`请输入列"${columnName}"的宽度`, {
+    title: `设置列宽 - ${columnName}`,
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     inputPattern: /^[1-9]\d*$/,
     inputErrorMessage: '列宽仅支持正整数',
-    inputValue: String(currentDimension.value!.width || ''),
+    inputValue: String(currentDimension.value.width || ''),
     autofocus: true
   })
     .then(({ value }) => {
