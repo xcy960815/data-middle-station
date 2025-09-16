@@ -355,10 +355,6 @@ declare namespace ChartConfigDao {
 
     // ========== 排序样式配置 ==========
     /**
-     * 表头排序激活背景色
-     */
-    sortActiveBackground: string
-    /**
      * 可排序颜色
      */
     sortActiveColor: string

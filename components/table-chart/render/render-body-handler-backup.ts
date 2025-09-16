@@ -54,7 +54,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
       y: 0,
       width: col.width || 0,
       height: props.headerRowHeight,
-      fill: isSortColumn ? props.sortActiveBackground : props.headerBackground,
+      fill: props.headerBackground,
       stroke: props.borderColor,
       strokeWidth: 1,
       listening: false,

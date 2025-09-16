@@ -112,10 +112,6 @@ export const styleProps = {
   scrollbarThumbHover: { type: String, default: '#a8a8a8' },
 
   /**
-   * 排序激活背景色
-   */
-  sortActiveBackground: { type: String, default: '#ecf5ff' },
-  /**
    * 排序箭头颜色
    */
   sortActiveColor: { type: String, default: '#409EFF' }

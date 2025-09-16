@@ -70,12 +70,12 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       y,
       width,
       height,
-      fill: isSorted ? props.sortActiveBackground : props.headerBackground,
+      fill: props.headerBackground,
       stroke: props.borderColor,
       strokeWidth: 1,
       rowIndex: 0,
       colIndex: colIndex + startColIndex,
-      originFill: isSorted ? props.sortActiveBackground : props.headerBackground
+      originFill: props.headerBackground
     })
 
     headerGroup.add(rect)
@@ -454,75 +454,6 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
     drawHeaderPart
   }
 }
-
-// export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
-//   const { openFilterDropdown } = filterDropdownHandler({ props })
-//   const { sortColumns, tableData, handleTableData, filterState, tableVars } = variableHandlder({ props })
-//   const { clearGroups } = konvaStageHandler({ props })
-//   const { setPointerStyle } = konvaStageHandler({ props, emits })
-//   /**
-//    * 创建表头单元格矩形
-//    */
-//   const createHeaderCell = (
-//     columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
-//     x: number,
-//     colIndex: number,
-//     startColIndex: number
-//   ) => {
-//     const pools = tableVars.leftBodyPools // 复用任一池子（header也只需要 rect/text 对象池）
-//     const isSortColumn = sortColumns.value.find((s) => s.columnName === columnOption.columnName)
-//     const rect = drawUnifiedRect({
-//       pools,
-//       name: 'header-cell-rect',
-//       x,
-//       y: 0,
-//       width: columnOption.width || 0,
-//       height: props.headerRowHeight,
-//       fill: isSortColumn ? props.sortActiveBackground : props.headerBackground,
-//       stroke: props.borderColor,
-//       strokeWidth: 1,
-//       listening: false,
-//       rowIndex: 0,
-//       colIndex: colIndex + startColIndex,
-//       originFill: props.headerBackground
-//     })
-
-//     return rect
-//   }
-
-//   /**
-//    * 创建表头文本
-//    * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption 列
-//    * @param {number} x 列的x坐标
-//    * @returns {Konva.Text} 表头文本
-//    */
-//   const createHeaderText = (columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption, x: number) => {
-//     const maxTextWidth = (columnOption.width || 0) - LAYOUT_CONSTANTS.ICON_AREA_WIDTH
-//     const fontSize = typeof props.headerFontSize === 'string' ? parseFloat(props.headerFontSize) : props.headerFontSize
-//     const displayName =
-//       columnOption.displayName && columnOption.displayName.trim().length > 0
-//         ? columnOption.displayName
-//         : columnOption.columnName === '__index__'
-//           ? '序号'
-//           : columnOption.columnName
-//     const truncatedTitle = truncateText(displayName, maxTextWidth, fontSize, props.headerFontFamily)
-//     const pools = tableVars.leftBodyPools
-//     const cellText = drawUnifiedText({
-//       pools,
-//       name: 'header-cell-text',
-//       text: truncatedTitle,
-//       x,
-//       y: 0,
-//       fontSize,
-//       fontFamily: props.headerFontFamily,
-//       fill: props.headerTextColor,
-//       align: columnOption.align || 'left',
-//       verticalAlign: 'middle',
-//       cellHeight: props.headerRowHeight,
-//       useGetTextX: true
-//     })
-//     return cellText
-//   }
 
 //   /**
 //    * 处理排序逻辑
