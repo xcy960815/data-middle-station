@@ -133,8 +133,7 @@ watch(
     props.headerFontFamily,
     props.headerFontSize,
     props.headerTextColor,
-    props.headerBackground,
-    props.sortActiveBackground
+    props.headerBackground
   ],
   () => {
     if (!tableVars.stage) return
