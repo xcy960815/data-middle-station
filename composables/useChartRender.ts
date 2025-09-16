@@ -1,14 +1,10 @@
 import type { Chart } from '@antv/g2'
-// G2-SSR的Chart类型可能与G2不同，我们使用any类型来避免类型错误
-// 在实际使用中，G2-SSR的API与G2基本相同，但类型定义可能不完整
-type ChartSSR = any
 
 /**
  * 图表渲染类型枚举
  */
 export enum ChartRenderType {
-  CLIENT = 'client', // 客户端渲染，包含交互
-  SERVER = 'server' // 服务端渲染，仅数据渲染
+  CLIENT = 'client' // 客户端渲染，包含交互
 }
 /**
  * 图表渲染配置接口
@@ -24,9 +20,9 @@ export interface ChartRenderConfig {
  * 通用图表渲染器接口
  */
 export interface ChartRenderer {
-  renderIntervalChart(chart: Chart | ChartSSR, config: ChartRenderConfig, chartConfig?: IntervalChartConfig): void
-  renderLineChart(chart: Chart | ChartSSR, config: ChartRenderConfig, chartConfig?: LineChartConfig): void
-  renderPieChart(chart: Chart | ChartSSR, config: ChartRenderConfig, chartConfig?: PieChartConfig): void
+  renderIntervalChart(chart: Chart, config: ChartRenderConfig, chartConfig?: IntervalChartConfig): void
+  renderLineChart(chart: Chart, config: ChartRenderConfig, chartConfig?: LineChartConfig): void
+  renderPieChart(chart: Chart, config: ChartRenderConfig, chartConfig?: PieChartConfig): void
 }
 
 /**
@@ -365,9 +361,9 @@ export function processChartData(config: ChartRenderConfig): ChartDataProcessRes
 }
 
 /**
- * 配置图表标题（兼容G2和G2-SSR）
+ * 配置图表标题
  */
-export function setChartTitle(chart: Chart | ChartSSR, title: string): void {
+export function setChartTitle(chart: Chart, title: string): void {
   if ('title' in chart && typeof chart.title === 'function') {
     chart.title({ title })
   }
@@ -446,248 +442,6 @@ export function addPieChartInteractions(
       `
     }
   })
-}
-
-// ==================== G2-SSR 专用渲染函数（服务端，仅数据渲染） ====================
-//
-// 使用场景：服务端图表渲染，用于邮件发送等场景
-// - 仅包含数据渲染逻辑，无交互功能
-// - 不包含 tooltip、高亮等前端交互
-// - 适用于生成静态图表图片
-// - 用于邮件中的图表展示
-//
-
-/**
- * 渲染柱状图 - G2-SSR版本（仅数据渲染）
- * @param chart G2-SSR 图表实例
- * @param config 图表配置
- * @param chartConfig 柱状图特有配置
- */
-export function renderIntervalChartSSR(
-  chart: ChartSSR,
-  config: ChartRenderConfig,
-  chartConfig: IntervalChartConfig = {}
-) {
-  const {
-    showPercentage = false,
-    displayMode = 'levelDisplay',
-    showLabel = false,
-    horizontalDisplay = false
-  } = chartConfig
-
-  // 如果没有数据，不渲染图表
-  if (!config.data || config.data.length === 0) {
-    return
-  }
-
-  // 处理公共数据
-  const dataResult = processChartData(config)
-  const { xFieldName, measureFields, groupFieldName, useFold, xAxisTitle, yAxisTitle } = dataResult
-
-  // 配置图表标题
-  setChartTitle(chart, config.title)
-
-  const intervalChart = chart
-    .interval()
-    .data({
-      type: 'inline',
-      value: config.data,
-      transform: useFold ? [{ type: 'fold', fields: measureFields, key: 'key', value: 'value' }] : []
-    })
-    .encode('x', xFieldName)
-    .encode('y', useFold ? 'value' : measureFields[0] || 'value')
-    .scale('y', { nice: true })
-
-  // 配置轴标题
-  const yAxisOptions: { title: string; labelFormatter: string } = { title: yAxisTitle, labelFormatter: '~s' }
-  chart.axis('x', { title: xAxisTitle })
-  chart.axis('y', yAxisOptions)
-
-  // 颜色与分组配置
-  if (useFold && groupFieldName) {
-    intervalChart.encode('color', (d: ChartDataVo.ChartData) => `${d[groupFieldName]}-${d.key}`)
-  } else if (useFold) {
-    intervalChart.encode('color', 'key')
-  } else if (groupFieldName) {
-    intervalChart.encode('color', groupFieldName)
-  }
-
-  // 显示模式配置
-  if (displayMode === 'levelDisplay') {
-    intervalChart.transform({ type: 'dodgeX' })
-  } else if (displayMode === 'stackDisplay') {
-    intervalChart.transform({ type: 'stackY' })
-  }
-
-  // 百分比显示
-  if (showPercentage) {
-    intervalChart.axis('y', { ...yAxisOptions, labelFormatter: (d: number) => `${Number(d) / 100}%` })
-  }
-
-  // 标签显示
-  if (showLabel) {
-    intervalChart.label({
-      text: useFold ? 'value' : measureFields[0],
-      position: 'top'
-    })
-  }
-
-  // 水平展示
-  if (horizontalDisplay) {
-    intervalChart.coordinate({
-      transform: [{ type: 'transpose' }]
-    })
-  }
-}
-
-/**
- * 渲染折线图 - G2-SSR版本（仅数据渲染）
- * @param chart G2-SSR 图表实例
- * @param config 图表配置
- * @param chartConfig 折线图特有配置
- */
-export function renderLineChartSSR(chart: ChartSSR, config: ChartRenderConfig, chartConfig: LineChartConfig = {}) {
-  const { showPoint = false, showLabel = false, smooth = false } = chartConfig
-
-  // 如果没有数据，不渲染图表
-  if (!config.data || config.data.length === 0) {
-    return
-  }
-
-  // 处理公共数据
-  const dataResult = processChartData(config)
-  const { xFieldName, measureFields, groupFieldName, useFold, xAxisTitle, yAxisTitle } = dataResult
-
-  // 配置图表标题
-  setChartTitle(chart, config.title)
-
-  // 设置公共数据和编码
-  chart
-    .data({
-      type: 'inline',
-      value: config.data,
-      transform: useFold ? [{ type: 'fold', fields: measureFields, key: 'key', value: 'value' }] : []
-    })
-    .encode('x', xFieldName)
-    .encode('y', (row: ChartDataVo.ChartData) => {
-      if (useFold) return row['value']
-      return row[measureFields[0]]
-    })
-    .scale('y', { nice: true })
-
-  // 配置轴标题
-  const yAxisOptions: { title: string; labelFormatter: string } = { title: yAxisTitle, labelFormatter: '~s' }
-  chart.axis('x', { title: xAxisTitle })
-  chart.axis('y', yAxisOptions)
-
-  // 颜色与分组编码
-  if (useFold && groupFieldName) {
-    const seriesEncoder = (row: ChartDataVo.ChartData) => `${String(row[groupFieldName])}-${String(row['key'])}`
-    chart.encode('color', seriesEncoder).encode('series', seriesEncoder)
-  } else if (useFold) {
-    chart.encode('color', 'key').encode('series', 'key')
-  } else if (groupFieldName) {
-    chart.encode('color', groupFieldName).encode('series', groupFieldName)
-  }
-
-  // 创建线条
-  const lineChart = chart.line().style('strokeWidth', 2)
-
-  // 是否画圆点
-  if (showPoint) {
-    chart.point().tooltip(false)
-  }
-
-  // 是否平滑展示
-  if (smooth) {
-    lineChart.encode('shape', 'smooth')
-  }
-
-  // 是否显示标签
-  if (showLabel) {
-    lineChart.label({
-      text: useFold ? 'value' : measureFields[0],
-      position: 'top',
-      dy: -10,
-      style: {
-        textAlign: 'center',
-        fontSize: 12,
-        fill: '#666',
-        stroke: '#fff',
-        strokeWidth: 2,
-        strokeOpacity: 0.8
-      },
-      transform: [{ type: 'overlapDodgeY' }]
-    })
-  }
-}
-
-/**
- * 渲染饼图 - G2-SSR版本（仅数据渲染）
- * @param chart G2-SSR 图表实例
- * @param config 图表配置
- * @param chartConfig 饼图特有配置
- */
-export function renderPieChartSSR(chart: ChartSSR, config: ChartRenderConfig, chartConfig: PieChartConfig = {}) {
-  const { showLabel = false, innerRadius = 0.6 } = chartConfig
-
-  // 配置图表标题
-  setChartTitle(chart, config.title)
-
-  // 饼图数据处理逻辑
-  const categoryField = config.xAxisFields[0]?.columnName
-  const categoryDisplayName = config.xAxisFields[0]?.displayName
-  const valueField = config.yAxisFields[0]?.columnName
-  const valueDisplayName = config.yAxisFields[0]?.displayName
-
-  if (!categoryField || !valueField) {
-    return
-  }
-
-  // 设置极坐标系
-  chart.coordinate({
-    type: 'theta',
-    innerRadius
-  })
-
-  const pieChart = chart
-    .interval()
-    .data(config.data)
-    .encode('y', valueField)
-    .encode('color', categoryField)
-    .scale('color', {
-      range: getDefaultChartColors()
-    })
-    .style('stroke', '#fff')
-    .style('strokeWidth', 2)
-
-  // 配置图例
-  chart.legend('color', {
-    title: categoryDisplayName || categoryField
-  })
-
-  // 饼图转换
-  pieChart.transform({ type: 'stackY' })
-
-  // 标签配置
-  if (showLabel) {
-    pieChart.label({
-      text: (d: ChartDataVo.ChartData) => {
-        const value = d[valueField]
-        const total = config.data.reduce(
-          (sum: number, item: ChartDataVo.ChartData) => sum + Number(item[valueField] || 0),
-          0
-        )
-        const percentage = total > 0 ? ((Number(value) / total) * 100).toFixed(1) : '0.0'
-        return `${percentage}%`
-      },
-      style: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        fill: '#fff'
-      }
-    })
-  }
 }
 
 /**
