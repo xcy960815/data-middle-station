@@ -1,8 +1,7 @@
-import { createChart } from '@antv/g2-ssr'
-import { renderIntervalChartSSR, renderLineChartSSR, renderPieChartSSR } from '~/composables/useChartRender'
 import { SendEmail } from '../utils/sendEmail'
 import { AnalyseService } from './analyseService'
 import { ChartDataService } from './chartDataService'
+
 const logger = new Logger({
   fileName: 'chart-email',
   folderName: 'server'
@@ -62,50 +61,17 @@ export class ChartEmailService {
       dimensions: chartConfig?.dimensions || [],
       commonChartConfig: chartConfig?.commonChartConfig!
     })
-    const chart = await createChart({
-      width: 640,
-      height: 480,
-      imageType: 'jpeg'
-    })
 
-    // 构造图表渲染配置
-    const chartRenderConfig = {
-      title: analyseOptions.analyseName,
-      data: chartData,
-      xAxisFields: chartConfig?.groups || [],
-      yAxisFields: chartConfig?.dimensions || []
-    }
-
-    switch (chartConfig?.chartType) {
-      case 'line':
-        renderLineChartSSR(chart, chartRenderConfig, chartConfig.privateChartConfig?.line)
-        break
-      case 'interval':
-        renderIntervalChartSSR(chart, chartRenderConfig, chartConfig.privateChartConfig?.interval)
-        break
-      case 'pie':
-        renderPieChartSSR(chart, chartRenderConfig, chartConfig.privateChartConfig?.pie)
-        break
-    }
-
-    // 导出
-    chart.exportToFile('chart')
-    // -> chart.png
-
-    const base64Image = chart.toBuffer()
-    console.log('base64Image', base64Image)
-    // chartHTML = `
-    //   <div style="text-align: center; margin: 20px 0;">
-    //     <h2>${analyseName}</h2>
-    //     <img src="data:image/png;base64,${base64Image}" alt="${analyseName}" style="max-width: 100%; height: auto;" />
-    //     ${additionalContent ? `<p>${additionalContent}</p>` : ''}
-    //   </div>
-    // `
-
+    // 由于移除了 @antv/g2-ssr 包，暂时返回简单的文本内容
+    // 如果需要图表功能，可以考虑使用其他图表库或重新安装 @antv/g2-ssr
     const chartHTML = `
       <div style="text-align: center; margin: 20px 0;">
         <h2>${analyseName}</h2>
-        <img src="data:image/png;base64,${base64Image}" alt="${analyseName}" style="max-width: 100%; height: auto;" />
+        <div style="padding: 20px; border: 1px solid #ddd; background-color: #f9f9f9;">
+          <p>图表功能暂时不可用（已移除 @antv/g2-ssr 包）</p>
+          <p>图表类型: ${chartConfig?.chartType || '未知'}</p>
+          <p>数据条数: ${chartData?.length || 0}</p>
+        </div>
         ${additionalContent ? `<p>${additionalContent}</p>` : ''}
       </div>
     `
