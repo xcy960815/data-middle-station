@@ -32,8 +32,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'change', value: string): void
-  (e: 'blur'): void
+  (event: 'change', value: string): void
+  (event: 'blur'): void
 }
 
 const props = defineProps<Props>()
