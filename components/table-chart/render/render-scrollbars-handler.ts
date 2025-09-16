@@ -36,6 +36,8 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   let lastRenderTime = 0
   const renderThrottleDelay = 32 // 限制重绘频率为30fps
 
+  // 滚动方向锁定相关变量
+
   /**
    * 创建滚动条
    */
@@ -486,14 +488,25 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     const hasDeltaX = Math.abs(e.deltaX) > 0
     const hasDeltaY = Math.abs(e.deltaY) > 0
+
     // 兼容 Shift + 滚轮用于横向滚动（常见于鼠标）
     if (e.shiftKey && !hasDeltaX && hasDeltaY) {
       updateHorizontalScroll(e.deltaY)
       return
     }
-    // 触控板或支持横向滚轮的鼠标
-    if (hasDeltaX) updateHorizontalScroll(e.deltaX)
-    if (hasDeltaY) updateVerticalScroll(e.deltaY)
+
+    // 实现滚动方向锁定：比较 deltaY 和 deltaX 的绝对值，只执行主要方向的滚动
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      // 主要是上下滚动
+      if (hasDeltaY) {
+        updateVerticalScroll(e.deltaY)
+      }
+    } else {
+      // 主要是左右滚动
+      if (hasDeltaX) {
+        updateHorizontalScroll(e.deltaX)
+      }
+    }
   }
 
   /**
