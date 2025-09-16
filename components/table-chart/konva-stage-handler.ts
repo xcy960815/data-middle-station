@@ -170,9 +170,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     // 手动拖拽导致的垂直滚动
     if (tableVars.isDraggingVerticalThumb) {
       const deltaY = mouseEvent.clientY - tableVars.dragStartY
-      const scrollThreshold = props.scrollThreshold
-      if (Math.abs(deltaY) < scrollThreshold) return
-
       const { maxScrollY, maxScrollX } = getScrollLimits()
       const stageHeight = tableVars.stage.height()
       const trackHeight =
@@ -226,8 +223,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     // 手动拖拽导致的水平滚动
     if (tableVars.isDraggingHorizontalThumb) {
       const deltaX = mouseEvent.clientX - tableVars.dragStartX
-      const scrollThreshold = props.scrollThreshold
-      if (Math.abs(deltaX) < scrollThreshold) return
 
       const { maxScrollX } = getScrollLimits()
       const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
