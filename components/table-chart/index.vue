@@ -35,7 +35,6 @@
         :scrollbar-thumb-hover="tableChartConfig?.scrollbarThumbHover"
         :buffer-rows="tableChartConfig?.bufferRows"
         :min-auto-col-width="tableChartConfig?.minAutoColWidth"
-        :scroll-threshold="tableChartConfig?.scrollThreshold"
         :sort-active-background="tableChartConfig?.sortActiveBackground"
         :sort-active-color="tableChartConfig?.sortActiveColor"
       >

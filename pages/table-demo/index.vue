@@ -107,7 +107,6 @@
         :scrollbar-thumb-hover="tableConfig.scrollbarThumbHover"
         :buffer-rows="tableConfig.bufferRows"
         :min-auto-col-width="tableConfig.minAutoColWidth"
-        :scroll-threshold="tableConfig.scrollThreshold"
         :header-sort-active-background="tableConfig.sortActiveBackground"
         :sortable-color="tableConfig.sortActiveColor"
         :y-axis-fields="yAxisFields"
@@ -118,7 +117,6 @@
         :highlight-col-background="tableConfig.highlightColBackground"
         :span-method="spanMethod"
         @cell-click="handleCellClick"
-        @action-click="() => {}"
         @cell-edit="handleCellEdit"
       >
       </CanvasTable>
@@ -513,7 +511,6 @@ const tableConfig = reactive({
   scrollbarThumbHover: 'rgba(24, 144, 255, 0.8)',
   bufferRows: 5,
   minAutoColWidth: 100,
-  scrollThreshold: 10,
   sortActiveBackground: '#ecf5ff',
   sortActiveColor: '#409EFF',
   chartHeight: 360,
