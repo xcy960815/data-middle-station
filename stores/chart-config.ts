@@ -2,7 +2,7 @@ import { StoreNames } from './store-names'
 /**
  * @desc 默认表格图配置
  */
-export const defaultTableChartConfig: ChartConfigVo.TableChartConfig = {
+export const defaultTableChartConfig: ChartConfigVo.TableChartConfigResponse = {
   /**
    * @desc 是否启用行悬停高亮
    */
@@ -120,15 +120,11 @@ export const defaultTableChartConfig: ChartConfigVo.TableChartConfig = {
    */
   minAutoColWidth: 80,
   /**
-   * @desc 滚动阈值
-   */
-  scrollThreshold: 3,
-  /**
-   * @desc 表头排序激活背景色
+   * @desc 排序激活背景色
    */
   sortActiveBackground: '#e5e7eb',
   /**
-   * @desc 可排序颜色
+   * @desc 激活的排序颜色
    */
   sortActiveColor: '#6b7280'
 }
@@ -136,7 +132,7 @@ export const defaultTableChartConfig: ChartConfigVo.TableChartConfig = {
 /**
  * @desc 默认饼图配置
  */
-export const defaultPieChartConfig: ChartConfigVo.PieChartConfig = {
+export const defaultPieChartConfig: ChartConfigVo.PieChartConfigResponse = {
   /**
    * @desc 是否显示标签
    */
@@ -150,7 +146,7 @@ export const defaultPieChartConfig: ChartConfigVo.PieChartConfig = {
 /**
  * @desc 默认柱状图配置
  */
-export const defaultIntervalChartConfig: ChartConfigVo.IntervalChartConfig = {
+export const defaultIntervalChartConfig: ChartConfigVo.IntervalChartConfigResponse = {
   /**
    * @desc 显示模式
    */
@@ -176,7 +172,7 @@ export const defaultIntervalChartConfig: ChartConfigVo.IntervalChartConfig = {
 /**
  * @desc 默认折线图配置
  */
-export const defaultLineChartConfig: ChartConfigVo.LineChartConfig = {
+export const defaultLineChartConfig: ChartConfigVo.LineChartConfigResponse = {
   showPoint: false,
   showLabel: false,
   smooth: false,
@@ -187,7 +183,7 @@ export const defaultLineChartConfig: ChartConfigVo.LineChartConfig = {
 /**
  * @desc 默认图表公共配置
  */
-export const defaultCommonChartConfig: ChartConfigVo.CommonChartConfig = {
+export const defaultCommonChartConfig: ChartConfigVo.CommonChartConfigResponse = {
   /**
    * @desc 数据量上限
    */

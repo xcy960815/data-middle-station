@@ -210,7 +210,7 @@ watch(
  * 虚拟滚动/性能相关
  */
 watch(
-  () => [props.bufferRows, props.scrollThreshold],
+  () => [props.bufferRows],
   () => {
     if (!tableVars.stage) return
     refreshTable(false)

@@ -386,10 +386,6 @@ declare namespace ChartConfigDao {
      * 缓冲行数
      */
     bufferRows: number
-    /**
-     * 滚动阈值
-     */
-    scrollThreshold: number
   }
 
   type PrivateChartConfig = {
