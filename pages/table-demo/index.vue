@@ -107,8 +107,7 @@
         :scrollbar-thumb-hover="tableConfig.scrollbarThumbHover"
         :buffer-rows="tableConfig.bufferRows"
         :min-auto-col-width="tableConfig.minAutoColWidth"
-        :header-sort-active-background="tableConfig.sortActiveBackground"
-        :sortable-color="tableConfig.sortActiveColor"
+        :sort-active-color="tableConfig.sortActiveColor"
         :y-axis-fields="yAxisFields"
         :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
         :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
@@ -511,7 +510,6 @@ const tableConfig = reactive({
   scrollbarThumbHover: 'rgba(24, 144, 255, 0.8)',
   bufferRows: 5,
   minAutoColWidth: 100,
-  sortActiveBackground: '#ecf5ff',
   sortActiveColor: '#409EFF',
   chartHeight: 360,
   chartWidth: 1500,
