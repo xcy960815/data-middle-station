@@ -12,9 +12,6 @@
 
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { RequestCodeEnum } from '~/utils/request-enmu'
-
 /**
  * 字符配置接口，定义了字符动画所需的所有配置参数
  */
@@ -137,11 +134,6 @@ function getRandomColor(): string {
 }
 
 /**
- * @desc 路由
- */
-const router = useRouter()
-
-/**
  * @desc 布局名称
  */
 const layoutName = 'welcome'
@@ -254,23 +246,21 @@ const userStore = useUserStore()
  * 导航到主页的处理函数
  */
 const navigateToHome = async () => {
-  try {
-    const loginResult = await $fetch('/api/login', {
-      method: 'POST',
-      body: {
-        userName: 'admin',
-        password: '123456'
-      }
-    })
-
-    // 根据你的 API 返回结构处理
-    if (loginResult?.code === RequestCodeEnum.Success) {
-      router.push('/homepage')
-    } else {
-      console.error('登录失败:', loginResult?.message)
+  const loginResult = await httpRequest('/api/login', {
+    method: 'POST',
+    body: {
+      userName: 'admin',
+      password: '123456'
     }
-  } catch (error) {
-    console.error('登录请求失败:', error)
+  })
+
+  // 根据你的 API 返回结构处理
+  if (loginResult?.code === RequestCodeEnum.Success) {
+    userStore.setUserId(loginResult.data!.userId)
+    userStore.setUserName(loginResult.data!.userName)
+    navigateTo('/homepage')
+  } else {
+    console.error('登录失败:', loginResult?.message)
   }
 }
 </script>
