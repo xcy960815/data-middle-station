@@ -15,7 +15,7 @@ export const getAnalyseHandler = () => {
     const router = useRouter()
     const id = router.currentRoute.value.query.id
     if (!id) return
-    const result = await $fetch('/api/getAnalyse', {
+    const result = await httpRequest('/api/getAnalyse', {
       method: 'post',
       body: {
         id

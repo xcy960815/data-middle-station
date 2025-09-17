@@ -330,7 +330,7 @@ watch(
  * @returns {Promise<void>}
  */
 const queryTableColumn = async (tableName: string) => {
-  const result = await $fetch('/api/queryTableColumn', {
+  const result = await httpRequest('/api/queryTableColumn', {
     params: {
       tableName
     }
