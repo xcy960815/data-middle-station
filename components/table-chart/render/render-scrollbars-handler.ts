@@ -41,7 +41,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   /**
    * 创建滚动条
    */
-  const drawSrollerbars = () => {
+  const drawScrollbarPart = () => {
     if (!tableVars.stage || !tableVars.scrollbarLayer) return
     const { width: stageWidth, height: stageHeight } = getStageAttr()
     const { maxScrollX, maxScrollY } = getScrollLimits()
@@ -536,7 +536,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   }
 
   return {
-    drawSrollerbars,
+    drawScrollbarPart,
     updateScrollbarPosition,
     updateScrollPositions,
     initWheelListener,
