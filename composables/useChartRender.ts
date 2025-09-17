@@ -1,12 +1,6 @@
 import type { Chart } from '@antv/g2'
 
 /**
- * 图表渲染类型枚举
- */
-export enum ChartRenderType {
-  CLIENT = 'client' // 客户端渲染，包含交互
-}
-/**
  * 图表渲染配置接口
  */
 export interface ChartRenderConfig {
@@ -55,15 +49,6 @@ export interface PieChartConfig {
   chartType?: 'pie' | 'donut' | 'rose'
   innerRadius?: number
 }
-
-// ==================== G2 专用渲染函数（客户端，数据渲染 + 交互） ====================
-//
-// 使用场景：前端图表展示，包含用户交互功能
-// - 支持 tooltip 悬停提示
-// - 支持元素高亮
-// - 支持滚动条等交互组件
-// - 适用于 Vue 组件中的图表渲染
-//
 
 /**
  * 渲染柱状图 - G2版本（数据渲染 + 交互）
