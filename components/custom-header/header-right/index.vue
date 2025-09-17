@@ -22,9 +22,9 @@
         <el-avatar :size="30" :src="userInfo.avatar" />
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item>{{ userInfo.name }}</el-dropdown-item>
-            <el-dropdown-item v-if="!userInfo.name" command="login" class="logout"> 登 录 </el-dropdown-item>
-            <el-dropdown-item v-if="userInfo.name" command="logout" class="logout"> 登 出 </el-dropdown-item>
+            <el-dropdown-item>{{ userInfo.userName }}</el-dropdown-item>
+            <el-dropdown-item v-if="!userInfo.userName" command="login" class="logout"> 登 录 </el-dropdown-item>
+            <el-dropdown-item v-if="userInfo.userName" command="logout" class="logout"> 登 出 </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -59,11 +59,11 @@ const userInfo = computed(() => userStore.userInfo)
  * @desc 获取用户信息
  */
 const getUserInfo = async () => {
-  const userInfoResult = await $fetch('/api/userInfo')
+  const userInfoResult = await httpRequest('/api/userInfo')
   if (userInfoResult.code === RequestCodeEnum.Success) {
-    const { userId, userName, avatar } = userInfoResult.data as UserInfoVo.UserInfo
+    const { userId, userName, avatar } = userInfoResult.data!
     userStore.setUserId(userId)
-    userStore.setName(userName)
+    userStore.setUserName(userName)
     userStore.setAvatar(avatar)
   }
 }
