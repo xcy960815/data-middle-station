@@ -56,7 +56,7 @@ const handleUpdateAnalyseName = () => {
  * @param {string} value 图表名称
  */
 const updateAnalyseName = async (value: string) => {
-  const result = await $fetch('/api/updateAnalyseName', {
+  const result = await httpRequest('/api/updateAnalyseName', {
     method: 'POST',
     body: {
       id: chartId.value,
@@ -96,7 +96,7 @@ const handleUpdateChartDesc = () => {
  * @param {string} value 图表描述
  */
 const updateChartDesc = async (value: string) => {
-  const result = await $fetch('/api/updateAnalyseDesc', {
+  const result = await httpRequest('/api/updateAnalyseDesc', {
     method: 'POST',
     body: {
       id: chartId.value,

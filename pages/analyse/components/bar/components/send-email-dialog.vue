@@ -541,7 +541,7 @@ const sendEmail = async () => {
       analyseId: analyseStore.getAnalyseId!
     }
   }
-  const response = await $fetch('/api/sendEmail', {
+  const response = await httpRequest('/api/sendEmail', {
     method: 'POST',
     body: emailData
   }).finally(() => {
@@ -584,7 +584,7 @@ const saveScheduledTask = async () => {
   }
 
   // 调用API保存定时任务
-  const response = await $fetch('/api/scheduledEmails', {
+  const response = await httpRequest('/api/scheduledEmails', {
     method: 'POST',
     body: scheduledEmailData
   }).finally(() => {
@@ -628,7 +628,7 @@ const saveRecurringTask = async () => {
   }
 
   // 调用API保存重复任务
-  const response = await $fetch('/api/scheduledEmails', {
+  const response = await httpRequest('/api/scheduledEmails', {
     method: 'POST',
     body: recurringTaskData
   }).finally(() => {

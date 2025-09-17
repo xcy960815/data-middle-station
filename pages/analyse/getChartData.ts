@@ -91,7 +91,7 @@ export const getChartDataHandler = () => {
 
     const startTime = dayjs().valueOf()
 
-    const result = await $fetch('/api/getChartData', {
+    const result = await httpRequest('/api/getChartData', {
       method: 'POST',
       body: queryChartDataParams.value
     }).finally(() => {
