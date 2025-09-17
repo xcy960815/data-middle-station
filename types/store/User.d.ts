@@ -11,7 +11,7 @@ declare namespace UserStore {
    */
   type UserState = {
     userId: string
-    name: string
+    userName: string
     avatar: string
   }
   /**
@@ -20,15 +20,12 @@ declare namespace UserStore {
   type UserGetters = {
     userInfo(state: UserState): {
       userId: string
-      name: string
+      userName: string
       avatar: string
     }
   }
   /**
    * @desc 用户action
    */
-  type UserActions = {
-    setUserId(userId: string): void
-    updateName(name: string): void
-  }
+  type UserActions = {}
 }
