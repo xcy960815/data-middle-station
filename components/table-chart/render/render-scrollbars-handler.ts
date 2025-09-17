@@ -7,6 +7,7 @@ import { chartProps } from '../props'
 import { constrainToRange, getTableContainerElement } from '../utils'
 import type { Prettify } from '../variable-handlder'
 import { variableHandlder } from '../variable-handlder'
+import { drawUnifiedRect } from './draw'
 import { renderBodyHandler } from './render-body-handler'
 
 import type { CanvasTableEmits } from '../emits'
@@ -27,114 +28,128 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   // 注释高亮功能以提升性能
   // const { updateHoverRects } = highlightHandler({ props })
 
-  // 滚动方向锁定相关变量
-
   /**
-   * 创建滚动条
+   * 创建垂直滚动条
    */
-  const drawScrollbarPart = () => {
+  const drawVerticalScrollbar = () => {
     if (!tableVars.stage || !tableVars.scrollbarLayer) return
     const { width: stageWidth, height: stageHeight } = getStageAttr()
     const { maxScrollX, maxScrollY } = getScrollLimits()
 
-    if (maxScrollY > 0) {
-      // 绘制垂直滚动条顶部遮罩（覆盖表头部分）
-      const verticalScrollbarTopMask = new Konva.Rect({
-        x: stageWidth - props.scrollbarSize,
-        y: 0,
-        width: props.scrollbarSize,
-        height: props.headerRowHeight,
-        fill: props.headerBackground,
-        stroke: props.borderColor,
-        strokeWidth: 1
-      })
-      tableVars.scrollbarLayer.add(verticalScrollbarTopMask)
-      // 绘制垂直滚动条底部遮罩（覆盖汇总行部分）
-      const verticalScrollbarBottomMask = new Konva.Rect({
-        x: stageWidth - props.scrollbarSize,
-        y: stageHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
-        width: props.scrollbarSize,
-        height: summaryRowHeight.value,
-        fill: props.summaryBackground,
-        stroke: props.borderColor,
-        strokeWidth: 1
-      })
+    // 绘制垂直滚动条顶部遮罩（覆盖表头部分）
+    const verticalScrollbarTopMask = drawUnifiedRect({
+      pools: tableVars.leftBodyPools,
+      name: 'vertical-scrollbar-top-mask',
+      x: stageWidth - props.scrollbarSize,
+      y: 0,
+      width: props.scrollbarSize,
+      height: props.headerRowHeight,
+      fill: props.headerBackground,
+      stroke: props.borderColor,
+      strokeWidth: 1
+    })
+    tableVars.scrollbarLayer.add(verticalScrollbarTopMask)
 
-      if (summaryRowHeight.value > 0) tableVars.scrollbarLayer.add(verticalScrollbarBottomMask)
+    // 绘制垂直滚动条底部遮罩（覆盖汇总行部分）
+    const verticalScrollbarBottomMask = drawUnifiedRect({
+      pools: tableVars.leftBodyPools,
+      name: 'vertical-scrollbar-bottom-mask',
+      x: stageWidth - props.scrollbarSize,
+      y: stageHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
+      width: props.scrollbarSize,
+      height: summaryRowHeight.value,
+      fill: props.summaryBackground,
+      stroke: props.borderColor,
+      strokeWidth: 1
+    })
 
-      // 绘制垂直滚动条轨道
-      const verticalScrollbarRect = new Konva.Rect({
-        x: stageWidth - props.scrollbarSize,
-        y: props.headerRowHeight,
-        width: props.scrollbarSize,
-        height:
-          stageHeight - props.headerRowHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
-        fill: props.scrollbarBackground,
-        stroke: props.borderColor,
-        strokeWidth: 1
-      })
-      tableVars.verticalScrollbarGroup?.add(verticalScrollbarRect)
+    if (summaryRowHeight.value > 0) tableVars.scrollbarLayer.add(verticalScrollbarBottomMask)
 
-      // 计算垂直滚动条高度
-      const trackHeight =
-        stageHeight - props.headerRowHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0)
-      const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
-      // 计算垂直滚动条 Y 坐标
-      const thumbY = props.headerRowHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
+    // 绘制垂直滚动条轨道
+    const verticalScrollbarRect = drawUnifiedRect({
+      pools: tableVars.leftBodyPools,
+      name: 'vertical-scrollbar-track',
+      x: stageWidth - props.scrollbarSize,
+      y: props.headerRowHeight,
+      width: props.scrollbarSize,
+      height: stageHeight - props.headerRowHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
+      fill: props.scrollbarBackground,
+      stroke: props.borderColor,
+      strokeWidth: 1
+    })
+    tableVars.verticalScrollbarGroup?.add(verticalScrollbarRect)
 
-      // 绘制垂直滚动条滑块
-      tableVars.verticalScrollbarThumbRect = new Konva.Rect({
-        x: stageWidth - props.scrollbarSize + 2,
-        y: thumbY,
-        width: props.scrollbarSize - 4,
-        height: thumbHeight,
-        fill: props.scrollbarThumb,
-        cornerRadius: 2,
-        draggable: false
-      })
-      tableVars.verticalScrollbarGroup?.add(tableVars.verticalScrollbarThumbRect)
+    // 计算垂直滚动条高度
+    const trackHeight =
+      stageHeight - props.headerRowHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0)
+    const thumbHeight = Math.max(20, (trackHeight * trackHeight) / (tableData.value.length * props.bodyRowHeight))
+    // 计算垂直滚动条 Y 坐标
+    const thumbY = props.headerRowHeight + (tableVars.stageScrollY / maxScrollY) * (trackHeight - thumbHeight)
 
-      // 设置垂直滚动条事件
-      setupVerticalScrollbarEvents()
-    }
+    // 绘制垂直滚动条滑块
+    tableVars.verticalScrollbarThumbRect = drawUnifiedRect({
+      pools: tableVars.leftBodyPools,
+      name: 'vertical-scrollbar-thumb',
+      x: stageWidth - props.scrollbarSize + 2,
+      y: thumbY,
+      width: props.scrollbarSize - 4,
+      height: thumbHeight,
+      fill: props.scrollbarThumb,
+      cornerRadius: 2,
+      listening: false
+    })
+    tableVars.verticalScrollbarGroup?.add(tableVars.verticalScrollbarThumbRect)
 
-    // 水平滚动条
-    if (maxScrollX > 0) {
-      const verticalScrollbarSpaceForHorizontal = maxScrollY > 0 ? props.scrollbarSize : 0
-      // 绘制水平滚动条轨道
-      const horizontalScrollbarTrack = new Konva.Rect({
-        x: 0,
-        y: stageHeight - props.scrollbarSize,
-        width: stageWidth - verticalScrollbarSpaceForHorizontal,
-        height: props.scrollbarSize,
-        fill: props.scrollbarBackground,
-        stroke: props.borderColor,
-        strokeWidth: 1
-      })
-      tableVars.horizontalScrollbarGroup?.add(horizontalScrollbarTrack)
+    // 设置垂直滚动条事件
+    setupVerticalScrollbarEvents()
+  }
 
-      // 计算水平滚动条宽度
-      const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
-      const verticalScrollbarSpaceForThumb = maxScrollY > 0 ? props.scrollbarSize : 0
-      // 计算水平滚动条宽度
-      const visibleWidth = stageWidth - leftWidth - rightWidth - verticalScrollbarSpaceForThumb
-      const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
-      const thumbX = leftWidth + (tableVars.stageScrollX / maxScrollX) * (visibleWidth - thumbWidth)
+  /**
+   * 创建水平滚动条
+   */
+  const drawHorizontalScrollbar = () => {
+    if (!tableVars.stage || !tableVars.scrollbarLayer) return
+    const { width: stageWidth, height: stageHeight } = getStageAttr()
+    const { maxScrollX, maxScrollY } = getScrollLimits()
 
-      // 绘制水平滚动条滑块
-      tableVars.horizontalScrollbarThumbRect = new Konva.Rect({
-        x: thumbX,
-        y: stageHeight - props.scrollbarSize + 2,
-        width: thumbWidth,
-        height: props.scrollbarSize - 4,
-        fill: props.scrollbarThumb,
-        cornerRadius: 2,
-        draggable: false
-      })
-      tableVars.horizontalScrollbarGroup?.add(tableVars.horizontalScrollbarThumbRect)
-      // 设置水平滚动条事件
-      setupHorizontalScrollbarEvents()
-    }
+    const verticalScrollbarSpaceForHorizontal = maxScrollY > 0 ? props.scrollbarSize : 0
+    // 绘制水平滚动条轨道
+    const horizontalScrollbarTrack = drawUnifiedRect({
+      pools: tableVars.leftBodyPools,
+      name: 'horizontal-scrollbar-track',
+      x: 0,
+      y: stageHeight - props.scrollbarSize,
+      width: stageWidth - verticalScrollbarSpaceForHorizontal,
+      height: props.scrollbarSize,
+      fill: props.scrollbarBackground,
+      stroke: props.borderColor,
+      strokeWidth: 1
+    })
+    tableVars.horizontalScrollbarGroup?.add(horizontalScrollbarTrack)
+
+    // 计算水平滚动条宽度
+    const { leftWidth, rightWidth, centerWidth } = getSplitColumns()
+    const verticalScrollbarSpaceForThumb = maxScrollY > 0 ? props.scrollbarSize : 0
+    // 计算水平滚动条宽度
+    const visibleWidth = stageWidth - leftWidth - rightWidth - verticalScrollbarSpaceForThumb
+    const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / centerWidth)
+    const thumbX = leftWidth + (tableVars.stageScrollX / maxScrollX) * (visibleWidth - thumbWidth)
+
+    // 绘制水平滚动条滑块
+    tableVars.horizontalScrollbarThumbRect = drawUnifiedRect({
+      pools: tableVars.leftBodyPools,
+      name: 'horizontal-scrollbar-thumb',
+      x: thumbX,
+      y: stageHeight - props.scrollbarSize + 2,
+      width: thumbWidth,
+      height: props.scrollbarSize - 4,
+      fill: props.scrollbarThumb,
+      cornerRadius: 2,
+      listening: false
+    })
+    tableVars.horizontalScrollbarGroup?.add(tableVars.horizontalScrollbarThumbRect)
+    // 设置水平滚动条事件
+    setupHorizontalScrollbarEvents()
   }
 
   /**
@@ -487,7 +502,8 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
   }
 
   return {
-    drawScrollbarPart,
+    drawVerticalScrollbar,
+    drawHorizontalScrollbar,
     updateScrollbarPosition,
     updateScrollPositions,
     initWheelListener,
