@@ -49,7 +49,6 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
    * @returns {Konva.Rect} 表头单元格矩形
    */
   const createHeaderCellRect = (
-    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
     x: number,
     y: number,
     width: number,
@@ -60,9 +59,6 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
     colIndex: number
   ) => {
     const pools = tableVars.leftBodyPools
-    const sortOrder = getColumnSortOrder(columnOption.columnName)
-    const isSorted = sortOrder !== null
-
     const rect = drawUnifiedRect({
       pools,
       name: 'header-cell-rect',
@@ -377,7 +373,13 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 
     // 如果有排序，给文本留出箭头空间
     const maxTextWidth = hasSort ? width - 32 : width - 16
-    const text = truncateText(columnOption.columnName, maxTextWidth, props.headerFontSize, props.headerFontFamily)
+
+    const text = truncateText(
+      columnOption.displayName || columnOption.columnName,
+      maxTextWidth,
+      props.headerFontSize,
+      props.headerFontFamily
+    )
 
     const headerText = drawUnifiedText({
       pools,
@@ -388,8 +390,8 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       fontSize: props.headerFontSize,
       fontFamily: props.headerFontFamily,
       fill: props.headerTextColor,
-      align: 'left',
-      verticalAlign: 'middle',
+      align: columnOption.align || 'left',
+      verticalAlign: columnOption.verticalAlign || 'middle',
       cellHeight: height,
       useGetTextX: true
     })
@@ -423,7 +425,6 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       }
       // 创建背景矩形
       createHeaderCellRect(
-        columnOption,
         x,
         0,
         columnWidth,
