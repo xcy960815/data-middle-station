@@ -120,10 +120,6 @@ export const defaultTableChartConfig: ChartConfigVo.TableChartConfigResponse = {
    */
   minAutoColWidth: 80,
   /**
-   * @desc 排序激活背景色
-   */
-  sortActiveBackground: '#e5e7eb',
-  /**
    * @desc 激活的排序颜色
    */
   sortActiveColor: '#6b7280'

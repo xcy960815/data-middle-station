@@ -1,5 +1,5 @@
 import { ElMessage } from 'element-plus'
-import { $fetch } from 'ofetch'
+// import { $fetch } from 'ofetch'
 
 /**
  * HTTP 请求组合式函数
@@ -35,13 +35,12 @@ export function useHttpRequest() {
 export const httpRequest = $fetch.create({
   // 请求拦截器
   onRequest({ options }) {
-    // const {
-    //   public: { apiBase }
-    // } = useRuntimeConfig()
-    // options.baseURL = apiBase
+    console.log('onRequest')
   },
   // 响应拦截
   onResponse({ response }) {
+    console.log('onResponse', response)
+
     return response._data
   },
   // 错误处理

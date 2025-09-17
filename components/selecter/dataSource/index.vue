@@ -123,7 +123,7 @@ const rowClassName = ({ row }: { row: DatabaseVo.TableOptions }) => {
  * @returns {Promise<void>}
  */
 const queryTable = async () => {
-  const result = await $fetch('/api/queryTable', {
+  const result = await httpRequest('/api/queryTable', {
     params: {
       tableName: searchKeyword.value
     }

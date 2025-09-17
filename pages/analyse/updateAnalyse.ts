@@ -26,7 +26,7 @@ export const updateAnalyseHandler = () => {
     const analyseDesc = analyseStore.getAnalyseDesc
     const chartType = analyseStore.getChartType
     const dataSource = columnStore.getDataSource
-    const result = await $fetch('/api/updateAnalyse', {
+    const result = await httpRequest('/api/updateAnalyse', {
       method: 'POST',
       body: {
         id,
