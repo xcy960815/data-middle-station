@@ -368,7 +368,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     const { drawHeaderPart } = renderHeaderHandler({ props, emits })
     const { drawBodyPart, getSplitColumns, getScrollLimits } = renderBodyHandler({ props, emits })
     const { drawSummaryPart } = renderSummaryHandler({ props })
-    const { drawScrollbarPart } = renderScrollbarsHandler({ props, emits })
+    const { drawVerticalScrollbar, drawHorizontalScrollbar } = renderScrollbarsHandler({ props, emits })
 
     const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
     const { width: stageWidth, height: stageHeight } = getStageAttr()
@@ -521,14 +521,14 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     if (maxScrollY > 0) {
       tableVars.verticalScrollbarGroup = new Konva.Group()
       tableVars.scrollbarLayer.add(tableVars.verticalScrollbarGroup)
+      drawVerticalScrollbar()
     }
 
     if (maxScrollX > 0) {
       tableVars.horizontalScrollbarGroup = new Konva.Group()
       tableVars.scrollbarLayer.add(tableVars.horizontalScrollbarGroup)
+      drawHorizontalScrollbar()
     }
-
-    drawScrollbarPart()
 
     // 确保层级绘制顺序正确：固定列在上层
     tableVars.bodyLayer?.batchDraw() // 1. 先绘制可滚动的中间内容
