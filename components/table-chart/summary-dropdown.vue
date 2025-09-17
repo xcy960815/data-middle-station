@@ -28,7 +28,7 @@ interface Props {
   visible: boolean
   options: SummaryOption[]
   selectedValue: string
-  dropdownStyle: Record<string, any>
+  dropdownStyle: Record<string, string | number>
 }
 
 interface Emits {

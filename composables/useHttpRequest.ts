@@ -35,12 +35,11 @@ export function useHttpRequest() {
 export const httpRequest = $fetch.create({
   // 请求拦截器
   onRequest({ options }) {
-    console.log('onRequest')
+    // console.log('onRequest')
   },
   // 响应拦截
   onResponse({ response }) {
-    console.log('onResponse', response)
-
+    // console.log('onResponse', response)
     return response._data
   },
   // 错误处理

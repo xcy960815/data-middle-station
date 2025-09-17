@@ -27,12 +27,12 @@ interface Props {
   visible: boolean
   options: string[]
   selectedValues: string[]
-  dropdownStyle: Record<string, any>
+  dropdownStyle: Record<string, string | number>
 }
 
 interface Emits {
-  (e: 'change', values: string[]): void
-  (e: 'blur'): void
+  (event: 'change', values: string[]): void
+  (event: 'blur'): void
 }
 
 const props = defineProps<Props>()
