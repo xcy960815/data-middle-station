@@ -2,6 +2,7 @@ import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
+import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { constrainToRange, getTableContainerElement } from '../utils'
@@ -9,8 +10,6 @@ import type { Prettify } from '../variable-handlder'
 import { variableHandlder } from '../variable-handlder'
 import { drawUnifiedRect } from './draw'
 import { renderBodyHandler } from './render-body-handler'
-
-import type { CanvasTableEmits } from '../emits'
 
 interface RenderScrollbarsHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -50,20 +49,21 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     })
     tableVars.scrollbarLayer.add(verticalScrollbarTopMask)
 
-    // 绘制垂直滚动条底部遮罩（覆盖汇总行部分）
-    const verticalScrollbarBottomMask = drawUnifiedRect({
-      pools: tableVars.leftBodyPools,
-      name: 'vertical-scrollbar-bottom-mask',
-      x: stageWidth - props.scrollbarSize,
-      y: stageHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
-      width: props.scrollbarSize,
-      height: summaryRowHeight.value,
-      fill: props.summaryBackground,
-      stroke: props.borderColor,
-      strokeWidth: 1
-    })
-
-    if (summaryRowHeight.value > 0) tableVars.scrollbarLayer.add(verticalScrollbarBottomMask)
+    if (summaryRowHeight.value > 0) {
+      // 绘制垂直滚动条底部遮罩（覆盖汇总行部分）
+      const verticalScrollbarBottomMask = drawUnifiedRect({
+        pools: tableVars.leftBodyPools,
+        name: 'vertical-scrollbar-bottom-mask',
+        x: stageWidth - props.scrollbarSize,
+        y: stageHeight - summaryRowHeight.value - (maxScrollX > 0 ? props.scrollbarSize : 0),
+        width: props.scrollbarSize,
+        height: summaryRowHeight.value,
+        fill: props.summaryBackground,
+        stroke: props.borderColor,
+        strokeWidth: 1
+      })
+      tableVars.scrollbarLayer.add(verticalScrollbarBottomMask)
+    }
 
     // 绘制垂直滚动条轨道
     const verticalScrollbarRect = drawUnifiedRect({
@@ -125,6 +125,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       stroke: props.borderColor,
       strokeWidth: 1
     })
+
     tableVars.horizontalScrollbarGroup?.add(horizontalScrollbarTrack)
 
     // 计算水平滚动条宽度
@@ -148,6 +149,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       listening: false
     })
     tableVars.horizontalScrollbarGroup?.add(tableVars.horizontalScrollbarThumbRect)
+
     // 设置水平滚动条事件
     setupHorizontalScrollbarEvents()
   }
@@ -176,6 +178,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       }
       tableVars.scrollbarLayer?.batchDraw()
     })
+
     tableVars.verticalScrollbarThumbRect.on('mouseleave', () => {
       if (tableVars.verticalScrollbarThumbRect && !tableVars.isDraggingVerticalThumb) {
         tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumb)
@@ -195,8 +198,6 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       tableVars.dragStartX = event.evt.clientX
       tableVars.dragStartScrollX = tableVars.stageScrollX
       tableVars.stage!.container().style.cursor = 'grabbing'
-
-      // 设置指针位置到 stage，避免 Konva 警告
       tableVars.stage!.setPointersPositions(event.evt)
     })
 
@@ -208,6 +209,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       }
       tableVars.scrollbarLayer?.batchDraw()
     })
+
     tableVars.horizontalScrollbarThumbRect.on('mouseleave', () => {
       if (tableVars.horizontalScrollbarThumbRect && !tableVars.isDraggingHorizontalThumb) {
         tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumb)
@@ -367,12 +369,9 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     // recomputeHoverIndexFromPointer()
     // updateHoverRects()
     updateCellEditorPositionsInTable()
-    // 横向滚动时更新弹框位置
     updateFilterDropdownPositionsInTable()
     updateSummaryDropdownPositionsInTable()
   }
-
-  // 移除旧的批量绘制函数，已被scheduleLayersBatchDraw替代
 
   /**
    * 更新垂直滚动
@@ -445,8 +444,6 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     // 注释高亮相关调用以提升性能
     // recomputeHoverIndexFromPointer()
     updateCellEditorPositionsInTable()
-
-    // 简化版本：始终重绘所有相关层
     scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar', 'summary'])
   }
 

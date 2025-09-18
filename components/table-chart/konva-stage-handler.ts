@@ -127,6 +127,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       const { maxScrollX, maxScrollY } = getScrollLimits()
       tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX, 0, maxScrollX)
       tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY, 0, maxScrollY)
+      console.log('tableVars.stageScrollX', tableVars.stageScrollX)
+      console.log('tableVars.stageScrollY', tableVars.stageScrollY)
     }
 
     calculateVisibleRows()
@@ -297,7 +299,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
    * @returns {void}
    */
   const clearGroups = () => {
-    // 清理5个真实的Layer
     tableVars.headerLayer?.destroyChildren()
     tableVars.bodyLayer?.destroyChildren()
     tableVars.fixedBodyLayer?.destroyChildren()
@@ -407,11 +408,11 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
 
     // 为中间可滚动区域创建裁剪组，防止遮挡固定列
     const bodyClipGroupHeight = stageHeight - props.headerRowHeight - summaryRowHeight.value - horizontalScrollbarHeight
-
+    const bodyClipGroupWidth = stageWidth - leftWidth - rightWidth - verticalScrollbarWidth
     const centerBodyClipGroup = createGroup('body', 'center', leftWidth, props.headerRowHeight, {
       x: 0,
       y: 0,
-      width: stageWidth - leftWidth - rightWidth - verticalScrollbarWidth,
+      width: bodyClipGroupWidth,
       height: bodyClipGroupHeight
     })
 
