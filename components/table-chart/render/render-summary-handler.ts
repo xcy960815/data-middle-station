@@ -4,7 +4,7 @@ import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { truncateText } from '../utils'
-import type { PositionMap, Prettify } from '../variable-handlder'
+import type { Prettify } from '../variable-handlder'
 import { numberOptions, textOptions, variableHandlder } from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
 interface RenderSummaryHandlerProps {
@@ -127,30 +127,22 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
    * 绘制汇总部分（固定在底部，风格与表头一致，但使用 bodyTextColor）
    * @param {Konva.Group | null} group 分组
    * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} cols 列
-   * @param {number} startColIndex 起始列索引
    */
   const drawSummaryPart = (
     summaryGroup: Konva.Group | null,
-    summaryCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
-    startColIndex: number,
-    positionMapList: PositionMap[],
-    stageStartX: number
+    summaryCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
   ) => {
     if (!tableVars.stage || !summaryGroup) return
-    const stage = tableVars.stage
     const summaryRowHeight = props.summaryRowHeight
     const summaryBackground = props.summaryBackground
     const borderColor = props.borderColor
     const summaryFontFamily = props.summaryFontFamily
     const summaryTextColor = props.summaryTextColor
     const fontSize = props.summaryFontSize
-    const rowIndex = tableData.value.length + 1
-    const summaryY = stage.height() - summaryRowHeight
 
     let x = 0
-    summaryCols.forEach((col, colIndex) => {
+    summaryCols.forEach((col) => {
       const pools = tableVars.leftBodyPools
-      const realColIndex = colIndex + startColIndex
       const summaryCellRect = drawUnifiedRect({
         pools,
         name: 'summary-cell-rect',
@@ -161,25 +153,12 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
         fill: summaryBackground,
         stroke: borderColor,
         strokeWidth: 1,
-        listening: true,
-        rowIndex,
-        colIndex: realColIndex,
-        originFill: summaryBackground
+        listening: true
       })
       summaryGroup.add(summaryCellRect)
 
       const colWidth = col.width || 0
       const textMaxWidth = colWidth - 16
-
-      // 记录汇总单元格位置信息（使用舞台坐标）
-      positionMapList.push({
-        x: stageStartX + x,
-        y: summaryY,
-        width: colWidth,
-        height: summaryRowHeight,
-        rowIndex,
-        colIndex: realColIndex
-      })
 
       // 先显示占位文本，然后异步更新
       const rule = summaryState[col.columnName] || 'nodisplay'

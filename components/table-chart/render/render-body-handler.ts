@@ -4,7 +4,7 @@ import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { returnToPool, truncateText } from '../utils'
-import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
+import { variableHandlder, type KonvaNodePools, type Prettify } from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
@@ -16,9 +16,9 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
   const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({
     props
   })
-  const { tableColumns, tableData, tableVars } = variableHandlder({ props })
+  const { tableColumns, tableData, tableVars, summaryRowHeight } = variableHandlder({ props })
   const { getStageAttr } = konvaStageHandler({ props })
-  const { summaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
+  const { summaryDropdown } = summaryDropDownHandler({ props })
 
   /**
    * 计算可视区域 数据的起始行和结束行
@@ -320,8 +320,6 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
     cellWidth: number,
     cellHeight: number,
     rowIndex: number,
-    colIndex: number,
-    startColIndex: number,
     columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
     row: ChartDataVo.ChartData,
     bodyFontSize: number
@@ -336,10 +334,7 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
       height: cellHeight,
       fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
       stroke: props.borderColor,
-      strokeWidth: 1,
-      rowIndex: rowIndex + 1,
-      colIndex: colIndex + startColIndex,
-      originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
+      strokeWidth: 1
     })
     bodyGroup.add(mergedCellRect)
 
@@ -376,8 +371,6 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
     cellWidth: number,
     cellHeight: number,
     rowIndex: number,
-    colIndex: number,
-    startColIndex: number,
     columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
     row: ChartDataVo.ChartData,
     bodyFontSize: number
@@ -392,25 +385,8 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
       height: cellHeight,
       fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
       stroke: props.borderColor,
-      strokeWidth: 1,
-      rowIndex: rowIndex + 1,
-      colIndex: colIndex + startColIndex,
-      originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
+      strokeWidth: 1
     })
-
-    // 添加点击事件
-    let clickTimeout: NodeJS.Timeout | null = null
-    const handleClick = () => {
-      if (clickTimeout) {
-        clearTimeout(clickTimeout)
-        clickTimeout = null
-        return
-      }
-      clickTimeout = setTimeout(() => {
-        handleCellClick(rowIndex, colIndex, columnOption, cellRect.x(), cellRect.y(), cellWidth, cellHeight, bodyGroup)
-        clickTimeout = null
-      }, 250)
-    }
 
     // cellRect.off('click.cell')
     // cellRect.on('click.cell', handleClick)
@@ -448,7 +424,6 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
     y: number
     rowIndex: number
     colIndex: number
-    startColIndex: number
     columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption
     row: ChartDataVo.ChartData
     bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
@@ -456,8 +431,6 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
     hasSpanMethod: boolean
     globalIndexByColName: Map<string, number>
     bodyFontSize: number
-    positionMapList: PositionMap[]
-    stageStartX: number
   }) => {
     const {
       pools,
@@ -466,16 +439,13 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
       y,
       rowIndex,
       colIndex,
-      startColIndex,
       columnOption,
       row,
       bodyCols,
       spanMethod,
       hasSpanMethod,
       globalIndexByColName,
-      bodyFontSize,
-      positionMapList,
-      stageStartX
+      bodyFontSize
     } = params
 
     const columnWidth = columnOption.width || 0
@@ -502,48 +472,11 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
     const computedRowSpan = hasSpanMethod ? spanRow : 1
     const cellHeight = computedRowSpan * props.bodyRowHeight
     const cellWidth = calculateMergedCellWidth(spanCol, colIndex, bodyCols, columnWidth)
-
-    // 记录位置信息
-    positionMapList.push({
-      x: stageStartX + x,
-      y: y + props.headerRowHeight,
-      width: cellWidth,
-      height: cellHeight,
-      rowIndex: rowIndex + 1,
-      colIndex: colIndex + startColIndex
-    })
-
     // 绘制单元格
     if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
-      drawMergedCell(
-        pools,
-        bodyGroup,
-        x,
-        y,
-        cellWidth,
-        cellHeight,
-        rowIndex,
-        colIndex,
-        startColIndex,
-        columnOption,
-        row,
-        bodyFontSize
-      )
+      drawMergedCell(pools, bodyGroup, x, y, cellWidth, cellHeight, rowIndex, columnOption, row, bodyFontSize)
     } else {
-      drawNormalCell(
-        pools,
-        bodyGroup,
-        x,
-        y,
-        cellWidth,
-        cellHeight,
-        rowIndex,
-        colIndex,
-        startColIndex,
-        columnOption,
-        row,
-        bodyFontSize
-      )
+      drawNormalCell(pools, bodyGroup, x, y, cellWidth, cellHeight, rowIndex, columnOption, row, bodyFontSize)
     }
 
     // 计算下一个位置和跳过的列数
@@ -562,28 +495,13 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
     bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
     pools: KonvaNodePools
     bodyGroup: Konva.Group
-    startColIndex: number
     spanMethod: NonNullable<typeof props.spanMethod> | null
     hasSpanMethod: boolean
     globalIndexByColName: Map<string, number>
     bodyFontSize: number
-    positionMapList: PositionMap[]
-    stageStartX: number
   }) => {
-    const {
-      rowIndex,
-      y,
-      bodyCols,
-      pools,
-      bodyGroup,
-      startColIndex,
-      spanMethod,
-      hasSpanMethod,
-      globalIndexByColName,
-      bodyFontSize,
-      positionMapList,
-      stageStartX
-    } = params
+    const { rowIndex, y, bodyCols, pools, bodyGroup, spanMethod, hasSpanMethod, globalIndexByColName, bodyFontSize } =
+      params
 
     const row = tableData.value[rowIndex]
     let x = 0
@@ -598,16 +516,13 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
         y,
         rowIndex,
         colIndex,
-        startColIndex,
         columnOption,
         row,
         bodyCols,
         spanMethod,
         hasSpanMethod,
         globalIndexByColName,
-        bodyFontSize,
-        positionMapList,
-        stageStartX
+        bodyFontSize
       })
 
       x = result.newX
@@ -620,18 +535,12 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
    * @param {Konva.Group | null} group 分组
    * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} cols 列
    * @param {ObjectPools} pools 对象池
-   * @param {number} startColIndex 起始列索引
-   * @param {PositionMap[]} positionMapList 位置映射列表
-   * @param {number} stageStartX 舞台起始X坐标
    * @returns {void}
    */
   const drawBodyPart = (
     bodyGroup: Konva.Group | null,
     bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
-    pools: KonvaNodePools,
-    startColIndex: number,
-    positionMapList: PositionMap[],
-    stageStartX: number
+    pools: KonvaNodePools
   ) => {
     if (!tableVars.stage || !bodyGroup) return
 
@@ -657,13 +566,10 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
         bodyCols,
         pools,
         bodyGroup,
-        startColIndex,
         spanMethod,
         hasSpanMethod,
         globalIndexByColName,
-        bodyFontSize,
-        positionMapList,
-        stageStartX
+        bodyFontSize
       })
     }
 
@@ -678,7 +584,6 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
   /**
    * 处理单元格点击，更新选中状态并抛出事件
    * @param {number} rowIndex 行索引
-   * @param {number} colIndex 列索引
    * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption 列配置
    * @param {number} cellX 单元格 X 坐标
    * @param {number} cellY 单元格 Y 坐标
@@ -688,7 +593,6 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
    */
   const handleCellClick = (
     rowIndex: number,
-    colIndex: number,
     columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
     cellX: number,
     cellY: number,
@@ -697,7 +601,7 @@ export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
     group: Konva.Group
   ) => {
     createHighlightRect(cellX, cellY, cellWidth, cellHeight, group)
-    const rowData = tableData.value[rowIndex]
+    tableData.value[rowIndex]
   }
 
   /**
