@@ -68,7 +68,6 @@ const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ pr
 
 // 注释过滤功能以提升性能
 const {
-  filterDropdownRef,
   filterDropdownStyle,
   filterDropdown,
   closeFilterDropdown,
@@ -79,7 +78,6 @@ const {
 
 // 注释汇总功能以提升性能
 const {
-  summaryDropdownRef,
   summaryDropdownStyle,
   summaryDropdown,
   closeSummaryDropdown,

@@ -24,15 +24,14 @@ const COLORS = {
 
 interface RenderHeaderHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
+  emits?: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
 export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) => {
   // 添加排序功能支持
   const { tableData, handleTableData, filterState, sortColumns, tableVars, handleHeaderSort, getColumnSortOrder } =
     variableHandlder({ props })
-  const { clearGroups } = konvaStageHandler({ props })
-  const { setPointerStyle } = konvaStageHandler({ props, emits })
+  const { clearGroups, setPointerStyle } = konvaStageHandler({ props })
   const { openFilterDropdown } = filterDropdownHandler({ props })
 
   /**
