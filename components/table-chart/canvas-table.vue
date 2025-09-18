@@ -230,16 +230,16 @@ onMounted(() => {
   refreshTable(true)
   initWheelListener()
   initStageListeners()
-  // initFilterDropdownListeners() // 注释过滤功能
-  // initSummaryDropdownListeners() // 注释汇总功能
+  initFilterDropdownListeners()
+  initSummaryDropdownListeners()
   initCellEditorListeners()
 })
 
 onBeforeUnmount(() => {
   cleanupWheelListener()
   cleanupStageListeners()
-  // cleanupFilterDropdownListeners() // 注释过滤功能
-  // cleanupSummaryDropdownListeners() // 注释汇总功能
+  cleanupFilterDropdownListeners()
+  cleanupSummaryDropdownListeners()
   cleanupCellEditorListeners()
   destroyStage()
 })

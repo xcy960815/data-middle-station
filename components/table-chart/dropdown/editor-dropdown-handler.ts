@@ -135,7 +135,6 @@ export const editorDropdownHandler = ({ props }: EditorDropdownHandlerProps) => 
       const rowData = tableData.value[rowIndex]
       rowData[colKey] = newValue
       clearLayersForRebuild()
-      tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
     }
     resetCellEditorDropdown()
   }

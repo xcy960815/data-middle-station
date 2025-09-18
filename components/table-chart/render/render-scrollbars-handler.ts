@@ -91,7 +91,7 @@ export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps)
       height: thumbHeight,
       fill: props.scrollbarThumbBackground,
       cornerRadius: 2,
-      listening: false
+      listening: true
     })
     tableVars.verticalScrollbarGroup?.add(tableVars.verticalScrollbarThumbRect)
 
@@ -141,7 +141,7 @@ export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps)
       height: props.scrollbarSize - 4,
       fill: props.scrollbarThumbBackground,
       cornerRadius: 2,
-      listening: false
+      listening: true
     })
     tableVars.horizontalScrollbarGroup?.add(tableVars.horizontalScrollbarThumbRect)
 
@@ -158,6 +158,7 @@ export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps)
     /**
      * 设置垂直滚动条拖拽事件
      */
+
     tableVars.verticalScrollbarThumbRect.on('mousedown', (event: Konva.KonvaEventObject<MouseEvent>) => {
       tableVars.isDraggingVerticalThumb = true
       tableVars.dragStartY = event.evt.clientY
@@ -171,7 +172,7 @@ export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps)
         tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumbHoverBackground)
         setPointerStyle(true, 'grab')
       }
-      tableVars.scrollbarLayer?.batchDraw()
+      // tableVars.scrollbarLayer?.batchDraw()
     })
 
     tableVars.verticalScrollbarThumbRect.on('mouseleave', () => {
@@ -252,14 +253,8 @@ export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps)
       !tableVars.centerHeaderGroup
     )
       return
-
-    const { leftWidth } = getSplitColumns()
-    const bodyY = props.headerRowHeight - tableVars.stageScrollY
     const centerX = -tableVars.stageScrollX
-    const headerX = -tableVars.stageScrollX // 修复：header 和 body 应该使用相同的 X 偏移计算
-    const summaryY = tableVars.stage
-      ? tableVars.stage.height() - summaryRowHeight.value - (getScrollLimits().maxScrollX > 0 ? props.scrollbarSize : 0)
-      : 0
+    const headerX = -tableVars.stageScrollX
 
     /**
      * 更新左侧和右侧主体（只有 Y 位置变化）
@@ -300,12 +295,10 @@ export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps)
 
     updateScrollbarPosition()
 
-    // 水平滚动时也需要重绘固定层，确保固定列正确显示
+    // 水平滚动时也需要重绘固定层
     scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar', 'summary'])
-
-    // 滚动时更新弹框位置
-    // updateFilterDropdownPositionsInTable()
-    // updateSummaryDropdownPositionsInTable()
+    updateFilterDropdownPositionsInTable()
+    updateSummaryDropdownPositionsInTable()
   }
 
   /**
@@ -388,31 +381,14 @@ export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps)
 
     if (visibleRangeChanged) {
       // 重新渲染可视区域
-      const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
+      const { leftCols, centerCols, rightCols } = getSplitColumns()
       tableVars.bodyPositionMapList.length = 0
 
       // 批量执行重绘操作，减少单独的绘制调用
       const renderOperations = [
-        () =>
-          drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0),
-        () =>
-          drawBodyPart(
-            tableVars.centerBodyGroup,
-            centerCols,
-            tableVars.centerBodyPools,
-            leftCols.length,
-            tableVars.bodyPositionMapList,
-            leftWidth
-          ),
-        () =>
-          drawBodyPart(
-            tableVars.rightBodyGroup,
-            rightCols,
-            tableVars.rightBodyPools,
-            leftCols.length + centerCols.length,
-            tableVars.bodyPositionMapList,
-            leftWidth + centerWidth
-          )
+        () => drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools),
+        () => drawBodyPart(tableVars.centerBodyGroup, centerCols, tableVars.centerBodyPools),
+        () => drawBodyPart(tableVars.rightBodyGroup, rightCols, tableVars.rightBodyPools)
       ]
 
       // 执行所有渲染操作

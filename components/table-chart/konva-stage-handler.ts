@@ -13,8 +13,7 @@ interface KonvaStageHandlerProps {
  * Konva Stage 和 Layer 管理器
  */
 export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
-  const { tableVars } = variableHandlder({ props })
-  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryRowHeight : 0))
+  const { tableVars, summaryRowHeight } = variableHandlder({ props })
   /**
    * 初始化 Stage 和所有 Layer
    * @returns {void}
@@ -117,8 +116,6 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
       const { maxScrollX, maxScrollY } = getScrollLimits()
       tableVars.stageScrollX = constrainToRange(tableVars.stageScrollX, 0, maxScrollX)
       tableVars.stageScrollY = constrainToRange(tableVars.stageScrollY, 0, maxScrollY)
-      console.log('tableVars.stageScrollX', tableVars.stageScrollX)
-      console.log('tableVars.stageScrollY', tableVars.stageScrollY)
     }
 
     calculateVisibleRows()
@@ -184,23 +181,9 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
       if (needsRerender) {
         const { leftCols, centerCols, rightCols, leftWidth, centerWidth } = getSplitColumns()
         tableVars.bodyPositionMapList.length = 0
-        drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
-        drawBodyPart(
-          tableVars.centerBodyGroup,
-          centerCols,
-          tableVars.centerBodyPools,
-          leftCols.length,
-          tableVars.bodyPositionMapList,
-          leftWidth
-        )
-        drawBodyPart(
-          tableVars.rightBodyGroup,
-          rightCols,
-          tableVars.rightBodyPools,
-          leftCols.length + centerCols.length,
-          tableVars.bodyPositionMapList,
-          leftWidth + centerWidth
-        )
+        drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools)
+        drawBodyPart(tableVars.centerBodyGroup, centerCols, tableVars.centerBodyPools)
+        drawBodyPart(tableVars.rightBodyGroup, rightCols, tableVars.rightBodyPools)
       }
 
       updateScrollPositions()
@@ -287,6 +270,7 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
     tableVars.fixedBodyLayer?.destroyChildren()
     tableVars.scrollbarLayer?.destroyChildren()
     tableVars.summaryLayer?.destroyChildren()
+    // 清理 Body 对象池
     clearPool(tableVars.leftBodyPools.cellRects)
     clearPool(tableVars.leftBodyPools.cellTexts)
     clearPool(tableVars.centerBodyPools.cellRects)
@@ -368,15 +352,9 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
 
     tableVars.headerPositionMapList.length = 0
     // 绘制表头
-    drawHeaderPart(tableVars.leftHeaderGroup, leftCols, 0, tableVars.headerPositionMapList, 0)
-    drawHeaderPart(tableVars.centerHeaderGroup, centerCols, leftCols.length, tableVars.headerPositionMapList, leftWidth)
-    drawHeaderPart(
-      tableVars.rightHeaderGroup,
-      rightCols,
-      leftCols.length + centerCols.length,
-      tableVars.headerPositionMapList,
-      leftWidth + centerWidth
-    )
+    drawHeaderPart(tableVars.leftHeaderGroup, leftCols)
+    drawHeaderPart(tableVars.centerHeaderGroup, centerCols)
+    drawHeaderPart(tableVars.rightHeaderGroup, rightCols)
 
     // 为中间可滚动区域创建裁剪组，防止遮挡固定列
     const bodyClipGroupHeight = stageHeight - props.headerRowHeight - summaryRowHeight.value - horizontalScrollbarHeight
@@ -429,23 +407,9 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
 
     tableVars.bodyPositionMapList.length = 0
     // 绘制主体
-    drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools, 0, tableVars.bodyPositionMapList, 0)
-    drawBodyPart(
-      tableVars.centerBodyGroup,
-      centerCols,
-      tableVars.centerBodyPools,
-      leftCols.length,
-      tableVars.bodyPositionMapList,
-      leftWidth
-    )
-    drawBodyPart(
-      tableVars.rightBodyGroup,
-      rightCols,
-      tableVars.rightBodyPools,
-      leftCols.length + centerCols.length,
-      tableVars.bodyPositionMapList,
-      leftWidth + centerWidth
-    )
+    drawBodyPart(tableVars.leftBodyGroup, leftCols, tableVars.leftBodyPools)
+    drawBodyPart(tableVars.centerBodyGroup, centerCols, tableVars.centerBodyPools)
+    drawBodyPart(tableVars.rightBodyGroup, rightCols, tableVars.rightBodyPools)
 
     // 创建汇总行组（完全参考header的实现方式）
     if (props.enableSummary) {
@@ -468,22 +432,9 @@ export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
       centerSummaryClipGroup.add(tableVars.centerSummaryGroup)
       tableVars.summaryLayer.add(tableVars.leftSummaryGroup, tableVars.rightSummaryGroup)
 
-      tableVars.summaryPositionMapList.length = 0
-      drawSummaryPart(tableVars.leftSummaryGroup, leftCols, 0, tableVars.summaryPositionMapList, 0)
-      drawSummaryPart(
-        tableVars.centerSummaryGroup,
-        centerCols,
-        leftCols.length,
-        tableVars.summaryPositionMapList,
-        leftWidth
-      )
-      drawSummaryPart(
-        tableVars.rightSummaryGroup,
-        rightCols,
-        leftCols.length + centerCols.length,
-        tableVars.summaryPositionMapList,
-        leftWidth + centerWidth
-      )
+      drawSummaryPart(tableVars.leftSummaryGroup, leftCols)
+      drawSummaryPart(tableVars.centerSummaryGroup, centerCols)
+      drawSummaryPart(tableVars.rightSummaryGroup, rightCols)
     } else {
       tableVars.leftSummaryGroup = null
       tableVars.centerSummaryGroup = null
