@@ -1,5 +1,4 @@
 import { reactive } from 'vue'
-import type { CanvasTableEmits } from '../emits'
 import { chartProps } from '../props'
 import { getTableContainerElement } from '../utils'
 import type { Prettify } from '../variable-handlder'
@@ -7,7 +6,6 @@ import { variableHandlder } from '../variable-handlder'
 
 interface EditorDropdownHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  emits?: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
 /**
@@ -33,7 +31,7 @@ const cellEditorDropdown = reactive({
   }
 })
 
-export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerProps) => {
+export const editorDropdownHandler = ({ props }: EditorDropdownHandlerProps) => {
   const { tableData, tableVars } = variableHandlder({ props })
   /**
    * 清空 Konva 节点
@@ -55,8 +53,6 @@ export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerPro
     tableVars.leftSummaryGroup = null
     tableVars.centerSummaryGroup = null
     tableVars.rightSummaryGroup = null
-    tableVars.hoveredRowIndex = null
-    tableVars.hoveredColIndex = null
   }
 
   /**
@@ -138,9 +134,6 @@ export const editorDropdownHandler = ({ props, emits }: EditorDropdownHandlerPro
     if (rowIndex >= 0 && colKey && column) {
       const rowData = tableData.value[rowIndex]
       rowData[colKey] = newValue
-      if (emits) {
-        emits('cell-edit', { rowIndex, colKey, rowData })
-      }
       clearLayersForRebuild()
       tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
     }
