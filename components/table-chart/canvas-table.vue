@@ -39,32 +39,22 @@ import CellEditor from './cell-editor.vue'
 import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
-import type { ChartEmits } from './emits'
 import FilterDropdown from './filter-dropdown.vue'
 import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
-import { renderBodyHandler } from './render/render-body-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
 import SummaryDropdown from './summary-dropdown.vue'
 import { variableHandlder } from './variable-handlder'
 
 const props = defineProps(chartProps)
 
-/**
- * 定义事件
- */
-const emits = defineEmits<ChartEmits>()
-
 const { tableVars, tableContainerStyle, handleTableData, handleTableColumns, sortColumns } = variableHandlder({ props })
 
 const { initStage, destroyStage, refreshTable, initStageListeners, cleanupStageListeners } = konvaStageHandler({
-  props,
-  emits
+  props
 })
 
-renderBodyHandler({ props, emits })
-
-const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ props, emits })
+const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ props })
 
 // 注释过滤功能以提升性能
 const {
@@ -92,7 +82,7 @@ const {
   handleCellEditorSave,
   initCellEditorListeners,
   cleanupCellEditorListeners
-} = editorDropdownHandler({ props, emits })
+} = editorDropdownHandler({ props })
 
 /**
  * 监听 props 变化
@@ -180,7 +170,12 @@ watch(
  * 滚动条相关（样式与尺寸）
  */
 watch(
-  () => [props.scrollbarBackground, props.scrollbarThumb, props.scrollbarThumbHover, props.scrollbarSize],
+  () => [
+    props.scrollbarBackground,
+    props.scrollbarThumbBackground,
+    props.scrollbarThumbHoverBackground,
+    props.scrollbarSize
+  ],
   () => {
     if (!tableVars.stage) return
     refreshTable(false)

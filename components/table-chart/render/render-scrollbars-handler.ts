@@ -2,7 +2,6 @@ import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
 import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
-import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { constrainToRange, getTableContainerElement } from '../utils'
@@ -13,19 +12,15 @@ import { renderBodyHandler } from './render-body-handler'
 
 interface RenderScrollbarsHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
-export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandlerProps) => {
+export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps) => {
   const { getStageAttr, setPointerStyle } = konvaStageHandler({ props })
-  const { getScrollLimits, getSplitColumns, recomputeHoverIndexFromPointer, drawBodyPart, calculateVisibleRows } =
-    renderBodyHandler({ props, emits })
+  const { getScrollLimits, getSplitColumns, drawBodyPart, calculateVisibleRows } = renderBodyHandler({ props })
   const { tableData, tableVars } = variableHandlder({ props })
   const { summaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
-  const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props, emits })
+  const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props })
   const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
-  // 注释高亮功能以提升性能
-  // const { updateHoverRects } = highlightHandler({ props })
 
   /**
    * 创建垂直滚动条
@@ -94,7 +89,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       y: thumbY,
       width: props.scrollbarSize - 4,
       height: thumbHeight,
-      fill: props.scrollbarThumb,
+      fill: props.scrollbarThumbBackground,
       cornerRadius: 2,
       listening: false
     })
@@ -144,7 +139,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
       y: stageHeight - props.scrollbarSize + 2,
       width: thumbWidth,
       height: props.scrollbarSize - 4,
-      fill: props.scrollbarThumb,
+      fill: props.scrollbarThumbBackground,
       cornerRadius: 2,
       listening: false
     })
@@ -173,7 +168,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     // 启用滚动条悬停效果
     tableVars.verticalScrollbarThumbRect.on('mouseenter', () => {
       if (tableVars.verticalScrollbarThumbRect) {
-        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumbHover)
+        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumbHoverBackground)
         setPointerStyle(true, 'grab')
       }
       tableVars.scrollbarLayer?.batchDraw()
@@ -181,7 +176,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     tableVars.verticalScrollbarThumbRect.on('mouseleave', () => {
       if (tableVars.verticalScrollbarThumbRect && !tableVars.isDraggingVerticalThumb) {
-        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumb)
+        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumbBackground)
         setPointerStyle(false, 'grab')
       }
       tableVars.scrollbarLayer?.batchDraw()
@@ -204,7 +199,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     // 启用滚动条悬停效果
     tableVars.horizontalScrollbarThumbRect.on('mouseenter', () => {
       if (tableVars.horizontalScrollbarThumbRect) {
-        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumbHover)
+        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumbHoverBackground)
         setPointerStyle(true, 'grab')
       }
       tableVars.scrollbarLayer?.batchDraw()
@@ -212,7 +207,7 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     tableVars.horizontalScrollbarThumbRect.on('mouseleave', () => {
       if (tableVars.horizontalScrollbarThumbRect && !tableVars.isDraggingHorizontalThumb) {
-        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumb)
+        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumbBackground)
         setPointerStyle(false, 'grab')
       }
       tableVars.scrollbarLayer?.batchDraw()
@@ -365,9 +360,6 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
 
     // 水平滚动需要更新表头、主体、固定列和汇总行
     scheduleLayersBatchDraw(['header', 'body', 'fixed', 'scrollbar', 'summary'])
-    // 注释高亮相关调用以提升性能
-    // recomputeHoverIndexFromPointer()
-    // updateHoverRects()
     updateCellEditorPositionsInTable()
     updateFilterDropdownPositionsInTable()
     updateSummaryDropdownPositionsInTable()
@@ -441,8 +433,6 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     tableVars.rightBodyGroup.y(fixedColumnsY)
     tableVars.centerBodyGroup.y(centerY)
     updateScrollbarPosition()
-    // 注释高亮相关调用以提升性能
-    // recomputeHoverIndexFromPointer()
     updateCellEditorPositionsInTable()
     scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar', 'summary'])
   }
@@ -455,9 +445,6 @@ export const renderScrollbarsHandler = ({ props, emits }: RenderScrollbarsHandle
     e.preventDefault()
 
     if (tableVars.stage) tableVars.stage.setPointersPositions(e)
-    // 同步最后一次客户端坐标，用于遮罩与区域判断
-    tableVars.lastClientX = e.clientX
-    tableVars.lastClientY = e.clientY
 
     const hasDeltaX = Math.abs(e.deltaX) > 0
     const hasDeltaY = Math.abs(e.deltaY) > 0

@@ -47,10 +47,10 @@
           <el-color-picker v-model="tableConfig.scrollbarBackground" show-alpha />
         </el-form-item>
         <el-form-item label="滚动条滑块颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumb" show-alpha />
+          <el-color-picker v-model="tableConfig.scrollbarThumbBackground" show-alpha />
         </el-form-item>
         <el-form-item label="滚动条滑块悬停颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumbHover" show-alpha />
+          <el-color-picker v-model="tableConfig.scrollbarThumbHoverBackground" show-alpha />
         </el-form-item>
         <el-form-item label="是否展示汇总">
           <el-switch v-model="tableConfig.enableSummary" />
@@ -103,8 +103,8 @@
         :body-background-odd="tableConfig.bodyBackgroundOdd"
         :body-background-even="tableConfig.bodyBackgroundEven"
         :scrollbar-background="tableConfig.scrollbarBackground"
-        :scrollbar-thumb="tableConfig.scrollbarThumb"
-        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHover"
+        :scrollbar-thumb="tableConfig.scrollbarThumbBackground"
+        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHoverBackground"
         :buffer-rows="tableConfig.bufferRows"
         :min-auto-col-width="tableConfig.minAutoColWidth"
         :sort-active-color="tableConfig.sortActiveColor"
@@ -506,8 +506,8 @@ const tableConfig = reactive({
   summaryBackground: '#f7f7f9',
   summaryTextColor: '#303133',
   scrollbarBackground: 'rgba(24, 144, 255, 0.5)',
-  scrollbarThumb: 'rgba(24, 144, 255, 0.5)',
-  scrollbarThumbHover: 'rgba(24, 144, 255, 0.8)',
+  scrollbarThumbBackground: 'rgba(24, 144, 255, 0.5)',
+  scrollbarThumbHoverBackground: 'rgba(24, 144, 255, 0.8)',
   bufferRows: 5,
   minAutoColWidth: 100,
   sortActiveColor: '#409EFF',

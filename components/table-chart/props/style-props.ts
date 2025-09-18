@@ -105,11 +105,11 @@ export const styleProps = {
   /**
    * 滚动条滑块颜色
    */
-  scrollbarThumb: { type: String, default: '#c1c1c1' },
+  scrollbarThumbBackground: { type: String, default: '#c1c1c1' },
   /**
    * 滚动条滑块悬停颜色
    */
-  scrollbarThumbHover: { type: String, default: '#a8a8a8' },
+  scrollbarThumbHoverBackground: { type: String, default: '#a8a8a8' },
 
   /**
    * 排序箭头颜色
