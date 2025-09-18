@@ -194,7 +194,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
   /**
    * 获取滚动限制
-   * @returns {Object} 滚动限制
+   * @returns {} 滚动限制
    */
   const getScrollLimits = () => {
     if (!tableVars.stage) return { maxScrollX: 0, maxScrollY: 0 }
@@ -418,8 +418,8 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
       }, 250)
     }
 
-    cellRect.off('click.cell')
-    cellRect.on('click.cell', handleClick)
+    // cellRect.off('click.cell')
+    // cellRect.on('click.cell', handleClick)
     bodyGroup.add(cellRect)
 
     // 绘制单元格文本
