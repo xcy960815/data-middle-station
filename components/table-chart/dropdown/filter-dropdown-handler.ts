@@ -204,8 +204,6 @@ export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => 
     // 重新处理表格数据，应用过滤条件
     handleTableData(props.data)
     clearGroups()
-    // 通过全局指针调用，避免 import 循环
-    tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
   }
 
   /**

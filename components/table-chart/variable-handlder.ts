@@ -63,9 +63,12 @@ export const paletteOptions: Record<string, { fill: string; stroke: string; text
 interface TableVars {
   rowHighlightRects: Konva.Rect[] | null
   colHighlightRects: Konva.Rect[] | null
+
+  // Body 对象池
   leftBodyPools: KonvaNodePools
   centerBodyPools: KonvaNodePools
   rightBodyPools: KonvaNodePools
+
   stage: Konva.Stage | null
   scrollbarLayer: Konva.Layer | null
 
@@ -86,15 +89,14 @@ interface TableVars {
   leftSummaryGroup: Konva.Group | null
   centerSummaryGroup: Konva.Group | null
   rightSummaryGroup: Konva.Group | null
+
   verticalScrollbarGroup: Konva.Group | null
   horizontalScrollbarGroup: Konva.Group | null
+
   verticalScrollbarThumbRect: Konva.Rect | null
   horizontalScrollbarThumbRect: Konva.Rect | null
+
   highlightRect: Konva.Rect | null
-  /**
-   * 对外暴露的重建分组函数指针，避免模块间循环依赖
-   */
-  rebuildGroupsFn?: (() => void) | null
   stageScrollY: number
   stageScrollX: number
   columnWidthOverrides: Record<string, number>
@@ -597,6 +599,8 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     return sortColumn ? sortColumn.order : null
   }
 
+  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryRowHeight : 0))
+
   return {
     tableContainerStyle,
     handleTableColumns,
@@ -605,6 +609,7 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     tableData,
     filterState,
     summaryState,
+    summaryRowHeight,
     sortColumns,
     handleTableData,
     resetTableVars,
