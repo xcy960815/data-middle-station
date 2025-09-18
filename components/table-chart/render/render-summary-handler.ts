@@ -17,7 +17,7 @@ export const renderSummaryHandler = ({ props }: RenderSummaryHandlerProps) => {
   const { openSummaryDropdown } = summaryDropDownHandler({ props })
   const { $webworker } = useNuxtApp()
   /**
-   * 计算某列的汇总显示值（异步版本）
+   * 计算某列的汇总显示值
    * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列
    * @param {string} rule 规则
    * @returns {string} 汇总显示值

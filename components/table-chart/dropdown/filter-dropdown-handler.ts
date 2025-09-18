@@ -50,8 +50,6 @@ interface FilterDropdownHandlerProps {
 export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => {
   const { filterState, handleTableData, tableVars } = variableHandlder({ props })
   const { clearGroups } = konvaStageHandler({ props })
-  // 注释高亮功能以提升性能
-  // const { updateHoverRects } = highlightHandler({ props })
 
   /**
    * 过滤下拉浮层样式
@@ -160,11 +158,6 @@ export const filterDropdownHandler = ({ props }: FilterDropdownHandlerProps) => 
       filterDropdown.colName = colName
       filterDropdown.options = options
       filterDropdown.selectedValues = [...selected]
-      // 打开下拉时取消 hover 高亮，避免视觉干扰
-      // 注释高亮重置以提升性能
-      // tableVars.hoveredRowIndex = null
-      // tableVars.hoveredColIndex = null
-      // updateHoverRects()
     })
   }
 

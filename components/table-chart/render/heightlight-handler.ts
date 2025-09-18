@@ -12,7 +12,6 @@ export const highlightHandler = ({ props }: HighlightHandlerProps) => {
   // 缓存高亮矩形的索引映射，避免重复遍历
   const rowHighlightCache = new Map<number, Konva.Rect[]>()
   const colHighlightCache = new Map<number, Konva.Rect[]>()
-  let cacheVersion = 0 // 版本号，用于判断缓存是否过期
   /**
    * 收集所有需要参与高亮判断的分组
    */
@@ -56,7 +55,6 @@ export const highlightHandler = ({ props }: HighlightHandlerProps) => {
   const invalidateHighlightCache = () => {
     rowHighlightCache.clear()
     colHighlightCache.clear()
-    cacheVersion++
   }
 
   /**

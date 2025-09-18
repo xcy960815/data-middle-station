@@ -53,9 +53,6 @@ interface SummaryDropdownHandlerProps {
 export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
   const { clearGroups } = konvaStageHandler({ props })
 
-  // 注释高亮功能以提升性能
-  // const { updateHoverRects } = highlightHandler({ props })
-
   const { summaryState, tableVars } = variableHandlder({ props })
 
   const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryRowHeight : 0))
@@ -178,11 +175,6 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
       summaryDropdown.colName = colName
       summaryDropdown.options = options
       summaryDropdown.selectedValue = selected || 'nodisplay'
-      // 打开下拉时取消 hover 高亮，避免视觉干扰
-      // 注释高亮重置以提升性能
-      // tableVars.hoveredRowIndex = null
-      // tableVars.hoveredColIndex = null
-      // updateHoverRects()
     })
   }
 

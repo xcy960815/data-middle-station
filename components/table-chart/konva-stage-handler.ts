@@ -1,5 +1,4 @@
 import Konva from 'konva'
-import type { CanvasTableEmits } from './emits'
 import { chartProps } from './props'
 import { renderBodyHandler } from './render/render-body-handler'
 import { renderHeaderHandler } from './render/render-header-handler'
@@ -9,20 +8,13 @@ import { clearPool, constrainToRange, getTableContainerElement } from './utils'
 import { variableHandlder, type Prettify } from './variable-handlder'
 interface KonvaStageHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  emits?: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 /**
  * Konva Stage 和 Layer 管理器
  */
-export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
+export const konvaStageHandler = ({ props }: KonvaStageHandlerProps) => {
   const { tableVars } = variableHandlder({ props })
   const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryRowHeight : 0))
-  const ensureEmits = () => {
-    if (!emits) {
-      throw new Error('This operation requires emits to be provided to konvaStageHandler')
-    }
-    return emits
-  }
   /**
    * 初始化 Stage 和所有 Layer
    * @returns {void}
@@ -38,8 +30,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     } else {
       tableVars.stage.size({ width, height })
     }
-
-    // 修复Layer层级顺序：确保表头在最上层不被遮挡
 
     // 1. 主体内容层（最底层 - 可滚动的body部分）
     if (!tableVars.bodyLayer) {
@@ -118,7 +108,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
    * @param resetScroll 是否重置滚动位置
    */
   const refreshTable = (resetScroll: boolean) => {
-    const { getScrollLimits, calculateVisibleRows } = renderBodyHandler({ props, emits: ensureEmits() })
+    const { getScrollLimits, calculateVisibleRows } = renderBodyHandler({ props })
 
     if (resetScroll) {
       tableVars.stageScrollX = 0
@@ -143,13 +133,8 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     if (!tableVars.stage) return
     tableVars.stage.setPointersPositions(mouseEvent)
 
-    // 记录鼠标在屏幕中的坐标
-    tableVars.lastClientX = mouseEvent.clientX
-    tableVars.lastClientY = mouseEvent.clientY
-
-    const { drawBodyPart, recomputeHoverIndexFromPointer, calculateVisibleRows, getScrollLimits, getSplitColumns } =
-      renderBodyHandler({ props, emits: ensureEmits() })
-    const { updateScrollPositions } = renderScrollbarsHandler({ props, emits: ensureEmits() })
+    const { drawBodyPart, calculateVisibleRows, getScrollLimits, getSplitColumns } = renderBodyHandler({ props })
+    const { updateScrollPositions } = renderScrollbarsHandler({ props })
     const { tableData } = variableHandlder({ props })
 
     // 列宽拖拽中：实时更新覆盖宽度并重建分组 - 已注释掉
@@ -238,8 +223,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       updateScrollPositions()
       return
     }
-    // 注释高亮重计算以提升性能
-    // recomputeHoverIndexFromPointer()
   }
 
   /**
@@ -254,9 +237,9 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       tableVars.isDraggingHorizontalThumb = false
       setPointerStyle(false, 'default')
       if (tableVars.verticalScrollbarThumbRect && !tableVars.isDraggingVerticalThumb)
-        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumb)
+        tableVars.verticalScrollbarThumbRect.fill(props.scrollbarThumbBackground)
       if (tableVars.horizontalScrollbarThumbRect && !tableVars.isDraggingHorizontalThumb)
-        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumb)
+        tableVars.horizontalScrollbarThumbRect.fill(props.scrollbarThumbBackground)
       tableVars.scrollbarLayer?.batchDraw()
     }
 
@@ -288,7 +271,7 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
    */
   const handleGlobalResize = () => {
     initStage()
-    const { calculateVisibleRows } = renderBodyHandler({ props, emits: ensureEmits() })
+    const { calculateVisibleRows } = renderBodyHandler({ props })
     calculateVisibleRows()
     clearGroups()
     rebuildGroups()
@@ -337,12 +320,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.leftSummaryGroup = null
     tableVars.centerSummaryGroup = null
     tableVars.rightSummaryGroup = null
-
-    /**
-     * 重置悬浮高亮
-     */
-    tableVars.hoveredRowIndex = null
-    tableVars.hoveredColIndex = null
   }
 
   /**
@@ -361,15 +338,10 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
       return
     }
 
-    // 必须提供 emits 才能完整重建（用于下拉与交互）
-    if (!emits) {
-      throw new Error('rebuildGroups requires emits to be provided to konvaStageHandler')
-    }
-
-    const { drawHeaderPart } = renderHeaderHandler({ props, emits })
-    const { drawBodyPart, getSplitColumns, getScrollLimits } = renderBodyHandler({ props, emits })
+    const { drawHeaderPart } = renderHeaderHandler({ props })
+    const { drawBodyPart, getSplitColumns, getScrollLimits } = renderBodyHandler({ props })
     const { drawSummaryPart } = renderSummaryHandler({ props })
-    const { drawVerticalScrollbar, drawHorizontalScrollbar } = renderScrollbarsHandler({ props, emits })
+    const { drawVerticalScrollbar, drawHorizontalScrollbar } = renderScrollbarsHandler({ props })
 
     const { leftCols, centerCols, rightCols, leftWidth, centerWidth, rightWidth } = getSplitColumns()
     const { width: stageWidth, height: stageHeight } = getStageAttr()
@@ -538,12 +510,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
     tableVars.summaryLayer?.batchDraw() // 4. 汇总层（像header一样统一管理）
     tableVars.scrollbarLayer?.batchDraw() // 5. 滚动条在最顶层
   }
-
-  // 暴露到全局状态，供其他模块调用（仅在提供 emits 时设置，以避免无 emits 实例覆盖）
-  if (emits) {
-    tableVars.rebuildGroupsFn = rebuildGroups
-  }
-
   /**
    * 统一的分组创建工厂方法
    * @param groupType 分组类型
@@ -600,8 +566,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
    * 初始化全局事件监听器
    */
   const initStageListeners = () => {
-    // 仅在提供 emits 时，注册依赖 emits 的全局事件监听器
-    if (!emits) return
     window.addEventListener('resize', handleGlobalResize)
     // 需要保留鼠标移动监听以支持列宽拖拽功能
     window.addEventListener('mousemove', handleGlobalMouseMove)
@@ -612,7 +576,6 @@ export const konvaStageHandler = ({ props, emits }: KonvaStageHandlerProps) => {
    * 清理全局事件监听器
    */
   const cleanupStageListeners = () => {
-    if (!emits) return
     window.removeEventListener('resize', handleGlobalResize)
     // 清理鼠标移动监听
     window.removeEventListener('mousemove', handleGlobalMouseMove)

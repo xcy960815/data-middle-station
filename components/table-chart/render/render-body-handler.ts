@@ -1,26 +1,20 @@
 import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
-import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
-import { getTableContainerElement, returnToPool, truncateText } from '../utils'
+import { returnToPool, truncateText } from '../utils'
 import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
-export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
-  // 注释高亮功能以提升性能
-  // const { updateHoverRects, invalidateHighlightCache } = highlightHandler({ props })
-  // const { invalidateHighlightCache } = highlightHandler({ props })
+export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
   // 注释过滤功能以提升性能
   // const { filterDropdown } = filterDropdownHandler({ props })
   const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({
-    props,
-    emits
+    props
   })
   const { tableColumns, tableData, tableVars } = variableHandlder({ props })
   const { getStageAttr } = konvaStageHandler({ props })
@@ -704,7 +698,6 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   ) => {
     createHighlightRect(cellX, cellY, cellWidth, cellHeight, group)
     const rowData = tableData.value[rowIndex]
-    emits('cell-click', { rowIndex, colIndex, colKey: columnOption.columnName, rowData })
   }
 
   /**
@@ -735,106 +728,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   //   openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
   // }
 
-  /**
-   * 判断当前指针位置的顶层元素是否属于表格容器
-   * 若不属于，则认为表格被其它遮罩/弹层覆盖，此时不进行高亮
-   * @param {number} clientX 鼠标点击位置的 X 坐标
-   * @param {number} clientY 鼠标点击位置的 Y 坐标
-   * @returns {boolean} 是否在表格容器内
-   */
-  const isTopMostInTable = (clientX: number, clientY: number): boolean => {
-    const container = getTableContainerElement()
-    if (!container) return false
-    const topEl = document.elementFromPoint(clientX, clientY) as HTMLElement | null
-    if (!topEl) return false
-    if (!container.contains(topEl)) return false
-    // 仅当命中的元素为 Konva 的 canvas（或其包裹层）时，认为没有被遮罩覆盖
-    if (topEl.tagName === 'CANVAS') return true
-    const konvaContent = topEl.closest('.konvajs-content') as HTMLElement | null
-    if (konvaContent && container.contains(konvaContent)) return true
-    // 命中的虽然在容器内，但不是 Konva 画布，视为被遮罩覆盖
-    return false
-  }
-
-  /**
-   * 注释高亮功能以提升性能 - 基于当前指针位置重新计算 行下标 列下标
-   * @returns {void}
-   */
-  const recomputeHoverIndexFromPointer = () => {
-    // 注释整个高亮计算逻辑以提升性能
-    return
-
-    // if (
-    //   !tableVars.stage ||
-    //   (!props.enableRowHoverHighlight && !props.enableColHoverHighlight) ||
-    //   filterDropdown.visible ||
-    //   summaryDropdown.visible
-    // ) {
-    //   return
-    // }
-
-    // // 清除高亮的辅助函数
-    // const clearHoverHighlight = () => {
-    //   if (tableVars.hoveredRowIndex !== null || tableVars.hoveredColIndex !== null) {
-    //     tableVars.hoveredRowIndex = null
-    //     tableVars.hoveredColIndex = null
-    //     updateHoverRects()
-    //   }
-    // }
-
-    // // 检查各种边界条件，如果不符合则清除高亮并返回
-    // if (!isTopMostInTable(tableVars.lastClientX, tableVars.lastClientY)) {
-    //   clearHoverHighlight()
-    //   return
-    // }
-
-    // const pointerPosition = tableVars.stage.getPointerPosition()
-    // if (!pointerPosition) {
-    //   clearHoverHighlight()
-    //   return
-    // }
-
-    // /**
-    //  * 检查鼠标是否在表格区域内（排除滚动条区域）
-    //  */
-    // if (!isInTableArea()) {
-    //   clearHoverHighlight()
-    //   return
-    // }
-
-    // const localY = pointerPosition.y + tableVars.stageScrollY
-    // const localX = pointerPosition.x + tableVars.stageScrollX
-    // // 计算鼠标所在的行索引
-    // const positionMapList = [
-    //   ...tableVars.headerPositionMapList,
-    //   ...tableVars.bodyPositionMapList,
-    //   ...tableVars.summaryPositionMapList
-    // ]
-    // const positionOption = positionMapList.find(
-    //   (item) => localX >= item.x && localX <= item.x + item.width && localY >= item.y && localY <= item.y + item.height
-    // )
-    // let newHoveredRowIndex = null
-    // let newHoveredColIndex = null
-    // if (positionOption) {
-    //   newHoveredRowIndex = positionOption.rowIndex
-    //   newHoveredColIndex = positionOption.colIndex
-    // }
-    // const rowChanged = newHoveredRowIndex !== tableVars.hoveredRowIndex
-    // const colChanged = newHoveredColIndex !== tableVars.hoveredColIndex
-    // if (rowChanged) {
-    //   tableVars.hoveredRowIndex = newHoveredRowIndex
-    // }
-    // if (colChanged) {
-    //   tableVars.hoveredColIndex = newHoveredColIndex
-    // }
-
-    // if (rowChanged || colChanged) {
-    //   updateHoverRects()
-    // }
-  }
-
   return {
-    recomputeHoverIndexFromPointer,
     calculateVisibleRows,
     getScrollLimits,
     getSplitColumns,

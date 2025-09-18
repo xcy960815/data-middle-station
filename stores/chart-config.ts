@@ -106,11 +106,11 @@ export const defaultTableChartConfig: ChartConfigVo.TableChartConfigResponse = {
   /**
    * @desc 滚动条滑块颜色
    */
-  scrollbarThumb: '#d1d5db',
+  scrollbarThumbBackground: '#d1d5db',
   /**
    * @desc 滚动条滑块悬停颜色
    */
-  scrollbarThumbHover: '#9ca3af',
+  scrollbarThumbHoverBackground: '#9ca3af',
   /**
    * @desc 缓冲行数
    */

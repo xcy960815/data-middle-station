@@ -98,8 +98,8 @@ interface TableVars {
   stageScrollY: number
   stageScrollX: number
   columnWidthOverrides: Record<string, number>
-  // 列宽拖拽相关变量 - 已注释掉
-  // isResizingColumn: boolean
+  // 列宽拖拽相关变量
+  isResizingColumn: boolean
   // resizingColumnName: string | null
   // resizeStartX: number
   // resizeStartWidth: number
@@ -114,10 +114,6 @@ interface TableVars {
   visibleRowStart: number
   visibleRowEnd: number
   visibleRowCount: number
-  hoveredRowIndex: number | null
-  hoveredColIndex: number | null
-  lastClientX: number
-  lastClientY: number
   headerPositionMapList: PositionMap[]
   bodyPositionMapList: PositionMap[]
   summaryPositionMapList: PositionMap[]
@@ -280,9 +276,9 @@ const tableVars: TableVars = {
   columnWidthOverrides: {},
 
   /**
-   * 列宽拖拽状态 - 已注释掉
+   * 列宽拖拽状态
    */
-  // isResizingColumn: false,
+  isResizingColumn: false,
 
   /**
    * 列宽拖拽列名 - 已注释掉
@@ -355,23 +351,6 @@ const tableVars: TableVars = {
    * 上下缓冲行数
    */
   visibleRowCount: 0,
-
-  // ========== 悬停高亮相关 ==========
-  /**
-   * 需要高亮的行索引
-   */
-  hoveredRowIndex: null,
-
-  /**
-   * 需要高亮的列索引
-   */
-  hoveredColIndex: null,
-
-  /**
-   * 最近一次指针的屏幕坐标（用于判断表格上是否存在遮罩层）
-   */
-  lastClientX: 0,
-  lastClientY: 0,
 
   // ========== 位置映射列表 ==========
   headerPositionMapList: [],
@@ -545,7 +524,8 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
 
     // 重置列宽拖拽相关 - 已注释掉
     tableVars.columnWidthOverrides = {}
-    // tableVars.isResizingColumn = false
+
+    tableVars.isResizingColumn = false
     // tableVars.resizingColumnName = null
     // tableVars.resizeStartX = 0
     // tableVars.resizeStartWidth = 0
@@ -564,12 +544,6 @@ export const variableHandlder = ({ props }: VariableHandlderProps) => {
     tableVars.visibleRowStart = 0
     tableVars.visibleRowEnd = 0
     tableVars.visibleRowCount = 0
-
-    // 重置悬停高亮相关
-    tableVars.hoveredRowIndex = null
-    tableVars.hoveredColIndex = null
-    tableVars.lastClientX = 0
-    tableVars.lastClientY = 0
 
     // 重置位置映射列表
     tableVars.headerPositionMapList.length = 0
