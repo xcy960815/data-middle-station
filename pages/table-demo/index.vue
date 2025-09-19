@@ -47,10 +47,10 @@
           <el-color-picker v-model="tableConfig.scrollbarBackground" show-alpha />
         </el-form-item>
         <el-form-item label="滚动条滑块颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumb" show-alpha />
+          <el-color-picker v-model="tableConfig.scrollbarThumbBackground" show-alpha />
         </el-form-item>
         <el-form-item label="滚动条滑块悬停颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumbHover" show-alpha />
+          <el-color-picker v-model="tableConfig.scrollbarThumbHoverBackground" show-alpha />
         </el-form-item>
         <el-form-item label="是否展示汇总">
           <el-switch v-model="tableConfig.enableSummary" />
@@ -103,8 +103,8 @@
         :body-background-odd="tableConfig.bodyBackgroundOdd"
         :body-background-even="tableConfig.bodyBackgroundEven"
         :scrollbar-background="tableConfig.scrollbarBackground"
-        :scrollbar-thumb="tableConfig.scrollbarThumb"
-        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHover"
+        :scrollbar-thumb="tableConfig.scrollbarThumbBackground"
+        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHoverBackground"
         :buffer-rows="tableConfig.bufferRows"
         :min-auto-col-width="tableConfig.minAutoColWidth"
         :sort-active-color="tableConfig.sortActiveColor"
@@ -115,9 +115,9 @@
         :highlight-row-background="tableConfig.highlightRowBackground"
         :highlight-col-background="tableConfig.highlightColBackground"
         :span-method="spanMethod"
-        @cell-click="handleCellClick"
-        @cell-edit="handleCellEdit"
       >
+        <!-- @cell-click="handleCellClick"
+      @cell-edit="handleCellEdit" -->
       </CanvasTable>
     </ClientOnly>
   </div>
@@ -151,19 +151,9 @@ const spanMethod = ({
     return { rowspan: 1, colspan: 1 }
   }
 
-  // 第一列（序号列）- 可配置合并行数
-  if (colIndex === 0 && spanConfig.firstColSpan > 1) {
-    if (rowIndex % spanConfig.firstColSpan === 0) {
-      return {
-        rowspan: spanConfig.firstColSpan,
-        colspan: 1
-      }
-    } else {
-      return {
-        rowspan: 0,
-        colspan: 0
-      }
-    }
+  // 第一列（序号列）- 序号列不应该合并，保持连续
+  if (colIndex === 0) {
+    return { rowspan: 1, colspan: 1 }
   }
 
   // 第二列（name列）- 可配置合并行数
@@ -244,16 +234,16 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     fixed: 'left',
     align: 'center'
   },
-  // {
-  //   columnName: 'id',
-  //   columnType: 'number',
-  //   columnComment: 'id',
-  //   displayName: 'id',
-  //   width: 200,
-  //   filterable: true,
-  //   editable: true,
-  //   editType: 'input'
-  // },
+  {
+    columnName: 'id',
+    columnType: 'number',
+    columnComment: 'id',
+    displayName: 'id',
+    width: 200,
+    filterable: true,
+    editable: true,
+    editType: 'input'
+  },
   {
     columnName: 'name',
     columnType: 'string',
@@ -506,8 +496,8 @@ const tableConfig = reactive({
   summaryBackground: '#f7f7f9',
   summaryTextColor: '#303133',
   scrollbarBackground: 'rgba(24, 144, 255, 0.5)',
-  scrollbarThumb: 'rgba(24, 144, 255, 0.5)',
-  scrollbarThumbHover: 'rgba(24, 144, 255, 0.8)',
+  scrollbarThumbBackground: 'rgba(24, 144, 255, 0.5)',
+  scrollbarThumbHoverBackground: 'rgba(24, 144, 255, 0.8)',
   bufferRows: 5,
   minAutoColWidth: 100,
   sortActiveColor: '#409EFF',

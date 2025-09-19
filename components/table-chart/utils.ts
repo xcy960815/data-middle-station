@@ -21,6 +21,7 @@ export const getFromPool = <T extends Konva.Node>(pools: T[], createPoolHandler:
   }
   return pooledNode
 }
+
 // 清理对象池
 export const clearPool = (pool: Konva.Node[]) => {
   pool.forEach((node) => node.destroy())
@@ -122,32 +123,6 @@ export const getTextX = (x: number) => {
 }
 
 /**
- * 调整十六进制颜色亮度
- * @param hex 颜色，如 #409EFF
- * @param percent 亮度百分比，正数变亮，负数变暗（-100~100）
- */
-export const adjustHexColorBrightness = (hex: string, percent: number): string => {
-  const normalizeHex = (h: string) => {
-    if (!h) return '#000000'
-    if (h.startsWith('#')) h = h.slice(1)
-    if (h.length === 3)
-      h = h
-        .split('')
-        .map((c) => c + c)
-        .join('')
-    if (h.length !== 6) return '#000000'
-    return '#' + h
-  }
-  const base = normalizeHex(hex)
-  const r = parseInt(base.slice(1, 3), 16)
-  const g = parseInt(base.slice(3, 5), 16)
-  const b = parseInt(base.slice(5, 7), 16)
-  const adj = (v: number) => constrainToRange(Math.round(v + (percent / 100) * 255), 0, 255)
-  const toHex = (v: number) => v.toString(16).padStart(2, '0')
-  return `#${toHex(adj(r))}${toHex(adj(g))}${toHex(adj(b))}`
-}
-
-/**
  * 超出最大宽度时裁剪文本，并追加省略号
  * @param text 文本
  * @param maxWidth 最大宽度
@@ -191,22 +166,4 @@ export const truncateText = (text: string, maxWidth: number, fontSize: number | 
 
   tempText.destroy()
   return result || '...'
-}
-
-/**
- * 估算单个按钮宽度基于文本长度
- * @param {string} text 文本
- * @param {number | string} fontSize 字体大小
- * @param {string} fontFamily 字体
- * @returns 估算的按钮宽度
- */
-export const estimateButtonWidth = (text: string, fontSize: number | string, fontFamily: string) => {
-  const tempCellText = new Konva.Text({
-    text,
-    fontSize: typeof fontSize === 'string' ? Number(fontSize) : fontSize,
-    fontFamily: fontFamily
-  })
-  const w = tempCellText.width() + 16
-  tempCellText.destroy()
-  return constrainToRange(w, 48, 120)
 }

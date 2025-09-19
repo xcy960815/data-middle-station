@@ -2,14 +2,7 @@
   <div id="table-container" class="table-container" :style="tableContainerStyle"></div>
 
   <!-- 过滤器下拉组件 -->
-  <filter-dropdown
-    :visible="filterDropdown.visible"
-    :options="filterDropdown.options"
-    :selected-values="filterDropdown.selectedValues"
-    :dropdown-style="filterDropdownStyle"
-    @change="handleSelectedFilter"
-    @blur="closeFilterDropdown"
-  />
+  <filter-dropdown ref="filterDropdownRef" :props="props" />
 
   <!-- 汇总下拉组件 -->
   <summary-dropdown
@@ -34,52 +27,42 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
-import CellEditor from './cell-editor.vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import CellEditor from './components/cell-editor.vue'
+import FilterDropdown from './components/filter-dropdown.vue'
+import SummaryDropdown from './components/summary-dropdown.vue'
 import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
-import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
-import type { ChartEmits } from './emits'
-import FilterDropdown from './filter-dropdown.vue'
+import { setGlobalFilterDropdownInstance } from './global-components'
 import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
-import { renderBodyHandler } from './render/render-body-handler'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
-import SummaryDropdown from './summary-dropdown.vue'
 import { variableHandlder } from './variable-handlder'
 
 const props = defineProps(chartProps)
 
-/**
- * 定义事件
- */
-const emits = defineEmits<ChartEmits>()
-
 const { tableVars, tableContainerStyle, handleTableData, handleTableColumns, sortColumns } = variableHandlder({ props })
 
 const { initStage, destroyStage, refreshTable, initStageListeners, cleanupStageListeners } = konvaStageHandler({
-  props,
-  emits
+  props
 })
 
-renderBodyHandler({ props, emits })
+const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ props })
 
-const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ props, emits })
+// FilterDropdown 组件引用
+const filterDropdownRef = ref<InstanceType<typeof FilterDropdown>>()
 
-// 注释过滤功能以提升性能
-const {
+// 设置全局实例，供 render handlers 使用
+watch(
   filterDropdownRef,
-  filterDropdownStyle,
-  filterDropdown,
-  closeFilterDropdown,
-  handleSelectedFilter,
-  initFilterDropdownListeners,
-  cleanupFilterDropdownListeners
-} = filterDropdownHandler({ props })
+  (newRef) => {
+    setGlobalFilterDropdownInstance(newRef || null)
+  },
+  { immediate: true }
+)
 
 // 注释汇总功能以提升性能
 const {
-  summaryDropdownRef,
   summaryDropdownStyle,
   summaryDropdown,
   closeSummaryDropdown,
@@ -94,7 +77,7 @@ const {
   handleCellEditorSave,
   initCellEditorListeners,
   cleanupCellEditorListeners
-} = editorDropdownHandler({ props, emits })
+} = editorDropdownHandler({ props })
 
 /**
  * 监听 props 变化
@@ -182,7 +165,12 @@ watch(
  * 滚动条相关（样式与尺寸）
  */
 watch(
-  () => [props.scrollbarBackground, props.scrollbarThumb, props.scrollbarThumbHover, props.scrollbarSize],
+  () => [
+    props.scrollbarBackground,
+    props.scrollbarThumbBackground,
+    props.scrollbarThumbHoverBackground,
+    props.scrollbarSize
+  ],
   () => {
     if (!tableVars.stage) return
     refreshTable(false)
@@ -237,18 +225,18 @@ onMounted(() => {
   refreshTable(true)
   initWheelListener()
   initStageListeners()
-  // initFilterDropdownListeners() // 注释过滤功能
-  // initSummaryDropdownListeners() // 注释汇总功能
+  initSummaryDropdownListeners()
   initCellEditorListeners()
 })
 
 onBeforeUnmount(() => {
   cleanupWheelListener()
   cleanupStageListeners()
-  // cleanupFilterDropdownListeners() // 注释过滤功能
-  // cleanupSummaryDropdownListeners() // 注释汇总功能
+  cleanupSummaryDropdownListeners()
   cleanupCellEditorListeners()
   destroyStage()
+  // 清理全局实例
+  setGlobalFilterDropdownInstance(null)
 })
 </script>
 

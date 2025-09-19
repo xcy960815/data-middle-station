@@ -611,12 +611,16 @@
               type="Refresh"
               size="16"
               fill="#666"
-              @click="handleResetTableConfig('scrollbarThumb')"
+              @click="handleResetTableConfig('scrollbarThumbBackground')"
             />
           </el-tooltip>
         </span>
       </template>
-      <el-color-picker v-model="tableChartConfig.scrollbarThumb" @change="handleUpdateTableConfig" show-alpha />
+      <el-color-picker
+        v-model="tableChartConfig.scrollbarThumbBackground"
+        @change="handleUpdateTableConfig"
+        show-alpha
+      />
     </el-form-item>
     <!-- 滚动条滑块悬停颜色 -->
     <el-form-item label="滚动条滑块悬停颜色">
@@ -632,12 +636,16 @@
               type="Refresh"
               size="16"
               fill="#666"
-              @click="handleResetTableConfig('scrollbarThumbHover')"
+              @click="handleResetTableConfig('scrollbarThumbHoverBackground')"
             />
           </el-tooltip>
         </span>
       </template>
-      <el-color-picker v-model="tableChartConfig.scrollbarThumbHover" @change="handleUpdateTableConfig" show-alpha />
+      <el-color-picker
+        v-model="tableChartConfig.scrollbarThumbHoverBackground"
+        @change="handleUpdateTableConfig"
+        show-alpha
+      />
     </el-form-item>
 
     <el-divider content-position="left">性能</el-divider>

@@ -33,9 +33,6 @@ export interface DrawRectConfig extends DrawBaseConfig {
   strokeWidth?: number
   cornerRadius?: number
   listening?: boolean
-  rowIndex?: number | null
-  colIndex?: number | null
-  originFill?: string
 }
 
 /**
@@ -106,35 +103,17 @@ export const drawUnifiedText = (config: DrawTextConfig) => {
  * @returns {Konva.Rect} 矩形节点
  */
 export const drawUnifiedRect = (config: DrawRectConfig): Konva.Rect => {
-  const {
-    pools,
-    name,
-    x,
-    y,
-    width,
-    height,
-    fill,
-    stroke,
-    strokeWidth = 1,
-    cornerRadius = 0,
-    listening = true,
-    rowIndex = null,
-    colIndex = null,
-    originFill
-  } = config
+  const { pools, name, x, y, width, height, fill, stroke, strokeWidth = 1, cornerRadius = 0, listening = true } = config
 
   const rect: Konva.Rect = getFromPool<Konva.Rect>(pools.cellRects, () => new Konva.Rect({ listening, name }))
   rect.name(name)
   rect.off('click')
   rect.off('mouseenter')
   rect.off('mouseleave')
-  rect.setAttr('row-index', rowIndex)
-  rect.setAttr('col-index', colIndex)
   rect.x(x)
   rect.y(y)
   rect.width(width)
   rect.height(height)
-  if (originFill !== undefined) rect.setAttr('origin-fill', originFill)
   if (fill !== undefined) rect.fill(fill)
   if (stroke !== undefined) rect.stroke(stroke)
   rect.strokeWidth(strokeWidth)

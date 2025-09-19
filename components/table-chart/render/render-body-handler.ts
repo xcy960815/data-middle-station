@@ -1,30 +1,24 @@
 import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
-import type { CanvasTableEmits } from '../emits'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
-import { getTableContainerElement, returnToPool, truncateText } from '../utils'
-import { variableHandlder, type KonvaNodePools, type PositionMap, type Prettify } from '../variable-handlder'
+import { returnToPool, truncateText } from '../utils'
+import { variableHandlder, type KonvaNodePools, type Prettify } from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
 interface RenderBodyHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
-export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
-  // 注释高亮功能以提升性能
-  // const { updateHoverRects, invalidateHighlightCache } = highlightHandler({ props })
-  // const { invalidateHighlightCache } = highlightHandler({ props })
+export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
   // 注释过滤功能以提升性能
-  // const { filterDropdown } = filterDropdownHandler({ props })
+  // filterDropdownHandler 已迁移到组件中
   const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({
-    props,
-    emits
+    props
   })
-  const { tableColumns, tableData, tableVars } = variableHandlder({ props })
-  const { getStageAttr, setPointerStyle } = konvaStageHandler({ props })
-  const { summaryRowHeight, summaryDropdown } = summaryDropDownHandler({ props })
+  const { tableColumns, tableData, tableVars, summaryRowHeight } = variableHandlder({ props })
+  const { getStageAttr } = konvaStageHandler({ props })
+  const { summaryDropdown } = summaryDropDownHandler({ props })
 
   /**
    * 计算可视区域 数据的起始行和结束行
@@ -159,11 +153,16 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     const autoColumnWidth = Math.max(props.minAutoColWidth, rawAutoWidth)
 
     // 为每个列计算最终宽度（支持用户拖拽覆盖）
-    const columnsWithWidth = tableColumns.value.map((col) => {
-      const overrideWidth = tableVars.columnWidthOverrides[col.columnName as string]
-      const width = overrideWidth !== undefined ? overrideWidth : col.width !== undefined ? col.width : autoColumnWidth
+    const columnsWithWidth = tableColumns.value.map((columnOption) => {
+      const overrideWidth = tableVars.columnWidthOverrides[columnOption.columnName as string]
+      const width =
+        overrideWidth !== undefined
+          ? overrideWidth
+          : columnOption.width !== undefined
+            ? columnOption.width
+            : autoColumnWidth
 
-      return { ...col, width }
+      return { ...columnOption, width }
     })
     const leftCols = columnsWithWidth.filter((c) => c.fixed === 'left')
     const centerCols = columnsWithWidth.filter((c) => !c.fixed)
@@ -189,7 +188,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
   /**
    * 获取滚动限制
-   * @returns {Object} 滚动限制
+   * @returns {} 滚动限制
    */
   const getScrollLimits = () => {
     if (!tableVars.stage) return { maxScrollX: 0, maxScrollY: 0 }
@@ -247,264 +246,332 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   }
 
   /**
-   *
+   * 计算单元格合并信息
+   */
+  const calculateCellSpan = (
+    spanMethod: NonNullable<typeof props.spanMethod>,
+    row: ChartDataVo.ChartData,
+    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+    rowIndex: number,
+    globalColIndex: number
+  ) => {
+    const res = spanMethod({ row, column: columnOption, rowIndex, colIndex: globalColIndex })
+    let spanRow = 1
+    let spanCol = 1
+
+    if (Array.isArray(res)) {
+      spanRow = Math.max(0, Number(res[0]) || 0)
+      spanCol = Math.max(0, Number(res[1]) || 0)
+    } else if (res && typeof res === 'object') {
+      spanRow = Math.max(0, Number(res.rowspan) || 0)
+      spanCol = Math.max(0, Number(res.colspan) || 0)
+    }
+
+    // 只要任一维度为 0，即视为被合并覆盖（与常见表格合并语义一致）
+    const coveredBySpanMethod = spanRow === 0 || spanCol === 0
+
+    return { spanRow, spanCol, coveredBySpanMethod }
+  }
+
+  /**
+   * 计算合并单元格的总宽度
+   */
+  const calculateMergedCellWidth = (
+    spanCol: number,
+    colIndex: number,
+    bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
+    columnWidth: number
+  ) => {
+    if (spanCol <= 1) return columnWidth
+
+    let totalWidth = 0
+    for (let i = 0; i < spanCol && colIndex + i < bodyCols.length; i++) {
+      const colInfo = bodyCols[colIndex + i]
+      totalWidth += colInfo.width || 0
+    }
+    return totalWidth
+  }
+
+  /**
+   * 获取单元格显示值
+   */
+  const getCellDisplayValue = (
+    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+    row: ChartDataVo.ChartData,
+    rowIndex: number
+  ) => {
+    const rawValue =
+      columnOption.columnName === '__index__'
+        ? String(rowIndex + 1)
+        : row && typeof row === 'object'
+          ? row[columnOption.columnName]
+          : undefined
+    return String(rawValue ?? '')
+  }
+
+  /**
+   * 创建合并单元格
+   */
+  const drawMergedCell = (
+    pools: KonvaNodePools,
+    bodyGroup: Konva.Group,
+    x: number,
+    y: number,
+    cellWidth: number,
+    cellHeight: number,
+    rowIndex: number,
+    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+    row: ChartDataVo.ChartData,
+    bodyFontSize: number
+  ) => {
+    // 绘制合并单元格背景
+    const mergedCellRect = drawUnifiedRect({
+      pools,
+      name: 'merged-cell-rect',
+      x,
+      y,
+      width: cellWidth,
+      height: cellHeight,
+      fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
+      stroke: props.borderColor,
+      strokeWidth: 1
+    })
+    bodyGroup.add(mergedCellRect)
+
+    // 绘制合并单元格文本
+    const value = getCellDisplayValue(columnOption, row, rowIndex)
+    const maxTextWidth = cellWidth - 16
+    const truncatedValue = truncateText(value, maxTextWidth, bodyFontSize, props.bodyFontFamily)
+
+    const mergedCellText = drawUnifiedText({
+      pools,
+      name: 'merged-cell-text',
+      text: truncatedValue,
+      x,
+      y,
+      fontSize: bodyFontSize,
+      fontFamily: props.bodyFontFamily,
+      fill: props.bodyTextColor,
+      align: columnOption.align || 'left',
+      verticalAlign: 'middle',
+      cellHeight,
+      useGetTextX: true
+    })
+    bodyGroup.add(mergedCellText)
+  }
+
+  /**
+   * 创建普通单元格
+   */
+  const drawNormalCell = (
+    pools: KonvaNodePools,
+    bodyGroup: Konva.Group,
+    x: number,
+    y: number,
+    cellWidth: number,
+    cellHeight: number,
+    rowIndex: number,
+    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+    row: ChartDataVo.ChartData,
+    bodyFontSize: number
+  ) => {
+    // 绘制单元格背景
+    const cellRect = drawUnifiedRect({
+      pools,
+      name: 'cell-rect',
+      x,
+      y,
+      width: cellWidth,
+      height: cellHeight,
+      fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
+      stroke: props.borderColor,
+      strokeWidth: 1
+    })
+
+    // cellRect.off('click.cell')
+    // cellRect.on('click.cell', handleClick)
+    bodyGroup.add(cellRect)
+
+    // 绘制单元格文本
+    const value = getCellDisplayValue(columnOption, row, rowIndex)
+    const maxTextWidth = cellWidth - 16
+    const truncatedValue = truncateText(value, maxTextWidth, bodyFontSize, props.bodyFontFamily)
+
+    const cellText = drawUnifiedText({
+      pools,
+      name: 'cell-text',
+      text: truncatedValue,
+      x,
+      y,
+      fontSize: bodyFontSize,
+      fontFamily: props.bodyFontFamily,
+      fill: props.bodyTextColor,
+      align: columnOption.align || 'left',
+      verticalAlign: 'middle',
+      cellHeight,
+      useGetTextX: true
+    })
+    bodyGroup.add(cellText)
+  }
+
+  /**
+   * 渲染单个单元格
+   */
+  const renderCell = (params: {
+    pools: KonvaNodePools
+    bodyGroup: Konva.Group
+    x: number
+    y: number
+    rowIndex: number
+    colIndex: number
+    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption
+    row: ChartDataVo.ChartData
+    bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
+    spanMethod: NonNullable<typeof props.spanMethod> | null
+    hasSpanMethod: boolean
+    globalIndexByColName: Map<string, number>
+    bodyFontSize: number
+  }) => {
+    const {
+      pools,
+      bodyGroup,
+      x,
+      y,
+      rowIndex,
+      colIndex,
+      columnOption,
+      row,
+      bodyCols,
+      spanMethod,
+      hasSpanMethod,
+      globalIndexByColName,
+      bodyFontSize
+    } = params
+
+    const columnWidth = columnOption.width || 0
+    if (columnWidth <= 0) return { newX: x + columnWidth, skipCols: 0 }
+
+    // 计算合并单元格信息
+    let spanRow = 1
+    let spanCol = 1
+    let coveredBySpanMethod = false
+
+    if (hasSpanMethod && spanMethod) {
+      const globalColIndex = globalIndexByColName.get(columnOption.columnName as string) ?? colIndex
+      const spanInfo = calculateCellSpan(spanMethod, row, columnOption, rowIndex, globalColIndex)
+      spanRow = spanInfo.spanRow
+      spanCol = spanInfo.spanCol
+      coveredBySpanMethod = spanInfo.coveredBySpanMethod
+    }
+
+    // 如果被合并覆盖，跳过绘制
+    if (hasSpanMethod && coveredBySpanMethod) {
+      return { newX: x + columnWidth, skipCols: 0 }
+    }
+
+    const computedRowSpan = hasSpanMethod ? spanRow : 1
+    const cellHeight = computedRowSpan * props.bodyRowHeight
+    const cellWidth = calculateMergedCellWidth(spanCol, colIndex, bodyCols, columnWidth)
+    // 绘制单元格
+    if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
+      drawMergedCell(pools, bodyGroup, x, y, cellWidth, cellHeight, rowIndex, columnOption, row, bodyFontSize)
+    } else {
+      drawNormalCell(pools, bodyGroup, x, y, cellWidth, cellHeight, rowIndex, columnOption, row, bodyFontSize)
+    }
+
+    // 计算下一个位置和跳过的列数
+    const skipCols = hasSpanMethod && spanCol > 1 ? spanCol - 1 : 0
+    const newX = hasSpanMethod && spanCol > 1 ? x + cellWidth : x + columnWidth
+
+    return { newX, skipCols }
+  }
+
+  /**
+   * 渲染单行的所有单元格
+   */
+  const renderRowCells = (params: {
+    rowIndex: number
+    y: number
+    bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
+    pools: KonvaNodePools
+    bodyGroup: Konva.Group
+    spanMethod: NonNullable<typeof props.spanMethod> | null
+    hasSpanMethod: boolean
+    globalIndexByColName: Map<string, number>
+    bodyFontSize: number
+  }) => {
+    const { rowIndex, y, bodyCols, pools, bodyGroup, spanMethod, hasSpanMethod, globalIndexByColName, bodyFontSize } =
+      params
+
+    const row = tableData.value[rowIndex]
+    let x = 0
+
+    for (let colIndex = 0; colIndex < bodyCols.length; colIndex++) {
+      const columnOption = bodyCols[colIndex]
+
+      const result = renderCell({
+        pools,
+        bodyGroup,
+        x,
+        y,
+        rowIndex,
+        colIndex,
+        columnOption,
+        row,
+        bodyCols,
+        spanMethod,
+        hasSpanMethod,
+        globalIndexByColName,
+        bodyFontSize
+      })
+
+      x = result.newX
+      colIndex += result.skipCols
+    }
+  }
+
+  /**
    * 画body区域 只渲染可视区域的行
    * @param {Konva.Group | null} group 分组
    * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} cols 列
    * @param {ObjectPools} pools 对象池
-   * @param {number} startColIndex 起始列索引
-   * @param {PositionMap[]} positionMapList 位置映射列表
-   * @param {number} stageStartX 舞台起始X坐标
    * @returns {void}
    */
   const drawBodyPart = (
     bodyGroup: Konva.Group | null,
     bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
-    pools: KonvaNodePools,
-    startColIndex: number,
-    positionMapList: PositionMap[],
-    stageStartX: number
+    pools: KonvaNodePools
   ) => {
     if (!tableVars.stage || !bodyGroup) return
 
     calculateVisibleRows()
-    // 预计算：字体、span 方法、全局列索引映射、操作列按钮宽度
-    const bodyFontFamily = props.bodyFontFamily
-    const bodyFontSizeNumber =
-      typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-    // 恢复合并单元格相关代码
+
+    const bodyFontSize = props.bodyFontSize
     const spanMethod = typeof props.spanMethod === 'function' ? props.spanMethod : null
     const hasSpanMethod = !!spanMethod
 
+    // 建立全局列索引映射
     const globalIndexByColName = new Map<string, number>()
     tableColumns.value.forEach((c, idx) => globalIndexByColName.set(c.columnName as string, idx))
 
+    // 清理旧节点
     recoverKonvaNode(bodyGroup, pools)
+
     // 渲染可视区域的行
     for (let rowIndex = tableVars.visibleRowStart; rowIndex <= tableVars.visibleRowEnd; rowIndex++) {
-      const row = tableData.value[rowIndex]
-      // y坐标 - 使用绝对行位置，bodyGroup会通过y偏移处理滚动
       const y = rowIndex * props.bodyRowHeight
-      // 渲染每列的单元格
-      let x = 0
-      for (let colIndex = 0; colIndex < bodyCols.length; colIndex++) {
-        const col = bodyCols[colIndex]
-        const columnWidth = col.width || 0
-        // 跳过零宽列
-        if (columnWidth <= 0) {
-          x += columnWidth
-          continue
-        }
-        // 恢复合并单元格逻辑
-        let spanRow = 1
-        let spanCol = 1
-        let coveredBySpanMethod = false
-        const globalColIndex = globalIndexByColName.get(col.columnName as string) ?? colIndex
-        if (hasSpanMethod && spanMethod) {
-          const res = spanMethod({ row, column: col, rowIndex, colIndex: globalColIndex })
-          if (Array.isArray(res)) {
-            spanRow = Math.max(0, Number(res[0]) || 0)
-            spanCol = Math.max(0, Number(res[1]) || 0)
-          } else if (res && typeof res === 'object') {
-            spanRow = Math.max(0, Number(res.rowspan) || 0)
-            spanCol = Math.max(0, Number(res.colspan) || 0)
-          }
-          // 只要任一维度为 0，即视为被合并覆盖（与常见表格合并语义一致）
-          if (spanRow === 0 || spanCol === 0) coveredBySpanMethod = true
-        }
-
-        const shouldDraw = !hasSpanMethod || !coveredBySpanMethod
-
-        if (!shouldDraw) {
-          x += columnWidth
-          continue
-        }
-
-        const computedRowSpan = hasSpanMethod ? spanRow : 1
-        // const computedRowSpan = 1 // 禁用合并后总是1行
-
-        const cellHeight = computedRowSpan * props.bodyRowHeight
-
-        // 计算合并单元格的总宽度
-        let cellWidth = columnWidth
-        if (hasSpanMethod && spanCol > 1) {
-          // 计算跨列的总宽度
-          let totalWidth = 0
-          for (let i = 0; i < spanCol && colIndex + i < bodyCols.length; i++) {
-            const colInfo = bodyCols[colIndex + i]
-            totalWidth += colInfo.width || 0
-          }
-          cellWidth = totalWidth
-        }
-
-        // 记录可视区域内主体单元格位置信息（使用舞台坐标）
-        positionMapList.push({
-          x: stageStartX + x,
-          y: y + props.headerRowHeight,
-          width: cellWidth,
-          height: cellHeight,
-          rowIndex: rowIndex + 1,
-          colIndex: colIndex + startColIndex
-        })
-        // 合并单元格特殊处理逻辑
-        if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
-          // 合并单元格特殊绘制逻辑
-          const mergedCellRect = drawUnifiedRect({
-            pools,
-            name: 'cell-rect',
-            x,
-            y,
-            width: cellWidth,
-            height: cellHeight,
-            fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
-            stroke: props.borderColor,
-            strokeWidth: 1,
-            rowIndex: rowIndex + 1,
-            colIndex: colIndex + startColIndex,
-            originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
-          })
-          bodyGroup.add(mergedCellRect)
-          const rawValue =
-            col.columnName === '__index__'
-              ? String(rowIndex + 1)
-              : row && typeof row === 'object'
-                ? row[col.columnName]
-                : undefined
-          const value = String(rawValue ?? '')
-          const maxTextWidth = cellWidth - 16
-          const fontFamily = props.bodyFontFamily
-          const fontSize = typeof props.bodyFontSize === 'string' ? parseFloat(props.bodyFontSize) : props.bodyFontSize
-          const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
-
-          const mergedCellText = drawUnifiedText({
-            pools,
-            name: 'merged-cell-text',
-            text: truncatedValue,
-            x,
-            y,
-            fontSize,
-            fontFamily,
-            fill: props.bodyTextColor,
-            align: 'left',
-            verticalAlign: 'middle',
-            cellHeight,
-            useGetTextX: true
-          })
-          bodyGroup.add(mergedCellText)
-        } else {
-          const cellRect = drawUnifiedRect({
-            pools,
-            name: 'cell-rect',
-            x,
-            y,
-            width: cellWidth,
-            height: cellHeight,
-            fill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven,
-            stroke: props.borderColor,
-            strokeWidth: 1,
-            rowIndex: rowIndex + 1,
-            colIndex: colIndex + startColIndex,
-            originFill: rowIndex % 2 === 0 ? props.bodyBackgroundOdd : props.bodyBackgroundEven
-          })
-          // 优化事件绑定 - 使用事件委托模式
-          let clickTimeout: NodeJS.Timeout | null = null
-          const handleClick = () => {
-            if (clickTimeout) {
-              clearTimeout(clickTimeout)
-              clickTimeout = null
-              return
-            }
-            clickTimeout = setTimeout(() => {
-              handleCellClick(rowIndex, colIndex, col, cellRect.x(), cellRect.y(), cellWidth, cellHeight, bodyGroup)
-              clickTimeout = null
-            }, 250)
-          }
-
-          // 注释双击编辑功能以提升性能
-          // const handleDoubleClick = () => {
-          //   handleCellDoubleClick(
-          //     rowIndex,
-          //     colIndex + startColIndex,
-          //     col,
-          //     cellRect.x(),
-          //     cellRect.y(),
-          //     cellWidth,
-          //     cellHeight
-          //   )
-          // }
-
-          // 使用命名空间避免事件冲突，只保留点击事件
-          cellRect.off('click.cell')
-          // cellRect.off('dblclick.cell') // 注释双击事件
-          cellRect.on('click.cell', handleClick)
-          // cellRect.on('dblclick.cell', handleDoubleClick) // 注释双击事件
-
-          bodyGroup.add(cellRect)
-          // 创建文本
-          const rawValue =
-            col.columnName === '__index__'
-              ? String(rowIndex + 1)
-              : row && typeof row === 'object'
-                ? row[col.columnName]
-                : undefined
-          const value = String(rawValue ?? '')
-          const maxTextWidth = cellWidth - 16
-          const fontFamily = bodyFontFamily
-          const fontSize = bodyFontSizeNumber
-
-          const truncatedValue = truncateText(value, maxTextWidth, fontSize, fontFamily)
-
-          const cellText = drawUnifiedText({
-            pools,
-            name: 'cell-text',
-            text: truncatedValue,
-            x,
-            y,
-            fontSize,
-            fontFamily,
-            fill: props.bodyTextColor,
-            align: 'left',
-            verticalAlign: 'middle',
-            cellHeight,
-            useGetTextX: true
-          })
-
-          bodyGroup.add(cellText)
-
-          // 注释tooltip功能以提升性能
-          // const colShowOverflow = col.showOverflowTooltip
-          // const enableTooltip = colShowOverflow !== undefined ? colShowOverflow : false
-          // if (enableTooltip && truncatedValue !== value) {
-          //   const handleMouseEnter = () => {
-          //     if (!tableVars.stage) return
-          //     tableVars.stage.container().setAttribute('title', String(rawValue ?? ''))
-          //   }
-          //
-          //   const handleMouseLeave = () => {
-          //     if (!tableVars.stage) return
-          //     tableVars.stage.container().removeAttribute('title')
-          //   }
-          //
-          //   cellRect.off('mouseenter.tooltip')
-          //   cellRect.off('mouseleave.tooltip')
-          //   cellRect.on('mouseenter.tooltip', handleMouseEnter)
-          //   cellRect.on('mouseleave.tooltip', handleMouseLeave)
-          // }
-        }
-
-        // 对于合并单元格，需要跳过被合并的列
-        if (hasSpanMethod && spanCol > 1) {
-          // 跳过被合并的列，x坐标已经通过cellWidth计算了正确位置
-          x += cellWidth
-          // 同时需要跳过循环中被合并的列
-          colIndex += spanCol - 1
-        } else {
-          x += col.width || 0
-        }
-      }
+      renderRowCells({
+        rowIndex,
+        y,
+        bodyCols,
+        pools,
+        bodyGroup,
+        spanMethod,
+        hasSpanMethod,
+        globalIndexByColName,
+        bodyFontSize
+      })
     }
-    // 注释高亮重计算以提升性能
-    // recomputeHoverIndexFromPointer()
 
     // 渲染完成后，若存在点击高亮，保持其在最顶层
     if (tableVars.highlightRect) {
@@ -517,8 +584,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   /**
    * 处理单元格点击，更新选中状态并抛出事件
    * @param {number} rowIndex 行索引
-   * @param {number} colIndex 列索引
-   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col 列配置
+   * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption 列配置
    * @param {number} cellX 单元格 X 坐标
    * @param {number} cellY 单元格 Y 坐标
    * @param {number} cellWidth 单元格宽度
@@ -527,8 +593,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
    */
   const handleCellClick = (
     rowIndex: number,
-    colIndex: number,
-    col: GroupStore.GroupOption | DimensionStore.DimensionOption,
+    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
     cellX: number,
     cellY: number,
     cellWidth: number,
@@ -536,8 +601,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
     group: Konva.Group
   ) => {
     createHighlightRect(cellX, cellY, cellWidth, cellHeight, group)
-    const rowData = tableData.value[rowIndex]
-    emits('cell-click', { rowIndex, colIndex, colKey: col.columnName, rowData })
+    tableData.value[rowIndex]
   }
 
   /**
@@ -568,106 +632,7 @@ export const renderBodyHandler = ({ props, emits }: RenderBodyHandlerProps) => {
   //   openCellEditorDropdown(rowIndex, colIndex, column, cellX, cellY, cellWidth, cellHeight)
   // }
 
-  /**
-   * 判断当前指针位置的顶层元素是否属于表格容器
-   * 若不属于，则认为表格被其它遮罩/弹层覆盖，此时不进行高亮
-   * @param {number} clientX 鼠标点击位置的 X 坐标
-   * @param {number} clientY 鼠标点击位置的 Y 坐标
-   * @returns {boolean} 是否在表格容器内
-   */
-  const isTopMostInTable = (clientX: number, clientY: number): boolean => {
-    const container = getTableContainerElement()
-    if (!container) return false
-    const topEl = document.elementFromPoint(clientX, clientY) as HTMLElement | null
-    if (!topEl) return false
-    if (!container.contains(topEl)) return false
-    // 仅当命中的元素为 Konva 的 canvas（或其包裹层）时，认为没有被遮罩覆盖
-    if (topEl.tagName === 'CANVAS') return true
-    const konvaContent = topEl.closest('.konvajs-content') as HTMLElement | null
-    if (konvaContent && container.contains(konvaContent)) return true
-    // 命中的虽然在容器内，但不是 Konva 画布，视为被遮罩覆盖
-    return false
-  }
-
-  /**
-   * 注释高亮功能以提升性能 - 基于当前指针位置重新计算 行下标 列下标
-   * @returns {void}
-   */
-  const recomputeHoverIndexFromPointer = () => {
-    // 注释整个高亮计算逻辑以提升性能
-    return
-
-    // if (
-    //   !tableVars.stage ||
-    //   (!props.enableRowHoverHighlight && !props.enableColHoverHighlight) ||
-    //   filterDropdown.visible ||
-    //   summaryDropdown.visible
-    // ) {
-    //   return
-    // }
-
-    // // 清除高亮的辅助函数
-    // const clearHoverHighlight = () => {
-    //   if (tableVars.hoveredRowIndex !== null || tableVars.hoveredColIndex !== null) {
-    //     tableVars.hoveredRowIndex = null
-    //     tableVars.hoveredColIndex = null
-    //     updateHoverRects()
-    //   }
-    // }
-
-    // // 检查各种边界条件，如果不符合则清除高亮并返回
-    // if (!isTopMostInTable(tableVars.lastClientX, tableVars.lastClientY)) {
-    //   clearHoverHighlight()
-    //   return
-    // }
-
-    // const pointerPosition = tableVars.stage.getPointerPosition()
-    // if (!pointerPosition) {
-    //   clearHoverHighlight()
-    //   return
-    // }
-
-    // /**
-    //  * 检查鼠标是否在表格区域内（排除滚动条区域）
-    //  */
-    // if (!isInTableArea()) {
-    //   clearHoverHighlight()
-    //   return
-    // }
-
-    // const localY = pointerPosition.y + tableVars.stageScrollY
-    // const localX = pointerPosition.x + tableVars.stageScrollX
-    // // 计算鼠标所在的行索引
-    // const positionMapList = [
-    //   ...tableVars.headerPositionMapList,
-    //   ...tableVars.bodyPositionMapList,
-    //   ...tableVars.summaryPositionMapList
-    // ]
-    // const positionOption = positionMapList.find(
-    //   (item) => localX >= item.x && localX <= item.x + item.width && localY >= item.y && localY <= item.y + item.height
-    // )
-    // let newHoveredRowIndex = null
-    // let newHoveredColIndex = null
-    // if (positionOption) {
-    //   newHoveredRowIndex = positionOption.rowIndex
-    //   newHoveredColIndex = positionOption.colIndex
-    // }
-    // const rowChanged = newHoveredRowIndex !== tableVars.hoveredRowIndex
-    // const colChanged = newHoveredColIndex !== tableVars.hoveredColIndex
-    // if (rowChanged) {
-    //   tableVars.hoveredRowIndex = newHoveredRowIndex
-    // }
-    // if (colChanged) {
-    //   tableVars.hoveredColIndex = newHoveredColIndex
-    // }
-
-    // if (rowChanged || colChanged) {
-    //   updateHoverRects()
-    // }
-  }
-
   return {
-    recomputeHoverIndexFromPointer,
     calculateVisibleRows,
     getScrollLimits,
     getSplitColumns,

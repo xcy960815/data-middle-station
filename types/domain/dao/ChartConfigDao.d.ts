@@ -367,11 +367,11 @@ declare namespace ChartConfigDao {
     /**
      * 滚动条滑块颜色
      */
-    scrollbarThumb: string
+    scrollbarThumbBackground: string
     /**
      * 滚动条滑块悬停颜色
      */
-    scrollbarThumbHover: string
+    scrollbarThumbHoverBackground: string
 
     // ========== 其他配置 ==========
     /**

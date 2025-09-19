@@ -1,10 +1,9 @@
 import Konva from 'konva'
-import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
-import type { CanvasTableEmits } from '../emits'
+import { getFilterDropdownMethods } from '../global-components'
 import { konvaStageHandler } from '../konva-stage-handler'
 import type { chartProps } from '../props'
 import { truncateText } from '../utils'
-import type { PositionMap, Prettify } from '../variable-handlder'
+import type { Prettify } from '../variable-handlder'
 import { variableHandlder } from '../variable-handlder'
 import { drawUnifiedRect, drawUnifiedText } from './draw'
 // 常量定义
@@ -24,16 +23,14 @@ const COLORS = {
 
 interface RenderHeaderHandlerProps {
   props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-  emits: <T extends keyof CanvasTableEmits>(event: T, ...args: CanvasTableEmits[T]) => void
 }
 
-export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) => {
+export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
   // 添加排序功能支持
   const { tableData, handleTableData, filterState, sortColumns, tableVars, handleHeaderSort, getColumnSortOrder } =
     variableHandlder({ props })
-  const { clearGroups } = konvaStageHandler({ props })
-  const { setPointerStyle } = konvaStageHandler({ props, emits })
-  const { openFilterDropdown } = filterDropdownHandler({ props })
+  const { clearGroups, setPointerStyle } = konvaStageHandler({ props })
+  const { openFilterDropdown } = getFilterDropdownMethods()
 
   /**
    * 创建表头单元格矩形 - 添加排序功能
@@ -43,26 +40,10 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
    * @param {number} width 列的宽度
    * @param {number} height 列的高度
    * @param {Konva.Group} headerGroup 表头组
-   * @param {PositionMap[]} positionMapList 位置映射列表
-   * @param {number} startColIndex 起始列索引
-   * @param {number} colIndex 列索引
    * @returns {Konva.Rect} 表头单元格矩形
    */
-  const createHeaderCellRect = (
-    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    headerGroup: Konva.Group,
-    positionMapList: PositionMap[],
-    startColIndex: number,
-    colIndex: number
-  ) => {
+  const createHeaderCellRect = (x: number, y: number, width: number, height: number, headerGroup: Konva.Group) => {
     const pools = tableVars.leftBodyPools
-    const sortOrder = getColumnSortOrder(columnOption.columnName)
-    const isSorted = sortOrder !== null
-
     const rect = drawUnifiedRect({
       pools,
       name: 'header-cell-rect',
@@ -72,23 +53,10 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       height,
       fill: props.headerBackground,
       stroke: props.borderColor,
-      strokeWidth: 1,
-      rowIndex: 0,
-      colIndex: colIndex + startColIndex,
-      originFill: props.headerBackground
+      strokeWidth: 1
     })
 
     headerGroup.add(rect)
-
-    // 记录位置信息
-    positionMapList.push({
-      x,
-      y,
-      width,
-      height,
-      rowIndex: 0,
-      colIndex: colIndex + startColIndex
-    })
 
     return rect
   }
@@ -157,8 +125,6 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 
     handleTableData(props.data)
     clearGroups()
-    // 通过全局指针调用，避免 import 循环
-    tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
   }
 
   /**
@@ -180,9 +146,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
     headerGroup: Konva.Group
   ) => {
     // 检查列是否可排序
-    if (!columnOption.sortable) {
-      return
-    }
+    if (!columnOption.sortable) return
 
     const sortOrder = getColumnSortOrder(columnOption.columnName)
 
@@ -207,7 +171,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 
     upArrow.on('mouseenter', () => setPointerStyle(true, 'pointer'))
     upArrow.on('mouseleave', () => setPointerStyle(false, 'default'))
-    upArrow.on('click', (evt) => {
+    upArrow.on('click', () => {
       handleSortAction(columnOption, 'asc', false)
     })
 
@@ -220,66 +184,64 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 
     downArrow.on('mouseenter', () => setPointerStyle(true, 'pointer'))
     downArrow.on('mouseleave', () => setPointerStyle(false, 'default'))
-    downArrow.on('click', (evt) => {
+    downArrow.on('click', () => {
       handleSortAction(columnOption, 'desc', false)
     })
 
     headerGroup.add(upArrow)
     headerGroup.add(downArrow)
-
-    return { upArrow, downArrow }
   }
 
   /**
-   * 创建列宽调整手柄 - 已注释掉
+   * 创建列宽调整手柄
    */
-  // const createColumnResizer = (
-  //   columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
-  //   headerCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
-  //   x: number,
-  //   colIndex: number,
-  //   headerGroup: Konva.Group
-  // ) => {
-  //   const resizer = new Konva.Rect({
-  //     x: x + (columnOption.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
-  //     y: 0,
-  //     width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
-  //     height: props.headerRowHeight,
-  //     fill: 'transparent',
-  //     listening: true,
-  //     draggable: false,
-  //     name: `col-resizer-${columnOption.columnName}`
-  //   })
+  const createColumnResizer = (
+    columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+    headerCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
+    x: number,
+    colIndex: number,
+    headerGroup: Konva.Group
+  ) => {
+    const resizer = new Konva.Rect({
+      x: x + (columnOption.width || 0) - LAYOUT_CONSTANTS.RESIZER_WIDTH / 2,
+      y: 0,
+      width: LAYOUT_CONSTANTS.RESIZER_WIDTH,
+      height: props.headerRowHeight,
+      fill: 'transparent',
+      listening: true,
+      draggable: false,
+      name: `col-resizer-${columnOption.columnName}`
+    })
 
-  //   // 添加鼠标交互
-  //   resizer.on('mouseenter', () => setPointerStyle(true, 'col-resize'))
-  //   resizer.on('mouseleave', () => {
-  //     if (!tableVars.isResizingColumn) {
-  //       setPointerStyle(false, 'default')
-  //     }
-  //   })
+    // 添加鼠标交互
+    resizer.on('mouseenter', () => setPointerStyle(true, 'col-resize'))
+    resizer.on('mouseleave', () => {
+      if (!tableVars.isResizingColumn) {
+        setPointerStyle(false, 'default')
+      }
+    })
 
-  //   headerGroup.add(resizer)
+    headerGroup.add(resizer)
 
-  //   resizer.on('mousedown', (evt) => {
-  //     tableVars.isResizingColumn = true
-  //     tableVars.resizingColumnName = columnOption.columnName
-  //     tableVars.resizeStartX = evt.evt.clientX
-  //     tableVars.resizeStartWidth = columnOption.width || 0
+    //   resizer.on('mousedown', (evt) => {
+    //     tableVars.isResizingColumn = true
+    //     tableVars.resizingColumnName = columnOption.columnName
+    //     tableVars.resizeStartX = evt.evt.clientX
+    //     tableVars.resizeStartWidth = columnOption.width || 0
 
-  //     // 设置邻近列信息（右侧列）
-  //     const neighborColumn = headerCols[colIndex + 1]
-  //     if (neighborColumn) {
-  //       tableVars.resizeNeighborColumnName = neighborColumn.columnName
-  //       tableVars.resizeNeighborStartWidth = neighborColumn.width || 0
-  //     } else {
-  //       tableVars.resizeNeighborColumnName = null
-  //       tableVars.resizeNeighborStartWidth = 0
-  //     }
+    //     // 设置邻近列信息（右侧列）
+    //     const neighborColumn = headerCols[colIndex + 1]
+    //     if (neighborColumn) {
+    //       tableVars.resizeNeighborColumnName = neighborColumn.columnName
+    //       tableVars.resizeNeighborStartWidth = neighborColumn.width || 0
+    //     } else {
+    //       tableVars.resizeNeighborColumnName = null
+    //       tableVars.resizeNeighborStartWidth = 0
+    //     }
 
-  //     setPointerStyle(true, 'col-resize')
-  //   })
-  // }
+    //     setPointerStyle(true, 'col-resize')
+    //   })
+  }
 
   /**
    * 创建过滤图标
@@ -377,7 +339,13 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
 
     // 如果有排序，给文本留出箭头空间
     const maxTextWidth = hasSort ? width - 32 : width - 16
-    const text = truncateText(columnOption.columnName, maxTextWidth, props.headerFontSize, props.headerFontFamily)
+
+    const text = truncateText(
+      columnOption.displayName || columnOption.columnName,
+      maxTextWidth,
+      props.headerFontSize,
+      props.headerFontFamily
+    )
 
     const headerText = drawUnifiedText({
       pools,
@@ -388,8 +356,8 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       fontSize: props.headerFontSize,
       fontFamily: props.headerFontFamily,
       fill: props.headerTextColor,
-      align: 'left',
-      verticalAlign: 'middle',
+      align: columnOption.align || 'left',
+      verticalAlign: columnOption.verticalAlign || 'middle',
       cellHeight: height,
       useGetTextX: true
     })
@@ -404,10 +372,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
    */
   const drawHeaderPart = (
     headerGroup: Konva.Group | null,
-    headerCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
-    startColIndex: number,
-    positionMapList: PositionMap[],
-    stageStartX: number
+    headerCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
   ) => {
     if (!headerGroup || !tableVars.stage) return
 
@@ -422,17 +387,7 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
         continue
       }
       // 创建背景矩形
-      createHeaderCellRect(
-        columnOption,
-        x,
-        0,
-        columnWidth,
-        props.headerRowHeight,
-        headerGroup,
-        positionMapList,
-        startColIndex,
-        colIndex
-      )
+      createHeaderCellRect(x, 0, columnWidth, props.headerRowHeight, headerGroup)
 
       // 创建文本
       createHeaderCellText(columnOption, x, 0, columnWidth, props.headerRowHeight, headerGroup)
@@ -443,8 +398,8 @@ export const renderHeaderHandler = ({ props, emits }: RenderHeaderHandlerProps) 
       // 添加过滤icon
       createFilterIcon(columnOption, x, 0, columnWidth, props.headerRowHeight, headerGroup)
 
-      // 添加列宽调整手柄 - 已注释掉
-      // createColumnResizer(columnOption, headerCols, x, colIndex, headerGroup)
+      // 添加列宽调整手柄
+      createColumnResizer(columnOption, headerCols, x, colIndex, headerGroup)
 
       x += columnWidth
     }

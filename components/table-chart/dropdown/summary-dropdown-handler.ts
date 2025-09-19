@@ -53,12 +53,7 @@ interface SummaryDropdownHandlerProps {
 export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) => {
   const { clearGroups } = konvaStageHandler({ props })
 
-  // 注释高亮功能以提升性能
-  // const { updateHoverRects } = highlightHandler({ props })
-
-  const { summaryState, tableVars } = variableHandlder({ props })
-
-  const summaryRowHeight = computed(() => (props.enableSummary ? props.summaryRowHeight : 0))
+  const { summaryState, tableVars, summaryRowHeight } = variableHandlder({ props })
 
   /**
    * 汇总下拉浮层样式
@@ -178,11 +173,6 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
       summaryDropdown.colName = colName
       summaryDropdown.options = options
       summaryDropdown.selectedValue = selected || 'nodisplay'
-      // 打开下拉时取消 hover 高亮，避免视觉干扰
-      // 注释高亮重置以提升性能
-      // tableVars.hoveredRowIndex = null
-      // tableVars.hoveredColIndex = null
-      // updateHoverRects()
     })
   }
 
@@ -195,8 +185,6 @@ export const summaryDropDownHandler = ({ props }: SummaryDropdownHandlerProps) =
     const selected = summaryDropdown.selectedValue
     summaryState[colName] = selected
     clearGroups()
-    // 通过全局指针调用，避免 import 循环
-    tableVars.rebuildGroupsFn && tableVars.rebuildGroupsFn()
     // 选择后关闭弹框
     summaryDropdown.visible = false
   }

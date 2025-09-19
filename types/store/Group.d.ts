@@ -29,9 +29,13 @@ declare namespace GroupStore {
      */
     fixed?: 'left' | 'right' | null
     /**
-     * 对齐方式
+     * 左右对齐方式
      */
     align?: 'left' | 'right' | 'center' | null
+    /**
+     * 垂直对齐方式
+     */
+    verticalAlign?: 'top' | 'middle' | 'bottom' | null
     /**
      * 宽度
      */
