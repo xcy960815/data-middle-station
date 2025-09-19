@@ -12,7 +12,7 @@ interface RenderBodyHandlerProps {
 
 export const renderBodyHandler = ({ props }: RenderBodyHandlerProps) => {
   // 注释过滤功能以提升性能
-  // const { filterDropdown } = filterDropdownHandler({ props })
+  // filterDropdownHandler 已迁移到组件中
   const { cellEditorDropdown, resetCellEditorDropdown, openCellEditorDropdown } = editorDropdownHandler({
     props
   })
