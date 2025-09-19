@@ -1,7 +1,7 @@
 import Konva from 'konva'
 import { editorDropdownHandler } from '../dropdown/editor-dropdown-handler'
-import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from '../dropdown/summary-dropdown-handler'
+import { getFilterDropdownMethods } from '../global-components'
 import { konvaStageHandler } from '../konva-stage-handler'
 import { chartProps } from '../props'
 import { constrainToRange, getTableContainerElement } from '../utils'
@@ -20,7 +20,7 @@ export const renderScrollbarsHandler = ({ props }: RenderScrollbarsHandlerProps)
   const { tableData, tableVars } = variableHandlder({ props })
   const { summaryRowHeight, updateSummaryDropdownPositionsInTable } = summaryDropDownHandler({ props })
   const { updateCellEditorPositionsInTable } = editorDropdownHandler({ props })
-  const { updateFilterDropdownPositionsInTable } = filterDropdownHandler({ props })
+  const { updateFilterDropdownPositionsInTable } = getFilterDropdownMethods()
 
   /**
    * 创建垂直滚动条

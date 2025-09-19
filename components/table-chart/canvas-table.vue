@@ -2,14 +2,7 @@
   <div id="table-container" class="table-container" :style="tableContainerStyle"></div>
 
   <!-- 过滤器下拉组件 -->
-  <filter-dropdown
-    :visible="filterDropdown.visible"
-    :options="filterDropdown.options"
-    :selected-values="filterDropdown.selectedValues"
-    :dropdown-style="filterDropdownStyle"
-    @change="handleSelectedFilter"
-    @blur="closeFilterDropdown"
-  />
+  <filter-dropdown ref="filterDropdownRef" :props="props" />
 
   <!-- 汇总下拉组件 -->
   <summary-dropdown
@@ -34,16 +27,16 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
-import CellEditor from './cell-editor.vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import CellEditor from './components/cell-editor.vue'
+import FilterDropdown from './components/filter-dropdown.vue'
+import SummaryDropdown from './components/summary-dropdown.vue'
 import { editorDropdownHandler } from './dropdown/editor-dropdown-handler'
-import { filterDropdownHandler } from './dropdown/filter-dropdown-handler'
 import { summaryDropDownHandler } from './dropdown/summary-dropdown-handler'
-import FilterDropdown from './filter-dropdown.vue'
+import { setGlobalFilterDropdownInstance } from './global-components'
 import { konvaStageHandler } from './konva-stage-handler'
 import { chartProps } from './props'
 import { renderScrollbarsHandler } from './render/render-scrollbars-handler'
-import SummaryDropdown from './summary-dropdown.vue'
 import { variableHandlder } from './variable-handlder'
 
 const props = defineProps(chartProps)
@@ -56,15 +49,17 @@ const { initStage, destroyStage, refreshTable, initStageListeners, cleanupStageL
 
 const { initWheelListener, cleanupWheelListener } = renderScrollbarsHandler({ props })
 
-// 注释过滤功能以提升性能
-const {
-  filterDropdownStyle,
-  filterDropdown,
-  closeFilterDropdown,
-  handleSelectedFilter,
-  initFilterDropdownListeners,
-  cleanupFilterDropdownListeners
-} = filterDropdownHandler({ props })
+// FilterDropdown 组件引用
+const filterDropdownRef = ref<InstanceType<typeof FilterDropdown>>()
+
+// 设置全局实例，供 render handlers 使用
+watch(
+  filterDropdownRef,
+  (newRef) => {
+    setGlobalFilterDropdownInstance(newRef || null)
+  },
+  { immediate: true }
+)
 
 // 注释汇总功能以提升性能
 const {
@@ -230,7 +225,6 @@ onMounted(() => {
   refreshTable(true)
   initWheelListener()
   initStageListeners()
-  initFilterDropdownListeners()
   initSummaryDropdownListeners()
   initCellEditorListeners()
 })
@@ -238,10 +232,11 @@ onMounted(() => {
 onBeforeUnmount(() => {
   cleanupWheelListener()
   cleanupStageListeners()
-  cleanupFilterDropdownListeners()
   cleanupSummaryDropdownListeners()
   cleanupCellEditorListeners()
   destroyStage()
+  // 清理全局实例
+  setGlobalFilterDropdownInstance(null)
 })
 </script>
 

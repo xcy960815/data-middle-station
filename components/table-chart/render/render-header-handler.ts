@@ -1,5 +1,5 @@
 import Konva from 'konva'
-import { filterDropdownHandler } from '../dropdown/filter-dropdown-handler'
+import { getFilterDropdownMethods } from '../global-components'
 import { konvaStageHandler } from '../konva-stage-handler'
 import type { chartProps } from '../props'
 import { truncateText } from '../utils'
@@ -30,7 +30,7 @@ export const renderHeaderHandler = ({ props }: RenderHeaderHandlerProps) => {
   const { tableData, handleTableData, filterState, sortColumns, tableVars, handleHeaderSort, getColumnSortOrder } =
     variableHandlder({ props })
   const { clearGroups, setPointerStyle } = konvaStageHandler({ props })
-  const { openFilterDropdown } = filterDropdownHandler({ props })
+  const { openFilterDropdown } = getFilterDropdownMethods()
 
   /**
    * 创建表头单元格矩形 - 添加排序功能
