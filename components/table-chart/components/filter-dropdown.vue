@@ -28,13 +28,11 @@
 <script setup lang="ts">
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import type { ExtractPropTypes } from 'vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { konvaStageHandler } from '../konva-stage-handler'
-import { chartProps } from '../props'
+import { filterColumns } from '../data-handler'
+import { stageVars, rebuildGroups } from '../stage-handler'
+import { handleTableData } from '../data-handler'
 import { getDropdownPosition } from '../utils'
-import { variableHandlder, type Prettify } from '../variable-handlder'
-
 export interface FilterDropdown {
   visible: boolean
   x: number
@@ -46,20 +44,15 @@ export interface FilterDropdown {
   originalClientY: number
 }
 
-interface Props {
-  props: Prettify<Readonly<ExtractPropTypes<typeof chartProps>>>
-}
-
 interface Emits {
   (event: 'update-positions-in-table'): void
 }
 
-const props = defineProps<Props>()
 const emits = defineEmits<Emits>()
 
-// 获取依赖
-const { filterState, handleTableData, tableVars } = variableHandlder({ props: props.props })
-const { clearGroups } = konvaStageHandler({ props: props.props })
+// // 获取依赖
+// const { filterState, handleTableData, tableVars } = variableHandlder({ props: props.props })
+// const { clearGroups } = konvaStageHandler({ props: props.props })
 
 /**
  * 过滤下拉浮层元素
@@ -76,7 +69,6 @@ const filterDropdown = reactive<FilterDropdown>({
   colName: '',
   options: [],
   selectedValues: [],
-  // 存储原始点击位置，用于滚动时重新计算
   originalClientX: 0,
   originalClientY: 0
 })
@@ -96,7 +88,7 @@ const filterDropdownStyle = computed(() => {
 /**
  * 更新过滤下拉浮层位置（用于表格内部滚动）
  */
-const updateFilterDropdownPositionsInTable = () => {
+const updateFilterDropdownPosition = () => {
   // 本次开发先隐藏掉
   if (filterDropdown.visible && filterDropdownRef.value) {
     filterDropdown.visible = false
@@ -113,7 +105,7 @@ const closeFilterDropdown = () => {
 /**
  * 滚动事件处理函数
  */
-const updateFilterDropdownPositionsInPage = () => {
+const updatePositions = () => {
   if (filterDropdown.visible && filterDropdownRef.value) {
     const filterDropdownElRect = filterDropdownRef.value.getBoundingClientRect()
     const filterDropdownElHeight = Math.ceil(filterDropdownElRect.height)
@@ -140,15 +132,19 @@ const updateFilterDropdownPositionsInPage = () => {
 
 /**
  * 打开过滤下拉浮层
+ * @param {KonvaEventObject<MouseEvent, Konva.Shape>} event 事件对象
+ * @param {string} colName 列名
+ * @param {string[]} options 选项列表
+ * @param {string[]} selected 已选中的选项
  */
 const openFilterDropdown = (
-  evt: KonvaEventObject<MouseEvent, Konva.Shape | Konva.Circle>,
+  event: KonvaEventObject<MouseEvent, Konva.Shape>,
   colName: string,
   options: string[],
   selected: string[]
 ) => {
   // 存储原始点击位置（转换为页面坐标，考虑滚动偏移）
-  const { clientX, clientY } = evt.evt
+  const { clientX, clientY } = event.evt
   const scrollX = window.pageXOffset || document.documentElement.scrollLeft
   const scrollY = window.pageYOffset || document.documentElement.scrollTop
   filterDropdown.originalClientX = clientX + scrollX
@@ -178,12 +174,13 @@ const openFilterDropdown = (
 
 /**
  * 点击外部关闭（允许点击 Element Plus 下拉面板）
- * @param e 鼠标事件
+ * @param 「MouseEvent mouseEvent 鼠标事件
+ * @param {HTMLElement | null} target 目标元素
  * @returns {void}
  */
-const onGlobalMousedown = (e: MouseEvent) => {
-  if (tableVars.stage) tableVars.stage.setPointersPositions(e)
-  const target = e.target as HTMLElement | null
+const onGlobalMousedown = (mouseEvent: MouseEvent) => {
+  if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
+  const target = mouseEvent.target as HTMLElement | null
   if (!target) return
 
   if (!filterDropdown.visible) return
@@ -203,52 +200,53 @@ const handleSelectedFilter = () => {
   const colName = filterDropdown.colName
   const selectedValues = filterDropdown.selectedValues
   if (!selectedValues || selectedValues.length === 0) {
-    delete filterState[colName]
+    const filterItem = filterColumns.value.find((f) => f.columnName === colName)
+    if (filterItem) {
+      filterItem.values.clear()
+    }
   } else {
-    filterState[colName] = new Set(selectedValues)
+    const filterItem = filterColumns.value.find((f) => f.columnName === colName)
+    if (filterItem) {
+      filterItem.values = new Set(selectedValues)
+    }
   }
   // 重新处理表格数据，应用过滤条件
-  handleTableData(props.props.data)
-  clearGroups()
+  handleTableData()
+  rebuildGroups()
 }
 
 /**
  * 初始化事件监听器
  */
-const initFilterDropdownListeners = () => {
-  window.addEventListener('scroll', updateFilterDropdownPositionsInPage)
-  document.addEventListener('scroll', updateFilterDropdownPositionsInPage)
+const initListeners = () => {
+  window.addEventListener('scroll', updatePositions)
+  document.addEventListener('scroll', updatePositions)
   document.addEventListener('mousedown', onGlobalMousedown, true)
 }
 
 /**
  * 清理事件监听器
  */
-const cleanupFilterDropdownListeners = () => {
-  window.removeEventListener('scroll', updateFilterDropdownPositionsInPage)
-  document.removeEventListener('scroll', updateFilterDropdownPositionsInPage)
+const cleanupListeners = () => {
+  window.removeEventListener('scroll', updatePositions)
+  document.removeEventListener('scroll', updatePositions)
   document.removeEventListener('mousedown', onGlobalMousedown, true)
 }
 
 // 生命周期
 onMounted(() => {
-  initFilterDropdownListeners()
+  initListeners()
 })
 
 onBeforeUnmount(() => {
-  cleanupFilterDropdownListeners()
+  cleanupListeners()
 })
 
 // 暴露方法供外部使用
 defineExpose({
-  filterDropdownRef,
-  filterDropdown,
   openFilterDropdown,
   closeFilterDropdown,
-  updateFilterDropdownPositionsInTable,
-  handleSelectedFilter,
-  initFilterDropdownListeners,
-  cleanupFilterDropdownListeners
+  updateFilterDropdownPosition
 })
 </script>
 
