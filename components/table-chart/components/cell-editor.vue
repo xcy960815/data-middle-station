@@ -1,39 +1,44 @@
 <template>
   <teleport to="body">
     <div
-      v-show="visible"
+      v-show="editDown.visible"
       ref="editorRef"
       class="dms-cell-editor"
       :style="editorStyle"
       @keydown.enter="handleSaveEditorValue"
-      @keydown.esc="handleCloseEditor"
+      @keydown.esc="closeEditor"
       @click.stop
     >
       <!-- 输入框编辑器 -->
       <el-input
-        v-if="editType === 'input'"
+        v-if="editDown.editType === 'input'"
         ref="inputRef"
-        v-model="editValue"
+        v-model="editDown.initialValue"
         @change="handleSaveEditorValue"
         @keydown.stop
       />
 
       <!-- 下拉选择编辑器 -->
       <el-select
-        v-else-if="editType === 'select'"
+        v-else-if="editDown.editType === 'select'"
         ref="selectRef"
-        v-model="editValue"
+        v-model="editDown.initialValue"
         @change="handleSaveEditorValue"
         @keydown.stop
       >
-        <el-option v-for="option in editOptions" :key="option.value" :label="option.label" :value="option.value" />
+        <el-option
+          v-for="option in editDown.editOptions"
+          :key="option.value"
+          :label="option.label"
+          :value="option.value"
+        />
       </el-select>
 
       <!-- 日期编辑器 -->
       <el-date-picker
-        v-else-if="editType === 'date'"
+        v-else-if="editDown.editType === 'date'"
         ref="dateRef"
-        v-model="editValue"
+        v-model="editDown.initialValue"
         type="date"
         format="YYYY-MM-DD"
         value-format="YYYY-MM-DD"
@@ -43,9 +48,9 @@
 
       <!-- 日期时间编辑器 -->
       <el-date-picker
-        v-else-if="editType === 'datetime'"
+        v-else-if="editDown.editType === 'datetime'"
         ref="datetimeRef"
-        v-model="editValue"
+        v-model="editDown.initialValue"
         type="datetime"
         format="YYYY-MM-DD HH:mm:ss"
         value-format="YYYY-MM-DD HH:mm:ss"
@@ -57,37 +62,31 @@
 </template>
 
 <script setup lang="ts">
+import Konva from 'konva'
+import type { KonvaEventObject } from 'konva/lib/Node'
 import { ElDatePicker, ElInput, ElOption, ElSelect } from 'element-plus'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { stageVars } from '../stage-handler'
+import { getDropdownPosition } from '../utils'
+
+interface EditDown {
+  visible: boolean
+  x: number
+  y: number
+  width: number
+  height: number
+  editType: 'input' | 'select' | 'date' | 'datetime'
+  editOptions?: EditOptions[]
+  initialValue: string | number
+  originalValue: string | number
+  originalClientX: number
+  originalClientY: number
+}
 
 interface EditOptions {
   label: string
   value: string | number
 }
-
-interface Props {
-  visible: boolean
-  editType: 'input' | 'select' | 'date' | 'datetime'
-  editOptions?: EditOptions[]
-  initialValue: string | number
-  position: {
-    x: number
-    y: number
-    width: number
-    height: number
-  }
-}
-
-interface Emits {
-  (eventName: 'save', value: number | string): void
-  (eventName: 'close'): void
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  editOptions: () => []
-})
-
-const emits = defineEmits<Emits>()
 
 const editorRef = ref<HTMLElement>()
 const inputRef = ref<InstanceType<typeof ElInput>>()
@@ -95,19 +94,28 @@ const selectRef = ref<InstanceType<typeof ElSelect>>()
 const dateRef = ref<InstanceType<typeof ElDatePicker>>()
 const datetimeRef = ref<InstanceType<typeof ElDatePicker>>()
 
-const editValue = ref<string | number>('')
+const editDown = reactive<EditDown>({
+  visible: false,
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  editType: 'input',
+  initialValue: '',
+  originalValue: '',
+  originalClientX: 0,
+  originalClientY: 0
+})
 
 // 计算编辑器样式
 const editorStyle = computed(() => {
-  const { x, y, width, height } = props.position
   return {
     position: 'fixed' as const,
-    left: `${x + 1}px`,
-    top: `${y + 1}px`,
-    width: `${width - 3}px`,
-    height: `${height - 2}px`,
+    left: `${editDown.x + 1}px`,
+    top: `${editDown.y + 1}px`,
+    width: `${editDown.width - 3}px`,
+    height: `${editDown.height - 2}px`,
     zIndex: 999999,
-
     background: '#fff',
     padding: 0,
     margin: 0,
@@ -116,72 +124,162 @@ const editorStyle = computed(() => {
   }
 })
 
-// 监听显示状态变化
-watch(
-  () => props.visible,
-  (visible) => {
-    if (visible) {
-      editValue.value = props.initialValue
-      nextTick(() => {
-        focusEditor()
-      })
-    }
-  },
-  { immediate: true }
-)
+/**
+ * 打开编辑器
+ * @param {KonvaEventObject<MouseEvent, Konva.Shape>} evt 事件对象
+ * @param {string} editType 编辑类型
+ * @param {string | number} initialValue 初始值
+ * @param {EditOptions[]} editOptions 编辑选项
+ */
+const openEditor = (
+  evt: KonvaEventObject<MouseEvent, Konva.Shape>,
+  editType: 'input' | 'select' | 'date' | 'datetime',
+  initialValue: ChartDataVo.ChartData[keyof ChartDataVo.ChartData],
+  editOptions?: EditOptions[]
+) => {
+  // 存储原始点击位置（转换为页面坐标，考虑滚动偏移）
+  const { clientX, clientY } = evt.evt
+  const scrollX = window.pageXOffset || document.documentElement.scrollLeft
+  const scrollY = window.pageYOffset || document.documentElement.scrollTop
+  editDown.originalClientX = clientX + scrollX
+  editDown.originalClientY = clientY + scrollY
+  editDown.visible = true
 
-// 聚焦编辑器
-const focusEditor = () => {
   nextTick(() => {
-    switch (props.editType) {
-      case 'input':
-        inputRef.value?.focus()
-        break
-      case 'select':
-        break
-      case 'date':
-        break
-      case 'datetime':
-        break
-    }
+    if (!editorRef.value) return
+    const editorEl = editorRef.value
+    if (!editorEl) return
+    const editorElRect = editorEl.getBoundingClientRect()
+    const editorElHeight = Math.ceil(editorElRect.height)
+    const editorElWidth = Math.ceil(editorElRect.width)
+    const { dropdownX, dropdownY } = getDropdownPosition(clientX, clientY, editorElWidth, editorElHeight)
+    editDown.x = dropdownX
+    editDown.y = dropdownY
+    editDown.editType = editType
+    editDown.editOptions = editOptions
+    const safeValue = (initialValue ?? '') as string | number
+    editDown.initialValue = safeValue
+    editDown.originalValue = safeValue
+
+    // 聚焦编辑器
+    nextTick(() => {
+      switch (editDown.editType) {
+        case 'input':
+          inputRef.value?.focus()
+          break
+        case 'select':
+          break
+        case 'date':
+          break
+        case 'datetime':
+          break
+      }
+    })
   })
 }
 
 // 保存编辑
 const handleSaveEditorValue = () => {
   // 只有当值发生变化时才保存
-  if (editValue.value !== props.initialValue) {
-    emits('save', editValue.value)
+  if (editDown.initialValue !== editDown.originalValue) {
+    // 保存数据
+    console.log('保存数据', editDown.initialValue)
+    editDown.visible = false
   } else {
-    // 值没有变化，直接取消编辑
-    emits('close')
+    editDown.visible = false
   }
 }
 
 // 取消编辑
-const handleCloseEditor = () => {
-  emits('close')
+const closeEditor = () => {
+  editDown.visible = false
 }
 
-// 点击外部关闭编辑器
-const handleClickOutside = (e: MouseEvent) => {
-  if (props.visible && editorRef.value && !editorRef.value.contains(e.target as Node)) {
-    // 检查是否点击了 Element Plus 的下拉面板
-    const target = e.target as HTMLElement
-    const isElSelectDropdown = target.closest('.el-select-dropdown, .el-popper, .el-picker-panel')
-    if (!isElSelectDropdown) {
-      // 点击外部时保存数据而不是取消
-      handleSaveEditorValue()
-    }
+/**
+ * 更新编辑器位置（用于表格内部滚动）
+ */
+const updateEditorPosition = () => {
+  // 本次开发先隐藏掉
+  if (editDown.visible && editorRef.value) {
+    editDown.visible = false
   }
 }
 
+/**
+ * 滚动事件处理函数
+ */
+const updatePositions = () => {
+  if (editDown.visible && editorRef.value) {
+    const editorElRect = editorRef.value.getBoundingClientRect()
+    const editorElHeight = Math.ceil(editorElRect.height)
+    const editorElWidth = Math.ceil(editorElRect.width)
+
+    // 获取当前滚动偏移量
+    const scrollX = window.pageXOffset || document.documentElement.scrollLeft
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop
+
+    // 将保存的页面坐标转换为当前的视口坐标
+    const currentClientX = editDown.originalClientX - scrollX
+    const currentClientY = editDown.originalClientY - scrollY
+
+    const { dropdownX, dropdownY } = getDropdownPosition(currentClientX, currentClientY, editorElWidth, editorElHeight)
+    editDown.x = dropdownX
+    editDown.y = dropdownY
+  }
+}
+
+/**
+ * 点击外部关闭编辑器（允许点击 Element Plus 下拉面板）
+ * @param {MouseEvent} mouseEvent 鼠标事件
+ */
+const onGlobalMousedown = (mouseEvent: MouseEvent) => {
+  if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
+  const target = mouseEvent.target as HTMLElement | null
+  if (!target) return
+
+  if (!editDown.visible) return
+  const panel = editorRef.value
+
+  if (panel && panel.contains(target)) return
+  const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper, .el-popper, .el-picker-panel')
+  if (!inElSelectDropdown) {
+    // 点击外部时保存数据而不是取消
+    handleSaveEditorValue()
+  }
+}
+
+/**
+ * 初始化事件监听器
+ */
+const initListeners = () => {
+  window.addEventListener('scroll', updatePositions)
+  document.addEventListener('scroll', updatePositions)
+  document.addEventListener('mousedown', onGlobalMousedown, true)
+}
+
+/**
+ * 清理事件监听器
+ */
+const cleanupListeners = () => {
+  window.removeEventListener('scroll', updatePositions)
+  document.removeEventListener('scroll', updatePositions)
+  document.removeEventListener('mousedown', onGlobalMousedown, true)
+}
+
+// 生命周期
 onMounted(() => {
-  document.addEventListener('mousedown', handleClickOutside, true)
+  initListeners()
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('mousedown', handleClickOutside, true)
+  cleanupListeners()
+})
+
+// 暴露方法供外部使用
+defineExpose({
+  openEditor,
+  closeEditor,
+  updateEditorPosition
 })
 </script>
 
