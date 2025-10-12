@@ -1,125 +1,121 @@
 <template>
   <div class="table-demo-container">
-    <ClientOnly>
-      <el-form label-width="auto" :model="tableConfig" inline>
-        <el-form-item label="是否行高亮">
-          <el-switch v-model="tableConfig.enableRowHoverHighlight" />
-        </el-form-item>
-        <el-form-item label="是否列高亮">
-          <el-switch v-model="tableConfig.enableColHoverHighlight" />
-        </el-form-item>
-        <el-form-item label="高亮 cell 背景色">
-          <el-color-picker v-model="tableConfig.highlightCellBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="高亮行背景色">
-          <el-color-picker v-model="tableConfig.highlightRowBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="高亮列背景色">
-          <el-color-picker v-model="tableConfig.highlightColBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="表头高度">
-          <el-input-number v-model="tableConfig.headerRowHeight" :step="10" />
-        </el-form-item>
-        <el-form-item label="表头字体大小">
-          <el-input-number v-model="tableConfig.headerFontSize" :step="2" />
-        </el-form-item>
-        <el-form-item label="表头字体">
-          <el-select style="width: 200px" v-model="tableConfig.headerFontFamily" placeholder="请选择表头字体">
-            <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="表头文本颜色">
-          <el-color-picker v-model="tableConfig.headerTextColor" show-alpha />
-        </el-form-item>
-        <el-form-item label="表头背景色">
-          <el-color-picker v-model="tableConfig.headerBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="表格文本颜色">
-          <el-color-picker v-model="tableConfig.bodyTextColor" show-alpha />
-        </el-form-item>
-        <el-form-item label="表格奇数行背景色">
-          <el-color-picker v-model="tableConfig.bodyBackgroundOdd" show-alpha />
-        </el-form-item>
-        <el-form-item label="表格偶数行背景色">
-          <el-color-picker v-model="tableConfig.bodyBackgroundEven" show-alpha />
-        </el-form-item>
-        <el-form-item label="滚动条背景色">
-          <el-color-picker v-model="tableConfig.scrollbarBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="滚动条滑块颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumbBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="滚动条滑块悬停颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumbHoverBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="是否展示汇总">
-          <el-switch v-model="tableConfig.enableSummary" />
-        </el-form-item>
-        <el-form-item label="汇总高度">
-          <el-input-number v-model="tableConfig.summaryRowHeight" :step="10" />
-        </el-form-item>
-        <el-form-item label="表格高度">
-          <el-input-number v-model="tableConfig.chartHeight" :step="100" />
-        </el-form-item>
-        <el-form-item label="表格宽度">
-          <el-input-number v-model="tableConfig.chartWidth" :step="100" />
-        </el-form-item>
-      </el-form>
+    <el-form label-width="auto" :model="tableConfig" inline>
+      <el-form-item label="是否行高亮">
+        <el-switch v-model="tableConfig.enableRowHoverHighlight" />
+      </el-form-item>
+      <el-form-item label="是否列高亮">
+        <el-switch v-model="tableConfig.enableColHoverHighlight" />
+      </el-form-item>
+      <el-form-item label="高亮 cell 背景色">
+        <el-color-picker v-model="tableConfig.highlightCellBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="高亮行背景色">
+        <el-color-picker v-model="tableConfig.highlightRowBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="高亮列背景色">
+        <el-color-picker v-model="tableConfig.highlightColBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="表头高度">
+        <el-input-number v-model="tableConfig.headerRowHeight" :step="10" />
+      </el-form-item>
+      <el-form-item label="表头字体大小">
+        <el-input-number v-model="tableConfig.headerFontSize" :step="2" />
+      </el-form-item>
+      <el-form-item label="表头字体">
+        <el-select style="width: 200px" v-model="tableConfig.headerFontFamily" placeholder="请选择表头字体">
+          <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="表头文本颜色">
+        <el-color-picker v-model="tableConfig.headerTextColor" show-alpha />
+      </el-form-item>
+      <el-form-item label="表头背景色">
+        <el-color-picker v-model="tableConfig.headerBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="表格文本颜色">
+        <el-color-picker v-model="tableConfig.bodyTextColor" show-alpha />
+      </el-form-item>
+      <el-form-item label="表格奇数行背景色">
+        <el-color-picker v-model="tableConfig.bodyBackgroundOdd" show-alpha />
+      </el-form-item>
+      <el-form-item label="表格偶数行背景色">
+        <el-color-picker v-model="tableConfig.bodyBackgroundEven" show-alpha />
+      </el-form-item>
+      <el-form-item label="滚动条背景色">
+        <el-color-picker v-model="tableConfig.scrollbarBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="滚动条滑块颜色">
+        <el-color-picker v-model="tableConfig.scrollbarThumbBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="滚动条滑块悬停颜色">
+        <el-color-picker v-model="tableConfig.scrollbarThumbHoverBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="是否展示汇总">
+        <el-switch v-model="tableConfig.enableSummary" />
+      </el-form-item>
+      <el-form-item label="汇总高度">
+        <el-input-number v-model="tableConfig.summaryRowHeight" :step="10" />
+      </el-form-item>
+      <el-form-item label="表格高度">
+        <el-input-number v-model="tableConfig.chartHeight" :step="100" />
+      </el-form-item>
+      <el-form-item label="表格宽度">
+        <el-input-number v-model="tableConfig.chartWidth" :step="100" />
+      </el-form-item>
+    </el-form>
 
-      <!-- 合并单元格配置 -->
-      <el-divider content-position="left">合并单元格配置</el-divider>
-      <el-form label-width="auto" :model="spanConfig" inline>
-        <el-form-item label="启用合并单元格">
-          <el-switch v-model="spanConfig.enableSpan" />
-        </el-form-item>
-        <el-form-item label="第一列合并行数">
-          <el-input-number v-model="spanConfig.firstColSpan" :min="1" :max="5" />
-        </el-form-item>
-        <el-form-item label="第二列合并行数">
-          <el-input-number v-model="spanConfig.secondColSpan" :min="1" :max="5" />
-        </el-form-item>
-        <el-form-item label="启用列合并示例">
-          <el-switch v-model="spanConfig.enableColSpan" />
-        </el-form-item>
-      </el-form>
-      <CanvasTable
-        :enable-summary="tableConfig.enableSummary"
-        :summary-height="tableConfig.summaryRowHeight"
-        :chart-height="tableConfig.chartHeight"
-        :chart-width="tableConfig.chartWidth"
-        :x-axis-fields="xAxisFields"
-        :highlight-cell-background="tableConfig.highlightCellBackground"
-        :header-text-color="tableConfig.headerTextColor"
-        :body-text-color="tableConfig.bodyTextColor"
-        :header-font-family="tableConfig.headerFontFamily"
-        :header-font-size="tableConfig.headerFontSize"
-        :header-height="tableConfig.headerRowHeight"
-        :body-font-family="tableConfig.bodyFontFamily"
-        :body-font-size="tableConfig.bodyFontSize"
-        :summary-font-family="tableConfig.summaryFontFamily"
-        :summary-font-size="tableConfig.summaryFontSize"
-        :header-background="tableConfig.headerBackground"
-        :summary-background="tableConfig.summaryBackground"
-        :body-background-odd="tableConfig.bodyBackgroundOdd"
-        :body-background-even="tableConfig.bodyBackgroundEven"
-        :scrollbar-background="tableConfig.scrollbarBackground"
-        :scrollbar-thumb="tableConfig.scrollbarThumbBackground"
-        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHoverBackground"
-        :buffer-rows="tableConfig.bufferRows"
-        :min-auto-col-width="tableConfig.minAutoColWidth"
-        :sort-active-color="tableConfig.sortActiveColor"
-        :y-axis-fields="yAxisFields"
-        :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
-        :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
-        :data="data"
-        :highlight-row-background="tableConfig.highlightRowBackground"
-        :highlight-col-background="tableConfig.highlightColBackground"
-        :span-method="spanMethod"
-      >
-        <!-- @cell-click="handleCellClick"
-      @cell-edit="handleCellEdit" -->
-      </CanvasTable>
-    </ClientOnly>
+    <!-- 合并单元格配置 -->
+    <el-divider content-position="left">合并单元格配置</el-divider>
+    <el-form label-width="auto" :model="spanConfig" inline>
+      <el-form-item label="启用合并单元格">
+        <el-switch v-model="spanConfig.enableSpan" />
+      </el-form-item>
+      <el-form-item label="第一列合并行数">
+        <el-input-number v-model="spanConfig.firstColSpan" :min="1" :max="5" />
+      </el-form-item>
+      <el-form-item label="第二列合并行数">
+        <el-input-number v-model="spanConfig.secondColSpan" :min="1" :max="5" />
+      </el-form-item>
+      <el-form-item label="启用列合并示例">
+        <el-switch v-model="spanConfig.enableColSpan" />
+      </el-form-item>
+    </el-form>
+    <CanvasTable
+      :enable-summary="tableConfig.enableSummary"
+      :summary-height="tableConfig.summaryRowHeight"
+      :chart-height="tableConfig.chartHeight"
+      :chart-width="tableConfig.chartWidth"
+      :x-axis-fields="xAxisFields"
+      :highlight-cell-background="tableConfig.highlightCellBackground"
+      :header-text-color="tableConfig.headerTextColor"
+      :body-text-color="tableConfig.bodyTextColor"
+      :header-font-family="tableConfig.headerFontFamily"
+      :header-font-size="tableConfig.headerFontSize"
+      :header-height="tableConfig.headerRowHeight"
+      :body-font-family="tableConfig.bodyFontFamily"
+      :body-font-size="tableConfig.bodyFontSize"
+      :summary-font-family="tableConfig.summaryFontFamily"
+      :summary-font-size="tableConfig.summaryFontSize"
+      :header-background="tableConfig.headerBackground"
+      :summary-background="tableConfig.summaryBackground"
+      :body-background-odd="tableConfig.bodyBackgroundOdd"
+      :body-background-even="tableConfig.bodyBackgroundEven"
+      :scrollbar-background="tableConfig.scrollbarBackground"
+      :scrollbar-thumb="tableConfig.scrollbarThumbBackground"
+      :scrollbar-thumb-hover="tableConfig.scrollbarThumbHoverBackground"
+      :buffer-rows="tableConfig.bufferRows"
+      :min-auto-col-width="tableConfig.minAutoColWidth"
+      :sort-active-color="tableConfig.sortActiveColor"
+      :y-axis-fields="yAxisFields"
+      :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
+      :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
+      :data="data"
+      :highlight-row-background="tableConfig.highlightRowBackground"
+      :highlight-col-background="tableConfig.highlightColBackground"
+      :span-method="spanMethod"
+    >
+    </CanvasTable>
   </div>
 </template>
 
