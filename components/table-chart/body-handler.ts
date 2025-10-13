@@ -1,13 +1,20 @@
 import Konva from 'konva'
-import { createGroup, drawUnifiedRect, drawUnifiedText, getCellDisplayValue, truncateText } from './utils'
-import { type KonvaNodePools, recoverKonvaNode } from './utils'
-import { stageVars, getStageSize } from './stage-handler'
-import { getSummaryRowHeight } from './summary-handler'
-import { scrollbarVars } from './scrollbar-handler'
-import { staticParams, tableData } from './parameter'
-import CellEditor from './components/cell-editor.vue'
-import { ref } from 'vue'
 import type { KonvaEventObject } from 'konva/lib/Node'
+import { ref } from 'vue'
+import CellEditor from './components/cell-editor.vue'
+import { staticParams, tableData } from './parameter'
+import { scrollbarVars } from './scrollbar-handler'
+import { getStageSize, stageVars } from './stage-handler'
+import { getSummaryRowHeight } from './summary-handler'
+import {
+  createGroup,
+  drawUnifiedRect,
+  drawUnifiedText,
+  getCellDisplayValue,
+  type KonvaNodePools,
+  recoverKonvaNode,
+  truncateText
+} from './utils'
 
 interface BodyVars {
   /**
