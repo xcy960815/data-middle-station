@@ -1,8 +1,7 @@
-// import { AdvancedScheduler } from '../service/advancedScheduler'
 import { ScheduledEmailService } from '../service/scheduledEmailService'
 
 const scheduledEmailService = new ScheduledEmailService()
-// const advancedScheduler = new AdvancedScheduler()
+
 const logger = new Logger({
   fileName: 'send-emails-regularly',
   folderName: 'plugins'
