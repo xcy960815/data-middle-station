@@ -1,10 +1,10 @@
 import Konva from 'konva'
-import { stageVars, getStageSize, scheduleLayersBatchDraw } from './stage-handler'
+import { bodyVars, calculateVisibleRows, cellEditorRef, columnsInfo, drawBodyPart } from './body-handler'
+import { filterDropdownRef, headerVars } from './header-handler'
 import { staticParams, tableData } from './parameter'
-import { headerVars } from './header-handler'
-import { bodyVars, calculateVisibleRows, columnsInfo, drawBodyPart } from './body-handler'
-import { summaryVars, getSummaryRowHeight } from './summary-handler'
-import { getTableContainer, setPointerStyle, constrainToRange, drawUnifiedRect, createGroup } from './utils'
+import { getStageSize, scheduleLayersBatchDraw, stageVars } from './stage-handler'
+import { getSummaryRowHeight, summaryDropdownRef, summaryVars } from './summary-handler'
+import { constrainToRange, createGroup, drawUnifiedRect, getTableContainer, setPointerStyle } from './utils'
 
 interface ScrollbarVars {
   /**
@@ -534,7 +534,9 @@ const handleMouseWheel = (wheelEvent: WheelEvent) => {
   wheelEvent.preventDefault()
 
   if (stageVars.stage) stageVars.stage.setPointersPositions(wheelEvent)
-
+  if (filterDropdownRef.value) filterDropdownRef.value.closeFilterDropdown()
+  if (summaryDropdownRef.value) summaryDropdownRef.value.closeSummaryDropdown()
+  if (cellEditorRef.value) cellEditorRef.value.closeEditor()
   const hasDeltaX = Math.abs(wheelEvent.deltaX) > 0
   const hasDeltaY = Math.abs(wheelEvent.deltaY) > 0
 
