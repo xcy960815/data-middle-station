@@ -81,7 +81,7 @@
         <el-switch v-model="spanConfig.enableColSpan" />
       </el-form-item>
     </el-form>
-    <CanvasTable
+    <TableChart
       :enable-summary="tableConfig.enableSummary"
       :summary-height="tableConfig.summaryRowHeight"
       :chart-height="tableConfig.chartHeight"
@@ -115,12 +115,12 @@
       :highlight-col-background="tableConfig.highlightColBackground"
       :span-method="spanMethod"
     >
-    </CanvasTable>
+    </TableChart>
   </div>
 </template>
 
 <script setup lang="ts">
-import CanvasTable from '@/components/table-chart/canvas-table.vue'
+import TableChart from '@/components/table-chart/index.vue'
 import { ElMessage } from 'element-plus'
 
 // 合并单元格配置
@@ -228,7 +228,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     displayName: '序号',
     width: 100,
     fixed: 'left',
-    align: 'center'
+    align: 'center',
+    resizable: true
   },
   {
     columnName: 'id',
@@ -238,7 +239,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     editable: true,
-    editType: 'input'
+    editType: 'input',
+    resizable: true
   },
   {
     columnName: 'name',
@@ -247,7 +249,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     displayName: 'name',
     filterable: true,
     editable: true,
-    editType: 'input'
+    editType: 'input',
+    resizable: true
   },
   {
     columnName: 'age',
@@ -256,8 +259,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     displayName: 'age',
     filterable: true,
     editable: true,
-    editType: 'input'
-    // fixed: 'left' as const
+    editType: 'input',
+    fixed: 'left' as const
   },
   {
     columnName: 'gender',
@@ -293,8 +296,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
       { label: '日本', value: 'Japan' },
       { label: '加拿大', value: 'Canada' },
       { label: '澳大利亚', value: 'Australia' }
-    ]
-    // fixed: 'left' as const
+    ],
+    fixed: 'left' as const
   },
   {
     columnName: 'city',
@@ -305,8 +308,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     sortable: true,
     displayName: 'city',
     editable: true,
-    editType: 'input'
-    // fixed: 'left' as const
+    editType: 'input',
+    fixed: 'left' as const
   },
   {
     columnName: 'state',
@@ -324,24 +327,10 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     editable: true,
-    editType: 'input'
+    editType: 'input',
+    resizable: true
     // fixed: 'right' as const
   },
-  // 注释掉action列以提升性能
-  // {
-  //   columnName: 'action',
-  //   columnType: 'string',
-  //   columnComment: '操作',
-  //   displayName: '操作',
-  //   width: 220,
-  //   fixed: 'right' as const,
-  //   align: 'center' as const,
-  //   actions: [
-  //     { key: 'view', label: '查看', type: 'primary' },
-  //     { key: 'edit', label: '编辑', type: 'success' },
-  //     { key: 'delete', label: '删除', type: 'danger' }
-  //   ]
-  // },
   {
     columnName: 'address',
     columnType: 'string',

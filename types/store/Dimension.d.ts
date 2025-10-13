@@ -48,27 +48,6 @@ declare namespace DimensionStore {
      */
     sortable?: boolean
     /**
-     * 操作列按钮配置（当用于操作列时生效）
-     */
-    actions?: Array<{
-      /**
-       * 唯一动作键
-       */
-      key: string
-      /**
-       * 按钮文案
-       */
-      label: string
-      /**
-       * 按钮类型，影响配色
-       */
-      type?: 'primary' | 'success' | 'warning' | 'danger' | 'default'
-      /**
-       * 是否禁用；也可传函数 (row, rowIndex) => boolean
-       */
-      disabled?: boolean | ((row: ChartDataVo.ChartData, rowIndex: number) => boolean)
-    }>
-    /**
      * 是否可编辑
      */
     editable?: boolean
@@ -83,6 +62,11 @@ declare namespace DimensionStore {
       label: string
       value: string | number
     }>
+
+    /**
+     * 是否可调整列宽
+     */
+    resizable?: boolean
   }
 
   /**
