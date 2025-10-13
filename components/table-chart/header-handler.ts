@@ -1,10 +1,10 @@
-import { ref } from 'vue'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { stageVars, clearGroups } from './stage-handler'
+import { ref } from 'vue'
+import { filterColumns, getColumnSortStatus, handleMultiColumnSort, handleTableData } from './data-handler'
 import { staticParams } from './parameter'
-import { filterColumns, handleTableData, getColumnSortStatus, handleMultiColumnSort } from './data-handler'
-import { truncateText, setPointerStyle, createGroup, drawUnifiedRect, drawUnifiedText } from './utils'
+import { clearGroups, stageVars } from './stage-handler'
+import { createGroup, drawUnifiedRect, drawUnifiedText, setPointerStyle, truncateText } from './utils'
 
 import FilterDropdown from './components/filter-dropdown.vue'
 
@@ -490,7 +490,7 @@ export const drawHeaderPart = (
   /**
    * 统一创建手柄
    */
-  for (const task of resizerTasks) {
-    task()
+  for (const createResizerTask of resizerTasks) {
+    createResizerTask()
   }
 }
