@@ -29,9 +29,8 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { filterColumns } from '../data-handler'
-import { stageVars, rebuildGroups } from '../stage-handler'
-import { handleTableData } from '../data-handler'
+import { filterColumns, handleTableData } from '../data-handler'
+import { rebuildGroups, stageVars } from '../stage-handler'
 import { getDropdownPosition } from '../utils'
 export interface FilterDropdown {
   visible: boolean
@@ -86,19 +85,10 @@ const filterDropdownStyle = computed(() => {
 })
 
 /**
- * 更新过滤下拉浮层位置（用于表格内部滚动）
- */
-const updateFilterDropdownPosition = () => {
-  // 本次开发先隐藏掉
-  if (filterDropdown.visible && filterDropdownRef.value) {
-    filterDropdown.visible = false
-  }
-}
-
-/**
  * 关闭过滤下拉浮层
  */
 const closeFilterDropdown = () => {
+  if (!filterDropdown.visible) return
   filterDropdown.visible = false
 }
 
@@ -246,7 +236,7 @@ onBeforeUnmount(() => {
 defineExpose({
   openFilterDropdown,
   closeFilterDropdown,
-  updateFilterDropdownPosition
+  updatePositions
 })
 </script>
 

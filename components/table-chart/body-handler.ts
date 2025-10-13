@@ -273,9 +273,9 @@ const drawMergedCell = (
   width: number,
   height: number,
   rowIndex: number,
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
-  row: ChartDataVo.ChartData
+  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption
 ) => {
+  const row = tableData.value[rowIndex]
   // 绘制合并单元格背景
   drawUnifiedRect({
     pools,
@@ -333,9 +333,9 @@ const drawNormalCell = (
   width: number,
   height: number,
   rowIndex: number,
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
-  row: ChartDataVo.ChartData
+  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption
 ) => {
+  const row: ChartDataVo.ChartData = tableData.value[rowIndex]
   // 绘制单元格背景
   const cellRect = drawUnifiedRect({
     pools,
@@ -398,7 +398,6 @@ export const calculateCellSpan = (
   const spanMethodResult = spanMethod({ row, column: columnOption, rowIndex, colIndex: columnOption.colIndex || 0 })
   let spanRow = 1
   let spanCol = 1
-
   if (Array.isArray(spanMethodResult)) {
     spanRow = Math.max(0, Number(spanMethodResult[0]) || 0)
     spanCol = Math.max(0, Number(spanMethodResult[1]) || 0)
@@ -497,9 +496,9 @@ export const drawBodyPart = (
 
       // 绘制单元格
       if (hasSpanMethod && (computedRowSpan > 1 || spanCol > 1)) {
-        drawMergedCell(pools, bodyGroup, x, y, width, height, rowIndex, columnOption, row)
+        drawMergedCell(pools, bodyGroup, x, y, width, height, rowIndex, columnOption)
       } else {
-        drawNormalCell(pools, bodyGroup, x, y, width, height, rowIndex, columnOption, row)
+        drawNormalCell(pools, bodyGroup, x, y, width, height, rowIndex, columnOption)
       }
 
       // 计算下一个位置和跳过的列数

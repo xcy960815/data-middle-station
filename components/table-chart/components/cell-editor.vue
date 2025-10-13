@@ -62,12 +62,11 @@
 </template>
 
 <script setup lang="ts">
+import { ElDatePicker, ElInput, ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { ElDatePicker, ElInput, ElOption, ElSelect } from 'element-plus'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { stageVars } from '../stage-handler'
-import { getDropdownPosition } from '../utils'
 
 interface EditDown {
   visible: boolean
@@ -79,8 +78,6 @@ interface EditDown {
   editOptions?: EditOptions[]
   initialValue: string | number
   originalValue: string | number
-  originalClientX: number
-  originalClientY: number
 }
 
 interface EditOptions {
@@ -102,9 +99,7 @@ const editDown = reactive<EditDown>({
   height: 0,
   editType: 'input',
   initialValue: '',
-  originalValue: '',
-  originalClientX: 0,
-  originalClientY: 0
+  originalValue: ''
 })
 
 // 计算编辑器样式
@@ -132,29 +127,30 @@ const editorStyle = computed(() => {
  * @param {EditOptions[]} editOptions 编辑选项
  */
 const openEditor = (
-  evt: KonvaEventObject<MouseEvent, Konva.Shape>,
+  evt: KonvaEventObject<MouseEvent, Konva.Rect>,
   editType: 'input' | 'select' | 'date' | 'datetime',
   initialValue: ChartDataVo.ChartData[keyof ChartDataVo.ChartData],
   editOptions?: EditOptions[]
 ) => {
-  // 存储原始点击位置（转换为页面坐标，考虑滚动偏移）
-  const { clientX, clientY } = evt.evt
-  const scrollX = window.pageXOffset || document.documentElement.scrollLeft
-  const scrollY = window.pageYOffset || document.documentElement.scrollTop
-  editDown.originalClientX = clientX + scrollX
-  editDown.originalClientY = clientY + scrollY
+  const target = evt.target
+  // 假设 rect 是 Konva.Rect 实例
+  const stage = target.getStage()
+  const position = target.getClientRect()
+  const stageContainer = stage?.container().getBoundingClientRect()!
+
+  // 计算 rect 在浏览器窗口中的坐标
+  const absoluteX = stageContainer?.left + position.x
+  const absoluteY = stageContainer?.top + position.y
+  const attr = target.attrs
+  const { height, width } = attr
+  editDown.width = width
+  editDown.height = height
   editDown.visible = true
 
   nextTick(() => {
     if (!editorRef.value) return
-    const editorEl = editorRef.value
-    if (!editorEl) return
-    const editorElRect = editorEl.getBoundingClientRect()
-    const editorElHeight = Math.ceil(editorElRect.height)
-    const editorElWidth = Math.ceil(editorElRect.width)
-    const { dropdownX, dropdownY } = getDropdownPosition(clientX, clientY, editorElWidth, editorElHeight)
-    editDown.x = dropdownX
-    editDown.y = dropdownY
+    editDown.x = absoluteX
+    editDown.y = absoluteY
     editDown.editType = editType
     editDown.editOptions = editOptions
     const safeValue = (initialValue ?? '') as string | number
@@ -178,7 +174,9 @@ const openEditor = (
   })
 }
 
-// 保存编辑
+/**
+ * 保存编辑
+ */
 const handleSaveEditorValue = () => {
   // 只有当值发生变化时才保存
   if (editDown.initialValue !== editDown.originalValue) {
@@ -192,39 +190,17 @@ const handleSaveEditorValue = () => {
 
 // 取消编辑
 const closeEditor = () => {
+  if (!editDown.visible) return
   editDown.visible = false
 }
 
 /**
  * 更新编辑器位置（用于表格内部滚动）
  */
-const updateEditorPosition = () => {
+const updatePositions = () => {
   // 本次开发先隐藏掉
   if (editDown.visible && editorRef.value) {
     editDown.visible = false
-  }
-}
-
-/**
- * 滚动事件处理函数
- */
-const updatePositions = () => {
-  if (editDown.visible && editorRef.value) {
-    const editorElRect = editorRef.value.getBoundingClientRect()
-    const editorElHeight = Math.ceil(editorElRect.height)
-    const editorElWidth = Math.ceil(editorElRect.width)
-
-    // 获取当前滚动偏移量
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop
-
-    // 将保存的页面坐标转换为当前的视口坐标
-    const currentClientX = editDown.originalClientX - scrollX
-    const currentClientY = editDown.originalClientY - scrollY
-
-    const { dropdownX, dropdownY } = getDropdownPosition(currentClientX, currentClientY, editorElWidth, editorElHeight)
-    editDown.x = dropdownX
-    editDown.y = dropdownY
   }
 }
 
@@ -279,7 +255,7 @@ onBeforeUnmount(() => {
 defineExpose({
   openEditor,
   closeEditor,
-  updateEditorPosition
+  updatePositions
 })
 </script>
 

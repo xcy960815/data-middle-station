@@ -1,46 +1,49 @@
 import Konva from 'konva'
-import { staticParams, tableData } from './parameter'
-import { getTableContainer, setPointerStyle, clearPool } from './utils'
-import {
-  createHeaderCenterGroup,
-  createHeaderLeftGroup,
-  createHeaderRightGroup,
-  createHeaderClipGroup,
-  drawHeaderPart,
-  headerVars
-} from './header-handler'
 import {
   bodyVars,
-  calculateVisibleRows,
   calculateColumnsInfo,
+  calculateVisibleRows,
+  cellEditorRef,
   columnsInfo,
-  createBodyLeftGroup,
   createBodyCenterGroup,
+  createBodyLeftGroup,
   createBodyRightGroup,
-  createLeftBodyClipGroup,
   createCenterBodyClipGroup,
+  createLeftBodyClipGroup,
   createRightBodyClipGroup,
   drawBodyPart
 } from './body-handler'
 import {
-  summaryVars,
-  createSummaryLeftGroup,
-  createSummaryCenterGroup,
-  createSummaryRightGroup,
-  createSummaryClipGroup,
-  drawSummaryPart,
-  getSummaryRowHeight
-} from './summary-handler'
+  createHeaderCenterGroup,
+  createHeaderClipGroup,
+  createHeaderLeftGroup,
+  createHeaderRightGroup,
+  drawHeaderPart,
+  filterDropdownRef,
+  headerVars
+} from './header-handler'
+import { staticParams, tableData } from './parameter'
 import {
+  calculateScrollRange,
+  createHorizontalScrollbarGroup,
+  createVerticalScrollbarGroup,
   drawHorizontalScrollbarPart,
   drawVerticalScrollbarPart,
   scrollbarVars,
-  calculateScrollRange,
-  createVerticalScrollbarGroup,
-  createHorizontalScrollbarGroup,
-  updateVerticalScroll,
-  updateHorizontalScroll
+  updateHorizontalScroll,
+  updateVerticalScroll
 } from './scrollbar-handler'
+import {
+  createSummaryCenterGroup,
+  createSummaryClipGroup,
+  createSummaryLeftGroup,
+  createSummaryRightGroup,
+  drawSummaryPart,
+  getSummaryRowHeight,
+  summaryDropdownRef,
+  summaryVars
+} from './summary-handler'
+import { clearPool, getTableContainer, setPointerStyle } from './utils'
 
 /**
  * 更新列宽调整指示线（直接调用，不使用 RAF 节流）
@@ -453,9 +456,7 @@ const rebuildVerticalScrollbarGroup = () => {
  */
 const rebuildHorizontalScrollbarGroup = () => {
   if (!scrollbarVars.scrollbarLayer) return
-
   const { maxHorizontalScroll } = calculateScrollRange()
-
   if (maxHorizontalScroll > 0) {
     scrollbarVars.horizontalScrollbarGroup = createHorizontalScrollbarGroup()
     scrollbarVars.scrollbarLayer.add(scrollbarVars.horizontalScrollbarGroup)
@@ -510,6 +511,9 @@ const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
       isAbsolute: true,
       skipThresholdCheck: true // 拖拽时保持原有的阈值检查逻辑
     })
+    filterDropdownRef.value?.closeFilterDropdown()
+    summaryDropdownRef.value?.closeSummaryDropdown()
+    cellEditorRef.value?.closeEditor()
     return
   }
 
@@ -528,6 +532,9 @@ const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
 
     // 使用统一的水平滚动方法，传入绝对位置
     updateHorizontalScroll(newScrollX, true)
+    filterDropdownRef.value?.closeFilterDropdown()
+    summaryDropdownRef.value?.closeSummaryDropdown()
+    cellEditorRef.value?.closeEditor()
     return
   }
 
@@ -536,6 +543,9 @@ const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
     const deltaX = mouseEvent.clientX - headerVars.resizeStartX
     headerVars.resizeTempWidth = headerVars.resizeStartWidth + deltaX
     updateResizeIndicator()
+    filterDropdownRef.value?.closeFilterDropdown()
+    summaryDropdownRef.value?.closeSummaryDropdown()
+    cellEditorRef.value?.closeEditor()
     return
   }
 }

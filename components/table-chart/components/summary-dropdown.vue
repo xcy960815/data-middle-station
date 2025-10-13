@@ -22,12 +22,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick, computed, onMounted, onBeforeUnmount } from 'vue'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { getDropdownPosition } from '../utils'
-import { stageVars, refreshTable } from '../stage-handler'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { refreshTable, stageVars } from '../stage-handler'
 import { summaryState } from '../summary-handler'
+import { getDropdownPosition } from '../utils'
 
 const summaryDropdownRef = ref<HTMLElement | null>(null)
 
@@ -156,6 +156,7 @@ const updatePositions = () => {
  * @returns {void}
  */
 const closeSummaryDropdown = () => {
+  if (!summaryDropdown.visible) return
   summaryDropdown.visible = false
 }
 
