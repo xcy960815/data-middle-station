@@ -34,8 +34,11 @@ RUN pnpm install --frozen-lockfile
 # 复制项目文件
 COPY . .
 
-# 构建应用
-RUN pnpm run build:prod
+# 构建应用 - 增加Node.js内存限制和优化构建
+RUN NODE_OPTIONS="--max-old-space-size=4096 --max-semi-space-size=128" pnpm run build:prod
+
+# 清理构建缓存和临时文件
+RUN rm -rf node_modules/.cache .nuxt/cache
 
 # 安装pm2
 RUN pnpm install -g pm2
