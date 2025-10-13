@@ -36,8 +36,6 @@
         :min-auto-col-width="tableChartConfig?.minAutoColWidth"
         :sort-active-color="tableChartConfig?.sortActiveColor"
       >
-        <!-- :enable-row-hover-highlight="tableChartConfig?.enableRowHoverHighlight"
-        :enable-col-hover-highlight="tableChartConfig?.enableColHoverHighlight" -->
       </CanvasTable>
     </client-only>
   </div>
