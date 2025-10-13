@@ -6,20 +6,32 @@ declare namespace TableSticky {
 
   type VNodeRef = string | Ref | ((ref: object | null, refs: Record<string, any>) => void)
 
+  /**
+   * @desc 指令绑定值
+   */
   interface DirectiveBindingValue {
     top: number
     parent: string
     willBeChangeElementClasses?: Array<string>
   }
 
+  /**
+   * @desc 表格粘性绑定
+   */
   type TableStickyBinding = DirectiveBinding<DirectiveBindingValue>
 
+  /**
+   * @desc 选项
+   */
   interface Option {
     tableElement: HTMLElement
     binding: TableStickyBinding
     vnode: VNode
   }
 
+  /**
+   * @desc 粘性配置
+   */
   interface StickyConfig {
     fixedTopValue: number
     tableHeaderElement: HTMLElement
@@ -36,8 +48,14 @@ declare namespace TableSticky {
     willChangeElementsResizeObserver: ResizeObserver[]
   }
 
+  /**
+   * @desc 粘性配置集合
+   */
   interface StickyConfigs extends Map<string, StickyConfig> {}
 
+  /**
+   * @desc 虚拟节点引用原子
+   */
   interface VNodeNormalizedRefAtom {
     i: ComponentInternalInstance
     r: VNodeRef

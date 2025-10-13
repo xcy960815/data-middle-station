@@ -1,82 +1,80 @@
-// 类型定义已移至 types/plugins/IndexDB.d.ts
-
 // 常量配置
 const DB_TABLES: Record<string, IndexDB.TableConfig> = {
-  USERS: {
-    name: 'users',
-    keyPath: 'id',
-    indexes: ['id', 'name', 'email', 'age', 'city', 'createTime']
-  },
-  SALES_RATING: {
-    name: 'salesRatingTable',
-    keyPath: 'id',
-    indexes: ['id', 'createTime', 'shortName', 'autoLine', 'number', 'slaughterDate']
-  },
-  SALES_RATING_HOOK: {
-    name: 'salesRatinghookTable',
-    keyPath: 'id',
-    indexes: ['id', 'createTime', 'shortName', 'autoLine', 'number', 'slaughterDate', 'rfid']
-  },
-  GRADING: {
-    name: 'gradingTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'createTime', 'shortName', 'slaughterDate']
-  },
-  GRADING_WEIGHT: {
-    name: 'gradingWeightTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'createTime', 'shortName', 'slaughterDate', 'tagCode', 'sort']
-  },
-  RFID: {
-    name: 'rfidTable',
-    keyPath: 'rfid',
-    indexes: ['rfid', 'createTime']
-  },
-  BT_PRODUCE: {
-    name: 'btProduceTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'createTime', 'tradeDate']
-  },
-  BT_WEIGHT: {
-    name: 'btWeightTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'tradeDate', 'syncType']
-  },
-  WEIGHING_HANDOVER: {
-    name: 'weighingHandoverTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'produceDate', 'syncType']
-  },
-  BT_REQUISITION: {
-    name: 'btRequisitionTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'rfid', 'createTime', 'tradeDate']
-  },
-  PRODUCT_WEIGHING: {
-    name: 'productWeighingTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'produceDate', 'syncType']
-  },
-  SCAN: {
-    name: 'scanTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'tagCode', 'syncType']
-  },
-  RFID_SCAN: {
-    name: 'rifdScanTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'tagCode', 'syncType']
-  },
-  BT_REQ_WEIGHT: {
-    name: 'btReqWeightTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'syncType']
-  },
-  SCAN_HANDOVER: {
-    name: 'scanHandoverTable',
-    keyPath: 'id',
-    indexes: ['id', 'tradeNo', 'syncType']
-  }
+  // USERS: {
+  //   name: 'users',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'name', 'email', 'age', 'city', 'createTime']
+  // },
+  // SALES_RATING: {
+  //   name: 'salesRatingTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'createTime', 'shortName', 'autoLine', 'number', 'slaughterDate']
+  // },
+  // SALES_RATING_HOOK: {
+  //   name: 'salesRatinghookTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'createTime', 'shortName', 'autoLine', 'number', 'slaughterDate', 'rfid']
+  // },
+  // GRADING: {
+  //   name: 'gradingTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'createTime', 'shortName', 'slaughterDate']
+  // },
+  // GRADING_WEIGHT: {
+  //   name: 'gradingWeightTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'createTime', 'shortName', 'slaughterDate', 'tagCode', 'sort']
+  // },
+  // RFID: {
+  //   name: 'rfidTable',
+  //   keyPath: 'rfid',
+  //   indexes: ['rfid', 'createTime']
+  // },
+  // BT_PRODUCE: {
+  //   name: 'btProduceTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'createTime', 'tradeDate']
+  // },
+  // BT_WEIGHT: {
+  //   name: 'btWeightTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'tradeDate', 'syncType']
+  // },
+  // WEIGHING_HANDOVER: {
+  //   name: 'weighingHandoverTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'produceDate', 'syncType']
+  // },
+  // BT_REQUISITION: {
+  //   name: 'btRequisitionTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'rfid', 'createTime', 'tradeDate']
+  // },
+  // PRODUCT_WEIGHING: {
+  //   name: 'productWeighingTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'produceDate', 'syncType']
+  // },
+  // SCAN: {
+  //   name: 'scanTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'tagCode', 'syncType']
+  // },
+  // RFID_SCAN: {
+  //   name: 'rifdScanTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'tagCode', 'syncType']
+  // },
+  // BT_REQ_WEIGHT: {
+  //   name: 'btReqWeightTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'syncType']
+  // },
+  // SCAN_HANDOVER: {
+  //   name: 'scanHandoverTable',
+  //   keyPath: 'id',
+  //   indexes: ['id', 'tradeNo', 'syncType']
+  // }
 }
 
 // 错误消息常量
@@ -93,7 +91,7 @@ const ERROR_MESSAGES = {
   DELETE_ERROR: '删除数据时发生错误',
   TRAVERSE_ERROR: '遍历数据时发生错误',
   QUERY_ERROR: '查询数据时发生错误'
-}
+} as const
 
 class IndexDBManager {
   // indexedDB兼容
