@@ -1,9 +1,11 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { ref } from 'vue'
+import { columnsInfo } from './body-handler'
 import { filterColumns, getColumnSortStatus, handleMultiColumnSort, handleTableData } from './data-handler'
 import { staticParams } from './parameter'
-import { clearGroups, stageVars } from './stage-handler'
+import { scrollbarVars } from './scrollbar-handler'
+import { clearGroups, getStageSize, refreshTable, scheduleLayersBatchDraw, stageVars } from './stage-handler'
 import { createGroup, drawUnifiedRect, drawUnifiedText, setPointerStyle, truncateText } from './utils'
 
 import FilterDropdown from './components/filter-dropdown.vue'
@@ -37,6 +39,30 @@ interface HeaderVars {
    * 调整指示线
    */
   resizeIndicatorLine: Konva.Line | null
+  /**
+   * 是否正在拖拽列
+   */
+  isDraggingColumn: boolean
+  /**
+   * 正在拖拽的列配置
+   */
+  draggingColumnName: string | null
+  /**
+   * 拖拽开始时的鼠标坐标
+   */
+  dragStartX: number
+  /**
+   * 开始拖拽时的列宽
+   */
+  dragStartWidth: number
+  /**
+   * 拖拽过程中的临时宽度
+   */
+  dragTempWidth: number
+  /**
+   * 拖拽插入指示线
+   */
+  dragDropIndicator: Konva.Rect | null
 }
 
 const LAYOUT_CONSTANTS = {
@@ -57,7 +83,7 @@ const LAYOUT_CONSTANTS = {
    */
   ARROW_SIZE: 8,
   /**
-   * 排序箭头高度缩放（0-1，值越小越“矮”）
+   * 排序箭头高度缩放（0-1，值越小越"矮"）
    */
   ARROW_HEIGHT_SCALE: 0.72,
   /**
@@ -67,7 +93,19 @@ const LAYOUT_CONSTANTS = {
   /**
    * 过滤图标大小
    */
-  FILTER_ICON_SIZE: 16
+  FILTER_ICON_SIZE: 16,
+  /**
+   * 拖拽图标距离左边缘的距离
+   */
+  DRAG_ICON_OFFSET: 8,
+  /**
+   * 拖拽图标大小
+   */
+  DRAG_ICON_SIZE: 14,
+  /**
+   * 左侧图标区域预留宽度
+   */
+  LEFT_ICON_AREA_WIDTH: 24
 } as const
 
 const COLORS = {
@@ -120,7 +158,31 @@ export const headerVars: HeaderVars = {
   /**
    * 调整指示线
    */
-  resizeIndicatorLine: null
+  resizeIndicatorLine: null,
+  /**
+   * 列拖拽相关字段
+   */
+  isDraggingColumn: false,
+  /**
+   * 正在拖拽的列配置
+   */
+  draggingColumnName: null,
+  /**
+   * 拖拽开始时的鼠标坐标
+   */
+  dragStartX: 0,
+  /**
+   * 开始拖拽时的列宽
+   */
+  dragStartWidth: 0,
+  /**
+   * 拖拽过程中的临时宽度
+   */
+  dragTempWidth: 0,
+  /**
+   * 拖拽插入指示线
+   */
+  dragDropIndicator: null
 }
 
 export const filterDropdownRef = ref<InstanceType<typeof FilterDropdown>>()
@@ -161,6 +223,83 @@ export const createHeaderClipGroup = (
   y: number,
   { width, height }: { x: number; y: number; width: number; height: number }
 ) => createGroup('header', 'center', x, y, { x, y, width, height })
+
+/**
+ * 创建拖拽图标
+ * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列配置
+ * @param {number} x - 列的x坐标
+ * @param {Konva.Group} headerGroup - 表头组
+ */
+export const createDragIcon = (
+  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  x: number,
+  headerGroup: Konva.Group
+) => {
+  // 固定列不显示拖拽图标
+  if (columnOption.fixed || !columnOption.draggable) return
+
+  const iconHeightSize = 16 // 增加高度使其更容易点击
+  const iconWidthSize = 9 // 增加宽度使其更容易点击
+  const iconX = x + LAYOUT_CONSTANTS.DRAG_ICON_OFFSET
+  const iconY = (staticParams.headerRowHeight - iconHeightSize) / 2
+
+  // 添加背景矩形增加可点击区域和调试可见性 - 直接添加到headerGroup
+  const dragIconRect = new Konva.Rect({
+    name: `drag-icon-bg-${columnOption.columnName}`,
+    x: iconX,
+    y: iconY,
+    width: iconWidthSize,
+    height: iconHeightSize,
+    stroke: 'rgba(0,0,0,0.2)',
+    strokeWidth: 0,
+    listening: true // 设置为可监听事件
+  })
+  headerGroup.add(dragIconRect)
+
+  const dotSize = 3 // 增加圆点大小
+  const startX = iconX + 2 // 相对于headerGroup的绝对位置
+  const startY = iconY + 2 // 相对于headerGroup的绝对位置
+
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 2; col++) {
+      const dotX = startX + col * 5
+      const dotY = startY + row * 6
+      const dotCircle = new Konva.Circle({
+        name: `drag-dot-${columnOption.columnName}-${row}-${col}`,
+        x: dotX,
+        y: dotY,
+        radius: dotSize / 2,
+        fill: 'rgba(0,0,0,0.1)',
+        listening: false
+      })
+
+      headerGroup.add(dotCircle)
+    }
+  }
+
+  // 添加悬停效果到背景矩形
+  dragIconRect.on('mouseenter', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+    if (!headerVars.isDraggingColumn) {
+      setPointerStyle(stageVars.stage, true, 'grab')
+    }
+  })
+
+  dragIconRect.on('mouseleave', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+    if (!headerVars.isDraggingColumn) {
+      setPointerStyle(stageVars.stage, false, 'default')
+    }
+  })
+  // 添加拖拽事件到背景矩形
+  dragIconRect.on('mousedown', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+    event.cancelBubble = true
+    // 设置拖拽状态
+    headerVars.isDraggingColumn = true
+    headerVars.draggingColumnName = columnOption.columnName
+    headerVars.dragStartX = event.evt.clientX
+    setPointerStyle(stageVars.stage, true, 'grabbing')
+  })
+  return dragIconRect
+}
 
 /**
  * 创建过滤图标
@@ -252,7 +391,7 @@ const createFilterIcon = (
  * @param {number} x - x坐标
  * @param {Konva.Group} headerGroup - 表头组
  */
-const createColumnResizer = (
+const createResizerIcon = (
   columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
   x: number,
   headerGroup: Konva.Group
@@ -409,8 +548,13 @@ const createHeaderCellText = (
   const sortOrder = getColumnSortStatus(columnOption.columnName)
   const hasSort = sortOrder !== null
 
+  // 计算文本起始位置（为拖拽图标留出空间）
+  const textStartX = columnOption.fixed ? x + 8 : x + LAYOUT_CONSTANTS.LEFT_ICON_AREA_WIDTH
+
   // 如果有排序，给文本留出箭头空间
-  const maxTextWidth = hasSort ? (columnOption.width || 0) - 32 : (columnOption.width || 0) - 16
+  const rightSpace = hasSort ? 32 : 16
+  const leftSpace = columnOption.fixed ? 8 : LAYOUT_CONSTANTS.LEFT_ICON_AREA_WIDTH
+  const maxTextWidth = (columnOption.width || 0) - leftSpace - rightSpace
 
   const text = truncateText(
     columnOption.displayName || columnOption.columnName,
@@ -422,7 +566,7 @@ const createHeaderCellText = (
   drawUnifiedText({
     name: 'header-cell-text',
     text,
-    x,
+    x: textStartX,
     y: 0,
     width: columnOption.width || 0,
     height: staticParams.headerRowHeight,
@@ -471,6 +615,9 @@ export const drawHeaderPart = (
       group: headerGroup
     })
 
+    // 添加拖拽图标
+    createDragIcon(columnOption, x, headerGroup)
+
     // 创建文本
     createHeaderCellText(columnOption, x, headerGroup)
 
@@ -483,7 +630,8 @@ export const drawHeaderPart = (
     // 只先保存任务，不执行；注意闭包中捕获当前列的 x
     const currentX = x
 
-    resizerTasks.push(() => createColumnResizer(columnOption, currentX, headerGroup))
+    // 这么做是为了不让下一个rect 覆盖 resizer rect
+    resizerTasks.push(() => createResizerIcon(columnOption, currentX, headerGroup))
 
     x += columnWidth
   }
@@ -492,5 +640,287 @@ export const drawHeaderPart = (
    */
   for (const createResizerTask of resizerTasks) {
     createResizerTask()
+  }
+}
+
+/**
+ * 更新列宽调整指示线
+ * @returns {void}
+ */
+export const updateResizeIndicator = (): void => {
+  if (!headerVars.isResizingColumn || !headerVars.resizingColumnName) return
+
+  const { height: stageHeight, width: stageWidth } = getStageSize()
+
+  // 找到目标列并确定其所在分区
+  const targetColumnInLeft = columnsInfo.leftColumns.find((c) => c.columnName === headerVars.resizingColumnName)
+  const targetColumnInCenter = columnsInfo.centerColumns.find((c) => c.columnName === headerVars.resizingColumnName)
+  const targetColumnInRight = columnsInfo.rightColumns.find((c) => c.columnName === headerVars.resizingColumnName)
+
+  let indicatorX = 0
+
+  if (targetColumnInLeft) {
+    // 左固定列：从0开始累加
+    for (const col of columnsInfo.leftColumns) {
+      if (col.columnName === headerVars.resizingColumnName) {
+        indicatorX += headerVars.resizeTempWidth
+        break
+      }
+      indicatorX += col.width || 0
+    }
+  } else if (targetColumnInCenter) {
+    // 中间列：从左固定列宽度开始，减去滚动偏移
+    indicatorX = columnsInfo.leftPartWidth
+    for (const col of columnsInfo.centerColumns) {
+      if (col.columnName === headerVars.resizingColumnName) {
+        indicatorX += headerVars.resizeTempWidth
+        break
+      }
+      indicatorX += col.width || 0
+    }
+    indicatorX -= scrollbarVars.stageScrollX
+  } else if (targetColumnInRight) {
+    // 右固定列：从舞台右侧开始，往左累加
+    indicatorX = stageWidth - columnsInfo.rightPartWidth
+    for (const col of columnsInfo.rightColumns) {
+      if (col.columnName === headerVars.resizingColumnName) {
+        indicatorX += headerVars.resizeTempWidth
+        break
+      }
+      indicatorX += col.width || 0
+    }
+  } else {
+    return // 未找到目标列
+  }
+
+  // 创建或更新指示线
+  if (!headerVars.resizeIndicatorLine) {
+    headerVars.resizeIndicatorLine = new Konva.Line({
+      points: [indicatorX, 0, indicatorX, stageHeight],
+      stroke: '#4A90E2',
+      strokeWidth: 2,
+      dash: [5, 5],
+      listening: false
+    })
+    headerVars.headerLayer?.add(headerVars.resizeIndicatorLine)
+  } else {
+    headerVars.resizeIndicatorLine.points([indicatorX, 0, indicatorX, stageHeight])
+  }
+
+  headerVars.headerLayer?.batchDraw()
+}
+
+/**
+ * 更新列拖拽指示器
+ * @returns {void}
+ */
+export const updateDragIndicator = (): void => {
+  if (!headerVars.isDraggingColumn || !headerVars.draggingColumnName) return
+
+  const { height: stageHeight } = getStageSize()
+  const stagePos = stageVars.stage?.getPointerPosition()
+
+  if (!stagePos) return
+
+  // 计算目标插入位置
+  const targetInfo = calculateDropTarget(stagePos.x)
+
+  if (targetInfo.canDrop) {
+    // 获取被拖拽列的宽度
+    const allColumns = [...columnsInfo.leftColumns, ...columnsInfo.centerColumns, ...columnsInfo.rightColumns]
+    const draggingColumn = allColumns.find((col) => col.columnName === headerVars.draggingColumnName)
+    const dragWidth = draggingColumn?.width || 100
+
+    // 创建或更新插入指示矩形
+    if (!headerVars.dragDropIndicator) {
+      headerVars.dragDropIndicator = new Konva.Rect({
+        name: 'drag-drop-indicator',
+        x: targetInfo.insertX,
+        y: 0,
+        width: dragWidth,
+        height: stageHeight,
+        fill: 'rgba(74, 144, 226, 0.2)', // 半透明蓝色填充
+        stroke: '#4A90E2',
+        strokeWidth: 2,
+        dash: [5, 5], // 虚线边框
+        listening: false
+      })
+      headerVars.headerLayer?.add(headerVars.dragDropIndicator)
+    } else {
+      // 更新位置和尺寸
+      headerVars.dragDropIndicator.x(targetInfo.insertX)
+      headerVars.dragDropIndicator.y(0)
+      headerVars.dragDropIndicator.width(dragWidth)
+      headerVars.dragDropIndicator.height(stageHeight)
+      headerVars.dragDropIndicator.visible(true)
+    }
+  } else {
+    // 如果不能放置，隐藏指示器
+    if (headerVars.dragDropIndicator) {
+      headerVars.dragDropIndicator.visible(false)
+    }
+  }
+
+  headerVars.headerLayer?.batchDraw()
+}
+
+/**
+ * 计算拖拽目标位置
+ * @param {number} mouseX - 鼠标X坐标
+ * @returns {object} 目标信息
+ */
+const calculateDropTarget = (mouseX: number): { targetIndex: number; insertX: number; canDrop: boolean } => {
+  const allColumns = [...columnsInfo.leftColumns, ...columnsInfo.centerColumns, ...columnsInfo.rightColumns]
+  let currentX = 0
+  let targetIndex = -1
+  let insertX = 0
+  let canDrop = false
+
+  // 考虑滚动偏移
+  const scrollOffset = scrollbarVars.stageScrollX || 0
+  const adjustedMouseX = mouseX + scrollOffset
+
+  // 计算每列的累积位置
+  for (let i = 0; i < allColumns.length; i++) {
+    const column = allColumns[i]
+    const columnWidth = column.width || 0
+    const columnStart = currentX
+    const columnEnd = currentX + columnWidth
+    const columnCenter = columnStart + columnWidth / 2
+
+    // 如果鼠标在列的左半部分，插入到列之前
+    if (adjustedMouseX >= columnStart && adjustedMouseX < columnCenter) {
+      targetIndex = i
+      insertX = columnStart - scrollOffset
+      canDrop = true
+      break
+    }
+    // 如果鼠标在列的右半部分，插入到列之后
+    else if (adjustedMouseX >= columnCenter && adjustedMouseX < columnEnd) {
+      targetIndex = i + 1
+      insertX = columnEnd - scrollOffset
+      canDrop = true
+      break
+    }
+
+    currentX += columnWidth
+  }
+
+  // 如果鼠标在所有列的右侧，插入到最后
+  if (!canDrop && adjustedMouseX >= currentX) {
+    targetIndex = allColumns.length
+    insertX = currentX - scrollOffset
+    canDrop = true
+  }
+
+  // 确保不会插入到被拖拽列的原位置
+  if (canDrop && headerVars.draggingColumnName) {
+    const draggingIndex = allColumns.findIndex((col) => col.columnName === headerVars.draggingColumnName)
+    if (draggingIndex !== -1 && (targetIndex === draggingIndex || targetIndex === draggingIndex + 1)) {
+      canDrop = false
+    }
+  }
+
+  return { targetIndex, insertX, canDrop }
+}
+
+/**
+ * 处理列拖拽完成后的重排序
+ * @param {number} mouseX - 鼠标X坐标
+ */
+export const handleColumnReorder = (mouseX: number) => {
+  if (!headerVars.isDraggingColumn || !headerVars.draggingColumnName) {
+    return false
+  }
+
+  // 计算目标位置
+  const { targetIndex, canDrop } = calculateDropTarget(mouseX)
+
+  if (!canDrop) {
+    return false
+  }
+
+  // 获取所有列配置
+  const allFields = [...staticParams.xAxisFields, ...staticParams.yAxisFields]
+  const draggingIndex = allFields.findIndex((field) => field.columnName === headerVars.draggingColumnName)
+
+  if (draggingIndex === -1) {
+    return false
+  }
+
+  // 获取被拖拽的列配置
+  const draggingField = allFields[draggingIndex]
+
+  // 从原位置移除
+  allFields.splice(draggingIndex, 1)
+
+  // 调整目标索引（如果目标位置在被拖拽列之后，需要减1）
+  let adjustedTargetIndex = targetIndex
+  if (targetIndex > draggingIndex) {
+    adjustedTargetIndex = targetIndex - 1
+  }
+
+  // 插入到新位置
+  allFields.splice(adjustedTargetIndex, 0, draggingField)
+
+  // 更新 staticParams 中的列配置
+  // 需要重新分离 xAxisFields 和 yAxisFields
+  const newXAxisFields: GroupStore.GroupOption[] = []
+  const newYAxisFields: DimensionStore.DimensionOption[] = []
+
+  allFields.forEach((field) => {
+    // 根据原始类型判断是 xAxisFields 还是 yAxisFields
+    const isXAxisField = staticParams.xAxisFields.some((xField) => xField.columnName === field.columnName)
+    if (isXAxisField) {
+      newXAxisFields.push(field as GroupStore.GroupOption)
+    } else {
+      newYAxisFields.push(field as DimensionStore.DimensionOption)
+    }
+  })
+
+  // 更新配置
+  staticParams.xAxisFields = newXAxisFields
+  staticParams.yAxisFields = newYAxisFields
+
+  refreshTable(false)
+}
+
+/**
+ * 清理列拖拽状态
+ */
+export const cleanupDragState = (): void => {
+  if (headerVars.dragDropIndicator) {
+    headerVars.dragDropIndicator.destroy()
+    headerVars.dragDropIndicator = null
+  }
+
+  // 重置状态变量
+  headerVars.isDraggingColumn = false
+  headerVars.draggingColumnName = null
+  headerVars.dragStartX = 0
+  headerVars.dragStartWidth = 0
+  headerVars.dragTempWidth = 0
+
+  scheduleLayersBatchDraw(['header'])
+}
+
+/**
+ * 清理列宽调整状态
+ */
+export const cleanupResizeState = (): void => {
+  // 清理调整指示线
+  if (headerVars.resizeIndicatorLine) {
+    headerVars.resizeIndicatorLine.destroy()
+    headerVars.resizeIndicatorLine = null
+  }
+
+  // 重置状态
+  headerVars.isResizingColumn = false
+  headerVars.resizingColumnName = null
+  headerVars.resizeTempWidth = 0
+
+  // 重绘图层
+  if (headerVars.headerLayer) {
+    headerVars.headerLayer.batchDraw()
   }
 }
