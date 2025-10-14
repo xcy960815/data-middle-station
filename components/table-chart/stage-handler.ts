@@ -14,13 +14,18 @@ import {
   drawBodyPart
 } from './body-handler'
 import {
+  cleanupDragState,
+  cleanupResizeState,
   createHeaderCenterGroup,
   createHeaderClipGroup,
   createHeaderLeftGroup,
   createHeaderRightGroup,
   drawHeaderPart,
   filterDropdownRef,
-  headerVars
+  handleColumnReorder,
+  headerVars,
+  updateDragIndicator,
+  updateResizeIndicator
 } from './header-handler'
 import { staticParams, tableData } from './parameter'
 import {
@@ -33,6 +38,7 @@ import {
   updateHorizontalScroll,
   updateVerticalScroll
 } from './scrollbar-handler'
+
 import {
   createSummaryCenterGroup,
   createSummaryClipGroup,
@@ -44,73 +50,6 @@ import {
   summaryVars
 } from './summary-handler'
 import { clearPool, getTableContainer, setPointerStyle } from './utils'
-
-/**
- * 更新列宽调整指示线（直接调用，不使用 RAF 节流）
- * @returns {void}
- */
-const updateResizeIndicator = () => {
-  if (!headerVars.isResizingColumn || !headerVars.resizingColumnName) return
-
-  const { height: stageHeight, width: stageWidth } = getStageSize()
-
-  // 找到目标列并确定其所在分区
-  const targetColumnInLeft = columnsInfo.leftColumns.find((c) => c.columnName === headerVars.resizingColumnName)
-  const targetColumnInCenter = columnsInfo.centerColumns.find((c) => c.columnName === headerVars.resizingColumnName)
-  const targetColumnInRight = columnsInfo.rightColumns.find((c) => c.columnName === headerVars.resizingColumnName)
-
-  let indicatorX = 0
-
-  if (targetColumnInLeft) {
-    // 左固定列：从0开始累加
-    for (const col of columnsInfo.leftColumns) {
-      if (col.columnName === headerVars.resizingColumnName) {
-        indicatorX += headerVars.resizeTempWidth
-        break
-      }
-      indicatorX += col.width || 0
-    }
-  } else if (targetColumnInCenter) {
-    // 中间列：从左固定列宽度开始，减去滚动偏移
-    indicatorX = columnsInfo.leftPartWidth
-    for (const col of columnsInfo.centerColumns) {
-      if (col.columnName === headerVars.resizingColumnName) {
-        indicatorX += headerVars.resizeTempWidth
-        break
-      }
-      indicatorX += col.width || 0
-    }
-    indicatorX -= scrollbarVars.stageScrollX
-  } else if (targetColumnInRight) {
-    // 右固定列：从舞台右侧开始，往左累加
-    indicatorX = stageWidth - columnsInfo.rightPartWidth
-    for (const col of columnsInfo.rightColumns) {
-      if (col.columnName === headerVars.resizingColumnName) {
-        indicatorX += headerVars.resizeTempWidth
-        break
-      }
-      indicatorX += col.width || 0
-    }
-  } else {
-    return // 未找到目标列
-  }
-
-  // 创建或更新指示线
-  if (!headerVars.resizeIndicatorLine) {
-    headerVars.resizeIndicatorLine = new Konva.Line({
-      points: [indicatorX, 0, indicatorX, stageHeight],
-      stroke: '#4A90E2',
-      strokeWidth: 2,
-      dash: [5, 5],
-      listening: false
-    })
-    headerVars.headerLayer?.add(headerVars.resizeIndicatorLine)
-  } else {
-    headerVars.resizeIndicatorLine.points([indicatorX, 0, indicatorX, stageHeight])
-  }
-
-  headerVars.headerLayer?.batchDraw()
-}
 
 interface StageVars {
   stage: Konva.Stage | null
@@ -213,8 +152,6 @@ export const initStage = () => {
     scrollbarVars.scrollbarLayer = new Konva.Layer()
     stageVars.stage.add(scrollbarVars.scrollbarLayer)
   }
-
-  // ========== 滚动条相关 ==========
 
   // 5. 滚动条组（根据滚动需求创建）
   const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
@@ -522,7 +459,6 @@ const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
     const deltaX = mouseEvent.clientX - scrollbarVars.dragStartX
     const { maxHorizontalScroll } = calculateScrollRange()
     const { width: stageWidth } = getStageSize()
-    // Account for vertical scrollbar only if present
     const { maxVerticalScroll } = calculateScrollRange()
     const verticalScrollbarSpace = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
     const visibleWidth = stageWidth - columnsInfo.leftPartWidth - columnsInfo.rightPartWidth - verticalScrollbarSpace
@@ -532,6 +468,18 @@ const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
 
     // 使用统一的水平滚动方法，传入绝对位置
     updateHorizontalScroll(newScrollX, true)
+    filterDropdownRef.value?.closeFilterDropdown()
+    summaryDropdownRef.value?.closeSummaryDropdown()
+    cellEditorRef.value?.closeEditor()
+    return
+  }
+
+  // 列拖拽移动处理
+  if (headerVars.isDraggingColumn) {
+    const deltaX = mouseEvent.clientX - headerVars.dragStartX
+    headerVars.dragTempWidth = headerVars.dragStartWidth + deltaX
+    updateDragIndicator()
+    // 关闭其他弹窗
     filterDropdownRef.value?.closeFilterDropdown()
     summaryDropdownRef.value?.closeSummaryDropdown()
     cellEditorRef.value?.closeEditor()
@@ -577,6 +525,15 @@ const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
     scheduleLayersBatchDraw(['scrollbar'])
   }
 
+  // 列拖拽结束处理
+  if (headerVars.isDraggingColumn) {
+    handleColumnReorder(mouseEvent.offsetX)
+    // 清理拖拽状态
+    cleanupDragState()
+    setPointerStyle(stageVars.stage, false, 'default')
+    return
+  }
+
   // 列宽调整结束 - 应用最终宽度
   if (headerVars.isResizingColumn) {
     // 应用最终宽度
@@ -588,17 +545,8 @@ const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
       // 会触发watch 走重新渲染表格的逻辑
     }
 
-    // 清理调整指示线
-    if (headerVars.resizeIndicatorLine) {
-      headerVars.resizeIndicatorLine.destroy()
-      headerVars.resizeIndicatorLine = null
-      headerVars.headerLayer?.batchDraw()
-    }
-
-    // 重置状态
-    headerVars.isResizingColumn = false
-    headerVars.resizingColumnName = null
-    headerVars.resizeTempWidth = 0
+    // 使用统一的清理函数
+    cleanupResizeState()
     setPointerStyle(stageVars.stage, false, 'default')
   }
 }
