@@ -6,7 +6,15 @@ import { filterColumns, getColumnSortStatus, handleMultiColumnSort, handleTableD
 import { staticParams } from './parameter'
 import { scrollbarVars } from './scrollbar-handler'
 import { clearGroups, getStageSize, refreshTable, scheduleLayersBatchDraw, stageVars } from './stage-handler'
-import { createGroup, drawUnifiedRect, drawUnifiedText, setPointerStyle, truncateText } from './utils'
+import {
+  LAYOUT_CONSTANTS,
+  calculateTextWidth,
+  createGroup,
+  drawUnifiedRect,
+  drawUnifiedText,
+  setPointerStyle,
+  truncateText
+} from './utils'
 
 import FilterDropdown from './components/filter-dropdown.vue'
 
@@ -64,49 +72,6 @@ interface HeaderVars {
    */
   dragDropIndicator: Konva.Rect | null
 }
-
-const LAYOUT_CONSTANTS = {
-  /**
-   * 右侧图标区域预留宽度
-   */
-  ICON_AREA_WIDTH: 40,
-  /**
-   * 排序箭头距离右边缘的距离
-   */
-  SORT_ARROW_OFFSET: 34,
-  /**
-   * 过滤图标距离右边缘的距离
-   */
-  FILTER_ICON_OFFSET: 12,
-  /**
-   * 排序箭头大小
-   */
-  ARROW_SIZE: 8,
-  /**
-   * 排序箭头高度缩放（0-1，值越小越"矮"）
-   */
-  ARROW_HEIGHT_SCALE: 0.72,
-  /**
-   * 上下箭头间距
-   */
-  ARROW_GAP: 2,
-  /**
-   * 过滤图标大小
-   */
-  FILTER_ICON_SIZE: 16,
-  /**
-   * 拖拽图标距离左边缘的距离
-   */
-  DRAG_ICON_OFFSET: 8,
-  /**
-   * 拖拽图标大小
-   */
-  DRAG_ICON_SIZE: 14,
-  /**
-   * 左侧图标区域预留宽度
-   */
-  LEFT_ICON_AREA_WIDTH: 24
-} as const
 
 const COLORS = {
   /**
@@ -545,16 +510,13 @@ const createHeaderCellText = (
   x: number,
   headerGroup: Konva.Group
 ) => {
-  const sortOrder = getColumnSortStatus(columnOption.columnName)
-  const hasSort = sortOrder !== null
+  console.log('x', x)
 
   // 计算文本起始位置（为拖拽图标留出空间）
-  const textStartX = columnOption.fixed ? x + 8 : x + LAYOUT_CONSTANTS.LEFT_ICON_AREA_WIDTH
+  const textStartX = x //+ TEXT_SPACING_CONSTANTS.TEXT_PADDING_HORIZONTAL
 
-  // 如果有排序，给文本留出箭头空间
-  const rightSpace = hasSort ? 32 : 16
-  const leftSpace = columnOption.fixed ? 8 : LAYOUT_CONSTANTS.LEFT_ICON_AREA_WIDTH
-  const maxTextWidth = (columnOption.width || 0) - leftSpace - rightSpace
+  // 使用统一的文本宽度计算函数
+  const maxTextWidth = calculateTextWidth.forHeaderCell(columnOption)
 
   const text = truncateText(
     columnOption.displayName || columnOption.columnName,

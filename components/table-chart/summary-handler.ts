@@ -5,7 +5,14 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 import SummaryDropdown from './components/summary-dropdown.vue'
 import { staticParams, tableData } from './parameter'
 import { stageVars } from './stage-handler'
-import { createGroup, drawUnifiedRect, drawUnifiedText, setPointerStyle, truncateText } from './utils'
+import {
+  calculateTextWidth,
+  createGroup,
+  drawUnifiedRect,
+  drawUnifiedText,
+  setPointerStyle,
+  truncateText
+} from './utils'
 const webworker = useNuxtApp().$webworker
 interface SummaryVars {
   summaryLayer: Konva.Layer | null
@@ -237,7 +244,7 @@ export const drawSummaryPart = (
       group: summaryGroup
     })
 
-    const textMaxWidth = colWidth - 16
+    const textMaxWidth = calculateTextWidth.forSummaryCell(colWidth)
 
     // 先显示占位文本，然后异步更新
     const rule = summaryState[col.columnName] || 'nodisplay'
