@@ -8,19 +8,24 @@
   <cell-editor ref="cellEditorRef" />
 </template>
 <script lang="ts" setup>
-import { tableProps, staticParams } from './parameter'
-import { onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
-import { stageVars, initStage, destroyStage, initStageListeners, cleanupStageListeners } from './stage-handler'
-import { sortColumns, handleTableData } from './data-handler'
-import { initWheelListener, cleanupWheelListener } from './scrollbar-handler'
-import { filterDropdownRef } from './header-handler'
-import { summaryDropdownRef } from './summary-handler'
-import { refreshTable } from './stage-handler'
+import { computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { cellEditorRef } from './body-handler'
+import CellEditor from './components/cell-editor.vue'
 import FilterDropdown from './components/filter-dropdown.vue'
 import SummaryDropdown from './components/summary-dropdown.vue'
-import CellEditor from './components/cell-editor.vue'
-import { cellEditorRef } from './body-handler'
-
+import { handleTableData, sortColumns } from './data-handler'
+import { filterDropdownRef } from './header-handler'
+import { staticParams, tableProps } from './parameter'
+import { cleanupWheelListener, initWheelListener } from './scrollbar-handler'
+import {
+  cleanupStageListeners,
+  destroyStage,
+  initStage,
+  initStageListeners,
+  refreshTable,
+  stageVars
+} from './stage-handler'
+import { summaryDropdownRef } from './summary-handler'
 const props = defineProps(tableProps)
 
 /**
@@ -56,6 +61,7 @@ watch(
     if (props.highlightColBackground !== undefined) staticParams.highlightColBackground = props.highlightColBackground
     if (props.headerRowHeight !== undefined) staticParams.headerRowHeight = props.headerRowHeight
     if (props.resizerWidth !== undefined) staticParams.resizerWidth = props.resizerWidth
+    if (props.textPaddingHorizontal !== undefined) staticParams.textPaddingHorizontal = props.textPaddingHorizontal
     if (props.headerBackground !== undefined) staticParams.headerBackground = props.headerBackground
     if (props.headerTextColor !== undefined) staticParams.headerTextColor = props.headerTextColor
     if (props.headerFontFamily !== undefined) staticParams.headerFontFamily = props.headerFontFamily
@@ -79,6 +85,8 @@ watch(
     if (props.scrollbarThumbHoverBackground !== undefined)
       staticParams.scrollbarThumbHoverBackground = props.scrollbarThumbHoverBackground
     if (props.sortActiveColor !== undefined) staticParams.sortActiveColor = props.sortActiveColor
+    if (props.dragIconHeight !== undefined) staticParams.dragIconHeight = props.dragIconHeight
+    if (props.dragIconWidth !== undefined) staticParams.dragIconWidth = props.dragIconWidth
     if (props.spanMethod !== undefined) staticParams.spanMethod = props.spanMethod
   },
   {
@@ -89,8 +97,9 @@ watch(
 
 watch(
   () => [props.data],
-  () => {
+  async () => {
     if (!stageVars.stage) return
+
     handleTableData()
     refreshTable(true)
   },
@@ -116,6 +125,7 @@ watch(
     if (!stageVars.stage) return
     // 等待demo节点发生变更再触发该方法
     await nextTick()
+
     initStage()
     handleTableData()
     refreshTable(true)
@@ -133,6 +143,8 @@ watch(
     props.headerFontSize,
     props.headerTextColor,
     props.headerBackground
+    // props.dragIconHeight,
+    // props.dragIconWidth
   ],
   () => {
     if (!stageVars.stage) return
@@ -235,7 +247,7 @@ watch(
   }
 )
 
-onMounted(() => {
+onMounted(async () => {
   initStage()
   handleTableData()
   refreshTable(true)
