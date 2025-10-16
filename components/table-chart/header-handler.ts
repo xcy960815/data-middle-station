@@ -203,27 +203,28 @@ export const createDragIcon = (
   // 固定列不显示拖拽图标
   if (columnOption.fixed || !columnOption.draggable) return
 
-  const iconHeightSize = 16 // 增加高度使其更容易点击
-  const iconWidthSize = 9 // 增加宽度使其更容易点击
-  const iconX = x + LAYOUT_CONSTANTS.DRAG_ICON_OFFSET
-  const iconY = (staticParams.headerRowHeight - iconHeightSize) / 2
+  const dragIconHeight = staticParams.dragIconHeight
+  const dragIconWidth = staticParams.dragIconWidth
+  const iconX = x + staticParams.textPaddingHorizontal
+  const iconY = (staticParams.headerRowHeight - dragIconHeight) / 2
 
   // 添加背景矩形增加可点击区域和调试可见性 - 直接添加到headerGroup
-  const dragIconRect = new Konva.Rect({
+  const dragIconRect = drawUnifiedRect({
     name: `drag-icon-bg-${columnOption.columnName}`,
     x: iconX,
     y: iconY,
-    width: iconWidthSize,
-    height: iconHeightSize,
+    width: dragIconWidth,
+    height: dragIconHeight,
+    fill: 'transparent',
     stroke: 'rgba(0,0,0,0.2)',
     strokeWidth: 0,
-    listening: true // 设置为可监听事件
+    listening: true,
+    group: headerGroup
   })
-  headerGroup.add(dragIconRect)
 
-  const dotSize = 3 // 增加圆点大小
-  const startX = iconX + 2 // 相对于headerGroup的绝对位置
-  const startY = iconY + 2 // 相对于headerGroup的绝对位置
+  const dragIconDotSize = staticParams.dragIconDotSize
+  const startX = iconX + 2
+  const startY = iconY + 3
 
   for (let row = 0; row < 3; row++) {
     for (let col = 0; col < 2; col++) {
@@ -233,7 +234,7 @@ export const createDragIcon = (
         name: `drag-dot-${columnOption.columnName}-${row}-${col}`,
         x: dotX,
         y: dotY,
-        radius: dotSize / 2,
+        radius: dragIconDotSize / 2,
         fill: 'rgba(0,0,0,0.1)',
         listening: false
       })
@@ -535,7 +536,8 @@ const createHeaderCellText = (
     fontSize: staticParams.headerFontSize,
     fontFamily: staticParams.headerFontFamily,
     fill: staticParams.headerTextColor,
-    align: columnOption.align ?? 'left',
+    // align: columnOption.align ?? 'left',
+    align: 'left',
     verticalAlign: columnOption.verticalAlign ?? 'middle',
     group: headerGroup
   })
