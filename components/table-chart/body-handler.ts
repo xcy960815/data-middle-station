@@ -7,14 +7,16 @@ import { scrollbarVars } from './scrollbar-handler'
 import { getStageSize, stageVars } from './stage-handler'
 import { getSummaryRowHeight } from './summary-handler'
 import {
+  calculateTextWidth,
   createGroup,
   drawUnifiedRect,
   drawUnifiedText,
-  getCellDisplayValue,
-  type KonvaNodePools,
+  getCellDisplayContent,
   recoverKonvaNode,
   truncateText
 } from './utils'
+
+import type { KonvaNodePools } from './utils'
 
 interface BodyVars {
   /**
@@ -291,8 +293,8 @@ const drawMergedCell = (
   })
 
   // 绘制合并单元格文本
-  const value = getCellDisplayValue(columnOption, row, rowIndex)
-  const maxTextWidth = width - 16
+  const value = getCellDisplayContent(columnOption, row, rowIndex)
+  const maxTextWidth = calculateTextWidth.forBodyCell(width)
   const truncatedValue = truncateText(value, maxTextWidth, staticParams.bodyFontSize, staticParams.bodyFontFamily)
 
   drawUnifiedText({
@@ -361,8 +363,8 @@ const drawNormalCell = (
   }
 
   // 绘制单元格文本
-  const value = getCellDisplayValue(columnOption, row, rowIndex)
-  const maxTextWidth = width - 16
+  const value = getCellDisplayContent(columnOption, row, rowIndex)
+  const maxTextWidth = calculateTextWidth.forBodyCell(width)
   const truncatedValue = truncateText(value, maxTextWidth, staticParams.bodyFontSize, staticParams.bodyFontFamily)
   drawUnifiedText({
     pools,

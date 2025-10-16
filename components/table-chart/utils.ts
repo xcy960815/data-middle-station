@@ -1,5 +1,82 @@
 import Konva from 'konva'
 
+import { getColumnSortStatus } from './data-handler'
+import { staticParams } from './parameter'
+/**
+ * 布局相关常量
+ */
+export const LAYOUT_CONSTANTS = {
+  /**
+   * 右侧图标区域预留宽度
+   */
+  ICON_AREA_WIDTH: 40,
+  /**
+   * 排序箭头距离右边缘的距离
+   */
+  SORT_ARROW_OFFSET: 34,
+  /**
+   * 过滤图标距离右边缘的距离
+   */
+  FILTER_ICON_OFFSET: 12,
+  /**
+   * 排序箭头大小
+   */
+  ARROW_SIZE: 8,
+  /**
+   * 排序箭头高度缩放（0-1，值越小越"矮"）
+   */
+  ARROW_HEIGHT_SCALE: 0.72,
+  /**
+   * 上下箭头间距
+   */
+  ARROW_GAP: 2,
+  /**
+   * 过滤图标大小
+   */
+  FILTER_ICON_SIZE: 16,
+  /**
+   * 拖拽图标距离左边缘的距离
+   */
+  DRAG_ICON_OFFSET: 8,
+  /**
+   * 拖拽图标大小
+   */
+  DRAG_ICON_SIZE: 14
+} as const
+
+/**
+ * 文本宽度计算工具函数
+ */
+export const calculateTextWidth = {
+  /**
+   * 计算 Header 单元格的可用文本宽度
+   * @param columnOption 列配置
+   */
+  forHeaderCell: (columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption): number => {
+    const sortOrder = getColumnSortStatus(columnOption.columnName)
+    const hasSort = sortOrder !== null
+    const cellWidth = columnOption.width || 0
+    const leftSpace = staticParams.textPaddingHorizontal
+    const rightSpace = staticParams.textPaddingHorizontal
+
+    return cellWidth - leftSpace - rightSpace
+  },
+
+  /**
+   * 计算 Body 单元格的可用文本宽度
+   */
+  forBodyCell: (cellWidth: number): number => {
+    return cellWidth - staticParams.textPaddingHorizontal
+  },
+
+  /**
+   * 计算 Summary 单元格的可用文本宽度
+   */
+  forSummaryCell: (cellWidth: number): number => {
+    return cellWidth - staticParams.textPaddingHorizontal
+  }
+}
+
 /**
  * 通用类型工具：美化类型显示
  */
@@ -230,9 +307,9 @@ export const drawUnifiedText = (config: DrawTextConfig) => {
     textNode.x(x + width / 2)
     textNode.offsetX(textNode.width() / 2)
   } else if (align === 'right') {
-    textNode.x(x + width - 8)
+    textNode.x(x + width - staticParams.textPaddingHorizontal)
   } else {
-    textNode.x(x + 8)
+    textNode.x(x + staticParams.textPaddingHorizontal)
   }
 
   // 处理垂直对齐
@@ -288,7 +365,7 @@ export const drawUnifiedRect = (config: DrawRectConfig): Konva.Rect => {
  * @param {number} rowIndex - 行索引
  * @returns {string} 显示值
  */
-export const getCellDisplayValue = (
+export const getCellDisplayContent = (
   columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
   row: ChartDataVo.ChartData,
   rowIndex: number
@@ -304,6 +381,7 @@ export const getCellDisplayValue = (
 
 /**
  * 设置指针样式的辅助函数
+ * @param {Konva.Stage | null} stage - 舞台
  * @param {boolean} on - 是否显示指针
  * @param {string} cursor - 指针样式
  */
@@ -351,7 +429,10 @@ export const createGroup = (
 
   // 如果是裁剪组，添加裁剪配置
   if (clip) {
-    groupConfig.clip = clip
+    groupConfig.clipX = clip.x
+    groupConfig.clipY = clip.y
+    groupConfig.clipWidth = clip.width
+    groupConfig.clipHeight = clip.height
   }
 
   return new Konva.Group(groupConfig)

@@ -67,6 +67,10 @@ declare namespace DimensionStore {
      * 是否可调整列宽
      */
     resizable?: boolean
+    /**
+     * 是否可拖拽调整位置
+     */
+    draggable?: boolean
 
     colIndex?: number
   }

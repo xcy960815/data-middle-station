@@ -51,6 +51,12 @@
       <el-form-item label="滚动条滑块悬停颜色">
         <el-color-picker v-model="tableConfig.scrollbarThumbHoverBackground" show-alpha />
       </el-form-item>
+      <el-form-item label="拖拽图标高度">
+        <el-input-number v-model="tableConfig.dragIconHeight" :min="8" :max="32" :step="2" />
+      </el-form-item>
+      <el-form-item label="拖拽图标宽度">
+        <el-input-number v-model="tableConfig.dragIconWidth" :min="6" :max="20" :step="1" />
+      </el-form-item>
       <el-form-item label="是否展示汇总">
         <el-switch v-model="tableConfig.enableSummary" />
       </el-form-item>
@@ -64,7 +70,6 @@
         <el-input-number v-model="tableConfig.chartWidth" :step="100" />
       </el-form-item>
     </el-form>
-
     <!-- 合并单元格配置 -->
     <el-divider content-position="left">合并单元格配置</el-divider>
     <el-form label-width="auto" :model="spanConfig" inline>
@@ -113,6 +118,8 @@
       :data="data"
       :highlight-row-background="tableConfig.highlightRowBackground"
       :highlight-col-background="tableConfig.highlightColBackground"
+      :drag-icon-height="tableConfig.dragIconHeight"
+      :drag-icon-width="tableConfig.dragIconWidth"
       :span-method="spanMethod"
     >
     </TableChart>
@@ -121,7 +128,6 @@
 
 <script setup lang="ts">
 import TableChart from '@/components/table-chart/index.vue'
-import { ElMessage } from 'element-plus'
 
 // 合并单元格配置
 const spanConfig = reactive({
@@ -226,8 +232,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'number',
     columnComment: '序号',
     displayName: '序号',
-    width: 100,
     fixed: 'left',
+    width: 100,
     align: 'center',
     resizable: true
   },
@@ -247,25 +253,28 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'name',
     displayName: 'name',
+    width: 200,
     filterable: true,
     editable: true,
     editType: 'input',
-    resizable: true
+    resizable: true,
+    draggable: true
   },
   {
     columnName: 'age',
     columnType: 'number',
     columnComment: 'age',
     displayName: 'age',
+    width: 200,
     filterable: true,
     editable: true,
-    editType: 'input',
-    fixed: 'left' as const
+    editType: 'input'
   },
   {
     columnName: 'gender',
     columnType: 'string',
     columnComment: 'gender',
+    width: 200,
     filterable: true,
     sortable: true,
     displayName: 'gender',
@@ -282,6 +291,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'country',
     width: 200,
+    resizable: true,
+    draggable: true,
     filterable: true,
     sortable: true,
     displayName: 'country',
@@ -296,8 +307,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
       { label: '日本', value: 'Japan' },
       { label: '加拿大', value: 'Canada' },
       { label: '澳大利亚', value: 'Australia' }
-    ],
-    fixed: 'left' as const
+    ]
   },
   {
     columnName: 'city',
@@ -308,8 +318,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     sortable: true,
     displayName: 'city',
     editable: true,
-    editType: 'input',
-    fixed: 'left' as const
+    editType: 'input'
   },
   {
     columnName: 'state',
@@ -329,7 +338,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     editable: true,
     editType: 'input',
     resizable: true
-    // fixed: 'right' as const
   },
   {
     columnName: 'address',
@@ -432,31 +440,6 @@ const data: Array<ChartDataVo.ChartData> = Array.from({ length: 1000 }, (_, i) =
     email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
   }
 })
-/**
- * 单元格点击事件
- */
-const handleCellClick = (cell: { rowIndex: number; colIndex: number }) => {
-  console.log('Cell clicked:', cell)
-}
-
-// 注释掉action事件处理函数
-// const handleActionClick = (payload: { rowIndex: number; action: string; rowData: ChartDataVo.ChartData }) => {
-//   console.log('Action clicked:', payload.rowIndex, payload.action, payload.rowData)
-// }
-
-/**
- * 单元格编辑事件
- */
-const handleCellEdit = (payload: { rowIndex: number; colKey: string; rowData: ChartDataVo.ChartData }) => {
-  console.log('Cell edited:', {
-    row: payload.rowIndex,
-    column: payload.colKey,
-    rowData: payload.rowData
-  })
-
-  // 这里可以添加数据持久化逻辑，例如调用API保存到后端
-  ElMessage.success(`成功修改 ${payload.colKey}`)
-}
 
 const tableConfig = reactive({
   enableSummary: true,
@@ -488,7 +471,9 @@ const tableConfig = reactive({
   sortActiveColor: '#409EFF',
   chartHeight: 360,
   chartWidth: 1500,
-  bodyRowHeight: 32
+  bodyRowHeight: 32,
+  dragIconHeight: 16,
+  dragIconWidth: 9
 })
 
 const fontFamilyOptions = [

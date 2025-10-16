@@ -77,7 +77,9 @@ const DB_TABLES: Record<string, IndexDB.TableConfig> = {
   // }
 }
 
-// 错误消息常量
+/**
+ * 错误消息常量
+ */
 const ERROR_MESSAGES = {
   BROWSER_NOT_SUPPORT: '浏览器不支持IndexedDB',
   DB_OPEN_ERROR: 'IndexedDB数据库打开错误',
@@ -94,7 +96,9 @@ const ERROR_MESSAGES = {
 } as const
 
 class IndexDBManager {
-  // indexedDB兼容
+  /**
+   * indexedDB兼容
+   */
   private indexedDB =
     (window as IndexDB.WindowWithIndexedDB).indexedDB ||
     (window as IndexDB.WindowWithIndexedDB).webkitIndexedDB ||
@@ -155,7 +159,7 @@ class IndexDBManager {
    * @param {string} databaseName - 要删除的数据库名称
    * @returns {Promise<boolean>} 返回删除操作是否成功
    */
-  deleteDatabase(databaseName: string): Promise<boolean> {
+  public deleteDatabase(databaseName: string): Promise<boolean> {
     return new Promise((resolve) => {
       if (!this.indexedDB) {
         console.error(ERROR_MESSAGES.BROWSER_NOT_SUPPORT)
@@ -163,11 +167,11 @@ class IndexDBManager {
         return
       }
       const deleteRequest = this.indexedDB.deleteDatabase(databaseName)
-      deleteRequest.onerror = function () {
+      deleteRequest.onerror = () => {
         console.error(ERROR_MESSAGES.DB_DELETE_ERROR)
         resolve(false)
       }
-      deleteRequest.onsuccess = function () {
+      deleteRequest.onsuccess = () => {
         console.log(`数据库 ${databaseName} 删除成功`)
         resolve(true)
       }
@@ -179,7 +183,7 @@ class IndexDBManager {
    * @param {IDBDatabase} database - 要关闭的数据库实例
    * @returns {void} 无返回值
    */
-  closeDatabase(database: IDBDatabase) {
+  public closeDatabase(database: IDBDatabase) {
     database.close()
     console.log(ERROR_MESSAGES.DB_CLOSED)
   }
@@ -192,7 +196,7 @@ class IndexDBManager {
    * @param {string | number} searchValue - 要删除的数据的查询值
    * @returns {Promise<boolean>} 返回删除操作是否成功
    */
-  deleteData(
+  public deleteData(
     database: IDBDatabase,
     storeName: string,
     indexName: string,
@@ -227,17 +231,17 @@ class IndexDBManager {
    * @param {string} storeName - 存储表名称
    * @returns {Promise<boolean>} 返回清空操作是否成功
    */
-  clearData(database: IDBDatabase, storeName: string): Promise<boolean> {
+  public clearData(database: IDBDatabase, storeName: string): Promise<boolean> {
     return new Promise((resolve) => {
       const store = database.transaction(storeName, 'readwrite').objectStore(storeName)
       const request = store.clear()
 
-      request.onsuccess = function () {
+      request.onsuccess = () => {
         console.log(`数据表 ${storeName} 清空成功`)
         resolve(true)
       }
 
-      request.onerror = function () {
+      request.onerror = () => {
         console.error(ERROR_MESSAGES.CLEAR_DATA_ERROR)
         resolve(false)
       }
@@ -251,14 +255,14 @@ class IndexDBManager {
    * @param {IndexDB.DataRecord[]} dataList - 要添加的数据记录数组
    * @returns {void} 无返回值，操作结果通过控制台输出
    */
-  addData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]) {
+  public addData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]) {
     const store = database.transaction([storeName], 'readwrite').objectStore(storeName)
     dataList.forEach((item) => {
       const request = store.add(item)
-      request.onsuccess = function () {
+      request.onsuccess = () => {
         console.log(ERROR_MESSAGES.DATA_WRITE_SUCCESS)
       }
-      request.onerror = function () {
+      request.onerror = () => {
         console.error(ERROR_MESSAGES.DATA_WRITE_ERROR)
       }
     })
@@ -271,7 +275,7 @@ class IndexDBManager {
    * @param {IndexDB.DataRecord[]} dataList - 要添加的数据记录数组
    * @returns {Promise<void>} 返回Promise，添加完成时resolve
    */
-  addDataAsync(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<void> {
+  public addDataAsync(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<void> {
     return new Promise((resolve, reject) => {
       const transaction = database.transaction([storeName], 'readwrite')
       const store = transaction.objectStore(storeName)
@@ -285,14 +289,14 @@ class IndexDBManager {
 
       dataList.forEach((item) => {
         const request = store.add(item)
-        request.onsuccess = function () {
+        request.onsuccess = () => {
           completedCount++
           if (completedCount === totalCount) {
             console.log(ERROR_MESSAGES.DATA_WRITE_SUCCESS)
             resolve()
           }
         }
-        request.onerror = function () {
+        request.onerror = () => {
           console.error(ERROR_MESSAGES.DATA_WRITE_ERROR)
           reject(new Error(ERROR_MESSAGES.DATA_WRITE_ERROR))
         }
@@ -303,7 +307,7 @@ class IndexDBManager {
   /**
    * @deprecated 使用 addDataAsync 替代
    */
-  newAddData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<void> {
+  public newAddData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<void> {
     return this.addDataAsync(database, storeName, dataList)
   }
 
@@ -314,7 +318,7 @@ class IndexDBManager {
    * @param {IndexDB.DataRecord[]} dataList - 要更新的数据记录数组
    * @returns {Promise<boolean>} 返回更新操作是否成功
    */
-  updateData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<boolean> {
+  public updateData(database: IDBDatabase, storeName: string, dataList: IndexDB.DataRecord[]): Promise<boolean> {
     return new Promise((resolve) => {
       const transaction = database.transaction([storeName], 'readwrite')
       const store = transaction.objectStore(storeName)
@@ -328,14 +332,14 @@ class IndexDBManager {
 
       dataList.forEach((item) => {
         const request = store.put(item)
-        request.onsuccess = function () {
+        request.onsuccess = () => {
           completedCount++
           if (completedCount === totalCount) {
             console.log(`数据更新成功，共更新 ${totalCount} 条记录`)
             resolve(true)
           }
         }
-        request.onerror = function () {
+        request.onerror = () => {
           console.error('数据更新失败')
           resolve(false)
         }
@@ -350,16 +354,20 @@ class IndexDBManager {
    * @param {IDBValidKey} primaryKey - 主键值
    * @returns {Promise<IndexDB.DataRecord | undefined>} 返回查询到的数据记录或undefined
    */
-  getData(database: IDBDatabase, storeName: string, primaryKey: IDBValidKey): Promise<IndexDB.DataRecord | undefined> {
+  public getData(
+    database: IDBDatabase,
+    storeName: string,
+    primaryKey: IDBValidKey
+  ): Promise<IndexDB.DataRecord | undefined> {
     const objectStore = database.transaction(storeName).objectStore(storeName)
     const request = objectStore.get(primaryKey)
 
-    request.onerror = function () {
+    request.onerror = () => {
       console.error(ERROR_MESSAGES.TRANSACTION_ERROR)
     }
 
     return new Promise((resolve) => {
-      request.onsuccess = function (e: Event) {
+      request.onsuccess = (e: Event) => {
         resolve((e.target as IDBRequest<IndexDB.DataRecord | undefined>).result)
       }
     })
@@ -375,7 +383,7 @@ class IndexDBManager {
    * @param {number} pageSize - 每页条数(可选，默认10)
    * @returns {Promise<IndexDB.QueryResult>} 返回分页查询结果，包含总数和数据数组
    */
-  getDataByPage(
+  public getDataByPage(
     database: IDBDatabase,
     storeName: string,
     indexName: string,
@@ -394,7 +402,7 @@ class IndexDBManager {
 
     // 创建一个count请求获取条数
     const countRequest = indexes.count(range)
-    countRequest.onsuccess = function (event: Event) {
+    countRequest.onsuccess = (event: Event) => {
       data.total = (event.target as IDBRequest<number>).result
     }
 
@@ -402,7 +410,7 @@ class IndexDBManager {
     let isFirst = true
 
     return new Promise((resolve) => {
-      request.onsuccess = function (e: Event) {
+      request.onsuccess = (e: Event) => {
         const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result
         if (page !== undefined && pageSize !== undefined) {
           if (isFirst && page > 0 && cursor) {
@@ -436,7 +444,7 @@ class IndexDBManager {
    * @param {string | number | Date} dateValue - 要转换的日期值
    * @returns {string} 返回ISO格式的UTC日期字符串
    */
-  utcDate(val: string | number | Date): string {
+  public utcDate(val: string | number | Date): string {
     return new Date(val).toISOString()
   }
 
@@ -448,7 +456,7 @@ class IndexDBManager {
    * @param {IDBValidKey} searchValue - 查询的值
    * @returns {Promise<IndexDB.DataRecord[]>} 返回匹配条件的数据记录数组
    */
-  getDataByone(
+  public getDataByone(
     database: IDBDatabase,
     storeName: string,
     indexName: string,
@@ -461,7 +469,7 @@ class IndexDBManager {
     const data: IndexDB.DataRecord[] = []
 
     return new Promise((resolve) => {
-      request.onsuccess = function (e: Event) {
+      request.onsuccess = (e: Event) => {
         const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
           data.push(cursor.value as IndexDB.DataRecord)
@@ -479,12 +487,12 @@ class IndexDBManager {
    * @param {string} storeName - 存储表名称
    * @returns {Promise<IndexDB.DataRecord[]>} 返回存储表中的所有数据记录
    */
-  getAllData(database: IDBDatabase, storeName: string): Promise<IndexDB.DataRecord[]> {
+  public getAllData(database: IDBDatabase, storeName: string): Promise<IndexDB.DataRecord[]> {
     const objectStore = database.transaction(storeName, 'readonly').objectStore(storeName)
     const request = objectStore.getAll()
 
     return new Promise((resolve) => {
-      request.onsuccess = function (e: Event) {
+      request.onsuccess = (e: Event) => {
         resolve((e.target as IDBRequest<IndexDB.DataRecord[]>).result)
       }
     })
@@ -499,7 +507,7 @@ class IndexDBManager {
    * @param {string} sortField - 排序字段名称(默认为createTime)
    * @returns {Promise<IndexDB.DataRecord[]>} 返回按指定字段排序的数据记录数组
    */
-  getDataByoneWithSort(
+  public getDataByoneWithSort(
     database: IDBDatabase,
     storeName: string,
     indexName: string,
@@ -513,7 +521,7 @@ class IndexDBManager {
     const data: IndexDB.DataRecord[] = []
 
     return new Promise((resolve, reject) => {
-      request.onsuccess = function (e: Event) {
+      request.onsuccess = (e: Event) => {
         const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
           data.push(cursor.value as IndexDB.DataRecord)
@@ -529,7 +537,7 @@ class IndexDBManager {
         }
       }
 
-      request.onerror = function (e: Event) {
+      request.onerror = (e: Event): void => {
         reject((e.target as IDBRequest).error)
       }
     })
@@ -544,7 +552,7 @@ class IndexDBManager {
    * @param {IndexDB.DataRecord} dataRecord - 要添加的数据记录
    * @returns {Promise<string>} 返回"已存在"或"添加成功"
    */
-  checkAndAdd(
+  public checkAndAdd(
     database: IDBDatabase,
     storeName: string,
     fieldName: string,
@@ -573,7 +581,7 @@ class IndexDBManager {
    * @param {string} storeName - 存储表名称
    * @returns {Promise<IndexDB.DataRecord | null>} 返回最早的一条数据或null
    */
-  getEarliestByCreateTime(database: IDBDatabase, storeName: string): Promise<IndexDB.DataRecord | null> {
+  public getEarliestByCreateTime(database: IDBDatabase, storeName: string): Promise<IndexDB.DataRecord | null> {
     return new Promise((resolve, reject) => {
       this.getAllData(database, storeName)
         .then((allData) => {
@@ -603,7 +611,7 @@ class IndexDBManager {
    * @param {unknown} fieldValue - 要匹配的字段值
    * @returns {Promise<number>} 返回删除的记录数
    */
-  deleteDataByCondition(
+  public deleteDataByCondition(
     database: IDBDatabase,
     storeName: string,
     fieldName: string,
@@ -615,7 +623,7 @@ class IndexDBManager {
       const request = store.openCursor()
       const keysToDelete: IDBValidKey[] = []
 
-      request.onsuccess = function (event: Event) {
+      request.onsuccess = (event: Event): void => {
         const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
           const cursorValue = cursor.value as IndexDB.DataRecord
@@ -650,7 +658,7 @@ class IndexDBManager {
         }
       }
 
-      request.onerror = function () {
+      request.onerror = (): void => {
         reject(new Error(ERROR_MESSAGES.TRAVERSE_ERROR))
       }
     })
@@ -663,7 +671,7 @@ class IndexDBManager {
    * @param {IndexDB.DataRecord} queryConditions - 查询条件对象 {field1: value1, field2: value2}
    * @returns {Promise<IndexDB.DataRecord[]>} 返回匹配的数据记录数组
    */
-  getDataByConditions(
+  public getDataByConditions(
     database: IDBDatabase,
     storeName: string,
     queryConditions: IndexDB.DataRecord
@@ -674,7 +682,7 @@ class IndexDBManager {
       const request = store.openCursor()
       const results: IndexDB.DataRecord[] = []
 
-      request.onsuccess = function (event: Event) {
+      request.onsuccess = (event: Event): void => {
         const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result
         if (cursor) {
           const data = cursor.value as IndexDB.DataRecord
@@ -698,20 +706,19 @@ class IndexDBManager {
         }
       }
 
-      request.onerror = function () {
+      request.onerror = () => {
         reject(new Error(ERROR_MESSAGES.QUERY_ERROR))
       }
     })
   }
 }
 
-// 创建单例实例
-const indexDBManager = new IndexDBManager()
-
 export default defineNuxtPlugin(() => {
+  // 创建单例实例
+  const indexDBManager = new IndexDBManager()
   return {
     provide: {
-      indexdb: indexDBManager
+      indexDB: indexDBManager
     }
   }
 })
