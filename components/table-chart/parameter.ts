@@ -97,6 +97,10 @@ export const tableProps = {
    */
   resizerWidth: { type: Number, default: 4 },
   /**
+   * 文本水平内边距
+   */
+  textPaddingHorizontal: { type: Number, default: 8 },
+  /**
    * 表头背景色
    */
   headerBackground: { type: String, default: '#f7f7f9' },
@@ -188,7 +192,22 @@ export const tableProps = {
   /**
    * 排序箭头颜色
    */
-  sortActiveColor: { type: String, default: '#409EFF' }
+  sortActiveColor: { type: String, default: '#409EFF' },
+
+  /**
+   * 拖拽图标高度
+   */
+  dragIconHeight: { type: Number, default: 16 },
+
+  /**
+   * 拖拽图标宽度
+   */
+  dragIconWidth: { type: Number, default: 9 },
+
+  /**
+   * 拖拽图标圆点大小
+   */
+  dragIconDotSize: { type: Number, default: 3 }
 }
 
 interface StaticParams {
@@ -240,6 +259,10 @@ interface StaticParams {
    * 列宽调整手柄宽度
    */
   resizerWidth: number
+  /**
+   * 文本水平内边距
+   */
+  textPaddingHorizontal: number
   /**
    * 表头背景色
    */
@@ -325,6 +348,18 @@ interface StaticParams {
    */
   sortActiveColor: string
   /**
+   * 拖拽图标高度
+   */
+  dragIconHeight: number
+  /**
+   * 拖拽图标宽度
+   */
+  dragIconWidth: number
+  /**
+   * 拖拽图标圆点大小
+   */
+  dragIconDotSize: number
+  /**
    * 合并单元格方法
    */
   spanMethod?: (config: {
@@ -352,6 +387,7 @@ export const staticParams: StaticParams = {
   highlightColBackground: 'rgba(64, 158, 255, 0.08)',
   headerRowHeight: 32,
   resizerWidth: 4,
+  textPaddingHorizontal: 8,
   headerBackground: '#f7f7f9',
   headerTextColor: '#303133',
   headerFontFamily: defaultFontFamily,
@@ -373,6 +409,9 @@ export const staticParams: StaticParams = {
   scrollbarThumbBackground: '#c1c1c1',
   scrollbarThumbHoverBackground: '#a8a8a8',
   sortActiveColor: '#409EFF',
+  dragIconHeight: 16,
+  dragIconWidth: 9,
+  dragIconDotSize: 3,
   spanMethod: undefined
 }
 
