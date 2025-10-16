@@ -11,7 +11,7 @@ import {
   createGroup,
   drawUnifiedRect,
   drawUnifiedText,
-  getCellDisplayValue,
+  getCellDisplayContent,
   recoverKonvaNode,
   truncateText
 } from './utils'
@@ -293,7 +293,7 @@ const drawMergedCell = (
   })
 
   // 绘制合并单元格文本
-  const value = getCellDisplayValue(columnOption, row, rowIndex)
+  const value = getCellDisplayContent(columnOption, row, rowIndex)
   const maxTextWidth = calculateTextWidth.forBodyCell(width)
   const truncatedValue = truncateText(value, maxTextWidth, staticParams.bodyFontSize, staticParams.bodyFontFamily)
 
@@ -363,7 +363,7 @@ const drawNormalCell = (
   }
 
   // 绘制单元格文本
-  const value = getCellDisplayValue(columnOption, row, rowIndex)
+  const value = getCellDisplayContent(columnOption, row, rowIndex)
   const maxTextWidth = calculateTextWidth.forBodyCell(width)
   const truncatedValue = truncateText(value, maxTextWidth, staticParams.bodyFontSize, staticParams.bodyFontFamily)
   drawUnifiedText({
