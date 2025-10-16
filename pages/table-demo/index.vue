@@ -51,6 +51,12 @@
       <el-form-item label="滚动条滑块悬停颜色">
         <el-color-picker v-model="tableConfig.scrollbarThumbHoverBackground" show-alpha />
       </el-form-item>
+      <el-form-item label="拖拽图标高度">
+        <el-input-number v-model="tableConfig.dragIconHeight" :min="8" :max="32" :step="2" />
+      </el-form-item>
+      <el-form-item label="拖拽图标宽度">
+        <el-input-number v-model="tableConfig.dragIconWidth" :min="6" :max="20" :step="1" />
+      </el-form-item>
       <el-form-item label="是否展示汇总">
         <el-switch v-model="tableConfig.enableSummary" />
       </el-form-item>
@@ -112,6 +118,8 @@
       :data="data"
       :highlight-row-background="tableConfig.highlightRowBackground"
       :highlight-col-background="tableConfig.highlightColBackground"
+      :drag-icon-height="tableConfig.dragIconHeight"
+      :drag-icon-width="tableConfig.dragIconWidth"
       :span-method="spanMethod"
     >
     </TableChart>
@@ -224,6 +232,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'number',
     columnComment: '序号',
     displayName: '序号',
+    fixed: 'left',
     width: 100,
     align: 'center',
     resizable: true
@@ -244,6 +253,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'name',
     displayName: 'name',
+    width: 200,
     filterable: true,
     editable: true,
     editType: 'input',
@@ -255,6 +265,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'number',
     columnComment: 'age',
     displayName: 'age',
+    width: 200,
     filterable: true,
     editable: true,
     editType: 'input'
@@ -263,6 +274,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'gender',
     columnType: 'string',
     columnComment: 'gender',
+    width: 200,
     filterable: true,
     sortable: true,
     displayName: 'gender',
@@ -279,6 +291,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'country',
     width: 200,
+    resizable: true,
+    draggable: true,
     filterable: true,
     sortable: true,
     displayName: 'country',
@@ -457,7 +471,9 @@ const tableConfig = reactive({
   sortActiveColor: '#409EFF',
   chartHeight: 360,
   chartWidth: 1500,
-  bodyRowHeight: 32
+  bodyRowHeight: 32,
+  dragIconHeight: 16,
+  dragIconWidth: 9
 })
 
 const fontFamilyOptions = [
