@@ -349,10 +349,12 @@ interface StaticParams {
   sortActiveColor: string
   /**
    * 拖拽图标高度
+   * 默认值 14
    */
   dragIconHeight: number
   /**
    * 拖拽图标宽度
+   * 默认值 9
    */
   dragIconWidth: number
   /**
@@ -409,7 +411,7 @@ export const staticParams: StaticParams = {
   scrollbarThumbBackground: '#c1c1c1',
   scrollbarThumbHoverBackground: '#a8a8a8',
   sortActiveColor: '#409EFF',
-  dragIconHeight: 16,
+  dragIconHeight: 14,
   dragIconWidth: 9,
   dragIconDotSize: 3,
   spanMethod: undefined
