@@ -1,8 +1,8 @@
 import Joi from 'joi'
-import { ChartEmailService } from '../service/chartEmailService'
+import { SendEmail } from '../utils/sendEmail'
 
 // 发送邮件
-const chartEmailService = new ChartEmailService()
+const sendEmailUtil = new SendEmail()
 
 const logger = new Logger({
   fileName: 'sendChartEmail',
@@ -10,7 +10,7 @@ const logger = new Logger({
 })
 
 // Joi 验证模式
-const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
+const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
     to: Joi.string().email().required().messages({
       'string.email': '收件人邮箱格式不正确',
@@ -56,7 +56,7 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
 
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOptions>>>(async (event) => {
   try {
-    const requestBody = await readBody<SendEmailDto.SendChartEmailOptions>(event)
+    const requestBody = await readBody<SendEmailDto.SendChartEmailRequest>(event)
 
     // 使用 Joi 进行数据验证
     const { error, value: validatedData } = sendChartEmailSchema.validate(requestBody, {
@@ -71,7 +71,7 @@ export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOpti
       return ApiResponse.error(errorMessage)
     }
 
-    const sendEmailResult = await chartEmailService.sendChartEmail(requestBody)
+    const sendEmailResult = await sendEmailUtil.sendMail(requestBody)
 
     return ApiResponse.success(sendEmailResult)
   } catch (error: any) {

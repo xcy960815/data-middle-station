@@ -1,7 +1,7 @@
 import Joi from 'joi'
-import { ChartEmailService } from '../service/chartEmailService'
+import { SendEmail } from '../utils/sendEmail'
 
-const chartEmailService = new ChartEmailService()
+const sendEmailUtil = new SendEmail()
 
 const logger = new Logger({
   fileName: 'sendEmail',
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
       return ApiResponse.error(errorMessage)
     }
 
-    const sendEmailResult = await chartEmailService.sendChartEmail(sendChartEmailRequest)
+    const sendEmailResult = await sendEmailUtil.sendMail(sendChartEmailRequest)
 
     logger.info(`邮件发送成功: ${sendChartEmailRequest.emailConfig.to}`)
     return ApiResponse.success(sendEmailResult)

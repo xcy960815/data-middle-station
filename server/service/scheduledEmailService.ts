@@ -1,5 +1,6 @@
 import { ScheduledEmailMapper } from '../mapper/scheduledEmailMapper'
 import { calculateNextExecutionTime } from '../utils/schedulerUtils'
+import { SendEmail } from '../utils/sendEmail'
 import { BaseService } from './baseService'
 import { ScheduledEmailLogService } from './scheduledEmailLogService'
 
@@ -9,17 +10,30 @@ const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
  * 定时邮件服务
  */
 export class ScheduledEmailService extends BaseService {
+  /**
+   * 定时任务映射器
+   */
   private scheduledEmailMapper: ScheduledEmailMapper
+  /**
+   * 定时任务日志服务
+   */
   private scheduledEmailLogService: ScheduledEmailLogService
+  /**
+   * 邮件发送工具
+   */
+  private sendEmailUtil: SendEmail
 
   constructor() {
     super()
     this.scheduledEmailMapper = new ScheduledEmailMapper()
     this.scheduledEmailLogService = new ScheduledEmailLogService()
+    this.sendEmailUtil = new SendEmail()
   }
 
   /**
    * 创建定时邮件任务
+   * @param {ScheduledEmailDto.CreateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
+   * @returns {Promise<boolean>}
    */
   async createScheduledEmail(scheduledEmailOptions: ScheduledEmailDto.CreateScheduledEmailOptions): Promise<boolean> {
     try {
@@ -96,6 +110,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 获取定时邮件任务详情
+   * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
+   * @returns {Promise<ScheduledEmailDto.ScheduledEmailOptions | null>}
    */
   async getScheduledEmail(
     scheduledEmailOptions: ScheduledEmailDto.UpdateScheduledEmailOptions
@@ -106,6 +122,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 更新定时邮件任务
+   * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
+   * @returns {Promise<boolean>}
    */
   async updateScheduledEmail(scheduledEmailOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
     // 验证任务是否存在
@@ -151,6 +169,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 删除定时邮件任务
+   * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
+   * @returns {Promise<boolean>}
    */
   async deleteScheduledEmail(scheduledEmailOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
     try {
@@ -180,6 +200,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 获取定时邮件任务列表
+   * @param {ScheduledEmailDto.ScheduledEmailListQuery} query 查询参数
+   * @returns {Promise<ScheduledEmailVo.ScheduledEmailOptions[]>}
    */
   async getScheduledEmailList(
     query: ScheduledEmailDto.ScheduledEmailListQuery
@@ -195,6 +217,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 切换任务状态（启用/禁用）
+   * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
+   * @returns {Promise<boolean>}
    */
   async toggleTaskStatus(scheduledEmailOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
     try {
@@ -240,6 +264,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 立即执行任务
+   * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
+   * @returns {Promise<boolean>}
    */
   async executeTask(scheduledEmailOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
     try {
@@ -260,7 +286,32 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
+   * 根据任务ID执行任务（简化版，用于调度器）
+   * @param {number} taskId 任务ID
+   * @returns {Promise<boolean>}
+   */
+  async executeTaskById(taskId: number): Promise<boolean> {
+    try {
+      const scheduledEmailTask = await this.scheduledEmailMapper.getScheduledEmailTaskById(taskId)
+      if (!scheduledEmailTask) {
+        throw new Error('任务不存在')
+      }
+
+      if (!scheduledEmailTask.isActive) {
+        logger.warn(`任务 ${taskId} 未激活，跳过执行`)
+        return false
+      }
+
+      return await this.processTask(scheduledEmailTask)
+    } catch (error) {
+      logger.error(`执行任务 ${taskId} 失败: ${error}`)
+      return false
+    }
+  }
+
+  /**
    * 处理待执行的任务（定时调度器调用）
+   * @returns {Promise<void>}
    */
   async processPendingTasks(): Promise<void> {
     try {
@@ -279,6 +330,7 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 处理精确时间任务（秒级精度）
+   * @returns {Promise<void>}
    */
   async processExactTimeTasks(): Promise<void> {
     try {
@@ -310,6 +362,7 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 重试失败的任务
+   * @returns {Promise<void>}
    */
   async retryFailedTasks(): Promise<void> {
     try {
@@ -327,6 +380,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 更新重复任务的下次执行时间
+   * @param {number} taskId 任务ID
+   * @returns {Promise<boolean>}
    */
   async updateNextExecutionTime(taskId: number): Promise<boolean> {
     try {
@@ -370,6 +425,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 处理单个任务
+   * @param {ScheduledEmailDao.ScheduledEmailOptions} scheduledEmailTask 定时任务参数
+   * @returns {Promise<boolean>}
    */
   private async processTask(scheduledEmailTask: ScheduledEmailDao.ScheduledEmailOptions): Promise<boolean> {
     const startTime = Date.now()
@@ -378,173 +435,103 @@ export class ScheduledEmailService extends BaseService {
 
     const { updatedBy, updateTime } = await super.getDefaultInfo()
 
-    // try {
-    //   // 计算时间补偿
-    //   const scheduleTime = new Date(scheduledEmailTask.scheduleTime)
-    //   const now = new Date()
-    //   const timeDiff = now.getTime() - scheduleTime.getTime()
+    try {
+      // 计算时间补偿
+      const scheduleTime = scheduledEmailTask.scheduleTime ? new Date(scheduledEmailTask.scheduleTime) : new Date()
+      const now = new Date()
+      const timeDiff = now.getTime() - scheduleTime.getTime()
 
-    //   // 记录时间误差
-    //   if (timeDiff > 0) {
-    //     logger.warn(`任务 ${scheduledEmailTask.id} 延迟执行 ${timeDiff}ms`)
-    //   } else if (timeDiff < -1000) {
-    //     logger.warn(`任务 ${scheduledEmailTask.id} 提前执行 ${Math.abs(timeDiff)}ms`)
-    //   }
+      // 记录时间误差
+      if (timeDiff > 0) {
+        logger.warn(`任务 ${scheduledEmailTask.id} 延迟执行 ${timeDiff}ms`)
+      } else if (timeDiff < -1000) {
+        logger.warn(`任务 ${scheduledEmailTask.id} 提前执行 ${Math.abs(timeDiff)}ms`)
+      }
 
-    //   // 更新任务状态为运行中
-    //   await this.scheduledEmailMapper.updateScheduledEmailTask({
-    //     ...scheduledEmailTask,
-    //     id: scheduledEmailTask.id,
-    //     status: 'running',
-    //     executedTime: updateTime,
-    //     updatedTime: updateTime,
-    //     updatedBy: updatedBy
-    //   })
+      // 更新任务状态为运行中
+      await this.scheduledEmailMapper.updateScheduledEmailTask({
+        ...scheduledEmailTask,
+        id: scheduledEmailTask.id,
+        status: 'running',
+        executedTime: updateTime,
+        updatedTime: updateTime,
+        updatedBy: updatedBy
+      })
 
-    //   // 解析配置
-    //   const emailConfig = scheduledEmailTask.emailConfig
-    //   const analyseOptions = scheduledEmailTask.analyseOptions
+      // 解析配置
+      const emailConfig = scheduledEmailTask.emailConfig
+      const analyseOptions = scheduledEmailTask.analyseOptions
 
-    //   // 构建邮件内容
-    //   const htmlContent = this.buildEmailContent(emailConfig, analyseOptions)
+      // 使用 SendEmail 工具发送邮件
+      const result = await this.sendEmailUtil.sendMail({
+        emailConfig: {
+          to: Array.isArray(emailConfig.to) ? emailConfig.to[0] : emailConfig.to,
+          subject: emailConfig.subject,
+          additionalContent: emailConfig.additionalContent || ''
+        },
+        analyseOptions: analyseOptions
+      })
 
-    //   // 发送邮件
-    //   const result = await this.sendEmailService.sendMail({
-    //     to: emailConfig.to,
-    //     subject: emailConfig.subject,
-    //     html: htmlContent,
-    //     cc: emailConfig.cc,
-    //     bcc: emailConfig.bcc,
-    //     attachments: [
-    //       {
-    //         filename: analyseOptions.filename,
-    //         content: Buffer.from(analyseOptions.base64Image.split(',')[1], 'base64'),
-    //         contentType: 'image/png'
-    //       }
-    //     ]
-    //   })
+      // 更新任务状态为完成
+      await this.scheduledEmailMapper.updateScheduledEmailTask({
+        ...scheduledEmailTask,
+        id: scheduledEmailTask.id,
+        status: 'completed',
+        errorMessage: undefined,
+        updatedTime: updateTime,
+        updatedBy: updatedBy
+      })
 
-    //   // 更新任务状态为完成
-    //   await this.scheduledEmailMapper.updateScheduledEmailTask({
-    //     ...scheduledEmailTask,
-    //     id: scheduledEmailTask.id,
-    //     status: 'completed',
-    //     errorMessage: undefined,
-    //     updatedTime: updateTime,
-    //     updatedBy: updatedBy
-    //   })
+      // 记录执行日志
+      await this.scheduledEmailLogService.logTaskSuccess(
+        scheduledEmailTask.id,
+        new Date().toISOString().slice(0, 19).replace('T', ' '),
+        result.messageId,
+        Date.now() - startTime,
+        '邮件发送成功'
+      )
 
-    //   // 记录执行日志
-    //   await this.scheduledEmailLogService.logTaskSuccess(
-    //     scheduledEmailTask.id,
-    //     new Date().toISOString().slice(0, 19).replace('T', ' '),
-    //     result.messageId,
-    //     Date.now() - startTime,
-    //     '邮件发送成功'
-    //   )
+      success = true
+      logger.info(`任务执行成功: ${scheduledEmailTask.id}, messageId: ${result.messageId}`)
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : '未知错误'
 
-    //   success = true
-    //   logger.info(`任务执行成功: ${scheduledEmailTask.id}, messageId: ${result.messageId}`)
-    // } catch (error) {
-    //   errorMessage = error instanceof Error ? error.message : '未知错误'
+      // 增加重试次数
+      const newRetryCount = scheduledEmailTask.retryCount + 1
+      const status = newRetryCount >= scheduledEmailTask.maxRetries ? 'failed' : 'pending'
 
-    //   // 增加重试次数
-    //   const newRetryCount = scheduledEmailTask.retryCount + 1
-    //   const status = newRetryCount >= scheduledEmailTask.maxRetries ? 'failed' : 'pending'
+      // 更新任务状态
+      await this.scheduledEmailMapper.updateScheduledEmailTask({
+        ...scheduledEmailTask,
+        id: scheduledEmailTask.id,
+        status,
+        errorMessage: errorMessage,
+        retryCount: newRetryCount,
+        updatedTime: updateTime,
+        updatedBy: updatedBy
+      })
 
-    //   // 更新任务状态
-    //   await this.scheduledEmailMapper.updateScheduledEmailTask({
-    //     ...scheduledEmailTask,
-    //     id: scheduledEmailTask.id,
-    //     status,
-    //     errorMessage: errorMessage,
-    //     retryCount: newRetryCount,
-    //     updatedTime: updateTime,
-    //     updatedBy: updatedBy
-    //   })
+      // 记录执行日志
+      await this.scheduledEmailLogService.logTaskFailure(
+        scheduledEmailTask.id,
+        new Date().toISOString().slice(0, 19).replace('T', ' '),
+        errorMessage,
+        Date.now() - startTime,
+        '邮件发送失败'
+      )
 
-    //   // 记录执行日志
-    //   await this.scheduledEmailLogService.logTaskFailure(
-    //     scheduledEmailTask.id,
-    //     new Date().toISOString().slice(0, 19).replace('T', ' '),
-    //     errorMessage,
-    //     Date.now() - startTime,
-    //     '邮件发送失败'
-    //   )
-
-    //   logger.error(
-    //     `任务执行失败: ${scheduledEmailTask.id}, 重试次数: ${newRetryCount}/${scheduledEmailTask.maxRetries}, 错误: ${errorMessage}`
-    //   )
-    // }
+      logger.error(
+        `任务执行失败: ${scheduledEmailTask.id}, 重试次数: ${newRetryCount}/${scheduledEmailTask.maxRetries}, 错误: ${errorMessage}`
+      )
+    }
 
     return success
   }
 
   /**
-   * 构建邮件内容
-   */
-  private buildEmailContent(
-    emailConfig: ScheduledEmailDao.EmailConfig,
-    analyseOptions: ScheduledEmailDao.AnalyseOptions
-  ): string {
-    const additionalContent = emailConfig.additionalContent
-      ? `<div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
-           <p style="margin: 0; color: #495057;">${emailConfig.additionalContent.replace(/\n/g, '<br>')}</p>
-         </div>`
-      : ''
-
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${emailConfig.subject}</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; }
-          .content { margin-bottom: 30px; }
-          .chart-info { background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-          .footer { text-align: center; margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; color: #6c757d; font-size: 14px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1 style="margin: 0; font-size: 24px;">📊 数据分析报告</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">${new Date().toLocaleDateString('zh-CN', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              weekday: 'long'
-            })}</p>
-          </div>
-
-          <div class="content">
-            ${additionalContent}
-
-            <div class="chart-info">
-              <h3 style="margin-top: 0; color: #495057;">📈 图表信息</h3>
-              <p style="margin: 5px 0;"><strong>图表标题:</strong> ${analyseOptions.analyseName}</p>
-              ${analyseOptions.analyseName ? `<p style="margin: 5px 0;"><strong>分析名称:</strong> ${analyseOptions.analyseName}</p>` : ''}
-              <p style="margin: 5px 0;"><strong>生成时间:</strong> ${new Date().toLocaleString('zh-CN')}</p>
-            </div>
-
-            <p>📎 图表图片已作为附件发送，请查看附件获取高清图表。</p>
-          </div>
-
-          <div class="footer">
-            <p style="margin: 0;">此邮件由数据中台自动发送，如有疑问请联系管理员。</p>
-            <p style="margin: 5px 0 0 0;">🤖 定时任务系统</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-  }
-
-  /**
    * 获取任务执行日志
+   * @param {number} taskId 任务ID
+   * @param {number} limit 日志数量限制
    */
   async getScheduledEmailLogList(taskId: number, limit: number = 20): Promise<ScheduledEmailDto.ExecutionLog[]> {
     try {
@@ -569,6 +556,8 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 转换DAO对象为DTO对象
+   * @param {ScheduledEmailDao.ScheduledEmailOptions} dao DAO对象
+   * @returns {ScheduledEmailDto.ScheduledEmailOptions}
    */
   private convertDaoToDto(dao: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailDto.ScheduledEmailOptions {
     return {
