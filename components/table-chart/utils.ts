@@ -1,23 +1,10 @@
 import Konva from 'konva'
 
-import { getColumnSortStatus } from './data-handler'
 import { staticParams } from './parameter'
 /**
  * 布局相关常量
  */
 export const LAYOUT_CONSTANTS = {
-  /**
-   * 右侧图标区域预留宽度
-   */
-  ICON_AREA_WIDTH: 40,
-  /**
-   * 排序箭头距离右边缘的距离
-   */
-  SORT_ARROW_OFFSET: 34,
-  /**
-   * 过滤图标距离右边缘的距离
-   */
-  FILTER_ICON_OFFSET: 12,
   /**
    * 排序箭头大小
    */
@@ -33,15 +20,7 @@ export const LAYOUT_CONSTANTS = {
   /**
    * 过滤图标大小
    */
-  FILTER_ICON_SIZE: 16,
-  /**
-   * 拖拽图标距离左边缘的距离
-   */
-  DRAG_ICON_OFFSET: 8,
-  /**
-   * 拖拽图标大小
-   */
-  DRAG_ICON_SIZE: 14
+  FILTER_ICON_SIZE: 16
 } as const
 
 /**
@@ -52,28 +31,37 @@ export const calculateTextWidth = {
    * 计算 Header 单元格的可用文本宽度
    * @param columnOption 列配置
    */
-  forHeaderCell: (columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption): number => {
-    const sortOrder = getColumnSortStatus(columnOption.columnName)
-    const hasSort = sortOrder !== null
-    const cellWidth = columnOption.width || 0
-    const leftSpace = staticParams.textPaddingHorizontal
-    const rightSpace = staticParams.textPaddingHorizontal
+  forHeaderCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
+    // 文本的最大宽度
+    let maxTextWidth = columnOption.width - staticParams.textPaddingHorizontal * 2
 
-    return cellWidth - leftSpace - rightSpace
+    if (columnOption.draggable) {
+      maxTextWidth = maxTextWidth - staticParams.dragIconWidth - staticParams.textPaddingHorizontal
+    }
+    if (columnOption.sortable) {
+      // 如果有排序
+      maxTextWidth = maxTextWidth - LAYOUT_CONSTANTS.ARROW_SIZE - staticParams.textPaddingHorizontal
+    }
+    if (columnOption.filterable) {
+      // 如果有过滤器
+      maxTextWidth = maxTextWidth - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - staticParams.textPaddingHorizontal
+    }
+
+    return maxTextWidth
   },
 
   /**
    * 计算 Body 单元格的可用文本宽度
    */
-  forBodyCell: (cellWidth: number): number => {
-    return cellWidth - staticParams.textPaddingHorizontal
+  forBodyCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
+    return columnOption.width - staticParams.textPaddingHorizontal
   },
 
   /**
    * 计算 Summary 单元格的可用文本宽度
    */
-  forSummaryCell: (cellWidth: number): number => {
-    return cellWidth - staticParams.textPaddingHorizontal
+  forSummaryCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
+    return columnOption.width - staticParams.textPaddingHorizontal
   }
 }
 

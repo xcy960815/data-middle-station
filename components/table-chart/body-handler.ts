@@ -178,9 +178,9 @@ export const calculateVisibleRows = () => {
  * 列信息存储结果
  */
 interface ColumnsInfo {
-  leftColumns: Array<(GroupStore.GroupOption | DimensionStore.DimensionOption) & { colIndex: number }>
-  centerColumns: Array<(GroupStore.GroupOption | DimensionStore.DimensionOption) & { colIndex: number }>
-  rightColumns: Array<(GroupStore.GroupOption | DimensionStore.DimensionOption) & { colIndex: number }>
+  leftColumns: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
+  centerColumns: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
+  rightColumns: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
   leftPartWidth: number
   centerPartWidth: number
   rightPartWidth: number
@@ -210,47 +210,54 @@ export const columnsInfo: ColumnsInfo = {
  */
 export const calculateColumnsInfo = () => {
   const { width: stageWidthRaw, height: stageHeightRaw } = getStageSize()
-  const xAxisFields = staticParams.xAxisFields
-  const yAxisFields = staticParams.yAxisFields
-  const tableColumns = xAxisFields.concat(yAxisFields).map((columnOption, index) => ({
-    ...columnOption,
-    align: columnOption.align ?? 'left', // 添加默认值
-    verticalAlign: columnOption.verticalAlign ?? 'middle', // 添加默认值
+  const { xAxisFields, yAxisFields, bodyRowHeight, headerRowHeight, scrollbarSize, minAutoColWidth } = staticParams
+
+  // 数据区高度
+  const contentHeight = tableData.value.length * bodyRowHeight
+
+  // 是否需要垂直滚动条
+  const needVScroll = contentHeight > stageHeightRaw - headerRowHeight - getSummaryRowHeight()
+  const verticalScrollbarSpace = needVScroll ? scrollbarSize : 0
+
+  // 可用宽度
+  const stageWidth = stageWidthRaw - verticalScrollbarSpace
+
+  // 🔹先拼出所有列
+  const tableColumnsRaw = [...xAxisFields, ...yAxisFields].map((col, index) => ({
+    ...col,
+    align: col.align ?? 'left',
+    verticalAlign: col.verticalAlign ?? 'middle',
     colIndex: index
   }))
 
-  // 计算滚动条预留宽度
-  const contentHeight = tableData.value.length * staticParams.bodyRowHeight
-  // 计算垂直滚动条预留空间
-  const verticalScrollbarSpace =
-    contentHeight > stageHeightRaw - staticParams.headerRowHeight - getSummaryRowHeight()
-      ? staticParams.scrollbarSize
-      : 0
-  // 计算可用宽度
-  const stageWidth = stageWidthRaw - verticalScrollbarSpace
+  // 🔹先统计已固定宽度列的总宽度
+  const fixedWidthTotal = tableColumnsRaw.reduce((acc, c) => acc + (c.width || 0), 0)
 
-  // 计算已设置宽度的列的总宽度
-  const fixedWidthColumns = tableColumns.filter((c) => c.width !== undefined)
-  const autoWidthColumns = tableColumns.filter((c) => c.width === undefined)
-  const fixedTotalWidth = fixedWidthColumns.reduce((acc, c) => acc + (c.width || 0), 0)
+  // 🔹找到未设置宽度的列
+  const autoCols = tableColumnsRaw.filter((c) => c.width == null)
+  const remainingWidth = Math.max(0, stageWidth - fixedWidthTotal)
+  const autoColWidth = Math.max(minAutoColWidth, autoCols.length ? remainingWidth / autoCols.length : 0)
 
-  // 计算自动宽度列应该分配的宽度（所有未设置宽度的列均分剩余空间）
-  const remainingWidth = Math.max(0, stageWidth - fixedTotalWidth)
-  const rawAutoWidth = autoWidthColumns.length > 0 ? remainingWidth / autoWidthColumns.length : 0
-  const autoColumnWidth = Math.max(staticParams.minAutoColWidth, rawAutoWidth)
+  // 🔹在同一个 map 阶段计算最终宽度
+  const tableColumns = tableColumnsRaw.map((col) => ({
+    ...col,
+    width: col.width ?? autoColWidth
+  }))
 
-  // 为未设置宽度的列分配宽度
-  autoWidthColumns.forEach((col) => {
-    col.width = autoColumnWidth
-  })
+  // 分组统计
+  const leftColumns = tableColumns.filter((c) => c.fixed === 'left')
+  const rightColumns = tableColumns.filter((c) => c.fixed === 'right')
+  const centerColumns = tableColumns.filter((c) => !c.fixed)
 
-  columnsInfo.leftColumns = tableColumns.filter((c) => c.fixed === 'left')
-  columnsInfo.centerColumns = tableColumns.filter((c) => !c.fixed)
-  columnsInfo.rightColumns = tableColumns.filter((c) => c.fixed === 'right')
+  const sumWidth = (columns: Array<CanvasTable.DimensionOption | CanvasTable.GroupOption>) =>
+    columns.reduce((acc, column) => acc + (column.width || 0), 0)
 
-  columnsInfo.leftPartWidth = columnsInfo.leftColumns.reduce((acc, c) => acc + (c.width || 0), 0)
-  columnsInfo.centerPartWidth = columnsInfo.centerColumns.reduce((acc, c) => acc + (c.width || 0), 0)
-  columnsInfo.rightPartWidth = columnsInfo.rightColumns.reduce((acc, c) => acc + (c.width || 0), 0)
+  columnsInfo.leftColumns = leftColumns
+  columnsInfo.centerColumns = centerColumns
+  columnsInfo.rightColumns = rightColumns
+  columnsInfo.leftPartWidth = sumWidth(leftColumns)
+  columnsInfo.centerPartWidth = sumWidth(centerColumns)
+  columnsInfo.rightPartWidth = sumWidth(rightColumns)
   columnsInfo.totalWidth = columnsInfo.leftPartWidth + columnsInfo.centerPartWidth + columnsInfo.rightPartWidth
 }
 
@@ -263,7 +270,7 @@ export const calculateColumnsInfo = () => {
  * @param {number} width - 单元格宽度
  * @param {number} height - 单元格高度
  * @param {number} rowIndex - 行索引
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列配置
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列配置
  * @param {ChartDataVo.ChartData} row - 行数据
  * @param {number} bodyFontSize - 字体大小
  */
@@ -275,7 +282,7 @@ const drawMergedCell = (
   width: number,
   height: number,
   rowIndex: number,
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption
 ) => {
   const row = tableData.value[rowIndex]
   // 绘制合并单元格背景
@@ -294,7 +301,7 @@ const drawMergedCell = (
 
   // 绘制合并单元格文本
   const value = getCellDisplayContent(columnOption, row, rowIndex)
-  const maxTextWidth = calculateTextWidth.forBodyCell(width)
+  const maxTextWidth = calculateTextWidth.forBodyCell(columnOption)
   const truncatedValue = truncateText(value, maxTextWidth, staticParams.bodyFontSize, staticParams.bodyFontFamily)
 
   drawUnifiedText({
@@ -323,7 +330,7 @@ const drawMergedCell = (
  * @param {number} width - 单元格宽度
  * @param {number} height - 单元格高度
  * @param {number} rowIndex - 行索引
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列配置
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列配置
  * @param {ChartDataVo.ChartData} row - 行数据
  * @param {number} bodyFontSize - 字体大小
  */
@@ -335,7 +342,7 @@ const drawNormalCell = (
   width: number,
   height: number,
   rowIndex: number,
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption
 ) => {
   const row: ChartDataVo.ChartData = tableData.value[rowIndex]
   // 绘制单元格背景
@@ -364,7 +371,7 @@ const drawNormalCell = (
 
   // 绘制单元格文本
   const value = getCellDisplayContent(columnOption, row, rowIndex)
-  const maxTextWidth = calculateTextWidth.forBodyCell(width)
+  const maxTextWidth = calculateTextWidth.forBodyCell(columnOption)
   const truncatedValue = truncateText(value, maxTextWidth, staticParams.bodyFontSize, staticParams.bodyFontFamily)
   drawUnifiedText({
     pools,
@@ -387,14 +394,14 @@ const drawNormalCell = (
  * 计算单元格合并信息
  * @param {Function} spanMethod - 合并方法
  * @param {ChartDataVo.ChartData} row - 行数据
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列配置
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列配置
  * @param {number} rowIndex - 行索引
  * @returns {Object} 合并信息
  */
 export const calculateCellSpan = (
   spanMethod: Function,
   row: ChartDataVo.ChartData,
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   rowIndex: number
 ) => {
   const spanMethodResult = spanMethod({ row, column: columnOption, rowIndex, colIndex: columnOption.colIndex || 0 })
@@ -418,14 +425,14 @@ export const calculateCellSpan = (
  * 计算合并单元格的总宽度
  * @param {number} spanCol - 跨列数
  * @param {number} colIndex - 列索引
- * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} bodyCols - 列配置数组
+ * @param {Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>} bodyCols - 列配置数组
  * @param {number} columnWidth - 列宽度
  * @returns {number} 合并单元格总宽度
  */
 export const calculateMergedCellWidth = (
   spanCol: number,
   colIndex: number,
-  bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
+  bodyCols: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>,
   columnWidth: number
 ) => {
   if (spanCol <= 1) return columnWidth
@@ -441,13 +448,13 @@ export const calculateMergedCellWidth = (
 /**
  * 画body区域 只渲染可视区域的行
  * @param {Konva.Group | null} bodyGroup - 分组
- * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} bodyCols - 列
+ * @param {Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>} bodyCols - 列
  * @param {KonvaNodePools} pools - 对象池
  * @returns {void}
  */
 export const drawBodyPart = (
   bodyGroup: Konva.Group | null,
-  bodyCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>,
+  bodyCols: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>,
   pools: KonvaNodePools
 ) => {
   if (!stageVars.stage || !bodyGroup) return

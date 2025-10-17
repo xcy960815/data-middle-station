@@ -86,48 +86,51 @@
         <el-switch v-model="spanConfig.enableColSpan" />
       </el-form-item>
     </el-form>
-    <TableChart
-      :enable-summary="tableConfig.enableSummary"
-      :summary-height="tableConfig.summaryRowHeight"
-      :chart-height="tableConfig.chartHeight"
-      :chart-width="tableConfig.chartWidth"
-      :x-axis-fields="xAxisFields"
-      :highlight-cell-background="tableConfig.highlightCellBackground"
-      :header-text-color="tableConfig.headerTextColor"
-      :body-text-color="tableConfig.bodyTextColor"
-      :header-font-family="tableConfig.headerFontFamily"
-      :header-font-size="tableConfig.headerFontSize"
-      :header-height="tableConfig.headerRowHeight"
-      :body-font-family="tableConfig.bodyFontFamily"
-      :body-font-size="tableConfig.bodyFontSize"
-      :summary-font-family="tableConfig.summaryFontFamily"
-      :summary-font-size="tableConfig.summaryFontSize"
-      :header-background="tableConfig.headerBackground"
-      :summary-background="tableConfig.summaryBackground"
-      :body-background-odd="tableConfig.bodyBackgroundOdd"
-      :body-background-even="tableConfig.bodyBackgroundEven"
-      :scrollbar-background="tableConfig.scrollbarBackground"
-      :scrollbar-thumb="tableConfig.scrollbarThumbBackground"
-      :scrollbar-thumb-hover="tableConfig.scrollbarThumbHoverBackground"
-      :buffer-rows="tableConfig.bufferRows"
-      :min-auto-col-width="tableConfig.minAutoColWidth"
-      :sort-active-color="tableConfig.sortActiveColor"
-      :y-axis-fields="yAxisFields"
-      :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
-      :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
-      :data="data"
-      :highlight-row-background="tableConfig.highlightRowBackground"
-      :highlight-col-background="tableConfig.highlightColBackground"
-      :drag-icon-height="tableConfig.dragIconHeight"
-      :drag-icon-width="tableConfig.dragIconWidth"
-      :span-method="spanMethod"
-    >
-    </TableChart>
+    <client-only>
+      <CanvasTable
+        :enable-summary="tableConfig.enableSummary"
+        :summary-height="tableConfig.summaryRowHeight"
+        :chart-height="tableConfig.chartHeight"
+        :chart-width="tableConfig.chartWidth"
+        :x-axis-fields="xAxisFields"
+        :highlight-cell-background="tableConfig.highlightCellBackground"
+        :header-text-color="tableConfig.headerTextColor"
+        :body-text-color="tableConfig.bodyTextColor"
+        :header-font-family="tableConfig.headerFontFamily"
+        :header-font-size="tableConfig.headerFontSize"
+        :header-height="tableConfig.headerRowHeight"
+        :body-font-family="tableConfig.bodyFontFamily"
+        :body-font-size="tableConfig.bodyFontSize"
+        :summary-font-family="tableConfig.summaryFontFamily"
+        :summary-font-size="tableConfig.summaryFontSize"
+        :header-background="tableConfig.headerBackground"
+        :summary-background="tableConfig.summaryBackground"
+        :body-background-odd="tableConfig.bodyBackgroundOdd"
+        :body-background-even="tableConfig.bodyBackgroundEven"
+        :scrollbar-background="tableConfig.scrollbarBackground"
+        :scrollbar-thumb="tableConfig.scrollbarThumbBackground"
+        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHoverBackground"
+        :buffer-rows="tableConfig.bufferRows"
+        :min-auto-col-width="tableConfig.minAutoColWidth"
+        :sort-active-color="tableConfig.sortActiveColor"
+        :y-axis-fields="yAxisFields"
+        :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
+        :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
+        :data="data"
+        :highlight-row-background="tableConfig.highlightRowBackground"
+        :highlight-col-background="tableConfig.highlightColBackground"
+        :drag-icon-height="tableConfig.dragIconHeight"
+        :drag-icon-width="tableConfig.dragIconWidth"
+        :span-method="spanMethod"
+      >
+      </CanvasTable>
+    </client-only>
   </div>
 </template>
 
 <script setup lang="ts">
-import TableChart from '@/components/table-chart/index.vue'
+// import TableChart from '@/components/table-chart/index.vue'
+import CanvasTable from '@/components/table-chart/canvas-table.vue'
 
 // 合并单元格配置
 const spanConfig = reactive({
@@ -266,7 +269,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: 'age',
     displayName: 'age',
     width: 200,
-    filterable: true,
+    sortable: true,
     editable: true,
     editType: 'input'
   },
