@@ -45,64 +45,126 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
-
+  /**
+   * id
+   */
   @Column('id')
   id!: number
 
+  /**
+   * 任务名称
+   */
   @Column('task_name')
   taskName!: string
 
+  /**
+   * 定时任务执行时间
+   * @example 2023-01-01 00:00:00
+   */
   @Column('schedule_time')
   scheduleTime?: string | null
 
+  /**
+   * 任务类型
+   */
   @Column('task_type')
   taskType!: ScheduledEmailDao.TaskType
 
+  /**
+   * 定时任务重复执行天数
+   */
   @Column('recurring_days')
   recurringDays?: number[] | null
 
+  /**
+   * 定时任务重复执行时间
+   * @example 00:00:00
+   */
   @Column('recurring_time')
   recurringTime?: string | null
 
+  /**
+   * 任务是否激活
+   */
   @Column('is_active')
   isActive!: boolean
 
+  /**
+   * 下次执行时间
+   * @example 2023-01-01 00:00:00
+   */
   @Column('next_execution_time')
   nextExecutionTime?: string | null
 
+  /**
+   * 邮件配置
+   */
   @Column('email_config')
   emailConfig!: ScheduledEmailDao.EmailConfig
 
+  /**
+   * 分析选项
+   */
   @Column('analyse_options')
   analyseOptions!: ScheduledEmailDao.AnalyseOptions
 
+  /**
+   * 任务状态
+   */
   @Column('status')
   status!: ScheduledEmailDao.Status
 
+  /**
+   * 备注
+   */
   @Column('remark')
   remark?: string
 
+  /**
+   * 创建时间
+   */
   @Column('created_time')
   createdTime!: string
 
+  /**
+   * 更新时间
+   */
   @Column('updated_time')
   updatedTime!: string
 
+  /**
+   * 执行时间
+   */
   @Column('executed_time')
   executedTime?: string
 
+  /**
+   * 错误信息
+   */
   @Column('error_message')
   errorMessage?: string
 
+  /**
+   * 重试次数
+   */
   @Column('retry_count')
   retryCount!: number
 
+  /**
+   * 最大重试次数
+   */
   @Column('max_retries')
   maxRetries!: number
 
+  /**
+   * 创建人
+   */
   @Column('created_by')
   createdBy!: string
 
+  /**
+   * 更新人
+   */
   @Column('updated_by')
   updatedBy!: string
 }

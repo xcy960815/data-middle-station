@@ -121,6 +121,7 @@
         :highlight-col-background="tableConfig.highlightColBackground"
         :drag-icon-height="tableConfig.dragIconHeight"
         :drag-icon-width="tableConfig.dragIconWidth"
+        :drag-icon-dot-size="4"
         :span-method="spanMethod"
       >
       </CanvasTable>
