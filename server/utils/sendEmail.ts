@@ -69,23 +69,91 @@ export class SendEmail {
     if (!this.transporter) {
       this.createTransporter()
     }
-    const result = {
-      messageId: '123'
+
+    const result = await this.transporter!.sendMail({
+      from: this.smtpFrom || this.smtpUser!,
+      to: options.emailConfig.to,
+      subject: options.emailConfig.subject,
+      html: this.buildEmailContent(options.emailConfig, options.analyseOptions),
+      attachments: options.analyseOptions.filename
+        ? [
+            {
+              filename: options.analyseOptions.filename,
+              contentType: 'image/png'
+            }
+          ]
+        : []
+    })
+
+    logger.info(`邮件已发送，messageId=${result.messageId}`)
+
+    return {
+      messageId: result.messageId
     }
-    // const result = await this.transporter!.sendMail({
-    //   from: this.smtpFrom || this.smtpUser!,
-    //   to: options.emailConfig.to,
-    //   subject: options.emailConfig.subject,
-    //   attachments: [
-    //     {
-    //       filename: options.analyseOptions.filename,
-    //       contentType: 'image/png'
-    //     }
-    //   ]
-    // })
+  }
 
-    // logger.info(`邮件已发送，messageId=${result.messageId}`)
+  /**
+   * @desc 构建邮件内容
+   * @param emailConfig {SendEmailDto.EmailConfig}
+   * @param analyseOptions {SendEmailDto.AnalyseOptions}
+   * @returns {string}
+   */
+  private buildEmailContent(
+    emailConfig: SendEmailDto.EmailConfig,
+    analyseOptions: SendEmailDto.AnalyseOptions
+  ): string {
+    const additionalContent = emailConfig.additionalContent
+      ? `<div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+           <p style="margin: 0; color: #495057;">${emailConfig.additionalContent.replace(/\n/g, '<br>')}</p>
+         </div>`
+      : ''
 
-    return result
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${emailConfig.subject}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; }
+          .content { margin-bottom: 30px; }
+          .chart-info { background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+          .footer { text-align: center; margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; color: #6c757d; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">📊 数据分析报告</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">${new Date().toLocaleDateString('zh-CN', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              weekday: 'long'
+            })}</p>
+          </div>
+
+          <div class="content">
+            ${additionalContent}
+
+            <div class="chart-info">
+              <h3 style="margin-top: 0; color: #495057;">📈 图表信息</h3>
+              <p style="margin: 5px 0;"><strong>图表标题:</strong> ${analyseOptions.analyseName}</p>
+              <p style="margin: 5px 0;"><strong>生成时间:</strong> ${new Date().toLocaleString('zh-CN')}</p>
+            </div>
+
+            <p>📎 图表图片已作为附件发送，请查看附件获取高清图表。</p>
+          </div>
+
+          <div class="footer">
+            <p style="margin: 0;">此邮件由数据中台自动发送，如有疑问请联系管理员。</p>
+            <p style="margin: 5px 0 0 0;">🤖 定时任务系统</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
   }
 }

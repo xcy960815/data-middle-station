@@ -36,33 +36,63 @@ class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLog
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 
+  /**
+   * id
+   */
   @Column('id')
   id!: number
 
+  /**
+   * 任务ID
+   */
   @Column('task_id')
   taskId!: number
 
+  /**
+   * 执行时间
+   */
   @Column('execution_time')
   executionTime!: string
 
+  /**
+   * 状态
+   */
   @Column('status')
   status!: 'success' | 'failed'
 
+  /**
+   * 消息
+   */
   @Column('message')
   message?: string
 
+  /**
+   * 错误详情
+   */
   @Column('error_details')
   errorDetails?: string
 
+  /**
+   * 邮件消息ID
+   */
   @Column('email_message_id')
   emailMessageId?: string
 
+  /**
+   * 执行时长
+   */
   @Column('execution_duration')
   executionDuration?: number
 
+  /**
+   * 创建时间
+   */
   @Column('created_time')
   createdTime!: string
 
+  /**
+   * 创建人
+   */
   @Column('created_by')
   createdBy!: string
 }

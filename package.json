@@ -45,6 +45,7 @@
     "@nuxt/devtools": "latest",
     "@types/node": "^20.19.0",
     "@types/node-cron": "^3.0.11",
+    "@types/node-schedule": "^2.1.8",
     "@types/nodemailer": "^7.0.1",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",

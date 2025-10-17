@@ -19,7 +19,7 @@ export class ScheduledEmailLogService extends BaseService {
    */
   async createExecutionLog(logRequest: ScheduledEmailLogDto.CreateLogRequest): Promise<number> {
     try {
-      const { createdBy, createTime } = await super.getDefaultInfo()
+      const { createTime } = await super.getDefaultInfo()
 
       const logData: ScheduledEmailLogDao.CreateScheduledEmailLogOptions = {
         taskId: logRequest.taskId,
@@ -29,8 +29,7 @@ export class ScheduledEmailLogService extends BaseService {
         errorDetails: logRequest.errorDetails,
         emailMessageId: logRequest.emailMessageId,
         executionDuration: logRequest.executionDuration,
-        createdTime: createTime,
-        createdBy: createdBy
+        createdTime: createTime
       }
 
       const logId = await this.scheduledEmailLogMapper.createScheduledEmailLog(logData)
@@ -207,8 +206,7 @@ export class ScheduledEmailLogService extends BaseService {
       errorDetails: dao.errorDetails,
       emailMessageId: dao.emailMessageId,
       executionDuration: dao.executionDuration,
-      createdTime: dao.createdTime,
-      createdBy: dao.createdBy
+      createdTime: dao.createdTime
     }
   }
 }
