@@ -1,5 +1,8 @@
 import dayjs from 'dayjs'
 
+/**
+ * 基础的service 提供了创建时间、更新时间、创建人、更新人等信息
+ */
 export class BaseService {
   /**
    * @desc 获取默认信息

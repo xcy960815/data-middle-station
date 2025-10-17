@@ -333,7 +333,6 @@ const rebuildBodyGroup = () => {
  */
 const rebuildSummaryGroup = () => {
   if (!summaryVars.summaryLayer) return
-
   // 创建汇总行组（完全参考header的实现方式）
   if (staticParams.enableSummary) {
     const { width: stageWidth, height: stageHeight } = getStageSize()

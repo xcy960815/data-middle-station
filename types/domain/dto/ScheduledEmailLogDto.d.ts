@@ -42,10 +42,6 @@ declare namespace ScheduledEmailLogDto {
      * 创建时间
      */
     createdTime: string
-    /**
-     * 创建人
-     */
-    createdBy: string
   }
 
   /**

@@ -78,7 +78,7 @@ declare namespace ScheduledEmailDao {
     analyseId: number
   }
   /**
-   * @desc 任务类型
+   * @desc 任务类型 scheduled 定时任务 recurring 重复任务
    */
   type TaskType = 'scheduled' | 'recurring'
 
