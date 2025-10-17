@@ -117,12 +117,12 @@ export const summaryState = reactive<Record<string, string>>({})
 
 /**
  * 计算某列的汇总显示值
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col - 列
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} col - 列
  * @param {string} rule - 规则
  * @returns {Promise<string>} 汇总显示值
  */
 const computeSummaryValueForColumn = async (
-  col: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  col: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   rule: string
 ) => {
   if (rule === 'nodisplay') return '不显示'
@@ -212,13 +212,13 @@ const getRuleLabel = (rule: string) => {
 /**
  * 绘制汇总部分（固定在底部，风格与表头一致，但使用 bodyTextColor）
  * @param {Konva.Group | null} summaryGroup - 分组
- * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} summaryCols - 列
+ * @param {Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>} summaryCols - 列
  */
 export const drawSummaryPart = (
   summaryGroup: Konva.Group | null,
-  summaryCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
+  summaryCols: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
 ) => {
-  if (!summaryGroup) return
+  if (!summaryGroup || !stageVars.stage) return
   const summaryRowHeight = staticParams.summaryRowHeight
   const summaryBackground = staticParams.summaryBackground
   const borderColor = staticParams.borderColor
@@ -227,8 +227,8 @@ export const drawSummaryPart = (
   const fontSize = staticParams.summaryFontSize
 
   let x = 0
-  summaryCols.forEach((col) => {
-    const colWidth = col.width || 0
+  summaryCols.forEach((columnOption) => {
+    const colWidth = columnOption.width
 
     // 使用统一函数创建汇总行矩形
     const summaryCellRect = drawUnifiedRect({
@@ -244,10 +244,10 @@ export const drawSummaryPart = (
       group: summaryGroup
     })
 
-    const textMaxWidth = calculateTextWidth.forSummaryCell(colWidth)
+    const textMaxWidth = calculateTextWidth.forSummaryCell(columnOption)
 
     // 先显示占位文本，然后异步更新
-    const rule = summaryState[col.columnName] || 'nodisplay'
+    const rule = summaryState[columnOption.columnName] || 'nodisplay'
     const placeholderText = rule === 'nodisplay' ? '不显示' : '计算中...'
     const truncatedTitle = truncateText(placeholderText, textMaxWidth, staticParams.summaryFontSize, summaryFontFamily)
 
@@ -262,14 +262,14 @@ export const drawSummaryPart = (
       fontSize,
       fontFamily: summaryFontFamily,
       fill: summaryTextColor,
-      align: col.align ?? 'left',
-      verticalAlign: col.verticalAlign ?? 'middle',
+      align: columnOption.align,
+      verticalAlign: columnOption.verticalAlign,
       group: summaryGroup
     })
 
     // 异步计算汇总值并更新文本
     if (rule !== 'nodisplay') {
-      computeSummaryValueForColumn(col, rule).then((summaryText) => {
+      computeSummaryValueForColumn(columnOption, rule).then((summaryText) => {
         const ruleLabel = getRuleLabel(rule)
         const displayText = ruleLabel ? `${ruleLabel}: ${summaryText}` : summaryText
         const finalText = truncateText(displayText, textMaxWidth, staticParams.summaryFontSize, summaryFontFamily)
@@ -284,11 +284,11 @@ export const drawSummaryPart = (
     summaryCellRect.on('click', (evt: KonvaEventObject<MouseEvent, Konva.Rect>) => {
       if (!stageVars.stage) return
       if (!summaryDropdownRef.value) return
-      const isNumber = col.columnType === 'number'
+      const isNumber = columnOption.columnType === 'number'
       const options = isNumber ? numberOptions : textOptions
-      const prev = summaryState[col.columnName] || 'nodisplay'
+      const prev = summaryState[columnOption.columnName] || 'nodisplay'
       const valid = options.some((o) => o.value === prev) ? prev : 'nodisplay'
-      summaryDropdownRef.value?.openSummaryDropdown(evt, col.columnName, options, valid)
+      summaryDropdownRef.value?.openSummaryDropdown(evt, columnOption.columnName, options, valid)
     })
 
     x += colWidth

@@ -26,7 +26,7 @@ declare namespace DimensionStore {
     /**
      * 左右对齐方式
      */
-    align?: 'left' | 'right' | 'center' | null
+    align?: 'left' | 'right' | 'center'
     /**
      * 垂直对齐方式
      */
@@ -34,7 +34,7 @@ declare namespace DimensionStore {
     /**
      * 宽度
      */
-    width?: number | null
+    width?: number
     /**
      * 是否显示溢出提示
      */

@@ -150,7 +150,10 @@ export const headerVars: HeaderVars = {
   dragDropIndicator: null
 }
 
-export const filterDropdownRef = ref<InstanceType<typeof FilterDropdown>>()
+/**
+ * 过滤下拉实例
+ */
+export const filterDropdownRef = ref<InstanceType<typeof FilterDropdown> | null>(null)
 
 /**
  * 创建表头左侧组
@@ -200,19 +203,24 @@ export const createDragIcon = (
   x: number,
   headerGroup: Konva.Group
 ) => {
-  // 固定列不显示拖拽图标
-  if (columnOption.fixed || !columnOption.draggable) return
-
+  if (columnOption.fixed) {
+    // 固定列不显示拖拽图标
+    return
+  }
+  if (!columnOption.draggable) {
+    return
+  }
   const dragIconHeight = staticParams.dragIconHeight
   const dragIconWidth = staticParams.dragIconWidth
-  const iconX = x + staticParams.textPaddingHorizontal
-  const iconY = (staticParams.headerRowHeight - dragIconHeight) / 2
+  const dragIconDotSize = staticParams.dragIconDotSize
+  const xCoordinate = x + staticParams.textPaddingHorizontal
+  const yCoordinate = (staticParams.headerRowHeight - dragIconHeight) / 2
 
   // 添加背景矩形增加可点击区域和调试可见性 - 直接添加到headerGroup
   const dragIconRect = drawUnifiedRect({
     name: `drag-icon-bg-${columnOption.columnName}`,
-    x: iconX,
-    y: iconY,
+    x: xCoordinate,
+    y: yCoordinate,
     width: dragIconWidth,
     height: dragIconHeight,
     fill: 'transparent',
@@ -222,16 +230,16 @@ export const createDragIcon = (
     group: headerGroup
   })
 
-  const dragIconDotSize = staticParams.dragIconDotSize
-  const startX = iconX + 2
-  const startY = iconY + 3
-
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 2; col++) {
-      const dotX = startX + col * 5
-      const dotY = startY + row * 6
+  const startX = xCoordinate
+  const startY = yCoordinate
+  const rowSpacing = (dragIconHeight - dragIconDotSize * 3) / 2
+  const columnSpacing = dragIconWidth - dragIconDotSize * 2
+  for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
+    for (let columnIndex = 0; columnIndex < 2; columnIndex++) {
+      const dotY = startY + rowIndex * (rowSpacing + dragIconDotSize) + dragIconDotSize / 2
+      const dotX = startX + columnIndex * (columnSpacing + dragIconDotSize) + dragIconDotSize / 2
       const dotCircle = new Konva.Circle({
-        name: `drag-dot-${columnOption.columnName}-${row}-${col}`,
+        name: `drag-dot-${columnOption.columnName}`,
         x: dotX,
         y: dotY,
         radius: dragIconDotSize / 2,
@@ -264,12 +272,13 @@ export const createDragIcon = (
     headerVars.dragStartX = event.evt.clientX
     setPointerStyle(stageVars.stage, true, 'grabbing')
   })
+
   return dragIconRect
 }
 
 /**
  * 创建过滤图标
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} col - 列
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} col - 列
  * @param {number} x - 列的x坐标
  * @param {number} y - 列的y坐标
  * @param {number} width - 列的宽度
@@ -277,7 +286,7 @@ export const createDragIcon = (
  * @param {Konva.Group} headerGroup - 表头组
  */
 const createFilterIcon = (
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
@@ -287,13 +296,13 @@ const createFilterIcon = (
   const filterItem = filterColumns.value.find((f) => f.columnName === columnOption.columnName)
   const isFilter = !!(filterItem && filterItem.values.size > 0)
   const filterColor = isFilter ? staticParams.sortActiveColor : COLORS.INACTIVE
-  const filterX = x + (columnOption.width || 0) - LAYOUT_CONSTANTS.FILTER_ICON_OFFSET
-  const centerY = staticParams.headerRowHeight / 2
+  const xCoordinate = x + columnOption.width - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - staticParams.textPaddingHorizontal
+  const yCoordinate = (staticParams.headerRowHeight - LAYOUT_CONSTANTS.FILTER_ICON_SIZE) / 2
   const iconSize = LAYOUT_CONSTANTS.FILTER_ICON_SIZE
 
   const filterIcon = new Konva.Shape({
-    x: filterX - iconSize / 2,
-    y: centerY - iconSize / 2,
+    x: xCoordinate,
+    y: yCoordinate,
     width: iconSize,
     height: iconSize,
     listening: true,
@@ -303,7 +312,6 @@ const createFilterIcon = (
       // 优化后的漏斗形状 - 更加圆润和对称
       const padding = 2
       const topWidth = iconSize - padding * 2
-      const bottomWidth = topWidth * 0.4
       const neckHeight = iconSize * 0.6
       const cornerRadius = Math.max(1, Math.min(3, iconSize * 0.12))
 
@@ -353,12 +361,12 @@ const createFilterIcon = (
 
 /**
  * 创建列宽调整手柄
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列配置
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列配置
  * @param {number} x - x坐标
  * @param {Konva.Group} headerGroup - 表头组
  */
 const createResizerIcon = (
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
@@ -403,7 +411,7 @@ const createResizerIcon = (
 
 /**
  * 创建排序指示器 - 上下两个箭头
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列
  * @param {number} x - 列的x坐标
  * @param {number} y - 列的y坐标
  * @param {number} width - 列的宽度
@@ -412,7 +420,7 @@ const createResizerIcon = (
  * @returns {Konva.Path} 排序指示器
  */
 const createSortIcon = (
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
@@ -422,13 +430,17 @@ const createSortIcon = (
   const sortOrder = getColumnSortStatus(columnOption.columnName)
 
   // 箭头的基础位置
-  const arrowX = x + (columnOption.width || 0) - LAYOUT_CONSTANTS.SORT_ARROW_OFFSET
+  let arrowX = x + columnOption.width - LAYOUT_CONSTANTS.ARROW_SIZE - staticParams.textPaddingHorizontal
+
+  if (columnOption.filterable) {
+    arrowX = arrowX - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - staticParams.textPaddingHorizontal
+  }
 
   const centerY = staticParams.headerRowHeight / 2
 
   // 上箭头（升序）- 指向上方的三角形（尖端圆润）
   const upSize = LAYOUT_CONSTANTS.ARROW_SIZE
-  const upHeightScale = LAYOUT_CONSTANTS.ARROW_HEIGHT_SCALE ?? 1
+  const upHeightScale = LAYOUT_CONSTANTS.ARROW_HEIGHT_SCALE
   const upEffectiveHeight = upSize * upHeightScale
   const upArrowY = centerY - LAYOUT_CONSTANTS.ARROW_GAP / 2 - upEffectiveHeight
   const upBaseLeftX = arrowX
@@ -442,7 +454,7 @@ const createSortIcon = (
 
   // 下箭头（降序）- 指向下方的三角形（尖端圆润）
   const downSize = LAYOUT_CONSTANTS.ARROW_SIZE
-  const downHeightScale = LAYOUT_CONSTANTS.ARROW_HEIGHT_SCALE ?? 1
+  const downHeightScale = LAYOUT_CONSTANTS.ARROW_HEIGHT_SCALE
   const downEffectiveHeight = downSize * downHeightScale
   const downArrowY = centerY + LAYOUT_CONSTANTS.ARROW_GAP / 2
   const downBaseLeftX = arrowX
@@ -486,11 +498,11 @@ const createSortIcon = (
 
 /**
  * 处理排序逻辑
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列配置
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列配置
  * @param {'asc' | 'desc'} order - 排序方向
  */
 const handleSortAction = (
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   order: 'asc' | 'desc'
 ) => {
   handleMultiColumnSort(columnOption, order)
@@ -500,23 +512,22 @@ const handleSortAction = (
 
 /**
  * 创建表头文本 - 添加排序支持
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列
+ * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列
  * @param {number} x - 列的x坐标
  * @param {number} width - 列的宽度
  * @param {number} height - 列的高度
  * @param {Konva.Group} headerGroup - 表头组
  */
 const createHeaderCellText = (
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
-  console.log('x', x)
-
-  // 计算文本起始位置（为拖拽图标留出空间）
-  const textStartX = x //+ TEXT_SPACING_CONSTANTS.TEXT_PADDING_HORIZONTAL
-
-  // 使用统一的文本宽度计算函数
+  // 计算文本起始位置
+  let textStartX = x
+  if (columnOption.draggable) {
+    textStartX += staticParams.dragIconWidth + staticParams.textPaddingHorizontal
+  }
   const maxTextWidth = calculateTextWidth.forHeaderCell(columnOption)
 
   const text = truncateText(
@@ -531,14 +542,13 @@ const createHeaderCellText = (
     text,
     x: textStartX,
     y: 0,
-    width: columnOption.width || 0,
+    width: columnOption.width,
     height: staticParams.headerRowHeight,
     fontSize: staticParams.headerFontSize,
     fontFamily: staticParams.headerFontFamily,
     fill: staticParams.headerTextColor,
-    // align: columnOption.align ?? 'left',
-    align: 'left',
-    verticalAlign: columnOption.verticalAlign ?? 'middle',
+    align: columnOption.align,
+    verticalAlign: columnOption.verticalAlign,
     group: headerGroup
   })
 }
@@ -546,11 +556,11 @@ const createHeaderCellText = (
 /**
  * 绘制表头部分
  * @param {Konva.Group | null} headerGroup - 表头组
- * @param {Array<GroupStore.GroupOption | DimensionStore.DimensionOption>} headerCols - 表头列配置
+ * @param {Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>} headerCols - 表头列配置
  */
 export const drawHeaderPart = (
   headerGroup: Konva.Group | null,
-  headerCols: Array<GroupStore.GroupOption | DimensionStore.DimensionOption>
+  headerCols: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
 ) => {
   if (!headerGroup || !stageVars.stage) return
 
