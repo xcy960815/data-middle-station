@@ -1,7 +1,7 @@
 declare namespace SendEmailDto {
   interface EmailConfig {
     /**
-     * 收件人
+     * 收件人 (支持单个或多个邮箱地址，多个用逗号分隔)
      */
     to: string
     /**
@@ -19,6 +19,14 @@ declare namespace SendEmailDto {
      * 文件名
      */
     filename: string
+    /**
+     * 文件内容 (Buffer或base64字符串)
+     */
+    fileContent?: Buffer | string
+    /**
+     * 文件路径 (可选，优先使用fileContent)
+     */
+    filePath?: string
     /**
      * 图表类型
      */
