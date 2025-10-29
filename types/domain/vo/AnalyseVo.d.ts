@@ -1,17 +1,17 @@
 /**
- * @desc  表结构
+ * @desc  分析响应
  */
 declare namespace AnalyseVo {
   /**
-   * 分析数据
+   * 图表数据
    */
   type ChartDataVo = Array<{
     [key: string]: string | number
   }>
   /**
-   * 分析配置
+   * 获取分析响应
    */
-  type GetAnalyseResponse = {
+  type AnalyseResponse = {
     id: number
     analyseName: string
     analyseDesc: string
