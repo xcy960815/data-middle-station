@@ -3,43 +3,49 @@
  */
 declare namespace AnalyseDto {
   /**
-   * 获取分析请求参数
+   * 创建分析请求参数
    */
-  type CreateAnalyseRequest = AnalyseVo.AnalyseOption
+  type CreateAnalyseRequest = AnalyseVo.AnalyseResponse
   /**
    * 获取分析请求参数
    */
   type GetAnalyseRequest = {
-    id: number
+    id: AnalyseVo.AnalyseResponse['id']
+    updatedBy?: AnalyseVo.AnalyseResponse['updatedBy']
+    updateTime?: AnalyseVo.AnalyseResponse['updateTime']
+    createdBy?: AnalyseVo.AnalyseResponse['createdBy']
+    createTime?: AnalyseVo.AnalyseResponse['createTime']
+    analyseName?: AnalyseVo.AnalyseResponse['analyseName']
+    analyseDesc?: AnalyseVo.AnalyseResponse['analyseDesc']
   }
   /**
    * 更新分析请求参数
    */
-  type UpdateAnalyseRequest = AnalyseVo.AnalyseOption
+  type UpdateAnalyseRequest = AnalyseVo.AnalyseResponse
   /**
    * 更新分析名称请求参数
    */
   type UpdateAnalyseNameRequest = {
-    id: AnalyseVo.AnalyseOption['id']
-    analyseName: AnalyseVo.AnalyseOption['analyseName']
-    updatedBy: AnalyseVo.AnalyseOption['updatedBy']
-    updateTime: AnalyseVo.AnalyseOption['updateTime']
+    id: AnalyseVo.AnalyseResponse['id']
+    analyseName: AnalyseVo.AnalyseResponse['analyseName']
+    updatedBy: AnalyseVo.AnalyseResponse['updatedBy']
+    updateTime: AnalyseVo.AnalyseResponse['updateTime']
   }
   /**
    * 更新分析描述请求参数
    */
   type UpdateAnalyseDescRequest = {
-    id: AnalyseVo.AnalyseOption['id']
-    analyseDesc: AnalyseVo.AnalyseOption['analyseDesc']
-    updatedBy: AnalyseVo.AnalyseOption['updatedBy']
-    updateTime: AnalyseVo.AnalyseOption['updateTime']
+    id: AnalyseVo.AnalyseResponse['id']
+    analyseDesc: AnalyseVo.AnalyseResponse['analyseDesc']
+    updatedBy: AnalyseVo.AnalyseResponse['updatedBy']
+    updateTime: AnalyseVo.AnalyseResponse['updateTime']
   }
   /**
    * 删除分析请求参数
    */
   type DeleteAnalyseRequest = {
-    id: AnalyseVo.AnalyseOption['id']
-    updatedBy?: AnalyseVo.AnalyseOption['updatedBy']
-    updateTime?: AnalyseVo.AnalyseOption['updateTime']
+    id: AnalyseVo.AnalyseResponse['id']
+    updatedBy?: AnalyseVo.AnalyseResponse['updatedBy']
+    updateTime?: AnalyseVo.AnalyseResponse['updateTime']
   }
 }
