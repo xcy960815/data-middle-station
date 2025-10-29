@@ -25,12 +25,12 @@ export class AnalyseService extends BaseService {
   /**
    * @desc dao 转 vo
    * @param chart {AnalyseDao.AnalyseOption} 图表
-   * @returns {AnalyseVo.GetAnalyseResponse}
+   * @returns {AnalyseVo.AnalyseResponse}
    */
   private dao2Vo(
     chart: AnalyseDao.AnalyseOption,
     chartConfig: ChartConfigVo.ChartConfigResponse | null
-  ): AnalyseVo.GetAnalyseResponse {
+  ): AnalyseVo.AnalyseResponse {
     return {
       ...chart,
       chartConfig: chartConfig
@@ -64,17 +64,17 @@ export class AnalyseService extends BaseService {
   /**
    * @desc 获取分析
    * @param id {number} 分析id
-   * @returns {Promise<AnalyseVo.GetAnalyseResponse>}
+   * @returns {Promise<AnalyseVo.AnalyseResponse>}
    */
-  public async getAnalyse(id: number): Promise<AnalyseVo.GetAnalyseResponse> {
-    const AnalyseOption = await this.analyseMapper.getAnalyse(id)
-    if (!AnalyseOption) {
+  public async getAnalyse(analyseParams: AnalyseDto.GetAnalyseRequest): Promise<AnalyseVo.AnalyseResponse> {
+    const analyseOption = await this.analyseMapper.getAnalyse(analyseParams)
+    if (!analyseOption) {
       throw new Error('图表不存在')
-    } else if (AnalyseOption.chartConfigId) {
-      const chartConfig = await this.chartConfigService.getChartConfig(AnalyseOption.chartConfigId)
-      return this.dao2Vo(AnalyseOption, chartConfig)
+    } else if (analyseOption.chartConfigId) {
+      const chartConfig = await this.chartConfigService.getChartConfig(analyseOption.chartConfigId)
+      return this.dao2Vo(analyseOption, chartConfig)
     } else {
-      return this.dao2Vo(AnalyseOption, null)
+      return this.dao2Vo(analyseOption, null)
     }
   }
 
@@ -82,7 +82,7 @@ export class AnalyseService extends BaseService {
    * @desc 获取所有图表
    * @returns {Promise<AnalyseVo.ChartsOption[]>}
    */
-  public async getAnalyses(): Promise<AnalyseVo.GetAnalyseResponse[]> {
+  public async getAnalyses(): Promise<AnalyseVo.AnalyseResponse[]> {
     const analyseOptions = await this.analyseMapper.getAnalyses()
     const promises = analyseOptions.map(async (item) => {
       if (item.chartConfigId) {

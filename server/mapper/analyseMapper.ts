@@ -132,12 +132,29 @@ export class AnalyseMapper extends BaseMapper {
    * @returns {Promise<AnalyseDao.AnalyseOption>}
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyse<T extends AnalyseDao.AnalyseOption>(id: number): Promise<T> {
+  public async getAnalyse<T extends AnalyseDao.AnalyseOption>(analyseParams: AnalyseDto.GetAnalyseRequest): Promise<T> {
+    const { id, updatedBy, updateTime, createdBy, createTime, analyseName, analyseDesc } = analyseParams
     await this.updateViewCount(id)
-    const sql = `select
-      ${ANALYSE_BASE_FIELDS.join(',\n    ')}
-    from ${ANALYSE_TABLE_NAME} where id = ? and is_deleted = 0`
-    const result = await this.exe<Array<T>>(sql, [id])
+    let whereClause = `where id = ? and is_deleted = 0`
+    if (updatedBy) {
+      whereClause += ` and updated_by = ?`
+    }
+    if (updateTime) {
+      whereClause += ` and update_time = ?`
+    }
+    if (createdBy) {
+      whereClause += ` and created_by = ?`
+    }
+    const sql = `select ${ANALYSE_BASE_FIELDS.join(',\n    ')} from ${ANALYSE_TABLE_NAME} ${whereClause}`
+    const result = await this.exe<Array<T>>(sql, [
+      id,
+      updatedBy,
+      updateTime,
+      createdBy,
+      createTime,
+      analyseName,
+      analyseDesc
+    ])
     return result?.[0]
   }
 
