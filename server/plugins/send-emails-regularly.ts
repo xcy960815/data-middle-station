@@ -63,7 +63,7 @@ export default defineNitroPlugin(async () => {
 /**
  * 加载所有待执行任务并注册到 node-schedule
  */
-async function loadAndScheduleAllTasks(): Promise<void> {
+const loadAndScheduleAllTasks = async (): Promise<void> => {
   try {
     // 获取所有待执行的任务
     const pendingTasks = await scheduledEmailService.getScheduledEmailList({
@@ -111,8 +111,10 @@ async function loadAndScheduleAllTasks(): Promise<void> {
 
 /**
  * 调度一次性任务（scheduled）
+ * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
+ * @returns {void}
  */
-function scheduleOnceTask(task: ScheduledEmailVo.ScheduledEmailOptions): void {
+const scheduleOnceTask = (task: ScheduledEmailVo.ScheduledEmailResponse): void => {
   if (!task.scheduleTime) {
     logger.error(`❌ 任务 ${task.id} 缺少执行时间`)
     return
@@ -141,8 +143,10 @@ function scheduleOnceTask(task: ScheduledEmailVo.ScheduledEmailOptions): void {
 
 /**
  * 调度重复任务（recurring）
+ * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
+ * @returns {void}
  */
-function scheduleRecurringTask(task: ScheduledEmailVo.ScheduledEmailOptions): void {
+const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailResponse): void => {
   if (!task.recurringDays || !task.recurringTime) {
     logger.error(`❌ 任务 ${task.id} 缺少重复配置`)
     return
@@ -181,11 +185,12 @@ function scheduleRecurringTask(task: ScheduledEmailVo.ScheduledEmailOptions): vo
 
 /**
  * 执行任务
+ * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
+ * @returns {Promise<void>}
  */
-async function executeTask(task: ScheduledEmailVo.ScheduledEmailOptions): Promise<void> {
+const executeTask = async (task: ScheduledEmailVo.ScheduledEmailResponse): Promise<void> => {
   try {
     const success = await scheduledEmailService.executeTaskById(task.id)
-
     if (success) {
       logger.info(`✅ 任务 ${task.id} 执行成功`)
 
@@ -208,38 +213,10 @@ async function executeTask(task: ScheduledEmailVo.ScheduledEmailOptions): Promis
 
 /**
  * 格式化星期显示
+ * @param {number[]} days 星期数组
+ * @returns {string} 格式化后的星期字符串
  */
-function formatDays(days: number[]): string {
+const formatDays = (days: number[]): string => {
   const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
   return days.map((d) => dayNames[d]).join('、')
-}
-
-/**
- * 动态添加任务到调度器（供外部调用）
- */
-export function addTaskToScheduler(task: ScheduledEmailVo.ScheduledEmailOptions): void {
-  if (task.taskType === 'scheduled') {
-    scheduleOnceTask(task)
-  } else if (task.taskType === 'recurring') {
-    scheduleRecurringTask(task)
-  }
-}
-
-/**
- * 从调度器移除任务（供外部调用）
- */
-export function removeTaskFromScheduler(taskId: number): void {
-  const job = scheduledJobs.get(taskId)
-  if (job) {
-    job.cancel()
-    scheduledJobs.delete(taskId)
-    logger.info(`🗑️ 任务 ${taskId} 已从调度器移除`)
-  }
-}
-
-/**
- * 获取当前调度器中的任务数量
- */
-export function getScheduledTaskCount(): number {
-  return scheduledJobs.size
 }

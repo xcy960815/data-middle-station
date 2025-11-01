@@ -1,4 +1,5 @@
-import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
+import type { IColumnTarget, Row } from './baseMapper'
+import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from './baseMapper'
 
 /**
  * @desc 表列表映射
@@ -58,7 +59,7 @@ export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarge
 /**
  * @desc 表列映射
  */
-export class TableColumnMapping implements DatabaseDao.TableColumnOption, IColumnTarget {
+export class TableColumnMapping implements DatabaseDao.TableColumnOptions, IColumnTarget {
   /**
    * @desc 列名
    */
@@ -101,8 +102,8 @@ export class DatabaseMapper extends BaseMapper {
    * @returns {Promise<Array<T>>}
    */
   @Mapping(TableOptionMapping)
-  public async queryTable<T extends DatabaseDao.TableOption = DatabaseDao.TableOption>(
-    queryTableRequest: DatabaseDto.QueryTableRequest
+  public async getTable<T extends DatabaseDao.TableOption = DatabaseDao.TableOption>(
+    getTableRequest: DatabaseDto.GetDatabaseTablesRequest
   ): Promise<Array<T>> {
     const sql = `SELECT
         table_name,
@@ -121,19 +122,19 @@ export class DatabaseMapper extends BaseMapper {
       WHERE
         table_type = 'BASE TABLE'
         AND table_schema='${tableSchema}'
-        ${!!queryTableRequest.tableName ? `AND table_name like '%${queryTableRequest.tableName}%'` : ''}`
+        ${!!getTableRequest.tableName ? `AND table_name like '%${getTableRequest.tableName}%'` : ''}`
     const result = await this.exe<Array<T>>(sql)
     return result
   }
 
   /**
    * @desc 查询表的所有列
-   * @param  tableColumnRequest  {DatabaseDto.TableColumnRequest} 查询表请求参数
-   * @returns {Promise<Array<TableInfoDao.TableColumnOption>>}
+   * @param  getTableColumnsRequest  {DatabaseDto.GetTableColumnsRequest} 查询表请求参数
+   * @returns {Promise<Array<DatabaseDao.TableColumnOptions>>}
    */
   @Mapping(TableColumnMapping)
-  public async queryTableColumn<T extends DatabaseDao.TableColumnOption>(
-    tableColumnRequest: DatabaseDto.TableColumnRequest
+  public async getTableColumns<T extends DatabaseDao.TableColumnOptions>(
+    getTableColumnsRequest: DatabaseDto.GetTableColumnsRequest
   ): Promise<Array<T>> {
     const sql = `SELECT
         column_name,
@@ -142,7 +143,7 @@ export class DatabaseMapper extends BaseMapper {
       FROM
         information_schema.columns
       WHERE
-        table_name = '${toLine(tableColumnRequest.tableName)}'
+        table_name = '${toLine(getTableColumnsRequest.tableName)}'
         AND table_schema = '${tableSchema}';`
     const result = await this.exe<Array<T>>(sql)
     return result

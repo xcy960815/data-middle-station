@@ -1,6 +1,7 @@
-import { ResultSetHeader } from 'mysql2'
+import type { ResultSetHeader } from 'mysql2'
 import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '../utils/databaseHelpper'
-import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
+import type { IColumnTarget, Row } from './baseMapper'
+import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from './baseMapper'
 
 /**
  * @desc 定时邮件任务基础字段
@@ -236,12 +237,12 @@ export class ScheduledEmailMapper extends BaseMapper {
 
   /**
    * @desc 查询任务列表
-   * @param {ScheduledEmailDto.ScheduledEmailListQuery} params  查询参数
+   * @param {ScheduledEmailDto.ScheduledEmailListRequest} params  查询参数
    * @returns {Promise<ScheduledEmailDao.ScheduledEmailOptions[]>} 任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getScheduledEmailList(
-    params: ScheduledEmailDto.ScheduledEmailListQuery
+    params: ScheduledEmailDto.ScheduledEmailListRequest
   ): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
     const whereConditions: string[] = []
 

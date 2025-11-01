@@ -661,7 +661,7 @@ A:
 A:
 
 1. 确保数据库中存在对应表
-2. 在 `server/api/queryTable.ts` 中添加表查询逻辑
+2. 在 `server/api/getDatabaseTables.ts` 中添加表查询逻辑
 3. 配置字段映射关系
 
 **Q: 如何自定义图表样式？**

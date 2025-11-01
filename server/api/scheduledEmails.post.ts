@@ -9,7 +9,7 @@ const logger = new Logger({
 })
 
 // Joi 验证模式
-const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledEmailOptions>({
+const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledEmailRequest>({
   taskName: Joi.string().min(1).max(100).required().messages({
     'string.min': '任务名称不能为空',
     'string.max': '任务名称不能超过100个字符',
@@ -107,7 +107,7 @@ const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledE
  */
 export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
   try {
-    const requestBody = await readBody<ScheduledEmailDto.CreateScheduledEmailOptions>(event)
+    const requestBody = await readBody<ScheduledEmailDto.CreateScheduledEmailRequest>(event)
 
     // 使用 Joi 进行数据验证
     const { error, value: scheduledEmailOptions } = createScheduledEmailSchema.validate(requestBody, {

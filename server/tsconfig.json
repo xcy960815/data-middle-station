@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "outDir": "./",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true
   },
   "extends": "../.nuxt/tsconfig.server.json"
 }

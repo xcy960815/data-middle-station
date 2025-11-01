@@ -63,33 +63,58 @@ export class SendEmail {
   /**
    * @desc 发送邮件
    * @param options {SendEmailDto.SendChartEmailRequest}
-   * @returns {Promise<SendEmailVo.SendEmailOptions>} messageId
+   * @returns {Promise<SendEmailVo.SendEmailResponse>} messageId
    */
-  public async sendMail(options: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailOptions> {
+  public async sendMail(options: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailResponse> {
     if (!this.transporter) {
       this.createTransporter()
     }
+
+    // 构建附件配置
+    const attachments = this.buildAttachments(options.analyseOptions)
 
     const result = await this.transporter!.sendMail({
       from: this.smtpFrom || this.smtpUser!,
       to: options.emailConfig.to,
       subject: options.emailConfig.subject,
       html: this.buildEmailContent(options.emailConfig, options.analyseOptions),
-      attachments: options.analyseOptions.filename
-        ? [
-            {
-              filename: options.analyseOptions.filename,
-              contentType: 'image/png'
-            }
-          ]
-        : []
+      attachments
     })
 
-    logger.info(`邮件已发送，messageId=${result.messageId}`)
+    logger.info(`邮件已发送，messageId=${result.messageId}，收件人=${options.emailConfig.to}`)
 
     return {
       messageId: result.messageId
     }
+  }
+
+  /**
+   * @desc 构建附件配置
+   * @param analyseOptions {SendEmailDto.AnalyseOptions}
+   * @returns {Array}
+   */
+  private buildAttachments(analyseOptions: SendEmailDto.AnalyseOptions): Array<any> {
+    if (!analyseOptions.filename) {
+      return []
+    }
+
+    const attachment: any = {
+      filename: analyseOptions.filename,
+      contentType: 'image/png'
+    }
+
+    // 优先使用文件内容
+    if (analyseOptions.fileContent) {
+      attachment.content = analyseOptions.fileContent
+    } else if (analyseOptions.filePath) {
+      attachment.path = analyseOptions.filePath
+    } else {
+      // 如果既没有内容也没有路径，记录警告但不添加附件
+      logger.warn(`邮件附件 ${analyseOptions.filename} 缺少内容或路径，将跳过附件`)
+      return []
+    }
+
+    return [attachment]
   }
 
   /**

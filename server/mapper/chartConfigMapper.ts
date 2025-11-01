@@ -1,6 +1,6 @@
-import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
-
-import { ResultSetHeader } from 'mysql2'
+import type { ResultSetHeader } from 'mysql2'
+import type { IColumnTarget, Row } from './baseMapper'
+import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from './baseMapper'
 
 class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
@@ -120,26 +120,26 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 更新图表配置
-   * @param chartConfig {ChartConfigDao.CreateChartConfigRequest} 图表配置
+   * @param updateChartConfigRequest {ChartConfigDto.UpdateChartConfigRequest} 图表配置
    * @returns {Promise<number>} 图表配置ID
    */
-  public async updateChartConfig(chartConfig: ChartConfigDto.UpdateChartConfigRequest): Promise<boolean> {
-    const { keys, values } = convertToSqlProperties(chartConfig)
+  public async updateChartConfig(updateChartConfigRequest: ChartConfigDto.UpdateChartConfigRequest): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(updateChartConfigRequest)
     const sql = `UPDATE ${CHART_CONFIG_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ? and is_deleted = 0`
-    return (await this.exe<number>(sql, [...values, chartConfig.id])) > 0
+    return (await this.exe<number>(sql, [...values, updateChartConfigRequest.id])) > 0
   }
 
   /**
    * @desc 删除图表配置(逻辑删除)
-   * @param deleteParams {ChartConfigDto.ChartConfigDeleteRequest} 图表配置删除参数
+   * @param deleteChartConfigRequest {ChartConfigDto.ChartConfigDeleteRequest} 图表配置删除参数
    * @returns {Promise<boolean>} 是否删除成功
    */
-  public async deleteChartConfig(deleteParams: ChartConfigDto.DeleteChartConfigRequest): Promise<boolean> {
+  public async deleteChartConfig(deleteChartConfigRequest: ChartConfigDto.DeleteChartConfigRequest): Promise<boolean> {
     const sql = `update ${CHART_CONFIG_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [
-      deleteParams.updatedBy,
-      deleteParams.updateTime,
-      deleteParams.id
+      deleteChartConfigRequest.updatedBy,
+      deleteChartConfigRequest.updateTime,
+      deleteChartConfigRequest.id
     ])
     return result.affectedRows > 0
   }

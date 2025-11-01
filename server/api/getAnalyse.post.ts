@@ -4,9 +4,9 @@ const analyseService = new AnalyseService()
 
 export default defineEventHandler<Promise<ApiResponseI<AnalyseVo.GetAnalyseResponse>>>(async (event) => {
   try {
-    const { id } = await readBody<AnalyseDto.GetAnalyseRequest>(event)
-    const data = await analyseService.getAnalyse(id)
-    return ApiResponse.success(data)
+    const getAnalyseRequest = await readBody<AnalyseDto.GetAnalyseRequest>(event)
+    const getAnalyseResult = await analyseService.getAnalyse(getAnalyseRequest)
+    return ApiResponse.success(getAnalyseResult)
   } catch (error: any) {
     return ApiResponse.error(error.message)
   }

@@ -10,12 +10,12 @@ declare namespace ColumnStore {
   /**
    * @desc 列选项
    */
-  type ColumnOption = DatabaseVo.TableColumnOption
+  type ColumnOption = DatabaseVo.GetTableColumnsResponse
 
   /**
    * @desc 数据源选项
    */
-  type DataSourceOption = DatabaseVo.TableOptions
+  type DataSourceOption = DatabaseVo.GetDatabaseTablesResponse
 
   /**
    * @desc 列状态

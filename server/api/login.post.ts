@@ -13,7 +13,7 @@ export const AVATAR = 'https://64.media.tumblr.com/d15e5f21577f659a395d84e49f4d7
 /**
  * 登录API
  */
-export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginOption>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginResponse>>>(async (event) => {
   try {
     // 获取请求体数据
     const body = await readBody<LoginDto.LoginRequest>(event)

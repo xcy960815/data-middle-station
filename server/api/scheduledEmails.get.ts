@@ -10,9 +10,9 @@ const logger = new Logger({
 /**
  * 查询定时邮件任务列表
  */
-export default defineEventHandler<Promise<ApiResponseI<ScheduledEmailVo.ScheduledEmailOptions[]>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<ScheduledEmailVo.ScheduledEmailResponse[]>>>(async (event) => {
   try {
-    const scheduledEmailListQuery = getQuery<ScheduledEmailDto.ScheduledEmailListQuery>(event)
+    const scheduledEmailListQuery = getQuery<ScheduledEmailDto.ScheduledEmailListRequest>(event)
     const scheduledEmailList = await scheduledEmailService.getScheduledEmailList(scheduledEmailListQuery)
     return ApiResponse.success(scheduledEmailList)
   } catch (error: any) {

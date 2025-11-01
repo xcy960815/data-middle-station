@@ -3,17 +3,15 @@ import { AnalyseService } from '../service/analyseService'
 const analyseService = new AnalyseService()
 
 /**
- * @api {post} /analyse/updateAnalyseName
- * @apiName updateAnalyseName
- * @apiGroup analyse
- * @apiDescription 更新图表名称
- * @returns {Promise<ApiResponseI<boolean>>}
+ * 更新分析名称
+ * @param event
+ * @returns {Promise<ApiResponseI<AnalyseVo.UpdateAnalyseNameResponse>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<AnalyseVo.UpdateAnalyseNameResponse>>>(async (event) => {
   try {
-    const analyseOption = await readBody<AnalyseDto.UpdateAnalyseNameRequest>(event)
-    const data = await analyseService.updateAnalyseName(analyseOption)
-    return ApiResponse.success(data)
+    const updateAnalyseNameRequest = await readBody<AnalyseDto.UpdateAnalyseNameRequest>(event)
+    const updateAnalyseNameResult = await analyseService.updateAnalyseName(updateAnalyseNameRequest)
+    return ApiResponse.success(updateAnalyseNameResult)
   } catch (error: any) {
     return ApiResponse.error(error.message)
   }

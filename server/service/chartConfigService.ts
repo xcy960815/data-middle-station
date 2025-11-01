@@ -100,10 +100,10 @@ export class ChartConfigService extends BaseService {
 
   /**
    * @desc 删除图表配置
-   * @param id {number} 图表配置id
+   * @param deleteChartConfigRequest {ChartConfigDto.DeleteChartConfigRequest} 图表配置删除请求参数
    * @returns {Promise<boolean>}
    */
-  public async deleteChartConfig(deleteParams: ChartConfigDto.DeleteChartConfigRequest): Promise<boolean> {
-    return await this.chartConfigMapper.deleteChartConfig(deleteParams)
+  public async deleteChartConfig(deleteChartConfigRequest: ChartConfigDto.DeleteChartConfigRequest): Promise<boolean> {
+    return await this.chartConfigMapper.deleteChartConfig(deleteChartConfigRequest)
   }
 }
