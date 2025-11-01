@@ -5,12 +5,12 @@ declare namespace ChartConfigVo {
   /**
    * 列配置
    */
-  type ColumnOption = DatabaseVo.TableColumnOption
+  type ColumnOption = DatabaseVo.GetTableColumnsResponse
 
   /**
    * 维度配置
    */
-  type DimensionOption = DatabaseVo.TableColumnOption & {
+  type DimensionOption = DatabaseVo.GetTableColumnsResponse & {
     __invalid?: boolean
   }
 
@@ -34,7 +34,7 @@ declare namespace ChartConfigVo {
   /**
    * 分组配置
    */
-  type GroupOption = DatabaseVo.TableColumnOption & {
+  type GroupOption = DatabaseVo.GetTableColumnsResponse & {
     __invalid?: boolean
   }
 

@@ -17,7 +17,7 @@ declare namespace ContextMenu {
   /**
    * @desc 右键菜单配置项
    */
-  export interface ContextMenuOtions {
+  export interface ContextMenuOptions {
     triggerTypes: TriggerType[]
     triggerEventHandler: (evt: Event) => void
   }

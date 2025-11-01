@@ -111,10 +111,10 @@ const loadAndScheduleAllTasks = async (): Promise<void> => {
 
 /**
  * 调度一次性任务（scheduled）
- * @param {ScheduledEmailVo.ScheduledEmailOptions} task 任务选项
+ * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
  * @returns {void}
  */
-const scheduleOnceTask = (task: ScheduledEmailVo.ScheduledEmailOptions): void => {
+const scheduleOnceTask = (task: ScheduledEmailVo.ScheduledEmailResponse): void => {
   if (!task.scheduleTime) {
     logger.error(`❌ 任务 ${task.id} 缺少执行时间`)
     return
@@ -143,10 +143,10 @@ const scheduleOnceTask = (task: ScheduledEmailVo.ScheduledEmailOptions): void =>
 
 /**
  * 调度重复任务（recurring）
- * @param {ScheduledEmailVo.ScheduledEmailOptions} task 任务选项
+ * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
  * @returns {void}
  */
-const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailOptions): void => {
+const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailResponse): void => {
   if (!task.recurringDays || !task.recurringTime) {
     logger.error(`❌ 任务 ${task.id} 缺少重复配置`)
     return
@@ -185,10 +185,10 @@ const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailOptions): vo
 
 /**
  * 执行任务
- * @param {ScheduledEmailVo.ScheduledEmailOptions} task 任务选项
+ * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
  * @returns {Promise<void>}
  */
-const executeTask = async (task: ScheduledEmailVo.ScheduledEmailOptions): Promise<void> => {
+const executeTask = async (task: ScheduledEmailVo.ScheduledEmailResponse): Promise<void> => {
   try {
     const success = await scheduledEmailService.executeTaskById(task.id)
     if (success) {

@@ -95,7 +95,7 @@ const dataSourceOptions = computed(() => columnStore.getDataSourceOptions)
  * @desc 搜索按钮点击（目前只做UI，实际过滤仍为输入框实时过滤）
  */
 const handleSearchTable = () => {
-  queryTable()
+  getTable()
 }
 
 /**
@@ -111,10 +111,10 @@ const handleSelectedTable = (row: ColumnStore.DataSourceOption) => {
 
 /**
  * @desc 高亮当前选中行
- * @param {DatabaseVo.TableOptions} row 表数据
+ * @param {DatabaseVo.GetDatabaseTablesResponse} row 表数据
  * @returns {string}
  */
-const rowClassName = ({ row }: { row: DatabaseVo.TableOptions }) => {
+const rowClassName = ({ row }: { row: DatabaseVo.GetDatabaseTablesResponse }) => {
   return row.tableName === dataSource.value ? 'is-selected' : ''
 }
 
@@ -122,10 +122,10 @@ const rowClassName = ({ row }: { row: DatabaseVo.TableOptions }) => {
  * @desc 查询表格列表
  * @returns {Promise<void>}
  */
-const queryTable = async () => {
-  const result = await httpRequest('/api/queryTable', {
+const getTable = async () => {
+  const result = await httpRequest('/api/getDatabaseTables', {
     params: {
-      tableName: searchKeyword.value
+      tableName: searchKeyword.value || null
     }
   })
   if (result.code === 200) {
@@ -148,7 +148,7 @@ watch(
   () => isPopoverVisible.value,
   (visible) => {
     if (visible) {
-      queryTable()
+      getTable()
     }
   }
 )

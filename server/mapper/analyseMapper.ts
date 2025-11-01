@@ -1,5 +1,6 @@
 import type { ResultSetHeader } from 'mysql2'
-import { BaseMapper, Column, Mapping, Row, entityColumnsMap, mapToTarget, type IColumnTarget } from './baseMapper'
+import type { IColumnTarget, Row } from './baseMapper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from './baseMapper'
 
 // 基础字段字典
 export const ANALYSE_BASE_FIELDS = [
@@ -15,7 +16,7 @@ export const ANALYSE_BASE_FIELDS = [
   'is_deleted'
 ]
 
-export class AnalyzeMapping implements AnalyseDao.AnalyseOption, IColumnTarget {
+export class AnalyseMapping implements AnalyseDao.AnalyseOption, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -86,7 +87,7 @@ export class AnalyseMapper extends BaseMapper {
    * @param params {Array<any>} 参数
    * @returns {Promise<T>}
    */
-  public async exe<T>(sql: string, params?: Array<any>): Promise<T> {
+  public override async exe<T>(sql: string, params?: Array<any>): Promise<T> {
     return await super.exe<T>(sql, params)
   }
 
@@ -131,7 +132,7 @@ export class AnalyseMapper extends BaseMapper {
    * @param id {number} 图表id
    * @returns {Promise<AnalyseDao.AnalyseOption>}
    */
-  @Mapping(AnalyzeMapping)
+  @Mapping(AnalyseMapping)
   public async getAnalyse<T extends AnalyseDao.AnalyseOption>(analyseParams: AnalyseDto.GetAnalyseRequest): Promise<T> {
     const { id, updatedBy, updateTime, createdBy, createTime, analyseName, analyseDesc } = analyseParams
     await this.updateViewCount(id)
@@ -174,7 +175,7 @@ export class AnalyseMapper extends BaseMapper {
    * @desc 获取所有的图表
    * @returns {Promise<Array<AnalyseDao.AnalyseOption>>}
    */
-  @Mapping(AnalyzeMapping)
+  @Mapping(AnalyseMapping)
   public async getAnalyses<T extends AnalyseDao.AnalyseOption = AnalyseDao.AnalyseOption>(): Promise<Array<T>> {
     const sql = `
     select

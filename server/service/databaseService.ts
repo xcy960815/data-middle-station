@@ -1,5 +1,4 @@
 import { DatabaseMapper } from '../mapper/databaseMapper'
-import { toLine } from '../utils/databaseHelpper'
 
 /** 将数据库所有的类型罗列出来在前端统一展示成 number */
 const NUMBER_TYPE_ENUM = [
@@ -72,12 +71,14 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中所有表
-   * @param queryTableRequest {DatabaseDto.QueryTableRequest} 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.TableOptionVo>>}
+   * @param getTableRequest {DatabaseDto.GetDatabaseTablesRequest} 查询表请求参数
+   * @returns {Promise<Array<DatabaseVo.GetDatabaseTablesResponse>>}
    */
-  public async queryTable(queryTableRequest: DatabaseDto.QueryTableRequest): Promise<Array<DatabaseVo.TableOptions>> {
-    const result = await this.databaseMapper.queryTable(queryTableRequest)
-    return result.map((item) => ({
+  public async getTable(
+    getTableRequest: DatabaseDto.GetDatabaseTablesRequest
+  ): Promise<Array<DatabaseVo.GetDatabaseTablesResponse>> {
+    const getTableResult = await this.databaseMapper.getTable(getTableRequest)
+    return getTableResult.map((item) => ({
       ...item,
       createTime: item.createTime,
       updateTime: item.updateTime,
@@ -91,14 +92,14 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中表的列
-   * @param {DatabaseDto.TableColumnRequest} tableColumnRequest 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.TableColumnOption>>}
+   * @param {DatabaseDto.GetTableColumnsRequest} getTableColumnsRequest 查询表请求参数
+   * @returns {Promise<Array<DatabaseVo.GetTableColumnsResponse>>}
    */
-  public async queryTableColumn(
-    tableColumnRequest: DatabaseDto.TableColumnRequest
-  ): Promise<Array<DatabaseVo.TableColumnOption>> {
-    const result = await this.databaseMapper.queryTableColumn(tableColumnRequest)
-    return result.map((item) => {
+  public async getTableColumns(
+    getTableColumnsRequest: DatabaseDto.GetTableColumnsRequest
+  ): Promise<Array<DatabaseVo.GetTableColumnsResponse>> {
+    const getTableColumnsResult = await this.databaseMapper.getTableColumns(getTableColumnsRequest)
+    return getTableColumnsResult.map((item) => {
       const columnTypeValue = item.columnType
       let columnType = ''
       if (NUMBER_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {

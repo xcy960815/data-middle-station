@@ -5,13 +5,13 @@ declare namespace DatabaseDto {
   /**
    * @desc 查询表列请求参数
    */
-  type TableColumnRequest = {
+  type GetTableColumnsRequest = {
     tableName: string
   }
   /**
    * @desc 查询表请求参数
    */
-  type QueryTableRequest = {
+  type GetDatabaseTablesRequest = {
     tableName: string
   }
 }

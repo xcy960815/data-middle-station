@@ -1,6 +1,7 @@
-import { ResultSetHeader } from 'mysql2'
+import type { ResultSetHeader } from 'mysql2'
 import { batchFormatSqlKey, convertToSqlProperties } from '../utils/databaseHelpper'
-import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
+import type { IColumnTarget, Row } from './baseMapper'
+import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from './baseMapper'
 
 /**
  * @desc 执行日志基础字段

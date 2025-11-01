@@ -63,9 +63,9 @@ export class SendEmail {
   /**
    * @desc 发送邮件
    * @param options {SendEmailDto.SendChartEmailRequest}
-   * @returns {Promise<SendEmailVo.SendEmailOptions>} messageId
+   * @returns {Promise<SendEmailVo.SendEmailResponse>} messageId
    */
-  public async sendMail(options: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailOptions> {
+  public async sendMail(options: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailResponse> {
     if (!this.transporter) {
       this.createTransporter()
     }

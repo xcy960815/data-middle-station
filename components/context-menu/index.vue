@@ -133,7 +133,7 @@ const handleAfterEnter = (el: Element) => {
 /**
  * @desc 触发元素的配置
  */
-const contextMenuOptions = reactive<Map<Element, ContextMenu.ContextMenuOtions>>(new Map())
+const contextMenuOptions = reactive<Map<Element, ContextMenu.ContextMenuOptions>>(new Map())
 /**
  * @desc 当前触发元素
  * @type {Ref<ContextMenu.ContextMenuElement>}

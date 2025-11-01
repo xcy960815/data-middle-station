@@ -6,13 +6,13 @@ const analyseService = new AnalyseService()
  * @apiName updateAnalyse
  * @apiGroup analyse
  * @apiDescription 更新分析
- * @returns {Promise<ApiResponseI<boolean>>}
+ * @returns {Promise<ApiResponseI<AnalyseVo.UpdateAnalyseResponse>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<AnalyseVo.UpdateAnalyseResponse>>>(async (event) => {
   try {
-    const analyseOption = await readBody<AnalyseDto.UpdateAnalyseRequest>(event)
-    const data = await analyseService.updateAnalyse(analyseOption)
-    return ApiResponse.success(data)
+    const updateAnalyseRequest = await readBody<AnalyseDto.UpdateAnalyseRequest>(event)
+    const updateAnalyseResult = await analyseService.updateAnalyse(updateAnalyseRequest)
+    return ApiResponse.success(updateAnalyseResult)
   } catch (error: any) {
     return ApiResponse.error(error.message)
   }

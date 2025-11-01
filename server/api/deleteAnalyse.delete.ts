@@ -2,15 +2,15 @@ import { AnalyseService } from '../service/analyseService'
 const analyseService = new AnalyseService()
 
 /**
- * @Desc 删除分析
+ * 删除分析
  * @param event
- * @returns {Promise<ApiResponseI<boolean>>}
+ * @returns {Promise<ApiResponseI<AnalyseVo.DeleteAnalyseResponse>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<AnalyseVo.DeleteAnalyseResponse>>>(async (event) => {
   try {
-    const { id } = await readBody<AnalyseDto.DeleteAnalyseRequest>(event)
-    const analyse = await analyseService.deleteAnalyse(id)
-    return ApiResponse.success(analyse)
+    const deleteAnalyseRequest = await readBody<AnalyseDto.DeleteAnalyseRequest>(event)
+    const deleteAnalyseResult = await analyseService.deleteAnalyse(deleteAnalyseRequest)
+    return ApiResponse.success(deleteAnalyseResult)
   } catch (error: any) {
     return ApiResponse.error(error.message)
   }

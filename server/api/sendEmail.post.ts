@@ -23,7 +23,7 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
   })
 })
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
   try {
     const sendChartEmailRequest = await readBody<SendEmailDto.SendChartEmailRequest>(event)
 
