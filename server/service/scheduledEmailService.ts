@@ -32,10 +32,10 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 创建定时邮件任务
-   * @param {ScheduledEmailDto.CreateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
+   * @param {ScheduledEmailDto.CreateScheduledEmailRequest} scheduledEmailOptions 定时任务参数
    * @returns {Promise<boolean>}
    */
-  async createScheduledEmail(scheduledEmailOptions: ScheduledEmailDto.CreateScheduledEmailOptions): Promise<boolean> {
+  async createScheduledEmail(scheduledEmailOptions: ScheduledEmailDto.CreateScheduledEmailRequest): Promise<boolean> {
     try {
       // 验证任务类型和相关字段
       if (scheduledEmailOptions.taskType === 'scheduled') {
@@ -111,11 +111,11 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 获取定时邮件任务详情
    * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
-   * @returns {Promise<ScheduledEmailDto.ScheduledEmailOptions | null>}
+   * @returns {Promise<ScheduledEmailVo.ScheduledEmailResponse | null>}
    */
   async getScheduledEmail(
     scheduledEmailOptions: ScheduledEmailDto.UpdateScheduledEmailOptions
-  ): Promise<ScheduledEmailDto.ScheduledEmailOptions | null> {
+  ): Promise<ScheduledEmailVo.ScheduledEmailResponse | null> {
     const scheduledEmailTask = await this.scheduledEmailMapper.getScheduledEmailTaskById(scheduledEmailOptions.id)
     return scheduledEmailTask ? this.convertDaoToDto(scheduledEmailTask) : null
   }
@@ -200,12 +200,12 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 获取定时邮件任务列表
-   * @param {ScheduledEmailDto.ScheduledEmailListQuery} query 查询参数
-   * @returns {Promise<ScheduledEmailVo.ScheduledEmailOptions[]>}
+   * @param {ScheduledEmailDto.ScheduledEmailListRequest} query 查询参数
+   * @returns {Promise<ScheduledEmailVo.ScheduledEmailResponse[]>}
    */
   async getScheduledEmailList(
-    query: ScheduledEmailDto.ScheduledEmailListQuery
-  ): Promise<ScheduledEmailVo.ScheduledEmailOptions[]> {
+    query: ScheduledEmailDto.ScheduledEmailListRequest
+  ): Promise<ScheduledEmailVo.ScheduledEmailResponse[]> {
     try {
       const scheduledEmailList = await this.scheduledEmailMapper.getScheduledEmailList(query)
       return scheduledEmailList.map((task) => this.convertDaoToVo(task))
@@ -555,11 +555,11 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 转换DAO对象为DTO对象
+   * 转换DAO对象为VO对象
    * @param {ScheduledEmailDao.ScheduledEmailOptions} dao DAO对象
-   * @returns {ScheduledEmailDto.ScheduledEmailOptions}
+   * @returns {ScheduledEmailVo.ScheduledEmailResponse}
    */
-  private convertDaoToDto(dao: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailDto.ScheduledEmailOptions {
+  private convertDaoToDto(dao: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailVo.ScheduledEmailResponse {
     return {
       id: dao.id,
       taskName: dao.taskName,
@@ -590,12 +590,14 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 转换DAO对象为VO对象
-   * @param {ScheduledEmailDao.ScheduledEmailOptions} dao 定时邮件任务选项
-   * @returns {ScheduledEmailVo.ScheduledEmailOptions} 定时邮件任务选项
+   * @param {ScheduledEmailDao.ScheduledEmailOptions} scheduledEmailOptions 定时邮件任务选项
+   * @returns {ScheduledEmailVo.ScheduledEmailResponse} 定时邮件任务选项
    */
-  private convertDaoToVo(dao: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailVo.ScheduledEmailOptions {
+  private convertDaoToVo(
+    scheduledEmailOptions: ScheduledEmailDao.ScheduledEmailOptions
+  ): ScheduledEmailVo.ScheduledEmailResponse {
     return {
-      ...dao
+      ...scheduledEmailOptions
     }
   }
 }

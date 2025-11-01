@@ -3,15 +3,15 @@ import { AnalyseService } from '../service/analyseService'
 const analyseService = new AnalyseService()
 
 /**
- * @Desc 创建或者更新图表
+ * 创建分析
  * @param event
- * @returns {Promise<ApiResponseI<boolean>>}
+ * @returns {Promise<ApiResponseI<AnalyseVo.CreateAnalyseResponse>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<AnalyseVo.CreateAnalyseResponse>>>(async (event) => {
   try {
-    const analyseParams = await readBody<AnalyseDto.CreateAnalyseRequest>(event)
-    const analyse = await analyseService.createAnalyse(analyseParams)
-    return ApiResponse.success(analyse)
+    const createAnalyseRequest = await readBody<AnalyseDto.CreateAnalyseRequest>(event)
+    const createAnalyseResult = await analyseService.createAnalyse(createAnalyseRequest)
+    return ApiResponse.success(createAnalyseResult)
   } catch (error: any) {
     return ApiResponse.error(error.message)
   }

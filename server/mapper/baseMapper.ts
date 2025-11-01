@@ -20,7 +20,7 @@ export const entityColumnsMap = new WeakMap<Function, ColumnMapping>()
  * 字段映射装饰器
  */
 export function Column(columnName: string): PropertyDecorator {
-  return (target, propertyKey) => {
+  return (target: Object, propertyKey: string | symbol) => {
     const constructor = target.constructor
     const mapping = entityColumnsMap.get(constructor) ?? new Map()
     mapping.set(columnName, propertyKey.toString())
@@ -68,7 +68,10 @@ export function mapToTarget(
  * 方法映射装饰器
  */
 export function Mapping(mapping: Constructor<IColumnTarget>): MethodDecorator {
-  return (_target, _propertyKey, descriptor: PropertyDescriptor) => {
+  return (_target: Object, _propertyKey: string | symbol, descriptor?: PropertyDescriptor) => {
+    if (!descriptor) {
+      throw new Error('装饰器必须应用于有描述符的属性')
+    }
     const originalMethod = descriptor.value as AsyncMethod
     if (!originalMethod) {
       throw new Error('方法装饰器必须应用于方法')

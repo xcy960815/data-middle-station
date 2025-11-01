@@ -32,9 +32,9 @@ declare namespace ScheduledEmailDto {
   type Status = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
 
   /**
-   * @desc 定时邮件任务选项/响应
+   * @desc 创建定时邮件任务请求
    */
-  interface ScheduledEmailOptions {
+  interface CreateScheduledEmailRequest {
     /**
      * 任务ID
      */
@@ -121,7 +121,7 @@ declare namespace ScheduledEmailDto {
    * @desc 创建定时邮件任务请求
    */
   type CreateScheduledEmailOptions = Omit<
-    ScheduledEmailOptions,
+    CreateScheduledEmailRequest,
     | 'id'
     | 'nextExecutionTime'
     | 'createdTime'
@@ -140,7 +140,7 @@ declare namespace ScheduledEmailDto {
    * 更新定时邮件任务请求
    */
   type UpdateScheduledEmailOptions = Omit<
-    ScheduledEmailOptions,
+    CreateScheduledEmailRequest,
     | 'id'
     | 'nextExecutionTime'
     | 'createdTime'
@@ -237,7 +237,7 @@ declare namespace ScheduledEmailDto {
   /**
    * 定时邮件列表查询参数
    */
-  interface ScheduledEmailListQuery {
+  interface ScheduledEmailListRequest {
     id?: number
     taskName?: string
     status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
