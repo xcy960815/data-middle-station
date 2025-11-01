@@ -4,12 +4,13 @@ const analyseService = new AnalyseService()
 
 /**
  * @desc 获取分析列表
- * @api {post} /analyse/getAnalyses
+ * @param event
+ * @returns {Promise<ApiResponseI<Array<AnalyseVo.GetAnalyseResponse>>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<Array<AnalyseVo.AnalyseResponse>>>>(async () => {
+export default defineEventHandler<Promise<ApiResponseI<Array<AnalyseVo.GetAnalyseResponse>>>>(async () => {
   try {
-    const analyses = await analyseService.getAnalyses()
-    return ApiResponse.success(analyses)
+    const getAnalysesResult = await analyseService.getAnalyses()
+    return ApiResponse.success(getAnalysesResult)
   } catch (e: any) {
     return ApiResponse.error(e.message)
   }

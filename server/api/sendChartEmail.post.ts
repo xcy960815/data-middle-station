@@ -54,12 +54,12 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
     })
 })
 
-export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOptions>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
   try {
     const requestBody = await readBody<SendEmailDto.SendChartEmailRequest>(event)
 
     // 使用 Joi 进行数据验证
-    const { error, value: validatedData } = sendChartEmailSchema.validate(requestBody, {
+    const { error } = sendChartEmailSchema.validate(requestBody, {
       abortEarly: false, // 返回所有验证错误
       stripUnknown: true, // 移除未知字段
       convert: true // 自动类型转换
