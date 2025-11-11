@@ -5,7 +5,7 @@
     :title="'访问次数' + viewCount"
   >
     <div class="card-inset">
-      <div class="card-title">{{ analyseName }}</div>
+      <div class="card-title">{{ analyzeName }}</div>
       <div class="card-info">
         <div class="info-row">
           <span class="creator">{{ createdBy || '未知' }}</span>
@@ -13,12 +13,12 @@
         </div>
       </div>
       <!-- 编辑图标 -->
-      <div class="edit-icon" @click.stop="handleEditAnalyse">
+      <div class="edit-icon" @click.stop="handleEditAnalyze">
         <!-- 编辑图标 -->
         <icon-park type="Edit" size="14" fill="#333" />
       </div>
       <!-- 删除图标 -->
-      <div class="delete-icon" @click.stop="handleDeleteAnalyse">
+      <div class="delete-icon" @click.stop="handleDeleteAnalyze">
         <!-- 删除图标 -->
         <icon-park type="DeleteOne" size="14" fill="#333" />
       </div>
@@ -35,7 +35,7 @@ const props = defineProps({
     required: true,
     default: ''
   },
-  analyseName: {
+  analyzeName: {
     type: String,
     required: true,
     default: ''
@@ -66,19 +66,19 @@ const props = defineProps({
  * @desc 点击卡片跳转到对应的分析页面
  */
 const handleClickCard = () => {
-  navigateTo(`/analyse?id=${props.id}`)
+  navigateTo(`/analyze?id=${props.id}`)
 }
 /**
  * @desc 编辑分析
  */
-const handleEditAnalyse = () => {
+const handleEditAnalyze = () => {
   emit('edit', props.id)
 }
 /**
  * @desc 删除分析
  */
-const handleDeleteAnalyse = () => {
-  emit('delete', props.id, props.analyseName)
+const handleDeleteAnalyze = () => {
+  emit('delete', props.id, props.analyzeName)
 }
 </script>
 

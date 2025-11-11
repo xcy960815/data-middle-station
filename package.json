@@ -34,6 +34,11 @@
   "overrides": {
     "vue": "latest"
   },
+  "pnpm": {
+    "overrides": {
+      "undici": "6.21.0"
+    }
+  },
   "optionalDependencies": {
     "@rollup/rollup-darwin-x64": "4.12.0"
   },

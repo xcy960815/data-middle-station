@@ -12,19 +12,19 @@ export const useHomepageStore = defineStore<
   BaseStore.Actions<HomePageStore.HomePageState, HomePageStore.HomePageActions>
 >(StoreNames.HOMEPAGE, {
   state: () => ({
-    analyses: []
+    analyzes: []
   }),
   getters: {
-    getAnalyses(state) {
-      return state.analyses
+    getAnalyzes(state) {
+      return state.analyzes
     }
   },
   actions: {
     /**
      * @desc 设置分析列表
      */
-    setAnalyses(value) {
-      this.analyses = value
+    setAnalyzes(value) {
+      this.analyzes = value
     }
   }
 })

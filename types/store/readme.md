@@ -7,7 +7,7 @@
 | 声明文件           | 功能描述                       |
 | ------------------ | ------------------------------ |
 | `BaseStore.d.ts`   | 基础 Store 的通用类型定义      |
-| `Analyse.d.ts`     | 数据分析和图表相关的状态管理   |
+| `Analyze.d.ts`     | 数据分析和图表相关的状态管理   |
 | `ChartConfig.d.ts` | 图表配置相关的状态管理         |
 | `Column.d.ts`      | 数据列管理的状态和操作         |
 | `Filter.d.ts`      | 数据过滤器的状态和操作         |
@@ -30,13 +30,13 @@
   - `ActionName<T>`: Action 命名规范（set + 首字母大写）
   - `Actions<S, A>`: Action 类型定义
 
-### 数据分析 Store (`Analyse.d.ts`)
+### 数据分析 Store (`Analyze.d.ts`)
 
 - **功能**: 管理图表分析相关的状态和操作
 - **主要类型**:
   - `ChartType`: 图表类型枚举（table、line、pie、interval）
-  - `AnalyseState`: 分析状态结构
-  - `AnalyseKey`: Store 键名类型
+  - `AnalyzeState`: 分析状态结构
+  - `AnalyzeKey`: Store 键名类型
 
 ### 图表配置 Store (`ChartConfig.d.ts`)
 
@@ -89,9 +89,9 @@
 // 在组件中使用 Store 类型
 export default defineComponent({
   setup() {
-    // 使用 Analyse Store
-    const analyseState: AnalyseStore.AnalyseState = {
-      analyseName: '销售数据分析',
+    // 使用 Analyze Store
+    const analyzeState: AnalyzeStore.AnalyzeState = {
+      analyzeName: '销售数据分析',
       chartType: 'table',
       chartData: []
       // ...其他属性
@@ -108,7 +108,7 @@ export default defineComponent({
     ]
 
     return {
-      analyseState,
+      analyzeState,
       filterOptions
     }
   }
@@ -143,7 +143,7 @@ type MyStoreActions = BaseStore.Actions<
 
 所有 Store 类型都使用命名空间，避免类型污染：
 
-- `AnalyseStore.*` - 分析相关类型
+- `AnalyzeStore.*` - 分析相关类型
 - `ChartConfigStore.*` - 图表配置类型
 - `FilterStore.*` - 过滤器类型
 - `ColumnStore.*` - 数据列类型
@@ -202,7 +202,7 @@ type MyStoreActions = BaseStore.Actions<
 ```
 BaseStore (基础类型)
     ↓
-├── AnalyseStore
+├── AnalyzeStore
 ├── ChartConfigStore
 ├── FilterStore
 ├── ColumnStore

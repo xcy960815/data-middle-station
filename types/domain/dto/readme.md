@@ -4,7 +4,7 @@
 
 ## 文件说明
 
-### AnalyseDto.d.ts
+### AnalyzeDto.d.ts
 
 分析相关的数据传输对象类型定义
 
@@ -55,10 +55,10 @@
 
 ```typescript
 // 导入 DTO 类型
-import type { AnalyseDto } from '~/types/domain/dto/AnalyseDto'
+import type { AnalyzeDto } from '~/types/domain/dto/AnalyzeDto'
 
 // 使用 DTO 类型
-const analyseRequest: AnalyseDto.CreateAnalyseRequest = {
+const analyzeRequest: AnalyzeDto.CreateAnalyzeRequest = {
   name: '示例分析',
   config: {
     /* 配置对象 */

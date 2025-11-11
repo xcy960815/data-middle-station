@@ -1,7 +1,7 @@
 declare namespace ScheduledEmailVo {
   type Status = ScheduledEmailDao.Status
   type EmailConfig = ScheduledEmailDao.EmailConfig
-  type AnalyseOptions = ScheduledEmailDao.AnalyseOptions
+  type AnalyzeOptions = ScheduledEmailDao.AnalyzeOptions
   type TaskType = ScheduledEmailDao.TaskType
 
   /**
@@ -47,7 +47,7 @@ declare namespace ScheduledEmailVo {
     /**
      * 图表数据
      */
-    analyseOptions: AnalyseOptions
+    analyzeOptions: AnalyzeOptions
     /**
      * 任务状态
      */

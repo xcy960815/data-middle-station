@@ -187,7 +187,7 @@ export const defaultCommonChartConfig: ChartConfigVo.CommonChartConfigResponse =
   /**
    * @desc 分析描述
    */
-  analyseDesc: '',
+  analyzeDesc: '',
   /**
    * @desc 分享策略
    */

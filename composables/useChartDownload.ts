@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx'
 export const useChartDownload = () => {
   const dimensionStore = useDimensionsStore()
   const groupStore = useGroupsStore()
-  const analyseStore = useAnalyseStore()
+  const analyzeStore = useAnalyzeStore()
   const columnStore = useColumnsStore()
 
   /**
@@ -72,9 +72,9 @@ export const useChartDownload = () => {
    * @param selectedColumns 选中的列
    */
   const executeDownload = async (selectedColumns: string[]) => {
-    const data = analyseStore.getChartData
+    const data = analyzeStore.getChartData
     const columns = selectedColumns
-    const fileName = `${analyseStore.getAnalyseName}.xlsx`
+    const fileName = `${analyzeStore.getAnalyzeName}.xlsx`
     const sheetName = columnStore.getDataSource
 
     // 显示下载开始提示

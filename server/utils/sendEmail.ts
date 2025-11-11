@@ -71,13 +71,13 @@ export class SendEmail {
     }
 
     // 构建附件配置
-    const attachments = this.buildAttachments(options.analyseOptions)
+    const attachments = this.buildAttachments(options.analyzeOptions)
 
     const result = await this.transporter!.sendMail({
       from: this.smtpFrom || this.smtpUser!,
       to: options.emailConfig.to,
       subject: options.emailConfig.subject,
-      html: this.buildEmailContent(options.emailConfig, options.analyseOptions),
+      html: this.buildEmailContent(options.emailConfig, options.analyzeOptions),
       attachments
     })
 
@@ -90,27 +90,27 @@ export class SendEmail {
 
   /**
    * @desc 构建附件配置
-   * @param analyseOptions {SendEmailDto.AnalyseOptions}
+   * @param analyzeOptions {SendEmailDto.AnalyzeOptions}
    * @returns {Array}
    */
-  private buildAttachments(analyseOptions: SendEmailDto.AnalyseOptions): Array<any> {
-    if (!analyseOptions.filename) {
+  private buildAttachments(analyzeOptions: SendEmailDto.AnalyzeOptions): Array<any> {
+    if (!analyzeOptions.filename) {
       return []
     }
 
     const attachment: any = {
-      filename: analyseOptions.filename,
+      filename: analyzeOptions.filename,
       contentType: 'image/png'
     }
 
     // 优先使用文件内容
-    if (analyseOptions.fileContent) {
-      attachment.content = analyseOptions.fileContent
-    } else if (analyseOptions.filePath) {
-      attachment.path = analyseOptions.filePath
+    if (analyzeOptions.fileContent) {
+      attachment.content = analyzeOptions.fileContent
+    } else if (analyzeOptions.filePath) {
+      attachment.path = analyzeOptions.filePath
     } else {
       // 如果既没有内容也没有路径，记录警告但不添加附件
-      logger.warn(`邮件附件 ${analyseOptions.filename} 缺少内容或路径，将跳过附件`)
+      logger.warn(`邮件附件 ${analyzeOptions.filename} 缺少内容或路径，将跳过附件`)
       return []
     }
 
@@ -120,12 +120,12 @@ export class SendEmail {
   /**
    * @desc 构建邮件内容
    * @param emailConfig {SendEmailDto.EmailConfig}
-   * @param analyseOptions {SendEmailDto.AnalyseOptions}
+   * @param analyzeOptions {SendEmailDto.AnalyzeOptions}
    * @returns {string}
    */
   private buildEmailContent(
     emailConfig: SendEmailDto.EmailConfig,
-    analyseOptions: SendEmailDto.AnalyseOptions
+    analyzeOptions: SendEmailDto.AnalyzeOptions
   ): string {
     const additionalContent = emailConfig.additionalContent
       ? `<div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
@@ -165,7 +165,7 @@ export class SendEmail {
 
             <div class="chart-info">
               <h3 style="margin-top: 0; color: #495057;">📈 图表信息</h3>
-              <p style="margin: 5px 0;"><strong>图表标题:</strong> ${analyseOptions.analyseName}</p>
+              <p style="margin: 5px 0;"><strong>图表标题:</strong> ${analyzeOptions.analyzeName}</p>
               <p style="margin: 5px 0;"><strong>生成时间:</strong> ${new Date().toLocaleString('zh-CN')}</p>
             </div>
 
