@@ -1,0 +1,6 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": ["antv", "konva", "sxzz", "popperjs"],
+  "ignorePaths": ["node_modules", "dist", ".nuxt", ".output"]
+}
