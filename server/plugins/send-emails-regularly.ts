@@ -152,19 +152,31 @@ const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailResponse): v
     return
   }
 
-  // 解析时间 HH:mm:ss
-  const timeParts = task.recurringTime.split(':')
-  const hour = parseInt(timeParts[0])
-  const minute = parseInt(timeParts[1])
-  const second = timeParts[2] ? parseInt(timeParts[2]) : 0
+  let cronExpression: string
 
-  // 构建 cron 表达式
-  // 格式: 秒 分 时 日 月 星期
-  // 例如: "0 30 9 * * 1,3,5" = 每周一、三、五的 9:30:00
-  const dayOfWeek = task.recurringDays.join(',')
-  const cronExpression = `${second} ${minute} ${hour} * * ${dayOfWeek}`
+  // 检查是否是高频执行格式（如 "*/1" 表示每1分钟）
+  if (task.recurringTime.startsWith('*/')) {
+    // 高频执行模式：*/N 表示每N分钟执行一次
+    const interval = task.recurringTime.substring(2)
+    const dayOfWeek = task.recurringDays.join(',')
+    // cron 格式: 秒 分 时 日 月 星期
+    // 例如: "0 */1 * * * *" = 每1分钟执行
+    cronExpression = `0 ${task.recurringTime} * * * ${dayOfWeek}`
+    logger.info(`🔧 构建高频 cron 表达式: ${cronExpression} (每${interval}分钟执行)`)
+  } else {
+    // 标准时间格式 HH:mm:ss
+    const timeParts = task.recurringTime.split(':')
+    const hour = parseInt(timeParts[0])
+    const minute = parseInt(timeParts[1])
+    const second = timeParts[2] ? parseInt(timeParts[2]) : 0
 
-  logger.info(`🔧 构建 cron 表达式: ${cronExpression} (${task.taskName})`)
+    // 构建 cron 表达式
+    // 格式: 秒 分 时 日 月 星期
+    // 例如: "0 30 9 * * 1,3,5" = 每周一、三、五的 9:30:00
+    const dayOfWeek = task.recurringDays.join(',')
+    cronExpression = `${second} ${minute} ${hour} * * ${dayOfWeek}`
+    logger.info(`🔧 构建 cron 表达式: ${cronExpression} (${task.taskName})`)
+  }
 
   // 创建重复调度任务
   const job = schedule.scheduleJob(cronExpression, async () => {
