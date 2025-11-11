@@ -65,7 +65,7 @@ export class AnalyzeMapping implements AnalyzeDao.AnalyzeOption, IColumnTarget {
 /**
  * @desc 本文件使用到的表
  */
-const ANALYZE_TABLE_NAME = 'analyze'
+const ANALYZE_TABLE_NAME = '`analyze`'
 
 /**
  * 本文件使用到的数据源
