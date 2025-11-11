@@ -1,4 +1,4 @@
-// export { useAnalyseStore } from './analyse'
+// export { useAnalyzeStore } from './analyze'
 // export { useDimensionsStore } from './dimension'
 // export { useGroupsStore } from './group'
 // export { useColumnsStore } from './column'

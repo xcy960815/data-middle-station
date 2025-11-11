@@ -67,7 +67,7 @@ data-middle-station/
 ├── layouts/              # 布局组件
 ├── middleware/           # 中间件
 ├── pages/                # 页面组件
-│   ├── analyse/          # 数据分析页面
+│   ├── analyze/          # 数据分析页面
 │   ├── dashboard/        # 仪表盘页面
 │   ├── homepage/         # 首页
 │   └── ...              # 其他功能页面
@@ -87,7 +87,7 @@ data-middle-station/
 
 ### 核心模块
 
-#### 1. 数据分析模块 (`pages/analyse/`)
+#### 1. 数据分析模块 (`pages/analyze/`)
 
 负责数据的查询、分析和可视化展示，是系统的核心功能模块。
 
@@ -126,7 +126,7 @@ data-middle-station/
 
 **主要 Store:**
 
-- `analyse`: 分析配置状态
+- `analyze`: 分析配置状态
 - `chart-config`: 图表配置
 - `columns`: 字段配置
 - `dimensions`: 维度配置
@@ -141,10 +141,10 @@ data-middle-station/
 
 **主要API:**
 
-- `getAnalyses`: 获取分析列表
-- `getAnalyse`: 获取单个分析配置
-- `createAnalyse`: 创建分析
-- `updateAnalyse`: 更新分析
+- `getAnalyzes`: 获取分析列表
+- `getAnalyze`: 获取单个分析配置
+- `createAnalyze`: 创建分析
+- `updateAnalyze`: 更新分析
 - `getChartData`: 获取图表数据
 - `sendChartEmail`: 发送图表邮件
 - `scheduledEmails`: 定时邮件管理
@@ -187,21 +187,21 @@ data-middle-station/
 
 ### 主要数据表
 
-#### 1. analyse (分析表)
+#### 1. analyze (分析表)
 
 存储数据分析的基本信息。
 
 ```sql
-CREATE TABLE `analyse` (
+CREATE TABLE `analyze` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `analyse_name` varchar(255) DEFAULT NULL COMMENT '分析名称',
+  `analyze_name` varchar(255) DEFAULT NULL COMMENT '分析名称',
   `view_count` int unsigned DEFAULT '0' COMMENT '访问次数',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `created_by` varchar(100) DEFAULT NULL COMMENT '创建人',
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `updated_by` varchar(100) DEFAULT NULL COMMENT '更新人',
   `chart_config_id` bigint DEFAULT NULL COMMENT '图表配置ID',
-  `analyse_desc` varchar(255) DEFAULT NULL COMMENT '分析描述',
+  `analyze_desc` varchar(255) DEFAULT NULL COMMENT '分析描述',
   `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='图表信息表';
@@ -242,7 +242,7 @@ CREATE TABLE `scheduled_email_tasks` (
   `recurring_time` time DEFAULT NULL COMMENT '每日执行时间',
   `is_active` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用任务',
   `email_config` json NOT NULL COMMENT '邮件配置',
-  `analyse_options` json NOT NULL COMMENT '图表数据',
+  `analyze_options` json NOT NULL COMMENT '图表数据',
   `status` enum('pending','running','completed','failed','cancelled') NOT NULL DEFAULT 'pending' COMMENT '任务状态',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='定时邮件任务表';
@@ -436,7 +436,7 @@ git commit -m "docs: 更新API文档"
 #### 获取分析列表
 
 ```
-POST /api/getAnalyses
+POST /api/getAnalyzes
 Content-Type: application/json
 
 Response:
@@ -445,8 +445,8 @@ Response:
   "data": [
     {
       "id": 1,
-      "analyseName": "销售数据看板",
-      "analyseDesc": "销售数据看板的描述",
+      "analyzeName": "销售数据看板",
+      "analyzeDesc": "销售数据看板的描述",
       "viewCount": 780,
       "createTime": "2025-05-30 02:19:10",
       "updatedBy": "system"
@@ -459,11 +459,11 @@ Response:
 #### 获取分析详情
 
 ```
-POST /api/getAnalyse
+POST /api/getAnalyze
 Content-Type: application/json
 
 {
-  "analyseId": 1
+  "analyzeId": 1
 }
 
 Response:
@@ -471,7 +471,7 @@ Response:
   "code": 200,
   "data": {
     "id": 1,
-    "analyseName": "销售数据看板",
+    "analyzeName": "销售数据看板",
     "chartConfig": {
       "chartType": "interval",
       "dataSource": "operationAnalysis",
@@ -486,12 +486,12 @@ Response:
 #### 创建分析
 
 ```
-POST /api/createAnalyse
+POST /api/createAnalyze
 Content-Type: application/json
 
 {
-  "analyseName": "新的分析",
-  "analyseDesc": "分析描述",
+  "analyzeName": "新的分析",
+  "analyzeDesc": "分析描述",
   "chartConfig": {
     "chartType": "table",
     "dataSource": "tableName",
@@ -563,10 +563,10 @@ Content-Type: application/json
     "subject": "数据分析报告",
     "additionalContent": "附加说明"
   },
-  "analyseOptions": {
-    "analyseId": 1,
+  "analyzeOptions": {
+    "analyzeId": 1,
     "chartType": "table",
-    "analyseName": "销售数据看板"
+    "analyzeName": "销售数据看板"
   }
 }
 ```

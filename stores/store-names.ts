@@ -1,6 +1,6 @@
 export enum StoreNames {
   HOMEPAGE = 'homepage',
-  ANALYSE = 'analyse',
+  ANALYZE = 'analyze',
   CONFIG = 'config',
   DIMENSIONS = 'dimensions',
   GROUPS = 'groups',

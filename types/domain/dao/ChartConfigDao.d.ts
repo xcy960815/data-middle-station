@@ -130,7 +130,7 @@ declare namespace ChartConfigDao {
     /**
      * 分析描述
      */
-    analyseDesc: string
+    analyzeDesc: string
     /**
      * 数据量
      */

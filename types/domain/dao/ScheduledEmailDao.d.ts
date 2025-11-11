@@ -59,7 +59,7 @@ declare namespace ScheduledEmailDao {
   /**
    * @desc 分析选项
    */
-  type AnalyseOptions = {
+  type AnalyzeOptions = {
     /**
      * 附件名称
      */
@@ -71,11 +71,11 @@ declare namespace ScheduledEmailDao {
     /**
      * 分析名称
      */
-    analyseName: string
+    analyzeName: string
     /**
      * 分析id
      */
-    analyseId: number
+    analyzeId: number
   }
   /**
    * @desc 任务类型 scheduled 定时任务 recurring 重复任务
@@ -125,7 +125,7 @@ declare namespace ScheduledEmailDao {
     /**
      * 图表数据
      */
-    analyseOptions: AnalyseOptions
+    analyzeOptions: AnalyzeOptions
     /**
      * 任务状态
      */

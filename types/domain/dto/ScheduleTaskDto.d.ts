@@ -16,7 +16,7 @@ declare namespace ScheduleTaskDto {
     title: string // 图表标题
     base64Image: string // 图表base64图片
     filename: string // 文件名
-    analyseName?: string // 分析名称
+    analyzeName?: string // 分析名称
   }
 
   /**
