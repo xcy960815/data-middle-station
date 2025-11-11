@@ -14,7 +14,7 @@ declare namespace SendEmailDto {
     additionalContent: string
   }
 
-  interface AnalyseOptions {
+  interface AnalyzeOptions {
     /**
      * 文件名
      */
@@ -34,11 +34,11 @@ declare namespace SendEmailDto {
     /**
      * 分析名称
      */
-    analyseName: string
+    analyzeName: string
     /**
      * 分析ID
      */
-    analyseId: number
+    analyzeId: number
   }
 
   interface SendChartEmailRequest {
@@ -49,7 +49,7 @@ declare namespace SendEmailDto {
     /**
      * 分析选项
      */
-    analyseOptions: AnalyseOptions
+    analyzeOptions: AnalyzeOptions
   }
   /**
    * 图表导出配置

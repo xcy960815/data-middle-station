@@ -1,10 +1,10 @@
 declare namespace HomePageStore {
   type HomePageKey = 'homepage'
 
-  type AnalyseOption = AnalyseVo.AnalyseOption
+  type AnalyzeOption = AnalyzeVo.AnalyzeOption
 
   type HomePageState = {
-    analyses: AnalyseOption[]
+    analyzes: AnalyzeOption[]
   }
 
   type HomePageGetters = {}
