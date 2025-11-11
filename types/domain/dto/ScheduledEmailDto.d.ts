@@ -19,11 +19,11 @@ declare namespace ScheduledEmailDto {
   /**
    * @desc 分析选项
    */
-  interface AnalyseOptions {
+  interface AnalyzeOptions {
     filename: string
     chartType: string
-    analyseName: string
-    analyseId: number
+    analyzeName: string
+    analyzeId: number
   }
 
   /**
@@ -74,7 +74,7 @@ declare namespace ScheduledEmailDto {
     /**
      * 图表数据
      */
-    analyseOptions: AnalyseOptions
+    analyzeOptions: AnalyzeOptions
     /**
      * 任务状态
      */

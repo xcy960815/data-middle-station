@@ -83,7 +83,7 @@ export class ScheduledEmailService extends BaseService {
         isActive: true,
         nextExecutionTime: nextExecutionTime,
         emailConfig: scheduledEmailOptions.emailConfig,
-        analyseOptions: scheduledEmailOptions.analyseOptions,
+        analyzeOptions: scheduledEmailOptions.analyzeOptions,
         status: 'pending',
         remark: scheduledEmailOptions.remark,
         createdTime: createTime,
@@ -156,7 +156,7 @@ export class ScheduledEmailService extends BaseService {
       taskName: scheduledEmailOptions.taskName || scheduledEmailTask.taskName,
       scheduleTime: scheduledEmailOptions.scheduleTime || scheduledEmailTask.scheduleTime,
       emailConfig: scheduledEmailOptions.emailConfig,
-      analyseOptions: scheduledEmailOptions.analyseOptions,
+      analyzeOptions: scheduledEmailOptions.analyzeOptions,
       status: scheduledEmailTask.status,
       remark: scheduledEmailOptions.remark !== undefined ? scheduledEmailOptions.remark : scheduledEmailTask.remark,
       maxRetries: 3,
@@ -460,7 +460,7 @@ export class ScheduledEmailService extends BaseService {
 
       // 解析配置
       const emailConfig = scheduledEmailTask.emailConfig
-      const analyseOptions = scheduledEmailTask.analyseOptions
+      const analyzeOptions = scheduledEmailTask.analyzeOptions
 
       // 使用 SendEmail 工具发送邮件
       const result = await this.sendEmailUtil.sendMail({
@@ -469,7 +469,7 @@ export class ScheduledEmailService extends BaseService {
           subject: emailConfig.subject,
           additionalContent: emailConfig.additionalContent || ''
         },
-        analyseOptions: analyseOptions
+        analyzeOptions: analyzeOptions
       })
 
       // 更新任务状态为完成
@@ -574,7 +574,7 @@ export class ScheduledEmailService extends BaseService {
         subject: dao.emailConfig.subject,
         additionalContent: dao.emailConfig.additionalContent
       },
-      analyseOptions: dao.analyseOptions,
+      analyzeOptions: dao.analyzeOptions,
       status: dao.status,
       remark: dao.remark,
       createdTime: dao.createdTime,

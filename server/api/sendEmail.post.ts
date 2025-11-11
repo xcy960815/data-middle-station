@@ -15,11 +15,11 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
     subject: Joi.string().required(),
     additionalContent: Joi.string().required()
   }),
-  analyseOptions: Joi.object<SendEmailDto.AnalyseOptions>({
+  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
     filename: Joi.string().required(),
     chartType: Joi.string().required(),
-    analyseName: Joi.string().required(),
-    analyseId: Joi.number().required()
+    analyzeName: Joi.string().required(),
+    analyzeId: Joi.number().required()
   })
 })
 

@@ -26,7 +26,7 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
     })
   }).required(),
 
-  analyseOptions: Joi.object<SendEmailDto.AnalyseOptions>({
+  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
     filename: Joi.string().min(1).max(100).required().messages({
       'string.min': '文件名不能为空',
       'string.max': '文件名不能超过100个字符',
@@ -36,12 +36,12 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
       'any.only': '图表类型必须是 line、bar、pie、table 或 interval 之一',
       'any.required': '图表类型不能为空'
     }),
-    analyseName: Joi.string().min(1).max(100).required().messages({
+    analyzeName: Joi.string().min(1).max(100).required().messages({
       'string.min': '分析名称不能为空',
       'string.max': '分析名称不能超过100个字符',
       'any.required': '分析名称不能为空'
     }),
-    analyseId: Joi.number().integer().positive().required().messages({
+    analyzeId: Joi.number().integer().positive().required().messages({
       'number.base': '分析ID必须是数字',
       'number.integer': '分析ID必须是整数',
       'number.positive': '分析ID必须大于0',

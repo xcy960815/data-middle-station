@@ -16,7 +16,7 @@ const SCHEDULED_EMAIL_TASK_BASE_FIELDS = [
   'is_active',
   'next_execution_time',
   'email_config',
-  'analyse_options',
+  'analyze_options',
   'status',
   'remark',
   'created_by',
@@ -106,8 +106,8 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
   /**
    * 分析选项
    */
-  @Column('analyse_options')
-  analyseOptions!: ScheduledEmailDao.AnalyseOptions
+  @Column('analyze_options')
+  analyzeOptions!: ScheduledEmailDao.AnalyzeOptions
 
   /**
    * 任务状态
