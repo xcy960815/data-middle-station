@@ -24,6 +24,44 @@ interface CharConfig {
 }
 
 /**
+ * 字符配置常量 - 必须在类定义之前初始化
+ */
+const CONFIG: CharConfig = {
+  CHAR_SET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+  FONT_COLORS: [
+    '#33B5E5',
+    '#0099CC',
+    '#AA66CC',
+    '#9933CC',
+    '#99CC00',
+    '#669900',
+    '#FFBB33',
+    '#FF8800',
+    '#FF4444',
+    '#CC0000'
+  ],
+  FONT_SIZE_MULTIPLIER: 1,
+  CHAR_DENSITY: 20,
+  FADE_SPEED: 0.05
+} as const
+
+/**
+ * 从字符集中随机获取一个字符
+ * @returns 随机字符
+ */
+function getRandomChar(): string {
+  return CONFIG.CHAR_SET[Math.floor(Math.random() * CONFIG.CHAR_SET.length)]
+}
+
+/**
+ * 从颜色集中随机获取一个颜色
+ * @returns 随机颜色代码
+ */
+function getRandomColor(): string {
+  return CONFIG.FONT_COLORS[Math.floor(Math.random() * CONFIG.FONT_COLORS.length)]
+}
+
+/**
  * 表示动画中的单个字符
  */
 class Char {
@@ -96,41 +134,6 @@ class Char {
     this.char = getRandomChar()
     this.color = getRandomColor()
   }
-}
-
-const CONFIG: CharConfig = {
-  CHAR_SET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-  FONT_COLORS: [
-    '#33B5E5',
-    '#0099CC',
-    '#AA66CC',
-    '#9933CC',
-    '#99CC00',
-    '#669900',
-    '#FFBB33',
-    '#FF8800',
-    '#FF4444',
-    '#CC0000'
-  ],
-  FONT_SIZE_MULTIPLIER: 1,
-  CHAR_DENSITY: 20,
-  FADE_SPEED: 0.05
-} as const
-
-/**
- * 从字符集中随机获取一个字符
- * @returns 随机字符
- */
-function getRandomChar(): string {
-  return CONFIG.CHAR_SET[Math.floor(Math.random() * CONFIG.CHAR_SET.length)]
-}
-
-/**
- * 从颜色集中随机获取一个颜色
- * @returns 随机颜色代码
- */
-function getRandomColor(): string {
-  return CONFIG.FONT_COLORS[Math.floor(Math.random() * CONFIG.FONT_COLORS.length)]
 }
 
 /**
@@ -246,7 +249,7 @@ const userStore = useUserStore()
  * 导航到主页的处理函数
  */
 const navigateToHome = async () => {
-  const loginResult = await httpRequest('/api/login', {
+  const loginResult = await $fetch('/api/login', {
     method: 'POST',
     body: {
       userName: 'admin',
