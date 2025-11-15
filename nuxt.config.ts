@@ -67,33 +67,67 @@ export default defineNuxtConfig({
             }
             return `_nuxt/[name].[hash].[ext]`
           },
-          // 简化代码分割配置，避免构建卡住
+          /**
+           * 安全的代码分割策略
+           *
+           * ⚠️ 核心原则：不要分离框架核心，避免破坏 Nuxt 初始化顺序
+           *
+           * 禁止分离的库（必须让 Vite 自动处理）：
+           * - vue, @vue/*           (Vue 核心)
+           * - pinia, @pinia/*       (状态管理，依赖 Vue 实例)
+           * - vue-router            (路由，依赖 Vue 实例)
+           * - nuxt, @nuxt/*, #app   (Nuxt 框架核心)
+           *
+           * 可以安全分离的库：
+           * - 大型独立的第三方库（Monaco、图表库等）
+           * - 工具类库（dayjs、lodash 等）
+           * - UI 组件库（Element Plus，但要注意它由 Nuxt Module 管理）
+           */
           manualChunks: (id) => {
-            // 只对主要的 node_modules 进行分割
-            if (id.includes('node_modules')) {
-              // 大型库单独分包
-              if (id.includes('element-plus')) {
-                return 'element-plus'
-              }
-              if (id.includes('monaco-editor')) {
-                return 'monaco-editor'
-              }
-              if (id.includes('@antv/g2')) {
-                return 'antv-g2'
-              }
-              if (id.includes('konva')) {
-                return 'konva'
-              }
-              if (id.includes('vue') && !id.includes('vue-router')) {
-                return 'vue-core'
-              }
-              if (id.includes('vue-router')) {
-                return 'vue-router'
-              }
-              // 其他库归为 vendor
-              return 'vendor'
+            // 非 node_modules 的业务代码不分割
+            if (!id.includes('node_modules')) {
+              return undefined
             }
-            // 业务代码不进行复杂分割，避免构建问题
+
+            // 1. 大型编辑器库（~3MB，相对独立，适合单独分包）
+            if (id.includes('monaco-editor')) {
+              return 'monaco-editor'
+            }
+
+            // 2. 大型图表库（~500KB+，相对独立）
+            if (id.includes('@antv/g2')) {
+              return 'antv-g2'
+            }
+
+            // 3. Canvas 渲染库（~200KB+，相对独立）
+            if (id.includes('konva')) {
+              return 'konva'
+            }
+
+            // 4. UI 组件库
+            // Element Plus 通过 @element-plus/nuxt 模块加载
+            // Nuxt 会确保 Vue 先初始化，所以相对安全
+            if (id.includes('element-plus')) {
+              return 'element-plus'
+            }
+
+            // 5. 日期处理库（小型工具库，可选）
+            if (id.includes('dayjs')) {
+              return 'dayjs'
+            }
+
+            // 6. Icon 库（如果体积大可以分离）
+            if (id.includes('@icon-park')) {
+              return 'icon-park'
+            }
+
+            // ⚠️ 重要：其他所有依赖都返回 undefined
+            // 让 Vite 根据依赖关系自动打包，特别是：
+            // - Vue 相关（vue、@vue/*）
+            // - Pinia 相关（pinia、@pinia/*）
+            // - Vue Router
+            // - Nuxt 核心
+            // 这些库的加载顺序至关重要，不能手动分离！
             return undefined
           }
         }
