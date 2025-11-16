@@ -146,6 +146,10 @@ export default defineNuxtConfig({
     },
     // 启用压缩
     compressPublicAssets: true,
+    // 外部依赖配置，防止 tslib 等依赖打包错误
+    externals: {
+      inline: ['tslib']
+    },
     // 服务端路由缓存
     routeRules: {
       // API 路由缓存配置
