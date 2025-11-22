@@ -103,6 +103,7 @@
     "vue-server-renderer": "^2.7.16",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^4.7.1",
+    "xcytest-package": "^1.0.3",
     "xlsx": "^0.18.5"
   },
   "volta": {
