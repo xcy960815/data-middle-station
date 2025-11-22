@@ -1,11 +1,13 @@
 <template>
-  <!-- 饼图 -->
-  <div
-    id="pie-container"
-    class="h-full w-full pie-chart-container"
-    data-canvas-type="pie-chart"
-    data-canvas-component="PieChart"
-  ></div>
+  <client-only>
+    <!-- 饼图 -->
+    <div
+      id="pie-container"
+      class="h-full w-full pie-chart-container"
+      data-canvas-type="pie-chart"
+      data-canvas-component="PieChart"
+    ></div>
+  </client-only>
 </template>
 
 <script lang="ts" setup>

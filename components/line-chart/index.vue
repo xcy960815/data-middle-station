@@ -1,6 +1,13 @@
 <template>
-  <!-- 折线图 -->
-  <div id="line-container" class="h-full w-full" data-canvas-type="line-chart" data-canvas-component="LineChart"></div>
+  <client-only>
+    <!-- 折线图 -->
+    <div
+      id="line-container"
+      class="h-full w-full"
+      data-canvas-type="line-chart"
+      data-canvas-component="LineChart"
+    ></div>
+  </client-only>
 </template>
 <script setup lang="ts">
 import { Chart } from '@antv/g2'

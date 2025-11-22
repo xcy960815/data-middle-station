@@ -3,7 +3,7 @@
     <template #header>
       <custom-header>
         <template #chart-name>
-          <analyzeName></analyzeName>
+          <AnalyzeName></AnalyzeName>
         </template>
       </custom-header>
     </template>
@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import Bar from './components/bar/index.vue'
 import ChartConfig from './components/chart-config/index.vue'
-import analyzeName from './components/chart-name/index.vue'
+import AnalyzeName from './components/chart-name/index.vue'
 import ChartType from './components/chart-type/index.vue'
 import Chart from './components/chart/index.vue'
 import Column from './components/column/index.vue'
