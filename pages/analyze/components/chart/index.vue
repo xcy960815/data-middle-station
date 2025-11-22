@@ -143,6 +143,7 @@ const chartComponentMap = {
 /**
  * @desc 图表组件
  * @type {Component}
+ *
  */
 const chartComponent = computed(() => chartComponentMap[analyzeStore.getChartType] || TableChart)
 
