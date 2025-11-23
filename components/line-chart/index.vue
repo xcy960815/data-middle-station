@@ -1,17 +1,33 @@
 <template>
-  <client-only>
-    <!-- 折线图 -->
-    <div
-      id="line-container"
-      class="h-full w-full"
-      data-canvas-type="line-chart"
-      data-canvas-component="LineChart"
-    ></div>
-  </client-only>
+  <!-- 折线图 -->
+  <div ref="chartContainer" class="h-full w-full" data-canvas-type="line-chart" data-canvas-component="LineChart"></div>
 </template>
 <script setup lang="ts">
-import { Chart } from '@antv/g2'
-import { renderLineChart, type LineChartConfig } from '~/composables/useChartRender'
+import { LineChart } from 'echarts/charts'
+import {
+  DataZoomComponent,
+  GraphicComponent,
+  GridComponent,
+  LegendComponent,
+  TitleComponent,
+  TooltipComponent
+} from 'echarts/components'
+import { init, type ECharts, type EChartsCoreOption } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { useChartRender } from '~/composables/useChartRender/index'
+
+// 注册必要的组件
+import { use } from 'echarts/core'
+use([
+  LineChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  DataZoomComponent,
+  GraphicComponent,
+  CanvasRenderer
+])
 
 defineOptions({
   name: 'LineChart'
@@ -38,111 +54,124 @@ const props = defineProps({
 
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
+const chartContainer = ref<HTMLElement | null>(null)
+
+const chartInstance = ref<ECharts | null>(null)
+
+// 使用图表渲染 composable
+const { renderLineChart } = useChartRender()
+
+// 获取图表配置
 const chartConfigStore = useChartConfigStore()
 
-/**
- * 默认配置
- */
-const defaultLineConfig: LineChartConfig = {
-  showPoint: false,
-  showLabel: false,
-  smooth: false,
-  autoDualAxis: false,
-  horizontalBar: false
-}
-
-/**
- * 属性配置
- */
-const lineChartConfig = computed(() => chartConfigStore.privateChartConfig?.line ?? defaultLineConfig)
-
-/**
- * 监听配置变化
- */
-watch(
-  () => lineChartConfig.value,
-  () => {
-    initChart()
-  },
-  {
-    deep: true
-  }
-)
-
-/**
- * 监听数据变化
- */
-watch(
-  () => props.data,
-  () => {
-    console.log('数据变化，重新渲染图表')
-    initChart()
-  },
-  {
-    deep: true
-  }
-)
+const chartConfig = computed(() => {
+  return (
+    chartConfigStore.privateChartConfig?.line || {
+      showPoint: false,
+      showLabel: false,
+      smooth: false,
+      autoDualAxis: false,
+      horizontalBar: false
+    }
+  )
+})
 
 const initChart = () => {
   emits('renderChartStart')
-  // 如果没有数据，不渲染图表
-  if (!props.data || props.data.length === 0) {
+
+  if (!chartContainer.value) {
+    console.warn('LineChart: chartContainer is not available')
     emits('renderChartEnd')
     return
   }
 
+  // 如果图表实例已存在，先销毁
+  if (chartInstance.value) {
+    chartInstance.value.dispose()
+    chartInstance.value = null
+  }
+
   // 初始化图表实例
-  const lineChart = new Chart({
-    container: 'line-container',
-    theme: 'classic',
-    autoFit: true
-  })
+  try {
+    chartInstance.value = init(chartContainer.value)
+  } catch (error) {
+    console.error('LineChart: init error', error)
+    emits('renderChartEnd')
+    return
+  }
 
-  // 使用共享的渲染逻辑
-  renderLineChart(
-    lineChart,
-    {
-      title: props.title,
-      data: props.data,
-      xAxisFields: props.xAxisFields,
-      yAxisFields: props.yAxisFields
-    },
-    lineChartConfig.value
-  )
+  // 使用 renderLineChart 生成配置
+  const config = {
+    title: props.title,
+    data: props.data,
+    xAxisFields: props.xAxisFields || [],
+    yAxisFields: props.yAxisFields
+  }
 
-  lineChart.render()
+  const option = renderLineChart(config, chartConfig.value)
+
+  // 如果没有数据，显示空图表
+  if (!option) {
+    const emptyOption: EChartsCoreOption = {
+      title: {
+        text: props.title || '折线图',
+        left: 'center',
+        top: 10,
+        bottom: 10
+      },
+      graphic: {
+        type: 'text',
+        left: 'center',
+        top: 'center',
+        style: {
+          text: '暂无数据',
+          fontSize: 14,
+          fill: '#999'
+        }
+      }
+    }
+    chartInstance.value.setOption(emptyOption)
+    emits('renderChartEnd')
+    return
+  }
+
+  // 设置配置项并渲染
+  try {
+    chartInstance.value.setOption(option, true) // true 表示不合并，完全替换
+  } catch (error) {
+    console.error('LineChart: setOption error', error)
+  }
 
   emits('renderChartEnd')
 }
+
+// 监听数据和配置变化
+watch(
+  () => [props.data, props.xAxisFields, props.yAxisFields, chartConfig.value],
+  () => {
+    nextTick(() => {
+      initChart()
+    })
+  },
+  { deep: true }
+)
+
 onMounted(() => {
-  initChart()
+  nextTick(() => {
+    initChart()
+  })
 })
-watch(
-  () => props.data,
-  () => {
-    initChart()
-  },
-  {
-    deep: true
+
+onBeforeUnmount(() => {
+  if (chartInstance.value) {
+    chartInstance.value.dispose()
+    chartInstance.value = null
   }
-)
-watch(
-  () => props.xAxisFields,
-  () => {
-    initChart()
-  },
-  {
-    deep: true
-  }
-)
-watch(
-  () => props.yAxisFields,
-  () => {
-    initChart()
-  },
-  {
-    deep: true
-  }
-)
+})
 </script>
-<style lang="scss"></style>
+<style lang="scss" scoped>
+div[data-canvas-type='line-chart'] {
+  min-height: 300px;
+  position: relative;
+}
+</style>
