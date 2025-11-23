@@ -8,7 +8,7 @@
       </div>
     </Transition>
   </Teleport>
-  <Transition @before-enter="handleBeforeEnter" @enter="handleEnter" @after-enter="handleAfterEnter" v-else>
+  <Transition v-else @before-enter="handleBeforeEnter" @enter="handleEnter" @after-enter="handleAfterEnter">
     <div class="contextmenu" ref="contextmenuElement" v-show="visible" :style="contextMenuPositionStyle">
       <ul class="contextmenu-inner">
         <slot></slot>
@@ -17,6 +17,9 @@
   </Transition>
 </template>
 <script setup lang="ts">
+// 动画过渡时间常量
+const TRANSITION_DURATION = '0.5s'
+
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -36,7 +39,7 @@ const emits = defineEmits(['show', 'hide', 'update:modelValue'])
 // 右键菜单的元素
 const contextmenuElement = ref<HTMLDivElement | null>(null)
 // 右键菜单是否显示
-const visible = ref(props.modelValue || false)
+const visible = ref(props.modelValue)
 /**
  * @desc 更新右键菜单的显示状态
  * @param {boolean} value
@@ -55,6 +58,33 @@ const contextMenuPositionStyle = computed(() => ({
   top: `${contextMenuPosition.value.top}px`,
   left: `${contextMenuPosition.value.left}px`
 }))
+
+/**
+ * @desc 计算菜单位置，确保菜单不超出视口
+ * @param {number} initialTop 初始 top 位置
+ * @param {number} initialLeft 初始 left 位置
+ * @param {number} menuWidth 菜单宽度
+ * @param {number} menuHeight 菜单高度
+ * @returns {{ top: number; left: number }} 调整后的位置
+ */
+const calculateMenuPosition = (
+  initialTop: number,
+  initialLeft: number,
+  menuWidth: number,
+  menuHeight: number
+): { top: number; left: number } => {
+  const viewportLeft = window.scrollX
+  const viewportTop = window.scrollY
+  const viewportRight = viewportLeft + window.innerWidth
+  const viewportBottom = viewportTop + window.innerHeight
+
+  const maxLeft = Math.max(viewportLeft, viewportRight - menuWidth)
+  const maxTop = Math.max(viewportTop, viewportBottom - menuHeight)
+  const adjustedLeft = Math.min(Math.max(initialLeft, viewportLeft), maxLeft)
+  const adjustedTop = Math.min(Math.max(initialTop, viewportTop), maxTop)
+
+  return { top: adjustedTop, left: adjustedLeft }
+}
 
 /**
  * @desc 显示菜单
@@ -80,17 +110,8 @@ const showContextMenu = (evt: MouseEvent) => {
     // 使用 scrollWidth/scrollHeight，避免进入动画阶段 height 被置为 0 导致测量不准
     const menuWidth = Math.max(contextmenuNode.scrollWidth, contextmenuNode.offsetWidth)
     const menuHeight = Math.max(contextmenuNode.scrollHeight, contextmenuNode.offsetHeight)
-    const viewportLeft = window.scrollX
-    const viewportTop = window.scrollY
-    const viewportRight = viewportLeft + window.innerWidth
-    const viewportBottom = viewportTop + window.innerHeight
 
-    const maxLeft = Math.max(viewportLeft, viewportRight - menuWidth)
-    const maxTop = Math.max(viewportTop, viewportBottom - menuHeight)
-    const adjustedLeft = Math.min(Math.max(initialPosition.left, viewportLeft), maxLeft)
-    const adjustedTop = Math.min(Math.max(initialPosition.top, viewportTop), maxTop)
-
-    contextMenuPosition.value = { top: adjustedTop, left: adjustedLeft }
+    contextMenuPosition.value = calculateMenuPosition(initialPosition.top, initialPosition.left, menuWidth, menuHeight)
     // 保持原有行为，触发展示事件
     emits('show')
   })
@@ -120,7 +141,7 @@ const handleEnter = (el: Element) => {
   ;(el as HTMLDivElement).style.height = '0'
   requestAnimationFrame(() => {
     ;(el as HTMLDivElement).style.height = realHeight
-    ;(el as HTMLDivElement).style.transition = 'height .5s'
+    ;(el as HTMLDivElement).style.transition = `height ${TRANSITION_DURATION}`
   })
 }
 /**
@@ -133,7 +154,7 @@ const handleAfterEnter = (el: Element) => {
 /**
  * @desc 触发元素的配置
  */
-const contextMenuOptions = reactive<Map<Element, ContextMenu.ContextMenuOptions>>(new Map())
+const contextMenuOptions = ref<Map<Element, ContextMenu.ContextMenuOptions>>(new Map())
 /**
  * @desc 当前触发元素
  * @type {Ref<ContextMenu.ContextMenuElement>}
@@ -144,7 +165,7 @@ const currentReferenceElement = ref<ContextMenu.ContextMenuElement>()
  * @type {ComputedRef<ContextMenu.ContextMenuOptions>}
  */
 const currentTriggerOptions = computed(
-  () => currentReferenceElement.value && contextMenuOptions.get(currentReferenceElement.value)
+  () => currentReferenceElement.value && contextMenuOptions.value.get(currentReferenceElement.value)
 )
 /**
  * @desc 添加触发元素
@@ -183,7 +204,7 @@ const initContextMenuEvent = (
   /**
    * @desc 保存触发元素
    */
-  contextMenuOptions.set(contextMenuElement, {
+  contextMenuOptions.value.set(contextMenuElement, {
     triggerTypes,
     triggerEventHandler
   })
@@ -194,12 +215,12 @@ const initContextMenuEvent = (
  * @returns {void}
  */
 const removeContextMenuEvent = (contextMenuElement: ContextMenu.ContextMenuElement): void => {
-  const options = contextMenuOptions.get(contextMenuElement)
+  const options = contextMenuOptions.value.get(contextMenuElement)
   if (!options) return
   options.triggerTypes.forEach((triggerType) => {
     contextMenuElement.removeEventListener(triggerType, options.triggerEventHandler)
   })
-  contextMenuOptions.delete(contextMenuElement)
+  contextMenuOptions.value.delete(contextMenuElement)
 }
 /**
  * @desc 当用户点击body时，隐藏菜单
@@ -219,6 +240,14 @@ const handleEscKey = (evt: KeyboardEvent) => {
     updateModelValue(false)
   }
 }
+
+// 同步 modelValue prop 到 visible
+watch(
+  () => props.modelValue,
+  (value) => {
+    visible.value = value
+  }
+)
 
 watch(visible, (value) => {
   if (value) {

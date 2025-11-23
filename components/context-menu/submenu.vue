@@ -55,6 +55,36 @@ const placements = ref(['top', 'right'])
  * @desc 是否hover
  */
 const hoverSubmenu = ref(false)
+
+/**
+ * @desc 计算子菜单位置，确保不超出视口
+ * @param {DOMRect} targetRect 目标元素的边界矩形
+ * @param {number} submenuWidth 子菜单宽度
+ * @param {number} submenuHeight 子菜单高度
+ * @returns {string[]} 位置数组
+ */
+const calculateSubmenuPlacement = (targetRect: DOMRect, submenuWidth: number, submenuHeight: number): string[] => {
+  const targetPlacements: string[] = []
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+
+  // 水平方向：优先右侧，超出则左侧
+  if (targetRect.right + submenuWidth >= viewportWidth) {
+    targetPlacements.push('left')
+  } else {
+    targetPlacements.push('right')
+  }
+
+  // 垂直方向：优先顶部，超出则底部
+  if (targetRect.bottom + submenuHeight >= viewportHeight) {
+    targetPlacements.push('bottom')
+  } else {
+    targetPlacements.push('top')
+  }
+
+  return targetPlacements
+}
+
 /**
  * @desc 鼠标进入事件
  * @param evt { Event }
@@ -66,29 +96,14 @@ const handleMouseenter = (evt: Event) => {
   emits('mouseenter', evt)
 
   nextTick(() => {
-    const targetPlacements = []
-    // 计算子菜单的位置（始终自动调整）
     const { target } = evt
-    const targetElementStyle = (target as HTMLElement).getBoundingClientRect()
-    if (!submenuElement.value) return
+    if (!target || !submenuElement.value) return
+
+    const targetElementRect = (target as HTMLElement).getBoundingClientRect()
     const submenuWidth = submenuElement.value.clientWidth
     const submenuHeight = submenuElement.value.clientHeight
-    if (targetElementStyle.right + submenuWidth >= window.innerWidth) {
-      // 如果子菜单的右边超出了窗口的宽度，就放在左边
-      targetPlacements.push('left')
-    } else {
-      // 否则就放在右边
-      targetPlacements.push('right')
-    }
-    if (targetElementStyle.bottom + submenuHeight >= window.innerHeight) {
-      // 如果子菜单的底部超出了窗口的高度，就放在上边
-      targetPlacements.push('bottom')
-    } else {
-      // 否则就放在下边
-      targetPlacements.push('top')
-    }
 
-    placements.value = targetPlacements
+    placements.value = calculateSubmenuPlacement(targetElementRect, submenuWidth, submenuHeight)
   })
 }
 /**
