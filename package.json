@@ -85,6 +85,7 @@
     "chalk": "^5.4.1",
     "common-watermark": "^0.0.1",
     "dayjs": "^1.11.13",
+    "echarts": "^6.0.0",
     "element-plus": "^2.11.1",
     "figlet": "^1.8.2",
     "gradient-string": "^3.0.0",
