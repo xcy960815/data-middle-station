@@ -31,12 +31,16 @@ const classes = computed(() => ({
   ['contextmenu-item--hover']: hoverItem.value
 }))
 
-// 当用户点击菜单项时，触发 click 事件
+/**
+ * @desc 当用户点击菜单项时，触发 click 事件
+ * @param {Event} evt
+ */
 const handleClickItem = (evt: Event) => {
   if (props.disabled) return
   // 如果设置了 hideOnClick 为 true，则点击菜单项后，隐藏菜单
-  props.hideOnClick && rootHide?.()
-
+  if (props.hideOnClick) {
+    rootHide?.()
+  }
   emit('click', evt)
 }
 /**

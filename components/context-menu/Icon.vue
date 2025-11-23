@@ -1,5 +1,5 @@
 <template>
-  <i :class="['contextmenu-icon', `${'contextmenu-icon'}-${name}`]" />
+  <i :class="iconClasses" />
 </template>
 
 <script lang="ts" setup>
@@ -10,6 +10,8 @@ const props = defineProps({
     required: true
   }
 })
+
+const iconClasses = computed(() => ['contextmenu-icon', `contextmenu-icon-${props.name}`])
 </script>
 
 <style scoped lang="scss"></style>
