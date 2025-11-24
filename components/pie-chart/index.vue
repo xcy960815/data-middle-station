@@ -50,14 +50,6 @@ const props = defineProps({
   }
 })
 
-const chartWidth = computed(() => {
-  return props.chartWidth || '100%'
-})
-
-const chartHeight = computed(() => {
-  return props.chartHeight || '100%'
-})
-
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
 const chartContainer = ref<HTMLElement | null>(null)
