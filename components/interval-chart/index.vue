@@ -79,7 +79,6 @@ const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 const chartContainer = ref<HTMLElement | null>(null)
 
 const chartInstance = ref<ECharts | null>(null)
-const isChartInitialized = ref(false)
 
 // 使用图表渲染 composable
 const { renderIntervalChart, createEmptyChartOption } = useChartRender()
@@ -101,9 +100,7 @@ const chartConfig = computed(() => {
 
 const initChart = () => {
   emits('renderChartStart')
-
   if (!chartContainer.value) {
-    console.warn('IntervalChart: chartContainer is not available')
     emits('renderChartEnd')
     return
   }
@@ -113,8 +110,6 @@ const initChart = () => {
     chartInstance.value.dispose()
     chartInstance.value = null
   }
-
-  isChartInitialized.value = false
 
   // 初始化图表实例
   try {
@@ -139,7 +134,6 @@ const initChart = () => {
   if (!option) {
     const emptyOption = createEmptyChartOption(props.title, 'interval')
     chartInstance.value.setOption(emptyOption)
-    isChartInitialized.value = false // 空图表不算有效初始化
     emits('renderChartEnd')
     return
   }
@@ -147,10 +141,8 @@ const initChart = () => {
   // 设置配置项并渲染
   try {
     chartInstance.value.setOption(option, true) // true 表示不合并，完全替换
-    isChartInitialized.value = true // 标记为已初始化
   } catch (error) {
     console.error('IntervalChart: setOption error', error)
-    isChartInitialized.value = false
   }
 
   emits('renderChartEnd')
@@ -170,19 +162,10 @@ watch(
 watch(
   () => [props.chartWidth, props.chartHeight],
   () => {
-    // if (!chartInstance.value || !isChartInitialized.value) return
-    // nextTick(() => {
-    //   if (chartInstance.value && isChartInitialized.value) {
-    //     try {
-    //       chartInstance.value.resize()
-    //     } catch (error) {
-    //       console.warn('IntervalChart: resize error', error)
-    //     }
-    //   }
-    // })
-  },
-  {
-    deep: true
+    if (!chartInstance.value) return
+    nextTick(() => {
+      chartInstance.value?.resize()
+    })
   }
 )
 
