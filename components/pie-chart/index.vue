@@ -53,7 +53,7 @@ const props = defineProps({
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
 const chartContainer = ref<HTMLElement | null>(null)
-const chartInstance = ref<ECharts | null>(null)
+const chartInstance = shallowRef<ECharts | null>(null)
 
 // 使用图表渲染 composable
 const { renderPieChart, createEmptyChartOption } = useChartRender()
@@ -87,7 +87,7 @@ const initChart = () => {
 
   // 初始化图表实例
   try {
-    chartInstance.value = init(chartContainer.value)
+    chartInstance.value = markRaw(init(chartContainer.value))
   } catch (error) {
     console.error('PieChart: init error', error)
     emits('renderChartEnd')
@@ -137,9 +137,8 @@ watch(
   () => [props.chartWidth, props.chartHeight],
   () => {
     if (!chartInstance.value) return
-    chartInstance.value.resize()
-  },
-  { deep: true }
+    nextTick(initChart)
+  }
 )
 
 onMounted(() => {

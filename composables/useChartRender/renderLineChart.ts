@@ -147,23 +147,20 @@ export function renderLineChart(
     return seriesOption
   })
 
-  // 构建 tooltip formatter
+  /**
+   * 构建 tooltip formatter
+   * @param {CallbackDataParams | CallbackDataParams[]} params 回调数据参数
+   * @returns {string} 格式化后的 tooltip 内容
+   */
   const tooltipFormatter = (params: CallbackDataParams | CallbackDataParams[]) => {
-    // 当 trigger 为 'axis' 时，params 是数组
     const paramsArray = Array.isArray(params) ? params : [params]
+    if (paramsArray.length === 0) return ''
 
-    if (paramsArray.length === 0) {
-      return ''
-    }
-
-    // axisValue 是 ECharts 在 axis trigger 模式下添加的属性
     const firstParam = paramsArray[0] as TooltipCallbackDataParams
     const axisValue = firstParam.axisValue ?? firstParam.name ?? ''
-    let result = `<div style="padding: 8px; background: rgba(50, 50, 50, 0.9); color: #fff; border-radius: 4px; font-size: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">
-      <div style="margin-bottom: 4px; font-weight: bold; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 4px;">${axisValue}</div>`
+    const lines: string[] = [String(axisValue)]
 
     for (const param of paramsArray) {
-      // param.value 可能是多种类型，需要转换为数字
       const numericValue =
         typeof param.value === 'number'
           ? param.value
@@ -173,14 +170,12 @@ export function renderLineChart(
               : Number(param.value[0]) || 0
             : Number(param.value) || 0
       const value = formatValue(numericValue, false)
-      result += `<div style="display: flex; align-items: center; padding: 4px 0;">
-            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${param.color || '#5470c6'}; margin-right: 8px;"></span>
-            <span style="margin-right: 12px;">${param.seriesName || ''}</span>
-            <span style="font-weight: bold;">${value}</span>
-          </div>`
+      const marker = (param as TooltipCallbackDataParams).marker || ''
+      const seriesName = param.seriesName || ''
+      lines.push(`${marker}${seriesName}: ${value}`)
     }
-    result += '</div>'
-    return result
+
+    return lines.join('<br/>')
   }
 
   // 构建 ECharts 配置选项
@@ -188,31 +183,28 @@ export function renderLineChart(
     title: {
       text: config.title || '折线图',
       left: 'center',
-      top: 10
+      top: 10,
+      bottom: 10
     },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'line',
-        lineStyle: {
-          color: '#999',
-          width: 1,
-          type: 'dashed'
-        }
+        type: 'shadow'
       },
       formatter: tooltipFormatter
     },
     legend: {
       data: legendData,
-      top: 30,
+      top: 50,
       left: 'center'
     },
     grid: {
-      left: '3%',
-      right: horizontalBar ? '15%' : '4%',
-      bottom: horizontalBar ? '15%' : '3%',
+      left: '5%',
+      right: '5%',
+      bottom: '8%',
       top: '15%',
-      containLabel: true
+      outerBoundsMode: 'same',
+      outerBoundsContain: 'axisLabel'
     },
     xAxis: {
       type: 'category',

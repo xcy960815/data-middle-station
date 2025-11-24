@@ -76,25 +76,22 @@ export function renderPieChart(
     }
   }
 
-  // 构建 tooltip formatter
+  /**
+   * 构建 tooltip formatter
+   * @param {CallbackDataParams | CallbackDataParams[]} params 回调数据参数
+   * @returns {string} 格式化后的 tooltip 内容
+   */
   const tooltipFormatter = (params: CallbackDataParams | CallbackDataParams[]) => {
     const param = Array.isArray(params) ? params[0] : params
     if (!param) return ''
 
     const value = typeof param.value === 'number' ? param.value : Number(param.value) || 0
     const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0'
+    const marker = (param as CallbackDataParams & { marker?: string }).marker || ''
+    const valueLabel = param.seriesName || valueDisplayName || valueField
+    const name = param.name ? `${param.name}` : ''
 
-    return `
-      <div style="padding: 8px; background: rgba(0, 0, 0, 0.8); color: white; border-radius: 4px; font-size: 12px;">
-        <div style="margin-bottom: 4px; font-weight: bold;">${param.name}</div>
-        <div style="display: flex; align-items: center;">
-          <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${param.color}; margin-right: 8px;"></span>
-          <span style="margin-right: 8px;">${valueDisplayName || valueField}:</span>
-          <span style="font-weight: bold;">${value.toLocaleString('zh-CN')}</span>
-        </div>
-        <div style="margin-top: 4px; color: #ccc;">占比: ${percentage}%</div>
-      </div>
-    `
+    return `${name}<br/>${marker}${valueLabel}: ${value.toLocaleString('zh-CN')} (${percentage}%)`
   }
 
   // 构建 ECharts 配置选项
@@ -102,17 +99,29 @@ export function renderPieChart(
     title: {
       text: config.title || '饼图',
       left: 'center',
-      top: 10
+      top: 10,
+      bottom: 10
     },
     tooltip: {
       trigger: 'item',
+      axisPointer: {
+        type: 'shadow'
+      },
       formatter: tooltipFormatter
     },
     legend: {
       orient: 'vertical',
       left: 'left',
-      top: 30,
+      top: 50,
       data: pieData.map((item) => item.name)
+    },
+    grid: {
+      left: '5%',
+      right: '5%',
+      bottom: '8%',
+      top: '15%',
+      outerBoundsMode: 'same',
+      outerBoundsContain: 'axisLabel'
     },
     color: colors,
     series: [seriesOption]
