@@ -11,7 +11,7 @@ import {
 } from './utils'
 
 /**
- * 渲染折线图 - ECharts版本
+ * 渲染折线图
  * @param {ChartRenderConfig} config 图表配置
  * @param {LineChartConfig} chartConfig 折线图特有配置
  * @returns {EChartsCoreOption | null} ECharts 配置选项
@@ -29,6 +29,7 @@ export function renderLineChart(
 
   // 处理公共数据
   const dataResult = processChartData(config)
+
   const { xFieldName, measureFields, groupFieldName, useFold, xAxisTitle, yAxisTitle } = dataResult
 
   // 检查 measureFields 是否为空
@@ -39,7 +40,7 @@ export function renderLineChart(
   // 处理数据
   let processedData: Array<ChartDataVo.ChartData>
   if (useFold) {
-    processedData = foldData(config.data, measureFields, xFieldName, groupFieldName)
+    processedData = foldData(config.data, measureFields)
   } else {
     processedData = config.data
   }
@@ -174,7 +175,6 @@ export function renderLineChart(
       top: 10
     },
     tooltip: {
-      show: true,
       trigger: 'axis',
       axisPointer: {
         type: 'line',
@@ -184,12 +184,7 @@ export function renderLineChart(
           type: 'dashed'
         }
       },
-      formatter: tooltipFormatter,
-      backgroundColor: 'transparent',
-      borderWidth: 0,
-      textStyle: {
-        color: '#fff'
-      }
+      formatter: tooltipFormatter
     },
     legend: {
       data: legendData,

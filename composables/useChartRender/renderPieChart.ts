@@ -4,7 +4,7 @@ import type { CallbackDataParams } from 'echarts/types/dist/shared'
 import { type ChartRenderConfig, getDefaultChartColors } from './utils'
 
 /**
- * 渲染饼图 - ECharts版本
+ * 渲染饼图
  * @param {ChartRenderConfig} config 图表配置
  * @param {PieChartConfig} chartConfig 饼图特有配置
  * @returns {EChartsCoreOption | null} ECharts 配置选项
@@ -13,7 +13,7 @@ export function renderPieChart(
   config: ChartRenderConfig,
   chartConfig: ChartConfigDao.PieChartConfig
 ): EChartsCoreOption | null {
-  const { showLabel = false, innerRadius = 0.6, chartType = 'pie' } = chartConfig
+  const { showLabel = false, chartType = 'pie' } = chartConfig
 
   // 饼图数据处理逻辑
   const categoryField = config.xAxisFields[0]?.columnName

@@ -18,7 +18,7 @@ import {
  */
 export function renderIntervalChart(
   config: ChartRenderConfig,
-  chartConfig: IntervalChartConfig = {}
+  chartConfig: ChartConfigDao.IntervalChartConfig
 ): EChartsCoreOption | null {
   const {
     showPercentage = false,
@@ -46,7 +46,7 @@ export function renderIntervalChart(
   // 处理数据
   let processedData: Array<ChartDataVo.ChartData>
   if (useFold) {
-    processedData = foldData(config.data, measureFields, xFieldName, groupFieldName)
+    processedData = foldData(config.data, measureFields)
   } else {
     processedData = config.data
   }
@@ -66,7 +66,6 @@ export function renderIntervalChart(
 
   // 根据字段类型进行排序
   const xAxisData = sortXAxisData(xAxisDataSet, columnType)
-
   // 构建系列数据
   const seriesMap = new Map<string, number[]>()
   const legendData: string[] = []
@@ -140,6 +139,8 @@ export function renderIntervalChart(
         show: true,
         position: horizontalDisplay ? 'right' : 'top',
         formatter: (params: any) => {
+          console.log('params', params)
+
           return formatValue(params.value, showPercentage)
         }
       }

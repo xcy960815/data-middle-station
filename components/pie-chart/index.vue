@@ -10,14 +10,14 @@
 
 <script setup lang="ts">
 import { PieChart } from 'echarts/charts'
-import { LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
+import { GraphicComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
 import { init, type ECharts, type EChartsCoreOption } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { useChartRender } from '~/composables/useChartRender/index'
 
 // 注册必要的组件
 import { use } from 'echarts/core'
-use([PieChart, TitleComponent, TooltipComponent, LegendComponent, CanvasRenderer])
+use([PieChart, TitleComponent, TooltipComponent, LegendComponent, GraphicComponent, CanvasRenderer])
 
 defineOptions({
   name: 'PieChart'
