@@ -60,8 +60,17 @@ export function renderPieChart(
   if (showLabel) {
     seriesOption.label = {
       show: true,
-      formatter: (params: any) => {
-        const percentage = total > 0 ? ((params.value / total) * 100).toFixed(1) : '0.0'
+      formatter: (params: CallbackDataParams) => {
+        // params.value 可能是多种类型，需要转换为数字
+        const numericValue =
+          typeof params.value === 'number'
+            ? params.value
+            : Array.isArray(params.value)
+              ? typeof params.value[0] === 'number'
+                ? params.value[0]
+                : Number(params.value[0]) || 0
+              : Number(params.value) || 0
+        const percentage = total > 0 ? ((numericValue / total) * 100).toFixed(1) : '0.0'
         return `${percentage}%`
       }
     }
