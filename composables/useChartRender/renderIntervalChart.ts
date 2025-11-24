@@ -172,7 +172,11 @@ export function renderIntervalChart(
     return seriesOption
   })
 
-  // 构建 tooltip formatter
+  /**
+   * 构建 tooltip formatter
+   * @param {TooltipCallbackDataParams | TooltipCallbackDataParams[] | CallbackDataParams | CallbackDataParams[]} params 回调数据参数
+   * @returns {string} 格式化后的 tooltip 内容
+   */
   const tooltipFormatter = (
     params: TooltipCallbackDataParams | TooltipCallbackDataParams[] | CallbackDataParams | CallbackDataParams[]
   ) => {
@@ -205,7 +209,6 @@ export function renderIntervalChart(
       result += '</div>'
       return result
     }
-    return ''
   }
 
   // 构建 ECharts 配置选项
@@ -220,20 +223,21 @@ export function renderIntervalChart(
       trigger: 'axis',
       axisPointer: {
         type: 'shadow'
-      }
-      // formatter: tooltipFormatter
+      },
+      formatter: tooltipFormatter
     },
     legend: {
       data: legendData,
-      top: 40,
+      top: 50,
       left: 'center'
     },
     grid: {
-      left: '3%',
-      right: horizontalBar && horizontalDisplay ? '15%' : '4%',
-      bottom: horizontalBar && !horizontalDisplay ? '15%' : horizontalDisplay ? '3%' : xAxisTitle ? '20%' : '15%',
+      left: '5%',
+      right: '5%',
+      bottom: '8%',
       top: '15%',
-      containLabel: true
+      outerBoundsMode: 'same',
+      outerBoundsContain: 'axisLabel'
     },
     xAxis: {
       type: horizontalDisplay ? 'value' : 'category',
