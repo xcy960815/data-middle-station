@@ -18,7 +18,7 @@ import {
   TitleComponent,
   TooltipComponent
 } from 'echarts/components'
-import { init, type ECharts, type EChartsCoreOption } from 'echarts/core'
+import { init, type ECharts } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { useChartRender } from '~/composables/useChartRender/index'
 
@@ -55,7 +55,23 @@ const props = defineProps({
   yAxisFields: {
     type: Array as PropType<Array<DimensionStore.DimensionOption>>,
     default: () => []
+  },
+  chartWidth: {
+    type: [Number, String],
+    default: () => '100%'
+  },
+  chartHeight: {
+    type: [Number, String],
+    default: () => '100%'
   }
+})
+
+const chartWidth = computed(() => {
+  return props.chartWidth || '100%'
+})
+
+const chartHeight = computed(() => {
+  return props.chartHeight || '100%'
 })
 
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
@@ -63,9 +79,10 @@ const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 const chartContainer = ref<HTMLElement | null>(null)
 
 const chartInstance = ref<ECharts | null>(null)
+const isChartInitialized = ref(false)
 
 // 使用图表渲染 composable
-const { renderIntervalChart } = useChartRender()
+const { renderIntervalChart, createEmptyChartOption } = useChartRender()
 
 // 获取图表配置
 const chartConfigStore = useChartConfigStore()
@@ -97,6 +114,8 @@ const initChart = () => {
     chartInstance.value = null
   }
 
+  isChartInitialized.value = false
+
   // 初始化图表实例
   try {
     chartInstance.value = init(chartContainer.value)
@@ -118,25 +137,9 @@ const initChart = () => {
 
   // 如果没有数据，显示空图表
   if (!option) {
-    const emptyOption: EChartsCoreOption = {
-      title: {
-        text: props.title || '柱状图',
-        left: 'center',
-        top: 10,
-        bottom: 10
-      },
-      graphic: {
-        type: 'text',
-        left: 'center',
-        top: 'center',
-        style: {
-          text: '暂无数据',
-          fontSize: 14,
-          fill: '#999'
-        }
-      }
-    }
+    const emptyOption = createEmptyChartOption(props.title, 'interval')
     chartInstance.value.setOption(emptyOption)
+    isChartInitialized.value = false // 空图表不算有效初始化
     emits('renderChartEnd')
     return
   }
@@ -144,8 +147,10 @@ const initChart = () => {
   // 设置配置项并渲染
   try {
     chartInstance.value.setOption(option, true) // true 表示不合并，完全替换
+    isChartInitialized.value = true // 标记为已初始化
   } catch (error) {
     console.error('IntervalChart: setOption error', error)
+    isChartInitialized.value = false
   }
 
   emits('renderChartEnd')
@@ -160,6 +165,25 @@ watch(
     })
   },
   { deep: true }
+)
+
+watch(
+  () => [props.chartWidth, props.chartHeight],
+  () => {
+    // if (!chartInstance.value || !isChartInitialized.value) return
+    // nextTick(() => {
+    //   if (chartInstance.value && isChartInitialized.value) {
+    //     try {
+    //       chartInstance.value.resize()
+    //     } catch (error) {
+    //       console.warn('IntervalChart: resize error', error)
+    //     }
+    //   }
+    // })
+  },
+  {
+    deep: true
+  }
 )
 
 onMounted(() => {
