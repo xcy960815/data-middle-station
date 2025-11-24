@@ -1,9 +1,6 @@
 // 导出所有接口和类型
 export type { ChartDataProcessResult, ChartRenderConfig, ChartRenderer } from './utils'
 
-// 导出工具函数（用于直接导入）
-export { foldData, formatValue, getDefaultChartColors, processChartData, sortXAxisData } from './utils'
-
 // 导入渲染函数和工具函数
 import { renderIntervalChart as _renderIntervalChart } from './renderIntervalChart'
 import { renderLineChart as _renderLineChart } from './renderLineChart'
