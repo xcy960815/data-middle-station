@@ -20,7 +20,7 @@ interface TooltipCallbackDataParams extends CallbackDataParams {
 }
 
 /**
- * 渲染柱状图 - ECharts版本
+ * 渲染柱状图
  * @param {ChartRenderConfig} config 图表配置
  * @param {ChartConfigDao.IntervalChartConfig} chartConfig 柱状图特有配置
  * @returns {EChartsCoreOption | null} ECharts 配置选项
@@ -220,8 +220,8 @@ export function renderIntervalChart(
       trigger: 'axis',
       axisPointer: {
         type: 'shadow'
-      },
-      formatter: tooltipFormatter
+      }
+      // formatter: tooltipFormatter
     },
     legend: {
       data: legendData,
