@@ -10,8 +10,14 @@ import {
   sortXAxisData
 } from './utils'
 
+// 扩展 CallbackDataParams 以包含 axisValue 属性（在 axis trigger 模式下可用）
+interface TooltipCallbackDataParams extends CallbackDataParams {
+  axisValue?: string | number
+  axisValueLabel?: string
+}
+
 /**
- * 渲染折线图 - ECharts版本
+ * 渲染折线图
  * @param {ChartRenderConfig} config 图表配置
  * @param {LineChartConfig} chartConfig 折线图特有配置
  * @returns {EChartsCoreOption | null} ECharts 配置选项
@@ -29,6 +35,7 @@ export function renderLineChart(
 
   // 处理公共数据
   const dataResult = processChartData(config)
+
   const { xFieldName, measureFields, groupFieldName, useFold, xAxisTitle, yAxisTitle } = dataResult
 
   // 检查 measureFields 是否为空
@@ -39,7 +46,7 @@ export function renderLineChart(
   // 处理数据
   let processedData: Array<ChartDataVo.ChartData>
   if (useFold) {
-    processedData = foldData(config.data, measureFields, xFieldName, groupFieldName)
+    processedData = foldData(config.data, measureFields)
   } else {
     processedData = config.data
   }
@@ -117,8 +124,17 @@ export function renderLineChart(
       seriesOption.label = {
         show: true,
         position: 'top',
-        formatter: (params: any) => {
-          return formatValue(params.value, false)
+        formatter: (params: CallbackDataParams) => {
+          // param.value 可能是多种类型，需要转换为数字
+          const numericValue =
+            typeof params.value === 'number'
+              ? params.value
+              : Array.isArray(params.value)
+                ? typeof params.value[0] === 'number'
+                  ? params.value[0]
+                  : Number(params.value[0]) || 0
+                : Number(params.value) || 0
+          return formatValue(numericValue, false)
         }
       }
     }
@@ -141,7 +157,8 @@ export function renderLineChart(
     }
 
     // axisValue 是 ECharts 在 axis trigger 模式下添加的属性
-    const axisValue = (paramsArray[0] as any).axisValue || paramsArray[0].name || ''
+    const firstParam = paramsArray[0] as TooltipCallbackDataParams
+    const axisValue = firstParam.axisValue ?? firstParam.name ?? ''
     let result = `<div style="padding: 8px; background: rgba(50, 50, 50, 0.9); color: #fff; border-radius: 4px; font-size: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">
       <div style="margin-bottom: 4px; font-weight: bold; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 4px;">${axisValue}</div>`
 
@@ -174,7 +191,6 @@ export function renderLineChart(
       top: 10
     },
     tooltip: {
-      show: true,
       trigger: 'axis',
       axisPointer: {
         type: 'line',
@@ -184,12 +200,7 @@ export function renderLineChart(
           type: 'dashed'
         }
       },
-      formatter: tooltipFormatter,
-      backgroundColor: 'transparent',
-      borderWidth: 0,
-      textStyle: {
-        color: '#fff'
-      }
+      formatter: tooltipFormatter
     },
     legend: {
       data: legendData,

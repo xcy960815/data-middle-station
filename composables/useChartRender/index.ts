@@ -1,10 +1,9 @@
 // 导出所有接口和类型
+export type { ChartType } from './emptyChartOption'
 export type { ChartDataProcessResult, ChartRenderConfig, ChartRenderer } from './utils'
 
-// 导出工具函数（用于直接导入）
-export { foldData, formatValue, getDefaultChartColors, processChartData, sortXAxisData } from './utils'
-
 // 导入渲染函数和工具函数
+import { createEmptyChartOption as _createEmptyChartOption } from './emptyChartOption'
 import { renderIntervalChart as _renderIntervalChart } from './renderIntervalChart'
 import { renderLineChart as _renderLineChart } from './renderLineChart'
 import { renderPieChart as _renderPieChart } from './renderPieChart'
@@ -30,6 +29,8 @@ export const useChartRender = () => {
     formatValue: _formatValue,
     getDefaultChartColors: _getDefaultChartColors,
     processChartData: _processChartData,
-    sortXAxisData: _sortXAxisData
+    sortXAxisData: _sortXAxisData,
+    // 空图表配置
+    createEmptyChartOption: _createEmptyChartOption
   }
 }

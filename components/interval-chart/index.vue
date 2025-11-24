@@ -18,7 +18,7 @@ import {
   TitleComponent,
   TooltipComponent
 } from 'echarts/components'
-import { init, type ECharts, type EChartsCoreOption } from 'echarts/core'
+import { init, type ECharts } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { useChartRender } from '~/composables/useChartRender/index'
 
@@ -55,7 +55,23 @@ const props = defineProps({
   yAxisFields: {
     type: Array as PropType<Array<DimensionStore.DimensionOption>>,
     default: () => []
+  },
+  chartWidth: {
+    type: [Number, String],
+    default: () => '100%'
+  },
+  chartHeight: {
+    type: [Number, String],
+    default: () => '100%'
   }
+})
+
+const chartWidth = computed(() => {
+  return props.chartWidth || '100%'
+})
+
+const chartHeight = computed(() => {
+  return props.chartHeight || '100%'
 })
 
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
@@ -65,7 +81,7 @@ const chartContainer = ref<HTMLElement | null>(null)
 const chartInstance = ref<ECharts | null>(null)
 
 // 使用图表渲染 composable
-const { renderIntervalChart } = useChartRender()
+const { renderIntervalChart, createEmptyChartOption } = useChartRender()
 
 // 获取图表配置
 const chartConfigStore = useChartConfigStore()
@@ -84,9 +100,7 @@ const chartConfig = computed(() => {
 
 const initChart = () => {
   emits('renderChartStart')
-
   if (!chartContainer.value) {
-    console.warn('IntervalChart: chartContainer is not available')
     emits('renderChartEnd')
     return
   }
@@ -118,24 +132,7 @@ const initChart = () => {
 
   // 如果没有数据，显示空图表
   if (!option) {
-    const emptyOption: EChartsCoreOption = {
-      title: {
-        text: props.title || '柱状图',
-        left: 'center',
-        top: 10,
-        bottom: 10
-      },
-      graphic: {
-        type: 'text',
-        left: 'center',
-        top: 'center',
-        style: {
-          text: '暂无数据',
-          fontSize: 14,
-          fill: '#999'
-        }
-      }
-    }
+    const emptyOption = createEmptyChartOption(props.title, 'interval')
     chartInstance.value.setOption(emptyOption)
     emits('renderChartEnd')
     return
@@ -160,6 +157,16 @@ watch(
     })
   },
   { deep: true }
+)
+
+watch(
+  () => [props.chartWidth, props.chartHeight],
+  () => {
+    if (!chartInstance.value) return
+    nextTick(() => {
+      chartInstance.value?.resize()
+    })
+  }
 )
 
 onMounted(() => {

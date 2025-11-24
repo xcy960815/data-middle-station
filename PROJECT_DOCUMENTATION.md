@@ -20,7 +20,7 @@
 - **UI框架**: Element Plus 2.11.1
 - **状态管理**: Pinia 2.1.7
 - **样式方案**: TailwindCSS 3.4.17 + Less 4.3.0
-- **数据可视化**: AntV G2 5.3.5
+- **数据可视化**: ECharts 6.0.0
 - **代码编辑器**: Monaco Editor 0.52.2
 - **图标库**: @icon-park/vue-next 1.4.2
 - **Canvas绘图**: Konva 9.3.22
@@ -111,7 +111,7 @@ data-middle-station/
 
 #### 2. 图表可视化组件
 
-基于 AntV G2 封装的图表组件库，支持多种图表类型。
+基于 ECharts 封装的图表组件库，支持多种图表类型。
 
 **图表类型:**
 

@@ -95,8 +95,8 @@ export default defineNuxtConfig({
             }
 
             // 2. 大型图表库（~500KB+，相对独立）
-            if (id.includes('@antv/g2')) {
-              return 'antv-g2'
+            if (id.includes('echarts')) {
+              return 'echarts'
             }
 
             // 3. Canvas 渲染库（~200KB+，相对独立）

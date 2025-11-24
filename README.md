@@ -7,7 +7,7 @@
 - **前端框架**: Nuxt 3
 - **UI 框架**: Element Plus
 - **状态管理**: Pinia
-- **数据可视化**: AntV G2
+- **数据可视化**: ECharts
 - **代码编辑器**: Monaco Editor
 - **样式处理**: TailwindCSS + Less
 - **数据库**: MySQL

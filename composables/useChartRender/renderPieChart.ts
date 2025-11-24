@@ -4,7 +4,7 @@ import type { CallbackDataParams } from 'echarts/types/dist/shared'
 import { type ChartRenderConfig, getDefaultChartColors } from './utils'
 
 /**
- * 渲染饼图 - ECharts版本
+ * 渲染饼图
  * @param {ChartRenderConfig} config 图表配置
  * @param {PieChartConfig} chartConfig 饼图特有配置
  * @returns {EChartsCoreOption | null} ECharts 配置选项
@@ -13,7 +13,7 @@ export function renderPieChart(
   config: ChartRenderConfig,
   chartConfig: ChartConfigDao.PieChartConfig
 ): EChartsCoreOption | null {
-  const { showLabel = false, innerRadius = 0.6, chartType = 'pie' } = chartConfig
+  const { showLabel = false, chartType = 'pie' } = chartConfig
 
   // 饼图数据处理逻辑
   const categoryField = config.xAxisFields[0]?.columnName
@@ -60,8 +60,17 @@ export function renderPieChart(
   if (showLabel) {
     seriesOption.label = {
       show: true,
-      formatter: (params: any) => {
-        const percentage = total > 0 ? ((params.value / total) * 100).toFixed(1) : '0.0'
+      formatter: (params: CallbackDataParams) => {
+        // params.value 可能是多种类型，需要转换为数字
+        const numericValue =
+          typeof params.value === 'number'
+            ? params.value
+            : Array.isArray(params.value)
+              ? typeof params.value[0] === 'number'
+                ? params.value[0]
+                : Number(params.value[0]) || 0
+              : Number(params.value) || 0
+        const percentage = total > 0 ? ((numericValue / total) * 100).toFixed(1) : '0.0'
         return `${percentage}%`
       }
     }

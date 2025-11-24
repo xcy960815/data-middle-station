@@ -10,15 +10,24 @@ import {
   sortXAxisData
 } from './utils'
 
+// Label formatter 类型定义
+type LabelFormatterCallback = (params: CallbackDataParams) => string
+
+// 扩展 CallbackDataParams 以包含 axisValue 属性（在 axis trigger 模式下可用）
+interface TooltipCallbackDataParams extends CallbackDataParams {
+  axisValue?: string | number
+  axisValueLabel?: string
+}
+
 /**
- * 渲染柱状图 - ECharts版本
+ * 渲染柱状图
  * @param {ChartRenderConfig} config 图表配置
  * @param {ChartConfigDao.IntervalChartConfig} chartConfig 柱状图特有配置
  * @returns {EChartsCoreOption | null} ECharts 配置选项
  */
 export function renderIntervalChart(
   config: ChartRenderConfig,
-  chartConfig: IntervalChartConfig = {}
+  chartConfig: ChartConfigDao.IntervalChartConfig
 ): EChartsCoreOption | null {
   const {
     showPercentage = false,
@@ -46,7 +55,7 @@ export function renderIntervalChart(
   // 处理数据
   let processedData: Array<ChartDataVo.ChartData>
   if (useFold) {
-    processedData = foldData(config.data, measureFields, xFieldName, groupFieldName)
+    processedData = foldData(config.data, measureFields)
   } else {
     processedData = config.data
   }
@@ -66,7 +75,6 @@ export function renderIntervalChart(
 
   // 根据字段类型进行排序
   const xAxisData = sortXAxisData(xAxisDataSet, columnType)
-
   // 构建系列数据
   const seriesMap = new Map<string, number[]>()
   const legendData: string[] = []
@@ -136,12 +144,23 @@ export function renderIntervalChart(
 
     // 标签配置
     if (showLabel) {
+      const labelFormatter: LabelFormatterCallback = (params: CallbackDataParams) => {
+        const numericValue =
+          typeof params.value === 'number'
+            ? params.value
+            : Array.isArray(params.value)
+              ? typeof params.value[0] === 'number'
+                ? params.value[0]
+                : Number(params.value[0]) || 0
+              : Number(params.value) || 0
+
+        return formatValue(numericValue, showPercentage)
+      }
+
       seriesOption.label = {
         show: true,
         position: horizontalDisplay ? 'right' : 'top',
-        formatter: (params: any) => {
-          return formatValue(params.value, showPercentage)
-        }
+        formatter: labelFormatter
       }
     }
 
@@ -154,13 +173,16 @@ export function renderIntervalChart(
   })
 
   // 构建 tooltip formatter
-  const tooltipFormatter = (params: CallbackDataParams | CallbackDataParams[]) => {
+  const tooltipFormatter = (
+    params: TooltipCallbackDataParams | TooltipCallbackDataParams[] | CallbackDataParams | CallbackDataParams[]
+  ) => {
     // 当 trigger 为 'axis' 时，params 是数组
     const paramsArray = Array.isArray(params) ? params : [params]
 
     if (paramsArray.length > 0) {
       // axisValue 是 ECharts 在 axis trigger 模式下添加的属性
-      const axisValue = (paramsArray[0] as any).axisValue || paramsArray[0].name
+      const firstParam = paramsArray[0] as TooltipCallbackDataParams
+      const axisValue = firstParam.axisValue ?? firstParam.name
       let result = `<div style="padding: 8px;"><div style="margin-bottom: 4px; font-weight: bold;">${axisValue}</div>`
 
       for (const param of paramsArray) {
@@ -198,8 +220,8 @@ export function renderIntervalChart(
       trigger: 'axis',
       axisPointer: {
         type: 'shadow'
-      },
-      formatter: tooltipFormatter
+      }
+      // formatter: tooltipFormatter
     },
     legend: {
       data: legendData,
