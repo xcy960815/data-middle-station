@@ -1,8 +1,8 @@
 import Joi from 'joi'
-import { SendEmail } from '../utils/sendEmail'
+import { SendEmailService } from '../service/sendEmailService'
 
 // 发送邮件
-const sendEmailUtil = new SendEmail()
+const sendEmailService = new SendEmailService()
 
 const logger = new Logger({
   fileName: 'sendChartEmail',
@@ -71,7 +71,7 @@ export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResp
       return ApiResponse.error(errorMessage)
     }
 
-    const sendEmailResult = await sendEmailUtil.sendMail(requestBody)
+    const sendEmailResult = await sendEmailService.sendMail(requestBody)
 
     return ApiResponse.success(sendEmailResult)
   } catch (error: any) {
