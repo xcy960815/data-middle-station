@@ -49,5 +49,29 @@ declare namespace SendEmailVo {
        */
       to: string[]
     }
+    /**
+     * 实际发件人(格式化)
+     */
+    sender?: string
+    /**
+     * 使用的邮件通道
+     */
+    channel?: string
+    /**
+     * 发送所使用的传输信息
+     */
+    transport?: {
+      host: string
+      port: number
+      secure: boolean
+    }
+    /**
+     * 实际附件摘要
+     */
+    attachments?: Array<{
+      filename?: string
+      contentType?: string
+      size?: number
+    }>
   }
 }

@@ -11,7 +11,7 @@ declare namespace ScheduledEmailDto {
    * @desc 邮件配置
    */
   interface EmailConfig {
-    to: string
+    to: string | string[]
     subject: string
     additionalContent?: string
   }
@@ -179,9 +179,81 @@ declare namespace ScheduledEmailDto {
      */
     error_message?: string
     /**
+     * 邮件消息ID
+     */
+    email_message_id?: string
+    /**
+     * 发件人邮箱
+     */
+    sender_email?: string
+    /**
+     * 发件人名称
+     */
+    sender_name?: string
+    /**
+     * 收件人(To)
+     */
+    recipient_to?: string[]
+    /**
+     * 抄送
+     */
+    recipient_cc?: string[]
+    /**
+     * 密送
+     */
+    recipient_bcc?: string[]
+    /**
+     * 邮件主题
+     */
+    email_subject?: string
+    /**
+     * 附件数量
+     */
+    attachment_count?: number
+    /**
+     * 附件名称
+     */
+    attachment_names?: string[]
+    /**
+     * 邮件通道
+     */
+    email_channel?: string
+    /**
+     * 邮件服务提供方
+     */
+    provider?: string
+    /**
+     * 服务响应
+     */
+    provider_response?: string
+    /**
+     * 接收成功的收件人
+     */
+    accepted_recipients?: string[]
+    /**
+     * 拒收的收件人
+     */
+    rejected_recipients?: string[]
+    /**
+     * 重试次数
+     */
+    retry_count?: number
+    /**
      * 执行时间
      */
     duration?: number
+    /**
+     * 执行时区
+     */
+    execution_timezone?: string
+    /**
+     * SMTP主机
+     */
+    smtp_host?: string
+    /**
+     * SMTP端口
+     */
+    smtp_port?: number
     /**
      * 创建时间
      */
