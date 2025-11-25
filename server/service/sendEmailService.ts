@@ -99,7 +99,28 @@ export class SendEmailService {
     logger.info(`邮件已发送，messageId=${result.messageId}，收件人=${options.emailConfig.to}`)
 
     return {
-      messageId: result.messageId
+      messageId: result.messageId,
+      accepted: result.accepted,
+      rejected: result.rejected,
+      ehlo: result.ehlo,
+      envelopeTime: result.envelopeTime,
+      messageTime: result.messageTime,
+      messageSize: result.messageSize,
+      response: result.response,
+      envelope: result.envelope,
+      sender: this.getSenderAddress(),
+      channel: this.getChannel(),
+      transport: this.getTransportInfo(),
+      attachments: attachments.map((item) => ({
+        filename: item.filename,
+        contentType: item.contentType,
+        size:
+          typeof item.content === 'string'
+            ? Buffer.byteLength(item.content)
+            : item.content
+              ? item.content.length
+              : undefined
+      }))
     }
   }
 
@@ -228,5 +249,30 @@ export class SendEmailService {
       </body>
       </html>
     `
+  }
+
+  /**
+   * 获取默认发件地址
+   */
+  public getSenderAddress(): string {
+    return this.smtpFrom || this.smtpUser || 'system@unknown'
+  }
+
+  /**
+   * 获取传输信息
+   */
+  public getTransportInfo(): { host: string; port: number; secure: boolean } {
+    return {
+      host: this.smtpHost || '',
+      port: this.smtpPort || 0,
+      secure: this.smtpSecure
+    }
+  }
+
+  /**
+   * 获取当前通道
+   */
+  public getChannel(): string {
+    return this.smtpSecure ? 'smtps' : 'smtp'
   }
 }

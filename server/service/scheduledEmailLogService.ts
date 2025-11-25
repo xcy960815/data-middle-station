@@ -19,17 +19,40 @@ export class ScheduledEmailLogService extends BaseService {
    */
   async createExecutionLog(logRequest: ScheduledEmailLogDto.CreateLogRequest): Promise<number> {
     try {
-      const { createTime } = await super.getDefaultInfo()
-
+      const { createTime, createdBy } = await super.getDefaultInfo()
+      const timezone = logRequest.executionTimezone || this.getCurrentTimezone()
+      const createdTimezone = logRequest.createdTimezone || timezone
       const logData: ScheduledEmailLogDao.CreateScheduledEmailLogOptions = {
         taskId: logRequest.taskId,
         executionTime: logRequest.executionTime,
+        executionTimezone: timezone,
         status: logRequest.status,
         message: logRequest.message,
         errorDetails: logRequest.errorDetails,
         emailMessageId: logRequest.emailMessageId,
+        senderEmail: logRequest.senderEmail || 'system@unknown',
+        senderName: logRequest.senderName,
+        recipientTo: logRequest.recipientTo && logRequest.recipientTo.length > 0 ? logRequest.recipientTo : [],
+        recipientCc: logRequest.recipientCc,
+        recipientBcc: logRequest.recipientBcc,
+        replyTo: logRequest.replyTo,
+        emailSubject: logRequest.emailSubject,
+        attachmentCount: logRequest.attachmentCount,
+        attachmentNames: logRequest.attachmentNames,
+        emailChannel: logRequest.emailChannel,
+        provider: logRequest.provider,
+        providerResponse: logRequest.providerResponse,
+        acceptedRecipients: logRequest.acceptedRecipients,
+        rejectedRecipients: logRequest.rejectedRecipients,
+        retryCount: logRequest.retryCount,
+        rawRequestPayload: logRequest.rawRequestPayload,
+        rawResponsePayload: logRequest.rawResponsePayload,
+        smtpHost: logRequest.smtpHost,
+        smtpPort: logRequest.smtpPort,
         executionDuration: logRequest.executionDuration,
-        createdTime: createTime
+        createdTime: createTime,
+        createdTimezone,
+        createdBy
       }
 
       const logId = await this.scheduledEmailLogMapper.createScheduledEmailLog(logData)
@@ -48,7 +71,7 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 根据ID获取执行日志
    */
-  async getExecutionLogById(id: number): Promise<ScheduledEmailLogDao.ScheduledEmailLogOptions | null> {
+  async getExecutionLogById(id: number): Promise<ScheduledEmailLogDto.ExecutionLog | null> {
     try {
       const log = await this.scheduledEmailLogMapper.getScheduledEmailLogById(id)
       return log ? this.convertDaoToDto(log) : null
@@ -61,9 +84,7 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 获取任务执行日志列表
    */
-  async getExecutionLogList<
-    T extends ScheduledEmailLogDao.ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
-  >(query: ScheduledEmailLogDto.LogListQuery): Promise<ScheduledEmailLogDto.LogListResponse> {
+  async getExecutionLogList(query: ScheduledEmailLogDto.LogListQuery): Promise<ScheduledEmailLogDto.LogListResponse> {
     try {
       const limit = query.limit || 50
       const offset = query.offset || 0
@@ -75,7 +96,7 @@ export class ScheduledEmailLogService extends BaseService {
       ])
 
       return {
-        logs: logs.map((log) => this.convertDaoToDto(log as T)),
+        logs: logs.map((log) => this.convertDaoToDto(log)),
         total,
         pagination: {
           limit,
@@ -161,7 +182,8 @@ export class ScheduledEmailLogService extends BaseService {
     executionTime: string,
     emailMessageId: string,
     executionDuration: number,
-    message?: string
+    message?: string,
+    metadata?: Partial<ScheduledEmailLogDto.CreateLogRequest>
   ): Promise<number> {
     return await this.createExecutionLog({
       taskId,
@@ -169,7 +191,8 @@ export class ScheduledEmailLogService extends BaseService {
       status: 'success',
       message: message || '邮件发送成功',
       emailMessageId,
-      executionDuration
+      executionDuration,
+      ...metadata
     })
   }
 
@@ -181,7 +204,8 @@ export class ScheduledEmailLogService extends BaseService {
     executionTime: string,
     errorDetails: string,
     executionDuration: number,
-    message?: string
+    message?: string,
+    metadata?: Partial<ScheduledEmailLogDto.CreateLogRequest>
   ): Promise<number> {
     return await this.createExecutionLog({
       taskId,
@@ -189,7 +213,8 @@ export class ScheduledEmailLogService extends BaseService {
       status: 'failed',
       message: message || '邮件发送失败',
       errorDetails,
-      executionDuration
+      executionDuration,
+      ...metadata
     })
   }
 
@@ -201,12 +226,78 @@ export class ScheduledEmailLogService extends BaseService {
       id: dao.id,
       taskId: dao.taskId,
       executionTime: dao.executionTime,
+      executionTimezone: dao.executionTimezone || undefined,
       status: dao.status,
       message: dao.message,
       errorDetails: dao.errorDetails,
       emailMessageId: dao.emailMessageId,
+      senderEmail: dao.senderEmail || undefined,
+      senderName: dao.senderName || undefined,
+      recipientTo: this.parseStringArray(dao.recipientTo),
+      recipientCc: this.parseStringArray(dao.recipientCc),
+      recipientBcc: this.parseStringArray(dao.recipientBcc),
+      replyTo: dao.replyTo || undefined,
+      emailSubject: dao.emailSubject || undefined,
+      attachmentCount: dao.attachmentCount,
+      attachmentNames: this.parseStringArray(dao.attachmentNames),
+      emailChannel: dao.emailChannel || undefined,
+      provider: dao.provider || undefined,
+      providerResponse: dao.providerResponse || undefined,
+      acceptedRecipients: this.parseStringArray(dao.acceptedRecipients),
+      rejectedRecipients: this.parseStringArray(dao.rejectedRecipients),
+      retryCount: dao.retryCount,
       executionDuration: dao.executionDuration,
-      createdTime: dao.createdTime
+      rawRequestPayload: this.parseJson(dao.rawRequestPayload),
+      rawResponsePayload: this.parseJson(dao.rawResponsePayload),
+      smtpHost: dao.smtpHost || undefined,
+      smtpPort: dao.smtpPort || undefined,
+      createdTime: dao.createdTime,
+      createdTimezone: dao.createdTimezone || undefined
     }
+  }
+
+  private parseStringArray(value?: string | string[] | null): string[] | undefined {
+    if (!value) {
+      return undefined
+    }
+    if (Array.isArray(value)) {
+      return value
+    }
+    try {
+      const parsed = JSON.parse(value)
+      if (Array.isArray(parsed)) {
+        return parsed
+      }
+      if (typeof parsed === 'string') {
+        return [parsed]
+      }
+    } catch (_error) {
+      if (typeof value === 'string') {
+        return value
+          .split(/[,;]/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+      }
+    }
+    return undefined
+  }
+
+  private parseJson<T = Record<string, any>>(value?: string | Record<string, any> | null): T | undefined {
+    if (!value) {
+      return undefined
+    }
+    if (typeof value === 'object') {
+      return value as T
+    }
+    try {
+      return JSON.parse(value) as T
+    } catch (_error) {
+      logger.warn(`解析JSON字段失败: ${value?.toString().slice(0, 100)}`)
+      return undefined
+    }
+  }
+
+  private getCurrentTimezone(): string {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   }
 }

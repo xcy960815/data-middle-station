@@ -1,7 +1,7 @@
-import type { ResultSetHeader } from 'mysql2'
-import { batchFormatSqlKey, convertToSqlProperties } from '@/server/utils/databaseHelpper'
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
 import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
+import { batchFormatSqlKey, convertToSqlProperties } from '@/server/utils/databaseHelpper'
+import type { ResultSetHeader } from 'mysql2'
 
 /**
  * @desc 执行日志基础字段
@@ -10,12 +10,33 @@ const SCHEDULED_EMAIL_LOG_BASE_FIELDS = [
   'id',
   'task_id',
   'execution_time',
+  'execution_timezone',
   'status',
   'message',
   'error_details',
   'email_message_id',
+  'sender_email',
+  'sender_name',
+  'recipient_to',
+  'recipient_cc',
+  'recipient_bcc',
+  'reply_to',
+  'email_subject',
+  'attachment_count',
+  'attachment_names',
+  'email_channel',
+  'provider',
+  'provider_response',
+  'accepted_recipients',
+  'rejected_recipients',
+  'retry_count',
+  'raw_request_payload',
+  'raw_response_payload',
+  'smtp_host',
+  'smtp_port',
   'execution_duration',
   'created_time',
+  'created_timezone',
   'created_by'
 ]
 
@@ -56,6 +77,12 @@ class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLog
   executionTime!: string
 
   /**
+   * 执行时区
+   */
+  @Column('execution_timezone')
+  executionTimezone?: string
+
+  /**
    * 状态
    */
   @Column('status')
@@ -80,6 +107,120 @@ class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLog
   emailMessageId?: string
 
   /**
+   * 发件人邮箱
+   */
+  @Column('sender_email')
+  senderEmail?: string
+
+  /**
+   * 发件人名称
+   */
+  @Column('sender_name')
+  senderName?: string
+
+  /**
+   * 收件人(To)
+   */
+  @Column('recipient_to')
+  recipientTo?: string
+
+  /**
+   * 抄送
+   */
+  @Column('recipient_cc')
+  recipientCc?: string
+
+  /**
+   * 密送
+   */
+  @Column('recipient_bcc')
+  recipientBcc?: string
+
+  /**
+   * 回复地址
+   */
+  @Column('reply_to')
+  replyTo?: string
+
+  /**
+   * 邮件主题
+   */
+  @Column('email_subject')
+  emailSubject?: string
+
+  /**
+   * 附件数量
+   */
+  @Column('attachment_count')
+  attachmentCount?: number
+
+  /**
+   * 附件名称
+   */
+  @Column('attachment_names')
+  attachmentNames?: string
+
+  /**
+   * 邮件通道
+   */
+  @Column('email_channel')
+  emailChannel?: string
+
+  /**
+   * 服务提供方
+   */
+  @Column('provider')
+  provider?: string
+
+  /**
+   * 服务响应
+   */
+  @Column('provider_response')
+  providerResponse?: string
+
+  /**
+   * 接收成功的收件人
+   */
+  @Column('accepted_recipients')
+  acceptedRecipients?: string
+
+  /**
+   * 拒收的收件人
+   */
+  @Column('rejected_recipients')
+  rejectedRecipients?: string
+
+  /**
+   * 重试次数
+   */
+  @Column('retry_count')
+  retryCount?: number
+
+  /**
+   * 原始请求
+   */
+  @Column('raw_request_payload')
+  rawRequestPayload?: string
+
+  /**
+   * 原始响应
+   */
+  @Column('raw_response_payload')
+  rawResponsePayload?: string
+
+  /**
+   * SMTP主机
+   */
+  @Column('smtp_host')
+  smtpHost?: string
+
+  /**
+   * SMTP端口
+   */
+  @Column('smtp_port')
+  smtpPort?: number
+
+  /**
    * 执行时长
    */
   @Column('execution_duration')
@@ -90,6 +231,12 @@ class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLog
    */
   @Column('created_time')
   createdTime!: string
+
+  /**
+   * 创建时区
+   */
+  @Column('created_timezone')
+  createdTimezone?: string
 
   /**
    * 创建人
