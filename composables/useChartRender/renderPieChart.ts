@@ -11,7 +11,7 @@ import { type ChartRenderConfig, getDefaultChartColors } from './utils'
  */
 export function renderPieChart(
   config: ChartRenderConfig,
-  chartConfig: ChartConfigDao.PieChartConfig
+  chartConfig: AnalyzeConfigDao.PieChartConfig
 ): EChartsCoreOption | null {
   const { showLabel = false, chartType = 'pie' } = chartConfig
 

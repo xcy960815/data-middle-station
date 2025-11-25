@@ -29,7 +29,7 @@ export class AnalyzeService extends BaseService {
    */
   private dao2Vo(
     chart: AnalyzeDao.AnalyzeOption,
-    chartConfig: ChartConfigVo.ChartConfigResponse | null
+    chartConfig: AnalyzeConfigVo.ChartConfigResponse | null
   ): AnalyzeVo.GetAnalyzeResponse {
     return {
       ...chart,
@@ -47,7 +47,7 @@ export class AnalyzeService extends BaseService {
   ): Promise<AnalyzeVo.DeleteAnalyzeResponse> {
     const analyzeOption = await this.getAnalyze(deleteAnalyzeRequest)
     if (analyzeOption.chartConfigId) {
-      const deleteChartConfigRequest: ChartConfigDto.DeleteChartConfigRequest = {
+      const deleteChartConfigRequest: AnalyzeConfigDto.DeleteChartConfigRequest = {
         id: analyzeOption.chartConfigId,
         updatedBy: analyzeOption.updatedBy,
         updateTime: analyzeOption.updateTime

@@ -14,9 +14,9 @@ export class ChartDataMapper extends BaseMapper {
   /**
    * @desc 执行sql
    * @param sql {string} sql语句
-   * @returns {Promise<Array<ChartDataDao.ChartData>>}
+   * @returns {Promise<Array<AnalyzeDataDao.ChartData>>}
    */
-  public async getChartData<T extends Array<ChartDataDao.ChartData>>(sql: string): Promise<T> {
+  public async getChartData<T extends Array<AnalyzeDataDao.ChartData>>(sql: string): Promise<T> {
     const data = await this.exe<T>(sql)
     return data
   }
