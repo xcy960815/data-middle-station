@@ -1,4 +1,4 @@
-import { ChartDataMapper } from '../mapper/chartDataMapper'
+import { ChartDataMapper } from '@/server/mapper/chartDataMapper'
 
 /**
  * @desc 图表数据服务

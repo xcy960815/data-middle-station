@@ -1,6 +1,6 @@
-import { AnalyzeMapper } from '../mapper/analyzeMapper'
-import { BaseService } from './baseService'
-import { ChartConfigService } from './chartConfigService'
+import { AnalyzeMapper } from '@/server/mapper/analyzeMapper'
+import { BaseService } from '@/server/service/baseService'
+import { ChartConfigService } from '@/server/service/chartConfigService'
 
 /**
  * @desc 分析服务

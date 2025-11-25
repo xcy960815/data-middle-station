@@ -1,6 +1,6 @@
 import type { ResultSetHeader } from 'mysql2'
-import type { IColumnTarget, Row } from './baseMapper'
-import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from './baseMapper'
+import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
+import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
 
 class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {

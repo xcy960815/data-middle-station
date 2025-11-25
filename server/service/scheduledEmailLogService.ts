@@ -1,5 +1,5 @@
-import { ScheduledEmailLogMapper } from '../mapper/scheduledEmailLogMapper'
-import { BaseService } from './baseService'
+import { ScheduledEmailLogMapper } from '@/server/mapper/scheduledEmailLogMapper'
+import { BaseService } from '@/server/service/baseService'
 
 const logger = new Logger({ fileName: 'scheduled-email-log', folderName: 'server' })
 

@@ -1,4 +1,4 @@
-import { BaseMapper } from './baseMapper'
+import { BaseMapper } from '@/server/mapper/baseMapper'
 
 const DATA_SOURCE_NAME = 'kanban_data'
 

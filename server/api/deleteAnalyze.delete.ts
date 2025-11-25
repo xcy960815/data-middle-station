@@ -1,4 +1,4 @@
-import { AnalyzeService } from '../service/analyzeService'
+import { AnalyzeService } from '@/server/service/analyzeService'
 const analyzeService = new AnalyzeService()
 
 /**

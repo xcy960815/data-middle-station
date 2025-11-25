@@ -1,9 +1,9 @@
-import { ScheduledEmailMapper } from '../mapper/scheduledEmailMapper'
-import { calculateNextExecutionTime } from '../utils/schedulerUtils'
-import { BaseService } from './baseService'
-import { ChartSnapshotService } from './chartSnapshotService'
-import { ScheduledEmailLogService } from './scheduledEmailLogService'
-import { SendEmailService } from './sendEmailService'
+import { ScheduledEmailMapper } from '@/server/mapper/scheduledEmailMapper'
+import { calculateNextExecutionTime } from '@/server/utils/schedulerUtils'
+import { BaseService } from '@/server/service/baseService'
+import { ChartSnapshotService } from '@/server/service/chartSnapshotService'
+import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
+import { SendEmailService } from '@/server/service/sendEmailService'
 
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
 

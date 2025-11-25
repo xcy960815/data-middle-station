@@ -1,4 +1,4 @@
-import { DatabaseService } from '../service/databaseService'
+import { DatabaseService } from '@/server/service/databaseService'
 const databaseService = new DatabaseService()
 /**
  * @desc 根据表名查询数据

@@ -1,4 +1,4 @@
-import { ChartDataService } from '../service/chartDataService'
+import { ChartDataService } from '@/server/service/chartDataService'
 const chartDataService = new ChartDataService()
 
 /**

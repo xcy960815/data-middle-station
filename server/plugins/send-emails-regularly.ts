@@ -1,5 +1,5 @@
+import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
 import schedule from 'node-schedule'
-import { ScheduledEmailService } from '../service/scheduledEmailService'
 
 const scheduledEmailService = new ScheduledEmailService()
 
