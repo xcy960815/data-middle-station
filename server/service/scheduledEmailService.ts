@@ -1,8 +1,9 @@
 import { ScheduledEmailMapper } from '../mapper/scheduledEmailMapper'
 import { calculateNextExecutionTime } from '../utils/schedulerUtils'
-import { SendEmail } from '../utils/sendEmail'
 import { BaseService } from './baseService'
+import { ChartSnapshotService } from './chartSnapshotService'
 import { ScheduledEmailLogService } from './scheduledEmailLogService'
+import { SendEmailService } from './sendEmailService'
 
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
 
@@ -19,15 +20,20 @@ export class ScheduledEmailService extends BaseService {
    */
   private scheduledEmailLogService: ScheduledEmailLogService
   /**
-   * 邮件发送工具
+   * 邮件发送服务
    */
-  private sendEmailUtil: SendEmail
+  private sendEmailService: SendEmailService
+  /**
+   * 图表渲染服务
+   */
+  private chartSnapshotService: ChartSnapshotService
 
   constructor() {
     super()
     this.scheduledEmailMapper = new ScheduledEmailMapper()
     this.scheduledEmailLogService = new ScheduledEmailLogService()
-    this.sendEmailUtil = new SendEmail()
+    this.sendEmailService = new SendEmailService()
+    this.chartSnapshotService = new ChartSnapshotService()
   }
 
   /**
@@ -462,14 +468,22 @@ export class ScheduledEmailService extends BaseService {
       const emailConfig = scheduledEmailTask.emailConfig
       const analyzeOptions = scheduledEmailTask.analyzeOptions
 
-      // 使用 SendEmail 工具发送邮件
-      const result = await this.sendEmailUtil.sendMail({
+      const chartSnapshot = await this.chartSnapshotService.renderAnalyzeChart(analyzeOptions.analyzeId)
+
+      // 使用 SendEmailService 发送邮件
+      const result = await this.sendEmailService.sendMail({
         emailConfig: {
           to: Array.isArray(emailConfig.to) ? emailConfig.to[0] : emailConfig.to,
           subject: emailConfig.subject,
           additionalContent: emailConfig.additionalContent || ''
         },
-        analyzeOptions: analyzeOptions
+        analyzeOptions: {
+          ...analyzeOptions,
+          filename: analyzeOptions.filename || chartSnapshot.filename,
+          analyzeName: analyzeOptions.analyzeName || chartSnapshot.analyzeName,
+          chartType: chartSnapshot.chartType,
+          fileContent: chartSnapshot.buffer
+        }
       })
 
       // 更新任务状态为完成

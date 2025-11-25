@@ -5,7 +5,7 @@ const logger = new Logger({ fileName: 'email', folderName: 'server' })
 /**
  * @desc 发送邮件服务
  */
-export class SendEmail {
+export class SendEmailService {
   /**
    * @desc 邮件传输器
    */
@@ -98,9 +98,13 @@ export class SendEmail {
       return []
     }
 
+    // 根据文件扩展名设置 content type
+    const isSvg = analyzeOptions.filename.toLowerCase().endsWith('.svg')
+    const contentType = isSvg ? 'image/svg+xml' : 'image/svg+xml'
+
     const attachment: any = {
       filename: analyzeOptions.filename,
-      contentType: 'image/png'
+      contentType
     }
 
     // 优先使用文件内容
