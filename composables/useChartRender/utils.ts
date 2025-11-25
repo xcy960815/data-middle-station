@@ -4,13 +4,13 @@ import type { EChartsCoreOption } from 'echarts/core'
  * 图表渲染配置接口
  * @interface ChartRenderConfig
  * @property {string} title 图表标题
- * @property {Array<ChartDataVo.ChartData>} data 图表数据
+ * @property {Array<AnalyzeDataVo.ChartData>} data 图表数据
  * @property {Array<GroupStore.GroupOption>} xAxisFields X轴字段
  * @property {Array<DimensionStore.DimensionOption>} yAxisFields Y轴字段
  */
 export interface ChartRenderConfig {
   title: string
-  data: Array<ChartDataVo.ChartData>
+  data: Array<AnalyzeDataVo.ChartData>
   xAxisFields: Array<GroupStore.GroupOption>
   yAxisFields: Array<DimensionStore.DimensionOption>
 }
@@ -25,10 +25,10 @@ export interface ChartRenderConfig {
 export interface ChartRenderer {
   renderIntervalChart(
     config: ChartRenderConfig,
-    chartConfig?: ChartConfigDao.IntervalChartConfig
+    chartConfig?: AnalyzeConfigDao.IntervalChartConfig
   ): EChartsCoreOption | null
-  renderLineChart(config: ChartRenderConfig, chartConfig?: ChartConfigDao.LineChartConfig): EChartsCoreOption | null
-  renderPieChart(config: ChartRenderConfig, chartConfig?: ChartConfigDao.PieChartConfig): EChartsCoreOption | null
+  renderLineChart(config: ChartRenderConfig, chartConfig?: AnalyzeConfigDao.LineChartConfig): EChartsCoreOption | null
+  renderPieChart(config: ChartRenderConfig, chartConfig?: AnalyzeConfigDao.PieChartConfig): EChartsCoreOption | null
 }
 
 /**
@@ -128,17 +128,17 @@ export function formatValue(value: number, showPercentage: boolean): string {
 
 /**
  * 处理数据折叠（fold transform）
- * @param {Array<ChartDataVo.ChartData>} data 原始数据
+ * @param {Array<AnalyzeDataVo.ChartData>} data 原始数据
  * @param {string[]} measureFields 度量字段
  * @param {string} xFieldName X轴字段
  * @param {string} groupFieldName 分组字段
- * @returns {Array<ChartDataVo.ChartData & { key: string; value: number }>} 折叠后的数据
+ * @returns {Array<AnalyzeDataVo.ChartData & { key: string; value: number }>} 折叠后的数据
  */
 export function foldData(
-  data: Array<ChartDataVo.ChartData>,
+  data: Array<AnalyzeDataVo.ChartData>,
   measureFields: string[]
-): Array<ChartDataVo.ChartData & { key: string; value: number }> {
-  const foldedData: Array<ChartDataVo.ChartData & { key: string; value: number }> = []
+): Array<AnalyzeDataVo.ChartData & { key: string; value: number }> {
+  const foldedData: Array<AnalyzeDataVo.ChartData & { key: string; value: number }> = []
   for (const item of data) {
     for (const field of measureFields) {
       const value = Number(item[field] || 0)

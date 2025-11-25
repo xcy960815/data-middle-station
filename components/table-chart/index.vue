@@ -48,7 +48,7 @@ const chartConfigStore = useChartConfigStore()
 
 defineProps({
   data: {
-    type: Array as PropType<Array<ChartDataVo.ChartData>>,
+    type: Array as PropType<Array<AnalyzeDataVo.ChartData>>,
     default: () => []
   },
   xAxisFields: {

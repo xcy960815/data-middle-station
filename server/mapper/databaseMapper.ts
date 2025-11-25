@@ -4,7 +4,7 @@ import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/se
 /**
  * @desc 表列表映射
  */
-export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarget {
+export class TableOptionMapping implements DataBaseDao.TableOption, IColumnTarget {
   @Column('TABLE_NAME')
   tableName!: string
 
@@ -59,7 +59,7 @@ export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarge
 /**
  * @desc 表列映射
  */
-export class TableColumnMapping implements DatabaseDao.TableColumnOptions, IColumnTarget {
+export class TableColumnMapping implements DataBaseDao.TableColumnOptions, IColumnTarget {
   /**
    * @desc 列名
    */
@@ -102,7 +102,7 @@ export class DatabaseMapper extends BaseMapper {
    * @returns {Promise<Array<T>>}
    */
   @Mapping(TableOptionMapping)
-  public async getTable<T extends DatabaseDao.TableOption = DatabaseDao.TableOption>(
+  public async getTable<T extends DataBaseDao.TableOption = DataBaseDao.TableOption>(
     getTableRequest: DatabaseDto.GetDatabaseTablesRequest
   ): Promise<Array<T>> {
     const sql = `SELECT
@@ -130,10 +130,10 @@ export class DatabaseMapper extends BaseMapper {
   /**
    * @desc 查询表的所有列
    * @param  getTableColumnsRequest  {DatabaseDto.GetTableColumnsRequest} 查询表请求参数
-   * @returns {Promise<Array<DatabaseDao.TableColumnOptions>>}
+   * @returns {Promise<Array<DataBaseDao.TableColumnOptions>>}
    */
   @Mapping(TableColumnMapping)
-  public async getTableColumns<T extends DatabaseDao.TableColumnOptions>(
+  public async getTableColumns<T extends DataBaseDao.TableColumnOptions>(
     getTableColumnsRequest: DatabaseDto.GetTableColumnsRequest
   ): Promise<Array<T>> {
     const sql = `SELECT

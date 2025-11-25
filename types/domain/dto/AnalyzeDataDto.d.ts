@@ -1,8 +1,8 @@
-declare namespace ChartDataDto {
+declare namespace AnalyzeDataDto {
   /**
    * @desc 公共图表配置
    */
-  type CommonChartConfig = ChartConfigDao.CommonChartConfig
+  type CommonChartConfig = AnalyzeConfigDao.CommonChartConfig
   /**
    * @desc 获取图表数据请求参数
    */
@@ -10,19 +10,19 @@ declare namespace ChartDataDto {
     /**
      * @desc 过滤配置
      */
-    filters: ChartConfigDao.FilterOption[]
+    filters: AnalyzeConfigDao.FilterOption[]
     /**
      * @desc 排序配置
      */
-    orders: ChartConfigDao.OrderOption[]
+    orders: AnalyzeConfigDao.OrderOption[]
     /**
      * @desc 分组配置
      */
-    groups: ChartConfigDao.GroupOption[]
+    groups: AnalyzeConfigDao.GroupOption[]
     /**
      * @desc 维度配置
      */
-    dimensions: ChartConfigDao.DimensionOption[]
+    dimensions: AnalyzeConfigDao.DimensionOption[]
     /**
      * @desc 数据源
      */
@@ -34,6 +34,6 @@ declare namespace ChartDataDto {
     /**
      * @desc 公共图表配置
      */
-    commonChartConfig?: ChartConfigDao.CommonChartConfig
+    commonChartConfig?: AnalyzeConfigDao.CommonChartConfig
   }
 }

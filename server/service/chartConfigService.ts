@@ -13,10 +13,10 @@ export class ChartConfigService extends BaseService {
   }
   /**
    * @desc 将dao对象转换为vo对象
-   * @param chartConfigOption {ChartConfigDao.ChartConfig} 图表配置
-   * @returns {ChartConfigVo.ChartConfig} 图表配置
+   * @param chartConfigOption {AnalyzeConfigDao.ChartConfig} 图表配置
+   * @returns {AnalyzeConfigVo.ChartConfig} 图表配置
    */
-  private dao2Vo(chartConfigOption: ChartConfigDao.ChartConfig): ChartConfigVo.ChartConfigResponse {
+  private dao2Vo(chartConfigOption: AnalyzeConfigDao.ChartConfig): AnalyzeConfigVo.ChartConfigResponse {
     return {
       ...chartConfigOption,
       commonChartConfig: chartConfigOption.commonChartConfig,
@@ -62,19 +62,19 @@ export class ChartConfigService extends BaseService {
   /**
    * @desc 获取图表
    * @param id {number} 图表id
-   * @returns {Promise<ChartConfigVo.ChartConfigResponse>}
+   * @returns {Promise<AnalyzeConfigVo.ChartConfigResponse>}
    */
-  public async getChartConfig(id: number): Promise<ChartConfigVo.ChartConfigResponse> {
+  public async getChartConfig(id: number): Promise<AnalyzeConfigVo.ChartConfigResponse> {
     const chartConfigOption = await this.chartConfigMapper.getChartConfig(id)
     return this.dao2Vo(chartConfigOption)
   }
 
   /**
    * @desc 保存图表配置
-   * @param chartConfig {ChartConfigDto.ChartConfig} 图表配置
+   * @param chartConfig {AnalyzeConfigDto.ChartConfig} 图表配置
    * @returns {Promise<boolean>}
    */
-  public async updateChartConfig(chartConfigRequest: ChartConfigDto.UpdateChartConfigRequest): Promise<boolean> {
+  public async updateChartConfig(chartConfigRequest: AnalyzeConfigDto.UpdateChartConfigRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     chartConfigRequest.updatedBy = updatedBy
     chartConfigRequest.updateTime = updateTime
@@ -84,10 +84,10 @@ export class ChartConfigService extends BaseService {
 
   /**
    * @desc 创建图表配置
-   * @param chartConfigDto {ChartConfigDto.CreateChartConfigRequest} 图表配置
+   * @param chartConfigDto {AnalyzeConfigDto.CreateChartConfigRequest} 图表配置
    * @returns {Promise<number>}
    */
-  public async createChartConfig(chartConfigRequest: ChartConfigDto.CreateChartConfigRequest): Promise<number> {
+  public async createChartConfig(chartConfigRequest: AnalyzeConfigDto.CreateChartConfigRequest): Promise<number> {
     const { createdBy, createTime, updateTime, updatedBy } = await this.getDefaultInfo()
     chartConfigRequest.createdBy = createdBy
     chartConfigRequest.createTime = createTime
@@ -100,10 +100,12 @@ export class ChartConfigService extends BaseService {
 
   /**
    * @desc 删除图表配置
-   * @param deleteChartConfigRequest {ChartConfigDto.DeleteChartConfigRequest} 图表配置删除请求参数
+   * @param deleteChartConfigRequest {AnalyzeConfigDto.DeleteChartConfigRequest} 图表配置删除请求参数
    * @returns {Promise<boolean>}
    */
-  public async deleteChartConfig(deleteChartConfigRequest: ChartConfigDto.DeleteChartConfigRequest): Promise<boolean> {
+  public async deleteChartConfig(
+    deleteChartConfigRequest: AnalyzeConfigDto.DeleteChartConfigRequest
+  ): Promise<boolean> {
     return await this.chartConfigMapper.deleteChartConfig(deleteChartConfigRequest)
   }
 }

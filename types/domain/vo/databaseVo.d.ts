@@ -5,12 +5,12 @@ declare namespace DatabaseVo {
   /**
    * 表配置
    */
-  type GetDatabaseTablesResponse = DatabaseDao.TableOption
+  type GetDatabaseTablesResponse = DataBaseDao.TableOption
 
   /**
    * 左侧数据源字段类型 刚从数据库出来的字段
    */
-  type GetTableColumnsResponse = DatabaseDao.TableColumnOptions & {
+  type GetTableColumnsResponse = DataBaseDao.TableColumnOptions & {
     displayName: string
   }
 }

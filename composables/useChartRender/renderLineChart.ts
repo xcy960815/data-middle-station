@@ -24,7 +24,7 @@ interface TooltipCallbackDataParams extends CallbackDataParams {
  */
 export function renderLineChart(
   config: ChartRenderConfig,
-  chartConfig: ChartConfigDao.LineChartConfig
+  chartConfig: AnalyzeConfigDao.LineChartConfig
 ): EChartsCoreOption | null {
   const { showPoint = false, showLabel = false, smooth = false, horizontalBar = false } = chartConfig
 
@@ -44,7 +44,7 @@ export function renderLineChart(
   }
 
   // 处理数据
-  let processedData: Array<ChartDataVo.ChartData>
+  let processedData: Array<AnalyzeDataVo.ChartData>
   if (useFold) {
     processedData = foldData(config.data, measureFields)
   } else {
@@ -72,7 +72,7 @@ export function renderLineChart(
   const legendData: string[] = []
 
   // 确定系列名称的生成逻辑
-  const getSeriesName = (item: ChartDataVo.ChartData): string => {
+  const getSeriesName = (item: AnalyzeDataVo.ChartData): string => {
     if (useFold && groupFieldName) {
       const groupValue = String(item[groupFieldName] || '')
       const keyValue = String(item['key'] || '')

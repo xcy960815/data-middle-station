@@ -1,7 +1,7 @@
 /**
  * @desc 从数据库出来的表信息
  */
-declare namespace DatabaseDao {
+declare namespace DataBaseDao {
   /**
    * @desc 左侧数据源列表
    */

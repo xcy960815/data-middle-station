@@ -4,9 +4,9 @@
 
 /**
  * @desc 表格图默认配置
- * @returns {ChartConfigVo.TableChartConfigResponse}
+ * @returns {AnalyzeConfigVo.TableChartConfigResponse}
  */
-export const defaultTableChartConfig: ChartConfigVo.TableChartConfigResponse = {
+export const defaultTableChartConfig: AnalyzeConfigVo.TableChartConfigResponse = {
   /** 是否在行 hover 时高亮整行 */
   enableRowHoverHighlight: false,
   /** 是否在列 hover 时高亮整列 */
@@ -71,9 +71,9 @@ export const defaultTableChartConfig: ChartConfigVo.TableChartConfigResponse = {
 
 /**
  * @desc 饼图默认配置
- * @returns {ChartConfigVo.PieChartConfigResponse}
+ * @returns {AnalyzeConfigVo.PieChartConfigResponse}
  */
-export const defaultPieChartConfig: ChartConfigVo.PieChartConfigResponse = {
+export const defaultPieChartConfig: AnalyzeConfigVo.PieChartConfigResponse = {
   /** 是否展示标签 */
   showLabel: false,
   /** 饼图类型 */
@@ -82,9 +82,9 @@ export const defaultPieChartConfig: ChartConfigVo.PieChartConfigResponse = {
 
 /**
  * @desc 柱状图默认配置
- * @returns {ChartConfigVo.IntervalChartConfigResponse}
+ * @returns {AnalyzeConfigVo.IntervalChartConfigResponse}
  */
-export const defaultIntervalChartConfig: ChartConfigVo.IntervalChartConfigResponse = {
+export const defaultIntervalChartConfig: AnalyzeConfigVo.IntervalChartConfigResponse = {
   /** 展示方式：层级 / 平铺 */
   displayMode: 'levelDisplay',
   /** 是否展示百分比 */
@@ -99,9 +99,9 @@ export const defaultIntervalChartConfig: ChartConfigVo.IntervalChartConfigRespon
 
 /**
  * @desc 折线图默认配置
- * @returns {ChartConfigVo.LineChartConfigResponse}
+ * @returns {AnalyzeConfigVo.LineChartConfigResponse}
  */
-export const defaultLineChartConfig: ChartConfigVo.LineChartConfigResponse = {
+export const defaultLineChartConfig: AnalyzeConfigVo.LineChartConfigResponse = {
   /** 折线节点是否展示 */
   showPoint: false,
   /** 是否显示标签 */
@@ -116,9 +116,9 @@ export const defaultLineChartConfig: ChartConfigVo.LineChartConfigResponse = {
 
 /**
  * @desc 公共图表默认配置
- * @returns {ChartConfigVo.CommonChartConfigResponse}
+ * @returns {AnalyzeConfigVo.CommonChartConfigResponse}
  */
-export const defaultCommonChartConfig: ChartConfigVo.CommonChartConfigResponse = {
+export const defaultCommonChartConfig: AnalyzeConfigVo.CommonChartConfigResponse = {
   /** 查询数据量上限 */
   limit: 1000,
   /** 分析备注 */

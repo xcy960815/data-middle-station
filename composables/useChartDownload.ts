@@ -103,13 +103,13 @@ export const useChartDownload = () => {
 
   /**
    * 导出Excel
-   * @param {ChartDataVo.ChartData} data 数据
+   * @param {AnalyzeDataVo.ChartData} data 数据
    * @param {string} fileName 文件名
    * @param {string} sheetName 表名
    * @param {string[]} columns 列名
    */
   const exportToExcel = async (
-    data: Array<ChartDataVo.ChartData>,
+    data: Array<AnalyzeDataVo.ChartData>,
     fileName: string,
     sheetName: string,
     columns?: string[]

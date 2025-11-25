@@ -1,16 +1,16 @@
 /**
  * 图表配置
  */
-declare namespace ChartConfigDao {
+declare namespace AnalyzeConfigDao {
   /**
    * 列配置
    */
-  type ColumnOption = DatabaseDao.TableColumnOptions
+  type ColumnOptions = DataBaseDao.TableColumnOptions & { displayName: string }
 
   /**
    * 维度配置
    */
-  type DimensionOption = DatabaseDao.TableColumnOptions & {
+  type DimensionOption = ColumnOptions & {
     __invalid?: boolean
   }
 
@@ -56,7 +56,7 @@ declare namespace ChartConfigDao {
   /**
    * 过滤配置
    */
-  type FilterOption = DatabaseDao.TableColumnOptions & {
+  type FilterOption = ColumnOptions & {
     /**
      * 过滤类型
      */
@@ -78,7 +78,7 @@ declare namespace ChartConfigDao {
   /**
    * 分组配置
    */
-  type GroupOption = DatabaseDao.TableColumnOptions & {
+  type GroupOption = ColumnOptions & {
     __invalid?: boolean
   }
 
@@ -112,7 +112,7 @@ declare namespace ChartConfigDao {
   /**
    * 排序配置
    */
-  type OrderOption = DatabaseDao.TableColumnOptions & {
+  type OrderOption = ColumnOptions & {
     /**
      * 排序类型
      */
@@ -425,7 +425,7 @@ declare namespace ChartConfigDao {
     /**
      * 列配置
      */
-    columns: DatabaseDao.TableColumnOptions[]
+    columns: ColumnOptions[]
     /**
      * 维度配置
      */
