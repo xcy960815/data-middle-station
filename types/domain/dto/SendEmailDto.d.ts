@@ -18,7 +18,7 @@ declare namespace SendEmailDto {
     /**
      * 文件名
      */
-    filename: string
+    filename?: string
     /**
      * 文件内容 (Buffer或base64字符串)
      */
@@ -30,11 +30,11 @@ declare namespace SendEmailDto {
     /**
      * 图表类型
      */
-    chartType: string
+    chartType?: string
     /**
      * 分析名称
      */
-    analyzeName: string
+    analyzeName?: string
     /**
      * 分析ID
      */

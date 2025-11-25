@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { ElButton, ElMessage, ElMessageBox, ElTag } from 'element-plus'
-import { getChartDataHandler } from '../../getChartData'
+import { getChartDataHandler } from '../../getAnalyzeData'
 import { updateAnalyzeHandler } from '../../updateAnalyze'
 import SendEmailDtoDialog from './components/send-email-dialog.vue'
 const { queryChartData } = getChartDataHandler()

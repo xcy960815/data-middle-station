@@ -91,7 +91,7 @@ export const getChartDataHandler = () => {
 
     const startTime = dayjs().valueOf()
 
-    const result = await httpRequest('/api/getChartData', {
+    const result = await httpRequest('/api/getAnalyzeData', {
       method: 'POST',
       body: queryChartDataParams.value
     }).finally(() => {
@@ -102,10 +102,10 @@ export const getChartDataHandler = () => {
     })
     const endTime = dayjs().valueOf()
     if (result.code === 200) {
-      analyzeStore.setChartData(result.data || [])
+      analyzeStore.setAnalyzeData(result.data || [])
       analyzeStore.setChartErrorMessage('')
     } else {
-      analyzeStore.setChartData([])
+      analyzeStore.setAnalyzeData([])
       analyzeStore.setChartErrorMessage(result.message)
     }
 

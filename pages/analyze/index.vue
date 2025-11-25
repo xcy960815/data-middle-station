@@ -49,7 +49,7 @@ import Filter from './components/filter/index.vue'
 import GroupOption from './components/group/index.vue'
 import Order from './components/order/index.vue'
 import { getAnalyzeHandler } from './getAnalyze'
-import { getChartDataHandler } from './getChartData'
+import { getChartDataHandler } from './getAnalyzeData'
 const layoutName = 'analyze'
 
 getAnalyzeHandler()

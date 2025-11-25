@@ -1,7 +1,7 @@
 /**
  * @desc 图表数据
  */
-declare namespace ChartDataDao {
+declare namespace AnalyzeDataDao {
   /**
    * @desc 图表数据
    */

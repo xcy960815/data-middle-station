@@ -22,12 +22,12 @@ interface TooltipCallbackDataParams extends CallbackDataParams {
 /**
  * 渲染柱状图
  * @param {ChartRenderConfig} config 图表配置
- * @param {ChartConfigDao.IntervalChartConfig} chartConfig 柱状图特有配置
+ * @param {AnalyzeConfigDao.IntervalChartConfig} chartConfig 柱状图特有配置
  * @returns {EChartsCoreOption | null} ECharts 配置选项
  */
 export function renderIntervalChart(
   config: ChartRenderConfig,
-  chartConfig: ChartConfigDao.IntervalChartConfig
+  chartConfig: AnalyzeConfigDao.IntervalChartConfig
 ): EChartsCoreOption | null {
   const {
     showPercentage = false,
@@ -53,7 +53,7 @@ export function renderIntervalChart(
   }
 
   // 处理数据
-  let processedData: Array<ChartDataVo.ChartData>
+  let processedData: Array<AnalyzeDataVo.ChartData>
   if (useFold) {
     processedData = foldData(config.data, measureFields)
   } else {
@@ -80,7 +80,7 @@ export function renderIntervalChart(
   const legendData: string[] = []
 
   // 确定系列名称的生成逻辑
-  const getSeriesName = (item: ChartDataVo.ChartData): string => {
+  const getSeriesName = (item: AnalyzeDataVo.ChartData): string => {
     if (useFold && groupFieldName) {
       const groupValue = String(item[groupFieldName] || '')
       const keyValue = String(item['key'] || '')

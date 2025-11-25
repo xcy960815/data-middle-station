@@ -1,7 +1,7 @@
+import { SendEmailService } from '@/server/service/sendEmailService'
 import Joi from 'joi'
-import { SendEmail } from '../utils/sendEmail'
 
-const sendEmailUtil = new SendEmail()
+const sendEmailService = new SendEmailService()
 
 const logger = new Logger({
   fileName: 'sendEmail',
@@ -16,9 +16,9 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
     additionalContent: Joi.string().required()
   }),
   analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
-    filename: Joi.string().required(),
-    chartType: Joi.string().required(),
-    analyzeName: Joi.string().required(),
+    filename: Joi.string().optional(),
+    chartType: Joi.string().optional(),
+    analyzeName: Joi.string().optional(),
     analyzeId: Joi.number().required()
   })
 })
@@ -40,7 +40,7 @@ export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResp
       return ApiResponse.error(errorMessage)
     }
 
-    const sendEmailResult = await sendEmailUtil.sendMail(sendChartEmailRequest)
+    const sendEmailResult = await sendEmailService.sendMail(sendChartEmailRequest)
 
     logger.info(`邮件发送成功: ${sendChartEmailRequest.emailConfig.to}`)
     return ApiResponse.success(sendEmailResult)

@@ -1,5 +1,5 @@
 {
-  "name": "data-middle-station",
+  "name": " ",
   "version": "0.0.1",
   "description": "使用nuxt3 + element-plus + pinia + mysql + pm2 搭建的数据中台",
   "scripts": {
@@ -80,7 +80,6 @@
     "@types/gradient-string": "^1.1.6",
     "@types/jsonwebtoken": "^9.0.10",
     "boxen": "^8.0.1",
-    "canvas": "^3.2.0",
     "chalk": "^5.4.1",
     "common-watermark": "^0.0.1",
     "dayjs": "^1.11.13",

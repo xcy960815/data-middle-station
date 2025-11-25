@@ -16,7 +16,7 @@ export const useAnalyzeStore = defineStore<
     chartType: 'table',
     chartConfigId: null,
     chartLoading: false,
-    chartData: []
+    analyzeData: []
   }),
   getters: {
     /**
@@ -78,8 +78,8 @@ export const useAnalyzeStore = defineStore<
     /**
      * @desc 获取图表数据
      */
-    getChartData(state) {
-      return state.chartData
+    getAnalyzeData(state) {
+      return state.analyzeData
     }
   },
   actions: {
@@ -156,8 +156,8 @@ export const useAnalyzeStore = defineStore<
     /**
      * @desc 设置图表数据
      */
-    setChartData(chartData) {
-      this.chartData = chartData
+    setAnalyzeData(analyzeData) {
+      this.analyzeData = analyzeData
     }
   }
 })

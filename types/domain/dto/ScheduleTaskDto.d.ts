@@ -42,7 +42,7 @@ declare namespace ScheduleTaskDto {
     /**
      * 图表数据
      */
-    chartData: ChartData // 图表数据
+    analyzeData: ChartData // 图表数据
     /**
      * 备注说明
      */
@@ -59,7 +59,7 @@ declare namespace ScheduleTaskDto {
     scheduleTime: string // 计划执行时间
     status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' // 任务状态
     emailConfig: EmailConfig // 邮件配置
-    chartData: ChartData // 图表数据
+    analyzeData: ChartData // 图表数据
     remark?: string // 备注说明
     createdAt: string // 创建时间
     updatedAt: string // 更新时间

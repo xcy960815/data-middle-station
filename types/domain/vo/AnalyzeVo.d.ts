@@ -5,13 +5,16 @@ declare namespace AnalyzeVo {
   /**
    * 图表数据
    */
-  type ChartDataVo = Array<{
+  type AnalyzeDataVo = Array<{
     [key: string]: string | number
   }>
   /**
    * 获取分析响应
    */
   type GetAnalyzeResponse = {
+    /**
+     * 分析id
+     */
     id: number
     /**
      * 分析名称
@@ -48,7 +51,7 @@ declare namespace AnalyzeVo {
     /**
      * 图表配置
      */
-    chartConfig: ChartConfigVo.ChartConfigResponse | null
+    chartConfig: AnalyzeConfigVo.ChartConfigResponse | null
   }
   /**
    * 更新分析响应

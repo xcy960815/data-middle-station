@@ -1,4 +1,4 @@
-import { AVATAR } from './login.post'
+import { AVATAR } from '@/server/api/login.post'
 /**
  * @desc 获取用户信息
  */

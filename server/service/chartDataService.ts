@@ -1,4 +1,4 @@
-import { ChartDataMapper } from '../mapper/chartDataMapper'
+import { ChartDataMapper } from '@/server/mapper/chartDataMapper'
 
 /**
  * @desc 图表数据服务
@@ -18,10 +18,10 @@ export class ChartDataService {
 
   /**
    * @desc 将dao对象转换为vo对象
-   * @param chartDataDao {ChartDataDao.ChartData} 图表数据
-   * @returns {ChartDataVo.ChartData}
+   * @param chartDataDao {AnalyzeDataDao.ChartData} 图表数据
+   * @returns {AnalyzeDataVo.ChartData}
    */
-  private dao2Vo(chartDataDao: Array<ChartDataDao.ChartData>): Array<ChartDataVo.ChartData> {
+  private dao2Vo(chartDataDao: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.ChartData> {
     return chartDataDao.map((item) => ({
       ...item,
       [String(item.columnName)]: item.columnValue
@@ -34,7 +34,10 @@ export class ChartDataService {
    * @param groups {GroupStore.GroupOption[]} 分组
    * @returns {string} select语句
    */
-  private buildSelectClause(dimensions: DimensionStore.DimensionOption[], groups: GroupStore.GroupOption[]): string {
+  private buildSelectClause(
+    dimensions: AnalyzeConfigDao.DimensionOption[],
+    groups: AnalyzeConfigDao.GroupOption[]
+  ): string {
     let sql = 'select'
 
     // 合并 dimensions 和 groups 中的列
@@ -43,7 +46,7 @@ export class ChartDataService {
       ...groups.filter((group) => !dimensions.some((dim) => dim.columnName === group.columnName))
     ]
 
-    allColumns.forEach((item: DimensionStore.DimensionOption | GroupStore.GroupOption) => {
+    allColumns.forEach((item: AnalyzeConfigDao.DimensionOption | AnalyzeConfigDao.GroupOption) => {
       const columnName = toLine(item.columnName)
       // 检查是否是日期时间类型的列
       const isDateTimeColumn = /date|time|created_at|updated_at/i.test(columnName)
@@ -58,7 +61,7 @@ export class ChartDataService {
    * @param filters {FilterStore.FilterOption[]} 过滤条件
    * @returns {string} where语句
    */
-  private buildWhereClause(filters: FilterStore.FilterOption[]): string {
+  private buildWhereClause(filters: AnalyzeConfigDao.FilterOption[]): string {
     if (filters.length === 0) return ''
     const whereClause = filters
       .map((item) => {
@@ -75,7 +78,7 @@ export class ChartDataService {
    * @param {OrderStore.OrderOption[]} orders  排序条件
    * @returns {string} orderBy语句
    */
-  private buildOrderByClause(orders: OrderStore.OrderOption[]): string {
+  private buildOrderByClause(orders: AnalyzeConfigDao.OrderOption[]): string {
     if (orders.length === 0) return ''
     const orderClause = orders
       .map((item) => {
@@ -91,11 +94,14 @@ export class ChartDataService {
 
   /**
    * @desc 构建groupBy语句
-   * @param groups {GroupStore.GroupOption[]} 分组条件
-   * @param dimensions {DimensionStore.DimensionOption[]} 维度
+   * @param groups {AnalyzeConfigDao.GroupOption[]} 分组条件
+   * @param dimensions {AnalyzeConfigDao.DimensionOption[]} 维度
    * @returns {string} groupBy语句
    */
-  private buildGroupByClause(groups: GroupStore.GroupOption[], dimensions: DimensionStore.DimensionOption[]): string {
+  private buildGroupByClause(
+    groups: AnalyzeConfigDao.GroupOption[],
+    dimensions: AnalyzeConfigDao.DimensionOption[]
+  ): string {
     if (groups.length === 0) return ''
     // 合并 groups 和 dimensions 中的列名
     const allGroupColumns = [
@@ -107,11 +113,13 @@ export class ChartDataService {
 
   /**
    * @desc 获取图表数据
-   * @param requestParams {ChartDataDto.ChartDataRequest} 请求参数
-   * @returns {Promise<ChartDataVo.ChartData>}
+   * @param requestParams {AnalyzeDataDto.ChartDataRequest} 请求参数
+   * @returns {Promise<AnalyzeDataDao.ChartData>}
    */
 
-  public async getChartData(requestParams: ChartDataDto.ChartDataRequest): Promise<Array<ChartDataVo.ChartData>> {
+  public async getAnalyzeData(
+    requestParams: AnalyzeDataDto.ChartDataRequest
+  ): Promise<Array<AnalyzeDataDao.ChartData>> {
     /**
      * @desc 构建select语句
      */
@@ -137,7 +145,7 @@ export class ChartDataService {
     /**
      * @desc 获取图表数据
      */
-    const data = await this.chartDataMapper.getChartData(sql)
+    const data = await this.chartDataMapper.getAnalyzeData(sql)
 
     return this.dao2Vo(data)
   }
