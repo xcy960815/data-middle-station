@@ -117,7 +117,9 @@ export class ChartDataService {
    * @returns {Promise<AnalyzeDataDao.ChartData>}
    */
 
-  public async getChartData(requestParams: AnalyzeDataDto.ChartDataRequest): Promise<Array<AnalyzeDataDao.ChartData>> {
+  public async getAnalyzeData(
+    requestParams: AnalyzeDataDto.ChartDataRequest
+  ): Promise<Array<AnalyzeDataDao.ChartData>> {
     /**
      * @desc 构建select语句
      */
@@ -143,7 +145,7 @@ export class ChartDataService {
     /**
      * @desc 获取图表数据
      */
-    const data = await this.chartDataMapper.getChartData(sql)
+    const data = await this.chartDataMapper.getAnalyzeData(sql)
 
     return this.dao2Vo(data)
   }

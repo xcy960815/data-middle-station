@@ -1,9 +1,8 @@
 import { ScheduledEmailMapper } from '@/server/mapper/scheduledEmailMapper'
-import { calculateNextExecutionTime } from '@/server/utils/schedulerUtils'
 import { BaseService } from '@/server/service/baseService'
-import { ChartSnapshotService } from '@/server/service/chartSnapshotService'
 import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
 import { SendEmailService } from '@/server/service/sendEmailService'
+import { calculateNextExecutionTime } from '@/server/utils/schedulerUtils'
 
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
 
@@ -23,17 +22,11 @@ export class ScheduledEmailService extends BaseService {
    * 邮件发送服务
    */
   private sendEmailService: SendEmailService
-  /**
-   * 图表渲染服务
-   */
-  private chartSnapshotService: ChartSnapshotService
-
   constructor() {
     super()
     this.scheduledEmailMapper = new ScheduledEmailMapper()
     this.scheduledEmailLogService = new ScheduledEmailLogService()
     this.sendEmailService = new SendEmailService()
-    this.chartSnapshotService = new ChartSnapshotService()
   }
 
   /**
@@ -468,8 +461,6 @@ export class ScheduledEmailService extends BaseService {
       const emailConfig = scheduledEmailTask.emailConfig
       const analyzeOptions = scheduledEmailTask.analyzeOptions
 
-      const chartSnapshot = await this.chartSnapshotService.renderAnalyzeChart(analyzeOptions.analyzeId)
-
       // 使用 SendEmailService 发送邮件
       const result = await this.sendEmailService.sendMail({
         emailConfig: {
@@ -478,11 +469,7 @@ export class ScheduledEmailService extends BaseService {
           additionalContent: emailConfig.additionalContent || ''
         },
         analyzeOptions: {
-          ...analyzeOptions,
-          filename: analyzeOptions.filename || chartSnapshot.filename,
-          analyzeName: analyzeOptions.analyzeName || chartSnapshot.analyzeName,
-          chartType: chartSnapshot.chartType,
-          fileContent: chartSnapshot.buffer
+          ...analyzeOptions
         }
       })
 

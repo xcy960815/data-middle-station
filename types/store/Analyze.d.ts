@@ -61,7 +61,7 @@ declare namespace AnalyzeStore {
     /**
      * 表格数据
      */
-    chartData: Array<AnalyzeDataVo.ChartData>
+    analyzeData: Array<AnalyzeDataVo.ChartData>
     /**
      * 图表加载状态
      */

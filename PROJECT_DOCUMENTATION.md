@@ -145,7 +145,7 @@ data-middle-station/
 - `getAnalyze`: 获取单个分析配置
 - `createAnalyze`: 创建分析
 - `updateAnalyze`: 更新分析
-- `getChartData`: 获取图表数据
+- `getAnalyzeData`: 获取图表数据
 - `sendChartEmail`: 发送图表邮件
 - `scheduledEmails`: 定时邮件管理
 
@@ -507,7 +507,7 @@ Content-Type: application/json
 #### 获取图表数据
 
 ```
-POST /api/getChartData
+POST /api/getAnalyzeData
 Content-Type: application/json
 
 {

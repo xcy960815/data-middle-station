@@ -1,5 +1,5 @@
-import Joi from 'joi'
 import { SendEmailService } from '@/server/service/sendEmailService'
+import Joi from 'joi'
 
 // 发送邮件
 const sendEmailService = new SendEmailService()
@@ -27,19 +27,16 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
   }).required(),
 
   analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
-    filename: Joi.string().min(1).max(100).required().messages({
+    filename: Joi.string().min(1).max(100).optional().messages({
       'string.min': '文件名不能为空',
-      'string.max': '文件名不能超过100个字符',
-      'any.required': '文件名不能为空'
+      'string.max': '文件名不能超过100个字符'
     }),
-    chartType: Joi.string().valid('line', 'bar', 'pie', 'table', 'interval').required().messages({
-      'any.only': '图表类型必须是 line、bar、pie、table 或 interval 之一',
-      'any.required': '图表类型不能为空'
+    chartType: Joi.string().valid('line', 'bar', 'pie', 'table', 'interval').optional().messages({
+      'any.only': '图表类型必须是 line、bar、pie、table 或 interval 之一'
     }),
-    analyzeName: Joi.string().min(1).max(100).required().messages({
+    analyzeName: Joi.string().min(1).max(100).optional().messages({
       'string.min': '分析名称不能为空',
-      'string.max': '分析名称不能超过100个字符',
-      'any.required': '分析名称不能为空'
+      'string.max': '分析名称不能超过100个字符'
     }),
     analyzeId: Joi.number().integer().positive().required().messages({
       'number.base': '分析ID必须是数字',
@@ -47,11 +44,7 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
       'number.positive': '分析ID必须大于0',
       'any.required': '分析ID不能为空'
     })
-  })
-    .required()
-    .messages({
-      'any.required': '图表数据不能为空'
-    })
+  }).required()
 })
 
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
