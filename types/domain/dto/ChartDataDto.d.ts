@@ -7,11 +7,33 @@ declare namespace ChartDataDto {
    * @desc 获取图表数据请求参数
    */
   type ChartDataRequest = {
-    filters: FilterStore.FilterOption[]
-    orders: OrderStore.OrderOption[]
-    groups: GroupStore.GroupOption[]
-    dimensions: DimensionStore.DimensionOption[]
+    /**
+     * @desc 过滤配置
+     */
+    filters: ChartConfigDao.FilterOption[]
+    /**
+     * @desc 排序配置
+     */
+    orders: ChartConfigDao.OrderOption[]
+    /**
+     * @desc 分组配置
+     */
+    groups: ChartConfigDao.GroupOption[]
+    /**
+     * @desc 维度配置
+     */
+    dimensions: ChartConfigDao.DimensionOption[]
+    /**
+     * @desc 数据源
+     */
     dataSource: string
-    commonChartConfig?: CommonChartConfig
+    /**
+     * @desc 数据源
+     */
+    dataSource: string
+    /**
+     * @desc 公共图表配置
+     */
+    commonChartConfig?: ChartConfigDao.CommonChartConfig
   }
 }

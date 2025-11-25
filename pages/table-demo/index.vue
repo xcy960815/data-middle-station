@@ -86,6 +86,26 @@
         <el-switch v-model="spanConfig.enableColSpan" />
       </el-form-item>
     </el-form>
+    <!-- 测试执行定时邮件任务 -->
+    <el-divider content-position="left">测试服务端生成 ECharts 图表</el-divider>
+    <el-form label-width="auto" inline>
+      <el-form-item label="任务ID">
+        <el-input-number v-model="testTaskId" :min="1" placeholder="请输入任务ID" style="width: 200px" />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="handleTestExecuteTask" :loading="testLoading"> 执行任务 </el-button>
+      </el-form-item>
+    </el-form>
+    <el-alert
+      v-if="testResult"
+      :title="testResult.success ? '执行成功' : '执行失败'"
+      :type="testResult.success ? 'success' : 'error'"
+      :description="testResult.message"
+      show-icon
+      :closable="true"
+      @close="testResult = null"
+      style="margin-top: 10px; margin-bottom: 10px"
+    />
     <client-only>
       <CanvasTable
         :enable-summary="tableConfig.enableSummary"
@@ -132,6 +152,7 @@
 <script setup lang="ts">
 // import TableChart from '@/components/table-chart/index.vue'
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
+import { ElMessage } from 'element-plus'
 
 // 合并单元格配置
 const spanConfig = reactive({
@@ -510,6 +531,55 @@ const fontFamilyOptions = [
     value: "'Times New Roman', Times, serif"
   }
 ]
+
+// 测试执行定时邮件任务
+const testTaskId = ref<number | null>(null)
+const testLoading = ref(false)
+const testResult = ref<{ success: boolean; message: string } | null>(null)
+
+/**
+ * 处理测试执行任务
+ */
+const handleTestExecuteTask = async () => {
+  if (!testTaskId.value || testTaskId.value <= 0) {
+    ElMessage.warning('请输入有效的任务ID')
+    return
+  }
+
+  testLoading.value = true
+  testResult.value = null
+
+  try {
+    const result = await $fetch('/api/testExecuteTask', {
+      method: 'POST',
+      body: {
+        taskId: testTaskId.value
+      }
+    })
+
+    if (result.code === 200) {
+      testResult.value = {
+        success: true,
+        message: `任务执行成功！结果: ${result.data ? '成功' : '失败'}`
+      }
+      ElMessage.success('任务执行成功')
+    } else {
+      testResult.value = {
+        success: false,
+        message: result.message || '执行失败'
+      }
+      ElMessage.error(result.message || '执行失败')
+    }
+  } catch (error: any) {
+    testResult.value = {
+      success: false,
+      message: error.message || '请求失败，请稍后重试'
+    }
+    ElMessage.error(error.message || '请求失败，请稍后重试')
+  } finally {
+    testLoading.value = false
+  }
+}
 </script>
 
 <style scoped>
