@@ -12,6 +12,9 @@ declare namespace AnalyzeVo {
    * 获取分析响应
    */
   type GetAnalyzeResponse = {
+    /**
+     * 分析id
+     */
     id: number
     /**
      * 分析名称
