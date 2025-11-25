@@ -1,5 +1,5 @@
-import Joi from 'joi'
 import { SendEmailService } from '@/server/service/sendEmailService'
+import Joi from 'joi'
 
 const sendEmailService = new SendEmailService()
 
@@ -16,9 +16,9 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
     additionalContent: Joi.string().required()
   }),
   analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
-    filename: Joi.string().required(),
-    chartType: Joi.string().required(),
-    analyzeName: Joi.string().required(),
+    filename: Joi.string().optional(),
+    chartType: Joi.string().optional(),
+    analyzeName: Joi.string().optional(),
     analyzeId: Joi.number().required()
   })
 })

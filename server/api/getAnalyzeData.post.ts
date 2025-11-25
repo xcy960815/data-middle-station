@@ -10,7 +10,7 @@ export default defineEventHandler<Promise<ApiResponseI<AnalyzeDataVo.ChartData[]
   try {
     const chartDataParams = await readBody<AnalyzeDataDto.ChartDataRequest>(event)
 
-    const data = await chartDataService.getChartData(chartDataParams)
+    const data = await chartDataService.getAnalyzeData(chartDataParams)
 
     return ApiResponse.success(data)
   } catch (error: any) {

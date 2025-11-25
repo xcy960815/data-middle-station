@@ -1,7 +1,14 @@
+import { ChartSnapshotService } from '@/server/service/chartSnapshotService'
 import nodemailer, { type Transporter } from 'nodemailer'
 
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
 
+interface Attachment {
+  filename: string
+  contentType: string
+  content?: string | Buffer<ArrayBufferLike>
+  path?: string
+}
 /**
  * @desc 发送邮件服务
  */
@@ -34,6 +41,10 @@ export class SendEmailService {
    * @desc 邮件发件人
    */
   private smtpFrom: string | null = null
+  /**
+   * @desc 图表快照服务
+   */
+  private chartSnapshotService: ChartSnapshotService
 
   constructor() {
     this.smtpHost = useRuntimeConfig().smtpHost
@@ -43,6 +54,7 @@ export class SendEmailService {
     this.smtpPass = useRuntimeConfig().smtpPass
     this.smtpFrom = useRuntimeConfig().smtpFrom
     this.createTransporter()
+    this.chartSnapshotService = new ChartSnapshotService()
   }
 
   /**
@@ -70,14 +82,17 @@ export class SendEmailService {
       this.createTransporter()
     }
 
+    // 根据 analyzeId 自动补全图表信息
+    const resolvedAnalyzeOptions = await this.resolveAnalyzeOptions(options.analyzeOptions)
+
     // 构建附件配置
-    const attachments = this.buildAttachments(options.analyzeOptions)
+    const attachments = this.buildAttachments(resolvedAnalyzeOptions)
 
     const result = await this.transporter!.sendMail({
       from: this.smtpFrom || this.smtpUser!,
       to: options.emailConfig.to,
       subject: options.emailConfig.subject,
-      html: this.buildEmailContent(options.emailConfig, options.analyzeOptions),
+      html: this.buildEmailContent(options.emailConfig, resolvedAnalyzeOptions),
       attachments
     })
 
@@ -93,7 +108,7 @@ export class SendEmailService {
    * @param analyzeOptions {SendEmailDto.AnalyzeOptions}
    * @returns {Array}
    */
-  private buildAttachments(analyzeOptions: SendEmailDto.AnalyzeOptions): Array<any> {
+  private buildAttachments(analyzeOptions: SendEmailDto.AnalyzeOptions): Array<Attachment> {
     if (!analyzeOptions.filename) {
       return []
     }
@@ -102,7 +117,7 @@ export class SendEmailService {
     const isSvg = analyzeOptions.filename.toLowerCase().endsWith('.svg')
     const contentType = isSvg ? 'image/svg+xml' : 'image/svg+xml'
 
-    const attachment: any = {
+    const attachment: Attachment = {
       filename: analyzeOptions.filename,
       contentType
     }
@@ -119,6 +134,35 @@ export class SendEmailService {
     }
 
     return [attachment]
+  }
+
+  /**
+   * 根据 analyzeId 自动生成附件所需的图表快照
+   */
+  private async resolveAnalyzeOptions(
+    analyzeOptions: SendEmailDto.AnalyzeOptions
+  ): Promise<SendEmailDto.AnalyzeOptions> {
+    if (analyzeOptions.fileContent || analyzeOptions.filePath) {
+      if (!analyzeOptions.filename) {
+        throw new Error('缺少附件文件名，无法发送邮件')
+      }
+      return analyzeOptions
+    }
+
+    if (!analyzeOptions.analyzeId) {
+      throw new Error('缺少分析ID，无法生成图表附件')
+    }
+
+    const snapshot = await this.chartSnapshotService.renderAnalyzeChart(analyzeOptions.analyzeId)
+    logger.info(`已为分析 ${analyzeOptions.analyzeId} 生成图表快照用于发送邮件`)
+
+    return {
+      ...analyzeOptions,
+      filename: analyzeOptions.filename || snapshot.filename,
+      analyzeName: analyzeOptions.analyzeName || snapshot.analyzeName,
+      chartType: snapshot.chartType,
+      fileContent: snapshot.buffer
+    }
   }
 
   /**

@@ -72,7 +72,7 @@ export const useChartDownload = () => {
    * @param selectedColumns 选中的列
    */
   const executeDownload = async (selectedColumns: string[]) => {
-    const data = analyzeStore.getChartData
+    const data = analyzeStore.getAnalyzeData
     const columns = selectedColumns
     const fileName = `${analyzeStore.getAnalyzeName}.xlsx`
     const sheetName = columnStore.getDataSource

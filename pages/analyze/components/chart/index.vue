@@ -126,8 +126,8 @@ const xAxisFields = computed(() => {
  * @type {Array<Chart. ChartData>}
  */
 const data = computed(() => {
-  const chartData = analyzeStore.getChartData
-  return chartData
+  const analyzeData = analyzeStore.getAnalyzeData
+  return analyzeData
 })
 /**
  * @desc 图表组件映射
