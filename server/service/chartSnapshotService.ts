@@ -1,6 +1,8 @@
+import { AnalyzeService } from '@/server/service/analyzeService'
+import { ChartDataService } from '@/server/service/chartDataService'
 import dayjs from 'dayjs'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
-import { GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
+import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
 import type { EChartsCoreOption } from 'echarts/core'
 import * as echarts from 'echarts/core'
 import { SVGRenderer } from 'echarts/renderers'
@@ -9,13 +11,12 @@ import { renderLineChart } from '~/composables/useChartRender/renderLineChart'
 import { renderPieChart } from '~/composables/useChartRender/renderPieChart'
 import type { ChartRenderConfig } from '~/composables/useChartRender/utils'
 import { defaultIntervalChartConfig, defaultLineChartConfig, defaultPieChartConfig } from '~/shared/chartDefaults'
-import { AnalyzeService } from '@/server/service/analyzeService'
-import { ChartDataService } from '@/server/service/chartDataService'
 
 echarts.use([
   BarChart,
   LineChart,
   PieChart,
+  DataZoomComponent,
   GridComponent,
   LegendComponent,
   TitleComponent,
@@ -103,6 +104,7 @@ export class ChartSnapshotService {
     }
 
     const buffer = this.renderOption(option)
+    console.log('buffer', buffer)
 
     return {
       buffer,
@@ -114,9 +116,10 @@ export class ChartSnapshotService {
 
   /**
    * 根据图表类型构建对应的 ECharts 配置
-   * @param chartType 图表类型标识
-   * @param config 通用渲染配置
-   * @param privateChartConfig 私有定制配置
+   * @param {string} chartType 图表类型标识
+   * @param {ChartRenderConfig} config 通用渲染配置
+   * @param {ChartConfigVo.PrivateChartConfigResponse | null} privateChartConfig 私有定制配置
+   * @returns {EChartsCoreOption | null} 构建的 ECharts 配置
    */
   private buildChartOption(
     chartType: string,
@@ -138,7 +141,8 @@ export class ChartSnapshotService {
 
   /**
    * 使用 SVG 渲染器渲染 option 并输出 SVG Buffer
-   * @param option 已生成的 ECharts 配置
+   * @param {EChartsCoreOption} option 已生成的 ECharts 配置
+   * @returns {Buffer} 渲染后的 SVG Buffer
    */
   private renderOption(option: EChartsCoreOption): Buffer {
     const chart = echarts.init(null, null, {
@@ -158,11 +162,12 @@ export class ChartSnapshotService {
 
   /**
    * 生成安全的文件名，包含分析名称与时间戳
-   * @param name 分析名称
-   * @param analyzeId 分析 ID，作为兜底命名
+   * @param {string} analyzeName 分析名称
+   * @param {number} analyzeId 分析 ID，作为兜底命名
+   * @returns {string} 安全的文件名
    */
-  private generateFilename(name: string, analyzeId: number): string {
-    const normalized = name
+  private generateFilename(analyzeName: string, analyzeId: number): string {
+    const normalized = analyzeName
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
