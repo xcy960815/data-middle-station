@@ -1,5 +1,5 @@
-import type { IColumnTarget, Row } from './baseMapper'
-import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from './baseMapper'
+import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
+import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
 
 /**
  * @desc 表列表映射

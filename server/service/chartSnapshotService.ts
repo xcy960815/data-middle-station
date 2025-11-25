@@ -9,8 +9,8 @@ import { renderLineChart } from '~/composables/useChartRender/renderLineChart'
 import { renderPieChart } from '~/composables/useChartRender/renderPieChart'
 import type { ChartRenderConfig } from '~/composables/useChartRender/utils'
 import { defaultIntervalChartConfig, defaultLineChartConfig, defaultPieChartConfig } from '~/shared/chartDefaults'
-import { AnalyzeService } from './analyzeService'
-import { ChartDataService } from './chartDataService'
+import { AnalyzeService } from '@/server/service/analyzeService'
+import { ChartDataService } from '@/server/service/chartDataService'
 
 echarts.use([
   BarChart,

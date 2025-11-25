@@ -1,5 +1,5 @@
-import { ChartConfigMapper } from '../mapper/chartConfigMapper'
-import { BaseService } from './baseService'
+import { ChartConfigMapper } from '@/server/mapper/chartConfigMapper'
+import { BaseService } from '@/server/service/baseService'
 
 /**
  * @desc 分析服务

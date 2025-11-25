@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { SendEmailService } from '../service/sendEmailService'
+import { SendEmailService } from '@/server/service/sendEmailService'
 
 const sendEmailService = new SendEmailService()
 
