@@ -129,7 +129,7 @@ const editorStyle = computed(() => {
 const openEditor = (
   evt: KonvaEventObject<MouseEvent, Konva.Rect>,
   editType: 'input' | 'select' | 'date' | 'datetime',
-  initialValue: ChartDataVo.ChartData[keyof ChartDataVo.ChartData],
+  initialValue: AnalyzeDataVo.ChartData[keyof AnalyzeDataVo.ChartData],
   editOptions?: EditOptions[]
 ) => {
   const target = evt.target

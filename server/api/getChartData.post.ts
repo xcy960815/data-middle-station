@@ -4,11 +4,11 @@ const chartDataService = new ChartDataService()
 /**
  * @desc 查询图表数据
  * @param {QueryChartDataParams} params
- * @returns {Promise<ResponseModule.Response<ChartDataVo.ChartData[]>>}
+ * @returns {Promise<ResponseModule.Response<AnalyzeDataVo.ChartData[]>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<ChartDataVo.ChartData[]>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<AnalyzeDataVo.ChartData[]>>>(async (event) => {
   try {
-    const chartDataParams = await readBody<ChartDataDto.ChartDataRequest>(event)
+    const chartDataParams = await readBody<AnalyzeDataDto.ChartDataRequest>(event)
 
     const data = await chartDataService.getChartData(chartDataParams)
 

@@ -5,7 +5,7 @@ declare namespace AnalyzeVo {
   /**
    * 图表数据
    */
-  type ChartDataVo = Array<{
+  type AnalyzeDataVo = Array<{
     [key: string]: string | number
   }>
   /**
@@ -51,7 +51,7 @@ declare namespace AnalyzeVo {
     /**
      * 图表配置
      */
-    chartConfig: ChartConfigVo.ChartConfigResponse | null
+    chartConfig: AnalyzeConfigVo.ChartConfigResponse | null
   }
   /**
    * 更新分析响应
