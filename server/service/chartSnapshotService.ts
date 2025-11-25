@@ -78,7 +78,7 @@ export class ChartSnapshotService {
       throw new Error(`分析 ${analyzeId} 缺少维度配置`)
     }
 
-    const chartData = await this.chartDataService.getChartData({
+    const analyzeData = await this.chartDataService.getAnalyzeData({
       filters: chartConfig.filters || [],
       orders: chartConfig.orders || [],
       groups: chartConfig.groups || [],
@@ -89,7 +89,7 @@ export class ChartSnapshotService {
 
     const renderConfig: ChartRenderConfig = {
       title: analyze.analyzeName,
-      data: chartData,
+      data: analyzeData,
       xAxisFields: chartConfig.groups || [],
       yAxisFields: chartConfig.dimensions
     }
@@ -104,8 +104,6 @@ export class ChartSnapshotService {
     }
 
     const buffer = this.renderOption(option)
-    console.log('buffer', buffer)
-
     return {
       buffer,
       chartType: chartConfig.chartType,
