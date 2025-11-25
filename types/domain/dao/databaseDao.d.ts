@@ -63,7 +63,7 @@ declare namespace DataBaseDao {
   /**
    * @desc 左侧数据源字段类型 刚从数据库出来的字段
    */
-  type TableColumnOptions = {
+  export type TableColumnOptions = {
     /**
      * @desc 列名
      */

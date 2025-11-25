@@ -12,6 +12,6 @@ declare namespace DatabaseDto {
    * @desc 查询表请求参数
    */
   type GetDatabaseTablesRequest = {
-    tableName: string
+    tableName?: string
   }
 }
