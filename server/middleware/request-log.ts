@@ -1,5 +1,5 @@
-import { Logger } from '../utils/logger'
-import type { H3Event, EventHandlerRequest } from 'h3'
+import { Logger } from '@/server/utils/logger'
+import type { EventHandlerRequest, H3Event } from 'h3'
 
 const logger = new Logger({
   fileName: 'log',

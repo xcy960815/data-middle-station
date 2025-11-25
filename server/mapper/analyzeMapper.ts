@@ -1,6 +1,6 @@
 import type { ResultSetHeader } from 'mysql2'
-import type { IColumnTarget, Row } from './baseMapper'
-import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from './baseMapper'
+import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
 
 // 基础字段字典
 export const ANALYZE_BASE_FIELDS = [

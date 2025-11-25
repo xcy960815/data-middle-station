@@ -1,7 +1,7 @@
 import type { ResultSetHeader } from 'mysql2'
-import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '../utils/databaseHelpper'
-import type { IColumnTarget, Row } from './baseMapper'
-import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from './baseMapper'
+import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '@/server/utils/databaseHelpper'
+import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
+import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
 
 /**
  * @desc 定时邮件任务基础字段

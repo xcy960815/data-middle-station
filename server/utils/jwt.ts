@@ -1,8 +1,8 @@
+import { Logger } from '@/server/utils/logger'
+import type { EventHandlerRequest, H3Event } from 'h3'
+import type { Secret, SignOptions } from 'jsonwebtoken'
 import pkg from 'jsonwebtoken'
 const { sign, verify, TokenExpiredError, JsonWebTokenError } = pkg
-import type { Secret, SignOptions } from 'jsonwebtoken'
-import type { H3Event, EventHandlerRequest } from 'h3'
-import { Logger } from './logger'
 
 const logger = new Logger({
   fileName: 'jwt',
