@@ -1,5 +1,6 @@
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
 import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
+import { toLine } from '@/server/utils/databaseHelpper'
 
 /**
  * @desc 表列表映射

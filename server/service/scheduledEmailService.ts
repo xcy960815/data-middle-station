@@ -3,6 +3,7 @@ import { BaseService } from '@/server/service/baseService'
 import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
 import { SendEmailService } from '@/server/service/sendEmailService'
 import { calculateNextExecutionTime } from '@/server/utils/schedulerUtils'
+import dayjs from 'dayjs'
 
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
 
@@ -433,6 +434,8 @@ export class ScheduledEmailService extends BaseService {
     let errorMessage = ''
 
     const { updatedBy, updateTime } = await super.getDefaultInfo()
+    const emailConfig = scheduledEmailTask.emailConfig
+    const analyzeOptions = scheduledEmailTask.analyzeOptions
 
     try {
       // 计算时间补偿
@@ -458,8 +461,7 @@ export class ScheduledEmailService extends BaseService {
       })
 
       // 解析配置
-      const emailConfig = scheduledEmailTask.emailConfig
-      const analyzeOptions = scheduledEmailTask.analyzeOptions
+      const baseLogMetadata = this.buildBaseLogMetadata(emailConfig, analyzeOptions, scheduledEmailTask.retryCount)
 
       // 使用 SendEmailService 发送邮件
       const result = await this.sendEmailService.sendMail({
@@ -486,10 +488,11 @@ export class ScheduledEmailService extends BaseService {
       // 记录执行日志
       await this.scheduledEmailLogService.logTaskSuccess(
         scheduledEmailTask.id,
-        new Date().toISOString().slice(0, 19).replace('T', ' '),
+        dayjs().format('YYYY-MM-DD HH:mm:ss'),
         result.messageId,
         Date.now() - startTime,
-        '邮件发送成功'
+        '邮件发送成功',
+        this.enrichLogMetadata(baseLogMetadata, result)
       )
 
       success = true
@@ -515,10 +518,17 @@ export class ScheduledEmailService extends BaseService {
       // 记录执行日志
       await this.scheduledEmailLogService.logTaskFailure(
         scheduledEmailTask.id,
-        new Date().toISOString().slice(0, 19).replace('T', ' '),
+        dayjs().format('YYYY-MM-DD HH:mm:ss'),
         errorMessage,
         Date.now() - startTime,
-        '邮件发送失败'
+        '邮件发送失败',
+        {
+          ...this.buildBaseLogMetadata(emailConfig, analyzeOptions, newRetryCount),
+          providerResponse: errorMessage,
+          rawResponsePayload: {
+            error: errorMessage
+          }
+        }
       )
 
       logger.error(
@@ -544,10 +554,29 @@ export class ScheduledEmailService extends BaseService {
         id: log.id,
         task_id: log.taskId,
         execution_time: log.executionTime,
+        execution_timezone: log.executionTimezone,
         status: log.status,
         error_message: log.errorDetails,
+        email_message_id: log.emailMessageId,
+        sender_email: log.senderEmail,
+        sender_name: log.senderName,
+        recipient_to: log.recipientTo,
+        recipient_cc: log.recipientCc,
+        recipient_bcc: log.recipientBcc,
+        email_subject: log.emailSubject,
+        attachment_count: log.attachmentCount,
+        attachment_names: log.attachmentNames,
+        email_channel: log.emailChannel,
+        provider: log.provider,
+        provider_response: log.providerResponse,
+        accepted_recipients: log.acceptedRecipients,
+        rejected_recipients: log.rejectedRecipients,
+        retry_count: log.retryCount,
         duration: log.executionDuration,
-        created_at: log.createdTime
+        smtp_host: log.smtpHost,
+        smtp_port: log.smtpPort,
+        created_at: log.createdTime,
+        created_timezone: log.createdTimezone
       }))
     } catch (error) {
       logger.error(`获取任务执行日志失败: ${taskId}, ${error}`)
@@ -600,5 +629,94 @@ export class ScheduledEmailService extends BaseService {
     return {
       ...scheduledEmailOptions
     }
+  }
+
+  private buildBaseLogMetadata(
+    emailConfig: ScheduledEmailDto.EmailConfig,
+    analyzeOptions: ScheduledEmailDto.AnalyzeOptions,
+    retryCount: number
+  ): Partial<ScheduledEmailLogDto.CreateLogRequest> {
+    const recipients = this.normalizeRecipients(emailConfig.to)
+    const timezone = this.getCurrentTimezone()
+    const attachments = analyzeOptions.filename ? [analyzeOptions.filename] : []
+    const transport = this.sendEmailService.getTransportInfo()
+    return {
+      senderEmail: this.sendEmailService.getSenderAddress(),
+      recipientTo: recipients,
+      emailSubject: emailConfig.subject,
+      attachmentNames: attachments.length ? attachments : undefined,
+      attachmentCount: attachments.length || undefined,
+      emailChannel: this.sendEmailService.getChannel(),
+      provider: transport.host || 'nodemailer',
+      retryCount,
+      executionTimezone: timezone,
+      rawRequestPayload: {
+        emailConfig,
+        analyzeOptions
+      },
+      smtpHost: transport.host,
+      smtpPort: transport.port
+    }
+  }
+
+  private enrichLogMetadata(
+    baseMetadata: Partial<ScheduledEmailLogDto.CreateLogRequest>,
+    sendResult: SendEmailVo.SendEmailResponse
+  ): Partial<ScheduledEmailLogDto.CreateLogRequest> {
+    const attachments = sendResult.attachments
+      ?.map((item) => item.filename)
+      .filter((item): item is string => Boolean(item))
+    const accepted = this.flattenNodemailerRecipients(sendResult.accepted)
+    const rejected = this.flattenNodemailerRecipients(sendResult.rejected)
+    const envelopeRecipients =
+      sendResult.envelope?.to && sendResult.envelope.to.length > 0 ? sendResult.envelope.to : undefined
+
+    return {
+      ...baseMetadata,
+      senderEmail: sendResult.sender || baseMetadata.senderEmail,
+      recipientTo: envelopeRecipients || baseMetadata.recipientTo,
+      attachmentNames: attachments && attachments.length > 0 ? attachments : baseMetadata.attachmentNames,
+      attachmentCount:
+        typeof sendResult.attachments?.length !== 'undefined'
+          ? sendResult.attachments.length
+          : baseMetadata.attachmentCount,
+      emailChannel: sendResult.channel || baseMetadata.emailChannel,
+      provider: sendResult.transport?.host || baseMetadata.provider || 'nodemailer',
+      providerResponse: sendResult.response || baseMetadata.providerResponse,
+      acceptedRecipients: accepted || baseMetadata.acceptedRecipients,
+      rejectedRecipients: rejected || baseMetadata.rejectedRecipients,
+      rawResponsePayload: sendResult,
+      smtpHost: sendResult.transport?.host || baseMetadata.smtpHost,
+      smtpPort: sendResult.transport?.port || baseMetadata.smtpPort
+    }
+  }
+
+  private normalizeRecipients(recipients?: string | string[]): string[] {
+    if (!recipients) {
+      return []
+    }
+    if (Array.isArray(recipients)) {
+      return recipients.map((recipient) => recipient.trim()).filter(Boolean)
+    }
+    return recipients
+      .split(/[,;]/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+
+  private flattenNodemailerRecipients(
+    recipients?: (string | { name?: string; address: string })[]
+  ): string[] | undefined {
+    if (!recipients || recipients.length === 0) {
+      return undefined
+    }
+    const normalized = recipients
+      .map((recipient) => (typeof recipient === 'string' ? recipient : recipient.address))
+      .filter((address): address is string => Boolean(address))
+    return normalized.length > 0 ? normalized : undefined
+  }
+
+  private getCurrentTimezone(): string {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   }
 }

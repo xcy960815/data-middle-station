@@ -36,13 +36,101 @@ declare namespace ScheduledEmailLogDao {
      */
     emailMessageId?: string
     /**
+     * 发件人邮箱
+     */
+    senderEmail?: string
+    /**
+     * 发件人名称
+     */
+    senderName?: string
+    /**
+     * 收件人(To)
+     */
+    recipientTo?: string | string[]
+    /**
+     * 抄送
+     */
+    recipientCc?: string | string[] | null
+    /**
+     * 密送
+     */
+    recipientBcc?: string | string[] | null
+    /**
+     * 回复地址
+     */
+    replyTo?: string | null
+    /**
+     * 邮件主题
+     */
+    emailSubject?: string
+    /**
+     * 附件数量
+     */
+    attachmentCount?: number
+    /**
+     * 附件名称
+     */
+    attachmentNames?: string | string[] | null
+    /**
+     * 邮件通道
+     */
+    emailChannel?: string
+    /**
+     * 邮件服务提供方
+     */
+    provider?: string | null
+    /**
+     * 服务响应信息
+     */
+    providerResponse?: string | null
+    /**
+     * 接收成功的收件人
+     */
+    acceptedRecipients?: string | string[] | null
+    /**
+     * 拒收的收件人
+     */
+    rejectedRecipients?: string | string[] | null
+    /**
+     * 重试次数
+     */
+    retryCount?: number
+    /**
      * 执行耗时(毫秒)
      */
     executionDuration?: number
     /**
+     * 执行时区
+     */
+    executionTimezone?: string | null
+    /**
+     * 原始请求负载
+     */
+    rawRequestPayload?: string | Record<string, any> | null
+    /**
+     * 原始响应负载
+     */
+    rawResponsePayload?: string | Record<string, any> | null
+    /**
+     * SMTP主机
+     */
+    smtpHost?: string | null
+    /**
+     * SMTP端口
+     */
+    smtpPort?: number | null
+    /**
      * 创建时间
      */
     createdTime: string
+    /**
+     * 创建时区
+     */
+    createdTimezone?: string | null
+    /**
+     * 创建人
+     */
+    createdBy: string
   }
 
   /**

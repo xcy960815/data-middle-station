@@ -35,13 +35,97 @@ declare namespace ScheduledEmailLogDto {
      */
     emailMessageId?: string
     /**
+     * 发件人邮箱
+     */
+    senderEmail?: string
+    /**
+     * 发件人名称
+     */
+    senderName?: string
+    /**
+     * 收件人(To)
+     */
+    recipientTo?: string[]
+    /**
+     * 抄送
+     */
+    recipientCc?: string[]
+    /**
+     * 密送
+     */
+    recipientBcc?: string[]
+    /**
+     * 回复地址
+     */
+    replyTo?: string
+    /**
+     * 邮件主题
+     */
+    emailSubject?: string
+    /**
+     * 附件数量
+     */
+    attachmentCount?: number
+    /**
+     * 附件名称
+     */
+    attachmentNames?: string[]
+    /**
+     * 邮件通道
+     */
+    emailChannel?: string
+    /**
+     * 邮件服务提供方
+     */
+    provider?: string
+    /**
+     * 服务响应
+     */
+    providerResponse?: string
+    /**
+     * 接收成功的收件人
+     */
+    acceptedRecipients?: string[]
+    /**
+     * 拒收的收件人
+     */
+    rejectedRecipients?: string[]
+    /**
+     * 重试次数
+     */
+    retryCount?: number
+    /**
      * 执行耗时(毫秒)
      */
     executionDuration?: number
     /**
+     * 执行时区
+     */
+    executionTimezone?: string
+    /**
+     * 原始请求
+     */
+    rawRequestPayload?: Record<string, any>
+    /**
+     * 原始响应
+     */
+    rawResponsePayload?: Record<string, any>
+    /**
+     * SMTP主机
+     */
+    smtpHost?: string
+    /**
+     * SMTP端口
+     */
+    smtpPort?: number
+    /**
      * 创建时间
      */
     createdTime: string
+    /**
+     * 创建时区
+     */
+    createdTimezone?: string
   }
 
   /**
@@ -73,9 +157,93 @@ declare namespace ScheduledEmailLogDto {
      */
     emailMessageId?: string
     /**
+     * 发件人邮箱
+     */
+    senderEmail?: string
+    /**
+     * 发件人名称
+     */
+    senderName?: string
+    /**
+     * 收件人(To)
+     */
+    recipientTo?: string[]
+    /**
+     * 抄送
+     */
+    recipientCc?: string[]
+    /**
+     * 密送
+     */
+    recipientBcc?: string[]
+    /**
+     * 回复地址
+     */
+    replyTo?: string
+    /**
+     * 邮件主题
+     */
+    emailSubject?: string
+    /**
+     * 附件数量
+     */
+    attachmentCount?: number
+    /**
+     * 附件名称
+     */
+    attachmentNames?: string[]
+    /**
+     * 邮件通道
+     */
+    emailChannel?: string
+    /**
+     * 邮件服务提供方
+     */
+    provider?: string
+    /**
+     * 服务响应
+     */
+    providerResponse?: string
+    /**
+     * 接收成功的收件人
+     */
+    acceptedRecipients?: string[]
+    /**
+     * 拒收的收件人
+     */
+    rejectedRecipients?: string[]
+    /**
+     * 重试次数
+     */
+    retryCount?: number
+    /**
      * 执行耗时(毫秒)
      */
     executionDuration?: number
+    /**
+     * 执行时区
+     */
+    executionTimezone?: string
+    /**
+     * 原始请求
+     */
+    rawRequestPayload?: Record<string, any>
+    /**
+     * 原始响应
+     */
+    rawResponsePayload?: Record<string, any>
+    /**
+     * SMTP主机
+     */
+    smtpHost?: string
+    /**
+     * SMTP端口
+     */
+    smtpPort?: number
+    /**
+     * 创建时区
+     */
+    createdTimezone?: string
   }
 
   /**
