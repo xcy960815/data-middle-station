@@ -3,7 +3,7 @@ declare namespace SendEmailDto {
     /**
      * 收件人 (支持单个或多个邮箱地址，多个用逗号分隔)
      */
-    to: string
+    to: string | string[]
     /**
      * 邮件主题
      */
