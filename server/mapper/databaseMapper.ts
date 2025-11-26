@@ -93,19 +93,30 @@ export class TableColumnMapping implements DataBaseDao.TableColumnOptions, IColu
 const tableSchema = 'kanban_data'
 
 /**
- * @desc 数据库mapper
+ * @desc 数据库 mapper，用于查询当前 schema 下的表和列信息
  */
 export class DatabaseMapper extends BaseMapper {
+  /**
+   * @desc 当前 mapper 使用的数据源名称（与 schema 同名）
+   */
   public dataSourceName = tableSchema
   /**
-   * @desc 查询所有的表名
-   * @datasource ${tableSchema}
-   * @returns {Promise<Array<T>>}
+   * @desc 查询当前 schema 下的所有基础表
+   * @param getTableRequest 表列表查询条件（支持按表名模糊搜索）
+   * @returns 表元数据列表
    */
   @Mapping(TableOptionMapping)
   public async getTable<T extends DataBaseDao.TableOption = DataBaseDao.TableOption>(
     getTableRequest: DatabaseDto.GetDatabaseTablesRequest
   ): Promise<Array<T>> {
+    const whereConditions: string[] = ["table_type = 'BASE TABLE'", 'table_schema = ?']
+    const whereValues: Array<string> = [tableSchema]
+
+    if (getTableRequest.tableName) {
+      whereConditions.push('table_name LIKE ?')
+      whereValues.push(`%${getTableRequest.tableName}%`)
+    }
+
     const sql = `SELECT
         table_name,
         table_type,
@@ -120,18 +131,16 @@ export class DatabaseMapper extends BaseMapper {
         engine,
         table_collation
       FROM information_schema.tables
-      WHERE
-        table_type = 'BASE TABLE'
-        AND table_schema='${tableSchema}'
-        ${!!getTableRequest.tableName ? `AND table_name like '%${getTableRequest.tableName}%'` : ''}`
-    const result = await this.exe<Array<T>>(sql)
+      WHERE ${whereConditions.join(' AND ')}`
+
+    const result = await this.exe<Array<T>>(sql, whereValues)
     return result
   }
 
   /**
-   * @desc 查询表的所有列
-   * @param  getTableColumnsRequest  {DatabaseDto.GetTableColumnsRequest} 查询表请求参数
-   * @returns {Promise<Array<DataBaseDao.TableColumnOptions>>}
+   * @desc 查询指定表的所有列信息
+   * @param getTableColumnsRequest 表列查询参数，包含目标表名
+   * @returns 指定表的列元数据列表
    */
   @Mapping(TableColumnMapping)
   public async getTableColumns<T extends DataBaseDao.TableColumnOptions>(
@@ -144,9 +153,9 @@ export class DatabaseMapper extends BaseMapper {
       FROM
         information_schema.columns
       WHERE
-        table_name = '${toLine(getTableColumnsRequest.tableName)}'
-        AND table_schema = '${tableSchema}';`
-    const result = await this.exe<Array<T>>(sql)
+        table_name = ?
+        AND table_schema = ?;`
+    const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsRequest.tableName), tableSchema])
     return result
   }
 }

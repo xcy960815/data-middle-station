@@ -2,6 +2,9 @@ import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
 import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
 import type { ResultSetHeader } from 'mysql2'
 
+/**
+ * @desc 图表配置行数据映射，将数据库字段转换为图表配置实体
+ */
 class ChartConfigMapping implements AnalyzeConfigDao.ChartConfig, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
@@ -84,29 +87,29 @@ const DATA_SOURCE_NAME = 'data_middle_station'
 
 export class ChartConfigMapper extends BaseMapper {
   /**
-   * @desc 数据源名称
+   * @desc 当前 mapper 使用的数据源名称
    */
   public dataSourceName = DATA_SOURCE_NAME
   /**
-   * @desc 获取图表配置
-   * @param id {number} 图表配置ID
-   * @returns {Promise<AnalyzeConfigDao.ChartConfig>} 图表配置
+   * @desc 根据主键 ID 获取单个图表配置
+   * @param chartConfigId 图表配置主键 ID
+   * @returns 图表配置详情（若存在）
    */
   @Mapping(ChartConfigMapping)
   public async getChartConfig<T extends AnalyzeConfigDao.ChartConfig = AnalyzeConfigDao.ChartConfig>(
-    id: number
+    chartConfigId: number
   ): Promise<T> {
     const sql = `select
           ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
             from ${CHART_CONFIG_TABLE_NAME}
           where id = ? and is_deleted = 0`
-    const result = await this.exe<Array<T>>(sql, [id])
+    const result = await this.exe<Array<T>>(sql, [chartConfigId])
     return result?.[0]
   }
   /**
    * @desc 创建图表配置
-   * @param chartConfig {AnalyzeConfigDao.CreateChartConfigRequest} 图表配置
-   * @returns {Promise<number>} 图表配置ID
+   * @param createChartConfigRequest 新建图表配置请求参数
+   * @returns 新建图表配置的主键 ID
    */
   public async createChartConfig(createChartConfigRequest: AnalyzeConfigDto.CreateChartConfigRequest): Promise<number> {
     const { keys, values } = convertToSqlProperties(createChartConfigRequest)
@@ -120,8 +123,8 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 更新图表配置
-   * @param updateChartConfigRequest {AnalyzeConfigDto.UpdateChartConfigRequest} 图表配置
-   * @returns {Promise<number>} 图表配置ID
+   * @param updateChartConfigRequest 更新图表配置请求参数
+   * @returns 是否更新成功
    */
   public async updateChartConfig(
     updateChartConfigRequest: AnalyzeConfigDto.UpdateChartConfigRequest
@@ -132,9 +135,9 @@ export class ChartConfigMapper extends BaseMapper {
   }
 
   /**
-   * @desc 删除图表配置(逻辑删除)
-   * @param deleteChartConfigRequest {AnalyzeConfigDto.ChartConfigDeleteRequest} 图表配置删除参数
-   * @returns {Promise<boolean>} 是否删除成功
+   * @desc 删除图表配置（逻辑删除）
+   * @param deleteChartConfigRequest 图表配置删除参数（包含 ID、操作者及时间）
+   * @returns 是否删除成功
    */
   public async deleteChartConfig(
     deleteChartConfigRequest: AnalyzeConfigDto.DeleteChartConfigRequest

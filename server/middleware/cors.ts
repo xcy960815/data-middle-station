@@ -1,52 +1,35 @@
 /**
- * @desc 跨域中间件
+ * @desc CORS（跨域）中间件
  * @link https://github.com/nuxt/nuxt/issues/14598
- * @param {import('h3').Event} event
- * @returns {void}
  */
-// export default defineEventHandler((event) => {
-// const requestProtocol = getRequestProtocol(event);
-// const requestHost = getRequestHost(event);
-// setResponseHeaders(event, {
-//   'Access-Control-Allow-Origin': `${requestProtocol}//${requestHost}`,
-//   'Access-Control-Allow-Credentials': 'true',
-//   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-//   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-//   'Access-Control-Max-Age': '86400',
-// });
-// const headers = {
-//   'Access-Control-Allow-Origin': `${requestProtocol}//${requestHost}`,
-//   'Access-Control-Allow-Credentials': 'true',
-//   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-//   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-//   'Access-Control-Max-Age': '86400',
-//   'connection': 'close',   // 添加缺失的属性
-//   'WWW-Authenticate': 'Basic realm="Login Required"',  // 添加缺失的属性
-//   'Authorization': 'Bearer xxxxx',  // 添加缺失的属性
-//   'Proxy-Authenticate': 'Basic'  // 添加缺失的属性
-// };
-// setResponseHeaders(event, headers);
-// if(getMethod(event) === 'OPTIONS'){
-//   setResponseHeaders(event, {
-//     'Content-Length': '0',
-//   });
-//   event.res.statusCode = 204
-//   event.res.statusMessage = "No Content."
-//   return 'OK'
-// }
-// })
 
 export default defineEventHandler((event) => {
-  setResponseHeaders(event, {
-    /**
-     * 允许的请求方法
-     */
-    'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Headers': '*',
-    'Access-Control-Expose-Headers': '*'
-  })
+  const requestOrigin = getHeader(event, 'origin') || ''
+
+  const corsHeaders: Record<string, string> = {
+    // 允许的请求方法
+    'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    // 允许在跨域请求中携带的请求头（可按需收紧）
+    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    // 允许前端访问的响应头（这里放宽为与 Allow-Headers 一致）
+    'Access-Control-Expose-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    // 预检请求结果缓存时间（秒）
+    'Access-Control-Max-Age': '86400',
+    // 允许携带 Cookie 等凭证
+    'Access-Control-Allow-Credentials': 'true'
+  }
+
+  if (requestOrigin) {
+    // 按规范，携带凭证时不能使用通配符，需要回写具体 Origin
+    corsHeaders['Access-Control-Allow-Origin'] = requestOrigin
+    corsHeaders['Vary'] = 'Origin'
+  } else {
+    // 非浏览器请求或没有 Origin 时，退回为全量允许
+    corsHeaders['Access-Control-Allow-Origin'] = '*'
+  }
+
+  setResponseHeaders(event, corsHeaders)
+
   if (event.method === 'OPTIONS') {
     setResponseStatus(event, 204, 'No Content')
     return 'OK'
