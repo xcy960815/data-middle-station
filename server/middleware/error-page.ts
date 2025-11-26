@@ -1,7 +1,7 @@
 // import type { H3Event } from 'h3';
-import { createSSRApp } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import type { PropType } from 'vue'
+import { createSSRApp } from 'vue'
 /**
  * @link https://github.com/nuxt/nuxt/blob/main/packages/nuxt/src/core/runtime/nitro/error.ts#L18-L20
  * @desc 错误页面

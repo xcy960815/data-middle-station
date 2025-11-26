@@ -1,11 +1,11 @@
 import type { DirectiveBinding } from 'vue'
-import ContextMenuDivider from '~/components/context-menu/divider.vue'
-import ContextMenuGroup from '~/components/context-menu/group.vue'
-import ContextMenuIcon from '~/components/context-menu/Icon.vue'
-import ContextMenu from '~/components/context-menu/index.vue'
-import ContextMenuItem from '~/components/context-menu/Item.vue'
-import ContextMenuSubmenu from '~/components/context-menu/submenu.vue'
-import '~/components/context-menu/themes/default/index.less'
+import ContextMenuDivider from '../components/context-menu/divider.vue'
+import ContextMenuGroup from '../components/context-menu/group.vue'
+import ContextMenuIcon from '../components/context-menu/Icon.vue'
+import ContextMenu from '../components/context-menu/index.vue'
+import ContextMenuItem from '../components/context-menu/Item.vue'
+import ContextMenuSubmenu from '../components/context-menu/submenu.vue'
+import '../components/context-menu/themes/default/index.less'
 
 class ContextMenuPlugin {
   /**

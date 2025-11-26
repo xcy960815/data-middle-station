@@ -1,13 +1,30 @@
+import { Logger } from '@/server/utils/logger'
+
 /* ========== 工具类型 & 日志 ========== */
+
+/**
+ * @desc 通用数据行类型，键为列名，值为基础类型或 null
+ */
 export type Row = Record<string, string | number | boolean | null>
 type ColumnMapping = Map<string, string>
 type AsyncMethod = (...args: any[]) => Promise<any>
 type Constructor<T = any> = new (...args: any[]) => T
 
+/**
+ * @desc 支持列映射的目标类型
+ */
 export interface IColumnTarget {
+  /**
+   * @desc 将原始查询结果映射为目标对象/对象数组
+   * @param data 原始数据库行数据，可以是单行或多行
+   * @returns 映射后的对象或对象数组
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row
 }
 
+/**
+ * @desc mapper 模块专用日志实例
+ */
 const logger = new Logger({
   fileName: 'database',
   folderName: 'database'
@@ -17,7 +34,11 @@ const logger = new Logger({
 export const entityColumnsMap = new WeakMap<Function, ColumnMapping>()
 
 /**
- * 字段映射装饰器
+ * @desc 字段映射装饰器
+ * @param columnName 数据库中的列名
+ * @description
+ * 将数据库列与实体类属性建立映射关系，
+ * 后续通过 `mapToTarget` 自动完成行数据到实体的转换。
  */
 export function Column(columnName: string): PropertyDecorator {
   return (target: Object, propertyKey: string | symbol) => {
@@ -29,7 +50,11 @@ export function Column(columnName: string): PropertyDecorator {
 }
 
 /**
- * 将数据库行数据映射到目标对象
+ * @desc 将数据库行数据映射到目标对象
+ * @param target 映射目标实例（一般为 *Mapping 类的实例）
+ * @param data 原始查询结果，可以是单行或多行
+ * @param columnsMap 列名到实体属性名的映射表
+ * @returns 映射后的结果，类型与入参 `data` 保持一致
  */
 export function mapToTarget(
   target: IColumnTarget,
@@ -65,7 +90,10 @@ export function mapToTarget(
 }
 
 /**
- * 方法映射装饰器
+ * @desc 方法映射装饰器
+ * @param mapping 列映射类的构造函数，用于将查询结果转换为领域实体
+ * @description
+ * 装饰异步 mapper 方法，使其返回值自动通过对应的 *Mapping.columnsMapper 进行字段映射。
  */
 export function Mapping(mapping: Constructor<IColumnTarget>): MethodDecorator {
   return (_target: Object, _propertyKey: string | symbol, descriptor?: PropertyDescriptor) => {
@@ -87,16 +115,19 @@ export function Mapping(mapping: Constructor<IColumnTarget>): MethodDecorator {
 }
 
 /**
- * 基础映射器
+ * @desc 基础映射器，封装通用的数据源与 SQL 执行逻辑
  */
 export abstract class BaseMapper {
   /**
-   * 数据源名称
+   * @desc 数据源名称，对应 `useNitroApp().mysqlPools` 中的 key
    */
   abstract dataSourceName: string
 
   /**
-   * 执行sql
+   * @desc 执行 SQL 并返回查询结果
+   * @param sql 需要执行的 SQL 语句
+   * @param params 预编译参数数组（可选）
+   * @returns 查询结果数组，默认类型为 `Row[]`
    */
   protected async exe<R = Row[]>(sql: string, params?: any[]): Promise<R> {
     const pool = useNitroApp().mysqlPools.get(this.dataSourceName)
