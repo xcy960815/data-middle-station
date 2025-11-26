@@ -34,7 +34,7 @@ declare namespace ScheduledEmailDto {
   /**
    * @desc 创建定时邮件任务请求
    */
-  interface CreateScheduledEmailRequest {
+  interface ScheduledEmailOptions {
     /**
      * 任务ID
      */
@@ -117,11 +117,12 @@ declare namespace ScheduledEmailDto {
     updatedBy: string
   }
 
+  interface CreateScheduledEmailOptions extends Omit<ScheduledEmailOptions, 'id'> {}
   /**
    * @desc 创建定时邮件任务请求
    */
   type CreateScheduledEmailOptions = Omit<
-    CreateScheduledEmailRequest,
+    ScheduledEmailOptions,
     | 'id'
     | 'nextExecutionTime'
     | 'createdTime'
@@ -136,11 +137,19 @@ declare namespace ScheduledEmailDto {
     | 'retryCount'
   >
 
+  type GetScheduledEmailOptions = Partial<ScheduledEmailOptions> & {
+    id: number
+  }
+
+  type DeleteScheduledEmailOptions = Partial<ScheduledEmailOptions> & {
+    id: number
+  }
+
   /**
    * 更新定时邮件任务请求
    */
   type UpdateScheduledEmailOptions = Omit<
-    CreateScheduledEmailRequest,
+    ScheduledEmailOptions,
     | 'id'
     | 'nextExecutionTime'
     | 'createdTime'
