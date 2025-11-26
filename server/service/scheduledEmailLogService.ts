@@ -1,5 +1,6 @@
 import { ScheduledEmailLogMapper } from '@/server/mapper/scheduledEmailLogMapper'
 import { BaseService } from '@/server/service/baseService'
+import dayjs from 'dayjs'
 
 const logger = new Logger({ fileName: 'scheduled-email-log', folderName: 'server' })
 
@@ -17,53 +18,55 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 创建执行日志
    */
-  async createExecutionLog(logRequest: ScheduledEmailLogDto.CreateLogRequest): Promise<number> {
+  async createExecutionLog(logRequestDto: ScheduledEmailLogDto.CreateLogRequest): Promise<number> {
     try {
       const { createTime, createdBy } = await super.getDefaultInfo()
-      const timezone = logRequest.executionTimezone || this.getCurrentTimezone()
-      const createdTimezone = logRequest.createdTimezone || timezone
-      const logData: ScheduledEmailLogDao.CreateScheduledEmailLogOptions = {
-        taskId: logRequest.taskId,
-        executionTime: logRequest.executionTime,
+      const timezone = logRequestDto.executionTimezone || this.getCurrentTimezone()
+      const createdTimezone = logRequestDto.createdTimezone || timezone
+      const executionDto: ScheduledEmailLogDto.ExecutionLog = {
+        id: 0,
+        taskId: logRequestDto.taskId,
+        executionTime: logRequestDto.executionTime,
         executionTimezone: timezone,
-        status: logRequest.status,
-        message: logRequest.message,
-        errorDetails: logRequest.errorDetails,
-        emailMessageId: logRequest.emailMessageId,
-        senderEmail: logRequest.senderEmail || 'system@unknown',
-        senderName: logRequest.senderName,
-        recipientTo: logRequest.recipientTo && logRequest.recipientTo.length > 0 ? logRequest.recipientTo : [],
-        recipientCc: logRequest.recipientCc,
-        recipientBcc: logRequest.recipientBcc,
-        replyTo: logRequest.replyTo,
-        emailSubject: logRequest.emailSubject,
-        attachmentCount: logRequest.attachmentCount,
-        attachmentNames: logRequest.attachmentNames,
-        emailChannel: logRequest.emailChannel,
-        provider: logRequest.provider,
-        providerResponse: logRequest.providerResponse,
-        acceptedRecipients: logRequest.acceptedRecipients,
-        rejectedRecipients: logRequest.rejectedRecipients,
-        retryCount: logRequest.retryCount,
-        rawRequestPayload: logRequest.rawRequestPayload,
-        rawResponsePayload: logRequest.rawResponsePayload,
-        smtpHost: logRequest.smtpHost,
-        smtpPort: logRequest.smtpPort,
-        executionDuration: logRequest.executionDuration,
+        status: logRequestDto.status,
+        message: logRequestDto.message,
+        errorDetails: logRequestDto.errorDetails,
+        emailMessageId: logRequestDto.emailMessageId,
+        senderEmail: logRequestDto.senderEmail || 'system@unknown',
+        senderName: logRequestDto.senderName,
+        recipientTo: logRequestDto.recipientTo,
+        recipientCc: logRequestDto.recipientCc,
+        recipientBcc: logRequestDto.recipientBcc,
+        replyTo: logRequestDto.replyTo,
+        emailSubject: logRequestDto.emailSubject,
+        attachmentCount: logRequestDto.attachmentCount,
+        attachmentNames: logRequestDto.attachmentNames,
+        emailChannel: logRequestDto.emailChannel,
+        provider: logRequestDto.provider,
+        providerResponse: logRequestDto.providerResponse,
+        acceptedRecipients: logRequestDto.acceptedRecipients,
+        rejectedRecipients: logRequestDto.rejectedRecipients,
+        retryCount: logRequestDto.retryCount,
+        executionDuration: logRequestDto.executionDuration,
+        rawRequestPayload: logRequestDto.rawRequestPayload || undefined,
+        rawResponsePayload: logRequestDto.rawResponsePayload || undefined,
+        smtpHost: logRequestDto.smtpHost,
+        smtpPort: logRequestDto.smtpPort || undefined,
         createdTime: createTime,
-        createdTimezone,
-        createdBy
+        createdTimezone
       }
 
-      const logId = await this.scheduledEmailLogMapper.createScheduledEmailLog(logData)
+      const daoPayload = this.convertDtoToDao(executionDto, { createdBy })
+      const { id: _omitId, ...createPayload } = daoPayload
+      const logId = await this.scheduledEmailLogMapper.createScheduledEmailLog(createPayload)
 
       if (logId > 0) {
-        logger.info(`执行日志创建成功: 任务ID ${logRequest.taskId}, 日志ID ${logId}, 状态: ${logRequest.status}`)
+        logger.info(`执行日志创建成功: 任务ID ${logRequestDto.taskId}, 日志ID ${logId}, 状态: ${logRequestDto.status}`)
       }
 
       return logId
     } catch (error) {
-      logger.error(`创建执行日志失败: 任务ID ${logRequest.taskId}, ${error}`)
+      logger.error(`创建执行日志失败: 任务ID ${logRequestDto.taskId}, ${error}`)
       throw error
     }
   }
@@ -71,12 +74,12 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 根据ID获取执行日志
    */
-  async getExecutionLogById(id: number): Promise<ScheduledEmailLogDto.ExecutionLog | null> {
+  async getExecutionLogById(logId: number): Promise<ScheduledEmailLogVo.ExecutionLog | null> {
     try {
-      const log = await this.scheduledEmailLogMapper.getScheduledEmailLogById(id)
-      return log ? this.convertDaoToDto(log) : null
+      const logDao = await this.scheduledEmailLogMapper.getScheduledEmailLogById(logId)
+      return logDao ? this.convertDaoToVo(logDao) : null
     } catch (error) {
-      logger.error(`获取执行日志失败: ID ${id}, ${error}`)
+      logger.error(`获取执行日志失败: ID ${logId}, ${error}`)
       throw error
     }
   }
@@ -84,19 +87,19 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 获取任务执行日志列表
    */
-  async getExecutionLogList(query: ScheduledEmailLogDto.LogListQuery): Promise<ScheduledEmailLogDto.LogListResponse> {
+  async getExecutionLogList(queryDto: ScheduledEmailLogDto.LogListQuery): Promise<ScheduledEmailLogVo.LogListResponse> {
     try {
-      const limit = query.limit || 50
-      const offset = query.offset || 0
+      const limit = queryDto.limit || 50
+      const offset = queryDto.offset || 0
 
       // 获取日志列表和总数
-      const [logs, total] = await Promise.all([
-        this.scheduledEmailLogMapper.getScheduledEmailLogList(query),
-        this.scheduledEmailLogMapper.getScheduledEmailLogCount(query)
+      const [logDaoList, total] = await Promise.all([
+        this.scheduledEmailLogMapper.getScheduledEmailLogList(queryDto),
+        this.scheduledEmailLogMapper.getScheduledEmailLogCount(queryDto)
       ])
 
       return {
-        logs: logs.map((log) => this.convertDaoToDto(log)),
+        logs: logDaoList.map((logDao) => this.convertDaoToVo(logDao)),
         total,
         pagination: {
           limit,
@@ -105,7 +108,7 @@ export class ScheduledEmailLogService extends BaseService {
         }
       }
     } catch (error) {
-      logger.error(`获取执行日志列表失败: ${JSON.stringify(query)}, ${error}`)
+      logger.error(`获取执行日志列表失败: ${JSON.stringify(queryDto)}, ${error}`)
       throw error
     }
   }
@@ -113,10 +116,10 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 获取任务的最新执行日志
    */
-  async getLatestExecutionLog(taskId: number): Promise<ScheduledEmailLogDto.ExecutionLog | null> {
+  async getLatestExecutionLog(taskId: number): Promise<ScheduledEmailLogVo.ExecutionLog | null> {
     try {
-      const log = await this.scheduledEmailLogMapper.getLatestLogByTaskId(taskId)
-      return log ? this.convertDaoToDto(log) : null
+      const logDao = await this.scheduledEmailLogMapper.getLatestLogByTaskId(taskId)
+      return logDao ? this.convertDaoToVo(logDao) : null
     } catch (error) {
       logger.error(`获取最新执行日志失败: 任务ID ${taskId}, ${error}`)
       throw error
@@ -219,41 +222,100 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 转换DAO对象为DTO对象
+   * 转换DAO对象为VO对象
    */
-  private convertDaoToDto(dao: ScheduledEmailLogDao.ScheduledEmailLogOptions): ScheduledEmailLogDto.ExecutionLog {
+  private convertDaoToVo(logDao: ScheduledEmailLogDao.ScheduledEmailLogOptions): ScheduledEmailLogVo.ExecutionLog {
+    const dtoPayload = this.convertDaoToDto(logDao)
     return {
-      id: dao.id,
-      taskId: dao.taskId,
-      executionTime: dao.executionTime,
-      executionTimezone: dao.executionTimezone || undefined,
-      status: dao.status,
-      message: dao.message,
-      errorDetails: dao.errorDetails,
-      emailMessageId: dao.emailMessageId,
-      senderEmail: dao.senderEmail || undefined,
-      senderName: dao.senderName || undefined,
-      recipientTo: this.parseStringArray(dao.recipientTo),
-      recipientCc: this.parseStringArray(dao.recipientCc),
-      recipientBcc: this.parseStringArray(dao.recipientBcc),
-      replyTo: dao.replyTo || undefined,
-      emailSubject: dao.emailSubject || undefined,
-      attachmentCount: dao.attachmentCount,
-      attachmentNames: this.parseStringArray(dao.attachmentNames),
-      emailChannel: dao.emailChannel || undefined,
-      provider: dao.provider || undefined,
-      providerResponse: dao.providerResponse || undefined,
-      acceptedRecipients: this.parseStringArray(dao.acceptedRecipients),
-      rejectedRecipients: this.parseStringArray(dao.rejectedRecipients),
-      retryCount: dao.retryCount,
-      executionDuration: dao.executionDuration,
-      rawRequestPayload: this.parseJson(dao.rawRequestPayload),
-      rawResponsePayload: this.parseJson(dao.rawResponsePayload),
-      smtpHost: dao.smtpHost || undefined,
-      smtpPort: dao.smtpPort || undefined,
-      createdTime: dao.createdTime,
-      createdTimezone: dao.createdTimezone || undefined
+      ...dtoPayload
     }
+  }
+
+  /**
+   * DAO -> DTO
+   */
+  private convertDaoToDto(logDao: ScheduledEmailLogDao.ScheduledEmailLogOptions): ScheduledEmailLogDto.ExecutionLog {
+    return {
+      id: logDao.id,
+      taskId: logDao.taskId,
+      executionTime: logDao.executionTime,
+      executionTimezone: logDao.executionTimezone || undefined,
+      status: logDao.status,
+      message: logDao.message,
+      errorDetails: logDao.errorDetails,
+      emailMessageId: logDao.emailMessageId,
+      senderEmail: logDao.senderEmail || undefined,
+      senderName: logDao.senderName || undefined,
+      recipientTo: this.parseStringArray(logDao.recipientTo),
+      recipientCc: this.parseStringArray(logDao.recipientCc),
+      recipientBcc: this.parseStringArray(logDao.recipientBcc),
+      replyTo: logDao.replyTo || undefined,
+      emailSubject: logDao.emailSubject || undefined,
+      attachmentCount: logDao.attachmentCount,
+      attachmentNames: this.parseStringArray(logDao.attachmentNames),
+      emailChannel: logDao.emailChannel || undefined,
+      provider: logDao.provider || undefined,
+      providerResponse: logDao.providerResponse || undefined,
+      acceptedRecipients: this.parseStringArray(logDao.acceptedRecipients),
+      rejectedRecipients: this.parseStringArray(logDao.rejectedRecipients),
+      retryCount: logDao.retryCount,
+      executionDuration: logDao.executionDuration,
+      rawRequestPayload: this.parseJson(logDao.rawRequestPayload),
+      rawResponsePayload: this.parseJson(logDao.rawResponsePayload),
+      smtpHost: logDao.smtpHost || undefined,
+      smtpPort: logDao.smtpPort || undefined,
+      createdTime: logDao.createdTime,
+      createdTimezone: logDao.createdTimezone || undefined
+    }
+  }
+
+  /**
+   * DTO -> DAO
+   */
+  private convertDtoToDao(
+    logDto: ScheduledEmailLogDto.ExecutionLog,
+    extras?: { createdBy?: string }
+  ): ScheduledEmailLogDao.ScheduledEmailLogOptions {
+    return {
+      id: logDto.id,
+      taskId: logDto.taskId,
+      executionTime: logDto.executionTime,
+      executionTimezone: logDto.executionTimezone || undefined,
+      status: logDto.status,
+      message: logDto.message,
+      errorDetails: logDto.errorDetails,
+      emailMessageId: logDto.emailMessageId,
+      senderEmail: logDto.senderEmail || 'system@unknown',
+      senderName: logDto.senderName,
+      recipientTo: this.stringifyStringArray(logDto.recipientTo),
+      recipientCc: this.stringifyStringArray(logDto.recipientCc),
+      recipientBcc: this.stringifyStringArray(logDto.recipientBcc),
+      replyTo: logDto.replyTo ?? undefined,
+      emailSubject: logDto.emailSubject ?? undefined,
+      attachmentCount: logDto.attachmentCount,
+      attachmentNames: this.stringifyStringArray(logDto.attachmentNames),
+      emailChannel: logDto.emailChannel ?? undefined,
+      provider: logDto.provider ?? undefined,
+      providerResponse: logDto.providerResponse ?? undefined,
+      acceptedRecipients: this.stringifyStringArray(logDto.acceptedRecipients),
+      rejectedRecipients: this.stringifyStringArray(logDto.rejectedRecipients),
+      retryCount: logDto.retryCount ?? 0,
+      rawRequestPayload: logDto.rawRequestPayload ? JSON.stringify(logDto.rawRequestPayload) : undefined,
+      rawResponsePayload: logDto.rawResponsePayload ? JSON.stringify(logDto.rawResponsePayload) : undefined,
+      smtpHost: logDto.smtpHost ?? undefined,
+      smtpPort: logDto.smtpPort ?? undefined,
+      executionDuration: logDto.executionDuration,
+      createdTime: logDto.createdTime,
+      createdTimezone: logDto.createdTimezone ?? undefined,
+      createdBy: extras?.createdBy || 'system'
+    }
+  }
+
+  private stringifyStringArray(value?: string[] | undefined): string | undefined {
+    if (!value || value.length === 0) {
+      return undefined
+    }
+    return JSON.stringify(value)
   }
 
   private parseStringArray(value?: string | string[] | null): string[] | undefined {
@@ -299,5 +361,80 @@ export class ScheduledEmailLogService extends BaseService {
 
   private getCurrentTimezone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  }
+
+  /**
+   * 即时发送成功日志
+   */
+  async logManualSendSuccess(
+    sendResult: SendEmailVo.SendEmailResponse,
+    sendRequest: SendEmailDto.SendChartEmailRequest
+  ): Promise<void> {
+    const executionTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    const metadata = this.buildManualSendMetadata(sendRequest, sendResult)
+    await this.logTaskSuccess(
+      0,
+      executionTime,
+      sendResult.messageId,
+      typeof sendResult.messageTime === 'number' ? sendResult.messageTime : 0,
+      '即时邮件发送成功',
+      metadata
+    )
+  }
+
+  /**
+   * 即时发送失败日志
+   */
+  async logManualSendFailure(sendRequest: SendEmailDto.SendChartEmailRequest, errorMessage: string): Promise<void> {
+    const executionTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    const metadata = this.buildManualSendMetadata(sendRequest)
+    await this.logTaskFailure(0, executionTime, errorMessage, 0, '即时邮件发送失败', metadata)
+  }
+
+  private buildManualSendMetadata(
+    sendRequest: SendEmailDto.SendChartEmailRequest,
+    sendResult?: SendEmailVo.SendEmailResponse
+  ): Partial<ScheduledEmailLogDto.CreateLogRequest> {
+    const recipients = Array.isArray(sendRequest.emailConfig.to)
+      ? sendRequest.emailConfig.to
+      : sendRequest.emailConfig.to
+          .split(/[,;]/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+    const attachmentNames = sendResult?.attachments
+      ?.map((attachment) => attachment.filename)
+      .filter((filename): filename is string => Boolean(filename))
+    return {
+      senderEmail: sendResult?.sender || this.getSenderAddressFallback(),
+      recipientTo: recipients,
+      emailSubject: sendRequest.emailConfig.subject,
+      attachmentNames: attachmentNames && attachmentNames.length > 0 ? attachmentNames : undefined,
+      attachmentCount: attachmentNames?.length || undefined,
+      emailChannel: sendResult?.channel,
+      provider: sendResult?.transport?.host,
+      providerResponse: sendResult?.response,
+      acceptedRecipients: sendResult?.accepted ? this.flattenNodemailerRecipients(sendResult.accepted) : undefined,
+      rejectedRecipients: sendResult?.rejected ? this.flattenNodemailerRecipients(sendResult.rejected) : undefined,
+      rawRequestPayload: sendRequest,
+      rawResponsePayload: sendResult,
+      smtpHost: sendResult?.transport?.host,
+      smtpPort: sendResult?.transport?.port
+    }
+  }
+
+  private getSenderAddressFallback(): string {
+    return 'system@unknown'
+  }
+
+  private flattenNodemailerRecipients(
+    recipients?: (string | { name?: string; address: string })[]
+  ): string[] | undefined {
+    if (!recipients || recipients.length === 0) {
+      return undefined
+    }
+    const normalized = recipients
+      .map((recipient) => (typeof recipient === 'string' ? recipient : recipient.address))
+      .filter((address): address is string => Boolean(address))
+    return normalized.length > 0 ? normalized : undefined
   }
 }

@@ -21,11 +21,32 @@ export class ChartDataService {
    * @param chartDataDao {AnalyzeDataDao.ChartData} 图表数据
    * @returns {AnalyzeDataVo.ChartData}
    */
-  private dao2Vo(chartDataDao: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.ChartData> {
-    return chartDataDao.map((item) => ({
-      ...item,
-      [String(item.columnName)]: item.columnValue
+  private convertDaoToVo(chartDataDaoList: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.ChartData> {
+    const dtoRows = this.convertDaoToDto(chartDataDaoList)
+    return dtoRows.map((chartDataDto) => ({
+      ...chartDataDto,
+      [String(chartDataDto.columnName)]: chartDataDto.columnValue
     }))
+  }
+
+  /**
+   * @desc DAO -> DTO
+   */
+  private convertDaoToDto(chartDataDaoList: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataDto.ChartDataResponse> {
+    return chartDataDaoList.map((chartDataDaoRow) => ({ ...chartDataDaoRow }))
+  }
+
+  /**
+   * @desc DTO -> DAO（请求归一化）
+   */
+  private convertDtoToDao(chartDataRequest: AnalyzeDataDto.ChartDataRequest): AnalyzeDataDto.ChartDataRequest {
+    return {
+      ...chartDataRequest,
+      filters: chartDataRequest.filters || [],
+      orders: chartDataRequest.orders || [],
+      groups: chartDataRequest.groups || [],
+      dimensions: chartDataRequest.dimensions || []
+    }
   }
 
   /**
@@ -38,7 +59,7 @@ export class ChartDataService {
     dimensions: AnalyzeConfigDao.DimensionOption[],
     groups: AnalyzeConfigDao.GroupOption[]
   ): string {
-    let sql = 'select'
+    let selectClause = 'select'
 
     // 合并 dimensions 和 groups 中的列
     const allColumns = [
@@ -46,14 +67,14 @@ export class ChartDataService {
       ...groups.filter((group) => !dimensions.some((dim) => dim.columnName === group.columnName))
     ]
 
-    allColumns.forEach((item: AnalyzeConfigDao.DimensionOption | AnalyzeConfigDao.GroupOption) => {
-      const columnName = toLine(item.columnName)
+    allColumns.forEach((columnOption: AnalyzeConfigDao.DimensionOption | AnalyzeConfigDao.GroupOption) => {
+      const columnName = toLine(columnOption.columnName)
       // 检查是否是日期时间类型的列
       const isDateTimeColumn = /date|time|created_at|updated_at/i.test(columnName)
       const fieldExpression = isDateTimeColumn ? `DATE_FORMAT(${columnName}, '%Y-%m-%d %H:%i:%s')` : columnName
-      sql += ` ${fieldExpression},`
+      selectClause += ` ${fieldExpression},`
     })
-    return sql.slice(0, sql.length - 1)
+    return selectClause.slice(0, selectClause.length - 1)
   }
 
   /**
@@ -61,12 +82,12 @@ export class ChartDataService {
    * @param filters {FilterStore.FilterOption[]} 过滤条件
    * @returns {string} where语句
    */
-  private buildWhereClause(filters: AnalyzeConfigDao.FilterOption[]): string {
-    if (filters.length === 0) return ''
-    const whereClause = filters
-      .map((item) => {
-        if (!item.filterType || !item.filterValue) return ''
-        return `${toLine(item.columnName)} ${item.filterType} '${item.filterValue}'`
+  private buildWhereClause(filterOptions: AnalyzeConfigDao.FilterOption[]): string {
+    if (filterOptions.length === 0) return ''
+    const whereClause = filterOptions
+      .map((filterOption) => {
+        if (!filterOption.filterType || !filterOption.filterValue) return ''
+        return `${toLine(filterOption.columnName)} ${filterOption.filterType} '${filterOption.filterValue}'`
       })
       .filter(Boolean)
       .join(' and ')
@@ -78,14 +99,14 @@ export class ChartDataService {
    * @param {OrderStore.OrderOption[]} orders  排序条件
    * @returns {string} orderBy语句
    */
-  private buildOrderByClause(orders: AnalyzeConfigDao.OrderOption[]): string {
-    if (orders.length === 0) return ''
-    const orderClause = orders
-      .map((item) => {
-        if (item.aggregationType === 'raw') {
-          return `${toLine(item.columnName)} ${item.orderType}`
+  private buildOrderByClause(orderOptions: AnalyzeConfigDao.OrderOption[]): string {
+    if (orderOptions.length === 0) return ''
+    const orderClause = orderOptions
+      .map((orderOption) => {
+        if (orderOption.aggregationType === 'raw') {
+          return `${toLine(orderOption.columnName)} ${orderOption.orderType}`
         }
-        return `${item.aggregationType}(${toLine(item.columnName)}) ${item.orderType}`
+        return `${orderOption.aggregationType}(${toLine(orderOption.columnName)}) ${orderOption.orderType}`
       })
       .filter(Boolean)
       .join(',')
@@ -99,14 +120,14 @@ export class ChartDataService {
    * @returns {string} groupBy语句
    */
   private buildGroupByClause(
-    groups: AnalyzeConfigDao.GroupOption[],
+    groupOptions: AnalyzeConfigDao.GroupOption[],
     dimensions: AnalyzeConfigDao.DimensionOption[]
   ): string {
-    if (groups.length === 0) return ''
+    if (groupOptions.length === 0) return ''
     // 合并 groups 和 dimensions 中的列名
     const allGroupColumns = [
-      ...groups.map((item) => toLine(item.columnName)),
-      ...dimensions.map((item) => toLine(item.columnName))
+      ...groupOptions.map((groupOption) => toLine(groupOption.columnName)),
+      ...dimensions.map((dimensionOption) => toLine(dimensionOption.columnName))
     ]
     return ` group by ${allGroupColumns.join(',')}`
   }
@@ -118,35 +139,38 @@ export class ChartDataService {
    */
 
   public async getAnalyzeData(
-    requestParams: AnalyzeDataDto.ChartDataRequest
+    chartDataRequest: AnalyzeDataDto.ChartDataRequest
   ): Promise<Array<AnalyzeDataDao.ChartData>> {
+    const normalizedRequest = this.convertDtoToDao(chartDataRequest)
     /**
      * @desc 构建select语句
      */
-    const selectClause = this.buildSelectClause(requestParams.dimensions, requestParams.groups)
+    const selectClause = this.buildSelectClause(normalizedRequest.dimensions, normalizedRequest.groups)
     /**
      * @desc 构建where语句
      */
-    const whereClause = this.buildWhereClause(requestParams.filters)
+    const whereClause = this.buildWhereClause(normalizedRequest.filters)
     /**
      * @desc 构建orderBy语句
      */
-    const orderByClause = this.buildOrderByClause(requestParams.orders)
+    const orderByClause = this.buildOrderByClause(normalizedRequest.orders)
     /**
      * @desc 构建groupBy语句
      */
-    const groupByClause = this.buildGroupByClause(requestParams.groups, requestParams.dimensions)
+    const groupByClause = this.buildGroupByClause(normalizedRequest.groups, normalizedRequest.dimensions)
 
     /**
      * @desc 构建sql语句
      */
-    const sql = `${selectClause} from ${toLine(requestParams.dataSource)}${whereClause}${groupByClause}${orderByClause} limit ${requestParams.commonChartConfig?.limit || 1000}`
+    const sql = `${selectClause} from ${toLine(
+      normalizedRequest.dataSource
+    )}${whereClause}${groupByClause}${orderByClause} limit ${normalizedRequest.commonChartConfig?.limit || 1000}`
 
     /**
      * @desc 获取图表数据
      */
     const data = await this.chartDataMapper.getAnalyzeData(sql)
 
-    return this.dao2Vo(data)
+    return this.convertDaoToVo(data)
   }
 }

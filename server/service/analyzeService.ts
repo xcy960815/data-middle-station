@@ -23,17 +23,45 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc dao 转 vo
-   * @param chart {AnalyzeDao.AnalyzeOption} 图表
+   * @desc DAO 转 VO
+   * @param analyzeDao {AnalyzeDao.AnalyzeOption} 分析记录
+   * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigResponse | null} 关联图表配置
    * @returns {AnalyzeVo.GetAnalyzeResponse}
    */
-  private dao2Vo(
-    chart: AnalyzeDao.AnalyzeOption,
-    chartConfig: AnalyzeConfigVo.ChartConfigResponse | null
+  private convertDaoToVo(
+    analyzeDao: AnalyzeDao.AnalyzeOption,
+    resolvedChartConfig: AnalyzeConfigVo.ChartConfigResponse | null
   ): AnalyzeVo.GetAnalyzeResponse {
+    const dtoPayload = this.convertDaoToDto(analyzeDao)
     return {
-      ...chart,
-      chartConfig: chartConfig
+      ...dtoPayload,
+      chartConfig: resolvedChartConfig
+    }
+  }
+
+  /**
+   * @desc DAO -> DTO 转换
+   */
+  private convertDaoToDto(analyzeDao: AnalyzeDao.AnalyzeOption): AnalyzeDto.UpdateAnalyzeRequest {
+    return {
+      ...analyzeDao,
+      chartConfig: null
+    }
+  }
+
+  /**
+   * @desc DTO -> DAO 转换
+   */
+  private convertDtoToDao(analyzeDto: AnalyzeDto.UpdateAnalyzeRequest): AnalyzeDao.AnalyzeOption {
+    const { chartConfig, ...rest } = analyzeDto
+    const isDeletedValue =
+      Object.prototype.hasOwnProperty.call(analyzeDto, 'isDeleted') && (analyzeDto as any).isDeleted !== undefined
+        ? Number((analyzeDto as any).isDeleted)
+        : 0
+    return {
+      ...rest,
+      chartConfigId: rest.chartConfigId ?? null,
+      isDeleted: isDeletedValue
     }
   }
 
@@ -45,12 +73,12 @@ export class AnalyzeService extends BaseService {
   public async deleteAnalyze(
     deleteAnalyzeRequest: AnalyzeDto.DeleteAnalyzeRequest
   ): Promise<AnalyzeVo.DeleteAnalyzeResponse> {
-    const analyzeOption = await this.getAnalyze(deleteAnalyzeRequest)
-    if (analyzeOption.chartConfigId) {
+    const analyzeVo = await this.getAnalyze(deleteAnalyzeRequest)
+    if (analyzeVo.chartConfigId) {
       const deleteChartConfigRequest: AnalyzeConfigDto.DeleteChartConfigRequest = {
-        id: analyzeOption.chartConfigId,
-        updatedBy: analyzeOption.updatedBy,
-        updateTime: analyzeOption.updateTime
+        id: analyzeVo.chartConfigId,
+        updatedBy: analyzeVo.updatedBy,
+        updateTime: analyzeVo.updateTime
       }
       // 删除图表配置
       await this.chartConfigService.deleteChartConfig(deleteChartConfigRequest)
@@ -61,7 +89,10 @@ export class AnalyzeService extends BaseService {
       updatedBy,
       updateTime
     }
-    const deleteAnalyzeResult = await this.analyzeMapper.deleteAnalyze(deleteParams)
+    const normalizedDeleteParams = this.convertDaoToDto(
+      this.convertDtoToDao(deleteParams as AnalyzeDto.UpdateAnalyzeRequest)
+    ) as AnalyzeDto.DeleteAnalyzeRequest
+    const deleteAnalyzeResult = await this.analyzeMapper.deleteAnalyze(normalizedDeleteParams)
     return deleteAnalyzeResult
   }
   /**
@@ -70,14 +101,14 @@ export class AnalyzeService extends BaseService {
    * @returns {Promise<AnalyzeVo.GetAnalyzeResponse>}
    */
   public async getAnalyze(analyzeParams: AnalyzeDto.GetAnalyzeRequest): Promise<AnalyzeVo.GetAnalyzeResponse> {
-    const analyzeOption = await this.analyzeMapper.getAnalyze(analyzeParams)
-    if (!analyzeOption) {
+    const analyzeDao = await this.analyzeMapper.getAnalyze(analyzeParams)
+    if (!analyzeDao) {
       throw new Error('图表不存在')
-    } else if (analyzeOption.chartConfigId) {
-      const chartConfig = await this.chartConfigService.getChartConfig(analyzeOption.chartConfigId)
-      return this.dao2Vo(analyzeOption, chartConfig)
+    } else if (analyzeDao.chartConfigId) {
+      const chartConfigVo = await this.chartConfigService.getChartConfig(analyzeDao.chartConfigId)
+      return this.convertDaoToVo(analyzeDao, chartConfigVo)
     } else {
-      return this.dao2Vo(analyzeOption, null)
+      return this.convertDaoToVo(analyzeDao, null)
     }
   }
 
@@ -86,13 +117,13 @@ export class AnalyzeService extends BaseService {
    * @returns {Promise<Array<AnalyzeVo.GetAnalyzeResponse>>}
    */
   public async getAnalyzes(): Promise<Array<AnalyzeVo.GetAnalyzeResponse>> {
-    const analyzeOptions = await this.analyzeMapper.getAnalyzes()
-    const promises = analyzeOptions.map(async (item) => {
-      if (item.chartConfigId) {
-        const chartConfig = await this.chartConfigService.getChartConfig(item.chartConfigId)
-        return this.dao2Vo(item, chartConfig)
+    const analyzeDaoList = await this.analyzeMapper.getAnalyzes()
+    const promises = analyzeDaoList.map(async (analyzeDao) => {
+      if (analyzeDao.chartConfigId) {
+        const chartConfigVo = await this.chartConfigService.getChartConfig(analyzeDao.chartConfigId)
+        return this.convertDaoToVo(analyzeDao, chartConfigVo)
       } else {
-        return this.dao2Vo(item, null)
+        return this.convertDaoToVo(analyzeDao, null)
       }
     })
     const getAnalyzesResult = await Promise.all(promises)
@@ -130,7 +161,8 @@ export class AnalyzeService extends BaseService {
       updatedBy,
       chartConfigId
     } as AnalyzeDto.UpdateAnalyzeRequest
-    const updateAnalyzeResponse = await this.analyzeMapper.updateAnalyze(updateParams)
+    const daoPayload = this.convertDtoToDao(updateParams)
+    const updateAnalyzeResponse = await this.analyzeMapper.updateAnalyze(this.convertDaoToDto(daoPayload))
 
     return updateAnalyzeResponse
   }
@@ -155,7 +187,10 @@ export class AnalyzeService extends BaseService {
     restOption.updatedBy = updatedBy
     restOption.createTime = createTime
     restOption.updateTime = updateTime
-    const createAnalyzeResponse = await this.analyzeMapper.createAnalyze(restOption as AnalyzeDto.CreateAnalyzeRequest)
+    const daoPayload = this.convertDtoToDao(restOption as AnalyzeDto.UpdateAnalyzeRequest)
+    const createAnalyzeResponse = await this.analyzeMapper.createAnalyze(
+      this.convertDaoToDto(daoPayload) as AnalyzeDto.CreateAnalyzeRequest
+    )
     return createAnalyzeResponse
   }
 
@@ -170,9 +205,8 @@ export class AnalyzeService extends BaseService {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     updateAnalyzeNameRequest.updatedBy = updatedBy
     updateAnalyzeNameRequest.updateTime = updateTime
-    const updateAnalyzeNameResponse = await this.analyzeMapper.updateAnalyze(
-      updateAnalyzeNameRequest as AnalyzeDto.UpdateAnalyzeRequest
-    )
+    const daoPayload = this.convertDtoToDao(updateAnalyzeNameRequest as AnalyzeDto.UpdateAnalyzeRequest)
+    const updateAnalyzeNameResponse = await this.analyzeMapper.updateAnalyze(this.convertDaoToDto(daoPayload))
     return updateAnalyzeNameResponse
   }
 
@@ -187,9 +221,8 @@ export class AnalyzeService extends BaseService {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     updateAnalyzeDescRequest.updatedBy = updatedBy
     updateAnalyzeDescRequest.updateTime = updateTime
-    const updateAnalyzeDescResponse = await this.analyzeMapper.updateAnalyze(
-      updateAnalyzeDescRequest as AnalyzeDto.UpdateAnalyzeRequest
-    )
+    const daoPayload = this.convertDtoToDao(updateAnalyzeDescRequest as AnalyzeDto.UpdateAnalyzeRequest)
+    const updateAnalyzeDescResponse = await this.analyzeMapper.updateAnalyze(this.convertDaoToDto(daoPayload))
     return updateAnalyzeDescResponse
   }
 }
