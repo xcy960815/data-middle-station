@@ -31,6 +31,14 @@ export class JwtUtils {
   private static readonly SECRET_KEY: string = useRuntimeConfig().jwtSecretKey
 
   /**
+   * 获取签名/验证使用的密钥
+   */
+  private static getSecretKey(): Secret {
+    // 统一在这里将密钥转换为 Buffer，便于后续维护
+    return Buffer.from(String(this.SECRET_KEY))
+  }
+
+  /**
    * token过期时间（默认24小时）
    */
   private static readonly JWT_EXPIRES_IN = useRuntimeConfig().jwtExpiresIn
@@ -42,14 +50,11 @@ export class JwtUtils {
    */
   public static generateToken(payload: JwtPayload): string {
     try {
-      // 将密钥转换为Buffer类型
-      const secretKey: Secret = Buffer.from(String(this.SECRET_KEY))
-
       // 配置签名选项
       const options: SignOptions = {
         expiresIn: this.JWT_EXPIRES_IN as SignOptions['expiresIn']
       }
-      return sign(payload, secretKey, options)
+      return sign(payload, this.getSecretKey(), options)
     } catch (error) {
       logger.error(`生成token失败: ${(error as Error).message}`)
       throw new Error('Token生成失败')
@@ -63,9 +68,8 @@ export class JwtUtils {
    */
   public static verifyToken(token: string): JwtPayload {
     try {
-      // 将密钥转换为Buffer类型
-      const secretKey: Secret = Buffer.from(String(this.SECRET_KEY))
-      return verify(token, secretKey) as JwtPayload
+      // 使用统一的密钥获取方式进行验证
+      return verify(token, this.getSecretKey()) as JwtPayload
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         logger.warn(`token已过期: ${error.message}`)
@@ -89,12 +93,16 @@ export class JwtUtils {
   }
 
   /**
-   * @校验token过期时间
+   * @校验token是否过期
+   * @description 这里直接使用已解析的 payload，避免重复解析 token
    */
-  public static checkTokenExpired(token: string): boolean {
-    const payload = this.verifyToken(token)
+  public static checkTokenExpired(payload: JwtPayload): boolean {
+    // 没有 exp 字段，视为不过期（由业务自行控制）
+    if (!payload.exp) {
+      return false
+    }
     const now = Date.now()
-    const expiredTime = (payload.exp || 0) * 1000
-    return now > expiredTime
+    const expiredTime = payload.exp * 1000
+    return now >= expiredTime
   }
 }
