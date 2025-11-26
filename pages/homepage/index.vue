@@ -16,7 +16,7 @@
       </custom-header>
     </template>
     <template #content>
-      <div class="homepage-container relative" ref="container">
+      <div class="homepage-container relative h-full" ref="container">
         <chart-card
           ref="cards"
           class="card-chart"
