@@ -36,4 +36,9 @@ declare namespace AnalyzeDataDto {
      */
     commonChartConfig?: AnalyzeConfigDao.CommonChartConfig
   }
+
+  /**
+   * @desc 图表数据响应
+   */
+  type ChartDataResponse = AnalyzeDataDao.ChartData
 }

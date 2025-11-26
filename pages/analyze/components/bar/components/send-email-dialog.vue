@@ -563,7 +563,7 @@ const saveScheduledTask = async () => {
     return
   }
   // 构建定时任务数据
-  const scheduledEmailData: ScheduledEmailDto.CreateScheduledEmailRequest = {
+  const scheduledEmailData: ScheduledEmailDto.CreateScheduledEmailOptions = {
     taskName: emailFormData.taskName || generateDefaultTaskName(),
     taskType: 'scheduled',
     scheduleTime: emailFormData.scheduleTime!,
@@ -607,7 +607,7 @@ const saveRecurringTask = async () => {
     return
   }
   // 构建重复任务数据
-  const recurringTaskData: ScheduledEmailDto.CreateScheduledEmailRequest = {
+  const recurringTaskData: ScheduledEmailDto.CreateScheduledEmailOptions = {
     taskName: emailFormData.taskName || generateDefaultTaskName(),
     taskType: 'recurring',
     scheduleTime: null,

@@ -14,4 +14,14 @@ declare namespace DatabaseDto {
   type GetDatabaseTablesRequest = {
     tableName?: string
   }
+
+  /**
+   * @desc 数据表 DTO
+   */
+  type TableOptionDto = DataBaseDao.TableOption
+
+  /**
+   * @desc 数据列 DTO
+   */
+  type TableColumnDto = DataBaseDao.TableColumnOptions
 }

@@ -1,7 +1,7 @@
-import type { ResultSetHeader } from 'mysql2'
-import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '@/server/utils/databaseHelpper'
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
 import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
+import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '@/server/utils/databaseHelpper'
+import type { ResultSetHeader } from 'mysql2'
 
 /**
  * @desc 定时邮件任务基础字段
@@ -40,7 +40,7 @@ const SCHEDULED_EMAIL_TASK_TABLE_NAME = 'scheduled_email_tasks'
 const DATA_SOURCE_NAME = 'data_middle_station'
 
 /**
- * @desc 定时邮件任务选项
+ * @desc 定时邮件任务行数据映射，将数据库字段转换为任务实体
  */
 export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEmailOptions, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
@@ -170,6 +170,9 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
   updatedBy!: string
 }
 
+/**
+ * @desc 定时邮件任务 mapper，负责对任务的增删改查及调度相关查询
+ */
 export class ScheduledEmailMapper extends BaseMapper {
   /**
    * @desc 数据源名称
@@ -178,8 +181,8 @@ export class ScheduledEmailMapper extends BaseMapper {
 
   /**
    * @desc 创建定时邮件任务
-   * @param {ScheduledEmailDao.CreateScheduledEmailOptions} scheduledEmailOptions  定时邮件任务选项
-   * @returns {Promise<number>} 任务ID
+   * @param scheduledEmailOptions 创建定时任务所需字段（名称、时间、邮件/分析配置等）
+   * @returns 新建任务的主键 ID
    */
   public async createScheduledEmailTask(
     scheduledEmailOptions: ScheduledEmailDao.CreateScheduledEmailOptions
@@ -194,27 +197,48 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取定时邮件任务
-   * @param {number} id  任务ID
-   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOptions>} 定时邮件任务
+   * @desc 根据主键 ID 获取单个定时邮件任务
+   * @param query 查询参数（至少包含任务 ID，可附带状态、类型、启用状态等条件）
+   * @returns 匹配的任务记录（若存在）
    */
   @Mapping(ScheduledEmailTaskMapping)
-  public async getScheduledEmailTaskById<
+  public async getScheduledEmailTask<
     T extends ScheduledEmailDao.ScheduledEmailOptions = ScheduledEmailDao.ScheduledEmailOptions
-  >(id: number): Promise<T> {
+  >(query: ScheduledEmailDao.GetScheduledEmailTaskOptions): Promise<T | null> {
+    const whereConditions: string[] = ['id = ?']
+    const whereValues: Array<number | string | boolean> = [query.id]
+
+    if (query.status) {
+      whereConditions.push('status = ?')
+      whereValues.push(query.status)
+    }
+
+    if (query.taskType) {
+      whereConditions.push('task_type = ?')
+      whereValues.push(query.taskType)
+    }
+
+    if (typeof query.isActive === 'boolean') {
+      whereConditions.push('is_active = ?')
+      whereValues.push(query.isActive ? 1 : 0)
+    }
+
+    const whereClause = `where ${whereConditions.join(' AND ')}`
+
     const sql = `select
           ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
             from ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
-          where id = ?`
-    const result = await this.exe<Array<T>>(sql, [id])
+          ${whereClause}`
 
-    return result?.[0]
+    const result = await this.exe<Array<T>>(sql, whereValues)
+
+    return result?.[0] || null
   }
 
   /**
    * @desc 更新定时邮件任务
-   * @param {ScheduledEmailDao.UpdateScheduledEmailOptions} scheduledEmailOptions  定时邮件任务选项
-   * @returns {Promise<boolean>} 是否更新成功
+   * @param scheduledEmailOptions 更新任务所需字段（包含主键 ID）
+   * @returns 是否更新成功
    */
   public async updateScheduledEmailTask(
     scheduledEmailOptions: ScheduledEmailDao.UpdateScheduledEmailOptions
@@ -225,9 +249,9 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 删除定时邮件任务(物理删除)
-   * @param {number} deleteParams  删除参数
-   * @returns {Promise<boolean>} 是否删除成功
+   * @desc 删除定时邮件任务（物理删除）
+   * @param deleteParams 删除参数，只需包含任务 ID
+   * @returns 是否删除成功
    */
   public async deleteScheduledEmailTask(deleteParams: { id: number }): Promise<boolean> {
     const sql = `delete from ${SCHEDULED_EMAIL_TASK_TABLE_NAME} where id = ?`
@@ -236,9 +260,9 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 查询任务列表
-   * @param {ScheduledEmailDto.ScheduledEmailListRequest} params  查询参数
-   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOptions[]>} 任务列表
+   * @desc 查询定时邮件任务列表
+   * @param params 查询条件（支持按状态、任务名模糊查询）
+   * @returns 匹配的任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getScheduledEmailList(
@@ -272,9 +296,9 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取待执行的任务
-   * @param currentTime {string} 当前时间
-   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOptions[]>} 待执行任务列表
+   * @desc 获取待执行的任务（单次定时任务）
+   * @param currentTime 当前时间，通常为调度触发时间
+   * @returns 在当前时间点应被执行的任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getPendingTasks(currentTime: string): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
@@ -289,10 +313,10 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取精确时间范围内的任务
-   * @param startTime {string} 开始时间
-   * @param endTime {string} 结束时间
-   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOptions[]>} 任务列表
+   * @desc 获取精确时间范围内的待执行任务
+   * @param startTime 开始时间（左开区间）
+   * @param endTime 结束时间（右闭区间）
+   * @returns 时间区间内的任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getExactTimeTasks(
@@ -312,7 +336,7 @@ export class ScheduledEmailMapper extends BaseMapper {
 
   /**
    * @desc 获取需要重试的失败任务
-   * @returns {Promise<ScheduledEmailDao.ScheduledEmailOptions[]>} 可重试任务列表
+   * @returns 仍处于失败状态且未超过最大重试次数的任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getRetryableTasks(): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
