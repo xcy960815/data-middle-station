@@ -27,7 +27,7 @@ echarts.use([
 /**
  * 服务端生成图表快照返回结果
  */
-interface ChartSnapshotResult {
+interface ChartSnapshotVo {
   buffer: Buffer
   chartType: string
   filename: string
@@ -58,43 +58,43 @@ export class ChartSnapshotService {
    * 根据分析 ID 渲染图表并返回 SVG 缓冲
    * @param analyzeId 分析记录主键
    */
-  public async renderAnalyzeChart(analyzeId: number): Promise<ChartSnapshotResult> {
-    const analyze = await this.analyzeService.getAnalyze({ id: analyzeId })
-    if (!analyze) {
+  public async renderAnalyzeChart(analyzeId: number): Promise<ChartSnapshotVo> {
+    const analyzeVo = await this.analyzeService.getAnalyze({ id: analyzeId })
+    if (!analyzeVo) {
       throw new Error(`未找到分析 ${analyzeId}`)
     }
 
-    if (!analyze.chartConfig || !analyze.chartConfigId) {
+    if (!analyzeVo.chartConfig || !analyzeVo.chartConfigId) {
       throw new Error(`分析 ${analyzeId} 缺少图表配置，无法生成图像`)
     }
 
-    const chartConfig = analyze.chartConfig
+    const chartConfigVo = analyzeVo.chartConfig
 
-    if (!chartConfig.dataSource) {
+    if (!chartConfigVo.dataSource) {
       throw new Error(`分析 ${analyzeId} 缺少数据源配置`)
     }
 
-    if (!chartConfig.dimensions || chartConfig.dimensions.length === 0) {
+    if (!chartConfigVo.dimensions || chartConfigVo.dimensions.length === 0) {
       throw new Error(`分析 ${analyzeId} 缺少维度配置`)
     }
 
     const analyzeData = await this.chartDataService.getAnalyzeData({
-      filters: chartConfig.filters || [],
-      orders: chartConfig.orders || [],
-      groups: chartConfig.groups || [],
-      dimensions: chartConfig.dimensions,
-      dataSource: chartConfig.dataSource,
-      commonChartConfig: chartConfig.commonChartConfig
+      filters: chartConfigVo.filters || [],
+      orders: chartConfigVo.orders || [],
+      groups: chartConfigVo.groups || [],
+      dimensions: chartConfigVo.dimensions,
+      dataSource: chartConfigVo.dataSource,
+      commonChartConfig: chartConfigVo.commonChartConfig
     })
 
     const renderConfig: ChartRenderConfig = {
-      title: analyze.analyzeName,
+      title: analyzeVo.analyzeName,
       data: analyzeData,
-      xAxisFields: chartConfig.groups || [],
-      yAxisFields: chartConfig.dimensions
+      xAxisFields: chartConfigVo.groups || [],
+      yAxisFields: chartConfigVo.dimensions
     }
 
-    const option = this.buildChartOption(chartConfig.chartType, renderConfig, chartConfig.privateChartConfig)
+    const option = this.buildChartOption(chartConfigVo.chartType, renderConfig, chartConfigVo.privateChartConfig)
     if (!option) {
       throw new Error(`分析 ${analyzeId} 生成图表配置失败`)
     }
@@ -103,13 +103,14 @@ export class ChartSnapshotService {
       option.backgroundColor = '#ffffff'
     }
 
-    const buffer = this.renderOption(option)
-    return {
-      buffer,
-      chartType: chartConfig.chartType,
-      filename: this.generateFilename(analyze.analyzeName, analyzeId),
-      analyzeName: analyze.analyzeName
+    const snapshotBuffer = this.renderOption(option)
+    const snapshotVo: ChartSnapshotVo = {
+      buffer: snapshotBuffer,
+      chartType: chartConfigVo.chartType,
+      filename: this.generateFilename(analyzeVo.analyzeName, analyzeId),
+      analyzeName: analyzeVo.analyzeName
     }
+    return snapshotVo
   }
 
   /**
@@ -174,4 +175,6 @@ export class ChartSnapshotService {
     const timestamp = dayjs().format('YYYYMMDDHHmmss')
     return `${safeName}-${timestamp}.svg`
   }
+
+  // ChartSnapshotService 当前直接返回 VO，不需要额外的 DTO/DAO 转换方法
 }

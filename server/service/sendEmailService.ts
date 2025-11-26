@@ -3,11 +3,25 @@ import nodemailer, { type Transporter } from 'nodemailer'
 
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
 
+/**
+ * @desc 邮件附件定义
+ */
 interface Attachment {
   filename: string
   contentType: string
   content?: string | Buffer<ArrayBufferLike>
   path?: string
+}
+
+/**
+ * @desc nodemailer 发送参数载体
+ */
+type SendMailPayload = {
+  from: string
+  to: string | string[]
+  subject: string
+  html: string
+  attachments: Attachment[]
 }
 /**
  * @desc 发送邮件服务
@@ -77,28 +91,20 @@ export class SendEmailService {
    * @param options {SendEmailDto.SendChartEmailRequest}
    * @returns {Promise<SendEmailVo.SendEmailResponse>} messageId
    */
-  public async sendMail(options: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailResponse> {
+  public async sendMail(sendMailDto: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailResponse> {
     if (!this.transporter) {
       this.createTransporter()
     }
 
     // 根据 analyzeId 自动补全图表信息
-    const resolvedAnalyzeOptions = await this.resolveAnalyzeOptions(options.analyzeOptions)
+    const resolvedAnalyzeOptions = await this.resolveAnalyzeOptions(sendMailDto.analyzeOptions)
 
     // 构建附件配置
     const attachments = this.buildAttachments(resolvedAnalyzeOptions)
+    const mailPayload = this.convertDtoToDao(sendMailDto, attachments, resolvedAnalyzeOptions)
 
-    const result = await this.transporter!.sendMail({
-      from: this.smtpFrom || this.smtpUser!,
-      to: options.emailConfig.to,
-      subject: options.emailConfig.subject,
-      html: this.buildEmailContent(options.emailConfig, resolvedAnalyzeOptions),
-      attachments
-    })
-
-    logger.info(`邮件已发送，messageId=${result.messageId}，收件人=${options.emailConfig.to}`)
-
-    return {
+    const result = await this.transporter!.sendMail(mailPayload)
+    const resultDto = this.convertDaoToDto({
       messageId: result.messageId,
       accepted: result.accepted,
       rejected: result.rejected,
@@ -107,9 +113,23 @@ export class SendEmailService {
       messageTime: result.messageTime,
       messageSize: result.messageSize,
       response: result.response,
-      envelope: result.envelope,
-      sender: this.getSenderAddress(),
-      channel: this.getChannel(),
+      envelope: result.envelope
+    })
+
+    logger.info(`邮件已发送，messageId=${result.messageId}，收件人=${sendMailDto.emailConfig.to}`)
+
+    return {
+      messageId: resultDto.messageId,
+      accepted: resultDto.accepted,
+      rejected: resultDto.rejected,
+      ehlo: resultDto.ehlo,
+      envelopeTime: resultDto.envelopeTime,
+      messageTime: resultDto.messageTime,
+      messageSize: resultDto.messageSize,
+      response: resultDto.response,
+      envelope: resultDto.envelope,
+      sender: resultDto.sender || this.getSenderAddress(),
+      channel: resultDto.channel || this.getChannel(),
       transport: this.getTransportInfo(),
       attachments: attachments.map((item) => ({
         filename: item.filename,
@@ -121,6 +141,38 @@ export class SendEmailService {
               ? item.content.length
               : undefined
       }))
+    }
+  }
+
+  /**
+   * @desc DTO -> nodemailer 发送参数转换
+   * @param sendMailDto {SendEmailDto.SendChartEmailRequest} 邮件请求
+   * @param attachments {Attachment[]} 附件列表
+   * @param analyzeOptions {SendEmailDto.AnalyzeOptions} 图表选项
+   */
+  private convertDtoToDao(
+    sendMailDto: SendEmailDto.SendChartEmailRequest,
+    attachments: Attachment[],
+    analyzeOptions: SendEmailDto.AnalyzeOptions
+  ): SendMailPayload {
+    return {
+      from: this.getSenderAddress(),
+      to: sendMailDto.emailConfig.to,
+      subject: sendMailDto.emailConfig.subject,
+      html: this.buildEmailContent(sendMailDto.emailConfig, analyzeOptions),
+      attachments
+    }
+  }
+
+  /**
+   * @desc nodemailer 结果 -> DTO 转换
+   * @param result {SendEmailDao.SendEmailOptions} nodemailer 返回结果
+   */
+  private convertDaoToDto(result: SendEmailDao.SendEmailOptions): SendEmailDto.SendEmailResultDto {
+    return {
+      ...result,
+      sender: this.getSenderAddress(),
+      channel: this.getChannel()
     }
   }
 

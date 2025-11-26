@@ -1,7 +1,9 @@
+import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
 import { SendEmailService } from '@/server/service/sendEmailService'
 import Joi from 'joi'
 
 const sendEmailService = new SendEmailService()
+const scheduledEmailLogService = new ScheduledEmailLogService()
 
 const logger = new Logger({
   fileName: 'sendEmail',
@@ -24,8 +26,9 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
 })
 
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
+  let sendChartEmailRequest: SendEmailDto.SendChartEmailRequest | null = null
   try {
-    const sendChartEmailRequest = await readBody<SendEmailDto.SendChartEmailRequest>(event)
+    sendChartEmailRequest = await readBody<SendEmailDto.SendChartEmailRequest>(event)
 
     // 使用 Joi 进行数据验证
     const { error } = sendEmailSchema.validate(sendChartEmailRequest, {
@@ -42,10 +45,20 @@ export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResp
 
     const sendEmailResult = await sendEmailService.sendMail(sendChartEmailRequest)
 
+    await scheduledEmailLogService
+      .logManualSendSuccess(sendEmailResult, sendChartEmailRequest)
+      .catch((logError) => logger.error(`记录即时发送日志失败: ${logError}`))
+
     logger.info(`邮件发送成功: ${sendChartEmailRequest.emailConfig.to}`)
     return ApiResponse.success(sendEmailResult)
   } catch (error: any) {
+    const errorMessage = error?.message || '发送邮件失败'
+    if (sendChartEmailRequest) {
+      await scheduledEmailLogService
+        .logManualSendFailure(sendChartEmailRequest, errorMessage)
+        .catch((logError) => logger.error(`记录失败日志异常: ${logError}`))
+    }
     logger.error('发送邮件失败: ' + error.message)
-    return ApiResponse.error(error instanceof Error ? error.message : '发送邮件失败')
+    return ApiResponse.error(errorMessage)
   }
 })
