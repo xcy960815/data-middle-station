@@ -308,6 +308,31 @@ module.exports = {
 - `dms-service-compose.yml`: 服务编排配置
 - `dms-service-data-compose.yml`: 数据服务配置
 
+### 多平台构建 (Multi-Platform Build)
+
+项目支持构建多平台 Docker 镜像 (linux/amd64, linux/arm64)。
+
+**前提条件:**
+
+- 安装 Docker Desktop
+- 启用 docker buildx
+
+**使用方法:**
+
+```bash
+# 使用 npm script (推荐)
+npm run docker:build:multi
+
+# 或者直接运行脚本
+./build-multi-arch.sh
+
+# 构建并推送到仓库
+./build-multi-arch.sh --push
+
+# 指定标签和平台
+./build-multi-arch.sh -t 1.0.0 -p linux/amd64
+```
+
 ## 开发指南
 
 ### 快速开始
