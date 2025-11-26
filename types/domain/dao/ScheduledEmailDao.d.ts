@@ -168,6 +168,13 @@ declare namespace ScheduledEmailDao {
     updatedBy: string
   }
 
+  type GetScheduledEmailTaskOptions = Partial<ScheduledEmailOptions> & {
+    /**
+     * 任务ID
+     */
+    id: number
+  }
+
   /**
    * @desc 创建任务参数
    */

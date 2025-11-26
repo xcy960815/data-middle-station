@@ -198,20 +198,41 @@ export class ScheduledEmailMapper extends BaseMapper {
 
   /**
    * @desc 根据主键 ID 获取单个定时邮件任务
-   * @param taskId 任务主键 ID
+   * @param query 查询参数（至少包含任务 ID，可附带状态、类型、启用状态等条件）
    * @returns 匹配的任务记录（若存在）
    */
   @Mapping(ScheduledEmailTaskMapping)
-  public async getScheduledEmailTaskById<
+  public async getScheduledEmailTask<
     T extends ScheduledEmailDao.ScheduledEmailOptions = ScheduledEmailDao.ScheduledEmailOptions
-  >(taskId: number): Promise<T> {
+  >(query: ScheduledEmailDao.GetScheduledEmailTaskOptions): Promise<T | null> {
+    const whereConditions: string[] = ['id = ?']
+    const whereValues: Array<number | string | boolean> = [query.id]
+
+    if (query.status) {
+      whereConditions.push('status = ?')
+      whereValues.push(query.status)
+    }
+
+    if (query.taskType) {
+      whereConditions.push('task_type = ?')
+      whereValues.push(query.taskType)
+    }
+
+    if (typeof query.isActive === 'boolean') {
+      whereConditions.push('is_active = ?')
+      whereValues.push(query.isActive ? 1 : 0)
+    }
+
+    const whereClause = `where ${whereConditions.join(' AND ')}`
+
     const sql = `select
           ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
             from ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
-          where id = ?`
-    const result = await this.exe<Array<T>>(sql, [taskId])
+          ${whereClause}`
 
-    return result?.[0]
+    const result = await this.exe<Array<T>>(sql, whereValues)
+
+    return result?.[0] || null
   }
 
   /**
