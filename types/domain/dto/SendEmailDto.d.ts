@@ -62,6 +62,11 @@ declare namespace SendEmailDto {
     backgroundColor?: string
     scale?: number
   }
+
+  interface SendEmailResultDto extends SendEmailDao.SendEmailOptions {
+    sender?: string
+    channel?: string
+  }
 }
 
 // export = SendEmailDto

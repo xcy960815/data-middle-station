@@ -75,19 +75,23 @@ export class DatabaseService {
    * @returns {Promise<Array<DatabaseVo.GetDatabaseTablesResponse>>}
    */
   public async getTable(
-    getTableRequest: DatabaseDto.GetDatabaseTablesRequest
+    getTablesRequest: DatabaseDto.GetDatabaseTablesRequest
   ): Promise<Array<DatabaseVo.GetDatabaseTablesResponse>> {
-    const getTableResult = await this.databaseMapper.getTable(getTableRequest)
-    return getTableResult.map((item) => ({
-      ...item,
-      createTime: item.createTime,
-      updateTime: item.updateTime,
-      tableName: item.tableName,
-      tableType: item.tableType,
-      tableComment: item.tableComment,
-      engine: item.engine,
-      tableCollation: item.tableCollation
-    }))
+    const tableDaoList = await this.databaseMapper.getTable(getTablesRequest)
+    return tableDaoList.map((tableDao) => {
+      const dtoPayload = this.convertDaoToDtoTable(tableDao)
+      const normalizedTableDao = this.convertDtoToDaoTable(dtoPayload)
+      return {
+        ...normalizedTableDao,
+        createTime: normalizedTableDao.createTime,
+        updateTime: normalizedTableDao.updateTime,
+        tableName: normalizedTableDao.tableName,
+        tableType: normalizedTableDao.tableType,
+        tableComment: normalizedTableDao.tableComment,
+        engine: normalizedTableDao.engine,
+        tableCollation: normalizedTableDao.tableCollation
+      }
+    })
   }
 
   /**
@@ -96,11 +100,13 @@ export class DatabaseService {
    * @returns {Promise<Array<DatabaseVo.GetTableColumnsResponse>>}
    */
   public async getTableColumns(
-    getTableColumnsRequest: DatabaseDto.GetTableColumnsRequest
+    tableColumnsRequest: DatabaseDto.GetTableColumnsRequest
   ): Promise<Array<DatabaseVo.GetTableColumnsResponse>> {
-    const getTableColumnsResult = await this.databaseMapper.getTableColumns(getTableColumnsRequest)
-    return getTableColumnsResult.map((item) => {
-      const columnTypeValue = item.columnType
+    const columnDaoList = await this.databaseMapper.getTableColumns(tableColumnsRequest)
+    return columnDaoList.map((columnDao) => {
+      const dtoPayload = this.convertDaoToDtoColumn(columnDao)
+      const normalizedColumnDao = this.convertDtoToDaoColumn(dtoPayload)
+      const columnTypeValue = normalizedColumnDao.columnType
       let columnType = ''
       if (NUMBER_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
         columnType = 'number'
@@ -112,11 +118,27 @@ export class DatabaseService {
         columnType = columnTypeValue
       }
       return {
-        columnName: item.columnName,
+        columnName: normalizedColumnDao.columnName,
         columnType: columnType,
-        columnComment: item.columnComment,
-        displayName: item.columnComment
+        columnComment: normalizedColumnDao.columnComment,
+        displayName: normalizedColumnDao.columnComment
       }
     })
+  }
+
+  private convertDaoToDtoTable(tableDao: DataBaseDao.TableOption): DatabaseDto.TableOptionDto {
+    return { ...tableDao }
+  }
+
+  private convertDtoToDaoTable(tableDto: DatabaseDto.TableOptionDto): DataBaseDao.TableOption {
+    return { ...tableDto }
+  }
+
+  private convertDaoToDtoColumn(columnDao: DataBaseDao.TableColumnOptions): DatabaseDto.TableColumnDto {
+    return { ...columnDao }
+  }
+
+  private convertDtoToDaoColumn(columnDto: DatabaseDto.TableColumnDto): DataBaseDao.TableColumnOptions {
+    return { ...columnDto }
   }
 }

@@ -1,5 +1,5 @@
 /**
- * @desc 定时邮件日志数据传输对象类型定义
+ * @desc 定时邮件日志视图对象类型定义（用于返回给前端的数据）
  */
 declare namespace ScheduledEmailLogVo {
   /**
@@ -129,7 +129,8 @@ declare namespace ScheduledEmailLogVo {
   }
 
   /**
-   * @desc 创建日志请求
+   * @desc 创建日志请求（此类型应移至 DTO，VO 不应包含请求类型）
+   * @deprecated 此类型应使用 ScheduledEmailLogDto.CreateLogRequest
    */
   interface CreateLogRequest {
     /**
@@ -247,7 +248,8 @@ declare namespace ScheduledEmailLogVo {
   }
 
   /**
-   * @desc 日志查询请求
+   * @desc 日志查询请求（此类型应移至 DTO，VO 不应包含请求类型）
+   * @deprecated 此类型应使用 ScheduledEmailLogDto.LogListQuery
    */
   interface LogListQuery {
     /**
