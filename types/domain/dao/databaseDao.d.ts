@@ -5,7 +5,7 @@ declare namespace DataBaseDao {
   /**
    * @desc 左侧数据源列表
    */
-  export type TableOption = {
+  export type TableOptions = {
     /**
      * @desc 表名
      */
@@ -61,6 +61,13 @@ declare namespace DataBaseDao {
   }
 
   /**
+   * @desc 查询表请求参数
+   */
+  type GetTableOptions = {
+    tableName?: string
+  }
+
+  /**
    * @desc 左侧数据源字段类型 刚从数据库出来的字段
    */
   export type TableColumnOptions = {
@@ -76,5 +83,9 @@ declare namespace DataBaseDao {
      * @desc 列注释
      */
     columnComment: string
+  }
+
+  type GetTableColumnOptions = {
+    tableName: string
   }
 }
