@@ -5,7 +5,7 @@ import { toLine } from '@/server/utils/databaseHelpper'
 /**
  * @desc 表列表映射
  */
-export class TableOptionMapping implements DataBaseDao.TableOption, IColumnTarget {
+export class TableOptionMapping implements DataBaseDao.TableOptions, IColumnTarget {
   @Column('TABLE_NAME')
   tableName!: string
 
@@ -106,8 +106,8 @@ export class DatabaseMapper extends BaseMapper {
    * @returns 表元数据列表
    */
   @Mapping(TableOptionMapping)
-  public async getTable<T extends DataBaseDao.TableOption = DataBaseDao.TableOption>(
-    getTableRequest: DatabaseDto.GetDatabaseTablesRequest
+  public async getTable<T extends DataBaseDao.TableOptions = DataBaseDao.TableOptions>(
+    getTableRequest: DataBaseDao.GetTableOptions
   ): Promise<Array<T>> {
     const whereConditions: string[] = ["table_type = 'BASE TABLE'", 'table_schema = ?']
     const whereValues: Array<string> = [tableSchema]
@@ -144,7 +144,7 @@ export class DatabaseMapper extends BaseMapper {
    */
   @Mapping(TableColumnMapping)
   public async getTableColumns<T extends DataBaseDao.TableColumnOptions>(
-    getTableColumnsRequest: DatabaseDto.GetTableColumnsRequest
+    getTableColumnsOptions: DataBaseDao.GetTableColumnOptions
   ): Promise<Array<T>> {
     const sql = `SELECT
         column_name,
@@ -155,7 +155,7 @@ export class DatabaseMapper extends BaseMapper {
       WHERE
         table_name = ?
         AND table_schema = ?;`
-    const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsRequest.tableName), tableSchema])
+    const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsOptions.tableName), tableSchema])
     return result
   }
 }

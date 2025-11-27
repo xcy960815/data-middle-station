@@ -1,24 +1,24 @@
 /**
  * @desc 数据库相关的数据传输对象类型定义
  */
-declare namespace DatabaseDto {
+declare namespace DataBaseDto {
   /**
    * @desc 查询表列请求参数
    */
-  type GetTableColumnsRequest = {
+  type GetTableColumnsOptions = {
     tableName: string
   }
   /**
    * @desc 查询表请求参数
    */
-  type GetDatabaseTablesRequest = {
+  type GetTableOptions = {
     tableName?: string
   }
 
   /**
    * @desc 数据表 DTO
    */
-  type TableOptionDto = DataBaseDao.TableOption
+  type TableOptionDto = DataBaseDao.TableOptions
 
   /**
    * @desc 数据列 DTO
