@@ -71,12 +71,12 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中所有表
-   * @param getTableRequest {DatabaseDto.GetDatabaseTablesRequest} 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.GetDatabaseTablesResponse>>}
+   * @param getTableRequest {DataBaseDto.GetDatabaseTablesRequest} 查询表请求参数
+   * @returns {Promise<Array<DatabaseVo.GetDataBaseTablesOptions>>}
    */
   public async getTable(
-    getTablesRequest: DatabaseDto.GetDatabaseTablesRequest
-  ): Promise<Array<DatabaseVo.GetDatabaseTablesResponse>> {
+    getTablesRequest: DataBaseDto.GetTableOptions
+  ): Promise<Array<DatabaseVo.GetDataBaseTablesOptions>> {
     const tableDaoList = await this.databaseMapper.getTable(getTablesRequest)
     return tableDaoList.map((tableDao) => {
       const dtoPayload = this.convertDaoToDtoTable(tableDao)
@@ -96,12 +96,12 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中表的列
-   * @param {DatabaseDto.GetTableColumnsRequest} getTableColumnsRequest 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.GetTableColumnsResponse>>}
+   * @param {DataBaseDto.GetTableColumnsOptions} tableColumnsRequest 查询表请求参数
+   * @returns {Promise<Array<DatabaseVo.GetTableColumnsOptions>>}
    */
   public async getTableColumns(
-    tableColumnsRequest: DatabaseDto.GetTableColumnsRequest
-  ): Promise<Array<DatabaseVo.GetTableColumnsResponse>> {
+    tableColumnsRequest: DataBaseDto.GetTableColumnsOptions
+  ): Promise<Array<DatabaseVo.GetTableColumnsOptions>> {
     const columnDaoList = await this.databaseMapper.getTableColumns(tableColumnsRequest)
     return columnDaoList.map((columnDao) => {
       const dtoPayload = this.convertDaoToDtoColumn(columnDao)
@@ -126,19 +126,19 @@ export class DatabaseService {
     })
   }
 
-  private convertDaoToDtoTable(tableDao: DataBaseDao.TableOption): DatabaseDto.TableOptionDto {
+  private convertDaoToDtoTable(tableDao: DataBaseDao.TableOptions): DataBaseDto.TableOptionDto {
     return { ...tableDao }
   }
 
-  private convertDtoToDaoTable(tableDto: DatabaseDto.TableOptionDto): DataBaseDao.TableOption {
+  private convertDtoToDaoTable(tableDto: DataBaseDto.TableOptionDto): DataBaseDao.TableOptions {
     return { ...tableDto }
   }
 
-  private convertDaoToDtoColumn(columnDao: DataBaseDao.TableColumnOptions): DatabaseDto.TableColumnDto {
+  private convertDaoToDtoColumn(columnDao: DataBaseDao.TableColumnOptions): DataBaseDto.TableColumnDto {
     return { ...columnDao }
   }
 
-  private convertDtoToDaoColumn(columnDto: DatabaseDto.TableColumnDto): DataBaseDao.TableColumnOptions {
+  private convertDtoToDaoColumn(columnDto: DataBaseDto.TableColumnDto): DataBaseDao.TableColumnOptions {
     return { ...columnDto }
   }
 }
