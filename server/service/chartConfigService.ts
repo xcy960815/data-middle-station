@@ -14,44 +14,44 @@ export class ChartConfigService extends BaseService {
   /**
    * @desc 将dao对象转换为vo对象
    * @param chartConfigOption {AnalyzeConfigDao.ChartConfig} 图表配置
-   * @returns {AnalyzeConfigVo.ChartConfig} 图表配置
+   * @returns {AnalyzeConfigVo.ChartConfigOptions} 图表配置
    */
-  private convertDaoToVo(chartConfigDao: AnalyzeConfigDao.ChartConfig): AnalyzeConfigVo.ChartConfigResponse {
-    const dtoPayload = this.convertDaoToDto(chartConfigDao)
+  private convertDaoToVo(chartConfigDao: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigVo.ChartConfigOptions {
+    const normalizedDao = this.convertDaoToDto(chartConfigDao)
     return {
-      ...dtoPayload,
+      ...normalizedDao,
       /**
        * 列配置
        */
-      columns: chartConfigDao.columns.map((item: AnalyzeConfigDao.ColumnOptions) => ({
+      columns: normalizedDao.columns.map((item: AnalyzeConfigDao.ColumnOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 维度配置
        */
-      dimensions: chartConfigDao.dimensions.map((item: AnalyzeConfigDao.DimensionOption) => ({
+      dimensions: normalizedDao.dimensions.map((item: AnalyzeConfigDao.DimensionOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 过滤配置
        */
-      filters: chartConfigDao.filters.map((item: AnalyzeConfigDao.FilterOption) => ({
+      filters: normalizedDao.filters.map((item: AnalyzeConfigDao.FilterOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 分组配置
        */
-      groups: chartConfigDao.groups.map((item: AnalyzeConfigDao.GroupOption) => ({
+      groups: normalizedDao.groups.map((item: AnalyzeConfigDao.GroupOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 排序配置
        */
-      orders: chartConfigDao.orders.map((item: AnalyzeConfigDao.OrderOption) => ({
+      orders: normalizedDao.orders.map((item: AnalyzeConfigDao.OrderOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       }))
@@ -60,64 +60,66 @@ export class ChartConfigService extends BaseService {
 
   /**
    * @desc 获取图表
-   * @param id {number} 图表id
+   * @param {AnalyzeConfigDto.GetChartConfigOptions} chartConfigOptions 图表配置请求参数
    * @returns {Promise<AnalyzeConfigVo.ChartConfigResponse>}
    */
-  public async getChartConfig(chartConfigId: number): Promise<AnalyzeConfigVo.ChartConfigResponse> {
-    const chartConfigDao = await this.chartConfigMapper.getChartConfig(chartConfigId)
+  public async getChartConfig(chartConfigOptions: AnalyzeConfigDto.GetChartConfigOptions): Promise<AnalyzeConfigVo.ChartConfigOptions> {
+    const chartConfigDao = await this.chartConfigMapper.getChartConfig(chartConfigOptions)
     return this.convertDaoToVo(chartConfigDao)
   }
 
   /**
-   * @desc 保存图表配置
-   * @param chartConfig {AnalyzeConfigDto.ChartConfig} 图表配置
+   * @desc 更新图表配置
+   * @param {AnalyzeConfigDto.UpdateChartConfigOptions} chartConfigOptions 图表配置
    * @returns {Promise<boolean>}
    */
-  public async updateChartConfig(chartConfigDto: AnalyzeConfigDto.UpdateChartConfigRequest): Promise<boolean> {
+  public async updateChartConfig(chartConfigOptions: AnalyzeConfigDto.UpdateChartConfigOptions): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    chartConfigDto.updatedBy = updatedBy
-    chartConfigDto.updateTime = updateTime
-    const daoPayload = this.convertDtoToDao(chartConfigDto)
-    const updateChartResult = await this.chartConfigMapper.updateChartConfig(this.convertDaoToDto(daoPayload))
+    const enrichedChartConfigOption = {
+      ...chartConfigOptions,
+      updatedBy,
+      updateTime
+    }
+    const updateChartResult = await this.chartConfigMapper.updateChartConfig(enrichedChartConfigOption)
     return updateChartResult
   }
 
   /**
    * @desc 创建图表配置
-   * @param chartConfigDto {AnalyzeConfigDto.CreateChartConfigRequest} 图表配置
+   * @param {AnalyzeConfigDto.CreateChartConfigOptions} chartConfigOptions 图表配置
    * @returns {Promise<number>}
    */
-  public async createChartConfig(chartConfigDto: AnalyzeConfigDto.CreateChartConfigRequest): Promise<number> {
+  public async createChartConfig(chartConfigOptions: AnalyzeConfigDto.CreateChartConfigOptions): Promise<number> {
     const { createdBy, createTime, updateTime, updatedBy } = await this.getDefaultInfo()
-    chartConfigDto.createdBy = createdBy
-    chartConfigDto.createTime = createTime
-    chartConfigDto.updateTime = updateTime
-    chartConfigDto.updatedBy = updatedBy
-    chartConfigDto.isDeleted = 0
-    const enrichedChartConfigRequest = {
-      id: 0,
-      ...chartConfigDto
-    } as AnalyzeConfigDto.UpdateChartConfigRequest
-    const daoPayload = this.convertDtoToDao(enrichedChartConfigRequest)
-    const chartConfigId = await this.chartConfigMapper.createChartConfig(
-      this.convertDaoToDto(daoPayload) as AnalyzeConfigDto.CreateChartConfigRequest
-    )
+    const enrichedChartConfigOption = {
+      ...chartConfigOptions,
+      createdBy,
+      createTime,
+      updateTime,
+      updatedBy
+    }
+    const chartConfigId = await this.chartConfigMapper.createChartConfig(enrichedChartConfigOption)
     return chartConfigId
   }
 
   /**
    * @desc 删除图表配置
-   * @param deleteChartConfigRequest {AnalyzeConfigDto.DeleteChartConfigRequest} 图表配置删除请求参数
+   * @param {AnalyzeConfigDto.DeleteChartConfigOptions} deleteChartConfigOptions 图表配置删除请求参数
    * @returns {Promise<boolean>}
    */
-  public async deleteChartConfig(deleteChartConfigDto: AnalyzeConfigDto.DeleteChartConfigRequest): Promise<boolean> {
-    return await this.chartConfigMapper.deleteChartConfig(deleteChartConfigDto)
+  public async deleteChartConfig(deleteChartConfigOptions: AnalyzeConfigDto.DeleteChartConfigOptions): Promise<boolean> {
+    const deleteParams: AnalyzeConfigDao.DeleteChartConfigOption = {
+      id: deleteChartConfigOptions.id,
+      updatedBy: deleteChartConfigOptions.updatedBy,
+      updateTime: deleteChartConfigOptions.updateTime
+    }
+    return await this.chartConfigMapper.deleteChartConfig(deleteParams)
   }
 
   /**
    * @desc DAO -> DTO
    */
-  private convertDaoToDto(chartConfigDao: AnalyzeConfigDao.ChartConfig): AnalyzeConfigDto.UpdateChartConfigRequest {
+  private convertDaoToDto(chartConfigDao: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigDao.ChartConfigOptions {
     return {
       ...chartConfigDao,
       columns: chartConfigDao.columns || [],
@@ -131,17 +133,21 @@ export class ChartConfigService extends BaseService {
   /**
    * @desc DTO -> DAO
    */
-  private convertDtoToDao(chartConfigDto: AnalyzeConfigDto.UpdateChartConfigRequest): AnalyzeConfigDao.ChartConfig {
+  private convertDtoToDao(
+    chartConfigDto: AnalyzeConfigDto.UpdateChartConfigOptions &
+      Pick<AnalyzeConfigDao.UpdateChartConfigOptions, 'updatedBy' | 'updateTime'>
+  ): AnalyzeConfigDao.UpdateChartConfigOptions {
     return {
       ...chartConfigDto,
+      updatedBy: chartConfigDto.updatedBy,
+      updateTime: chartConfigDto.updateTime,
       columns: chartConfigDto.columns || [],
       dimensions: chartConfigDto.dimensions || [],
       filters: chartConfigDto.filters || [],
       groups: chartConfigDto.groups || [],
       orders: chartConfigDto.orders || [],
       commonChartConfig: chartConfigDto.commonChartConfig,
-      privateChartConfig: chartConfigDto.privateChartConfig,
-      isDeleted: Number(chartConfigDto.isDeleted ?? 0)
+      privateChartConfig: chartConfigDto.privateChartConfig
     }
   }
 }

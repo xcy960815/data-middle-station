@@ -82,6 +82,9 @@ export class SendEmailService {
       auth: {
         user: this.smtpUser!,
         pass: this.smtpPass!
+      },
+      tls: {
+        rejectUnauthorized: false
       }
     })
   }

@@ -409,7 +409,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 图表配置
    */
-  type ChartConfig = {
+  type ChartConfigOptions = {
     /**
      * 图表id
      */
@@ -471,4 +471,27 @@ declare namespace AnalyzeConfigDao {
      */
     isDeleted?: number
   }
+
+
+  /**
+   * 获取图表配置请求参数
+   */
+  type GetChartConfigOptions = Partial<ChartConfigOptions> & {
+    id: number
+  }
+
+  /**
+   * 创建图表配置请求参数
+   */
+  type CreateChartConfigOptions = Omit<ChartConfigOptions, 'id' | 'isDeleted'>
+
+  /**
+   * 更新图表配置请求参数
+   */
+  type UpdateChartConfigOptions = Omit<ChartConfigOptions, 'createTime' | 'createdBy' | 'isDeleted'>
+
+  /**
+   * 删除图表配置请求参数
+   */
+  type DeleteChartConfigOption = Pick<ChartConfigOptions, 'id' | 'updatedBy' | 'updateTime'>
 }

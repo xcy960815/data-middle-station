@@ -11,7 +11,7 @@ declare namespace AnalyzeVo {
   /**
    * 获取分析响应
    */
-  type GetAnalyzeResponse = {
+  type GetAnalyzeOptions = {
     /**
      * 分析id
      */
