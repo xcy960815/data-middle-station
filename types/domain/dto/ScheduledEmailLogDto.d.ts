@@ -131,7 +131,7 @@ declare namespace ScheduledEmailLogDto {
   /**
    * @desc 创建日志请求
    */
-  interface CreateLogRequest {
+  interface CreateLogOptions {
     /**
      * 任务ID
      */
@@ -331,4 +331,19 @@ declare namespace ScheduledEmailLogDto {
       hasMore: boolean
     }
   }
+
+  /**
+   * @desc 执行日志单条查询请求
+   */
+  type GetExecutionLogOptions = ScheduledEmailLogDao.GetScheduledEmailLogQuery
+
+  /**
+   * @desc 执行日志删除请求
+   */
+  type DeleteExecutionLogOptions = ScheduledEmailLogDao.DeleteScheduledEmailLogOptions
+
+  /**
+   * @desc 成功率统计查询请求
+   */
+  type TaskSuccessRateQuery = ScheduledEmailLogDao.TaskSuccessRateQuery
 }

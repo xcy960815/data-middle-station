@@ -201,4 +201,85 @@ declare namespace ScheduledEmailLogDao {
      */
     avgDuration: number
   }
+
+  /**
+   * @desc 执行日志单条查询参数
+   */
+  type GetScheduledEmailLogQuery = {
+    /**
+     * 日志ID
+     */
+    id?: number
+    /**
+     * 任务ID
+     */
+    taskId?: number
+    /**
+     * 执行状态
+     */
+    status?: Status
+    /**
+     * 邮件消息ID
+     */
+    emailMessageId?: string
+    /**
+     * 发件人邮箱
+     */
+    senderEmail?: string
+    /**
+     * 发件人名称
+     */
+    senderName?: string
+    /**
+     * 收件人(To)
+     */
+    recipientTo?: string
+    /**
+     * 抄送
+     */
+    recipientCc?: string
+    /**
+     * 密送
+     */
+    recipientBcc?: string
+    /**
+     * 邮件主题
+     */
+    emailSubject?: string
+    /**
+     * 邮件通道
+     */
+    emailChannel?: string
+    /**
+     * 服务提供方
+     */
+    provider?: string
+    /**
+     * 创建人
+     */
+    createdBy?: string
+  }
+
+  /**
+   * @desc 执行日志删除参数
+   */
+  type DeleteScheduledEmailLogOptions = GetScheduledEmailLogQuery
+
+  /**
+   * @desc 成功率统计查询参数
+   */
+  type TaskSuccessRateQuery = GetScheduledEmailLogQuery & {
+    /**
+     * 统计天数，默认30天
+     */
+    days?: number
+    /**
+     * 开始时间
+     */
+    startTime?: string
+    /**
+     * 结束时间
+     */
+    endTime?: string
+  }
 }
