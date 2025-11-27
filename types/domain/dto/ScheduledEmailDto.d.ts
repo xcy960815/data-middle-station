@@ -136,13 +136,11 @@ declare namespace ScheduledEmailDto {
     | 'retryCount'
   >
 
-  type GetScheduledEmailOptions = Partial<ScheduledEmailOptions> & {
-    id: number
-  }
+  type ScheduledEmailQueryOptions = ScheduledEmailDao.ScheduledEmailQueryOptions
 
-  type DeleteScheduledEmailOptions = Partial<ScheduledEmailOptions> & {
-    id: number
-  }
+  type GetScheduledEmailOptions = ScheduledEmailDao.GetScheduledEmailOptions
+
+  type DeleteScheduledEmailOptions = ScheduledEmailDao.DeleteScheduledEmailOptions
 
   /**
    * 更新定时邮件任务请求
@@ -317,9 +315,5 @@ declare namespace ScheduledEmailDto {
   /**
    * 定时邮件列表查询参数
    */
-  interface ScheduledEmailListRequest {
-    id?: number
-    taskName?: string
-    status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
-  }
+  type ScheduledEmailListRequest = ScheduledEmailDao.ScheduledEmailListOptions
 }

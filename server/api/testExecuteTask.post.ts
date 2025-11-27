@@ -15,7 +15,7 @@ export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) 
       return ApiResponse.error('任务ID不能为空且必须为数字')
     }
 
-    const result = await scheduledEmailService.executeTaskById(taskId)
+    const result = await scheduledEmailService.executeTaskWithOptions({ id: taskId })
     return ApiResponse.success(result)
   } catch (error: any) {
     return ApiResponse.error(error.message || '执行任务失败')

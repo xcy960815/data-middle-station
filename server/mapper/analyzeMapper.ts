@@ -165,9 +165,18 @@ export class AnalyzeMapper extends BaseMapper {
   public async getAnalyze<T extends AnalyzeDao.AnalyzeOption = AnalyzeDao.AnalyzeOption>(analyzeOptions: AnalyzeDao.GetAnalyzeOptions): Promise<T> {
     const { id, analyzeName, analyzeDesc, updatedBy, updateTime, createdBy } = analyzeOptions
     await this.updateViewCount(id)
-    let whereClause = `where id = ? and analyze_name = ? and analyze_desc = ? and is_deleted = 0`
-    const whereValues: Array<string | number | undefined> = [id, analyzeName, analyzeDesc]
 
+    let whereClause = `where id = ? and is_deleted = 0`
+    const whereValues: Array<string | number> = [id]
+
+    if (analyzeName) {
+      whereClause += ` and analyze_name = ?`
+      whereValues.push(analyzeName)
+    }
+    if (analyzeDesc) {
+      whereClause += ` and analyze_desc = ?`
+      whereValues.push(analyzeDesc)
+    }
     if (updatedBy) {
       whereClause += ` and updated_by = ?`
       whereValues.push(updatedBy)
