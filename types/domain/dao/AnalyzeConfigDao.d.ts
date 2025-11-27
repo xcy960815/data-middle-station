@@ -10,9 +10,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 维度配置
    */
-  type DimensionOption = ColumnOptions & {
-    __invalid?: boolean
-  }
+  type DimensionOption = ColumnOptions
 
   /**
    * 过滤聚合方式
@@ -66,10 +64,6 @@ declare namespace AnalyzeConfigDao {
      */
     filterValue?: string
     /**
-     * 显示名称
-     */
-    displayName?: string
-    /**
      * 聚合方式
      */
     aggregationType: FilterAggregationsType
@@ -78,9 +72,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 分组配置
    */
-  type GroupOption = ColumnOptions & {
-    __invalid?: boolean
-  }
+  type GroupOption = ColumnOptions
 
   /**
    * 排序类型

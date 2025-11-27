@@ -272,20 +272,62 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 根据主键 ID 获取执行日志
-   * @param logId 日志主键 ID
+   * @desc 根据查询条件获取单条执行日志
+   * @param query 查询条件
    * @returns 匹配的执行日志（若存在）
    */
   @Mapping(ScheduledEmailLogMapping)
-  public async getScheduledEmailLogById<
+  public async getScheduledEmailLog<
     T extends ScheduledEmailLogDao.ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
-  >(logId: number): Promise<T | null> {
+  >(query: ScheduledEmailLogDao.GetScheduledEmailLogQuery): Promise<T | null> {
+    const whereConditions: string[] = []
+    const whereValues: Array<string | number | ScheduledEmailLogDao.Status> = []
+
+    const appendNumberCondition = (column: string, value?: number) => {
+      if (typeof value === 'number') {
+        whereConditions.push(`${column} = ?`)
+        whereValues.push(value)
+      }
+    }
+
+    const appendStringCondition = (column: string, value?: string) => {
+      if (typeof value === 'string' && value.trim() !== '') {
+        whereConditions.push(`${column} = ?`)
+        whereValues.push(value.trim())
+      }
+    }
+
+    appendNumberCondition('id', query.id)
+    appendNumberCondition('task_id', query.taskId)
+
+    if (query.status) {
+      whereConditions.push('status = ?')
+      whereValues.push(query.status)
+    }
+
+    appendStringCondition('email_message_id', query.emailMessageId)
+    appendStringCondition('sender_email', query.senderEmail)
+    appendStringCondition('sender_name', query.senderName)
+    appendStringCondition('recipient_to', query.recipientTo)
+    appendStringCondition('recipient_cc', query.recipientCc)
+    appendStringCondition('recipient_bcc', query.recipientBcc)
+    appendStringCondition('email_subject', query.emailSubject)
+    appendStringCondition('email_channel', query.emailChannel)
+    appendStringCondition('provider', query.provider)
+    appendStringCondition('created_by', query.createdBy)
+
+    if (whereConditions.length === 0) {
+      throw new Error('getScheduledEmailLog 至少需要一个查询条件')
+    }
+
     const sql = `
       SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_LOG_BASE_FIELDS)}
       FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME}
-      WHERE id = ?
+      WHERE ${whereConditions.join(' AND ')}
+      LIMIT 1
     `
-    const result = await this.exe<T[]>(sql, [logId])
+
+    const result = await this.exe<T[]>(sql, whereValues)
     return result?.[0] || null
   }
 
@@ -401,14 +443,60 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 删除任务相关的所有日志
-   * @param {number} taskId  任务ID
-   * @returns {Promise<boolean>} 是否删除成功
+   * @desc 根据条件删除日志
+   * @param query 查询条件
+   * @returns {Promise<number>} 删除的条数
    */
-  public async deleteLogsByTaskId(taskId: number): Promise<boolean> {
-    const sql = `DELETE FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME} WHERE task_id = ?`
-    const result = await this.exe<ResultSetHeader>(sql, [taskId])
-    return result.affectedRows > 0
+  public async deleteLogs(
+    query: ScheduledEmailLogDao.DeleteScheduledEmailLogOptions
+  ): Promise<number> {
+    const whereConditions: string[] = []
+    const whereValues: Array<string | number | ScheduledEmailLogDao.Status> = []
+
+    const appendNumberCondition = (column: string, value?: number) => {
+      if (typeof value === 'number') {
+        whereConditions.push(`${column} = ?`)
+        whereValues.push(value)
+      }
+    }
+
+    const appendStringCondition = (column: string, value?: string) => {
+      if (typeof value === 'string' && value.trim() !== '') {
+        whereConditions.push(`${column} = ?`)
+        whereValues.push(value.trim())
+      }
+    }
+
+    appendNumberCondition('id', query.id)
+    appendNumberCondition('task_id', query.taskId)
+
+    if (query.status) {
+      whereConditions.push('status = ?')
+      whereValues.push(query.status)
+    }
+
+    appendStringCondition('email_message_id', query.emailMessageId)
+    appendStringCondition('sender_email', query.senderEmail)
+    appendStringCondition('sender_name', query.senderName)
+    appendStringCondition('recipient_to', query.recipientTo)
+    appendStringCondition('recipient_cc', query.recipientCc)
+    appendStringCondition('recipient_bcc', query.recipientBcc)
+    appendStringCondition('email_subject', query.emailSubject)
+    appendStringCondition('email_channel', query.emailChannel)
+    appendStringCondition('provider', query.provider)
+    appendStringCondition('created_by', query.createdBy)
+
+    if (whereConditions.length === 0) {
+      throw new Error('deleteLogs 至少需要一个查询条件')
+    }
+
+    const sql = `
+      DELETE FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME}
+      WHERE ${whereConditions.join(' AND ')}
+    `
+
+    const result = await this.exe<ResultSetHeader>(sql, whereValues)
+    return result.affectedRows || 0
   }
 
   /**
@@ -426,14 +514,62 @@ export class ScheduledEmailLogMapper extends BaseMapper {
 
   /**
    * @desc 获取任务的执行成功率统计
-   * @param {number} taskId  任务ID
-   * @param {number} days  统计天数(默认30天)
+   * @param query 查询参数
    * @returns {Promise<Array<{date: string, successRate: number}>>} 成功率统计
    */
   public async getTaskSuccessRateStats(
-    taskId: number,
-    days: number = 30
+    query: ScheduledEmailLogDao.TaskSuccessRateQuery
   ): Promise<Array<{ date: string; successRate: number; totalCount: number; successCount: number }>> {
+    const whereConditions: string[] = []
+    const whereValues: Array<string | number | ScheduledEmailLogDao.Status> = []
+
+    const appendNumberCondition = (column: string, value?: number) => {
+      if (typeof value === 'number') {
+        whereConditions.push(`${column} = ?`)
+        whereValues.push(value)
+      }
+    }
+
+    const appendStringCondition = (column: string, value?: string) => {
+      if (typeof value === 'string' && value.trim() !== '') {
+        whereConditions.push(`${column} = ?`)
+        whereValues.push(value.trim())
+      }
+    }
+
+    appendNumberCondition('task_id', query.taskId)
+
+    if (query.status) {
+      whereConditions.push('status = ?')
+      whereValues.push(query.status)
+    }
+
+    appendStringCondition('email_channel', query.emailChannel)
+    appendStringCondition('provider', query.provider)
+    appendStringCondition('created_by', query.createdBy)
+
+    if (query.startTime) {
+      whereConditions.push('execution_time >= ?')
+      whereValues.push(query.startTime)
+    }
+
+    if (query.endTime) {
+      whereConditions.push('execution_time <= ?')
+      whereValues.push(query.endTime)
+    }
+
+    if (!query.startTime && !query.endTime) {
+      const days = query.days ?? 30
+      whereConditions.push('execution_time >= DATE_SUB(CURDATE(), INTERVAL ? DAY)')
+      whereValues.push(days)
+    }
+
+    if (whereConditions.length === 0) {
+      throw new Error('getTaskSuccessRateStats 至少需要一个查询条件')
+    }
+
+    const whereClause = `WHERE ${whereConditions.join(' AND ')}`
+
     const sql = `
       SELECT
         DATE(execution_time) as date,
@@ -444,8 +580,7 @@ export class ScheduledEmailLogMapper extends BaseMapper {
           2
         ) as success_rate
       FROM ${SCHEDULED_EMAIL_LOG_TABLE_NAME}
-      WHERE task_id = ?
-        AND execution_time >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      ${whereClause}
       GROUP BY DATE(execution_time)
       ORDER BY date DESC
     `
@@ -457,7 +592,7 @@ export class ScheduledEmailLogMapper extends BaseMapper {
         success_count: number
         success_rate: number
       }>
-    >(sql, [taskId, days])
+    >(sql, whereValues)
 
     return result.map((row) => ({
       date: row.date,

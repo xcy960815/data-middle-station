@@ -17,47 +17,26 @@ export class ChartDataService {
   }
 
   /**
-   * @desc 将dao对象转换为vo对象
-   * @param chartDataDao {AnalyzeDataDao.ChartData} 图表数据
-   * @returns {AnalyzeDataVo.ChartData}
+   * @desc 将DAO对象转换为VO对象
+   * @param chartDataDaoList {AnalyzeDataDao.ChartData[]} 图表数据DAO列表
+   * @returns {AnalyzeDataVo.ChartData[]} 图表数据VO列表
    */
   private convertDaoToVo(chartDataDaoList: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.ChartData> {
-    const dtoRows = this.convertDaoToDto(chartDataDaoList)
-    return dtoRows.map((chartDataDto) => ({
-      ...chartDataDto,
-      [String(chartDataDto.columnName)]: chartDataDto.columnValue
+    return chartDataDaoList.map((chartDataDao) => ({
+      ...chartDataDao,
+      [String(chartDataDao.columnName)]: chartDataDao.columnValue
     }))
   }
 
   /**
-   * @desc DAO -> DTO
-   */
-  private convertDaoToDto(chartDataDaoList: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataDto.ChartDataResponse> {
-    return chartDataDaoList.map((chartDataDaoRow) => ({ ...chartDataDaoRow }))
-  }
-
-  /**
-   * @desc DTO -> DAO（请求归一化）
-   */
-  private convertDtoToDao(chartDataRequest: AnalyzeDataDto.ChartDataRequest): AnalyzeDataDto.ChartDataRequest {
-    return {
-      ...chartDataRequest,
-      filters: chartDataRequest.filters || [],
-      orders: chartDataRequest.orders || [],
-      groups: chartDataRequest.groups || [],
-      dimensions: chartDataRequest.dimensions || []
-    }
-  }
-
-  /**
    * @desc 构建select语句
-   * @param dimensions {DimensionStore.DimensionOption[]} 维度
-   * @param groups {GroupStore.GroupOption[]} 分组
+   * @param dimensions {AnalyzeDataDto.DimensionOption[]} 维度
+   * @param groups {AnalyzeDataDto.GroupOption[]} 分组
    * @returns {string} select语句
    */
   private buildSelectClause(
-    dimensions: AnalyzeConfigDao.DimensionOption[],
-    groups: AnalyzeConfigDao.GroupOption[]
+    dimensions: AnalyzeDataDto.DimensionOption[],
+    groups: AnalyzeDataDto.GroupOption[]
   ): string {
     let selectClause = 'select'
 
@@ -67,7 +46,7 @@ export class ChartDataService {
       ...groups.filter((group) => !dimensions.some((dim) => dim.columnName === group.columnName))
     ]
 
-    allColumns.forEach((columnOption: AnalyzeConfigDao.DimensionOption | AnalyzeConfigDao.GroupOption) => {
+    allColumns.forEach((columnOption: AnalyzeDataDto.DimensionOption | AnalyzeDataDto.GroupOption) => {
       const columnName = toLine(columnOption.columnName)
       // 检查是否是日期时间类型的列
       const isDateTimeColumn = /date|time|created_at|updated_at/i.test(columnName)
@@ -79,10 +58,10 @@ export class ChartDataService {
 
   /**
    * @desc 构建where语句
-   * @param filters {FilterStore.FilterOption[]} 过滤条件
+   * @param filterOptions {AnalyzeDataDto.FilterOption[]} 过滤条件
    * @returns {string} where语句
    */
-  private buildWhereClause(filterOptions: AnalyzeConfigDao.FilterOption[]): string {
+  private buildWhereClause(filterOptions: AnalyzeDataDto.FilterOption[]): string {
     if (filterOptions.length === 0) return ''
     const whereClause = filterOptions
       .map((filterOption) => {
@@ -96,10 +75,10 @@ export class ChartDataService {
 
   /**
    * @desc 构建orderBy语句
-   * @param {OrderStore.OrderOption[]} orders  排序条件
+   * @param orderOptions {AnalyzeDataDto.OrderOption[]} 排序条件
    * @returns {string} orderBy语句
    */
-  private buildOrderByClause(orderOptions: AnalyzeConfigDao.OrderOption[]): string {
+  private buildOrderByClause(orderOptions: AnalyzeDataDto.OrderOption[]): string {
     if (orderOptions.length === 0) return ''
     const orderClause = orderOptions
       .map((orderOption) => {
@@ -115,13 +94,13 @@ export class ChartDataService {
 
   /**
    * @desc 构建groupBy语句
-   * @param groups {AnalyzeConfigDao.GroupOption[]} 分组条件
-   * @param dimensions {AnalyzeConfigDao.DimensionOption[]} 维度
+   * @param groupOptions {AnalyzeDataDto.GroupOption[]} 分组条件
+   * @param dimensions {AnalyzeDataDto.DimensionOption[]} 维度
    * @returns {string} groupBy语句
    */
   private buildGroupByClause(
-    groupOptions: AnalyzeConfigDao.GroupOption[],
-    dimensions: AnalyzeConfigDao.DimensionOption[]
+    groupOptions: AnalyzeDataDto.GroupOption[],
+    dimensions: AnalyzeDataDto.DimensionOption[]
   ): string {
     if (groupOptions.length === 0) return ''
     // 合并 groups 和 dimensions 中的列名
@@ -134,14 +113,21 @@ export class ChartDataService {
 
   /**
    * @desc 获取图表数据
-   * @param requestParams {AnalyzeDataDto.ChartDataRequest} 请求参数
-   * @returns {Promise<AnalyzeDataDao.ChartData>}
+   * @param chartDataRequest {AnalyzeDataDto.ChartDataOptions} 请求参数
+   * @returns {Promise<AnalyzeDataVo.ChartData[]>} 图表数据VO列表
    */
-
   public async getAnalyzeData(
-    chartDataRequest: AnalyzeDataDto.ChartDataRequest
-  ): Promise<Array<AnalyzeDataDao.ChartData>> {
-    const normalizedRequest = this.convertDtoToDao(chartDataRequest)
+    chartDataRequest: AnalyzeDataDto.ChartDataOptions
+  ): Promise<Array<AnalyzeDataVo.ChartData>> {
+    // 归一化请求参数，确保数组字段不为空
+    const normalizedRequest: AnalyzeDataDto.ChartDataOptions = {
+      ...chartDataRequest,
+      filters: chartDataRequest.filters || [],
+      orders: chartDataRequest.orders || [],
+      groups: chartDataRequest.groups || [],
+      dimensions: chartDataRequest.dimensions || []
+    }
+
     /**
      * @desc 构建select语句
      */
@@ -169,8 +155,8 @@ export class ChartDataService {
     /**
      * @desc 获取图表数据
      */
-    const data = await this.chartDataMapper.getAnalyzeData(sql)
+    const chartDataDaoList = await this.chartDataMapper.getAnalyzeData(sql)
 
-    return this.convertDaoToVo(data)
+    return this.convertDaoToVo(chartDataDaoList)
   }
 }

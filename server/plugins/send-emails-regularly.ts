@@ -202,7 +202,7 @@ const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailResponse): v
  */
 const executeTask = async (task: ScheduledEmailVo.ScheduledEmailResponse): Promise<void> => {
   try {
-    const success = await scheduledEmailService.executeTaskById(task.id)
+    const success = await scheduledEmailService.executeTaskWithOptions({ id: task.id })
     if (success) {
       logger.info(`✅ 任务 ${task.id} 执行成功`)
 

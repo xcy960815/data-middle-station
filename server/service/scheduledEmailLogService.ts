@@ -18,13 +18,12 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 创建执行日志
    */
-  async createExecutionLog(logRequestDto: ScheduledEmailLogDto.CreateLogRequest): Promise<number> {
+  async createExecutionLog(logRequestDto: ScheduledEmailLogDto.CreateLogOptions): Promise<number> {
     try {
       const { createTime, createdBy } = await super.getDefaultInfo()
       const timezone = logRequestDto.executionTimezone || this.getCurrentTimezone()
       const createdTimezone = logRequestDto.createdTimezone || timezone
-      const executionDto: ScheduledEmailLogDto.ExecutionLog = {
-        id: 0,
+      const executionDao: ScheduledEmailLogDao.CreateScheduledEmailLogOptions = {
         taskId: logRequestDto.taskId,
         executionTime: logRequestDto.executionTime,
         executionTimezone: timezone,
@@ -53,12 +52,11 @@ export class ScheduledEmailLogService extends BaseService {
         smtpHost: logRequestDto.smtpHost,
         smtpPort: logRequestDto.smtpPort || undefined,
         createdTime: createTime,
+        createdBy,
         createdTimezone
       }
 
-      const daoPayload = this.convertDtoToDao(executionDto, { createdBy })
-      const { id: _omitId, ...createPayload } = daoPayload
-      const logId = await this.scheduledEmailLogMapper.createScheduledEmailLog(createPayload)
+      const logId = await this.scheduledEmailLogMapper.createScheduledEmailLog(executionDao)
 
       if (logId > 0) {
         logger.info(`执行日志创建成功: 任务ID ${logRequestDto.taskId}, 日志ID ${logId}, 状态: ${logRequestDto.status}`)
@@ -72,14 +70,16 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 根据ID获取执行日志
+   * 根据条件获取单条执行日志
    */
-  async getExecutionLogById(logId: number): Promise<ScheduledEmailLogVo.ExecutionLog | null> {
+  async getExecutionLog(
+    query: ScheduledEmailLogDto.GetExecutionLogOptions
+  ): Promise<ScheduledEmailLogVo.ExecutionLog | null> {
     try {
-      const logDao = await this.scheduledEmailLogMapper.getScheduledEmailLogById(logId)
+      const logDao = await this.scheduledEmailLogMapper.getScheduledEmailLog(query)
       return logDao ? this.convertDaoToVo(logDao) : null
     } catch (error) {
-      logger.error(`获取执行日志失败: ID ${logId}, ${error}`)
+      logger.error(`获取执行日志失败: ${JSON.stringify(query)}, ${error}`)
       throw error
     }
   }
@@ -127,19 +127,21 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 删除任务相关的所有日志
+   * 根据条件删除执行日志
    */
-  async deleteLogsByTaskId(taskId: number): Promise<boolean> {
+  async deleteExecutionLogs(
+    query: ScheduledEmailLogDto.DeleteExecutionLogOptions
+  ): Promise<boolean> {
     try {
-      const success = await this.scheduledEmailLogMapper.deleteLogsByTaskId(taskId)
+      const deletedCount = await this.scheduledEmailLogMapper.deleteLogs(query)
 
-      if (success) {
-        logger.info(`任务日志删除成功: 任务ID ${taskId}`)
+      if (deletedCount > 0) {
+        logger.info(`执行日志删除成功: 条件 ${JSON.stringify(query)}, 删除数量 ${deletedCount}`)
       }
 
-      return success
+      return deletedCount > 0
     } catch (error) {
-      logger.error(`删除任务日志失败: 任务ID ${taskId}, ${error}`)
+      logger.error(`删除执行日志失败: ${JSON.stringify(query)}, ${error}`)
       throw error
     }
   }
@@ -166,13 +168,12 @@ export class ScheduledEmailLogService extends BaseService {
    * 获取任务执行成功率统计
    */
   async getTaskSuccessRateStats(
-    taskId: number,
-    days: number = 30
+    query: ScheduledEmailLogDto.TaskSuccessRateQuery
   ): Promise<Array<{ date: string; successRate: number; totalCount: number; successCount: number }>> {
     try {
-      return await this.scheduledEmailLogMapper.getTaskSuccessRateStats(taskId, days)
+      return await this.scheduledEmailLogMapper.getTaskSuccessRateStats(query)
     } catch (error) {
-      logger.error(`获取任务成功率统计失败: 任务ID ${taskId}, ${error}`)
+      logger.error(`获取任务成功率统计失败: ${JSON.stringify(query)}, ${error}`)
       throw error
     }
   }
@@ -186,7 +187,7 @@ export class ScheduledEmailLogService extends BaseService {
     emailMessageId: string,
     executionDuration: number,
     message?: string,
-    metadata?: Partial<ScheduledEmailLogDto.CreateLogRequest>
+    metadata?: Partial<ScheduledEmailLogDto.CreateLogOptions>
   ): Promise<number> {
     return await this.createExecutionLog({
       taskId,
@@ -208,7 +209,7 @@ export class ScheduledEmailLogService extends BaseService {
     errorDetails: string,
     executionDuration: number,
     message?: string,
-    metadata?: Partial<ScheduledEmailLogDto.CreateLogRequest>
+    metadata?: Partial<ScheduledEmailLogDto.CreateLogOptions>
   ): Promise<number> {
     return await this.createExecutionLog({
       taskId,
@@ -394,7 +395,7 @@ export class ScheduledEmailLogService extends BaseService {
   private buildManualSendMetadata(
     sendRequest: SendEmailDto.SendChartEmailRequest,
     sendResult?: SendEmailVo.SendEmailResponse
-  ): Partial<ScheduledEmailLogDto.CreateLogRequest> {
+  ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
     const recipients = Array.isArray(sendRequest.emailConfig.to)
       ? sendRequest.emailConfig.to
       : sendRequest.emailConfig.to

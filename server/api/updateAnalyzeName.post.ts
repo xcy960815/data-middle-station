@@ -9,7 +9,7 @@ const analyzeService = new AnalyzeService()
  */
 export default defineEventHandler<Promise<ApiResponseI<AnalyzeVo.UpdateAnalyzeNameResponse>>>(async (event) => {
   try {
-    const updateAnalyzeNameRequest = await readBody<AnalyzeDto.UpdateAnalyzeNameRequest>(event)
+    const updateAnalyzeNameRequest = await readBody<AnalyzeDto.UpdateAnalyzeNameOptions>(event)
     const updateAnalyzeNameResult = await analyzeService.updateAnalyzeName(updateAnalyzeNameRequest)
     return ApiResponse.success(updateAnalyzeNameResult)
   } catch (error: any) {

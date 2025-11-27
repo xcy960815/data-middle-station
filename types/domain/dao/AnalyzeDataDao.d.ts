@@ -8,4 +8,5 @@ declare namespace AnalyzeDataDao {
   type ChartData = {
     [key: string]: string | number | ChartData | undefined | null | boolean
   }
+
 }

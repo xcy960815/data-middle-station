@@ -69,16 +69,19 @@ export class ScheduledEmailService extends BaseService {
         nextExecutionTime = createRequestDto.scheduleTime!
       }
 
-      const normalizedDto: ScheduledEmailDto.CreateScheduledEmailOptions = {
-        ...createRequestDto,
+      const createParams: ScheduledEmailDao.CreateScheduledEmailOptions = {
+        taskName: createRequestDto.taskName,
         scheduleTime: createRequestDto.scheduleTime || null,
+        taskType: createRequestDto.taskType,
         recurringDays: createRequestDto.recurringDays || null,
         recurringTime: createRequestDto.recurringTime || null,
         isActive: true,
         nextExecutionTime,
+        emailConfig: createRequestDto.emailConfig,
+        analyzeOptions: createRequestDto.analyzeOptions,
         status: 'pending',
         remark: createRequestDto.remark,
-        maxRetries: createRequestDto.maxRetries ?? 3,
+        maxRetries: 3,
         retryCount: 0,
         errorMessage: null,
         createdTime: createTime,
@@ -87,8 +90,6 @@ export class ScheduledEmailService extends BaseService {
         createdBy,
         updatedBy
       }
-      const daoPayload = this.convertDtoToDao(normalizedDto)
-      const { id: _omitId, ...createParams } = daoPayload
 
       // 创建任务
       const taskId = await this.scheduledEmailMapper.createScheduledEmailTask(createParams)
@@ -110,9 +111,7 @@ export class ScheduledEmailService extends BaseService {
   async getScheduledEmail(
     scheduledEmailDto: ScheduledEmailDto.GetScheduledEmailOptions
   ): Promise<ScheduledEmailVo.ScheduledEmailResponse | null> {
-    const scheduledEmailDao = await this.scheduledEmailMapper.getScheduledEmailTask({
-      id: scheduledEmailDto.id
-    })
+    const scheduledEmailDao = await this.scheduledEmailMapper.getScheduledEmailTask(scheduledEmailDto)
     return scheduledEmailDao ? this.convertDaoToVo(scheduledEmailDao) : null
   }
 
@@ -147,36 +146,24 @@ export class ScheduledEmailService extends BaseService {
 
     const { updatedBy, updateTime } = await super.getDefaultInfo()
 
-    const existingDto = this.convertDaoToDto(scheduledEmailDao)
-    const mergedDto: ScheduledEmailDto.ScheduledEmailOptions = {
-      ...existingDto,
-      ...updateRequestDto,
+    const updateParams: ScheduledEmailDao.UpdateScheduledEmailOptions = {
+      ...scheduledEmailDao,
       id: updateRequestDto.id,
-      taskName: updateRequestDto.taskName || existingDto.taskName,
+      taskName: updateRequestDto.taskName || scheduledEmailDao.taskName,
       scheduleTime:
-        updateRequestDto.scheduleTime !== undefined ? updateRequestDto.scheduleTime : existingDto.scheduleTime,
-      emailConfig: updateRequestDto.emailConfig || existingDto.emailConfig,
-      analyzeOptions: updateRequestDto.analyzeOptions,
-      remark: updateRequestDto.remark !== undefined ? updateRequestDto.remark : existingDto.remark,
-      updatedBy,
-      updatedTime: updateTime,
-      createdBy: existingDto.createdBy,
-      createdTime: existingDto.createdTime,
+        updateRequestDto.scheduleTime !== undefined ? updateRequestDto.scheduleTime : scheduledEmailDao.scheduleTime,
+      emailConfig: updateRequestDto.emailConfig || scheduledEmailDao.emailConfig,
+      analyzeOptions: updateRequestDto.analyzeOptions || scheduledEmailDao.analyzeOptions,
+      remark: updateRequestDto.remark !== undefined ? updateRequestDto.remark : scheduledEmailDao.remark,
       recurringDays:
-        updateRequestDto.recurringDays !== undefined ? updateRequestDto.recurringDays : existingDto.recurringDays,
+        updateRequestDto.recurringDays !== undefined ? updateRequestDto.recurringDays : scheduledEmailDao.recurringDays,
       recurringTime:
-        updateRequestDto.recurringTime !== undefined ? updateRequestDto.recurringTime : existingDto.recurringTime,
-      isActive: existingDto.isActive,
-      nextExecutionTime: existingDto.nextExecutionTime,
-      status: existingDto.status,
-      maxRetries: existingDto.maxRetries,
-      retryCount: existingDto.retryCount,
-      errorMessage: existingDto.errorMessage,
-      executedTime: existingDto.executedTime
+        updateRequestDto.recurringTime !== undefined ? updateRequestDto.recurringTime : scheduledEmailDao.recurringTime,
+      updatedBy,
+      updatedTime: updateTime
     }
-    const daoPayload = this.convertDtoToDao(mergedDto)
 
-    return await this.scheduledEmailMapper.updateScheduledEmailTask(daoPayload)
+    return await this.scheduledEmailMapper.updateScheduledEmailTask(updateParams)
   }
 
   /**
@@ -187,9 +174,7 @@ export class ScheduledEmailService extends BaseService {
   async deleteScheduledEmail(deleteRequestDto: ScheduledEmailDto.DeleteScheduledEmailOptions): Promise<boolean> {
     try {
       // 验证任务是否存在
-      const scheduledEmailDao = await this.scheduledEmailMapper.getScheduledEmailTask({
-        id: deleteRequestDto.id
-      })
+      const scheduledEmailDao = await this.scheduledEmailMapper.getScheduledEmailTask(deleteRequestDto)
       if (!scheduledEmailDao) {
         throw new Error('任务不存在')
       }
@@ -199,15 +184,15 @@ export class ScheduledEmailService extends BaseService {
         throw new Error('正在执行的任务不能删除')
       }
 
-      const isDeleteSuccess = await this.scheduledEmailMapper.deleteScheduledEmailTask({ id: deleteRequestDto.id })
+      const deletedCount = await this.scheduledEmailMapper.deleteScheduledEmailTask(deleteRequestDto)
 
-      if (isDeleteSuccess) {
-        logger.info(`定时邮件任务删除成功: ${deleteRequestDto.id}`)
+      if (deletedCount > 0) {
+        logger.info(`定时邮件任务删除成功: ${JSON.stringify(deleteRequestDto)}，删除数量 ${deletedCount}`)
       }
 
-      return isDeleteSuccess
+      return deletedCount > 0
     } catch (error) {
-      logger.error(`删除定时邮件任务失败: ${deleteRequestDto.id}, ${error}`)
+      logger.error(`删除定时邮件任务失败: ${JSON.stringify(deleteRequestDto)}, ${error}`)
       throw error
     }
   }
@@ -302,25 +287,41 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 根据任务ID执行任务（简化版，用于调度器）
-   * @param {number} taskId 任务ID
+   * 根据查询条件执行任务（简化版，用于调度器）
    * @returns {Promise<boolean>}
    */
-  async executeTaskById(taskId: number): Promise<boolean> {
+  async executeTaskWithOptions(query: ScheduledEmailDto.ScheduledEmailQueryOptions): Promise<boolean> {
     try {
-      const scheduledEmailTask = await this.scheduledEmailMapper.getScheduledEmailTask({ id: taskId })
+      const taskQuery: ScheduledEmailDao.GetScheduledEmailOptions = {
+        id: query.id,
+        taskName: query.taskName,
+        status: query.status,
+        taskType: query.taskType,
+        isActive: query.isActive,
+        createdBy: query.createdBy,
+        updatedBy: query.updatedBy,
+        minRetryCount: query.minRetryCount,
+        maxRetryCount: query.maxRetryCount,
+        maxRetries: query.maxRetries,
+        remarkKeyword: query.remarkKeyword,
+        scheduleTimeStart: query.scheduleTimeStart,
+        scheduleTimeEnd: query.scheduleTimeEnd,
+        nextExecutionTimeStart: query.nextExecutionTimeStart,
+        nextExecutionTimeEnd: query.nextExecutionTimeEnd
+      }
+      const scheduledEmailTask = await this.scheduledEmailMapper.getScheduledEmailTask(taskQuery)
       if (!scheduledEmailTask) {
         throw new Error('任务不存在')
       }
 
       if (!scheduledEmailTask.isActive) {
-        logger.warn(`任务 ${taskId} 未激活，跳过执行`)
+        logger.warn(`任务 ${scheduledEmailTask.id} 未激活，跳过执行`)
         return false
       }
 
       return await this.processTask(scheduledEmailTask)
     } catch (error) {
-      logger.error(`执行任务 ${taskId} 失败: ${error}`)
+      logger.error(`执行任务失败: ${JSON.stringify(query)}, ${error}`)
       return false
     }
   }
@@ -396,18 +397,17 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 更新重复任务的下次执行时间
-   * @param {number} taskId 任务ID
    * @returns {Promise<boolean>}
    */
-  async updateNextExecutionTime(taskId: number): Promise<boolean> {
+  async updateNextExecutionTime(query: ScheduledEmailDto.ScheduledEmailQueryOptions): Promise<boolean> {
     try {
-      const scheduledEmailDao = await this.scheduledEmailMapper.getScheduledEmailTask({ id: taskId })
+      const scheduledEmailDao = await this.scheduledEmailMapper.getScheduledEmailTask(query)
       if (!scheduledEmailDao) {
         throw new Error('任务不存在')
       }
 
       if (scheduledEmailDao.taskType !== 'recurring') {
-        logger.info(`任务 ${taskId} 不是重复任务，无需更新下次执行时间`)
+        logger.info(`任务 ${scheduledEmailDao.id} 不是重复任务，无需更新下次执行时间`)
         return true
       }
 
@@ -417,7 +417,7 @@ export class ScheduledEmailService extends BaseService {
       )
 
       if (!nextExecutionTime) {
-        logger.error(`任务 ${taskId} 无法计算下次执行时间`)
+        logger.error(`任务 ${scheduledEmailDao.id} 无法计算下次执行时间`)
         return false
       }
 
@@ -425,19 +425,19 @@ export class ScheduledEmailService extends BaseService {
 
       const success = await this.scheduledEmailMapper.updateScheduledEmailTask({
         ...scheduledEmailDao,
-        id: taskId,
+        id: scheduledEmailDao.id,
         nextExecutionTime,
         updatedTime: updateTime,
         updatedBy
       })
 
       if (success) {
-        logger.info(`任务 ${taskId} 下次执行时间已更新为: ${nextExecutionTime}`)
+        logger.info(`任务 ${scheduledEmailDao.id} 下次执行时间已更新为: ${nextExecutionTime}`)
       }
 
       return success
     } catch (error) {
-      logger.error(`更新任务 ${taskId} 下次执行时间失败: ${error}`)
+      logger.error(`更新任务下次执行时间失败: ${JSON.stringify(query)}, ${error}`)
       return false
     }
   }
@@ -560,15 +560,17 @@ export class ScheduledEmailService extends BaseService {
 
   /**
    * 获取任务执行日志
-   * @param {number} taskId 任务ID
-   * @param {number} limit 日志数量限制
    */
-  async getScheduledEmailLogList(taskId: number, limit: number = 20): Promise<ScheduledEmailDto.ExecutionLog[]> {
+  async getScheduledEmailLogList(
+    query: ScheduledEmailLogDto.LogListQuery
+  ): Promise<ScheduledEmailDto.ExecutionLog[]> {
     try {
-      const result = await this.scheduledEmailLogService.getExecutionLogList({
-        taskId,
-        limit
-      })
+      const normalizedQuery = {
+        limit: query.limit ?? 20,
+        offset: query.offset ?? 0,
+        ...query
+      }
+      const result = await this.scheduledEmailLogService.getExecutionLogList(normalizedQuery)
       return result.logs.map((log) => ({
         id: log.id,
         task_id: log.taskId,
@@ -598,7 +600,7 @@ export class ScheduledEmailService extends BaseService {
         created_timezone: log.createdTimezone
       }))
     } catch (error) {
-      logger.error(`获取任务执行日志失败: ${taskId}, ${error}`)
+      logger.error(`获取任务执行日志失败: ${JSON.stringify(query)}, ${error}`)
       throw error
     }
   }
@@ -609,115 +611,41 @@ export class ScheduledEmailService extends BaseService {
    * @returns {ScheduledEmailVo.ScheduledEmailResponse}
    */
   private convertDaoToVo(dao: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailVo.ScheduledEmailResponse {
-    const dtoPayload = this.convertDaoToDto(dao)
-    return {
-      id: dtoPayload.id,
-      taskName: dtoPayload.taskName,
-      taskType: dtoPayload.taskType,
-      scheduleTime: dtoPayload.scheduleTime || null,
-      recurringDays: dtoPayload.recurringDays || null,
-      recurringTime: dtoPayload.recurringTime || null,
-      isActive: dtoPayload.isActive,
-      nextExecutionTime: dtoPayload.nextExecutionTime || null,
-      emailConfig: {
-        to: Array.isArray(dtoPayload.emailConfig.to) ? dtoPayload.emailConfig.to.join(',') : dtoPayload.emailConfig.to,
-        subject: dtoPayload.emailConfig.subject,
-        additionalContent: dtoPayload.emailConfig.additionalContent
-      },
-      analyzeOptions: dtoPayload.analyzeOptions,
-      status: dtoPayload.status,
-      remark: dtoPayload.remark,
-      createdTime: dtoPayload.createdTime,
-      updatedTime: dtoPayload.updatedTime,
-      executedTime: dtoPayload.executedTime || null,
-      errorMessage: dtoPayload.errorMessage,
-      retryCount: dtoPayload.retryCount,
-      maxRetries: dtoPayload.maxRetries,
-      createdBy: dtoPayload.createdBy,
-      updatedBy: dtoPayload.updatedBy
-    }
-  }
-
-  private convertDaoToDto(dao: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailDto.ScheduledEmailOptions {
     return {
       id: dao.id,
       taskName: dao.taskName,
-      scheduleTime: dao.scheduleTime || null,
       taskType: dao.taskType,
+      scheduleTime: dao.scheduleTime || null,
       recurringDays: dao.recurringDays || null,
       recurringTime: dao.recurringTime || null,
       isActive: dao.isActive,
       nextExecutionTime: dao.nextExecutionTime || null,
       emailConfig: {
-        to: dao.emailConfig.to,
+        to: Array.isArray(dao.emailConfig.to) ? dao.emailConfig.to.join(',') : dao.emailConfig.to,
         subject: dao.emailConfig.subject,
-        additionalContent: dao.emailConfig.additionalContent || ''
+        additionalContent: dao.emailConfig.additionalContent
       },
       analyzeOptions: dao.analyzeOptions,
       status: dao.status,
       remark: dao.remark,
-      maxRetries: dao.maxRetries,
-      retryCount: dao.retryCount,
-      errorMessage: dao.errorMessage || null,
       createdTime: dao.createdTime,
       updatedTime: dao.updatedTime,
       executedTime: dao.executedTime || null,
+      errorMessage: dao.errorMessage,
+      retryCount: dao.retryCount,
+      maxRetries: dao.maxRetries,
       createdBy: dao.createdBy,
       updatedBy: dao.updatedBy
     }
   }
 
-  private convertDtoToDao(
-    dto:
-      | ScheduledEmailDto.ScheduledEmailOptions
-      | ScheduledEmailDto.CreateScheduledEmailOptions
-      | (ScheduledEmailDto.UpdateScheduledEmailOptions & { createdTime: string; createdBy: string })
-      | (ScheduledEmailDto.GetScheduledEmailOptions & { createdTime: string; createdBy: string })
-      | (ScheduledEmailDto.DeleteScheduledEmailOptions & { createdTime: string; createdBy: string })
-  ): ScheduledEmailDao.ScheduledEmailOptions {
-    return {
-      id: 'id' in dto ? dto.id : 0,
-      taskName: dto.taskName ?? '',
-      scheduleTime: dto.scheduleTime ?? null,
-      taskType: dto.taskType ?? 'scheduled',
-      recurringDays: dto.recurringDays ?? null,
-      recurringTime: dto.recurringTime ?? null,
-      isActive: 'isActive' in dto ? ((dto as ScheduledEmailDto.ScheduledEmailOptions).isActive ?? true) : true,
-      nextExecutionTime:
-        'nextExecutionTime' in dto
-          ? ((dto as ScheduledEmailDto.ScheduledEmailOptions).nextExecutionTime ?? null)
-          : null,
-      emailConfig: dto.emailConfig ?? {
-        to: '',
-        subject: '',
-        additionalContent: ''
-      },
-      analyzeOptions: dto.analyzeOptions ?? {
-        filename: '',
-        chartType: '',
-        analyzeName: '',
-        analyzeId: 0
-      },
-      status: 'status' in dto ? (dto as ScheduledEmailDto.ScheduledEmailOptions).status || 'pending' : 'pending',
-      remark: dto.remark,
-      createdTime: 'createdTime' in dto ? (dto as ScheduledEmailDto.ScheduledEmailOptions).createdTime : '',
-      updatedTime: 'updatedTime' in dto ? (dto as ScheduledEmailDto.ScheduledEmailOptions).updatedTime : '',
-      executedTime:
-        'executedTime' in dto ? ((dto as ScheduledEmailDto.ScheduledEmailOptions).executedTime ?? null) : null,
-      errorMessage:
-        'errorMessage' in dto ? ((dto as ScheduledEmailDto.ScheduledEmailOptions).errorMessage ?? null) : null,
-      retryCount: 'retryCount' in dto ? ((dto as ScheduledEmailDto.ScheduledEmailOptions).retryCount ?? 0) : 0,
-      maxRetries: 'maxRetries' in dto ? ((dto as ScheduledEmailDto.ScheduledEmailOptions).maxRetries ?? 3) : 3,
-      createdBy: 'createdBy' in dto ? (dto as ScheduledEmailDto.ScheduledEmailOptions).createdBy : '',
-      updatedBy: 'updatedBy' in dto ? (dto as ScheduledEmailDto.ScheduledEmailOptions).updatedBy : ''
-    }
-  }
+
 
   private buildBaseLogMetadata(
     emailConfig: ScheduledEmailDto.EmailConfig,
     analyzeOptions: ScheduledEmailDto.AnalyzeOptions,
     retryCount: number
-  ): Partial<ScheduledEmailLogDto.CreateLogRequest> {
+  ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
     const recipients = this.normalizeRecipients(emailConfig.to)
     const timezone = this.getCurrentTimezone()
     const attachments = analyzeOptions.filename ? [analyzeOptions.filename] : []
@@ -742,9 +670,9 @@ export class ScheduledEmailService extends BaseService {
   }
 
   private enrichLogMetadata(
-    baseMetadata: Partial<ScheduledEmailLogDto.CreateLogRequest>,
+    baseMetadata: Partial<ScheduledEmailLogDto.CreateLogOptions>,
     sendResult: SendEmailVo.SendEmailResponse
-  ): Partial<ScheduledEmailLogDto.CreateLogRequest> {
+  ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
     const attachments = sendResult.attachments
       ?.map((item) => item.filename)
       .filter((item): item is string => Boolean(item))
