@@ -5,7 +5,7 @@ import type { ResultSetHeader } from 'mysql2'
 /**
  * @desc 图表配置行数据映射，将数据库字段转换为图表配置实体
  */
-class ChartConfigMapping implements AnalyzeConfigDao.ChartConfig, IColumnTarget {
+class ChartConfigMapping implements AnalyzeConfigDao.ChartConfigOptions, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -96,23 +96,23 @@ export class ChartConfigMapper extends BaseMapper {
    * @returns 图表配置详情（若存在）
    */
   @Mapping(ChartConfigMapping)
-  public async getChartConfig<T extends AnalyzeConfigDao.ChartConfig = AnalyzeConfigDao.ChartConfig>(
-    chartConfigId: number
+  public async getChartConfig<T extends AnalyzeConfigDao.ChartConfigOptions = AnalyzeConfigDao.ChartConfigOptions>(
+    chartConfigOptions: AnalyzeConfigDao.GetChartConfigOptions
   ): Promise<T> {
     const sql = `select
           ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
             from ${CHART_CONFIG_TABLE_NAME}
           where id = ? and is_deleted = 0`
-    const result = await this.exe<Array<T>>(sql, [chartConfigId])
+    const result = await this.exe<Array<T>>(sql, [chartConfigOptions.id])
     return result?.[0]
   }
   /**
    * @desc 创建图表配置
-   * @param createChartConfigRequest 新建图表配置请求参数
+   * @param {AnalyzeConfigDao.CreateChartConfigOptions} createChartConfigOptions 新建图表配置请求参数
    * @returns 新建图表配置的主键 ID
    */
-  public async createChartConfig(createChartConfigRequest: AnalyzeConfigDto.CreateChartConfigRequest): Promise<number> {
-    const { keys, values } = convertToSqlProperties(createChartConfigRequest)
+  public async createChartConfig(createChartConfigOptions: AnalyzeConfigDao.CreateChartConfigOptions): Promise<number> {
+    const { keys, values } = convertToSqlProperties(createChartConfigOptions)
     // 只使用数据库表中存在的字段
     const validKeys = keys.filter((key) => CHART_CONFIG_BASE_FIELDS.includes(key))
     const validValues = validKeys.map((key) => values[keys.indexOf(key)])
@@ -127,7 +127,7 @@ export class ChartConfigMapper extends BaseMapper {
    * @returns 是否更新成功
    */
   public async updateChartConfig(
-    updateChartConfigRequest: AnalyzeConfigDto.UpdateChartConfigRequest
+    updateChartConfigRequest: AnalyzeConfigDao.UpdateChartConfigOptions
   ): Promise<boolean> {
     const { keys, values } = convertToSqlProperties(updateChartConfigRequest)
     const sql = `UPDATE ${CHART_CONFIG_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ? and is_deleted = 0`
@@ -136,17 +136,17 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 删除图表配置（逻辑删除）
-   * @param deleteChartConfigRequest 图表配置删除参数（包含 ID、操作者及时间）
-   * @returns 是否删除成功
+   * @param {AnalyzeConfigDao.DeleteChartConfigOption} deleteChartConfigOption
+   * @returns {Promise<boolean>} 是否删除成功
    */
   public async deleteChartConfig(
-    deleteChartConfigRequest: AnalyzeConfigDto.DeleteChartConfigRequest
+    deleteChartConfigOption: AnalyzeConfigDao.DeleteChartConfigOption
   ): Promise<boolean> {
     const sql = `update ${CHART_CONFIG_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [
-      deleteChartConfigRequest.updatedBy,
-      deleteChartConfigRequest.updateTime,
-      deleteChartConfigRequest.id
+      deleteChartConfigOption.updatedBy,
+      deleteChartConfigOption.updateTime,
+      deleteChartConfigOption.id
     ])
     return result.affectedRows > 0
   }

@@ -117,7 +117,6 @@ declare namespace ScheduledEmailDto {
     updatedBy: string
   }
 
-  interface CreateScheduledEmailOptions extends Omit<ScheduledEmailOptions, 'id'> {}
   /**
    * @desc 创建定时邮件任务请求
    */

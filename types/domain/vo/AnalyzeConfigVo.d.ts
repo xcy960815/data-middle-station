@@ -68,7 +68,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 图表配置
    */
-  type ChartConfigResponse = AnalyzeConfigDao.ChartConfig
+  type ChartConfigOptions = AnalyzeConfigDao.ChartConfigOptions
 
   /**
    * @desc 饼图配置

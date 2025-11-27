@@ -96,11 +96,11 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 新建分析配置
-   * @param createAnalyzeRequest 新建分析所需的字段（名称、描述、图表配置等）
-   * @returns 是否创建成功
+   * @param {AnalyzeDao.CreateAnalyzeOptions} createAnalyzeDao 新建分析所需的字段（名称、描述、图表配置等）
+   * @returns {Promise<boolean>} 是否创建成功
    */
-  public async createAnalyze(createAnalyzeRequest: AnalyzeDto.CreateAnalyzeRequest): Promise<boolean> {
-    const { keys, values } = convertToSqlProperties(createAnalyzeRequest)
+  public async createAnalyze(createAnalyzeDao: AnalyzeDao.CreateAnalyzeOptions): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(createAnalyzeDao)
     const sql = `INSERT INTO ${ANALYZE_TABLE_NAME} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`
     const result = await this.exe<ResultSetHeader>(sql, values)
     return result.affectedRows > 0
@@ -108,25 +108,48 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 更新分析配置（不包含访问统计相关字段）
-   * @param updateAnalyzeRequest 更新分析的请求参数
-   * @returns 是否更新成功
+   * @param {AnalyzeDao.UpdateAnalyzeOptions} updateAnalyzeDao 更新分析的请求参数
+   * @returns {Promise<boolean>} 是否更新成功
    */
-  public async updateAnalyze(updateAnalyzeRequest: AnalyzeDto.UpdateAnalyzeRequest): Promise<boolean> {
-    const { viewCount, createTime, createdBy, ...updatableFields } = updateAnalyzeRequest
+  public async updateAnalyze(updateAnalyzeOptions: AnalyzeDao.UpdateAnalyzeOptions): Promise<boolean> {
+    const { viewCount, ...updatableFields } = updateAnalyzeOptions
     const { keys: analyzeOptionKeys, values: analyzeOptionValues } = convertToSqlProperties(updatableFields)
     const analyzeOptionSetClause = analyzeOptionKeys.map((key) => `${key} = ?`).join(', ')
     const updateAnalyzeSql = `UPDATE ${ANALYZE_TABLE_NAME} SET ${analyzeOptionSetClause} WHERE id = ? and is_deleted = 0`
     const analyzeResult = await this.exe<ResultSetHeader>(updateAnalyzeSql, [
       ...analyzeOptionValues,
-      updateAnalyzeRequest.id
+      updateAnalyzeOptions.id
     ])
 
     return analyzeResult.affectedRows > 0
   }
 
   /**
+   * @desc 更新分析名称
+   * @param {AnalyzeDao.UpdateAnalyzeNameOptions} updateAnalyzeNameOptions 更新分析名称的请求参数
+   * @returns {Promise<boolean>} 是否更新成功
+   */
+  public async updateAnalyzeName(updateAnalyzeNameOptions: AnalyzeDao.UpdateAnalyzeNameOptions): Promise<boolean> {
+    const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET analyze_name = ? WHERE id = ? and is_deleted = 0`
+    const result = await this.exe<ResultSetHeader>(sql, [updateAnalyzeNameOptions.analyzeName, updateAnalyzeNameOptions.id])
+    return result.affectedRows > 0
+  }
+
+  /**
+   * @desc 更新分析描述
+   * @param {AnalyzeDao.UpdateAnalyzeDescOptions} updateAnalyzeDescOptions 更新分析描述的请求参数
+   * @returns {Promise<boolean>} 是否更新成功
+   */
+  public async updateAnalyzeDesc(updateAnalyzeDescOptions: AnalyzeDao.UpdateAnalyzeDescOptions): Promise<boolean> {
+    const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET analyze_desc = ? WHERE id = ? and is_deleted = 0`
+    const result = await this.exe<ResultSetHeader>(sql, [updateAnalyzeDescOptions.analyzeDesc, updateAnalyzeDescOptions.id])
+    return result.affectedRows > 0
+  }
+
+  /**
    * @desc 更新图表的访问次数（自增 1）
-   * @param analyzeId 图表主键 ID
+   * @param {number} analyzeId 图表主键 ID
+   * @returns {Promise<number>} 更新后的访问次数
    */
   public async updateViewCount(analyzeId: number): Promise<number> {
     const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET view_count = view_count + 1 WHERE id = ?`
@@ -135,15 +158,15 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 获取单个分析详情，同时自增访问次数
-   * @param analyzeParams 查询参数（至少包含分析 ID，可附带创建/更新人等过滤条件）
-   * @returns 匹配的分析配置（若存在）
+   * @param {AnalyzeDao.GetAnalyzeOption} analyzeDao 查询参数（至少包含分析 ID，可附带创建/更新人等过滤条件）
+   * @returns {Promise<T>} 匹配的分析配置（若存在）
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyze<T extends AnalyzeDao.AnalyzeOption>(analyzeParams: AnalyzeDto.GetAnalyzeRequest): Promise<T> {
-    const { id, updatedBy, updateTime, createdBy } = analyzeParams
+  public async getAnalyze<T extends AnalyzeDao.AnalyzeOption = AnalyzeDao.AnalyzeOption>(analyzeOptions: AnalyzeDao.GetAnalyzeOptions): Promise<T> {
+    const { id, analyzeName, analyzeDesc, updatedBy, updateTime, createdBy } = analyzeOptions
     await this.updateViewCount(id)
-    let whereClause = `where id = ? and is_deleted = 0`
-    const whereValues: Array<string | number> = [id]
+    let whereClause = `where id = ? and analyze_name = ? and analyze_desc = ? and is_deleted = 0`
+    const whereValues: Array<string | number | undefined> = [id, analyzeName, analyzeDesc]
 
     if (updatedBy) {
       whereClause += ` and updated_by = ?`
@@ -164,11 +187,11 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 删除图表（逻辑删除）
-   * @param deleteAnalyzeRequest 删除参数（包含 ID、操作者及时间）
+   * @param {AnalyzeDao.DeleteAnalyzeOptions} deleteAnalyzeDao 删除参数（包含 ID、操作者及时间）
    * @returns 是否删除成功
    */
-  public async deleteAnalyze(deleteAnalyzeRequest: AnalyzeDto.DeleteAnalyzeRequest): Promise<boolean> {
-    const { id, updatedBy, updateTime } = deleteAnalyzeRequest
+  public async deleteAnalyze(deleteAnalyzeDao: AnalyzeDao.DeleteAnalyzeOptions): Promise<boolean> {
+    const { id, updatedBy, updateTime } = deleteAnalyzeDao
     const sql = `update ${ANALYZE_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [updatedBy, updateTime, id])
     return result.affectedRows > 0
