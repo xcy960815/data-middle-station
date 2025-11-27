@@ -61,13 +61,14 @@ fi
 
 # Create a new builder instance if it doesn't exist
 BUILDER_NAME="mybuilder"
-if ! docker buildx inspect $BUILDER_NAME > /dev/null 2>&1; then
-    echo "Creating new builder instance: $BUILDER_NAME"
-    docker buildx create --name $BUILDER_NAME --use
-else
-    echo "Using existing builder instance: $BUILDER_NAME"
-    docker buildx use $BUILDER_NAME
+# Recreate builder instance to ensure correct network settings
+if docker buildx inspect $BUILDER_NAME > /dev/null 2>&1; then
+    echo "Removing existing builder instance: $BUILDER_NAME"
+    docker buildx rm $BUILDER_NAME
 fi
+
+echo "Creating new builder instance: $BUILDER_NAME"
+docker buildx create --name $BUILDER_NAME --use --driver-opt network=host
 
 # Bootstrap the builder
 docker buildx inspect --bootstrap

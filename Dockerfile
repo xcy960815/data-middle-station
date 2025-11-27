@@ -25,6 +25,9 @@ RUN npm install -g pnpm@10
 # 创建logs目录
 RUN mkdir -p /app/logs
 
+# 安装 curl 用于健康检查
+RUN apk add --no-cache curl
+
 
 
 
@@ -57,3 +60,5 @@ CMD ["sh", "-c", "ls -la /app/.output/server/ && pm2 start ecosystem.config.js -
 
 # 1. 构建镜像
 # docker build -t xcy960815/data-middle-station:1.0 .
+# 2. 构建多平台
+# docker buildx build --platform linux/amd64,linux/arm64 -t xcy960815/data-middle-station:1.1 --push .
