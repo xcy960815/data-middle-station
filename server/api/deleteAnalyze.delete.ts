@@ -8,7 +8,7 @@ const analyzeService = new AnalyzeService()
  */
 export default defineEventHandler<Promise<ApiResponseI<AnalyzeVo.DeleteAnalyzeResponse>>>(async (event) => {
   try {
-    const deleteAnalyzeRequest = await readBody<AnalyzeDto.DeleteAnalyzeOption>(event)
+    const deleteAnalyzeRequest = await readBody<AnalyzeDto.DeleteAnalyzeOptions>(event)
     const deleteAnalyzeResult = await analyzeService.deleteAnalyze(deleteAnalyzeRequest)
     return ApiResponse.success(deleteAnalyzeResult)
   } catch (error: any) {

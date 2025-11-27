@@ -11,7 +11,7 @@ const logger = new Logger({
 })
 
 // Joi 验证模式
-const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
+const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
     to: Joi.string().email().required(),
     subject: Joi.string().required(),
@@ -26,9 +26,9 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
 })
 
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
-  let sendChartEmailRequest: SendEmailDto.SendChartEmailRequest | null = null
+  let sendChartEmailRequest: SendEmailDto.SendChartEmailOptions | null = null
   try {
-    sendChartEmailRequest = await readBody<SendEmailDto.SendChartEmailRequest>(event)
+    sendChartEmailRequest = await readBody<SendEmailDto.SendChartEmailOptions>(event)
 
     // 使用 Joi 进行数据验证
     const { error } = sendEmailSchema.validate(sendChartEmailRequest, {

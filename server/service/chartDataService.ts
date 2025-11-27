@@ -18,13 +18,13 @@ export class ChartDataService {
 
   /**
    * @desc 将DAO对象转换为VO对象
-   * @param chartDataDaoList {AnalyzeDataDao.ChartData[]} 图表数据DAO列表
+   * @param chartDataRecords {AnalyzeDataDao.ChartData[]} 图表数据DAO列表
    * @returns {AnalyzeDataVo.ChartData[]} 图表数据VO列表
    */
-  private convertDaoToVo(chartDataDaoList: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.ChartData> {
-    return chartDataDaoList.map((chartDataDao) => ({
-      ...chartDataDao,
-      [String(chartDataDao.columnName)]: chartDataDao.columnValue
+  private convertDaoToVo(chartDataRecords: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.ChartData> {
+    return chartDataRecords.map((chartDataRecord) => ({
+      ...chartDataRecord,
+      [String(chartDataRecord.columnName)]: chartDataRecord.columnValue
     }))
   }
 
@@ -113,50 +113,48 @@ export class ChartDataService {
 
   /**
    * @desc 获取图表数据
-   * @param chartDataRequest {AnalyzeDataDto.ChartDataOptions} 请求参数
+   * @param queryOptions {AnalyzeDataDto.ChartDataOptions} 请求参数
    * @returns {Promise<AnalyzeDataVo.ChartData[]>} 图表数据VO列表
    */
-  public async getAnalyzeData(
-    chartDataRequest: AnalyzeDataDto.ChartDataOptions
-  ): Promise<Array<AnalyzeDataVo.ChartData>> {
+  public async getAnalyzeData(queryOptions: AnalyzeDataDto.ChartDataOptions): Promise<Array<AnalyzeDataVo.ChartData>> {
     // 归一化请求参数，确保数组字段不为空
-    const normalizedRequest: AnalyzeDataDto.ChartDataOptions = {
-      ...chartDataRequest,
-      filters: chartDataRequest.filters || [],
-      orders: chartDataRequest.orders || [],
-      groups: chartDataRequest.groups || [],
-      dimensions: chartDataRequest.dimensions || []
+    const normalizedOptions: AnalyzeDataDto.ChartDataOptions = {
+      ...queryOptions,
+      filters: queryOptions.filters || [],
+      orders: queryOptions.orders || [],
+      groups: queryOptions.groups || [],
+      dimensions: queryOptions.dimensions || []
     }
 
     /**
      * @desc 构建select语句
      */
-    const selectClause = this.buildSelectClause(normalizedRequest.dimensions, normalizedRequest.groups)
+    const selectClause = this.buildSelectClause(normalizedOptions.dimensions, normalizedOptions.groups)
     /**
      * @desc 构建where语句
      */
-    const whereClause = this.buildWhereClause(normalizedRequest.filters)
+    const whereClause = this.buildWhereClause(normalizedOptions.filters)
     /**
      * @desc 构建orderBy语句
      */
-    const orderByClause = this.buildOrderByClause(normalizedRequest.orders)
+    const orderByClause = this.buildOrderByClause(normalizedOptions.orders)
     /**
      * @desc 构建groupBy语句
      */
-    const groupByClause = this.buildGroupByClause(normalizedRequest.groups, normalizedRequest.dimensions)
+    const groupByClause = this.buildGroupByClause(normalizedOptions.groups, normalizedOptions.dimensions)
 
     /**
      * @desc 构建sql语句
      */
     const sql = `${selectClause} from ${toLine(
-      normalizedRequest.dataSource
-    )}${whereClause}${groupByClause}${orderByClause} limit ${normalizedRequest.commonChartConfig?.limit || 1000}`
+      normalizedOptions.dataSource
+    )}${whereClause}${groupByClause}${orderByClause} limit ${normalizedOptions.commonChartConfig?.limit || 1000}`
 
     /**
      * @desc 获取图表数据
      */
-    const chartDataDaoList = await this.chartDataMapper.getAnalyzeData(sql)
+    const chartDataRecords = await this.chartDataMapper.getAnalyzeData(sql)
 
-    return this.convertDaoToVo(chartDataDaoList)
+    return this.convertDaoToVo(chartDataRecords)
   }
 }

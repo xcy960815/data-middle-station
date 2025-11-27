@@ -464,7 +464,6 @@ declare namespace AnalyzeConfigDao {
     isDeleted?: number
   }
 
-
   /**
    * 获取图表配置请求参数
    */
@@ -485,5 +484,5 @@ declare namespace AnalyzeConfigDao {
   /**
    * 删除图表配置请求参数
    */
-  type DeleteChartConfigOption = Pick<ChartConfigOptions, 'id' | 'updatedBy' | 'updateTime'>
+  type DeleteChartConfigOptions = Pick<ChartConfigOptions, 'id' | 'updatedBy' | 'updateTime'>
 }

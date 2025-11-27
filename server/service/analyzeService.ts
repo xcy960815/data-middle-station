@@ -24,87 +24,85 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc DAO 转 VO
-   * @param analyzeDao {AnalyzeDao.AnalyzeOption} 分析记录
+   * @param analyzeRecord {AnalyzeDao.AnalyzeOptions} 分析记录
    * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigResponse | null} 关联图表配置
    * @returns {AnalyzeVo.GetAnalyzeResponse}
    */
   private convertDaoToVo(
-    analyzeDao: AnalyzeDao.AnalyzeOption,
-    resolvedChartConfig: AnalyzeConfigVo.ChartConfigOptions | null
-  ): AnalyzeVo.GetAnalyzeOptions {
+    analyzeRecord: AnalyzeDao.AnalyzeOptions,
+    resolvedChartConfig: AnalyzeConfigVo.ChartConfigResponse | null
+  ): AnalyzeVo.GetAnalyzeResponse {
     return {
-      ...analyzeDao,
+      ...analyzeRecord,
       chartConfig: resolvedChartConfig
     }
   }
   /**
    * @desc 删除分析
-   * @param {AnalyzeDto.DeleteAnalyzeOption} deleteAnalyzeOptions
+   * @param {AnalyzeDto.DeleteAnalyzeOptions} deleteOptions
    * @returns {Promise<AnalyzeVo.DeleteAnalyzeResponse>}
    */
-  public async deleteAnalyze(
-    deleteAnalyzeOptions: AnalyzeDto.DeleteAnalyzeOption
-  ): Promise<AnalyzeVo.DeleteAnalyzeResponse> {
-    const getAnalyzeDao: AnalyzeDao.GetAnalyzeOptions = {
-      id: deleteAnalyzeOptions.id
+  public async deleteAnalyze(deleteOptions: AnalyzeDto.DeleteAnalyzeOptions): Promise<AnalyzeVo.DeleteAnalyzeResponse> {
+    const queryOptions: AnalyzeDao.GetAnalyzeOptions = {
+      id: deleteOptions.id
     }
-    const analyzeDao = await this.analyzeMapper.getAnalyze(getAnalyzeDao)
-    if (!analyzeDao) {
+    const analyzeRecord = await this.analyzeMapper.getAnalyze(queryOptions)
+    if (!analyzeRecord) {
       throw new Error('分析不存在')
     }
-    if (analyzeDao.chartConfigId) {
-      const deleteChartConfigDao: AnalyzeConfigDao.DeleteChartConfigOption = {
-        id: analyzeDao.chartConfigId,
-        updatedBy: analyzeDao.updatedBy,
-        updateTime: analyzeDao.updateTime
+    if (analyzeRecord.chartConfigId) {
+      const deleteChartConfigOptions: AnalyzeConfigDao.DeleteChartConfigOptions = {
+        id: analyzeRecord.chartConfigId,
+        updatedBy: analyzeRecord.updatedBy,
+        updateTime: analyzeRecord.updateTime
       }
       // 删除图表配置
-      await this.chartConfigService.deleteChartConfig(deleteChartConfigDao)
+      await this.chartConfigService.deleteChartConfig(deleteChartConfigOptions)
     }
     const { updatedBy, updateTime } = await super.getDefaultInfo()
-    const deleteAnalyzeDao: AnalyzeDao.DeleteAnalyzeOptions = {
-      id: analyzeDao.id,
+    const deleteAnalyzeOptions: AnalyzeDao.DeleteAnalyzeOptions = {
+      id: analyzeRecord.id,
       updatedBy,
       updateTime
     }
-    const deleteAnalyzeResult = await this.analyzeMapper.deleteAnalyze(deleteAnalyzeDao)
+    const deleteAnalyzeResult = await this.analyzeMapper.deleteAnalyze(deleteAnalyzeOptions)
     return deleteAnalyzeResult
   }
   /**
    * @desc 获取分析
-   * @param {AnalyzeDto.GetAnalyzeOptions} analyzeOptions
-   * @returns {Promise<AnalyzeVo.GetAnalyzeOptions>}
+   * @param {AnalyzeDto.GetAnalyzeOptions} queryOptions
+   * @returns {Promise<AnalyzeVo.GetAnalyzeResponse>}
    */
-  public async getAnalyze(analyzeOptions: AnalyzeDto.GetAnalyzeOptions): Promise<AnalyzeVo.GetAnalyzeOptions> {
-    const analyzeDao = await this.analyzeMapper.getAnalyze(analyzeOptions)
-    if (!analyzeDao) {
+  public async getAnalyze(queryOptions: AnalyzeDto.GetAnalyzeOptions): Promise<AnalyzeVo.GetAnalyzeResponse> {
+    const analyzeRecord = await this.analyzeMapper.getAnalyze(queryOptions)
+    if (!analyzeRecord) {
       throw new Error('分析不存在')
-    } else if (analyzeDao.chartConfigId) {
+    } else if (analyzeRecord.chartConfigId) {
       const getChartConfigOptions: AnalyzeConfigDao.GetChartConfigOptions = {
-        id: analyzeDao.chartConfigId
+        id: analyzeRecord.chartConfigId
       }
       const chartConfigVo = await this.chartConfigService.getChartConfig(getChartConfigOptions)
-      return this.convertDaoToVo(analyzeDao, chartConfigVo)
+      return this.convertDaoToVo(analyzeRecord, chartConfigVo)
     } else {
-      return this.convertDaoToVo(analyzeDao, null)
+      return this.convertDaoToVo(analyzeRecord, null)
     }
   }
 
   /**
    * @desc 获取所有图表
-   * @returns {Promise<Array<AnalyzeVo.GetAnalyzeOptions>>}
+   * @returns {Promise<Array<AnalyzeVo.GetAnalyzeResponse>>}
    */
-  public async getAnalyzes(): Promise<Array<AnalyzeVo.GetAnalyzeOptions>> {
-    const analyzeDaoList = await this.analyzeMapper.getAnalyzes()
-    const promises = analyzeDaoList.map(async (analyzeDao) => {
-      if (analyzeDao.chartConfigId) {
+  public async getAnalyzes(): Promise<Array<AnalyzeVo.GetAnalyzeResponse>> {
+    const analyzeRecordList = await this.analyzeMapper.getAnalyzes()
+    const promises = analyzeRecordList.map(async (analyzeRecord) => {
+      if (analyzeRecord.chartConfigId) {
         const getChartConfigOptions: AnalyzeConfigDao.GetChartConfigOptions = {
-          id: analyzeDao.chartConfigId
+          id: analyzeRecord.chartConfigId
         }
         const chartConfigVo = await this.chartConfigService.getChartConfig(getChartConfigOptions)
-        return this.convertDaoToVo(analyzeDao, chartConfigVo)
+        return this.convertDaoToVo(analyzeRecord, chartConfigVo)
       } else {
-        return this.convertDaoToVo(analyzeDao, null)
+        return this.convertDaoToVo(analyzeRecord, null)
       }
     })
     const getAnalyzesResult = await Promise.all(promises)
@@ -113,15 +111,13 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 更新分析
-   * @param {AnalyzeDto.UpdateAnalyzeOptions} updateAnalyzeOptions
+   * @param {AnalyzeDto.UpdateAnalyzeOptions} updateOptions
    * @returns {Promise<AnalyzeVo.UpdateAnalyzeResponse>}
    */
-  public async updateAnalyze(
-    updateAnalyzeOptions: AnalyzeDto.UpdateAnalyzeOptions
-  ): Promise<AnalyzeVo.UpdateAnalyzeResponse> {
+  public async updateAnalyze(updateOptions: AnalyzeDto.UpdateAnalyzeOptions): Promise<AnalyzeVo.UpdateAnalyzeResponse> {
     // 解构分析配置，剩余的为分析配置
-    const { chartConfig, ...restOption } = updateAnalyzeOptions
-    let chartConfigId = updateAnalyzeOptions.chartConfigId
+    const { chartConfig, ...restOption } = updateOptions
+    let chartConfigId = updateOptions.chartConfigId
     if (chartConfig) {
       if (!chartConfigId) {
         // 如果图表配置不存在，则创建默认图表配置
@@ -150,20 +146,18 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 创建图表
-   * @param createAnalyzeRequest {AnalyzeDto.CreateAnalyzeRequest} 图表
+   * @param createOptions {AnalyzeDto.CreateAnalyzeRequest} 图表
    * @returns {Promise<AnalyzeVo.CreateAnalyzeResponse>}
    */
-  public async createAnalyze(
-    createAnalyzeRequest: AnalyzeDto.CreateAnalyzeOptions
-  ): Promise<AnalyzeVo.CreateAnalyzeResponse> {
-    const { chartConfig, ...restAnalyzeOption } = createAnalyzeRequest
+  public async createAnalyze(createOptions: AnalyzeDto.CreateAnalyzeOptions): Promise<AnalyzeVo.CreateAnalyzeResponse> {
+    const { chartConfig, ...restAnalyzeOption } = createOptions
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
-    let chartConfigId = createAnalyzeRequest.chartConfigId || null
+    let chartConfigId = createOptions.chartConfigId || null
     if (chartConfig) {
       // 如果图表配置不存在，则创建默认图表配置
       chartConfigId = await this.chartConfigService.createChartConfig(chartConfig)
     }
-    const enrichedAnalyzeOption = {
+    const enrichedOptions = {
       ...restAnalyzeOption,
       createdBy,
       updatedBy,
@@ -171,43 +165,43 @@ export class AnalyzeService extends BaseService {
       updateTime,
       chartConfigId
     }
-    const createAnalyzeResponse = await this.analyzeMapper.createAnalyze(enrichedAnalyzeOption)
+    const createAnalyzeResponse = await this.analyzeMapper.createAnalyze(enrichedOptions)
     return createAnalyzeResponse
   }
 
   /**
    * @desc 更新图表名称
-   * @param analyzeOption {AnalyzeDto.AnalyzeOption} 图表
+   * @param updateOptions {AnalyzeDto.AnalyzeOption} 图表
    * @returns {Promise<boolean>}
    */
   public async updateAnalyzeName(
-    updateAnalyzeNameRequest: AnalyzeDto.UpdateAnalyzeNameOptions
+    updateOptions: AnalyzeDto.UpdateAnalyzeNameOptions
   ): Promise<AnalyzeVo.UpdateAnalyzeNameResponse> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    const enrichedAnalyzeNameOptions: AnalyzeDao.UpdateAnalyzeNameOptions = {
-      ...updateAnalyzeNameRequest,
+    const enrichedOptions: AnalyzeDao.UpdateAnalyzeNameOptions = {
+      ...updateOptions,
       updatedBy,
       updateTime
     }
-    const updateAnalyzeNameResponse = await this.analyzeMapper.updateAnalyzeName(enrichedAnalyzeNameOptions)
+    const updateAnalyzeNameResponse = await this.analyzeMapper.updateAnalyzeName(enrichedOptions)
     return updateAnalyzeNameResponse
   }
 
   /**
    * @desc 更新图表描述
-   * @param updateAnalyzeDescRequest {AnalyzeDto.UpdateAnalyzeDescRequest} 图表
+   * @param updateOptions {AnalyzeDto.UpdateAnalyzeDescRequest} 图表
    * @returns {Promise<AnalyzeVo.UpdateAnalyzeDescResponse>}
    */
   public async updateAnalyzeDesc(
-    updateAnalyzeDescRequest: AnalyzeDto.UpdateAnalyzeDescOptions
+    updateOptions: AnalyzeDto.UpdateAnalyzeDescOptions
   ): Promise<AnalyzeVo.UpdateAnalyzeDescResponse> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    const enrichedAnalyzeDescOptions: AnalyzeDao.UpdateAnalyzeDescOptions = {
-      ...updateAnalyzeDescRequest,
+    const enrichedOptions: AnalyzeDao.UpdateAnalyzeDescOptions = {
+      ...updateOptions,
       updatedBy,
       updateTime
     }
-    const updateAnalyzeDescResponse = await this.analyzeMapper.updateAnalyzeDesc(enrichedAnalyzeDescOptions)
+    const updateAnalyzeDescResponse = await this.analyzeMapper.updateAnalyzeDesc(enrichedOptions)
     return updateAnalyzeDescResponse
   }
 }

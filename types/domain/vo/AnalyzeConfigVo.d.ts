@@ -3,14 +3,14 @@
  */
 declare namespace AnalyzeConfigVo {
   /**
-   * 列配置
+   * 列配置响应
    */
-  type ColumnOption = DatabaseVo.GetTableColumnsResponse
+  type ColumnResponse = DatabaseVo.GetTableColumnsResponse
 
   /**
-   * 维度配置
+   * 维度配置响应
    */
-  type DimensionOption = DatabaseVo.GetTableColumnsResponse & {
+  type DimensionResponse = DatabaseVo.GetTableColumnsResponse & {
     __invalid?: boolean
   }
 
@@ -66,9 +66,9 @@ declare namespace AnalyzeConfigVo {
   type PrivateChartConfigResponse = AnalyzeConfigDao.PrivateChartConfig
 
   /**
-   * 图表配置
+   * 图表配置响应
    */
-  type ChartConfigOptions = AnalyzeConfigDao.ChartConfigOptions
+  type ChartConfigResponse = AnalyzeConfigDao.ChartConfigOptions
 
   /**
    * @desc 饼图配置

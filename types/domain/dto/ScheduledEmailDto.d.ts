@@ -164,7 +164,7 @@ declare namespace ScheduledEmailDto {
   }
 
   /**
-   * 任务执行日志
+   * 任务执行日志（API 响应格式，使用 snake_case）
    */
   interface ExecutionLog {
     id: number
@@ -315,5 +315,5 @@ declare namespace ScheduledEmailDto {
   /**
    * 定时邮件列表查询参数
    */
-  type ScheduledEmailListRequest = ScheduledEmailDao.ScheduledEmailListOptions
+  type ScheduledEmailListQuery = ScheduledEmailDao.ScheduledEmailListOptions
 }

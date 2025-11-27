@@ -18,7 +18,7 @@ declare namespace DataBaseDto {
   /**
    * @desc 数据表 DTO
    */
-  type TableOptionDto = DataBaseDao.TableOptions
+  type TableDto = DataBaseDao.TableOptions
 
   /**
    * @desc 数据列 DTO

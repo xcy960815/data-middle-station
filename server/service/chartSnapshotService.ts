@@ -45,13 +45,13 @@ export class ChartSnapshotService {
 
   /**
    * 初始化服务，可自定义画布尺寸
-   * @param options 可选的画布宽高配置
+   * @param canvasOptions 可选的画布宽高配置
    */
-  constructor(options?: { width?: number; height?: number }) {
+  constructor(canvasOptions?: { width?: number; height?: number }) {
     this.analyzeService = new AnalyzeService()
     this.chartDataService = new ChartDataService()
-    this.width = options?.width ?? 1200
-    this.height = options?.height ?? 720
+    this.width = canvasOptions?.width ?? 1200
+    this.height = canvasOptions?.height ?? 720
   }
 
   /**
@@ -94,16 +94,16 @@ export class ChartSnapshotService {
       yAxisFields: chartConfigVo.dimensions
     }
 
-    const option = this.buildChartOption(chartConfigVo.chartType, renderConfig, chartConfigVo.privateChartConfig)
-    if (!option) {
+    const chartOption = this.buildChartOption(chartConfigVo.chartType, renderConfig, chartConfigVo.privateChartConfig)
+    if (!chartOption) {
       throw new Error(`分析 ${analyzeId} 生成图表配置失败`)
     }
 
-    if (!option.backgroundColor) {
-      option.backgroundColor = '#ffffff'
+    if (!chartOption.backgroundColor) {
+      chartOption.backgroundColor = '#ffffff'
     }
 
-    const snapshotBuffer = this.renderOption(option)
+    const snapshotBuffer = this.renderOption(chartOption)
     const snapshotVo: ChartSnapshotVo = {
       buffer: snapshotBuffer,
       chartType: chartConfigVo.chartType,
@@ -116,23 +116,23 @@ export class ChartSnapshotService {
   /**
    * 根据图表类型构建对应的 ECharts 配置
    * @param {string} chartType 图表类型标识
-   * @param {ChartRenderConfig} config 通用渲染配置
+   * @param {ChartRenderConfig} renderConfig 通用渲染配置
    * @param {AnalyzeConfigVo.PrivateChartConfigResponse | null} privateChartConfig 私有定制配置
    * @returns {EChartsCoreOption | null} 构建的 ECharts 配置
    */
   private buildChartOption(
     chartType: string,
-    config: ChartRenderConfig,
+    renderConfig: ChartRenderConfig,
     privateChartConfig?: AnalyzeConfigVo.PrivateChartConfigResponse | null
   ): EChartsCoreOption | null {
     switch (chartType) {
       case 'line':
-        return renderLineChart(config, privateChartConfig?.line || defaultLineChartConfig)
+        return renderLineChart(renderConfig, privateChartConfig?.line || defaultLineChartConfig)
       case 'interval':
       case 'bar':
-        return renderIntervalChart(config, privateChartConfig?.interval || defaultIntervalChartConfig)
+        return renderIntervalChart(renderConfig, privateChartConfig?.interval || defaultIntervalChartConfig)
       case 'pie':
-        return renderPieChart(config, privateChartConfig?.pie || defaultPieChartConfig)
+        return renderPieChart(renderConfig, privateChartConfig?.pie || defaultPieChartConfig)
       default:
         throw new Error(`暂不支持 ${chartType} 类型的服务端渲染`)
     }
@@ -140,10 +140,10 @@ export class ChartSnapshotService {
 
   /**
    * 使用 SVG 渲染器渲染 option 并输出 SVG Buffer
-   * @param {EChartsCoreOption} option 已生成的 ECharts 配置
+   * @param {EChartsCoreOption} chartOption 已生成的 ECharts 配置
    * @returns {Buffer} 渲染后的 SVG Buffer
    */
-  private renderOption(option: EChartsCoreOption): Buffer {
+  private renderOption(chartOption: EChartsCoreOption): Buffer {
     const chart = echarts.init(null, null, {
       renderer: 'svg',
       ssr: true,
@@ -151,7 +151,7 @@ export class ChartSnapshotService {
       height: this.height
     })
 
-    chart.setOption(option, true)
+    chart.setOption(chartOption, true)
     const svgStr = chart.renderToSVGString()
     chart.dispose()
 

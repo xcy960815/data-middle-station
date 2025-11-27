@@ -10,7 +10,7 @@ const logger = new Logger({
 })
 
 // Joi 验证模式
-const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
+const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
     to: Joi.string().email().required().messages({
       'string.email': '收件人邮箱格式不正确',
@@ -49,7 +49,7 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
 
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
   try {
-    const requestBody = await readBody<SendEmailDto.SendChartEmailRequest>(event)
+    const requestBody = await readBody<SendEmailDto.SendChartEmailOptions>(event)
 
     // 使用 Joi 进行数据验证
     const { error } = sendChartEmailSchema.validate(requestBody, {

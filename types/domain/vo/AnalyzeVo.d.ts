@@ -5,13 +5,13 @@ declare namespace AnalyzeVo {
   /**
    * 图表数据
    */
-  type AnalyzeDataVo = Array<{
+  type AnalyzeData = Array<{
     [key: string]: string | number
   }>
   /**
    * 获取分析响应
    */
-  type GetAnalyzeOptions = {
+  type GetAnalyzeResponse = {
     /**
      * 分析id
      */

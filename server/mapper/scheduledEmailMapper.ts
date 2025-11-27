@@ -242,9 +242,7 @@ export class ScheduledEmailMapper extends BaseMapper {
    * @param deleteParams 删除参数，只需包含任务 ID
    * @returns 是否删除成功
    */
-  public async deleteScheduledEmailTask(
-    query: ScheduledEmailDao.DeleteScheduledEmailOptions
-  ): Promise<number> {
+  public async deleteScheduledEmailTask(query: ScheduledEmailDao.DeleteScheduledEmailOptions): Promise<number> {
     const { whereConditions, whereValues } = this.buildTaskQueryConditions(query)
 
     if (whereConditions.length === 0) {
@@ -267,7 +265,7 @@ export class ScheduledEmailMapper extends BaseMapper {
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getScheduledEmailList(
-    params: ScheduledEmailDto.ScheduledEmailListRequest
+    params: ScheduledEmailDao.ScheduledEmailListOptions
   ): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
     const { whereConditions, whereValues } = this.buildTaskQueryConditions(params, { allowEmpty: true })
 
