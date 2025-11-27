@@ -19,7 +19,7 @@ export const ANALYZE_BASE_FIELDS = [
 /**
  * @desc 分析页面的行数据映射，将数据库字段转换为领域对象属性
  */
-export class AnalyzeMapping implements AnalyzeDao.AnalyzeOption, IColumnTarget {
+export class AnalyzeMapping implements AnalyzeDao.AnalyzeOptions, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -131,7 +131,10 @@ export class AnalyzeMapper extends BaseMapper {
    */
   public async updateAnalyzeName(updateAnalyzeNameOptions: AnalyzeDao.UpdateAnalyzeNameOptions): Promise<boolean> {
     const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET analyze_name = ? WHERE id = ? and is_deleted = 0`
-    const result = await this.exe<ResultSetHeader>(sql, [updateAnalyzeNameOptions.analyzeName, updateAnalyzeNameOptions.id])
+    const result = await this.exe<ResultSetHeader>(sql, [
+      updateAnalyzeNameOptions.analyzeName,
+      updateAnalyzeNameOptions.id
+    ])
     return result.affectedRows > 0
   }
 
@@ -142,7 +145,10 @@ export class AnalyzeMapper extends BaseMapper {
    */
   public async updateAnalyzeDesc(updateAnalyzeDescOptions: AnalyzeDao.UpdateAnalyzeDescOptions): Promise<boolean> {
     const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET analyze_desc = ? WHERE id = ? and is_deleted = 0`
-    const result = await this.exe<ResultSetHeader>(sql, [updateAnalyzeDescOptions.analyzeDesc, updateAnalyzeDescOptions.id])
+    const result = await this.exe<ResultSetHeader>(sql, [
+      updateAnalyzeDescOptions.analyzeDesc,
+      updateAnalyzeDescOptions.id
+    ])
     return result.affectedRows > 0
   }
 
@@ -158,11 +164,13 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 获取单个分析详情，同时自增访问次数
-   * @param {AnalyzeDao.GetAnalyzeOption} analyzeDao 查询参数（至少包含分析 ID，可附带创建/更新人等过滤条件）
+   * @param {AnalyzeDao.GetAnalyzeOptions} analyzeDao 查询参数（至少包含分析 ID，可附带创建/更新人等过滤条件）
    * @returns {Promise<T>} 匹配的分析配置（若存在）
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyze<T extends AnalyzeDao.AnalyzeOption = AnalyzeDao.AnalyzeOption>(analyzeOptions: AnalyzeDao.GetAnalyzeOptions): Promise<T> {
+  public async getAnalyze<T extends AnalyzeDao.AnalyzeOptions = AnalyzeDao.AnalyzeOptions>(
+    analyzeOptions: AnalyzeDao.GetAnalyzeOptions
+  ): Promise<T> {
     const { id, analyzeName, analyzeDesc, updatedBy, updateTime, createdBy } = analyzeOptions
     await this.updateViewCount(id)
 
@@ -208,10 +216,10 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 获取所有的图表
-   * @returns {Promise<Array<AnalyzeDao.AnalyzeOption>>}
+   * @returns {Promise<Array<AnalyzeDao.AnalyzeOptions>>}
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyzes<T extends AnalyzeDao.AnalyzeOption = AnalyzeDao.AnalyzeOption>(): Promise<Array<T>> {
+  public async getAnalyzes<T extends AnalyzeDao.AnalyzeOptions = AnalyzeDao.AnalyzeOptions>(): Promise<Array<T>> {
     const sql = `
     select
       ${ANALYZE_BASE_FIELDS.join(',\n    ')}
