@@ -136,17 +136,17 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 删除图表配置（逻辑删除）
-   * @param {AnalyzeConfigDao.DeleteChartConfigOption} deleteChartConfigOption
+   * @param {AnalyzeConfigDao.DeleteChartConfigOptions} deleteChartConfigOptions
    * @returns {Promise<boolean>} 是否删除成功
    */
   public async deleteChartConfig(
-    deleteChartConfigOption: AnalyzeConfigDao.DeleteChartConfigOption
+    deleteChartConfigOptions: AnalyzeConfigDao.DeleteChartConfigOptions
   ): Promise<boolean> {
     const sql = `update ${CHART_CONFIG_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [
-      deleteChartConfigOption.updatedBy,
-      deleteChartConfigOption.updateTime,
-      deleteChartConfigOption.id
+      deleteChartConfigOptions.updatedBy,
+      deleteChartConfigOptions.updateTime,
+      deleteChartConfigOptions.id
     ])
     return result.affectedRows > 0
   }

@@ -12,7 +12,7 @@ const logger = new Logger({
  */
 export default defineEventHandler<Promise<ApiResponseI<ScheduledEmailVo.ScheduledEmailResponse[]>>>(async (event) => {
   try {
-    const scheduledEmailListQuery = getQuery<ScheduledEmailDto.ScheduledEmailListRequest>(event)
+    const scheduledEmailListQuery = getQuery<ScheduledEmailDto.ScheduledEmailListQuery>(event)
     const scheduledEmailList = await scheduledEmailService.getScheduledEmailList(scheduledEmailListQuery)
     return ApiResponse.success(scheduledEmailList)
   } catch (error: any) {

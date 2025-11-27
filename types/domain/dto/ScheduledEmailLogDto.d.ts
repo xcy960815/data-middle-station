@@ -3,7 +3,7 @@
  */
 declare namespace ScheduledEmailLogDto {
   /**
-   * @desc 执行日志
+   * @desc 执行日志（内部使用格式，使用 camelCase）
    */
   interface ExecutionLog {
     /**
@@ -247,7 +247,7 @@ declare namespace ScheduledEmailLogDto {
   }
 
   /**
-   * @desc 日志查询请求
+   * @desc 日志列表查询参数
    */
   interface LogListQuery {
     /**

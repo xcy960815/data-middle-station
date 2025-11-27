@@ -20,9 +20,9 @@ declare namespace ScheduleTaskDto {
   }
 
   /**
-   * 创建定时任务请求
+   * 创建定时任务请求参数
    */
-  interface ScheduleTaskOptions {
+  interface CreateScheduleTaskOptions {
     /**
      * 任务名称
      */
@@ -78,9 +78,9 @@ declare namespace ScheduleTaskDto {
   }
 
   /**
-   * 更新定时任务请求
+   * 更新定时任务请求参数
    */
-  interface UpdateScheduleTaskRequest {
+  interface UpdateScheduleTaskOptions {
     taskName?: string // 任务名称
     scheduleTime?: string // 计划执行时间
     emailConfig?: Partial<EmailConfig> // 邮件配置
