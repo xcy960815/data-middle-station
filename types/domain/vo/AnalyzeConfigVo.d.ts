@@ -3,14 +3,14 @@
  */
 declare namespace AnalyzeConfigVo {
   /**
-   * 列配置响应
+   * 列配置选项
    */
-  type ColumnResponse = DatabaseVo.GetTableColumnsResponse
+  type ColumnOptions = DatabaseVo.GetTableColumnsOptions
 
   /**
-   * 维度配置响应
+   * 维度配置选项
    */
-  type DimensionResponse = DatabaseVo.GetTableColumnsResponse & {
+  type DimensionOptions = DatabaseVo.GetTableColumnsOptions & {
     __invalid?: boolean
   }
 
@@ -27,14 +27,14 @@ declare namespace AnalyzeConfigVo {
   /**
    * 过滤配置
    */
-  type FilterOption = AnalyzeConfigDao.FilterOption & {
+  type FilterOptions = AnalyzeConfigDao.FilterOption & {
     displayName: string
   }
 
   /**
-   * 分组配置
+   * 分组配置选项
    */
-  type GroupOption = DatabaseVo.GetTableColumnsResponse & {
+  type GroupOptions = DatabaseVo.GetTableColumnsOptions & {
     __invalid?: boolean
   }
 
@@ -51,42 +51,42 @@ declare namespace AnalyzeConfigVo {
   /**
    * 排序配置
    */
-  type OrderOption = AnalyzeConfigDao.OrderOption & {
+  type OrderOptions = AnalyzeConfigDao.OrderOption & {
     displayName: string
   }
 
   /**
    * @desc 公共图表配置
    */
-  type CommonChartConfigResponse = AnalyzeConfigDao.CommonChartConfig
+  type CommonChartConfigOptions = AnalyzeConfigDao.CommonChartConfig
 
   /**
    * @desc 私有图表配置
    */
-  type PrivateChartConfigResponse = AnalyzeConfigDao.PrivateChartConfig
+  type PrivateChartConfigOptions = AnalyzeConfigDao.PrivateChartConfig
 
   /**
    * 图表配置响应
    */
-  type ChartConfigResponse = AnalyzeConfigDao.ChartConfigOptions
+  type ChartConfigOptions = AnalyzeConfigDao.ChartConfigOptions
 
   /**
    * @desc 饼图配置
    */
-  type PieChartConfigResponse = AnalyzeConfigDao.PieChartConfig
+  type PieChartConfigOptions = AnalyzeConfigDao.PieChartConfig
 
   /**
    * @desc 柱状图配置
    */
-  type IntervalChartConfigResponse = AnalyzeConfigDao.IntervalChartConfig
+  type IntervalChartConfigOptions = AnalyzeConfigDao.IntervalChartConfig
 
   /**
    * @desc 折线图配置
    */
-  type LineChartConfigResponse = AnalyzeConfigDao.LineChartConfig
+  type LineChartConfigOptions = AnalyzeConfigDao.LineChartConfig
 
   /**
    * @desc 表格配置
    */
-  type TableChartConfigResponse = AnalyzeConfigDao.TableChartConfig
+  type TableChartConfigOptions = AnalyzeConfigDao.TableChartConfig
 }
