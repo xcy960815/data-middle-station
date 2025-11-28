@@ -10,31 +10,31 @@ declare namespace ChartConfigStore {
   /**
    * @desc 表格配置
    */
-  type TableChartConfig = AnalyzeConfigVo.TableChartConfig
+  type TableChartConfig = AnalyzeConfigVo.TableChartConfigOptions
 
   /**
    * @desc 饼图配置
    */
-  type PieChartConfig = AnalyzeConfigVo.PieChartConfig
+  type PieChartConfig = AnalyzeConfigVo.PieChartConfigOptions
 
   /**
    * @desc 柱状图配置
    */
-  type IntervalChartConfig = AnalyzeConfigVo.IntervalChartConfig
+  type IntervalChartConfig = AnalyzeConfigVo.IntervalChartConfigOptions
 
   /**
    * @desc 折线图配置
    */
-  type LineChartConfig = AnalyzeConfigVo.LineChartConfig
+  type LineChartConfig = AnalyzeConfigVo.LineChartConfigOptions
 
   /**
    * @desc 图表公共配置
    */
-  type CommonChartConfig = AnalyzeConfigVo.CommonChartConfig
+  type CommonChartConfig = AnalyzeConfigVo.CommonChartConfigOptions
   /**
    * @desc 私有图表配置
    */
-  type PrivateChartConfig = AnalyzeConfigVo.PrivateChartConfigResponse
+  type PrivateChartConfig = AnalyzeConfigVo.PrivateChartConfigOptions
 
   /**
    * @desc 图表配置状态

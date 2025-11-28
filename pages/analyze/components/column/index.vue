@@ -61,16 +61,16 @@ const DATE_ICON_NAME = 'calendar-thirty'
 // 字符串图标
 const STRING_ICON_NAME = 'text'
 
-const columnDisplayNames = (column: ColumnStore.ColumnOption) => {
+const columnDisplayNames = (column: ColumnsStore.ColumnOption) => {
   return column.displayName || column.columnName
 }
 
 /**
  * @desc 列类名
- * @param column {ColumnStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOption} 列选项
  * @returns {string} 类名
  */
-const columnClasses = computed(() => (column: ColumnStore.ColumnOption) => {
+const columnClasses = computed(() => (column: ColumnsStore.ColumnOption) => {
   const dimensionChoosed = useDimensionsStore().getDimensions.find(
     (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
@@ -86,10 +86,10 @@ const columnClasses = computed(() => (column: ColumnStore.ColumnOption) => {
 
 /**
  * @desc 根据列类型返回对应的图标名称
- * @param column {ColumnStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOption} 列选项
  * @returns {string} 图标名称
  */
-const columnIconName = computed(() => (column: ColumnStore.ColumnOption) => {
+const columnIconName = computed(() => (column: ColumnsStore.ColumnOption) => {
   const { columnType } = column
   if (columnType === 'number') {
     return NUMBER_ICON_NAME
@@ -120,17 +120,17 @@ const columnList = computed(() => {
 /**
  * @desc 当前选中的列
  */
-const currentColumn = ref<ColumnStore.ColumnOption>()
+const currentColumn = ref<ColumnsStore.ColumnOption>()
 
 const contextmenu = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 /**
  * @desc 拖拽开始事件
- * @param column {ColumnStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOption} 列选项
  * @param index {number} 列索引
  * @param event {DragEvent} 拖拽事件
  */
-const dragstartHandler = (column: ColumnStore.ColumnOption, index: number, event: DragEvent) => {
+const dragstartHandler = (column: ColumnsStore.ColumnOption, index: number, event: DragEvent) => {
   if (!event.dataTransfer) return
   event.dataTransfer.setData(
     'text/plain',
@@ -200,9 +200,9 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const columnIndex = columnStore.getColumns.findIndex(
-    (column: ColumnStore.ColumnOption) => column.columnName === data.value.columnName
+    (column: ColumnsStore.ColumnOption) => column.columnName === data.value.columnName
   )
 
   switch (data.from) {
@@ -236,9 +236,9 @@ const dropHandler = (dragEvent: DragEvent) => {
 
 /**
  * @desc 右键点击事件
- * @param column {ColumnStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOption} 列选项
  */
-const contextmenuHandler = (column: ColumnStore.ColumnOption, event: MouseEvent) => {
+const contextmenuHandler = (column: ColumnsStore.ColumnOption, event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
   currentColumn.value = column

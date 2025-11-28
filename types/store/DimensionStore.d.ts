@@ -1,7 +1,7 @@
 /**
  * @desc 维度字段
  */
-/// <reference path="./commom.d.ts" />
+/// <reference path="./Common.d.ts" />
 declare namespace DimensionStore {
   /**
    * @desc 维度字段
@@ -10,7 +10,7 @@ declare namespace DimensionStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type DimensionOption = ColumnStore.ColumnOption & {
+  type DimensionOption = ColumnsStore.ColumnOption & {
     /**
      * 是否无效
      */

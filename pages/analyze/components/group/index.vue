@@ -122,7 +122,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const groupOption: GroupStore.GroupOption = {
     ...data.value,
     __invalid: false,

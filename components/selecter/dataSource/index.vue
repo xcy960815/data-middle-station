@@ -87,7 +87,7 @@ const dataSource = computed({
 
 /**
  * @desc 数据源选项
- * @returns {ColumnStore.dataSourceOption[]}
+ * @returns {ColumnsStore.dataSourceOption[]}
  */
 const dataSourceOptions = computed(() => columnStore.getDataSourceOptions)
 
@@ -100,10 +100,10 @@ const handleSearchTable = () => {
 
 /**
  * @desc 选择表
- * @param {ColumnStore.DataSourceOption} row 表数据
+ * @param {ColumnsStore.DataSourceOption} row 表数据
  * @returns {void}
  */
-const handleSelectedTable = (row: ColumnStore.DataSourceOption) => {
+const handleSelectedTable = (row: ColumnsStore.DataSourceOption) => {
   dataSource.value = row.tableName
   isPopoverVisible.value = false
   if (row.tableName) emit('dataSource-change', row.tableName)
