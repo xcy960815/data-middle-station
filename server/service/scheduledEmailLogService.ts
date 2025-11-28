@@ -74,7 +74,7 @@ export class ScheduledEmailLogService extends BaseService {
    */
   async getExecutionLog(
     queryOptions: ScheduledEmailLogDto.GetExecutionLogOptions
-  ): Promise<ScheduledEmailLogVo.ExecutionLog | null> {
+  ): Promise<ScheduledEmailLogVo.ScheduledEmailLogOptions | null> {
     try {
       const logRecord = await this.scheduledEmailLogMapper.getScheduledEmailLog(queryOptions)
       return logRecord ? this.convertDaoToVo(logRecord) : null
@@ -87,9 +87,7 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 获取任务执行日志列表
    */
-  async getExecutionLogList(
-    listQuery: ScheduledEmailLogDto.LogListQuery
-  ): Promise<ScheduledEmailLogVo.LogListResponse> {
+  async getExecutionLogList(listQuery: ScheduledEmailLogDto.LogListQuery): Promise<ScheduledEmailLogVo.LogListOptions> {
     try {
       const limit = listQuery.limit || 50
       const offset = listQuery.offset || 0
@@ -118,7 +116,7 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 获取任务的最新执行日志
    */
-  async getLatestExecutionLog(taskId: number): Promise<ScheduledEmailLogVo.ExecutionLog | null> {
+  async getLatestExecutionLog(taskId: number): Promise<ScheduledEmailLogVo.ScheduledEmailLogOptions | null> {
     try {
       const logRecord = await this.scheduledEmailLogMapper.getLatestLogByTaskId(taskId)
       return logRecord ? this.convertDaoToVo(logRecord) : null
@@ -225,7 +223,9 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 转换DAO对象为VO对象
    */
-  private convertDaoToVo(logRecord: ScheduledEmailLogDao.ScheduledEmailLogOptions): ScheduledEmailLogVo.ExecutionLog {
+  private convertDaoToVo(
+    logRecord: ScheduledEmailLogDao.ScheduledEmailLogOptions
+  ): ScheduledEmailLogVo.ScheduledEmailLogOptions {
     const dtoPayload = this.convertDaoToDto(logRecord)
     return {
       ...dtoPayload
@@ -368,7 +368,7 @@ export class ScheduledEmailLogService extends BaseService {
    * 即时发送成功日志
    */
   async logManualSendSuccess(
-    sendResult: SendEmailVo.SendEmailResponse,
+    sendResult: SendEmailVo.SendEmailOptions,
     sendRequest: SendEmailDto.SendChartEmailOptions
   ): Promise<void> {
     const executionTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
@@ -394,7 +394,7 @@ export class ScheduledEmailLogService extends BaseService {
 
   private buildManualSendMetadata(
     sendRequest: SendEmailDto.SendChartEmailOptions,
-    sendResult?: SendEmailVo.SendEmailResponse
+    sendResult?: SendEmailVo.SendEmailOptions
   ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
     const recipients = Array.isArray(sendRequest.emailConfig.to)
       ? sendRequest.emailConfig.to

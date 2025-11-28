@@ -3,9 +3,9 @@
  */
 declare namespace ScheduledEmailLogVo {
   /**
-   * @desc 执行日志
+   * @desc 执行日志选项
    */
-  interface ExecutionLog {
+  interface ScheduledEmailLogOptions {
     /**
      * 日志ID
      */
@@ -163,13 +163,13 @@ declare namespace ScheduledEmailLogVo {
   }
 
   /**
-   * @desc 日志列表响应
+   * @desc 日志列表选项
    */
-  interface LogListResponse {
+  interface LogListOptions {
     /**
      * 日志列表
      */
-    logs: ExecutionLog[]
+    logs: ScheduledEmailLogOptions[]
     /**
      * 总数
      */

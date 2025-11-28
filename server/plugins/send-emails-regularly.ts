@@ -74,7 +74,7 @@ const loadAndScheduleAllTasks = async (): Promise<void> => {
 
     // 清理已存在的调度任务（避免重复注册）
     for (const [taskId, job] of scheduledJobs.entries()) {
-      const taskExists = pendingTasks.some((task) => task.id === taskId)
+      const taskExists = pendingTasks.some((taskOptions) => taskOptions.id === taskId)
       if (!taskExists) {
         job.cancel()
         scheduledJobs.delete(taskId)
@@ -83,23 +83,23 @@ const loadAndScheduleAllTasks = async (): Promise<void> => {
     }
 
     // 为每个任务创建调度
-    for (const task of pendingTasks) {
+    for (const taskOptions of pendingTasks) {
       // 跳过未激活的任务
-      if (!task.isActive) {
+      if (!taskOptions.isActive) {
         continue
       }
 
       // 如果任务已经在调度器中，先取消
-      if (scheduledJobs.has(task.id)) {
-        scheduledJobs.get(task.id)?.cancel()
-        scheduledJobs.delete(task.id)
+      if (scheduledJobs.has(taskOptions.id)) {
+        scheduledJobs.get(taskOptions.id)?.cancel()
+        scheduledJobs.delete(taskOptions.id)
       }
 
       // 根据任务类型创建调度
-      if (task.taskType === 'scheduled') {
-        scheduleOnceTask(task)
-      } else if (task.taskType === 'recurring') {
-        scheduleRecurringTask(task)
+      if (taskOptions.taskType === 'scheduled') {
+        scheduleOnceTask(taskOptions)
+      } else if (taskOptions.taskType === 'recurring') {
+        scheduleRecurringTask(taskOptions)
       }
     }
 
@@ -111,85 +111,85 @@ const loadAndScheduleAllTasks = async (): Promise<void> => {
 
 /**
  * 调度一次性任务（scheduled）
- * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
+ * @param {ScheduledEmailVo.ScheduledEmailOptions} taskOptions 任务选项
  * @returns {void}
  */
-const scheduleOnceTask = (task: ScheduledEmailVo.ScheduledEmailResponse): void => {
-  if (!task.scheduleTime) {
-    logger.error(`❌ 任务 ${task.id} 缺少执行时间`)
+const scheduleOnceTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): void => {
+  if (!taskOptions.scheduleTime) {
+    logger.error(`❌ 任务 ${taskOptions.id} 缺少执行时间`)
     return
   }
 
-  const executeTime = new Date(task.scheduleTime)
+  const executeTime = new Date(taskOptions.scheduleTime)
   const now = new Date()
 
   // 检查时间是否已过期
   if (executeTime <= now) {
-    logger.warn(`⚠️ 任务 ${task.id} 的执行时间已过期: ${task.scheduleTime}`)
+    logger.warn(`⚠️ 任务 ${taskOptions.id} 的执行时间已过期: ${taskOptions.scheduleTime}`)
     return
   }
 
   // 创建一次性调度任务
   const job = schedule.scheduleJob(executeTime, async () => {
-    logger.info(`🚀 执行定时任务: ${task.id} - ${task.taskName}`)
-    await executeTask(task)
+    logger.info(`🚀 执行定时任务: ${taskOptions.id} - ${taskOptions.taskName}`)
+    await executeTask(taskOptions)
   })
 
   if (job) {
-    scheduledJobs.set(task.id, job)
-    logger.info(`📅 定时任务已注册: ${task.id} - ${task.taskName}, 执行时间: ${task.scheduleTime}`)
+    scheduledJobs.set(taskOptions.id, job)
+    logger.info(`📅 定时任务已注册: ${taskOptions.id} - ${taskOptions.taskName}, 执行时间: ${taskOptions.scheduleTime}`)
   }
 }
 
 /**
  * 调度重复任务（recurring）
- * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
+ * @param {ScheduledEmailVo.ScheduledEmailOptions} taskOptions 任务选项
  * @returns {void}
  */
-const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailResponse): void => {
-  if (!task.recurringDays || !task.recurringTime) {
-    logger.error(`❌ 任务 ${task.id} 缺少重复配置`)
+const scheduleRecurringTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): void => {
+  if (!taskOptions.recurringDays || !taskOptions.recurringTime) {
+    logger.error(`❌ 任务 ${taskOptions.id} 缺少重复配置`)
     return
   }
 
   let cronExpression: string
 
   // 检查是否是高频执行格式（如 "*/1" 表示每1分钟）
-  if (task.recurringTime.startsWith('*/')) {
+  if (taskOptions.recurringTime.startsWith('*/')) {
     // 高频执行模式：*/N 表示每N分钟执行一次
-    const interval = task.recurringTime.substring(2)
-    const dayOfWeek = task.recurringDays.join(',')
+    const intervalMinutes = taskOptions.recurringTime.substring(2)
+    const dayOfWeek = taskOptions.recurringDays.join(',')
     // cron 格式: 秒 分 时 日 月 星期
     // 例如: "0 */1 * * * *" = 每1分钟执行
-    cronExpression = `0 ${task.recurringTime} * * * ${dayOfWeek}`
-    logger.info(`🔧 构建高频 cron 表达式: ${cronExpression} (每${interval}分钟执行)`)
+    cronExpression = `0 ${taskOptions.recurringTime} * * * ${dayOfWeek}`
+    logger.info(`🔧 构建高频 cron 表达式: ${cronExpression} (每${intervalMinutes}分钟执行)`)
   } else {
     // 标准时间格式 HH:mm:ss
-    const timeParts = task.recurringTime.split(':')
-    const hour = parseInt(timeParts[0])
-    const minute = parseInt(timeParts[1])
-    const second = timeParts[2] ? parseInt(timeParts[2]) : 0
+    const timeComponents = taskOptions.recurringTime.split(':')
+    const hour = parseInt(timeComponents[0])
+    const minute = parseInt(timeComponents[1])
+    const second = timeComponents[2] ? parseInt(timeComponents[2]) : 0
 
     // 构建 cron 表达式
     // 格式: 秒 分 时 日 月 星期
     // 例如: "0 30 9 * * 1,3,5" = 每周一、三、五的 9:30:00
-    const dayOfWeek = task.recurringDays.join(',')
+    const dayOfWeek = taskOptions.recurringDays.join(',')
     cronExpression = `${second} ${minute} ${hour} * * ${dayOfWeek}`
-    logger.info(`🔧 构建 cron 表达式: ${cronExpression} (${task.taskName})`)
+    logger.info(`🔧 构建 cron 表达式: ${cronExpression} (${taskOptions.taskName})`)
   }
 
   // 创建重复调度任务
   const job = schedule.scheduleJob(cronExpression, async () => {
-    logger.info(`🚀 执行重复任务: ${task.id} - ${task.taskName}`)
-    await executeTask(task)
+    logger.info(`🚀 执行重复任务: ${taskOptions.id} - ${taskOptions.taskName}`)
+    await executeTask(taskOptions)
   })
 
   if (job) {
-    scheduledJobs.set(task.id, job)
+    scheduledJobs.set(taskOptions.id, job)
     const nextInvocation = job.nextInvocation()
     logger.info(
-      `🔄 重复任务已注册: ${task.id} - ${task.taskName}, ` +
-        `执行周期: ${formatDays(task.recurringDays)} ${task.recurringTime}, ` +
+      `🔄 重复任务已注册: ${taskOptions.id} - ${taskOptions.taskName}, ` +
+        `执行周期: ${formatDays(taskOptions.recurringDays)} ${taskOptions.recurringTime}, ` +
         `下次执行: ${nextInvocation?.toLocaleString('zh-CN')}`
     )
   }
@@ -197,38 +197,38 @@ const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailResponse): v
 
 /**
  * 执行任务
- * @param {ScheduledEmailVo.ScheduledEmailResponse} task 任务选项
+ * @param {ScheduledEmailVo.ScheduledEmailOptions} taskOptions 任务选项
  * @returns {Promise<void>}
  */
-const executeTask = async (task: ScheduledEmailVo.ScheduledEmailResponse): Promise<void> => {
+const executeTask = async (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): Promise<void> => {
   try {
-    const success = await scheduledEmailService.executeTaskWithOptions({ id: task.id })
+    const success = await scheduledEmailService.executeTaskWithOptions({ id: taskOptions.id })
     if (success) {
-      logger.info(`✅ 任务 ${task.id} 执行成功`)
+      logger.info(`✅ 任务 ${taskOptions.id} 执行成功`)
 
       // 如果是一次性任务，执行后从调度器中移除
-      if (task.taskType === 'scheduled') {
-        const job = scheduledJobs.get(task.id)
+      if (taskOptions.taskType === 'scheduled') {
+        const job = scheduledJobs.get(taskOptions.id)
         if (job) {
           job.cancel()
-          scheduledJobs.delete(task.id)
-          logger.info(`🗑️ 一次性任务 ${task.id} 已从调度器移除`)
+          scheduledJobs.delete(taskOptions.id)
+          logger.info(`🗑️ 一次性任务 ${taskOptions.id} 已从调度器移除`)
         }
       }
     } else {
-      logger.error(`❌ 任务 ${task.id} 执行失败`)
+      logger.error(`❌ 任务 ${taskOptions.id} 执行失败`)
     }
   } catch (error) {
-    logger.error(`❌ 任务 ${task.id} 执行异常: ${error}`)
+    logger.error(`❌ 任务 ${taskOptions.id} 执行异常: ${error}`)
   }
 }
 
 /**
  * 格式化星期显示
- * @param {number[]} days 星期数组
+ * @param {number[]} dayNumbers 星期数字数组
  * @returns {string} 格式化后的星期字符串
  */
-const formatDays = (days: number[]): string => {
+const formatDays = (dayNumbers: number[]): string => {
   const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-  return days.map((d) => dayNames[d]).join('、')
+  return dayNumbers.map((dayIndex) => dayNames[dayIndex]).join('、')
 }
