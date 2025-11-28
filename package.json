@@ -29,8 +29,7 @@
     "format": "prettier --write \"**/*.{js,ts,vue,json,css,scss,less,html,md}\"",
     "format:check": "prettier --check \"**/*.{js,ts,vue,json,css,scss,less,html,md}\"",
     "lint": "eslint --config eslint.config.js .",
-    "lint:fix": "eslint --config eslint.config.js . --fix",
-    "docker:build:multi": "./build-multi-arch.sh"
+    "lint:fix": "eslint --config eslint.config.js . --fix"
   },
   "overrides": {
     "vue": "latest"

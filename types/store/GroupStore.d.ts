@@ -27,11 +27,11 @@ declare namespace GroupStore {
     /**
      * 固定列
      */
-    fixed?: 'left' | 'right'
+    fixed: 'left' | 'right' | null
     /**
      * 左右对齐方式
      */
-    align?: 'left' | 'right' | 'center'
+    align: 'left' | 'right' | 'center' | null
     /**
      * 垂直对齐方式
      */

@@ -1,8 +1,8 @@
 <template>
   <client-only>
-    <div class="chart-selecter-container px-1" :class="invalidClass">
-      <span class="chart-selecter-name mr-1">{{ displayName }}</span>
-      <slot class="chart-selecter-order-icon" name="order-icon"></slot>
+    <div class="chart-selector-container px-1" :class="invalidClass">
+      <span class="chart-selector-name mr-1">{{ displayName }}</span>
+      <slot class="chart-selector-order-icon" name="order-icon"></slot>
       <!-- 无效排序图标 -->
       <el-tooltip
         class="box-item"
@@ -15,7 +15,7 @@
       </el-tooltip>
       <!-- 删除图标 -->
       <icon-park
-        class="chart-selecter-delete"
+        class="chart-selector-delete"
         type="DeleteTwo"
         size="14"
         fill="#333"
@@ -67,7 +67,7 @@ const selecterVisible = ref(false)
  * @desc 无效样式
  */
 const invalidClass = computed(() => {
-  return props.invalid ? 'invalid-selecter' : ''
+  return props.invalid ? 'invalid-selector' : ''
 })
 /**
  * @desc 无效内容
@@ -116,7 +116,7 @@ onMounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-.chart-selecter-container {
+.chart-selector-container {
   position: relative;
   height: 26px;
   box-sizing: border-box;
@@ -128,11 +128,11 @@ onMounted(() => {
   align-items: center;
 
   // 无效字段样式
-  &.invalid-selecter {
+  &.invalid-selector {
     border-color: #ff4d4f;
   }
 
-  .chart-selecter-name {
+  .chart-selector-name {
     flex-grow: 1;
     // 超出部分隐藏 并且显示省略号
     overflow: hidden;
@@ -140,14 +140,14 @@ onMounted(() => {
     white-space: nowrap;
   }
 
-  .chart-selecter-delete,
-  :deep(.chart-selecter-order-icon) {
+  .chart-selector-delete,
+  :deep(.chart-selector-order-icon) {
     cursor: pointer;
     flex-shrink: 0;
     margin-left: auto;
   }
 
-  .chart-selecter-order-icon {
+  .chart-selector-order-icon {
     margin-right: 6px;
     font-size: 14px;
   }

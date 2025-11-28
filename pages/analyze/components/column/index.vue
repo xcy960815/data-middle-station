@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import ContextMenu from '@/components/context-menu/index.vue'
-import DataSourceSelecter from '@/components/selecter/dataSource/index.vue'
+import DataSourceSelecter from '@/components/selector/dataSource/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { computed, ref, watch } from 'vue'
 import { useAnalyzeStore } from '~/stores/analyze'
