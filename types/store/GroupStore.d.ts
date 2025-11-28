@@ -1,4 +1,4 @@
-/// <reference path="./commom.d.ts" />
+/// <reference path="./Common.d.ts" />
 /**
  * @desc 左侧列字段
  */
@@ -14,7 +14,7 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type GroupOption = ColumnStore.ColumnOption & {
+  type GroupOption = ColumnsStore.ColumnOption & {
     /**
      * 是否无效
      */

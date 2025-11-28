@@ -1,7 +1,7 @@
 /**
  * @desc 列存储类型
  */
-declare namespace ColumnStore {
+declare namespace ColumnsStore {
   /**
    * @desc 列key
    */
