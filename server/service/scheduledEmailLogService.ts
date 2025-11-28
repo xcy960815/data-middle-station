@@ -369,7 +369,7 @@ export class ScheduledEmailLogService extends BaseService {
    */
   async logManualSendSuccess(
     sendResult: SendEmailVo.SendEmailOptions,
-    sendRequest: SendEmailDto.SendChartEmailOptions
+    sendRequest: SendEmailDto.SendEmailOptions
   ): Promise<void> {
     const executionTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const metadata = this.buildManualSendMetadata(sendRequest, sendResult)
@@ -386,14 +386,14 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 即时发送失败日志
    */
-  async logManualSendFailure(sendRequest: SendEmailDto.SendChartEmailOptions, errorMessage: string): Promise<void> {
+  async logManualSendFailure(sendRequest: SendEmailDto.SendEmailOptions, errorMessage: string): Promise<void> {
     const executionTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const metadata = this.buildManualSendMetadata(sendRequest)
     await this.logTaskFailure(0, executionTime, errorMessage, 0, '即时邮件发送失败', metadata)
   }
 
   private buildManualSendMetadata(
-    sendRequest: SendEmailDto.SendChartEmailOptions,
+    sendRequest: SendEmailDto.SendEmailOptions,
     sendResult?: SendEmailVo.SendEmailOptions
   ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
     const recipients = Array.isArray(sendRequest.emailConfig.to)

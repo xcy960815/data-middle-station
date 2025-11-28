@@ -1,7 +1,7 @@
 import { ChartSnapshotService } from '@/server/service/chartSnapshotService'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
-import weekday from 'dayjs/plugin/weekday'
+import weekday from 'dayjs/plugin/weekday.js'
 import nodemailer, { type Transporter } from 'nodemailer'
 
 dayjs.extend(weekday)
@@ -96,10 +96,10 @@ export class SendEmailService {
 
   /**
    * @desc 发送邮件
-   * @param sendOptions {SendEmailDto.SendChartEmailOptions}
+   * @param sendOptions {SendEmailDto.SendEmailOptions}
    * @returns {Promise<SendEmailVo.SendEmailOptions>} messageId
    */
-  public async sendMail(sendOptions: SendEmailDto.SendChartEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
+  public async sendMail(sendOptions: SendEmailDto.SendEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
     if (!this.transporter) {
       this.createTransporter()
     }
@@ -154,12 +154,12 @@ export class SendEmailService {
 
   /**
    * @desc DTO -> nodemailer 发送参数转换
-   * @param sendOptions {SendEmailDto.SendChartEmailOptions} 邮件请求
+   * @param sendOptions {SendEmailDto.SendEmailOptions} 邮件请求
    * @param attachments {Attachment[]} 附件列表
    * @param analyzeOptions {SendEmailDto.AnalyzeOptions} 图表选项
    */
   private convertDtoToDao(
-    sendOptions: SendEmailDto.SendChartEmailOptions,
+    sendOptions: SendEmailDto.SendEmailOptions,
     attachments: Attachment[],
     analyzeOptions: SendEmailDto.AnalyzeOptions
   ): SendMailPayload {
