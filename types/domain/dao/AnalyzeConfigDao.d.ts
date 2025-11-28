@@ -10,9 +10,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 维度配置
    */
-  type DimensionOption = ColumnOptions & {
-    __invalid?: boolean
-  }
+  type DimensionOption = ColumnOptions
 
   /**
    * 过滤聚合方式
@@ -66,10 +64,6 @@ declare namespace AnalyzeConfigDao {
      */
     filterValue?: string
     /**
-     * 显示名称
-     */
-    displayName?: string
-    /**
      * 聚合方式
      */
     aggregationType: FilterAggregationsType
@@ -78,9 +72,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 分组配置
    */
-  type GroupOption = ColumnOptions & {
-    __invalid?: boolean
-  }
+  type GroupOption = ColumnOptions
 
   /**
    * 排序类型
@@ -409,7 +401,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 图表配置
    */
-  type ChartConfig = {
+  type ChartConfigOptions = {
     /**
      * 图表id
      */
@@ -471,4 +463,26 @@ declare namespace AnalyzeConfigDao {
      */
     isDeleted?: number
   }
+
+  /**
+   * 获取图表配置请求参数
+   */
+  type GetChartConfigOptions = Partial<ChartConfigOptions> & {
+    id: number
+  }
+
+  /**
+   * 创建图表配置请求参数
+   */
+  type CreateChartConfigOptions = Omit<ChartConfigOptions, 'id' | 'isDeleted'>
+
+  /**
+   * 更新图表配置请求参数
+   */
+  type UpdateChartConfigOptions = Omit<ChartConfigOptions, 'createTime' | 'createdBy' | 'isDeleted'>
+
+  /**
+   * 删除图表配置请求参数
+   */
+  type DeleteChartConfigOptions = Pick<ChartConfigOptions, 'id' | 'updatedBy' | 'updateTime'>
 }

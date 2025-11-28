@@ -5,7 +5,7 @@ declare namespace AnalyzeVo {
   /**
    * 图表数据
    */
-  type AnalyzeDataVo = Array<{
+  type AnalyzeData = Array<{
     [key: string]: string | number
   }>
   /**

@@ -3,30 +3,47 @@ declare namespace AnalyzeDataDto {
    * @desc 公共图表配置
    */
   type CommonChartConfig = AnalyzeConfigDao.CommonChartConfig
+
+  /**
+   * @desc 维度配置
+   */
+  type DimensionOption = AnalyzeConfigDao.DimensionOption
+
+  /**
+   * @desc 分组配置
+   */
+  type GroupOption = AnalyzeConfigDao.GroupOption
+
+  /**
+   * @desc 过滤配置
+   */
+  type FilterOption = AnalyzeConfigDao.FilterOption
+
+  /**
+   * @desc 排序配置
+   */
+  type OrderOption = AnalyzeConfigDao.OrderOption
+
   /**
    * @desc 获取图表数据请求参数
    */
-  type ChartDataRequest = {
+  type ChartDataOptions = {
     /**
      * @desc 过滤配置
      */
-    filters: AnalyzeConfigDao.FilterOption[]
+    filters: FilterOption[]
     /**
      * @desc 排序配置
      */
-    orders: AnalyzeConfigDao.OrderOption[]
+    orders: OrderOption[]
     /**
      * @desc 分组配置
      */
-    groups: AnalyzeConfigDao.GroupOption[]
+    groups: GroupOption[]
     /**
      * @desc 维度配置
      */
-    dimensions: AnalyzeConfigDao.DimensionOption[]
-    /**
-     * @desc 数据源
-     */
-    dataSource: string
+    dimensions: DimensionOption[]
     /**
      * @desc 数据源
      */
@@ -34,7 +51,7 @@ declare namespace AnalyzeDataDto {
     /**
      * @desc 公共图表配置
      */
-    commonChartConfig?: AnalyzeConfigDao.CommonChartConfig
+    commonChartConfig?: CommonChartConfig
   }
 
   /**

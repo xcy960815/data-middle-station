@@ -168,12 +168,73 @@ declare namespace ScheduledEmailDao {
     updatedBy: string
   }
 
-  type GetScheduledEmailTaskOptions = Partial<ScheduledEmailOptions> & {
+  /**
+   * @desc 定时邮件任务查询条件
+   */
+  type ScheduledEmailQueryOptions = {
     /**
      * 任务ID
      */
-    id: number
+    id?: number
+    /**
+     * 任务名称
+     */
+    taskName?: string
+    /**
+     * 任务状态
+     */
+    status?: Status
+    /**
+     * 任务类型
+     */
+    taskType?: TaskType
+    /**
+     * 是否启用
+     */
+    isActive?: boolean
+    /**
+     * 创建人
+     */
+    createdBy?: string
+    /**
+     * 更新人
+     */
+    updatedBy?: string
+    /**
+     * 最小时段重试次数
+     */
+    minRetryCount?: number
+    /**
+     * 最大时段重试次数
+     */
+    maxRetryCount?: number
+    /**
+     * 最小最大重试阈值
+     */
+    maxRetries?: number
+    /**
+     * 标签/备注关键词
+     */
+    remarkKeyword?: string
+    /**
+     * 计划执行时间范围开始
+     */
+    scheduleTimeStart?: string
+    /**
+     * 计划执行时间范围结束
+     */
+    scheduleTimeEnd?: string
+    /**
+     * 下次执行时间范围开始
+     */
+    nextExecutionTimeStart?: string
+    /**
+     * 下次执行时间范围结束
+     */
+    nextExecutionTimeEnd?: string
   }
+
+  type GetScheduledEmailOptions = ScheduledEmailQueryOptions
 
   /**
    * @desc 创建任务参数
@@ -188,5 +249,21 @@ declare namespace ScheduledEmailDao {
      * 任务ID
      */
     id: number
+  }
+
+  /**
+   * @desc 删除任务参数
+   */
+  type DeleteScheduledEmailOptions = ScheduledEmailQueryOptions
+
+  /**
+   * @desc 任务列表查询参数
+   */
+  type ScheduledEmailListOptions = ScheduledEmailQueryOptions & {
+    keyword?: string
+    limit?: number
+    offset?: number
+    orderBy?: 'created_time' | 'schedule_time' | 'updated_time'
+    orderDirection?: 'asc' | 'desc'
   }
 }

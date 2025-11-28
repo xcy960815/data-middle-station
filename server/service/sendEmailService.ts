@@ -1,5 +1,10 @@
 import { ChartSnapshotService } from '@/server/service/chartSnapshotService'
+import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
+import weekday from 'dayjs/plugin/weekday.js'
 import nodemailer, { type Transporter } from 'nodemailer'
+
+dayjs.extend(weekday)
 
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
 
@@ -82,54 +87,57 @@ export class SendEmailService {
       auth: {
         user: this.smtpUser!,
         pass: this.smtpPass!
+      },
+      tls: {
+        rejectUnauthorized: false
       }
     })
   }
 
   /**
    * @desc 发送邮件
-   * @param options {SendEmailDto.SendChartEmailRequest}
-   * @returns {Promise<SendEmailVo.SendEmailResponse>} messageId
+   * @param sendOptions {SendEmailDto.SendEmailOptions}
+   * @returns {Promise<SendEmailVo.SendEmailOptions>} messageId
    */
-  public async sendMail(sendMailDto: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailResponse> {
+  public async sendMail(sendOptions: SendEmailDto.SendEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
     if (!this.transporter) {
       this.createTransporter()
     }
 
     // 根据 analyzeId 自动补全图表信息
-    const resolvedAnalyzeOptions = await this.resolveAnalyzeOptions(sendMailDto.analyzeOptions)
+    const resolvedAnalyzeOptions = await this.resolveAnalyzeOptions(sendOptions.analyzeOptions)
 
     // 构建附件配置
     const attachments = this.buildAttachments(resolvedAnalyzeOptions)
-    const mailPayload = this.convertDtoToDao(sendMailDto, attachments, resolvedAnalyzeOptions)
+    const mailPayload = this.convertDtoToDao(sendOptions, attachments, resolvedAnalyzeOptions)
 
-    const result = await this.transporter!.sendMail(mailPayload)
-    const resultDto = this.convertDaoToDto({
-      messageId: result.messageId,
-      accepted: result.accepted,
-      rejected: result.rejected,
-      ehlo: result.ehlo,
-      envelopeTime: result.envelopeTime,
-      messageTime: result.messageTime,
-      messageSize: result.messageSize,
-      response: result.response,
-      envelope: result.envelope
+    const sendResult = await this.transporter!.sendMail(mailPayload)
+    const sendResultData = this.convertDaoToDto({
+      messageId: sendResult.messageId,
+      accepted: sendResult.accepted,
+      rejected: sendResult.rejected,
+      ehlo: sendResult.ehlo,
+      envelopeTime: sendResult.envelopeTime,
+      messageTime: sendResult.messageTime,
+      messageSize: sendResult.messageSize,
+      response: sendResult.response,
+      envelope: sendResult.envelope
     })
 
-    logger.info(`邮件已发送，messageId=${result.messageId}，收件人=${sendMailDto.emailConfig.to}`)
+    logger.info(`邮件已发送，messageId=${sendResult.messageId}，收件人=${sendOptions.emailConfig.to}`)
 
     return {
-      messageId: resultDto.messageId,
-      accepted: resultDto.accepted,
-      rejected: resultDto.rejected,
-      ehlo: resultDto.ehlo,
-      envelopeTime: resultDto.envelopeTime,
-      messageTime: resultDto.messageTime,
-      messageSize: resultDto.messageSize,
-      response: resultDto.response,
-      envelope: resultDto.envelope,
-      sender: resultDto.sender || this.getSenderAddress(),
-      channel: resultDto.channel || this.getChannel(),
+      messageId: sendResultData.messageId,
+      accepted: sendResultData.accepted,
+      rejected: sendResultData.rejected,
+      ehlo: sendResultData.ehlo,
+      envelopeTime: sendResultData.envelopeTime,
+      messageTime: sendResultData.messageTime,
+      messageSize: sendResultData.messageSize,
+      response: sendResultData.response,
+      envelope: sendResultData.envelope,
+      sender: sendResultData.sender || this.getSenderAddress(),
+      channel: sendResultData.channel || this.getChannel(),
       transport: this.getTransportInfo(),
       attachments: attachments.map((item) => ({
         filename: item.filename,
@@ -146,31 +154,31 @@ export class SendEmailService {
 
   /**
    * @desc DTO -> nodemailer 发送参数转换
-   * @param sendMailDto {SendEmailDto.SendChartEmailRequest} 邮件请求
+   * @param sendOptions {SendEmailDto.SendEmailOptions} 邮件请求
    * @param attachments {Attachment[]} 附件列表
    * @param analyzeOptions {SendEmailDto.AnalyzeOptions} 图表选项
    */
   private convertDtoToDao(
-    sendMailDto: SendEmailDto.SendChartEmailRequest,
+    sendOptions: SendEmailDto.SendEmailOptions,
     attachments: Attachment[],
     analyzeOptions: SendEmailDto.AnalyzeOptions
   ): SendMailPayload {
     return {
       from: this.getSenderAddress(),
-      to: sendMailDto.emailConfig.to,
-      subject: sendMailDto.emailConfig.subject,
-      html: this.buildEmailContent(sendMailDto.emailConfig, analyzeOptions),
+      to: sendOptions.emailConfig.to,
+      subject: sendOptions.emailConfig.subject,
+      html: this.buildEmailContent(sendOptions.emailConfig, analyzeOptions),
       attachments
     }
   }
 
   /**
    * @desc nodemailer 结果 -> DTO 转换
-   * @param result {SendEmailDao.SendEmailOptions} nodemailer 返回结果
+   * @param sendResult {SendEmailDao.SendEmailOptions} nodemailer 返回结果
    */
-  private convertDaoToDto(result: SendEmailDao.SendEmailOptions): SendEmailDto.SendEmailResultDto {
+  private convertDaoToDto(sendResult: SendEmailDao.SendEmailOptions): SendEmailDto.SendEmailResultDto {
     return {
-      ...result,
+      ...sendResult,
       sender: this.getSenderAddress(),
       channel: this.getChannel()
     }
@@ -273,12 +281,7 @@ export class SendEmailService {
         <div class="container">
           <div class="header">
             <h1 style="margin: 0; font-size: 24px;">📊 数据分析报告</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">${new Date().toLocaleDateString('zh-CN', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              weekday: 'long'
-            })}</p>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">${dayjs().locale('zh-cn').format('YYYY年MM月DD日 dddd')}</p>
           </div>
 
           <div class="content">
@@ -287,7 +290,7 @@ export class SendEmailService {
             <div class="chart-info">
               <h3 style="margin-top: 0; color: #495057;">📈 图表信息</h3>
               <p style="margin: 5px 0;"><strong>图表标题:</strong> ${analyzeOptions.analyzeName}</p>
-              <p style="margin: 5px 0;"><strong>生成时间:</strong> ${new Date().toLocaleString('zh-CN')}</p>
+              <p style="margin: 5px 0;"><strong>生成时间:</strong> ${dayjs().locale('zh-cn').format('YYYY年MM月DD日 HH:mm:ss')}</p>
             </div>
 
             <p>📎 图表图片已作为附件发送，请查看附件获取高清图表。</p>

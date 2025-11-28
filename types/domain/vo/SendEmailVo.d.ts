@@ -3,9 +3,9 @@
  */
 declare namespace SendEmailVo {
   /**
-   * @desc 发送邮件结果
+   * @desc 发送邮件选项
    */
-  type SendEmailResponse = {
+  type SendEmailOptions = {
     /** 邮件消息ID */
     messageId: string
     /**
