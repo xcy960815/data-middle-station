@@ -72,11 +72,11 @@ export class DatabaseService {
   /**
    * @desc 查询当前数据库中所有表
    * @param queryOptions {DataBaseDto.GetDatabaseTablesRequest} 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.GetDataBaseTablesResponse>>}
+   * @returns {Promise<Array<DatabaseVo.GetDataBaseTablesOptions>>}
    */
   public async getTable(
     queryOptions: DataBaseDto.GetTableOptions
-  ): Promise<Array<DatabaseVo.GetDataBaseTablesResponse>> {
+  ): Promise<Array<DatabaseVo.GetDataBaseTablesOptions>> {
     const tableRecords = await this.databaseMapper.getTable(queryOptions)
     return tableRecords.map((tableRecord) => {
       const dtoPayload = this.convertDaoToDtoTable(tableRecord)
@@ -97,11 +97,11 @@ export class DatabaseService {
   /**
    * @desc 查询当前数据库中表的列
    * @param {DataBaseDto.GetTableColumnsOptions} queryOptions 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.GetTableColumnsResponse>>}
+   * @returns {Promise<Array<DatabaseVo.GetTableColumnsOptions>>}
    */
   public async getTableColumns(
     queryOptions: DataBaseDto.GetTableColumnsOptions
-  ): Promise<Array<DatabaseVo.GetTableColumnsResponse>> {
+  ): Promise<Array<DatabaseVo.GetTableColumnsOptions>> {
     const columnRecords = await this.databaseMapper.getTableColumns(queryOptions)
     return columnRecords.map((columnRecord) => {
       const dtoPayload = this.convertDaoToDtoColumn(columnRecord)
