@@ -106,11 +106,11 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 获取定时邮件任务详情
    * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} queryOptions 定时任务参数
-   * @returns {Promise<ScheduledEmailVo.ScheduledEmailResponse | null>}
+   * @returns {Promise<ScheduledEmailVo.ScheduledEmailOptions | null>}
    */
   async getScheduledEmail(
     queryOptions: ScheduledEmailDto.GetScheduledEmailOptions
-  ): Promise<ScheduledEmailVo.ScheduledEmailResponse | null> {
+  ): Promise<ScheduledEmailVo.ScheduledEmailOptions | null> {
     const scheduledEmailRecord = await this.scheduledEmailMapper.getScheduledEmailTask(queryOptions)
     return scheduledEmailRecord ? this.convertDaoToVo(scheduledEmailRecord) : null
   }
@@ -200,11 +200,11 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 获取定时邮件任务列表
    * @param {ScheduledEmailDto.ScheduledEmailListQuery} listOptions 查询参数
-   * @returns {Promise<ScheduledEmailVo.ScheduledEmailResponse[]>}
+   * @returns {Promise<ScheduledEmailVo.ScheduledEmailOptions[]>}
    */
   async getScheduledEmailList(
     listOptions: ScheduledEmailDto.ScheduledEmailListQuery
-  ): Promise<ScheduledEmailVo.ScheduledEmailResponse[]> {
+  ): Promise<ScheduledEmailVo.ScheduledEmailOptions[]> {
     try {
       const scheduledEmailRecordList = await this.scheduledEmailMapper.getScheduledEmailList(listOptions)
       return scheduledEmailRecordList.map((scheduledEmailRecord) => this.convertDaoToVo(scheduledEmailRecord))
@@ -608,9 +608,9 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 转换DAO对象为VO对象
    * @param {ScheduledEmailDao.ScheduledEmailOptions} record DAO对象
-   * @returns {ScheduledEmailVo.ScheduledEmailResponse}
+   * @returns {ScheduledEmailVo.ScheduledEmailOptions}
    */
-  private convertDaoToVo(record: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailVo.ScheduledEmailResponse {
+  private convertDaoToVo(record: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailVo.ScheduledEmailOptions {
     return {
       id: record.id,
       taskName: record.taskName,
@@ -669,7 +669,7 @@ export class ScheduledEmailService extends BaseService {
 
   private enrichLogMetadata(
     baseMetadata: Partial<ScheduledEmailLogDto.CreateLogOptions>,
-    sendResult: SendEmailVo.SendEmailResponse
+    sendResult: SendEmailVo.SendEmailOptions
   ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
     const attachments = sendResult.attachments
       ?.map((item) => item.filename)
