@@ -1,5 +1,5 @@
 {
-  "name": " ",
+  "name": "data-middle-station",
   "version": "0.0.1",
   "description": "使用nuxt3 + element-plus + pinia + mysql + pm2 搭建的数据中台",
   "scripts": {
@@ -109,7 +109,6 @@
     "vue-server-renderer": "^2.7.16",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^4.7.1",
-    "xcytest-package": "^1.0.3",
     "xlsx": "^0.18.5"
   },
   "volta": {
