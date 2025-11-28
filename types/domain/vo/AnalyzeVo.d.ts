@@ -11,7 +11,7 @@ declare namespace AnalyzeVo {
   /**
    * 获取分析响应
    */
-  type GetAnalyzeResponse = {
+  type GetAnalyzeOptions = {
     /**
      * 分析id
      */
@@ -51,30 +51,30 @@ declare namespace AnalyzeVo {
     /**
      * 图表配置
      */
-    chartConfig: AnalyzeConfigVo.ChartConfigResponse | null
+    chartConfig: AnalyzeConfigVo.ChartConfigOptions | null
   }
   /**
-   * 更新分析响应
+   * 更新分析选项
    */
-  type UpdateAnalyzeResponse = boolean
+  type UpdateAnalyzeOptions = boolean
 
   /**
-   * 更新分析描述响应
+   * 更新分析描述选项
    */
-  type UpdateAnalyzeDescResponse = boolean
+  type UpdateAnalyzeDescOptions = boolean
 
   /**
-   * 更新分析名称响应
+   * 更新分析名称选项
    */
-  type UpdateAnalyzeNameResponse = boolean
+  type UpdateAnalyzeNameOptions = boolean
 
   /**
-   * 创建分析响应
+   * 创建分析选项
    */
-  type CreateAnalyzeResponse = boolean
+  type CreateAnalyzeOptions = boolean
 
   /**
-   * 删除分析响应
+   * 删除分析选项
    */
-  type DeleteAnalyzeResponse = boolean
+  type DeleteAnalyzeOptions = boolean
 }
