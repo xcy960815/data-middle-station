@@ -5,9 +5,9 @@ declare namespace ScheduledEmailVo {
   type TaskType = ScheduledEmailDao.TaskType
 
   /**
-   * @desc 定时邮件任务响应
+   * @desc 定时邮件任务选项
    */
-  interface ScheduledEmailResponse {
+  interface ScheduledEmailOptions {
     /**
      * 任务ID
      */

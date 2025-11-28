@@ -1,5 +1,10 @@
 import { ChartSnapshotService } from '@/server/service/chartSnapshotService'
+import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
+import weekday from 'dayjs/plugin/weekday'
 import nodemailer, { type Transporter } from 'nodemailer'
+
+dayjs.extend(weekday)
 
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
 
@@ -92,9 +97,9 @@ export class SendEmailService {
   /**
    * @desc 发送邮件
    * @param sendOptions {SendEmailDto.SendChartEmailOptions}
-   * @returns {Promise<SendEmailVo.SendEmailResponse>} messageId
+   * @returns {Promise<SendEmailVo.SendEmailOptions>} messageId
    */
-  public async sendMail(sendOptions: SendEmailDto.SendChartEmailOptions): Promise<SendEmailVo.SendEmailResponse> {
+  public async sendMail(sendOptions: SendEmailDto.SendChartEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
     if (!this.transporter) {
       this.createTransporter()
     }
@@ -276,12 +281,7 @@ export class SendEmailService {
         <div class="container">
           <div class="header">
             <h1 style="margin: 0; font-size: 24px;">📊 数据分析报告</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">${new Date().toLocaleDateString('zh-CN', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              weekday: 'long'
-            })}</p>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">${dayjs().locale('zh-cn').format('YYYY年MM月DD日 dddd')}</p>
           </div>
 
           <div class="content">
@@ -290,7 +290,7 @@ export class SendEmailService {
             <div class="chart-info">
               <h3 style="margin-top: 0; color: #495057;">📈 图表信息</h3>
               <p style="margin: 5px 0;"><strong>图表标题:</strong> ${analyzeOptions.analyzeName}</p>
-              <p style="margin: 5px 0;"><strong>生成时间:</strong> ${new Date().toLocaleString('zh-CN')}</p>
+              <p style="margin: 5px 0;"><strong>生成时间:</strong> ${dayjs().locale('zh-cn').format('YYYY年MM月DD日 HH:mm:ss')}</p>
             </div>
 
             <p>📎 图表图片已作为附件发送，请查看附件获取高清图表。</p>

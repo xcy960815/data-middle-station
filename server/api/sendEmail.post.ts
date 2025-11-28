@@ -25,7 +25,7 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
   })
 })
 
-export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOptions>>>(async (event) => {
   let sendChartEmailRequest: SendEmailDto.SendChartEmailOptions | null = null
   try {
     sendChartEmailRequest = await readBody<SendEmailDto.SendChartEmailOptions>(event)

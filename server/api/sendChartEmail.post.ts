@@ -47,7 +47,7 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
   }).required()
 })
 
-export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOptions>>>(async (event) => {
   try {
     const requestBody = await readBody<SendEmailDto.SendChartEmailOptions>(event)
 
