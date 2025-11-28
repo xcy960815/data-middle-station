@@ -1,11 +1,11 @@
 <template>
-  <div class="dimension-selecter" @contextmenu="contextmenuHandler">
-    <selecter-template v-bind="$attrs" :dimension="dimension"></selecter-template>
+  <div class="group-selector" @contextmenu="contextmenuHandler">
+    <selector-template v-bind="$attrs" :group="group"></selector-template>
   </div>
   <!-- 字段的操作选项 -->
   <context-menu ref="contextmenuRef">
     <context-menu-item @click="handleSetAlias">设置别名</context-menu-item>
-    <context-menu-item @click="handleSetColumnWidth">设置列宽</context-menu-item>
+    <context-menu-item @click="handleSetWidth">设置列宽</context-menu-item>
     <!-- 开启排序 -->
     <context-menu-item @click="handleSetSortable">开启排序</context-menu-item>
     <!-- 开启表头过滤 -->
@@ -29,30 +29,30 @@
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ContextMenu from '../../context-menu/index.vue'
-import SelecterTemplate from '../template/index.vue'
 
 const props = defineProps({
-  dimension: {
-    type: Object as PropType<DimensionStore.DimensionOption>,
+  group: {
+    type: Object as PropType<GroupStore.GroupOption>,
     required: true,
     default: () => ({})
   }
 })
-const dimensionStore = useDimensionsStore()
+
+const groupStore = useGroupsStore()
+
 const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 /**
  * @desc 当前选中的列
  */
-const currentDimension = ref<DimensionStore.DimensionOption | null>(null)
+const currentGroup = ref<GroupStore.GroupOption | null>(null)
 /**
  * @desc 右键点击事件
  */
 const contextmenuHandler = (event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
-  currentDimension.value = props.dimension
-
+  currentGroup.value = props.group
   // 直接显示右键菜单
   if (contextmenuRef.value) {
     contextmenuRef.value.show(event)
@@ -67,54 +67,49 @@ const handleSetAlias = () => {
     cancelButtonText: '取消',
     inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
     inputErrorMessage: '别名仅支持中英文、数字、下划线，且不能为空',
-    inputValue: currentDimension.value!.displayName || '',
+    inputValue: currentGroup.value!.displayName || '',
     autofocus: true
   })
     .then(({ value }) => {
-      if (!currentDimension.value) return
-      currentDimension.value.displayName = value
-      dimensionStore.updateDimension(currentDimension.value)
-      currentDimension.value = null
+      if (!currentGroup.value) return
+      currentGroup.value.displayName = value
+      groupStore.updateGroup(currentGroup.value)
+      currentGroup.value = null
     })
     .catch(() => {
       ElMessage({
         type: 'info',
         message: '取消操作'
       })
-      currentDimension.value = null
+      currentGroup.value = null
     })
 }
 
 /**
  * @desc 设置列宽
  */
-const handleSetColumnWidth = () => {
-  if (!currentDimension.value) return
-
-  // 获取列的显示名称（优先使用别名，否则使用原始名称）
-  const columnName = currentDimension.value.displayName || currentDimension.value.columnName || '未知列'
-
-  ElMessageBox.prompt(`请输入列"${columnName}"的宽度`, {
-    title: `设置列宽 - ${columnName}`,
+const handleSetWidth = () => {
+  ElMessageBox.prompt('请输入列宽', {
+    title: '设置列宽',
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     inputPattern: /^[1-9]\d*$/,
     inputErrorMessage: '列宽仅支持正整数',
-    inputValue: String(currentDimension.value.width || ''),
+    inputValue: String(currentGroup.value!.width || ''),
     autofocus: true
   })
     .then(({ value }) => {
-      if (!currentDimension.value) return
-      currentDimension.value.width = Number(value)
-      dimensionStore.updateDimension(currentDimension.value)
-      currentDimension.value = null
+      if (!currentGroup.value) return
+      currentGroup.value.width = Number(value)
+      groupStore.updateGroup(currentGroup.value)
+      currentGroup.value = null
     })
     .catch(() => {
       ElMessage({
         type: 'info',
         message: '取消操作'
       })
-      currentDimension.value = null
+      currentGroup.value = null
     })
 }
 
@@ -122,44 +117,44 @@ const handleSetColumnWidth = () => {
  * @desc 设置固定列
  */
 const handleSetFixed = (fixed: 'left' | 'right' | null) => {
-  if (!currentDimension.value) return
-  currentDimension.value.fixed = fixed
-  dimensionStore.updateDimension(currentDimension.value)
-  currentDimension.value = null
+  if (!currentGroup.value) return
+  currentGroup.value.fixed = fixed
+  groupStore.updateGroup(currentGroup.value)
+  currentGroup.value = null
 }
 
 /**
  * @desc 设置对齐方式
  */
 const handleSetAlign = (align: 'left' | 'right' | 'center' | null) => {
-  if (!currentDimension.value) return
-  currentDimension.value.align = align
-  dimensionStore.updateDimension(currentDimension.value)
-  currentDimension.value = null
+  if (!currentGroup.value) return
+  currentGroup.value.align = align
+  groupStore.updateGroup(currentGroup.value)
+  currentGroup.value = null
 }
 
 /**
  * @desc 设置排序
  */
 const handleSetSortable = () => {
-  if (!currentDimension.value) return
-  currentDimension.value.sortable = !currentDimension.value.sortable
-  dimensionStore.updateDimension(currentDimension.value)
-  currentDimension.value = null
+  if (!currentGroup.value) return
+  currentGroup.value.sortable = !currentGroup.value.sortable
+  groupStore.updateGroup(currentGroup.value)
+  currentGroup.value = null
 }
 
 /**
  * @desc 设置表头过滤
  */
 const handleSetFilterable = () => {
-  if (!currentDimension.value) return
-  currentDimension.value.filterable = !currentDimension.value.filterable
-  dimensionStore.updateDimension(currentDimension.value)
-  currentDimension.value = null
+  if (!currentGroup.value) return
+  currentGroup.value.filterable = !currentGroup.value.filterable
+  groupStore.updateGroup(currentGroup.value)
+  currentGroup.value = null
 }
 </script>
 <style lang="scss" scoped>
-.dimension-selecter {
+.group-selector {
   cursor: context-menu;
 }
 </style>

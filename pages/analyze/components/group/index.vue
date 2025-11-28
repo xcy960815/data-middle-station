@@ -22,7 +22,7 @@
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
       >
-        <selecter-group
+        <selector-group
           class="group__item__name"
           cast="group"
           :displayName="item.displayName"
@@ -31,7 +31,7 @@
           :index="index"
           :invalid="item.__invalid"
           :invalidMessage="item.__invalidMessage"
-        ></selecter-group>
+        ></selector-group>
       </div>
     </div>
   </div>

@@ -1,9 +1,9 @@
 <template>
-  <selecter-template v-bind="$attrs" :display-name="displayName" :cast="cast" :index="index" :order="order">
+  <selector-template v-bind="$attrs" :display-name="displayName" :cast="cast" :index="index" :order="order">
     <template #order-icon>
       <!-- 降序 -->
       <icon-park
-        class="chart-selecter-order-icon mr-1"
+        class="chart-selector-order-icon mr-1"
         v-if="orderType === 'asc'"
         type="arrow-circle-down"
         size="14"
@@ -12,7 +12,7 @@
       />
       <!-- 升序 -->
       <icon-park
-        class="chart-selecter-order-icon mr-1"
+        class="chart-selector-order-icon mr-1"
         v-if="orderType === 'desc'"
         type="arrow-circle-up"
         size="14"
@@ -37,7 +37,7 @@
         <span>{{ orderAggregation.label }}</span>
       </div>
     </template>
-  </selecter-template>
+  </selector-template>
 </template>
 
 <script lang="ts" setup>
@@ -110,13 +110,6 @@ const orderAggregations = ref([
     value: 'min'
   }
 ])
-
-/**
- * @desc 升降序icon图标
- */
-const orderIconName = computed(() => (orderType: OrderStore.OrderType) => {
-  return orderType === 'asc' ? 'arrow-circle-down' : 'arrow-circle-up'
-})
 
 /**
  * @desc 点击排序的升降序
