@@ -41,7 +41,7 @@ declare namespace SendEmailDto {
     analyzeId: number
   }
 
-  interface SendChartEmailOptions {
+  interface SendEmailOptions {
     /**
      * 邮件配置
      */
