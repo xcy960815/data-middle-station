@@ -49,7 +49,7 @@ declare namespace FilterStore {
   /**
    * @desc 过滤器选项
    */
-  type FilterOption = ColumnStore.ColumnOption & {
+  type FilterOption = ColumnsStore.ColumnOption & {
     filterType?: FilterType
     filterValue?: string
     displayName?: string

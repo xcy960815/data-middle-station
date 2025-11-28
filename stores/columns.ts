@@ -3,10 +3,10 @@ import { StoreNames } from './store-names'
  * @desc 列 store
  */
 export const useColumnsStore = defineStore<
-  ColumnStore.ColumnKey,
-  BaseStore.State<ColumnStore.ColumnState>,
-  BaseStore.Getters<ColumnStore.ColumnState, ColumnStore.ColumnGetters>,
-  BaseStore.Actions<ColumnStore.ColumnState, ColumnStore.ColumnActions>
+  ColumnsStore.ColumnKey,
+  BaseStore.State<ColumnsStore.ColumnState>,
+  BaseStore.Getters<ColumnsStore.ColumnState, ColumnsStore.ColumnGetters>,
+  BaseStore.Actions<ColumnsStore.ColumnState, ColumnsStore.ColumnActions>
 >(StoreNames.COLUMNS, {
   /**
    * @desc 关于列所哟的数据字段
@@ -55,7 +55,7 @@ export const useColumnsStore = defineStore<
      * @desc 删除列名
      */
     removeColumns(columns) {
-      this.columns = this.columns.filter((column: ColumnStore.ColumnOption) => !columns.includes(column))
+      this.columns = this.columns.filter((column: ColumnsStore.ColumnOption) => !columns.includes(column))
     },
     /**
      * @desc 更新列名
