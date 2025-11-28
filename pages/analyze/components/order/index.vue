@@ -15,7 +15,7 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <selecter-order
+        <selector-order
           class="order__item__name"
           cast="order"
           :display-name="orderOption.displayName"
@@ -26,7 +26,7 @@
           :order="orderOption"
           :invalid="orderOption.__invalid"
           :invalidMessage="orderOption.__invalidMessage"
-        ></selecter-order>
+        ></selector-order>
       </div>
     </div>
   </div>

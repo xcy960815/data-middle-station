@@ -27,7 +27,14 @@ services:
   redis:
     image: redis:7.2.5
     container_name: dms-redis-container
-    command: redis-server --bind 0.0.0.0 --requirepass 123456 --user dms on >123456 allkeys allcommands
+    command:
+      - redis-server
+      - --bind
+      - 0.0.0.0
+      - --requirepass
+      - '123456'
+      - --user
+      - dms on >123456 ~* +@all
     ports:
       - '6383:6379'
     networks:

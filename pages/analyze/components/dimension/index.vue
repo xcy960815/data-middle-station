@@ -22,7 +22,7 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <selecter-dimension
+        <selector-dimension
           class="dimension__item__name"
           cast="dimension"
           :columnName="dimension.columnName"
@@ -32,14 +32,13 @@
           :invalid="dimension.__invalid"
           :invalidMessage="dimension.__invalidMessage"
         >
-        </selecter-dimension>
+        </selector-dimension>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import SelecterDimension from '@/components/selecter/dimension/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()

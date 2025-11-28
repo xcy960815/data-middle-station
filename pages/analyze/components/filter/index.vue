@@ -22,7 +22,7 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <selecter-filter
+        <selector-filter
           class="filter__item__name"
           cast="filter"
           :name="item.columnName"
@@ -33,7 +33,7 @@
           :column-type="item.columnType"
           :index="index"
         >
-        </selecter-filter>
+        </selector-filter>
       </div>
     </div>
   </div>

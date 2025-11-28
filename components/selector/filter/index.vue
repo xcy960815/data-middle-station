@@ -1,5 +1,5 @@
 <template>
-  <selecter-template v-bind="$attrs" :display-name="displayName">
+  <selector-template v-bind="$attrs" :display-name="displayName">
     <template #default>
       <div
         class="aggregation-option step-1"
@@ -16,7 +16,7 @@
         />
         <span>{{ filterAggregation.label }}</span>
       </div>
-      <div class="filter-selecter relative step-2" style="width: 500px" v-else>
+      <div class="filter-selector relative step-2" style="width: 500px" v-else>
         <el-select v-model="localFilterType" placeholder="请选择过滤条件" class="w-full mb-1">
           <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
@@ -26,7 +26,7 @@
         </div>
       </div>
     </template>
-  </selecter-template>
+  </selector-template>
 </template>
 
 <script lang="ts" setup>
@@ -235,7 +235,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.filter-selecter {
+.filter-selector {
   position: reactive;
 
   .handle-box {
