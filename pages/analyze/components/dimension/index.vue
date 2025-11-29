@@ -162,7 +162,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   }
   const index = data.index
   switch (data.from) {
-    case 'dimensions':
+    case 'dimensions': {
       // 移动位置
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
@@ -171,6 +171,7 @@ const dropHandler = (dragEvent: DragEvent) => {
       dimensions.splice(targetIndex, 0, target)
       dimensionStore.setDimensions(dimensions)
       break
+    }
     default:
       // 更新列名 主要是显示已经选中的标志
       columnStore.updateColumn({ column: data.value, index })

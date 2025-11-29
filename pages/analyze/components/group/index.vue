@@ -148,7 +148,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   const index = data.index
   switch (data.from) {
     case 'groups': {
-      // relocate postion by dragging
+      // relocate position by dragging
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
       const groups = JSON.parse(JSON.stringify(groupStore.getGroups))

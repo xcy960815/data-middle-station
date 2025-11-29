@@ -1,6 +1,18 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": ["antv", "konva", "sxzz", "popperjs", "nuxt", "mediapipe", "healthcheck", "requirepass", "mysqladmin"],
+  "words": [
+    "antv",
+    "konva",
+    "sxzz",
+    "popperjs",
+    "nuxt",
+    "mediapipe",
+    "healthcheck",
+    "requirepass",
+    "mysqladmin",
+    "echarts",
+    "pinia"
+  ],
   "ignorePaths": ["node_modules", "dist", ".nuxt", ".output"]
 }

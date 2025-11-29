@@ -15,7 +15,7 @@
       <context-menu-item @click="handleSetAlign('left')">左对齐</context-menu-item>
       <context-menu-item @click="handleSetAlign('center')">居中对齐</context-menu-item>
       <context-menu-item @click="handleSetAlign('right')">右对齐</context-menu-item>
-      <context-menu-item @click="handleSetAlign(undefined)">取消对齐</context-menu-item>
+      <context-menu-item @click="handleSetAlign(null)">取消对齐</context-menu-item>
     </context-menu-submenu>
     <context-menu-divider></context-menu-divider>
     <context-menu-submenu title="固定列">
@@ -130,7 +130,7 @@ const handleSetFixed = (fixed: 'left' | 'right' | null) => {
 /**
  * @desc 设置对齐方式
  */
-const handleSetAlign = (align: 'left' | 'right' | 'center' | undefined) => {
+const handleSetAlign = (align: 'left' | 'right' | 'center' | null) => {
   if (!currentDimension.value) return
   currentDimension.value.align = align
   dimensionStore.updateDimension(currentDimension.value)

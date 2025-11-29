@@ -1,3 +1,5 @@
+import { httpRequest } from '@/composables/useHttpRequest'
+import { debounce } from '@/utils/throttleDebounce'
 import dayjs from 'dayjs'
 import { computed } from 'vue'
 
@@ -85,13 +87,12 @@ export const getChartDataHandler = () => {
     analyzeStore.setChartLoading(true)
     const dataSource = columnStore.getDataSource
     const dimensions = dimensionStore.getDimensions
-    const filters = filterStore.getFilters
     if (!dataSource) return
     if (!dimensions.length) return
 
     const startTime = dayjs().valueOf()
-
-    const result = await httpRequest('/api/getAnalyzeData', {
+    // TODO
+    const result = await httpRequest<ApiResponseI<AnalyzeVo.AnalyzeData>>('/api/getAnalyzeData', {
       method: 'POST',
       body: queryChartDataParams.value
     }).finally(() => {

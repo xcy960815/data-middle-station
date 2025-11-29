@@ -30,8 +30,8 @@ export class AnalyzeService extends BaseService {
    */
   private convertDaoToVo(
     analyzeRecord: AnalyzeDao.AnalyzeOptions,
-    resolvedChartConfig: AnalyzeConfigVo.ChartConfigResponse | null
-  ): AnalyzeVo.GetAnalyzeResponse {
+    resolvedChartConfig: AnalyzeConfigVo.ChartConfigOptions | null
+  ): AnalyzeVo.GetAnalyzeOptions {
     return {
       ...analyzeRecord,
       chartConfig: resolvedChartConfig
@@ -42,7 +42,7 @@ export class AnalyzeService extends BaseService {
    * @param {AnalyzeDto.DeleteAnalyzeOptions} deleteOptions
    * @returns {Promise<AnalyzeVo.DeleteAnalyzeResponse>}
    */
-  public async deleteAnalyze(deleteOptions: AnalyzeDto.DeleteAnalyzeOptions): Promise<AnalyzeVo.DeleteAnalyzeResponse> {
+  public async deleteAnalyze(deleteOptions: AnalyzeDto.DeleteAnalyzeOptions): Promise<AnalyzeVo.DeleteAnalyzeOptions> {
     const queryOptions: AnalyzeDao.GetAnalyzeOptions = {
       id: deleteOptions.id
     }
@@ -73,7 +73,7 @@ export class AnalyzeService extends BaseService {
    * @param {AnalyzeDto.GetAnalyzeOptions} queryOptions
    * @returns {Promise<AnalyzeVo.GetAnalyzeResponse>}
    */
-  public async getAnalyze(queryOptions: AnalyzeDto.GetAnalyzeOptions): Promise<AnalyzeVo.GetAnalyzeResponse> {
+  public async getAnalyze(queryOptions: AnalyzeDto.GetAnalyzeOptions): Promise<AnalyzeVo.GetAnalyzeOptions> {
     const analyzeRecord = await this.analyzeMapper.getAnalyze(queryOptions)
     if (!analyzeRecord) {
       throw new Error('分析不存在')
@@ -92,7 +92,7 @@ export class AnalyzeService extends BaseService {
    * @desc 获取所有图表
    * @returns {Promise<Array<AnalyzeVo.GetAnalyzeResponse>>}
    */
-  public async getAnalyzes(): Promise<Array<AnalyzeVo.GetAnalyzeResponse>> {
+  public async getAnalyzes(): Promise<Array<AnalyzeVo.GetAnalyzeOptions>> {
     const analyzeRecordList = await this.analyzeMapper.getAnalyzes()
     const promises = analyzeRecordList.map(async (analyzeRecord) => {
       if (analyzeRecord.chartConfigId) {
@@ -114,7 +114,7 @@ export class AnalyzeService extends BaseService {
    * @param {AnalyzeDto.UpdateAnalyzeOptions} updateOptions
    * @returns {Promise<AnalyzeVo.UpdateAnalyzeResponse>}
    */
-  public async updateAnalyze(updateOptions: AnalyzeDto.UpdateAnalyzeOptions): Promise<AnalyzeVo.UpdateAnalyzeResponse> {
+  public async updateAnalyze(updateOptions: AnalyzeDto.UpdateAnalyzeOptions): Promise<AnalyzeVo.UpdateAnalyzeOptions> {
     // 解构分析配置，剩余的为分析配置
     const { chartConfig, ...restOption } = updateOptions
     let chartConfigId = updateOptions.chartConfigId
@@ -149,7 +149,7 @@ export class AnalyzeService extends BaseService {
    * @param createOptions {AnalyzeDto.CreateAnalyzeRequest} 图表
    * @returns {Promise<AnalyzeVo.CreateAnalyzeResponse>}
    */
-  public async createAnalyze(createOptions: AnalyzeDto.CreateAnalyzeOptions): Promise<AnalyzeVo.CreateAnalyzeResponse> {
+  public async createAnalyze(createOptions: AnalyzeDto.CreateAnalyzeOptions): Promise<AnalyzeVo.CreateAnalyzeOptions> {
     const { chartConfig, ...restAnalyzeOption } = createOptions
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
     let chartConfigId = createOptions.chartConfigId || null
@@ -176,7 +176,7 @@ export class AnalyzeService extends BaseService {
    */
   public async updateAnalyzeName(
     updateOptions: AnalyzeDto.UpdateAnalyzeNameOptions
-  ): Promise<AnalyzeVo.UpdateAnalyzeNameResponse> {
+  ): Promise<AnalyzeVo.UpdateAnalyzeNameOptions> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const enrichedOptions: AnalyzeDao.UpdateAnalyzeNameOptions = {
       ...updateOptions,
@@ -194,7 +194,7 @@ export class AnalyzeService extends BaseService {
    */
   public async updateAnalyzeDesc(
     updateOptions: AnalyzeDto.UpdateAnalyzeDescOptions
-  ): Promise<AnalyzeVo.UpdateAnalyzeDescResponse> {
+  ): Promise<AnalyzeVo.UpdateAnalyzeDescOptions> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const enrichedOptions: AnalyzeDao.UpdateAnalyzeDescOptions = {
       ...updateOptions,
