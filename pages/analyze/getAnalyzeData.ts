@@ -92,7 +92,7 @@ export const getChartDataHandler = () => {
 
     const startTime = dayjs().valueOf()
     // TODO
-    const result = await httpRequest<ApiResponseI<AnalyzeVo.AnalyzeData>>('/api/getAnalyzeData', {
+    const result = await httpRequest<ApiResponseI<AnalyzeDataVo.ChartData[]>>('/api/getAnalyzeData', {
       method: 'POST',
       body: queryChartDataParams.value
     }).finally(() => {

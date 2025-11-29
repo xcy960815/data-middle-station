@@ -13,10 +13,10 @@ export class ChartConfigService extends BaseService {
   }
   /**
    * @desc 将dao对象转换为vo对象
-   * @param chartConfigRecord {AnalyzeConfigDao.ChartConfig} 图表配置
-   * @returns {AnalyzeConfigVo.ChartConfigResponse} 图表配置
+   * @param chartConfigRecord {AnalyzeConfigDao.ChartConfigOptions} 图表配置
+   * @returns {AnalyzeConfigVo.ChartConfigOptions} 图表配置
    */
-  private convertDaoToVo(chartConfigRecord: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigVo.ChartConfigResponse {
+  private convertDaoToVo(chartConfigRecord: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigVo.ChartConfigOptions {
     const normalizedData = this.convertDaoToDto(chartConfigRecord)
     return {
       ...normalizedData,
@@ -30,7 +30,7 @@ export class ChartConfigService extends BaseService {
       /**
        * 维度配置
        */
-      dimensions: normalizedData.dimensions.map((item: AnalyzeConfigDao.DimensionOption) => ({
+      dimensions: normalizedData.dimensions.map((item: AnalyzeConfigDao.DimensionOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
@@ -61,11 +61,11 @@ export class ChartConfigService extends BaseService {
   /**
    * @desc 获取图表
    * @param {AnalyzeConfigDto.GetChartConfigOptions} queryOptions 图表配置请求参数
-   * @returns {Promise<AnalyzeConfigVo.ChartConfigResponse>}
+   * @returns {Promise<AnalyzeConfigVo.ChartConfigOptions>}
    */
   public async getChartConfig(
     queryOptions: AnalyzeConfigDto.GetChartConfigOptions
-  ): Promise<AnalyzeConfigVo.ChartConfigResponse> {
+  ): Promise<AnalyzeConfigVo.ChartConfigOptions> {
     const chartConfigRecord = await this.chartConfigMapper.getChartConfig(queryOptions)
     return this.convertDaoToVo(chartConfigRecord)
   }
