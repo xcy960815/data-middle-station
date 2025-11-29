@@ -50,9 +50,7 @@ declare namespace AnalyzeDao {
   /**
    * 获取分析请求参数
    */
-  type GetAnalyzeOptions = Partial<
-    Pick<AnalyzeOptions, 'id' | 'analyzeName' | 'analyzeDesc' | 'updatedBy' | 'updateTime' | 'createdBy'>
-  > & {
+  type GetAnalyzeOptions = Partial<AnalyzeOptions> & {
     id: number
   }
   /**

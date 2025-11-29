@@ -234,7 +234,9 @@ declare namespace ScheduledEmailDao {
     nextExecutionTimeEnd?: string
   }
 
-  type GetScheduledEmailOptions = ScheduledEmailQueryOptions
+  type GetScheduledEmailOptions = Partial<ScheduledEmailOptions> & {
+    id: number
+  }
 
   /**
    * @desc 创建任务参数
@@ -244,17 +246,12 @@ declare namespace ScheduledEmailDao {
   /**
    * @desc 更新任务参数
    */
-  type UpdateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'id'> & {
-    /**
-     * 任务ID
-     */
-    id: number
-  }
+  type UpdateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'createdTime' | 'createdBy'>
 
   /**
    * @desc 删除任务参数
    */
-  type DeleteScheduledEmailOptions = ScheduledEmailQueryOptions
+  type DeleteScheduledEmailOptions = Pick<ScheduledEmailOptions, 'id' | 'updatedBy' | 'updatedTime'>
 
   /**
    * @desc 任务列表查询参数

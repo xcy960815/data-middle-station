@@ -37,21 +37,21 @@ export class ChartConfigService extends BaseService {
       /**
        * 过滤配置
        */
-      filters: normalizedData.filters.map((item: AnalyzeConfigDao.FilterOption) => ({
+      filters: normalizedData.filters.map((item: AnalyzeConfigDao.FilterOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 分组配置
        */
-      groups: normalizedData.groups.map((item: AnalyzeConfigDao.GroupOption) => ({
+      groups: normalizedData.groups.map((item: AnalyzeConfigDao.GroupOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 排序配置
        */
-      orders: normalizedData.orders.map((item: AnalyzeConfigDao.OrderOption) => ({
+      orders: normalizedData.orders.map((item: AnalyzeConfigDao.OrderOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       }))

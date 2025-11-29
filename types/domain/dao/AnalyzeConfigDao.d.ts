@@ -10,7 +10,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 维度配置
    */
-  type DimensionOption = ColumnOptions
+  type DimensionOptions = ColumnOptions
 
   /**
    * 过滤聚合方式
@@ -54,7 +54,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 过滤配置
    */
-  type FilterOption = ColumnOptions & {
+  type FilterOptions = ColumnOptions & {
     /**
      * 过滤类型
      */
@@ -72,7 +72,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 分组配置
    */
-  type GroupOption = ColumnOptions
+  type GroupOptions = ColumnOptions
 
   /**
    * 排序类型
@@ -104,7 +104,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 排序配置
    */
-  type OrderOption = ColumnOptions & {
+  type OrderOptions = ColumnOptions & {
     /**
      * 排序类型
      */
@@ -399,7 +399,7 @@ declare namespace AnalyzeConfigDao {
   }
 
   /**
-   * 图表配置
+   * 数据库图表配置
    */
   type ChartConfigOptions = {
     /**
@@ -421,19 +421,19 @@ declare namespace AnalyzeConfigDao {
     /**
      * 维度配置
      */
-    dimensions: DimensionOption[]
+    dimensions: DimensionOptions[]
     /**
      * 过滤配置
      */
-    filters: FilterOption[]
+    filters: FilterOptions[]
     /**
      * 分组配置
      */
-    groups: GroupOption[]
+    groups: GroupOptions[]
     /**
      * 排序配置
      */
-    orders: OrderOption[]
+    orders: OrderOptions[]
     /**
      * 公共图表配置
      */
