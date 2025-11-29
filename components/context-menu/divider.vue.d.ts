@@ -1,4 +1,4 @@
 import type { DefineComponent } from 'vue'
 
-declare const Component: DefineComponent<{}, {}, any>
+declare const Component: DefineComponent<{}, {}, {}, {}, {}, {}, {}, {}>
 export default Component

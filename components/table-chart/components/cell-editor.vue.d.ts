@@ -20,7 +20,7 @@ declare const Component: DefineComponent<
     closeEditor: () => void
     updatePositions: () => void
   },
-  any
+  {}
 >
 
 export default Component

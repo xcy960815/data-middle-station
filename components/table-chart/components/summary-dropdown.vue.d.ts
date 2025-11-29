@@ -19,7 +19,7 @@ declare const Component: DefineComponent<
     closeSummaryDropdown: () => void
     updatePositions: () => void
   },
-  any
+  {}
 >
 
 export default Component
