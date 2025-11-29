@@ -14,7 +14,7 @@ declare const Component: DefineComponent<
     closeFilterDropdown: () => void
     updatePositions: () => void
   },
-  any,
+  {},
   {},
   {},
   {},
