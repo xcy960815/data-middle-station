@@ -8,23 +8,18 @@ interface SummaryDropdownOption {
 }
 
 declare const Component: DefineComponent<
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>
-> & {
-  openSummaryDropdown: (
-    evt: KonvaEventObject<MouseEvent, Konva.Rect>,
-    colName: string,
-    options: SummaryDropdownOption[],
-    selected?: string
-  ) => void
-  closeSummaryDropdown: () => void
-  updatePositions: () => void
-}
+  {},
+  {
+    openSummaryDropdown: (
+      evt: KonvaEventObject<MouseEvent, Konva.Rect>,
+      colName: string,
+      options: SummaryDropdownOption[],
+      selected?: string
+    ) => void
+    closeSummaryDropdown: () => void
+    updatePositions: () => void
+  },
+  any
+>
 
 export default Component

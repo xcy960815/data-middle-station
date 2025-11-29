@@ -25,13 +25,13 @@ export class AnalyzeService extends BaseService {
   /**
    * @desc DAO 转 VO
    * @param analyzeRecord {AnalyzeDao.AnalyzeOptions} 分析记录
-   * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigResponse | null} 关联图表配置
-   * @returns {AnalyzeVo.GetAnalyzeResponse}
+   * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigOptions | null} 关联图表配置
+   * @returns {AnalyzeVo.GetAnalyzeOptions}
    */
   private convertDaoToVo(
     analyzeRecord: AnalyzeDao.AnalyzeOptions,
     resolvedChartConfig: AnalyzeConfigVo.ChartConfigOptions | null
-  ): AnalyzeVo.GetAnalyzeOptions {
+  ): AnalyzeVo.AnalyzeOptions {
     return {
       ...analyzeRecord,
       chartConfig: resolvedChartConfig
@@ -166,8 +166,7 @@ export class AnalyzeService extends BaseService {
       chartConfigId
     }
     const createAnalyzeResponseId = await this.analyzeMapper.createAnalyze(enrichedOptions)
-    const createAnalyzeResponse = await this.analyzeMapper.getAnalyze({ id: createAnalyzeResponseId })
-    return createAnalyzeResponse
+    return this.getAnalyze({ id: createAnalyzeResponseId })
   }
 
   /**
