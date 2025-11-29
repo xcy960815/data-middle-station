@@ -3,78 +3,42 @@
  */
 declare namespace AnalyzeVo {
   /**
-   * 图表数据
+   * @desc 分析选项
    */
-  type AnalyzeData = Array<{
-    [key: string]: string | number
-  }>
+  type AnalyzeOptions = AnalyzeDao.AnalyzeOptions
+
   /**
-   * 获取分析响应
+   * @desc 获取分析响应
    */
-  type GetAnalyzeOptions = {
-    /**
-     * 分析id
-     */
-    id: number
-    /**
-     * 分析名称
-     */
-    analyzeName: string
-    /**
-     * 分析描述
-     */
-    analyzeDesc: string
-    /**
-     * 访问次数
-     */
-    viewCount: number
-    /**
-     * 创建时间
-     */
-    createTime: string
-    /**
-     * 更新时间
-     */
-    updateTime: string
-    /**
-     * 创建人
-     */
-    createdBy: string
-    /**
-     * 更新人
-     */
-    updatedBy: string
-    /**
-     * 图表配置id
-     */
-    chartConfigId: number | null
+  type GetAnalyzeOptions = AnalyzeOptions & {
     /**
      * 图表配置
      */
     chartConfig: AnalyzeConfigVo.ChartConfigOptions | null
   }
+
   /**
-   * 更新分析选项
+   * @desc 创建分析响应
+   */
+  type CreateAnalyzeOptions = AnalyzeOptions
+
+  /**
+   * @desc 更新分析响应
    */
   type UpdateAnalyzeOptions = boolean
 
   /**
-   * 更新分析描述选项
-   */
-  type UpdateAnalyzeDescOptions = boolean
-
-  /**
-   * 更新分析名称选项
+   * @desc 更新分析名称响应
    */
   type UpdateAnalyzeNameOptions = boolean
 
   /**
-   * 创建分析选项
+   * @desc 更新分析描述响应
    */
-  type CreateAnalyzeOptions = boolean
+  type UpdateAnalyzeDescOptions = boolean
 
   /**
-   * 删除分析选项
+   * @desc 删除分析响应
    */
   type DeleteAnalyzeOptions = boolean
 }

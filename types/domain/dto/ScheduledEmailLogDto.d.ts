@@ -3,334 +3,61 @@
  */
 declare namespace ScheduledEmailLogDto {
   /**
-   * @desc 执行日志（内部使用格式，使用 camelCase）
+   * @desc 执行日志
    */
-  interface ExecutionLog {
-    /**
-     * 日志ID
-     */
-    id: number
-    /**
-     * 任务ID
-     */
-    taskId: number
-    /**
-     * 执行时间
-     */
-    executionTime: string
-    /**
-     * 执行状态
-     */
-    status: 'success' | 'failed'
-    /**
-     * 消息
-     */
-    message?: string
-    /**
-     * 错误详情
-     */
-    errorDetails?: string
-    /**
-     * 邮件消息ID
-     */
-    emailMessageId?: string
-    /**
-     * 发件人邮箱
-     */
-    senderEmail?: string
-    /**
-     * 发件人名称
-     */
-    senderName?: string
-    /**
-     * 收件人(To)
-     */
-    recipientTo?: string[]
-    /**
-     * 抄送
-     */
-    recipientCc?: string[]
-    /**
-     * 密送
-     */
-    recipientBcc?: string[]
-    /**
-     * 回复地址
-     */
-    replyTo?: string
-    /**
-     * 邮件主题
-     */
-    emailSubject?: string
-    /**
-     * 附件数量
-     */
-    attachmentCount?: number
-    /**
-     * 附件名称
-     */
-    attachmentNames?: string[]
-    /**
-     * 邮件通道
-     */
-    emailChannel?: string
-    /**
-     * 邮件服务提供方
-     */
-    provider?: string
-    /**
-     * 服务响应
-     */
-    providerResponse?: string
-    /**
-     * 接收成功的收件人
-     */
-    acceptedRecipients?: string[]
-    /**
-     * 拒收的收件人
-     */
-    rejectedRecipients?: string[]
-    /**
-     * 重试次数
-     */
-    retryCount?: number
-    /**
-     * 执行耗时(毫秒)
-     */
-    executionDuration?: number
-    /**
-     * 执行时区
-     */
-    executionTimezone?: string
-    /**
-     * 原始请求
-     */
-    rawRequestPayload?: Record<string, any>
-    /**
-     * 原始响应
-     */
-    rawResponsePayload?: Record<string, any>
-    /**
-     * SMTP主机
-     */
-    smtpHost?: string
-    /**
-     * SMTP端口
-     */
-    smtpPort?: number
-    /**
-     * 创建时间
-     */
-    createdTime: string
-    /**
-     * 创建时区
-     */
-    createdTimezone?: string
-  }
+  type ExecutionLog = ScheduledEmailLogDao.ScheduledEmailLogOptions
 
   /**
    * @desc 创建日志请求
    */
-  interface CreateLogOptions {
-    /**
-     * 任务ID
-     */
-    taskId: number
-    /**
-     * 执行时间
-     */
-    executionTime: string
-    /**
-     * 执行状态
-     */
-    status: 'success' | 'failed'
-    /**
-     * 消息
-     */
-    message?: string
-    /**
-     * 错误详情
-     */
-    errorDetails?: string
-    /**
-     * 邮件消息ID
-     */
-    emailMessageId?: string
-    /**
-     * 发件人邮箱
-     */
-    senderEmail?: string
-    /**
-     * 发件人名称
-     */
-    senderName?: string
-    /**
-     * 收件人(To)
-     */
-    recipientTo?: string[]
-    /**
-     * 抄送
-     */
-    recipientCc?: string[]
-    /**
-     * 密送
-     */
-    recipientBcc?: string[]
-    /**
-     * 回复地址
-     */
-    replyTo?: string
-    /**
-     * 邮件主题
-     */
-    emailSubject?: string
-    /**
-     * 附件数量
-     */
-    attachmentCount?: number
-    /**
-     * 附件名称
-     */
-    attachmentNames?: string[]
-    /**
-     * 邮件通道
-     */
-    emailChannel?: string
-    /**
-     * 邮件服务提供方
-     */
-    provider?: string
-    /**
-     * 服务响应
-     */
-    providerResponse?: string
-    /**
-     * 接收成功的收件人
-     */
-    acceptedRecipients?: string[]
-    /**
-     * 拒收的收件人
-     */
-    rejectedRecipients?: string[]
-    /**
-     * 重试次数
-     */
-    retryCount?: number
-    /**
-     * 执行耗时(毫秒)
-     */
-    executionDuration?: number
-    /**
-     * 执行时区
-     */
-    executionTimezone?: string
-    /**
-     * 原始请求
-     */
-    rawRequestPayload?: Record<string, any>
-    /**
-     * 原始响应
-     */
-    rawResponsePayload?: Record<string, any>
-    /**
-     * SMTP主机
-     */
-    smtpHost?: string
-    /**
-     * SMTP端口
-     */
-    smtpPort?: number
-    /**
-     * 创建时区
-     */
-    createdTimezone?: string
-  }
+  type CreateLogOptions = ScheduledEmailLogDao.CreateScheduledEmailLogOptions
 
   /**
    * @desc 日志列表查询参数
    */
-  interface LogListQuery {
-    /**
-     * 任务ID
-     */
-    taskId?: number
-    /**
-     * 执行状态
-     */
-    status?: 'success' | 'failed'
-    /**
-     * 开始时间
-     */
-    startTime?: string
-    /**
-     * 结束时间
-     */
-    endTime?: string
-    /**
-     * 分页大小
-     */
-    limit?: number
-    /**
-     * 偏移量
-     */
-    offset?: number
-  }
+  type LogListQuery = ScheduledEmailLogDao.LogListQuery
 
   /**
    * @desc 日志统计信息
    */
-  interface LogStatistics {
-    /**
-     * 总日志数
-     */
-    totalLogs: number
-    /**
-     * 成功执行数
-     */
-    successCount: number
-    /**
-     * 失败执行数
-     */
-    failedCount: number
-    /**
-     * 今日执行数
-     */
-    todayCount: number
-    /**
-     * 本周执行数
-     */
-    thisWeekCount: number
-    /**
-     * 本月执行数
-     */
-    thisMonthCount: number
-    /**
-     * 平均执行时长(毫秒)
-     */
-    avgDuration: number
-  }
+  type LogStatistics = ScheduledEmailLogDao.LogStatistics
 
   /**
    * @desc 日志列表响应
    */
   interface LogListResponse {
-    /**
-     * 日志列表
-     */
     logs: ExecutionLog[]
-    /**
-     * 总数
-     */
     total: number
-    /**
-     * 分页信息
-     */
     pagination: {
       limit: number
       offset: number
       hasMore: boolean
     }
   }
+
+  type ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
+
+  /**
+   * 获取日志请求参数
+   */
+  type GetScheduledEmailLogOptions = Partial<ScheduledEmailLogOptions> & {
+    id: number
+  }
+
+  /**
+   * 更新日志请求参数
+   */
+  type UpdateScheduledEmailLogOptions = Omit<ScheduledEmailLogOptions, 'createdTime' | 'createdBy'>
+
+  /**
+   * 删除日志请求参数
+   */
+  type DeleteScheduledEmailLogOptions = Pick<ScheduledEmailLogOptions, 'id'>
+
+  /**
+   * 创建日志请求参数
+   */
+  type CreateScheduledEmailLogOptions = Omit<ScheduledEmailLogOptions, 'id' | 'createdTime' | 'createdBy'>
 
   /**
    * @desc 执行日志单条查询请求
