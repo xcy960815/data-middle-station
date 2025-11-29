@@ -1,3 +1,5 @@
+import { httpRequest } from '@/composables/useHttpRequest'
+
 /**
  * @desc 获取图表配置 handler
  */
@@ -15,7 +17,8 @@ export const getAnalyzeHandler = () => {
     const router = useRouter()
     const id = router.currentRoute.value.query.id
     if (!id) return
-    const result = await httpRequest('/api/getAnalyze', {
+    // eslint-disable-next-line no-undef
+    const result = await httpRequest<ApiResponseI<AnalyzeVo.GetAnalyzeOptions>>('/api/getAnalyze', {
       method: 'post',
       body: {
         id
@@ -34,10 +37,11 @@ export const getAnalyzeHandler = () => {
       const chartConfig = data.chartConfig
       analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')
       columnStore.setColumns(chartConfig?.columns || [])
-      dimensionStore.setDimensions(chartConfig?.dimensions || [])
+      // TODO
+      dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
       filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
-      groupStore.setGroups(chartConfig?.groups || [])
-      orderStore.setOrders(chartConfig?.orders || [])
+      groupStore.setGroups((chartConfig?.groups as GroupStore.GroupOption[]) || [])
+      orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
       // 设置公共配置与图表配置
       useChartConfigStore().setCommonChartConfig(
         chartConfig?.commonChartConfig || useChartConfigStore().$state.commonChartConfig

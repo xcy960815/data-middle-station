@@ -6,7 +6,7 @@ import { ElMessage } from 'element-plus'
 export function useHttpRequest() {
   const httpRequest = $fetch.create({
     // 请求拦截器
-    onRequest({ options }) {
+    onRequest() {
       // const {
       //   public: { apiBase }
       // } = useRuntimeConfig()
@@ -33,7 +33,7 @@ export function useHttpRequest() {
 
 export const httpRequest = $fetch.create({
   // 请求拦截器
-  onRequest({ options }) {},
+  onRequest() {},
   // 响应拦截
   onResponse({ response }) {
     return response._data

@@ -13,6 +13,7 @@ import { PieChart } from 'echarts/charts'
 import { GraphicComponent, GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
 import { init, type ECharts } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
+import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type PropType } from 'vue'
 import { useChartRender } from '~/composables/useChartRender/index'
 
 // 注册必要的组件

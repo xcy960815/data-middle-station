@@ -1,7 +1,7 @@
 <template>
   <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
     <!-- 数据源 -->
-    <DataSourceSelecter @dataSource-change="queryTableColumn" />
+    <DataSourceSelector @dataSource-change="queryTableColumn" />
     <div class="column__title py-2">维度</div>
     <div class="column__content">
       <div
@@ -41,7 +41,8 @@
 
 <script setup lang="ts">
 import ContextMenu from '@/components/context-menu/index.vue'
-import DataSourceSelecter from '@/components/selector/dataSource/index.vue'
+import DataSourceSelector from '@/components/selector/dataSource/index.vue'
+import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { computed, ref, watch } from 'vue'
 import { useAnalyzeStore } from '~/stores/analyze'
@@ -71,16 +72,16 @@ const columnDisplayNames = (column: ColumnsStore.ColumnOption) => {
  * @returns {string} 类名
  */
 const columnClasses = computed(() => (column: ColumnsStore.ColumnOption) => {
-  const dimensionChoosed = useDimensionsStore().getDimensions.find(
+  const dimensionSelected = useDimensionsStore().getDimensions.find(
     (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
-  const groupChoosed = useGroupsStore().getGroups.find(
+  const groupSelected = useGroupsStore().getGroups.find(
     (groupOption: GroupStore.GroupOption) => groupOption.columnName === column.columnName
   )
   return {
     column__item: true, // 默认类名
-    column__item_dimension_choosed: dimensionChoosed, // 维度选中
-    column__item_group_choosed: groupChoosed // 分组选中
+    column__item_dimension_selected: dimensionSelected, // 维度选中
+    column__item_group_selected: groupSelected // 分组选中
   }
 })
 
@@ -206,19 +207,22 @@ const dropHandler = (dragEvent: DragEvent) => {
   )
 
   switch (data.from) {
-    case 'dimensions':
-      const dimensionSrore = useDimensionsStore()
-      dimensionSrore.removeDimension(data.index)
+    case 'dimensions': {
+      const dimensionStore = useDimensionsStore()
+      dimensionStore.removeDimension(data.index)
       break
-    case 'filters':
+    }
+    case 'filters': {
       const filterStore = useFiltersStore()
       filterStore.removeFilter(data.index)
       break
-    case 'orders':
+    }
+    case 'orders': {
       const orderStore = useOrdersStore()
       orderStore.removeOrder(data.index)
       break
-    case 'groups':
+    }
+    case 'groups': {
       const groupStore = useGroupsStore()
       groupStore.removeGroup(data.index)
       columnStore.updateColumn({
@@ -226,6 +230,7 @@ const dropHandler = (dragEvent: DragEvent) => {
         index: columnIndex
       })
       break
+    }
     case 'columns':
       break
     default:
@@ -293,10 +298,10 @@ const setDataModel = (dataType: string) => {
  */
 watch(
   () => columnStore.getDataSource,
-  async (newDataSource, oldDataSource) => {
+  async (newDataSource) => {
     if (!newDataSource) {
       // 如果数据源为空，清空图表数据
-      analyzeStore.setChartData([])
+      analyzeStore.setAnalyzeData([])
       // 如果数据源为空，清空筛选条件
       filterStore.setFilters([])
       // 如果数据源为空，清空排序条件
@@ -330,13 +335,14 @@ watch(
  * @returns {Promise<void>}
  */
 const queryTableColumn = async (tableName: string) => {
-  const result = await httpRequest('/api/queryTableColumn', {
+  // eslint-disable-next-line no-undef
+  const result = await httpRequest<ApiResponseI<DatabaseVo.GetTableColumnsOptions[]>>('/api/queryTableColumn', {
     params: {
       tableName
     }
   })
   if (result.code === 200) {
-    const cloumns = result.data?.map((item) => {
+    const columns = result.data?.map((item) => {
       return {
         ...item,
         columnName: item.columnName || '',
@@ -345,7 +351,7 @@ const queryTableColumn = async (tableName: string) => {
         displayName: item.displayName || ''
       }
     })
-    columnStore.setColumns(cloumns || [])
+    columnStore.setColumns(columns || [])
   } else {
     columnStore.setDataSourceOptions([])
   }
@@ -376,7 +382,7 @@ const queryTableColumn = async (tableName: string) => {
       border-radius: 4px;
       margin-bottom: 5px;
 
-      &.column__item_dimension_choosed::before {
+      &.column__item_dimension_selected::before {
         position: absolute;
         left: 5px;
         top: 9px;
@@ -387,7 +393,7 @@ const queryTableColumn = async (tableName: string) => {
         background-color: #54c32a;
       }
 
-      &.column__item_group_choosed::after {
+      &.column__item_group_selected::after {
         position: absolute;
         left: 5px;
         top: 9px;

@@ -38,7 +38,7 @@
       <el-table
         :data="dataSourceOptions"
         border
-        style="width: 100%"
+        :style="{ width: '100%' }"
         @row-click="handleSelectedTable"
         highlight-current-row
         max-height="300"
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import { httpRequest } from '@/composables/useHttpRequest'
 import { Search } from '@element-plus/icons-vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElButton, ElInput, ElMessage, ElPopover, ElTable, ElTableColumn } from 'element-plus'
@@ -111,10 +112,10 @@ const handleSelectedTable = (row: ColumnsStore.DataSourceOption) => {
 
 /**
  * @desc 高亮当前选中行
- * @param {DatabaseVo.GetDatabaseTablesResponse} row 表数据
+ * @param {DatabaseVo.GetDataBaseTablesOptions} row 表数据
  * @returns {string}
  */
-const rowClassName = ({ row }: { row: DatabaseVo.GetDatabaseTablesResponse }) => {
+const rowClassName = ({ row }: { row: DatabaseVo.GetDataBaseTablesOptions }) => {
   return row.tableName === dataSource.value ? 'is-selected' : ''
 }
 
