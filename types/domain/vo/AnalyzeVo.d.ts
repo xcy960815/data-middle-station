@@ -5,7 +5,12 @@ declare namespace AnalyzeVo {
   /**
    * @desc 分析选项
    */
-  type AnalyzeOptions = AnalyzeDao.AnalyzeOptions
+  type AnalyzeOptions = AnalyzeDao.AnalyzeOptions & {
+    /**
+     * 图表配置
+     */
+    chartConfig: AnalyzeConfigVo.ChartConfigOptions | null
+  }
 
   /**
    * @desc 获取分析响应

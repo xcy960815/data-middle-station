@@ -9,23 +9,18 @@ interface EditOptions {
 }
 
 declare const Component: DefineComponent<
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>,
-  Record<string, never>
-> & {
-  openEditor: (
-    evt: KonvaEventObject<MouseEvent, Konva.Rect>,
-    editType: 'input' | 'select' | 'date' | 'datetime',
-    initialValue: AnalyzeDataVo.ChartData[keyof AnalyzeDataVo.ChartData],
-    editOptions?: EditOptions[]
-  ) => void
-  closeEditor: () => void
-  updatePositions: () => void
-}
+  {},
+  {
+    openEditor: (
+      evt: KonvaEventObject<MouseEvent, Konva.Rect>,
+      editType: 'input' | 'select' | 'date' | 'datetime',
+      initialValue: AnalyzeDataVo.ChartData[keyof AnalyzeDataVo.ChartData],
+      editOptions?: EditOptions[]
+    ) => void
+    closeEditor: () => void
+    updatePositions: () => void
+  },
+  any
+>
 
 export default Component

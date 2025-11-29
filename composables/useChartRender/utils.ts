@@ -5,14 +5,14 @@ import type { EChartsCoreOption } from 'echarts/core'
  * @interface ChartRenderConfig
  * @property {string} title 图表标题
  * @property {Array<AnalyzeDataVo.ChartData>} data 图表数据
- * @property {Array<GroupStore.GroupOption>} xAxisFields X轴字段
- * @property {Array<DimensionStore.DimensionOption>} yAxisFields Y轴字段
+ * @property {Array<AnalyzeConfigDao.GroupOptions>} xAxisFields X轴字段
+ * @property {Array<AnalyzeConfigDao.DimensionOptions>} yAxisFields Y轴字段
  */
 export interface ChartRenderConfig {
   title: string
   data: Array<AnalyzeDataVo.ChartData>
-  xAxisFields: Array<GroupStore.GroupOption>
-  yAxisFields: Array<DimensionStore.DimensionOption>
+  xAxisFields: Array<AnalyzeConfigDao.GroupOptions>
+  yAxisFields: Array<AnalyzeConfigDao.DimensionOptions>
 }
 
 /**
