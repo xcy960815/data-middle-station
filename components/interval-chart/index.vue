@@ -20,6 +20,7 @@ import {
 } from 'echarts/components'
 import { init, type ECharts } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
+import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type PropType } from 'vue'
 import { useChartRender } from '~/composables/useChartRender/index'
 
 // 注册必要的组件
@@ -64,14 +65,6 @@ const props = defineProps({
     type: [Number, String],
     default: () => '100%'
   }
-})
-
-const chartWidth = computed(() => {
-  return props.chartWidth || '100%'
-})
-
-const chartHeight = computed(() => {
-  return props.chartHeight || '100%'
 })
 
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])

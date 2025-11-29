@@ -125,6 +125,7 @@ module.exports = [
         SendEmailDtoDto: 'readonly',
         LoginVo: 'readonly',
         ApiResponse: 'readonly',
+        ApiResponseI: 'readonly',
         // 工具类
         Logger: 'readonly',
         JwtUtils: 'readonly',
@@ -267,6 +268,7 @@ module.exports = [
         SendEmailDtoDto: 'readonly',
         LoginVo: 'readonly',
         ApiResponse: 'readonly',
+        ApiResponseI: 'readonly',
         // 工具类
         Logger: 'readonly',
         JwtUtils: 'readonly',

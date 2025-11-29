@@ -7,7 +7,7 @@ const analyzeService = new AnalyzeService()
  * @param event
  * @returns {Promise<ApiResponseI<Array<AnalyzeVo.GetAnalyzeResponse>>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<Array<AnalyzeVo.GetAnalyzeResponse>>>>(async () => {
+export default defineEventHandler<Promise<ApiResponseI<Array<AnalyzeVo.GetAnalyzeOptions>>>>(async () => {
   try {
     const getAnalyzesResult = await analyzeService.getAnalyzes()
     return ApiResponse.success(getAnalyzesResult)

@@ -11,7 +11,7 @@
         placement="top"
         v-if="hasInvalidIcon()"
       >
-        <icon-park class="chart-selecterinvalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
+        <icon-park class="chart-selector-invalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
       </el-tooltip>
       <!-- 删除图标 -->
       <icon-park
@@ -19,7 +19,7 @@
         type="DeleteTwo"
         size="14"
         fill="#333"
-        @click.stop="handleDeleteSelecter"
+        @click.stop="handleDeleteSelector"
         @contextmenu.stop
       />
     </div>
@@ -62,7 +62,7 @@ const filterStore = useFiltersStore()
 const orderStore = useOrdersStore()
 const dimensionStore = useDimensionsStore()
 const groupStore = useGroupsStore()
-const selecterVisible = ref(false)
+const selectorVisible = ref(false)
 /**
  * @desc 无效样式
  */
@@ -96,7 +96,7 @@ const hasInvalidIcon = computed(() => () => {
 /**
  * @desc 删除标签
  */
-const handleDeleteSelecter = () => {
+const handleDeleteSelector = () => {
   if (props.cast === 'filter') {
     filterStore.removeFilter(props.index)
   } else if (props.cast === 'order') {
@@ -111,7 +111,7 @@ const handleDeleteSelecter = () => {
 onMounted(() => {
   // 如果cast为filter或order，则默认显示
   if (props.cast === 'filter' || props.cast === 'order') {
-    selecterVisible.value = true
+    selectorVisible.value = true
   }
 })
 </script>
@@ -152,7 +152,7 @@ onMounted(() => {
     font-size: 14px;
   }
 
-  .chart-selecterinvalid-icon {
+  .chart-selector-invalid-icon {
     color: #ff4d4f;
     margin-right: 6px;
     cursor: help;
