@@ -27,7 +27,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 过滤配置
    */
-  type FilterOptions = AnalyzeConfigDao.FilterOption & {
+  type FilterOptions = AnalyzeConfigDao.FilterOptions & {
     displayName: string
   }
 
@@ -51,7 +51,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 排序配置
    */
-  type OrderOptions = AnalyzeConfigDao.OrderOption & {
+  type OrderOptions = AnalyzeConfigDao.OrderOptions & {
     displayName: string
   }
 

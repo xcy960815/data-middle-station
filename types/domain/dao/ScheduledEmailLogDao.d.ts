@@ -203,6 +203,13 @@ declare namespace ScheduledEmailLogDao {
   }
 
   /**
+   * @desc 获取日志请求参数
+   */
+  type GetScheduledEmailLogOptions = Partial<ScheduledEmailLogOptions> & {
+    id: number
+  }
+
+  /**
    * @desc 执行日志单条查询参数
    */
   type GetScheduledEmailLogQuery = {
