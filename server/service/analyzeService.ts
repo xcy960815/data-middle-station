@@ -165,7 +165,8 @@ export class AnalyzeService extends BaseService {
       updateTime,
       chartConfigId
     }
-    const createAnalyzeResponse = await this.analyzeMapper.createAnalyze(enrichedOptions)
+    const createAnalyzeResponseId = await this.analyzeMapper.createAnalyze(enrichedOptions)
+    const createAnalyzeResponse = await this.analyzeMapper.getAnalyze({ id: createAnalyzeResponseId })
     return createAnalyzeResponse
   }
 
