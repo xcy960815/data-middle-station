@@ -71,6 +71,26 @@ declare namespace AnalyzeConfigVo {
   type ChartConfigOptions = AnalyzeConfigDao.ChartConfigOptions
 
   /**
+   * @desc 获取图表配置响应
+   */
+  type GetChartConfigOptions = ChartConfigOptions
+
+  /**
+   * @desc 创建图表配置响应
+   */
+  type CreateChartConfigOptions = ChartConfigOptions
+
+  /**
+   * @desc 更新图表配置响应
+   */
+  type UpdateChartConfigOptions = boolean
+
+  /**
+   * @desc 删除图表配置响应
+   */
+  type DeleteChartConfigOptions = boolean
+
+  /**
    * @desc 饼图配置
    */
   type PieChartConfigOptions = AnalyzeConfigDao.PieChartConfig

@@ -97,13 +97,13 @@ export class AnalyzeMapper extends BaseMapper {
   /**
    * @desc 新建分析配置
    * @param {AnalyzeDao.CreateAnalyzeOptions} createAnalyzeDao 新建分析所需的字段（名称、描述、图表配置等）
-   * @returns {Promise<boolean>} 是否创建成功
+   * @returns {Promise<number>} 创建成功后的 ID
    */
-  public async createAnalyze(createAnalyzeDao: AnalyzeDao.CreateAnalyzeOptions): Promise<boolean> {
+  public async createAnalyze(createAnalyzeDao: AnalyzeDao.CreateAnalyzeOptions): Promise<number> {
     const { keys, values } = convertToSqlProperties(createAnalyzeDao)
     const sql = `INSERT INTO ${ANALYZE_TABLE_NAME} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`
     const result = await this.exe<ResultSetHeader>(sql, values)
-    return result.affectedRows > 0
+    return result.insertId
   }
 
   /**

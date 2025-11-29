@@ -18,7 +18,7 @@ export class ScheduledEmailLogService extends BaseService {
   /**
    * 创建执行日志
    */
-  async createExecutionLog(logOptions: ScheduledEmailLogDto.CreateLogOptions): Promise<number> {
+  async createExecutionLog(logOptions: ScheduledEmailLogDto.CreateScheduledEmailLogOptions): Promise<number> {
     try {
       const { createTime, createdBy } = await super.getDefaultInfo()
       const timezone = logOptions.executionTimezone || this.getCurrentTimezone()
@@ -52,7 +52,7 @@ export class ScheduledEmailLogService extends BaseService {
         smtpHost: logOptions.smtpHost,
         smtpPort: logOptions.smtpPort || undefined,
         createdTime: createTime,
-        createdBy,
+        createdBy: createdBy || 'system',
         createdTimezone
       }
 
@@ -185,7 +185,7 @@ export class ScheduledEmailLogService extends BaseService {
     emailMessageId: string,
     executionDuration: number,
     message?: string,
-    metadata?: Partial<ScheduledEmailLogDto.CreateLogOptions>
+    metadata?: Partial<ScheduledEmailLogDto.CreateScheduledEmailLogOptions>
   ): Promise<number> {
     return await this.createExecutionLog({
       taskId,
@@ -207,7 +207,7 @@ export class ScheduledEmailLogService extends BaseService {
     errorDetails: string,
     executionDuration: number,
     message?: string,
-    metadata?: Partial<ScheduledEmailLogDto.CreateLogOptions>
+    metadata?: Partial<ScheduledEmailLogDto.CreateScheduledEmailLogOptions>
   ): Promise<number> {
     return await this.createExecutionLog({
       taskId,
@@ -266,7 +266,8 @@ export class ScheduledEmailLogService extends BaseService {
       smtpHost: logRecord.smtpHost || undefined,
       smtpPort: logRecord.smtpPort || undefined,
       createdTime: logRecord.createdTime,
-      createdTimezone: logRecord.createdTimezone || undefined
+      createdTimezone: logRecord.createdTimezone || undefined,
+      createdBy: logRecord.createdBy
     }
   }
 
@@ -312,11 +313,14 @@ export class ScheduledEmailLogService extends BaseService {
     }
   }
 
-  private stringifyStringArray(stringArray?: string[] | undefined): string | undefined {
-    if (!stringArray || stringArray.length === 0) {
+  private stringifyStringArray(value?: string | string[] | null): string | undefined {
+    if (!value) {
       return undefined
     }
-    return JSON.stringify(stringArray)
+    if (Array.isArray(value)) {
+      return value.length > 0 ? JSON.stringify(value) : undefined
+    }
+    return value
   }
 
   private parseStringArray(rawValue?: string | string[] | null): string[] | undefined {
@@ -395,7 +399,7 @@ export class ScheduledEmailLogService extends BaseService {
   private buildManualSendMetadata(
     sendRequest: SendEmailDto.SendEmailOptions,
     sendResult?: SendEmailVo.SendEmailOptions
-  ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
+  ): Partial<ScheduledEmailLogDto.CreateScheduledEmailLogOptions> {
     const recipients = Array.isArray(sendRequest.emailConfig.to)
       ? sendRequest.emailConfig.to
       : sendRequest.emailConfig.to

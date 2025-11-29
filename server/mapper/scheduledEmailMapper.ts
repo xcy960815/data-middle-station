@@ -204,7 +204,7 @@ export class ScheduledEmailMapper extends BaseMapper {
   @Mapping(ScheduledEmailTaskMapping)
   public async getScheduledEmailTask<
     T extends ScheduledEmailDao.ScheduledEmailOptions = ScheduledEmailDao.ScheduledEmailOptions
-  >(query: ScheduledEmailDao.GetScheduledEmailOptions): Promise<T | null> {
+  >(query: ScheduledEmailDao.ScheduledEmailQueryOptions): Promise<T | null> {
     const { whereConditions, whereValues } = this.buildTaskQueryConditions(query)
 
     if (whereConditions.length === 0) {

@@ -292,7 +292,7 @@ export class ScheduledEmailService extends BaseService {
    */
   async executeTaskWithOptions(queryOptions: ScheduledEmailDto.ScheduledEmailQueryOptions): Promise<boolean> {
     try {
-      const taskQuery: ScheduledEmailDao.GetScheduledEmailOptions = {
+      const taskQuery: ScheduledEmailDao.ScheduledEmailQueryOptions = {
         id: queryOptions.id,
         taskName: queryOptions.taskName,
         status: queryOptions.status,
@@ -575,29 +575,29 @@ export class ScheduledEmailService extends BaseService {
         id: log.id,
         task_id: log.taskId,
         execution_time: log.executionTime,
-        execution_timezone: log.executionTimezone,
+        execution_timezone: log.executionTimezone || undefined,
         status: log.status,
         error_message: log.errorDetails,
         email_message_id: log.emailMessageId,
         sender_email: log.senderEmail,
         sender_name: log.senderName,
-        recipient_to: log.recipientTo,
-        recipient_cc: log.recipientCc,
-        recipient_bcc: log.recipientBcc,
+        recipient_to: this.ensureStringArray(log.recipientTo),
+        recipient_cc: this.ensureStringArray(log.recipientCc),
+        recipient_bcc: this.ensureStringArray(log.recipientBcc),
         email_subject: log.emailSubject,
         attachment_count: log.attachmentCount,
-        attachment_names: log.attachmentNames,
+        attachment_names: this.ensureStringArray(log.attachmentNames),
         email_channel: log.emailChannel,
-        provider: log.provider,
-        provider_response: log.providerResponse,
-        accepted_recipients: log.acceptedRecipients,
-        rejected_recipients: log.rejectedRecipients,
+        provider: log.provider || undefined,
+        provider_response: log.providerResponse || undefined,
+        accepted_recipients: this.ensureStringArray(log.acceptedRecipients),
+        rejected_recipients: this.ensureStringArray(log.rejectedRecipients),
         retry_count: log.retryCount,
         duration: log.executionDuration,
-        smtp_host: log.smtpHost,
-        smtp_port: log.smtpPort,
+        smtp_host: log.smtpHost || undefined,
+        smtp_port: log.smtpPort || undefined,
         created_at: log.createdTime,
-        created_timezone: log.createdTimezone
+        created_timezone: log.createdTimezone || undefined
       }))
     } catch (error) {
       logger.error(`获取任务执行日志失败: ${JSON.stringify(queryOptions)}, ${error}`)
@@ -697,6 +697,13 @@ export class ScheduledEmailService extends BaseService {
       smtpHost: sendResult.transport?.host || baseMetadata.smtpHost,
       smtpPort: sendResult.transport?.port || baseMetadata.smtpPort
     }
+  }
+
+  private ensureStringArray(value: string | string[] | null | undefined): string[] | undefined {
+    if (!value) {
+      return undefined
+    }
+    return Array.isArray(value) ? value : [value]
   }
 
   private normalizeRecipients(recipients?: string | string[]): string[] {
