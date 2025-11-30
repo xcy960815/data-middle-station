@@ -31,7 +31,6 @@ declare namespace ScheduledEmailDto {
     smtp_host?: string
     smtp_port?: number
     created_at: string
-    created_timezone?: string
   }
 
   /**

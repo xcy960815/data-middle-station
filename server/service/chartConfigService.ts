@@ -91,7 +91,9 @@ export class ChartConfigService extends BaseService {
    * @param {AnalyzeConfigDto.CreateChartConfigOptions} createOptions 图表配置
    * @returns {Promise<number>}
    */
-  public async createChartConfig(createOptions: AnalyzeConfigDto.CreateChartConfigOptions): Promise<number> {
+  public async createChartConfig(
+    createOptions: AnalyzeConfigDto.CreateChartConfigOptions
+  ): Promise<AnalyzeConfigVo.CreateChartConfigOptions> {
     const { createdBy, createTime, updateTime, updatedBy } = await this.getDefaultInfo()
     const enrichedOptions = {
       ...createOptions,
@@ -101,7 +103,7 @@ export class ChartConfigService extends BaseService {
       updatedBy
     }
     const chartConfigId = await this.chartConfigMapper.createChartConfig(enrichedOptions)
-    return chartConfigId
+    return this.getChartConfig({ id: chartConfigId })
   }
 
   /**

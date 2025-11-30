@@ -17,7 +17,7 @@ export const getAnalyzeHandler = () => {
     const router = useRouter()
     const id = router.currentRoute.value.query.id
     if (!id) return
-    // eslint-disable-next-line no-undef
+
     const result = await httpRequest<ApiResponseI<AnalyzeVo.GetAnalyzeOptions>>('/api/getAnalyze', {
       method: 'post',
       body: {
