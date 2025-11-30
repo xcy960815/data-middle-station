@@ -135,6 +135,7 @@ const commonGlobals = {
   ScheduledEmailLogVo: 'readonly',
   SendEmailVo: 'readonly',
   SendEmailDto: 'readonly',
+  SendEmailDao: 'readonly',
   ScheduledEmailDto: 'readonly',
   ScheduledEmailDao: 'readonly',
   ScheduledEmailVo: 'readonly'
