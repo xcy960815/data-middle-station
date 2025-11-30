@@ -1,6 +1,6 @@
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
-import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
-import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '@/server/utils/databaseHelpper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
+import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '@/server/utils/databaseHelper'
 import type { ResultSetHeader } from 'mysql2'
 
 /**

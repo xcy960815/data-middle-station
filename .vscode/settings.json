@@ -62,6 +62,7 @@
   "typescript.preferences.quoteStyle": "single",
   "typescript.suggest.autoImports": true,
   "typescript.suggest.includeCompletionsForModuleExports": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
   // 编辑器设置与 .editorconfig 保持一致
   "editor.tabSize": 2,
   "editor.insertSpaces": true,

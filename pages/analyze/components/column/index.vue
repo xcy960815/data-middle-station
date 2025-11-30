@@ -335,7 +335,6 @@ watch(
  * @returns {Promise<void>}
  */
 const queryTableColumn = async (tableName: string) => {
-  // eslint-disable-next-line no-undef
   const result = await httpRequest<ApiResponseI<DatabaseVo.GetTableColumnsOptions[]>>('/api/queryTableColumn', {
     params: {
       tableName

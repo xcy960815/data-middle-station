@@ -121,7 +121,8 @@ export class AnalyzeService extends BaseService {
     if (chartConfig) {
       if (!chartConfigId) {
         // 如果图表配置不存在，则创建默认图表配置
-        chartConfigId = await this.chartConfigService.createChartConfig(chartConfig)
+        const createChartConfigResponse = await this.chartConfigService.createChartConfig(chartConfig)
+        chartConfigId = createChartConfigResponse.id
       } else {
         // 如果图表配置存在，则更新图表配置
         await this.chartConfigService.updateChartConfig({
@@ -146,8 +147,8 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 创建图表
-   * @param createOptions {AnalyzeDto.CreateAnalyzeRequest} 图表
-   * @returns {Promise<AnalyzeVo.CreateAnalyzeResponse>}
+   * @param {AnalyzeDto.CreateAnalyzeOptions} createOptions
+   * @returns {Promise<AnalyzeVo.CreateAnalyzeOptions>}
    */
   public async createAnalyze(createOptions: AnalyzeDto.CreateAnalyzeOptions): Promise<AnalyzeVo.CreateAnalyzeOptions> {
     const { chartConfig, ...restAnalyzeOption } = createOptions
@@ -155,9 +156,10 @@ export class AnalyzeService extends BaseService {
     let chartConfigId = createOptions.chartConfigId || null
     if (chartConfig) {
       // 如果图表配置不存在，则创建默认图表配置
-      chartConfigId = await this.chartConfigService.createChartConfig(chartConfig)
+      const createChartConfigResponse = await this.chartConfigService.createChartConfig(chartConfig)
+      chartConfigId = createChartConfigResponse.id
     }
-    const enrichedOptions = {
+    const createAnalyzeOptions = {
       ...restAnalyzeOption,
       createdBy,
       updatedBy,
@@ -165,43 +167,43 @@ export class AnalyzeService extends BaseService {
       updateTime,
       chartConfigId
     }
-    const createAnalyzeResponseId = await this.analyzeMapper.createAnalyze(enrichedOptions)
+    const createAnalyzeResponseId = await this.analyzeMapper.createAnalyze(createAnalyzeOptions)
     return this.getAnalyze({ id: createAnalyzeResponseId })
   }
 
   /**
    * @desc 更新图表名称
-   * @param updateOptions {AnalyzeDto.AnalyzeOption} 图表
-   * @returns {Promise<boolean>}
+   * @param {AnalyzeDto.UpdateAnalyzeNameOptions} updateOptions
+   * @returns {Promise<AnalyzeVo.UpdateAnalyzeNameOptions>}
    */
   public async updateAnalyzeName(
     updateOptions: AnalyzeDto.UpdateAnalyzeNameOptions
   ): Promise<AnalyzeVo.UpdateAnalyzeNameOptions> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    const enrichedOptions: AnalyzeDao.UpdateAnalyzeNameOptions = {
+    const updateAnalyzeNameOptions = {
       ...updateOptions,
       updatedBy,
       updateTime
     }
-    const updateAnalyzeNameResponse = await this.analyzeMapper.updateAnalyzeName(enrichedOptions)
+    const updateAnalyzeNameResponse = await this.analyzeMapper.updateAnalyzeName(updateAnalyzeNameOptions)
     return updateAnalyzeNameResponse
   }
 
   /**
    * @desc 更新图表描述
-   * @param updateOptions {AnalyzeDto.UpdateAnalyzeDescRequest} 图表
-   * @returns {Promise<AnalyzeVo.UpdateAnalyzeDescResponse>}
+   * @param {AnalyzeDto.UpdateAnalyzeDescOptions} updateOptions
+   * @returns {Promise<AnalyzeVo.UpdateAnalyzeDescOptions>}
    */
   public async updateAnalyzeDesc(
     updateOptions: AnalyzeDto.UpdateAnalyzeDescOptions
   ): Promise<AnalyzeVo.UpdateAnalyzeDescOptions> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    const enrichedOptions: AnalyzeDao.UpdateAnalyzeDescOptions = {
+    const updateAnalyzeDescOptions = {
       ...updateOptions,
       updatedBy,
       updateTime
     }
-    const updateAnalyzeDescResponse = await this.analyzeMapper.updateAnalyzeDesc(enrichedOptions)
+    const updateAnalyzeDescResponse = await this.analyzeMapper.updateAnalyzeDesc(updateAnalyzeDescOptions)
     return updateAnalyzeDescResponse
   }
 }

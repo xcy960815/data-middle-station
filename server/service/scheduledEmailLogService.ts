@@ -8,6 +8,9 @@ const logger = new Logger({ fileName: 'scheduled-email-log', folderName: 'server
  * 定时邮件日志服务
  */
 export class ScheduledEmailLogService extends BaseService {
+  /**
+   * 定时邮件日志Mapper
+   */
   private scheduledEmailLogMapper: ScheduledEmailLogMapper
 
   constructor() {
@@ -22,7 +25,7 @@ export class ScheduledEmailLogService extends BaseService {
     try {
       const { createTime, createdBy } = await super.getDefaultInfo()
       const timezone = logOptions.executionTimezone || this.getCurrentTimezone()
-      const createdTimezone = logOptions.createdTimezone || timezone
+
       const executionDao: ScheduledEmailLogDao.CreateScheduledEmailLogOptions = {
         taskId: logOptions.taskId,
         executionTime: logOptions.executionTime,
@@ -52,8 +55,7 @@ export class ScheduledEmailLogService extends BaseService {
         smtpHost: logOptions.smtpHost,
         smtpPort: logOptions.smtpPort || undefined,
         createdTime: createTime,
-        createdBy: createdBy || 'system',
-        createdTimezone
+        createdBy: createdBy || 'system'
       }
 
       const logId = await this.scheduledEmailLogMapper.createScheduledEmailLog(executionDao)
@@ -266,7 +268,7 @@ export class ScheduledEmailLogService extends BaseService {
       smtpHost: logRecord.smtpHost || undefined,
       smtpPort: logRecord.smtpPort || undefined,
       createdTime: logRecord.createdTime,
-      createdTimezone: logRecord.createdTimezone || undefined,
+
       createdBy: logRecord.createdBy
     }
   }
@@ -308,7 +310,7 @@ export class ScheduledEmailLogService extends BaseService {
       smtpPort: logData.smtpPort ?? undefined,
       executionDuration: logData.executionDuration,
       createdTime: logData.createdTime,
-      createdTimezone: logData.createdTimezone ?? undefined,
+
       createdBy: additionalOptions?.createdBy || 'system'
     }
   }

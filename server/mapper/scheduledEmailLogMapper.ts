@@ -1,6 +1,7 @@
+// cspell:ignore CURDATE
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
-import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
-import { batchFormatSqlKey, convertToSqlProperties } from '@/server/utils/databaseHelpper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
+import { batchFormatSqlKey, convertToSqlProperties } from '@/server/utils/databaseHelper'
 import type { ResultSetHeader } from 'mysql2'
 
 /**
@@ -36,7 +37,7 @@ const SCHEDULED_EMAIL_LOG_BASE_FIELDS = [
   'smtp_port',
   'execution_duration',
   'created_time',
-  'created_timezone',
+
   'created_by'
 ]
 
@@ -231,12 +232,6 @@ class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLog
    */
   @Column('created_time')
   createdTime!: string
-
-  /**
-   * 创建时区
-   */
-  @Column('created_timezone')
-  createdTimezone?: string
 
   /**
    * 创建人

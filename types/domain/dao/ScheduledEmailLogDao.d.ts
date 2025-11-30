@@ -123,10 +123,7 @@ declare namespace ScheduledEmailLogDao {
      * 创建时间
      */
     createdTime: string
-    /**
-     * 创建时区
-     */
-    createdTimezone?: string | null
+
     /**
      * 创建人
      */

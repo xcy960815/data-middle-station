@@ -1,5 +1,5 @@
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
-import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
 import type { ResultSetHeader } from 'mysql2'
 
 /**
@@ -99,11 +99,27 @@ export class ChartConfigMapper extends BaseMapper {
   public async getChartConfig<T extends AnalyzeConfigDao.ChartConfigOptions = AnalyzeConfigDao.ChartConfigOptions>(
     chartConfigOptions: AnalyzeConfigDao.GetChartConfigOptions
   ): Promise<T> {
+    const { keys, values } = convertToSqlProperties(chartConfigOptions)
+    const whereClauses: string[] = []
+    const queryValues: any[] = []
+
+    keys.forEach((key, index) => {
+      if (CHART_CONFIG_BASE_FIELDS.includes(key)) {
+        const formattedKey = ['groups', 'orders', 'columns', 'dimensions', 'filters'].includes(key) ? `\`${key}\`` : key
+        whereClauses.push(`${formattedKey} = ?`)
+        queryValues.push(values[index])
+      }
+    })
+
+    if (!keys.includes('is_deleted')) {
+      whereClauses.push('is_deleted = 0')
+    }
+
     const sql = `select
           ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
             from ${CHART_CONFIG_TABLE_NAME}
-          where id = ? and is_deleted = 0`
-    const result = await this.exe<Array<T>>(sql, [chartConfigOptions.id])
+          where ${whereClauses.join(' and ')}`
+    const result = await this.exe<Array<T>>(sql, queryValues)
     return result?.[0]
   }
   /**
