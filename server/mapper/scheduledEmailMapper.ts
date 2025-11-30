@@ -1,6 +1,6 @@
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
-import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
-import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '@/server/utils/databaseHelpper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
+import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '@/server/utils/databaseHelper'
 import type { ResultSetHeader } from 'mysql2'
 
 /**
@@ -204,7 +204,7 @@ export class ScheduledEmailMapper extends BaseMapper {
   @Mapping(ScheduledEmailTaskMapping)
   public async getScheduledEmailTask<
     T extends ScheduledEmailDao.ScheduledEmailOptions = ScheduledEmailDao.ScheduledEmailOptions
-  >(query: ScheduledEmailDao.GetScheduledEmailOptions): Promise<T | null> {
+  >(query: ScheduledEmailDao.ScheduledEmailQueryOptions): Promise<T | null> {
     const { whereConditions, whereValues } = this.buildTaskQueryConditions(query)
 
     if (whereConditions.length === 0) {

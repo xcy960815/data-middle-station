@@ -22,7 +22,7 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <selecter-dimension
+        <selector-dimension
           class="dimension__item__name"
           cast="dimension"
           :columnName="dimension.columnName"
@@ -32,14 +32,13 @@
           :invalid="dimension.__invalid"
           :invalidMessage="dimension.__invalidMessage"
         >
-        </selecter-dimension>
+        </selector-dimension>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import SelecterDimension from '@/components/selecter/dimension/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
@@ -137,7 +136,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const dimensionOption: DimensionStore.DimensionOption = {
     ...data.value,
     __invalid: false,
@@ -163,7 +162,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   }
   const index = data.index
   switch (data.from) {
-    case 'dimensions':
+    case 'dimensions': {
       // 移动位置
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
@@ -172,6 +171,7 @@ const dropHandler = (dragEvent: DragEvent) => {
       dimensions.splice(targetIndex, 0, target)
       dimensionStore.setDimensions(dimensions)
       break
+    }
     default:
       // 更新列名 主要是显示已经选中的标志
       columnStore.updateColumn({ column: data.value, index })

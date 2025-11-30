@@ -1,7 +1,7 @@
 <template>
   <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
     <!-- 数据源 -->
-    <DataSourceSelecter @dataSource-change="queryTableColumn" />
+    <DataSourceSelector @dataSource-change="queryTableColumn" />
     <div class="column__title py-2">维度</div>
     <div class="column__content">
       <div
@@ -41,7 +41,8 @@
 
 <script setup lang="ts">
 import ContextMenu from '@/components/context-menu/index.vue'
-import DataSourceSelecter from '@/components/selecter/dataSource/index.vue'
+import DataSourceSelector from '@/components/selector/dataSource/index.vue'
+import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { computed, ref, watch } from 'vue'
 import { useAnalyzeStore } from '~/stores/analyze'
@@ -61,35 +62,35 @@ const DATE_ICON_NAME = 'calendar-thirty'
 // 字符串图标
 const STRING_ICON_NAME = 'text'
 
-const columnDisplayNames = (column: ColumnStore.ColumnOption) => {
+const columnDisplayNames = (column: ColumnsStore.ColumnOption) => {
   return column.displayName || column.columnName
 }
 
 /**
  * @desc 列类名
- * @param column {ColumnStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOption} 列选项
  * @returns {string} 类名
  */
-const columnClasses = computed(() => (column: ColumnStore.ColumnOption) => {
-  const dimensionChoosed = useDimensionsStore().getDimensions.find(
+const columnClasses = computed(() => (column: ColumnsStore.ColumnOption) => {
+  const dimensionSelected = useDimensionsStore().getDimensions.find(
     (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
-  const groupChoosed = useGroupsStore().getGroups.find(
+  const groupSelected = useGroupsStore().getGroups.find(
     (groupOption: GroupStore.GroupOption) => groupOption.columnName === column.columnName
   )
   return {
     column__item: true, // 默认类名
-    column__item_dimension_choosed: dimensionChoosed, // 维度选中
-    column__item_group_choosed: groupChoosed // 分组选中
+    column__item_dimension_selected: dimensionSelected, // 维度选中
+    column__item_group_selected: groupSelected // 分组选中
   }
 })
 
 /**
  * @desc 根据列类型返回对应的图标名称
- * @param column {ColumnStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOption} 列选项
  * @returns {string} 图标名称
  */
-const columnIconName = computed(() => (column: ColumnStore.ColumnOption) => {
+const columnIconName = computed(() => (column: ColumnsStore.ColumnOption) => {
   const { columnType } = column
   if (columnType === 'number') {
     return NUMBER_ICON_NAME
@@ -120,17 +121,17 @@ const columnList = computed(() => {
 /**
  * @desc 当前选中的列
  */
-const currentColumn = ref<ColumnStore.ColumnOption>()
+const currentColumn = ref<ColumnsStore.ColumnOption>()
 
 const contextmenu = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 /**
  * @desc 拖拽开始事件
- * @param column {ColumnStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOption} 列选项
  * @param index {number} 列索引
  * @param event {DragEvent} 拖拽事件
  */
-const dragstartHandler = (column: ColumnStore.ColumnOption, index: number, event: DragEvent) => {
+const dragstartHandler = (column: ColumnsStore.ColumnOption, index: number, event: DragEvent) => {
   if (!event.dataTransfer) return
   event.dataTransfer.setData(
     'text/plain',
@@ -200,25 +201,28 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const columnIndex = columnStore.getColumns.findIndex(
-    (column: ColumnStore.ColumnOption) => column.columnName === data.value.columnName
+    (column: ColumnsStore.ColumnOption) => column.columnName === data.value.columnName
   )
 
   switch (data.from) {
-    case 'dimensions':
-      const dimensionSrore = useDimensionsStore()
-      dimensionSrore.removeDimension(data.index)
+    case 'dimensions': {
+      const dimensionStore = useDimensionsStore()
+      dimensionStore.removeDimension(data.index)
       break
-    case 'filters':
+    }
+    case 'filters': {
       const filterStore = useFiltersStore()
       filterStore.removeFilter(data.index)
       break
-    case 'orders':
+    }
+    case 'orders': {
       const orderStore = useOrdersStore()
       orderStore.removeOrder(data.index)
       break
-    case 'groups':
+    }
+    case 'groups': {
       const groupStore = useGroupsStore()
       groupStore.removeGroup(data.index)
       columnStore.updateColumn({
@@ -226,6 +230,7 @@ const dropHandler = (dragEvent: DragEvent) => {
         index: columnIndex
       })
       break
+    }
     case 'columns':
       break
     default:
@@ -236,9 +241,9 @@ const dropHandler = (dragEvent: DragEvent) => {
 
 /**
  * @desc 右键点击事件
- * @param column {ColumnStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOption} 列选项
  */
-const contextmenuHandler = (column: ColumnStore.ColumnOption, event: MouseEvent) => {
+const contextmenuHandler = (column: ColumnsStore.ColumnOption, event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
   currentColumn.value = column
@@ -293,10 +298,10 @@ const setDataModel = (dataType: string) => {
  */
 watch(
   () => columnStore.getDataSource,
-  async (newDataSource, oldDataSource) => {
+  async (newDataSource) => {
     if (!newDataSource) {
       // 如果数据源为空，清空图表数据
-      analyzeStore.setChartData([])
+      analyzeStore.setAnalyzeData([])
       // 如果数据源为空，清空筛选条件
       filterStore.setFilters([])
       // 如果数据源为空，清空排序条件
@@ -330,13 +335,13 @@ watch(
  * @returns {Promise<void>}
  */
 const queryTableColumn = async (tableName: string) => {
-  const result = await httpRequest('/api/queryTableColumn', {
+  const result = await httpRequest<ApiResponseI<DatabaseVo.GetTableColumnsOptions[]>>('/api/queryTableColumn', {
     params: {
       tableName
     }
   })
   if (result.code === 200) {
-    const cloumns = result.data?.map((item) => {
+    const columns = result.data?.map((item) => {
       return {
         ...item,
         columnName: item.columnName || '',
@@ -345,7 +350,7 @@ const queryTableColumn = async (tableName: string) => {
         displayName: item.displayName || ''
       }
     })
-    columnStore.setColumns(cloumns || [])
+    columnStore.setColumns(columns || [])
   } else {
     columnStore.setDataSourceOptions([])
   }
@@ -376,7 +381,7 @@ const queryTableColumn = async (tableName: string) => {
       border-radius: 4px;
       margin-bottom: 5px;
 
-      &.column__item_dimension_choosed::before {
+      &.column__item_dimension_selected::before {
         position: absolute;
         left: 5px;
         top: 9px;
@@ -387,7 +392,7 @@ const queryTableColumn = async (tableName: string) => {
         background-color: #54c32a;
       }
 
-      &.column__item_group_choosed::after {
+      &.column__item_group_selected::after {
         position: absolute;
         left: 5px;
         top: 9px;

@@ -41,7 +41,7 @@ declare namespace OrderStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type OrderOption = ColumnStore.ColumnOption & {
+  type OrderOption = ColumnsStore.ColumnOption & {
     orderType: OrderType | null
     aggregationType?: OrderAggregationsType
     __invalid?: boolean | null

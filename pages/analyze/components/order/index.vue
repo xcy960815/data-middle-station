@@ -15,7 +15,7 @@
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <selecter-order
+        <selector-order
           class="order__item__name"
           cast="order"
           :display-name="orderOption.displayName"
@@ -26,7 +26,7 @@
           :order="orderOption"
           :invalid="orderOption.__invalid"
           :invalidMessage="orderOption.__invalidMessage"
-        ></selecter-order>
+        ></selector-order>
       </div>
     </div>
   </div>
@@ -114,7 +114,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
 
   const orderOption: OrderStore.OrderOption = {
     ...data.value,

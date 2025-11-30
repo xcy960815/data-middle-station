@@ -1,6 +1,6 @@
 <template>
-  <div class="group-selecter" @contextmenu="contextmenuHandler">
-    <selecter-template v-bind="$attrs" :group="group"></selecter-template>
+  <div class="group-selector" @contextmenu="contextmenuHandler">
+    <selector-template v-bind="$attrs" :group="group"></selector-template>
   </div>
   <!-- 字段的操作选项 -->
   <context-menu ref="contextmenuRef">
@@ -29,7 +29,6 @@
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ContextMenu from '../../context-menu/index.vue'
-import SelecterTemplate from '../template/index.vue'
 
 const props = defineProps({
   group: {
@@ -155,7 +154,7 @@ const handleSetFilterable = () => {
 }
 </script>
 <style lang="scss" scoped>
-.group-selecter {
+.group-selector {
   cursor: context-menu;
 }
 </style>

@@ -123,10 +123,7 @@ declare namespace ScheduledEmailLogDao {
      * 创建时间
      */
     createdTime: string
-    /**
-     * 创建时区
-     */
-    createdTimezone?: string | null
+
     /**
      * 创建人
      */
@@ -200,6 +197,13 @@ declare namespace ScheduledEmailLogDao {
      * 平均执行时长(毫秒)
      */
     avgDuration: number
+  }
+
+  /**
+   * @desc 获取日志请求参数
+   */
+  type GetScheduledEmailLogOptions = Partial<ScheduledEmailLogOptions> & {
+    id: number
   }
 
   /**

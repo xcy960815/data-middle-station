@@ -11,7 +11,7 @@ declare namespace DataBaseDto {
   /**
    * @desc 查询表请求参数
    */
-  type GetTableOptions = {
+  type GetDataBaseTablesOptions = {
     tableName?: string
   }
 

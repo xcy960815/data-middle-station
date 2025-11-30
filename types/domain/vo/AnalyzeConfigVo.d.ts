@@ -27,7 +27,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 过滤配置
    */
-  type FilterOptions = AnalyzeConfigDao.FilterOption & {
+  type FilterOptions = AnalyzeConfigDao.FilterOptions & {
     displayName: string
   }
 
@@ -51,7 +51,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 排序配置
    */
-  type OrderOptions = AnalyzeConfigDao.OrderOption & {
+  type OrderOptions = AnalyzeConfigDao.OrderOptions & {
     displayName: string
   }
 
@@ -69,6 +69,28 @@ declare namespace AnalyzeConfigVo {
    * 图表配置响应
    */
   type ChartConfigOptions = AnalyzeConfigDao.ChartConfigOptions
+
+  /**
+   * @desc 获取图表配置响应
+   */
+  type GetChartConfigOptions = Partial<ChartConfigOptions> & {
+    id: number
+  }
+
+  /**
+   * @desc 创建图表配置响应
+   */
+  type CreateChartConfigOptions = ChartConfigOptions
+
+  /**
+   * @desc 更新图表配置响应
+   */
+  type UpdateChartConfigOptions = boolean
+
+  /**
+   * @desc 删除图表配置响应
+   */
+  type DeleteChartConfigOptions = boolean
 
   /**
    * @desc 饼图配置

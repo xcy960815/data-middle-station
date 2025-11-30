@@ -22,7 +22,7 @@
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
       >
-        <selecter-group
+        <selector-group
           class="group__item__name"
           cast="group"
           :displayName="item.displayName"
@@ -31,7 +31,7 @@
           :index="index"
           :invalid="item.__invalid"
           :invalidMessage="item.__invalidMessage"
-        ></selecter-group>
+        ></selector-group>
       </div>
     </div>
   </div>
@@ -122,7 +122,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const groupOption: GroupStore.GroupOption = {
     ...data.value,
     __invalid: false,
@@ -148,7 +148,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   const index = data.index
   switch (data.from) {
     case 'groups': {
-      // relocate postion by dragging
+      // relocate position by dragging
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
       const groups = JSON.parse(JSON.stringify(groupStore.getGroups))

@@ -38,9 +38,21 @@ interface ChartSnapshotVo {
  * 负责将分析配置渲染为图像快照的服务
  */
 export class ChartSnapshotService {
+  /**
+   * 分析服务
+   */
   private readonly analyzeService: AnalyzeService
+  /**
+   * 图表数据服务
+   */
   private readonly chartDataService: ChartDataService
+  /**
+   * 画布宽度
+   */
   private readonly width: number
+  /**
+   * 画布高度
+   */
   private readonly height: number
 
   /**
@@ -117,13 +129,13 @@ export class ChartSnapshotService {
    * 根据图表类型构建对应的 ECharts 配置
    * @param {string} chartType 图表类型标识
    * @param {ChartRenderConfig} renderConfig 通用渲染配置
-   * @param {AnalyzeConfigVo.PrivateChartConfigResponse | null} privateChartConfig 私有定制配置
+   * @param {AnalyzeConfigVo.PrivateChartConfigOptions | null} privateChartConfig 私有定制配置
    * @returns {EChartsCoreOption | null} 构建的 ECharts 配置
    */
   private buildChartOption(
     chartType: string,
     renderConfig: ChartRenderConfig,
-    privateChartConfig?: AnalyzeConfigVo.PrivateChartConfigResponse | null
+    privateChartConfig?: AnalyzeConfigVo.PrivateChartConfigOptions | null
   ): EChartsCoreOption | null {
     switch (chartType) {
       case 'line':
@@ -175,6 +187,4 @@ export class ChartSnapshotService {
     const timestamp = dayjs().format('YYYYMMDDHHmmss')
     return `${safeName}-${timestamp}.svg`
   }
-
-  // ChartSnapshotService 当前直接返回 VO，不需要额外的 DTO/DAO 转换方法
 }

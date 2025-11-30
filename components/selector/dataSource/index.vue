@@ -38,7 +38,7 @@
       <el-table
         :data="dataSourceOptions"
         border
-        style="width: 100%"
+        :style="{ width: '100%' }"
         @row-click="handleSelectedTable"
         highlight-current-row
         max-height="300"
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import { httpRequest } from '@/composables/useHttpRequest'
 import { Search } from '@element-plus/icons-vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElButton, ElInput, ElMessage, ElPopover, ElTable, ElTableColumn } from 'element-plus'
@@ -87,7 +88,7 @@ const dataSource = computed({
 
 /**
  * @desc 数据源选项
- * @returns {ColumnStore.dataSourceOption[]}
+ * @returns {ColumnsStore.dataSourceOption[]}
  */
 const dataSourceOptions = computed(() => columnStore.getDataSourceOptions)
 
@@ -100,10 +101,10 @@ const handleSearchTable = () => {
 
 /**
  * @desc 选择表
- * @param {ColumnStore.DataSourceOption} row 表数据
+ * @param {ColumnsStore.DataSourceOption} row 表数据
  * @returns {void}
  */
-const handleSelectedTable = (row: ColumnStore.DataSourceOption) => {
+const handleSelectedTable = (row: ColumnsStore.DataSourceOption) => {
   dataSource.value = row.tableName
   isPopoverVisible.value = false
   if (row.tableName) emit('dataSource-change', row.tableName)
@@ -111,10 +112,10 @@ const handleSelectedTable = (row: ColumnStore.DataSourceOption) => {
 
 /**
  * @desc 高亮当前选中行
- * @param {DatabaseVo.GetDatabaseTablesResponse} row 表数据
+ * @param {DatabaseVo.GetDataBaseTablesOptions} row 表数据
  * @returns {string}
  */
-const rowClassName = ({ row }: { row: DatabaseVo.GetDatabaseTablesResponse }) => {
+const rowClassName = ({ row }: { row: DatabaseVo.GetDataBaseTablesOptions }) => {
   return row.tableName === dataSource.value ? 'is-selected' : ''
 }
 

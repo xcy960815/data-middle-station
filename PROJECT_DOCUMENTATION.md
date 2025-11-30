@@ -61,7 +61,7 @@ data-middle-station/
 │   ├── line-chart/       # 折线图组件
 │   ├── monaco-editor/    # 代码编辑器组件
 │   ├── pie-chart/        # 饼图组件
-│   ├── selecter/         # 选择器组件集
+│   ├── selector/         # 选择器组件集
 │   └── table-chart/      # 表格图表组件
 ├── composables/          # 组合式函数
 ├── layouts/              # 布局组件

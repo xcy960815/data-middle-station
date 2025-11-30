@@ -1,6 +1,6 @@
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
-import { BaseMapper, Column, entityColumnsMap, Mapping, mapToTarget } from '@/server/mapper/baseMapper'
-import { toLine } from '@/server/utils/databaseHelpper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
+import { toLine } from '@/server/utils/databaseHelper'
 
 /**
  * @desc 表列表映射
@@ -106,7 +106,7 @@ export class DatabaseMapper extends BaseMapper {
    * @returns 表元数据列表
    */
   @Mapping(TableOptionMapping)
-  public async getTable<T extends DataBaseDao.TableOptions = DataBaseDao.TableOptions>(
+  public async getDataBaseTables<T extends DataBaseDao.TableOptions = DataBaseDao.TableOptions>(
     getTableRequest: DataBaseDao.GetTableOptions
   ): Promise<Array<T>> {
     const whereConditions: string[] = ["table_type = 'BASE TABLE'", 'table_schema = ?']

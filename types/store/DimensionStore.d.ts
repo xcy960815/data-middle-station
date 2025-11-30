@@ -1,7 +1,7 @@
 /**
  * @desc 维度字段
  */
-/// <reference path="./commom.d.ts" />
+/// <reference path="./Common.d.ts" />
 declare namespace DimensionStore {
   /**
    * @desc 维度字段
@@ -10,7 +10,7 @@ declare namespace DimensionStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type DimensionOption = ColumnStore.ColumnOption & {
+  type DimensionOption = ColumnsStore.ColumnOption & {
     /**
      * 是否无效
      */
@@ -22,11 +22,11 @@ declare namespace DimensionStore {
     /**
      * 固定列
      */
-    fixed?: 'left' | 'right' | null
+    fixed: 'left' | 'right' | null
     /**
      * 左右对齐方式
      */
-    align?: 'left' | 'right' | 'center'
+    align: 'left' | 'right' | 'center' | null
     /**
      * 垂直对齐方式
      */
@@ -34,7 +34,7 @@ declare namespace DimensionStore {
     /**
      * 宽度
      */
-    width?: number
+    width: number | null
     /**
      * 是否显示溢出提示
      */

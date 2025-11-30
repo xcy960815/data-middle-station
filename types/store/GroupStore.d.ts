@@ -1,4 +1,4 @@
-/// <reference path="./commom.d.ts" />
+/// <reference path="./Common.d.ts" />
 /**
  * @desc 左侧列字段
  */
@@ -14,7 +14,7 @@ declare namespace GroupStore {
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type GroupOption = ColumnStore.ColumnOption & {
+  type GroupOption = ColumnsStore.ColumnOption & {
     /**
      * 是否无效
      */
@@ -27,11 +27,11 @@ declare namespace GroupStore {
     /**
      * 固定列
      */
-    fixed?: 'left' | 'right'
+    fixed: 'left' | 'right' | null
     /**
      * 左右对齐方式
      */
-    align?: 'left' | 'right' | 'center'
+    align: 'left' | 'right' | 'center' | null
     /**
      * 垂直对齐方式
      */
@@ -39,7 +39,7 @@ declare namespace GroupStore {
     /**
      * 宽度
      */
-    width?: number
+    width: number | null
     /**
      * 是否显示溢出提示
      */

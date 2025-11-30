@@ -1,6 +1,12 @@
 <template>
   <!-- 折线图 -->
-  <div ref="chartContainer" class="h-full w-full" data-canvas-type="line-chart" data-canvas-component="LineChart"></div>
+  <div
+    ref="chartContainer"
+    class="h-full w-full"
+    :style="{ width: chartWidth, height: chartHeight }"
+    data-canvas-type="line-chart"
+    data-canvas-component="LineChart"
+  ></div>
 </template>
 <script setup lang="ts">
 import { LineChart } from 'echarts/charts'
@@ -14,6 +20,7 @@ import {
 } from 'echarts/components'
 import { init, type ECharts } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
+import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type PropType } from 'vue'
 import { useChartRender } from '~/composables/useChartRender/index'
 
 // 注册必要的组件
@@ -61,10 +68,12 @@ const props = defineProps({
 })
 
 const chartWidth = computed(() => {
+  if (typeof props.chartWidth === 'number') return props.chartWidth + 'px'
   return props.chartWidth || '100%'
 })
 
 const chartHeight = computed(() => {
+  if (typeof props.chartHeight === 'number') return props.chartHeight + 'px'
   return props.chartHeight || '100%'
 })
 

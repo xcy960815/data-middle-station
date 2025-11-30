@@ -13,10 +13,10 @@ export class ChartConfigService extends BaseService {
   }
   /**
    * @desc 将dao对象转换为vo对象
-   * @param chartConfigRecord {AnalyzeConfigDao.ChartConfig} 图表配置
-   * @returns {AnalyzeConfigVo.ChartConfigResponse} 图表配置
+   * @param chartConfigRecord {AnalyzeConfigDao.ChartConfigOptions} 图表配置
+   * @returns {AnalyzeConfigVo.ChartConfigOptions} 图表配置
    */
-  private convertDaoToVo(chartConfigRecord: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigVo.ChartConfigResponse {
+  private convertDaoToVo(chartConfigRecord: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigVo.ChartConfigOptions {
     const normalizedData = this.convertDaoToDto(chartConfigRecord)
     return {
       ...normalizedData,
@@ -30,28 +30,28 @@ export class ChartConfigService extends BaseService {
       /**
        * 维度配置
        */
-      dimensions: normalizedData.dimensions.map((item: AnalyzeConfigDao.DimensionOption) => ({
+      dimensions: normalizedData.dimensions.map((item: AnalyzeConfigDao.DimensionOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 过滤配置
        */
-      filters: normalizedData.filters.map((item: AnalyzeConfigDao.FilterOption) => ({
+      filters: normalizedData.filters.map((item: AnalyzeConfigDao.FilterOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 分组配置
        */
-      groups: normalizedData.groups.map((item: AnalyzeConfigDao.GroupOption) => ({
+      groups: normalizedData.groups.map((item: AnalyzeConfigDao.GroupOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
       /**
        * 排序配置
        */
-      orders: normalizedData.orders.map((item: AnalyzeConfigDao.OrderOption) => ({
+      orders: normalizedData.orders.map((item: AnalyzeConfigDao.OrderOptions) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       }))
@@ -61,11 +61,11 @@ export class ChartConfigService extends BaseService {
   /**
    * @desc 获取图表
    * @param {AnalyzeConfigDto.GetChartConfigOptions} queryOptions 图表配置请求参数
-   * @returns {Promise<AnalyzeConfigVo.ChartConfigResponse>}
+   * @returns {Promise<AnalyzeConfigVo.ChartConfigOptions>}
    */
   public async getChartConfig(
     queryOptions: AnalyzeConfigDto.GetChartConfigOptions
-  ): Promise<AnalyzeConfigVo.ChartConfigResponse> {
+  ): Promise<AnalyzeConfigVo.ChartConfigOptions> {
     const chartConfigRecord = await this.chartConfigMapper.getChartConfig(queryOptions)
     return this.convertDaoToVo(chartConfigRecord)
   }
@@ -91,7 +91,9 @@ export class ChartConfigService extends BaseService {
    * @param {AnalyzeConfigDto.CreateChartConfigOptions} createOptions 图表配置
    * @returns {Promise<number>}
    */
-  public async createChartConfig(createOptions: AnalyzeConfigDto.CreateChartConfigOptions): Promise<number> {
+  public async createChartConfig(
+    createOptions: AnalyzeConfigDto.CreateChartConfigOptions
+  ): Promise<AnalyzeConfigVo.CreateChartConfigOptions> {
     const { createdBy, createTime, updateTime, updatedBy } = await this.getDefaultInfo()
     const enrichedOptions = {
       ...createOptions,
@@ -101,7 +103,7 @@ export class ChartConfigService extends BaseService {
       updatedBy
     }
     const chartConfigId = await this.chartConfigMapper.createChartConfig(enrichedOptions)
-    return chartConfigId
+    return this.getChartConfig({ id: chartConfigId })
   }
 
   /**

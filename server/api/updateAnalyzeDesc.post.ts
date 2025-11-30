@@ -7,7 +7,7 @@ const analyzeService = new AnalyzeService()
  * @param event
  * @returns {Promise<ApiResponseI<AnalyzeVo.UpdateAnalyzeDescResponse>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<AnalyzeVo.UpdateAnalyzeDescResponse>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<AnalyzeVo.UpdateAnalyzeDescOptions>>>(async (event) => {
   try {
     const updateAnalyzeDescRequest = await readBody<AnalyzeDto.UpdateAnalyzeDescOptions>(event)
     const updateAnalyzeDescResult = await analyzeService.updateAnalyzeDesc(updateAnalyzeDescRequest)

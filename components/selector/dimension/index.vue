@@ -1,6 +1,6 @@
 <template>
-  <div class="dimension-selecter" @contextmenu="contextmenuHandler">
-    <selecter-template v-bind="$attrs" :dimension="dimension"></selecter-template>
+  <div class="dimension-selector" @contextmenu="contextmenuHandler">
+    <selector-template v-bind="$attrs" :dimension="dimension"></selector-template>
   </div>
   <!-- 字段的操作选项 -->
   <context-menu ref="contextmenuRef">
@@ -29,7 +29,6 @@
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ContextMenu from '../../context-menu/index.vue'
-import SelecterTemplate from '../template/index.vue'
 
 const props = defineProps({
   dimension: {
@@ -159,7 +158,7 @@ const handleSetFilterable = () => {
 }
 </script>
 <style lang="scss" scoped>
-.dimension-selecter {
+.dimension-selector {
   cursor: context-menu;
 }
 </style>

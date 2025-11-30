@@ -2,7 +2,7 @@ import type { DirectiveBinding } from 'vue'
 import ContextMenuDivider from '../components/context-menu/divider.vue'
 import ContextMenuGroup from '../components/context-menu/group.vue'
 import ContextMenuIcon from '../components/context-menu/Icon.vue'
-import ContextMenu from '../components/context-menu/index.vue'
+import ContextMenuComponent from '../components/context-menu/index.vue'
 import ContextMenuItem from '../components/context-menu/Item.vue'
 import ContextMenuSubmenu from '../components/context-menu/submenu.vue'
 import '../components/context-menu/themes/default/index.less'
@@ -69,7 +69,7 @@ export default defineNuxtPlugin(({ vueApp }) => {
   })
 
   // 全局注册组件
-  vueApp.component('ContextMenu', ContextMenu)
+  vueApp.component('ContextMenu', ContextMenuComponent)
   vueApp.component('ContextMenuItem', ContextMenuItem)
   vueApp.component('ContextMenuSubmenu', ContextMenuSubmenu)
   vueApp.component('ContextMenuDivider', ContextMenuDivider)
