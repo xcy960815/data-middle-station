@@ -63,7 +63,7 @@ declare namespace SendEmailDto {
     scale?: number
   }
 
-  interface SendEmailResultDto extends SendEmailDao.SendEmailOptions {
+  type SendEmailResultDto = SendEmailDao.SendEmailOptions & {
     sender?: string
     channel?: string
   }

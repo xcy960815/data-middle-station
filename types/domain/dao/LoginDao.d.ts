@@ -1,5 +1,5 @@
 declare namespace LoginDao {
-  export type Login = {
+  export type LoginOptions = {
     token: string
     user: {
       userId: number
