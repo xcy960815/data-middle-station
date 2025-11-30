@@ -202,7 +202,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * @desc 表格配置条件选项
    */
-  type ConditionOption = {
+  type ConditionOptions = {
     /**
      * 条件
      */

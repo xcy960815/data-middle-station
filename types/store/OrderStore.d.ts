@@ -10,30 +10,19 @@ declare namespace OrderStore {
   /**
    * @desc 排序类型
    */
-  const OrderTypeEnums = {
-    升序: 'asc',
-    降序: 'desc',
-    无: null
-  } as const
+  const OrderTypeEnums: typeof AnalyzeConfigVo.OrderTypeEnums
 
-  type OrderType = (typeof OrderTypeEnums)[keyof typeof OrderTypeEnums]
+  type OrderType = AnalyzeConfigVo.OrderType
 
   /**
    * @desc 排序聚合方式
    */
-  const OrderAggregationsEnum = {
-    原始值: 'raw',
-    计数: 'count',
-    总计: 'sum',
-    平均: 'avg',
-    最大值: 'max',
-    最小值: 'min'
-  } as const
+  const OrderAggregationsEnum: typeof AnalyzeConfigVo.OrderAggregationsEnum
 
   /**
    * @desc 排序聚合方式
    */
-  type OrderAggregationsType = (typeof OrderAggregationsEnum)[keyof typeof OrderAggregationsEnum]
+  type OrderAggregationsType = AnalyzeConfigVo.OrderAggregationsType
   /**
    * @desc 左侧列字段
    * @interface OrderOption
