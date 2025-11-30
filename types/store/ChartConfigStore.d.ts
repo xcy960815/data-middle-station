@@ -71,7 +71,7 @@ declare namespace ChartConfigStore {
     /**
      * @desc 设置表格图配置条件
      */
-    setTableChartConditions(conditions: ConditionOption[]): void
+    setTableChartConditions(conditions: AnalyzeConfigVo.ConditionOptions[]): void
     /**
      * @desc 设置表格图配置
      */
