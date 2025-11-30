@@ -15,6 +15,16 @@ declare namespace AnalyzeConfigVo {
   }
 
   /**
+   * 过滤聚合方式枚举
+   */
+  const FilterAggregationsEnum: typeof AnalyzeConfigDao.FilterAggregationsEnum
+
+  /**
+   * 过滤类型枚举
+   */
+  const FilterTypeEnums: typeof AnalyzeConfigDao.FilterTypeEnums
+
+  /**
    * 过滤类型
    */
   type FilterType = AnalyzeConfigDao.FilterType
@@ -39,9 +49,19 @@ declare namespace AnalyzeConfigVo {
   }
 
   /**
+   * 排序类型枚举
+   */
+  const OrderTypeEnums: typeof AnalyzeConfigDao.OrderTypeEnums
+
+  /**
    * 排序类型
    */
   type OrderType = AnalyzeConfigDao.OrderType
+
+  /**
+   * 排序聚合方式枚举
+   */
+  const OrderAggregationsEnum: typeof AnalyzeConfigDao.OrderAggregationsEnum
 
   /**
    * 排序聚合方式
@@ -111,4 +131,9 @@ declare namespace AnalyzeConfigVo {
    * @desc 表格配置
    */
   type TableChartConfigOptions = AnalyzeConfigDao.TableChartConfig
+
+  /**
+   * @desc 表格配置条件选项
+   */
+  type ConditionOptions = AnalyzeConfigDao.ConditionOptions
 }

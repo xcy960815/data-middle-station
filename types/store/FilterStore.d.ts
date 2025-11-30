@@ -10,41 +10,22 @@ declare namespace FilterStore {
   /**
    * @desc 过滤器聚合方式
    */
-  const FilterAggregationsEnum = {
-    原始值: 'raw',
-    计数: 'count',
-    计数去重: 'countDistinct',
-    总计: 'sum',
-    平均: 'avg',
-    最大值: 'max',
-    最小值: 'min'
-  } as const
+  const FilterAggregationsEnum: typeof AnalyzeConfigVo.FilterAggregationsEnum
 
   /**
    * @desc 过滤器类型
    */
-  const FilterTypeEnums = {
-    等于: 'eq',
-    不等于: 'neq',
-    大于: 'gt',
-    大于等于: 'gte',
-    小于: 'lt',
-    小于等于: 'lte',
-    包含: 'like',
-    不包含: 'notLike',
-    为空: 'isNull',
-    不为空: 'isNotNull'
-  } as const
+  const FilterTypeEnums: typeof AnalyzeConfigVo.FilterTypeEnums
 
   /**
    * @desc 过滤器类型
    */
-  type FilterType = (typeof FilterTypeEnums)[keyof typeof FilterTypeEnums]
+  type FilterType = AnalyzeConfigVo.FilterType
 
   /**
    * @desc 过滤器聚合方式
    */
-  type FilterAggregationType = (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
+  type FilterAggregationType = AnalyzeConfigVo.FilterAggregationsType
 
   /**
    * @desc 过滤器选项
