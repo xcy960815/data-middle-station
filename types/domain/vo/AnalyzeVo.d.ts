@@ -15,12 +15,7 @@ declare namespace AnalyzeVo {
   /**
    * @desc 获取分析响应
    */
-  type GetAnalyzeOptions = AnalyzeOptions & {
-    /**
-     * 图表配置
-     */
-    chartConfig: AnalyzeConfigVo.ChartConfigOptions | null
-  }
+  type GetAnalyzeOptions = AnalyzeOptions
 
   /**
    * @desc 创建分析响应

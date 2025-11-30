@@ -38,9 +38,21 @@ interface ChartSnapshotVo {
  * 负责将分析配置渲染为图像快照的服务
  */
 export class ChartSnapshotService {
+  /**
+   * 分析服务
+   */
   private readonly analyzeService: AnalyzeService
+  /**
+   * 图表数据服务
+   */
   private readonly chartDataService: ChartDataService
+  /**
+   * 画布宽度
+   */
   private readonly width: number
+  /**
+   * 画布高度
+   */
   private readonly height: number
 
   /**
@@ -175,6 +187,4 @@ export class ChartSnapshotService {
     const timestamp = dayjs().format('YYYYMMDDHHmmss')
     return `${safeName}-${timestamp}.svg`
   }
-
-  // ChartSnapshotService 当前直接返回 VO，不需要额外的 DTO/DAO 转换方法
 }

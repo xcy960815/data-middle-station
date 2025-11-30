@@ -2,13 +2,13 @@
   // https://nuxt.com/docs/guide/concepts/typescript
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
+    "module": "esnext",
     "typeRoots": ["./types", "./node_modules/@types"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "module": "esnext"
+    "noUnusedParameters": false
   },
   "exclude": ["**/*.vue.bak"]
 }

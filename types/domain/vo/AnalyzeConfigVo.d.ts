@@ -73,7 +73,9 @@ declare namespace AnalyzeConfigVo {
   /**
    * @desc 获取图表配置响应
    */
-  type GetChartConfigOptions = ChartConfigOptions
+  type GetChartConfigOptions = Partial<ChartConfigOptions> & {
+    id: number
+  }
 
   /**
    * @desc 创建图表配置响应

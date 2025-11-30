@@ -71,13 +71,13 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中所有表
-   * @param queryOptions {DataBaseDto.GetDatabaseTablesRequest} 查询表请求参数
+   * @param {DataBaseDto.GetDataBaseTablesOptions} queryOptions  查询表请求参数
    * @returns {Promise<Array<DatabaseVo.GetDataBaseTablesOptions>>}
    */
-  public async getTable(
-    queryOptions: DataBaseDto.GetTableOptions
+  public async getDataBaseTables(
+    queryOptions: DataBaseDto.GetDataBaseTablesOptions
   ): Promise<Array<DatabaseVo.GetDataBaseTablesOptions>> {
-    const tableRecords = await this.databaseMapper.getTable(queryOptions)
+    const tableRecords = await this.databaseMapper.getDataBaseTables(queryOptions)
     return tableRecords.map((tableRecord) => {
       const dtoPayload = this.convertDaoToDtoTable(tableRecord)
       const normalizedTableRecord = this.convertDtoToDaoTable(dtoPayload)

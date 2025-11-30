@@ -596,8 +596,7 @@ export class ScheduledEmailService extends BaseService {
         duration: log.executionDuration,
         smtp_host: log.smtpHost || undefined,
         smtp_port: log.smtpPort || undefined,
-        created_at: log.createdTime,
-        created_timezone: log.createdTimezone || undefined
+        created_at: log.createdTime
       }))
     } catch (error) {
       logger.error(`获取任务执行日志失败: ${JSON.stringify(queryOptions)}, ${error}`)
