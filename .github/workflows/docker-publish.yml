@@ -48,3 +48,18 @@ jobs:
           platforms: linux/amd64,linux/arm64 # 如果需要多架构构建
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Update Docker Hub repository overview from README
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          # 将 README.md 转成 JSON 安全的字符串
+          DESCRIPTION=$(jq -Rs . < README.md)
+
+          # 调用 Docker Hub API 更新仓库 full_description（Overview）
+          curl --fail --silent --show-error \
+            --request PATCH \
+            --url https://hub.docker.com/v2/repositories/xcy960815/data-middle-station/ \
+            --header "Content-Type: application/json" \
+            --header "Authorization: Bearer ${DOCKERHUB_TOKEN}" \
+            --data "{\"full_description\": ${DESCRIPTION}}"
