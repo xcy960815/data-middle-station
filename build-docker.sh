@@ -63,6 +63,11 @@ if [ $? -eq 0 ]; then
     echo "  - xcy960815/data-middle-station:$VERSION"
     echo "  - xcy960815/data-middle-station:latest"
 
+    # 自动生成 .env 文件，用于 docker-compose
+    echo "IMAGE_VERSION=$VERSION" > .env.docker
+    echo -e "${GREEN}>>> 已生成 .env.docker 文件，版本号: $VERSION${NC}"
+    echo "启动容器时可以使用: docker-compose -p dms-service -f dms-service-compose.yml --env-file .env.docker up -d"
+
     read -p "是否立即推送到 Docker Hub? (y/n) [n]: " push_choice
     push_choice=${push_choice:-n}
 

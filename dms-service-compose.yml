@@ -5,7 +5,7 @@
 #   unless-stopped  - 除非手动停止，否则总是重启
 services:
   nuxt3:
-    image: xcy960815/data-middle-station:1.0
+    image: xcy960815/data-middle-station:${IMAGE_VERSION:-latest}
     # 容器名称
     container_name: dms-container
     ports:
