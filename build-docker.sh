@@ -54,11 +54,11 @@ esac
 
 echo -e "${GREEN}>>> 开始构建版本: $VERSION${NC}"
 
-# 构建镜像，同时打上版本号标签和 latest 标签
+# 1. 先进行本地构建 (保持原有逻辑，用于验证和本地使用)
 docker build -t xcy960815/data-middle-station:$VERSION -t xcy960815/data-middle-station:latest .
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}>>> 镜像构建成功！${NC}"
+    echo -e "${GREEN}>>> 本地镜像构建成功！${NC}"
     echo "生成的标签:"
     echo "  - xcy960815/data-middle-station:$VERSION"
     echo "  - xcy960815/data-middle-station:latest"
@@ -68,14 +68,29 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}>>> 已生成 .env.docker 文件，版本号: $VERSION${NC}"
     echo "启动容器时可以使用: docker-compose -p dms-service -f dms-service-compose.yml --env-file .env.docker up -d"
 
-    read -p "是否立即推送到 Docker Hub? (y/n) [n]: " push_choice
+    read -p "是否立即构建多架构镜像(amd64/arm64)并推送到 Docker Hub? (y/n) [n]: " push_choice
     push_choice=${push_choice:-n}
 
     if [ "$push_choice" = "y" ]; then
-        echo -e "${BLUE}>>> 正在推送...${NC}"
-        docker push xcy960815/data-middle-station:$VERSION
-        docker push xcy960815/data-middle-station:latest
-        echo -e "${GREEN}>>> 推送完成！${NC}"
+        echo -e "${BLUE}>>> 正在准备多架构构建...${NC}"
+
+        # 检查并设置 buildx (只在需要推送时设置)
+        if ! docker buildx inspect dms-builder > /dev/null 2>&1; then
+            echo "创建并启动新的 buildx builder (dms-builder)..."
+            docker buildx create --name dms-builder --use --bootstrap
+        else
+            docker buildx use dms-builder
+        fi
+
+        echo -e "${BLUE}>>> 正在构建并推送多架构镜像 (linux/amd64, linux/arm64)...${NC}"
+        # 使用 buildx 构建多架构并推送
+        docker buildx build --platform linux/amd64,linux/arm64 -t xcy960815/data-middle-station:$VERSION -t xcy960815/data-middle-station:latest --push .
+
+        if [ $? -eq 0 ]; then
+             echo -e "${GREEN}>>> 多架构镜像推送完成！${NC}"
+        else
+             echo -e "\033[0;31m>>> 推送失败。\033[0m"
+        fi
     else
         echo "已跳过推送。你可以稍后执行:"
         echo "docker push xcy960815/data-middle-station:$VERSION"
