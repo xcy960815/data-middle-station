@@ -43,7 +43,9 @@
     "XOAUTH",
     "coremail",
     "STARTTLS",
-    "BITMIME"
+    "BITMIME",
+    "buildx",
+    "DOCKERHUB"
   ],
   "ignorePaths": ["node_modules", "dist", ".nuxt", ".output"]
 }
