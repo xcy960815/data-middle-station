@@ -51,7 +51,7 @@ export default defineNuxtConfig({
       }
     },
     build: {
-      chunkSizeWarningLimit: 1024, // 将警告体积变成1MB
+      chunkSizeWarningLimit: 2048, // 将警告体积变成2MB，避免因 Monaco Editor 等大库产生警告
       rollupOptions: {
         output: {
           // 配置 JS 文件命名格式：chunk名称 + hash
