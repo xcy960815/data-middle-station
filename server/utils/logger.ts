@@ -1,13 +1,28 @@
-import { createLogger, format, transports } from 'winston'
-import type { Logger as LoggerType } from 'winston'
-import DailyRotateFile from 'winston-daily-rotate-file'
 import chalk from 'chalk'
+import dayjs from 'dayjs'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
 import gradient from 'gradient-string'
+import type { Logger as LoggerType } from 'winston'
+import { createLogger, format, transports } from 'winston'
+import DailyRotateFile from 'winston-daily-rotate-file'
 // import boxen from 'boxen'
+
+// 启用 dayjs 时区插件
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 interface LoggerOptions {
   fileName: string
   folderName: string
+}
+
+// 扩展的日志信息接口，包含自定义字段
+interface ExtendedLogInfo {
+  level: string
+  message: string | unknown
+  caller?: string
+  [key: string]: unknown
 }
 
 // 日志级别对应的emoji和颜色
@@ -16,6 +31,15 @@ const LOG_LEVELS = {
   error: { emoji: '❌', color: '#FF5252' },
   warn: { emoji: '⚠️', color: '#FFC107' },
   debug: { emoji: '🔍', color: '#4CAF50' }
+}
+
+/**
+ * 获取中国时间（UTC+8）
+ * @param {string} format 时间格式
+ * @returns {string} 格式化后的中国时间
+ */
+function getChinaTime(format: string = 'YYYY-MM-DD HH:mm:ss'): string {
+  return dayjs().tz('Asia/Shanghai').format(format)
 }
 
 /**
@@ -80,18 +104,19 @@ export class Logger {
    * @returns {void}
    */
   private _createLogger(fileName: string, folderName: string): void {
+    // 保存时间格式到局部变量，避免 this 上下文问题
+    const timeFormat = this.logTimeFormat
     this.logger = createLogger({
       transports: [
         new transports.Console({
           // 禁用winston默认的colorize，我们将使用自定义的颜色处理
           format: format.combine(
-            format.timestamp({
-              format: this.logTimeFormat
-            }),
             format.align(),
             format.printf((info) => {
-              const { timestamp, level, message, caller, ...args } = info
-              const ts = typeof timestamp === 'string' ? timestamp.slice(0, 19).replace('T', ' ') : ''
+              const logInfo = info as ExtendedLogInfo
+              const { level, message, caller, ...args } = logInfo
+              // 使用中国时区时间
+              const ts = getChinaTime(timeFormat)
 
               // 获取日志级别对应的样式
               const levelInfo = LOG_LEVELS[level as keyof typeof LOG_LEVELS] || { emoji: '📝', color: '#2196F3' }
@@ -133,14 +158,13 @@ export class Logger {
         // 压缩
         zippedArchive: true,
         format: format.combine(
-          format.timestamp({
-            format: this.logTimeFormat
-          }),
           format.align(),
-          format.printf((info: any) => {
+          format.printf((info) => {
             // 这里可以自定义你的输出格式
-            const { timestamp, level, message, caller } = info
-            const ts = timestamp?.slice(0, 19).replace('T', ' ') || ''
+            const logInfo = info as ExtendedLogInfo
+            const { level, message, caller } = logInfo
+            // 使用中国时区时间
+            const ts = getChinaTime(timeFormat)
             const callerInfo = caller ? `[${caller}]` : ''
             return `${ts} [${folderName} ${level}]: ${message} ${callerInfo}`
           })
