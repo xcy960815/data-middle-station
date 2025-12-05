@@ -1,4 +1,5 @@
 import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
+import { Logger } from '@/server/utils/logger'
 import schedule from 'node-schedule'
 
 const scheduledEmailService = new ScheduledEmailService()
@@ -66,7 +67,7 @@ export default defineNitroPlugin(async () => {
 const loadAndScheduleAllTasks = async (): Promise<void> => {
   try {
     // 获取所有待执行的任务
-    const pendingTasks = await scheduledEmailService.getScheduledEmailList({
+    const pendingTasks = await scheduledEmailService.getScheduledEmailTaskList({
       status: 'pending'
     })
 
@@ -158,10 +159,10 @@ const scheduleRecurringTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptio
   if (taskOptions.recurringTime.startsWith('*/')) {
     // 高频执行模式：*/N 表示每N分钟执行一次
     const intervalMinutes = taskOptions.recurringTime.substring(2)
-    const dayOfWeek = taskOptions.recurringDays.join(',')
     // cron 格式: 秒 分 时 日 月 星期
-    // 例如: "0 */1 * * * *" = 每1分钟执行
-    cronExpression = `0 ${taskOptions.recurringTime} * * * ${dayOfWeek}`
+    // 对于高频任务（每N分钟），星期部分使用 * 表示每天
+    // 例如: "0 */1 * * * *" = 每1分钟执行（每天）
+    cronExpression = `0 ${taskOptions.recurringTime} * * * *`
     logger.info(`🔧 构建高频 cron 表达式: ${cronExpression} (每${intervalMinutes}分钟执行)`)
   } else {
     // 标准时间格式 HH:mm:ss
@@ -179,19 +180,25 @@ const scheduleRecurringTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptio
   }
 
   // 创建重复调度任务
-  const job = schedule.scheduleJob(cronExpression, async () => {
-    logger.info(`🚀 执行重复任务: ${taskOptions.id} - ${taskOptions.taskName}`)
-    await executeTask(taskOptions)
-  })
+  try {
+    const job = schedule.scheduleJob(cronExpression, async () => {
+      logger.info(`🚀 执行重复任务: ${taskOptions.id} - ${taskOptions.taskName}`)
+      await executeTask(taskOptions)
+    })
 
-  if (job) {
-    scheduledJobs.set(taskOptions.id, job)
-    const nextInvocation = job.nextInvocation()
-    logger.info(
-      `🔄 重复任务已注册: ${taskOptions.id} - ${taskOptions.taskName}, ` +
-        `执行周期: ${formatDays(taskOptions.recurringDays)} ${taskOptions.recurringTime}, ` +
-        `下次执行: ${nextInvocation?.toLocaleString('zh-CN')}`
-    )
+    if (job) {
+      scheduledJobs.set(taskOptions.id, job)
+      const nextInvocation = job.nextInvocation()
+      logger.info(
+        `🔄 重复任务已注册: ${taskOptions.id} - ${taskOptions.taskName}, ` +
+          `执行周期: ${formatDays(taskOptions.recurringDays)} ${taskOptions.recurringTime}, ` +
+          `下次执行: ${nextInvocation?.toLocaleString('zh-CN')}`
+      )
+    } else {
+      logger.error(`❌ 任务 ${taskOptions.id} 的 cron 表达式无效，无法创建调度: ${cronExpression}`)
+    }
+  } catch (error) {
+    logger.error(`❌ 创建重复任务调度失败: ${taskOptions.id} - ${taskOptions.taskName}, 错误: ${error}`)
   }
 }
 
