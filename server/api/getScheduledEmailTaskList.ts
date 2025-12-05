@@ -13,7 +13,7 @@ const logger = new Logger({
 export default defineEventHandler<Promise<ApiResponseI<ScheduledEmailVo.ScheduledEmailOptions[]>>>(async (event) => {
   try {
     const scheduledEmailListQuery = getQuery<ScheduledEmailDto.ScheduledEmailListQuery>(event)
-    const scheduledEmailList = await scheduledEmailService.getScheduledEmailList(scheduledEmailListQuery)
+    const scheduledEmailList = await scheduledEmailService.getScheduledEmailTaskList(scheduledEmailListQuery)
     return ApiResponse.success(scheduledEmailList)
   } catch (error: any) {
     logger.error('查询定时邮件任务列表失败' + error.message)

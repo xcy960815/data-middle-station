@@ -264,7 +264,7 @@ export class ScheduledEmailMapper extends BaseMapper {
    * @returns 匹配的任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
-  public async getScheduledEmailList(
+  public async getScheduledEmailTaskList(
     params: ScheduledEmailDao.ScheduledEmailListOptions
   ): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
     const { whereConditions, whereValues } = this.buildTaskQueryConditions(params, { allowEmpty: true })
