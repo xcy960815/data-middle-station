@@ -123,7 +123,7 @@ export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) 
     }
 
     // 验证通过，执行业务逻辑
-    const result = await scheduledEmailService.createScheduledEmail(scheduledEmailOptions)
+    const result = await scheduledEmailService.createScheduledEmailTask(scheduledEmailOptions)
 
     logger.info(`定时邮件任务创建成功: ${scheduledEmailOptions.taskName}`)
     return ApiResponse.success(result)

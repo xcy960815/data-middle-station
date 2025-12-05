@@ -35,7 +35,7 @@ export class ScheduledEmailService extends BaseService {
    * @param {ScheduledEmailDto.CreateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
    * @returns {Promise<boolean>}
    */
-  async createScheduledEmail(createOptions: ScheduledEmailDto.CreateScheduledEmailOptions): Promise<boolean> {
+  async createScheduledEmailTask(createOptions: ScheduledEmailDto.CreateScheduledEmailOptions): Promise<boolean> {
     try {
       // 验证任务类型和相关字段
       if (createOptions.taskType === 'scheduled') {
@@ -108,7 +108,7 @@ export class ScheduledEmailService extends BaseService {
    * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} queryOptions 定时任务参数
    * @returns {Promise<ScheduledEmailVo.ScheduledEmailOptions | null>}
    */
-  async getScheduledEmail(
+  async getScheduledEmailTask(
     queryOptions: ScheduledEmailDto.GetScheduledEmailOptions
   ): Promise<ScheduledEmailVo.ScheduledEmailOptions | null> {
     const scheduledEmailRecord = await this.scheduledEmailMapper.getScheduledEmailTask(queryOptions)
@@ -120,7 +120,7 @@ export class ScheduledEmailService extends BaseService {
    * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
    * @returns {Promise<boolean>}
    */
-  async updateScheduledEmail(updateOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
+  async updateScheduledEmailTask(updateOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
     // 验证任务是否存在
     const scheduledEmailRecord = await this.scheduledEmailMapper.getScheduledEmailTask({
       id: updateOptions.id
@@ -171,7 +171,7 @@ export class ScheduledEmailService extends BaseService {
    * @param {ScheduledEmailDto.UpdateScheduledEmailOptions} scheduledEmailOptions 定时任务参数
    * @returns {Promise<boolean>}
    */
-  async deleteScheduledEmail(deleteOptions: ScheduledEmailDto.DeleteScheduledEmailOptions): Promise<boolean> {
+  async deleteScheduledEmailTask(deleteOptions: ScheduledEmailDto.DeleteScheduledEmailOptions): Promise<boolean> {
     try {
       // 验证任务是否存在
       const scheduledEmailRecord = await this.scheduledEmailMapper.getScheduledEmailTask(deleteOptions)
@@ -202,11 +202,11 @@ export class ScheduledEmailService extends BaseService {
    * @param {ScheduledEmailDto.ScheduledEmailListQuery} listOptions 查询参数
    * @returns {Promise<ScheduledEmailVo.ScheduledEmailOptions[]>}
    */
-  async getScheduledEmailList(
+  async getScheduledEmailTaskList(
     listOptions: ScheduledEmailDto.ScheduledEmailListQuery
   ): Promise<ScheduledEmailVo.ScheduledEmailOptions[]> {
     try {
-      const scheduledEmailRecordList = await this.scheduledEmailMapper.getScheduledEmailList(listOptions)
+      const scheduledEmailRecordList = await this.scheduledEmailMapper.getScheduledEmailTaskList(listOptions)
       return scheduledEmailRecordList.map((scheduledEmailRecord) => this.convertDaoToVo(scheduledEmailRecord))
     } catch (error) {
       logger.error(`获取定时邮件任务列表失败: ${JSON.stringify(listOptions)}, ${error}`)
@@ -399,7 +399,7 @@ export class ScheduledEmailService extends BaseService {
    * 更新重复任务的下次执行时间
    * @returns {Promise<boolean>}
    */
-  async updateNextExecutionTime(queryOptions: ScheduledEmailDto.ScheduledEmailQueryOptions): Promise<boolean> {
+  async updateNextExecutionTimeTask(queryOptions: ScheduledEmailDto.ScheduledEmailQueryOptions): Promise<boolean> {
     try {
       const scheduledEmailRecord = await this.scheduledEmailMapper.getScheduledEmailTask(queryOptions)
       if (!scheduledEmailRecord) {
@@ -638,6 +638,13 @@ export class ScheduledEmailService extends BaseService {
     }
   }
 
+  /**
+   * 构建基础日志元数据
+   * @param {ScheduledEmailDto.EmailConfig} emailConfig 邮件配置
+   * @param {ScheduledEmailDto.AnalyzeOptions} analyzeOptions 分析选项
+   * @param {number} retryCount 重试次数
+   * @returns {Partial<ScheduledEmailLogDto.CreateLogOptions>} 基础日志元数据
+   */
   private buildBaseLogMetadata(
     emailConfig: ScheduledEmailDto.EmailConfig,
     analyzeOptions: ScheduledEmailDto.AnalyzeOptions,
@@ -666,6 +673,12 @@ export class ScheduledEmailService extends BaseService {
     }
   }
 
+  /**
+   * 增强日志元数据
+   * @param {Partial<ScheduledEmailLogDto.CreateLogOptions>} baseMetadata 基础日志元数据
+   * @param {SendEmailVo.SendEmailOptions} sendResult 发送结果
+   * @returns {Partial<ScheduledEmailLogDto.CreateLogOptions>} 增强后的日志元数据
+   */
   private enrichLogMetadata(
     baseMetadata: Partial<ScheduledEmailLogDto.CreateLogOptions>,
     sendResult: SendEmailVo.SendEmailOptions
@@ -698,6 +711,11 @@ export class ScheduledEmailService extends BaseService {
     }
   }
 
+  /**
+   * 确保字符串数组
+   * @param {string | string[] | null | undefined} value 字符串或字符串数组
+   * @returns {string[] | undefined} 字符串数组
+   */
   private ensureStringArray(value: string | string[] | null | undefined): string[] | undefined {
     if (!value) {
       return undefined
@@ -705,6 +723,11 @@ export class ScheduledEmailService extends BaseService {
     return Array.isArray(value) ? value : [value]
   }
 
+  /**
+   * 规范化收件人
+   * @param {string | string[]} recipients 收件人
+   * @returns {string[]} 规范化后的收件人
+   */
   private normalizeRecipients(recipients?: string | string[]): string[] {
     if (!recipients) {
       return []
@@ -718,6 +741,11 @@ export class ScheduledEmailService extends BaseService {
       .filter(Boolean)
   }
 
+  /**
+   * 扁平化Nodemailer收件人
+   * @param {string | { name?: string; address: string }[]} recipients 收件人
+   * @returns {string[] | undefined} 扁平化后的收件人
+   */
   private flattenNodemailerRecipients(
     recipients?: (string | { name?: string; address: string })[]
   ): string[] | undefined {
@@ -730,6 +758,10 @@ export class ScheduledEmailService extends BaseService {
     return normalized.length > 0 ? normalized : undefined
   }
 
+  /**
+   * 获取当前时区
+   * @returns {string} 当前时区
+   */
   private getCurrentTimezone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   }
