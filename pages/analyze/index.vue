@@ -38,6 +38,7 @@
 </template>
 
 <script setup lang="ts">
+import { onActivated, onMounted } from 'vue'
 import Bar from './components/bar/index.vue'
 import ChartConfig from './components/chart-config/index.vue'
 import AnalyzeName from './components/chart-name/index.vue'
@@ -50,10 +51,15 @@ import GroupOption from './components/group/index.vue'
 import Order from './components/order/index.vue'
 import { getAnalyzeHandler } from './getAnalyze'
 import { getChartDataHandler } from './getAnalyzeData'
+onMounted(() => {
+  getAnalyzeHandler()
+  getChartDataHandler()
+})
+onActivated(() => {
+  getAnalyzeHandler()
+  getChartDataHandler()
+})
 const layoutName = 'analyze'
-
-getAnalyzeHandler()
-getChartDataHandler()
 </script>
 
 <style scoped lang="scss"></style>

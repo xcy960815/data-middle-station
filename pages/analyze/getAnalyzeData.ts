@@ -1,15 +1,18 @@
 import { httpRequest } from '@/composables/useHttpRequest'
+import { useAnalyzeStore } from '@/stores/analyze'
+import { useChartConfigStore } from '@/stores/chart-config'
+import { useColumnsStore } from '@/stores/columns'
+import { useDimensionsStore } from '@/stores/dimensions'
+import { useFiltersStore } from '@/stores/filters'
+import { useGroupsStore } from '@/stores/groups'
+import { useOrdersStore } from '@/stores/orders'
 import { debounce } from '@/utils/throttleDebounce'
 import dayjs from 'dayjs'
-import { computed } from 'vue'
-
-// 保证只注册一次 watch，并复用同一个防抖函数
-let hasSetupChartDataWatcher = false
-let sharedQueryChartDataDebounce: (() => Promise<void>) | null = null
+import { computed, watch } from 'vue'
 
 /**
- * @desc 获取图表数据
- * @returns {Promise<void>}
+ * 获取图表数据的处理函数
+ * 每次页面挂载都会重新注册 watcher，确保离开页面后再次进入仍能请求数据。
  */
 export const getChartDataHandler = () => {
   const analyzeStore = useAnalyzeStore()
@@ -20,11 +23,7 @@ export const getChartDataHandler = () => {
   const orderStore = useOrdersStore()
   const chartConfigStore = useChartConfigStore()
 
-  /**
-   * @desc 图表推荐策略类
-   * @param {AnalyzeStore.AnalyzeState['chartType']} chartType
-   * @returns {string}
-   */
+  // ---------- 图表推荐策略 ----------
   const chartSuggestStrategies = (chartType: AnalyzeStore.ChartType) => {
     const dimensions = dimensionStore.getDimensions
     const groups = groupStore.getGroups
@@ -36,72 +35,47 @@ export const getChartDataHandler = () => {
     }
     switch (chartType) {
       case 'table':
-        if (dimensions.length > 0 || groups.length > 0) {
-          return ''
-        } else {
-          return `${chartNames[chartType]}至少需要一个值或者一个分组`
-        }
+        return dimensions.length > 0 || groups.length > 0 ? '' : `${chartNames[chartType]}至少需要一个值或者一个分组`
       case 'interval':
       case 'line':
-        if (dimensions.length > 0 && groups.length > 0) {
-          return ''
-        } else {
-          return `${chartNames[chartType]}至少需要一个值和一个分组`
-        }
+        return dimensions.length > 0 && groups.length > 0 ? '' : `${chartNames[chartType]}至少需要一个值和一个分组`
       case 'pie':
-        if (dimensions.length > 0 && groups.length > 0) {
-          return ''
-        } else {
-          return `${chartNames[chartType]}只需要一个值和一个分组`
-        }
+        return dimensions.length > 0 && groups.length > 0 ? '' : `${chartNames[chartType]}只需要一个值和一个分组`
       default:
         return ''
     }
   }
-  /**
-   * @desc 需要查询表格数据的参数
-   */
+
+  // ---------- 查询参数 ----------
   const queryChartDataParams = computed(() => {
     return {
       dataSource: columnStore.getDataSource,
-      // 这样做可以避免条件没有选完就进行查询的情况 good
+      // 过滤掉未完成的聚合条件
       filters: filterStore.getFilters.filter((item) => item.aggregationType && (item.filterType || item.filterValue)),
-      // TODO 不知道 aggregationType 是干嘛的，先这样吧
       orders: orderStore.getOrders.filter((item) => item.aggregationType || item.orderType),
       groups: groupStore.getGroups,
       dimensions: dimensionStore.getDimensions,
       commonChartConfig: chartConfigStore.getCommonChartConfig
     }
   })
-  /**
-   * @desc 查询表格数据
-   * @returns {Promise<void>}
-   */
+
+  // ---------- 实际请求 ----------
   const queryChartData = async () => {
     const chartType = analyzeStore.getChartType
     const errorMessage = chartSuggestStrategies(chartType)
     analyzeStore.setChartErrorMessage(errorMessage)
-    if (errorMessage) {
-      return
-    }
-    analyzeStore.setChartLoading(true)
-    const dataSource = columnStore.getDataSource
-    const dimensions = dimensionStore.getDimensions
-    if (!dataSource) return
-    if (!dimensions.length) return
+    if (errorMessage) return
 
+    analyzeStore.setChartLoading(true)
     const startTime = dayjs().valueOf()
-    // TODO
     const result = await httpRequest<ApiResponseI<AnalyzeDataVo.ChartData[]>>('/api/getAnalyzeData', {
       method: 'POST',
       body: queryChartDataParams.value
     }).finally(() => {
-      /**
-       * 统一处理的逻辑
-       */
       analyzeStore.setChartLoading(false)
     })
     const endTime = dayjs().valueOf()
+
     if (result.code === 200) {
       analyzeStore.setAnalyzeData(result.data || [])
       analyzeStore.setChartErrorMessage('')
@@ -110,34 +84,28 @@ export const getChartDataHandler = () => {
       analyzeStore.setChartErrorMessage(result.message)
     }
 
+    // 更新计时信息
     analyzeStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
     const duration = endTime - startTime
-    const seconds = Math.floor(duration / 1000)
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    analyzeStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${remainingSeconds}秒` : `${remainingSeconds}秒`)
+    const minutes = Math.floor(duration / 60000)
+    const seconds = Math.floor((duration % 60000) / 1000)
+    analyzeStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`)
   }
 
-  // 仅初始化一次防抖函数
-  if (!sharedQueryChartDataDebounce) {
-    sharedQueryChartDataDebounce = debounce(queryChartData, 1000)
-  }
+  // 使用防抖避免频繁请求
+  const debouncedQuery = debounce(queryChartData, 1000)
 
-  /**
-   * @desc 监听查询表格数据的参数变化
-   */
-  if (!hasSetupChartDataWatcher) {
-    watch(
-      () => queryChartDataParams.value,
-      () => {
-        sharedQueryChartDataDebounce && sharedQueryChartDataDebounce()
-      },
-      {
-        deep: true
-      }
-    )
-    hasSetupChartDataWatcher = true
-  }
+  // 监听参数变化并触发防抖请求
+  watch(
+    () => queryChartDataParams.value,
+    () => {
+      debouncedQuery()
+    },
+    { deep: true }
+  )
+
+  // 首次进入页面立即请求一次数据
+  queryChartData()
 
   return {
     queryChartDataParams,

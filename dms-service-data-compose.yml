@@ -37,6 +37,7 @@ services:
 
 networks:
   dms-service-data-network:
+    name: dms-service-data-network
     driver: bridge
 
 volumes:
