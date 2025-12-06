@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { type PreRenderedAsset } from 'rollup'
 export default defineNuxtConfig({
+  compatibilityDate: '2025-12-06',
   devtools: { enabled: true },
   // 启用服务端渲染
   ssr: true,
