@@ -124,9 +124,11 @@ const scheduleOnceTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): 
   const executeTime = new Date(taskOptions.scheduleTime)
   const now = new Date()
 
-  // 检查时间是否已过期
+  // 检查时间是否已过期，如果已过期则立即执行一次性任务
   if (executeTime <= now) {
-    logger.warn(`⚠️ 任务 ${taskOptions.id} 的执行时间已过期: ${taskOptions.scheduleTime}`)
+    logger.warn(`⚠️ 任务 ${taskOptions.id} 的执行时间已过期: ${taskOptions.scheduleTime}，立即执行`)
+    // 直接执行任务而不是调度
+    executeTask(taskOptions).catch((err) => logger.error(`❌ 立即执行任务 ${taskOptions.id} 失败: ${err}`))
     return
   }
 
