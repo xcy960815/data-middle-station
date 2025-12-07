@@ -1,0 +1,128 @@
+# restart 策略可选值：
+#   no              - 不自动重启（默认）
+#   always          - 总是自动重启
+#   on-failure[:N]  - 失败时自动重启，最多N次
+#   unless-stopped  - 除非手动停止，否则总是重启
+services:
+  # Nuxt3 应用服务
+  nuxt3:
+    image: xcy960815/data-middle-station:${IMAGE_VERSION:-latest}
+    container_name: dms-container
+    ports:
+      - '12583:12583'
+    volumes:
+      - ./logs:/app/logs
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    restart: on-failure:5
+    networks:
+      - dms-network
+    depends_on:
+      mysql-main:
+        condition: service_healthy
+
+  # Redis 缓存服务
+  redis:
+    image: redis:7.2.5
+    container_name: dms-redis-container
+    command:
+      - redis-server
+      - --bind
+      - 0.0.0.0
+      - --requirepass
+      - '123456'
+    ports:
+      - '6383:6379'
+    networks:
+      - dms-network
+    restart: on-failure:5
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '123456', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # 主数据库 MySQL（应用数据）
+  mysql-main:
+    image: mysql:8.4.2
+    container_name: dms-mysql-container
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=data_middle_station
+    command:
+      [
+        '--bind-address=0.0.0.0',
+        '--character-set-server=utf8mb4',
+        '--collation-server=utf8mb4_unicode_ci',
+        '--max_allowed_packet=128M',
+        '--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION',
+        '--default-time-zone=+8:00',
+      ]
+    ports:
+      - '3310:3306'
+    volumes:
+      - mysql-main-data:/var/lib/mysql
+    networks:
+      - dms-network
+    restart: on-failure:5
+    healthcheck:
+      test:
+        ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p123456']
+      timeout: 20s
+      retries: 10
+      interval: 5s
+      start_period: 30s
+
+  # 看板数据 MySQL（业务数据）
+  mysql-data:
+    image: mysql:8.4.2
+    container_name: dms-data-mysql-container
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=kanban_data
+    command:
+      [
+        '--bind-address=0.0.0.0',
+        '--character-set-server=utf8mb4',
+        '--collation-server=utf8mb4_unicode_ci',
+        '--max_allowed_packet=128M',
+        '--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION',
+        '--default-time-zone=+8:00',
+      ]
+    ports:
+      - '3311:3306'
+    volumes:
+      - mysql-data-data:/var/lib/mysql
+    networks:
+      - dms-network
+    restart: on-failure:5
+    healthcheck:
+      test:
+        ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p123456']
+      timeout: 20s
+      retries: 10
+      interval: 5s
+      start_period: 30s
+
+networks:
+  dms-network:
+    name: dms-network
+    driver: bridge
+
+volumes:
+  mysql-main-data:
+    name: dms-mysql-main-data
+    driver: local
+  mysql-data-data:
+    name: dms-mysql-data-data
+    driver: local
+
+# 启动所有服务
+# docker-compose up -d --remove-orphans
+
+# 停止所有服务
+# docker-compose down
+
+# 只启动数据库服务
+# docker-compose up -d mysql-main mysql-data redis
