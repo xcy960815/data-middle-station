@@ -14,7 +14,7 @@ import { computed, watch } from 'vue'
  * 获取图表数据的处理函数
  * 每次页面挂载都会重新注册 watcher，确保离开页面后再次进入仍能请求数据。
  */
-export const getChartDataHandler = () => {
+export const getAnalyzeDataHandler = () => {
   const analyzeStore = useAnalyzeStore()
   const dimensionStore = useDimensionsStore()
   const groupStore = useGroupsStore()
@@ -47,7 +47,7 @@ export const getChartDataHandler = () => {
   }
 
   // ---------- 查询参数 ----------
-  const queryChartDataParams = computed(() => {
+  const queryAnalyzeDataParams = computed(() => {
     return {
       dataSource: columnStore.getDataSource,
       // 过滤掉未完成的聚合条件
@@ -60,7 +60,7 @@ export const getChartDataHandler = () => {
   })
 
   // ---------- 实际请求 ----------
-  const queryChartData = async () => {
+  const queryAnalyzeData = async () => {
     const chartType = analyzeStore.getChartType
     const errorMessage = chartSuggestStrategies(chartType)
     analyzeStore.setChartErrorMessage(errorMessage)
@@ -68,9 +68,9 @@ export const getChartDataHandler = () => {
 
     analyzeStore.setChartLoading(true)
     const startTime = dayjs().valueOf()
-    const result = await httpRequest<ApiResponseI<AnalyzeDataVo.ChartData[]>>('/api/getAnalyzeData', {
+    const result = await httpRequest<ApiResponseI<AnalyzeDataVo.AnalyzeData[]>>('/api/getAnalyzeData', {
       method: 'POST',
-      body: queryChartDataParams.value
+      body: queryAnalyzeDataParams.value
     }).finally(() => {
       analyzeStore.setChartLoading(false)
     })
@@ -93,22 +93,22 @@ export const getChartDataHandler = () => {
   }
 
   // 使用防抖避免频繁请求
-  const debouncedQuery = debounce(queryChartData, 1000)
+  const debouncedQueryAnalyzeData = debounce(queryAnalyzeData, 1000)
 
   // 监听参数变化并触发防抖请求
   watch(
-    () => queryChartDataParams.value,
+    () => queryAnalyzeDataParams.value,
     () => {
-      debouncedQuery()
+      debouncedQueryAnalyzeData()
     },
     { deep: true }
   )
 
   // 首次进入页面立即请求一次数据
-  queryChartData()
+  queryAnalyzeData()
 
   return {
-    queryChartDataParams,
-    queryChartData
+    queryAnalyzeDataParams,
+    queryAnalyzeData
   }
 }

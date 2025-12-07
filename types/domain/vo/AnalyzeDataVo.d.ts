@@ -1,7 +1,9 @@
 /**
- * @file chartDataVo.d.ts
- * @desc chartDataVo 的类型声明文件
+ * @file AnalyzeDataVo.d.ts
+ * @desc AnalyzeDataVo 的类型声明文件
  */
 declare namespace AnalyzeDataVo {
-  type ChartData = AnalyzeDataDao.ChartData
+  type AnalyzeData = AnalyzeDataDao.AnalyzeData
+  /** @desc 图表数据类型，别名指向 AnalyzeData */
+  type ChartData = AnalyzeData
 }
