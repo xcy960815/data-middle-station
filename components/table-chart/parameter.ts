@@ -18,7 +18,7 @@ export const tableProps = {
    * 数据
    */
   data: {
-    type: Array as PropType<AnalyzeDataVo.ChartData[]>,
+    type: Array as PropType<AnalyzeDataVo.AnalyzeData[]>,
     required: true,
     default: () => []
   },
@@ -57,7 +57,7 @@ export const tableProps = {
   spanMethod: {
     type: Function as PropType<
       (config: {
-        row: AnalyzeDataVo.ChartData
+        row: AnalyzeDataVo.AnalyzeData
         column: GroupStore.GroupOption | DimensionStore.DimensionOption
         rowIndex: number
         colIndex: number
@@ -218,7 +218,7 @@ interface StaticParams {
   /**
    * 数据
    */
-  data: Array<AnalyzeDataVo.ChartData>
+  data: Array<AnalyzeDataVo.AnalyzeData>
   /**
    * 维度字段
    */
@@ -365,7 +365,7 @@ interface StaticParams {
    * 合并单元格方法
    */
   spanMethod?: (config: {
-    row: AnalyzeDataVo.ChartData
+    row: AnalyzeDataVo.AnalyzeData
     column: GroupStore.GroupOption | DimensionStore.DimensionOption
     rowIndex: number
     colIndex: number
@@ -420,6 +420,6 @@ export const staticParams: StaticParams = {
 /**
  * 表格数据 不参与视图更新啥的 没必要整成响应式数据
  */
-export const tableData: { value: Array<AnalyzeDataVo.ChartData> } = {
+export const tableData: { value: Array<AnalyzeDataVo.AnalyzeData> } = {
   value: []
 }

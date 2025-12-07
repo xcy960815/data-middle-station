@@ -4,13 +4,13 @@ import type { EChartsCoreOption } from 'echarts/core'
  * 图表渲染配置接口
  * @interface ChartRenderConfig
  * @property {string} title 图表标题
- * @property {Array<AnalyzeDataVo.ChartData>} data 图表数据
+ * @property {Array<AnalyzeDataVo.AnalyzeData>} data 图表数据
  * @property {Array<AnalyzeConfigDao.GroupOptions>} xAxisFields X轴字段
  * @property {Array<AnalyzeConfigDao.DimensionOptions>} yAxisFields Y轴字段
  */
 export interface ChartRenderConfig {
   title: string
-  data: Array<AnalyzeDataVo.ChartData>
+  data: Array<AnalyzeDataVo.AnalyzeData>
   xAxisFields: Array<AnalyzeConfigDao.GroupOptions>
   yAxisFields: Array<AnalyzeConfigDao.DimensionOptions>
 }
@@ -128,17 +128,17 @@ export function formatValue(value: number, showPercentage: boolean): string {
 
 /**
  * 处理数据折叠（fold transform）
- * @param {Array<AnalyzeDataVo.ChartData>} data 原始数据
+ * @param {Array<AnalyzeDataVo.AnalyzeData>} data 原始数据
  * @param {string[]} measureFields 度量字段
  * @param {string} xFieldName X轴字段
  * @param {string} groupFieldName 分组字段
- * @returns {Array<AnalyzeDataVo.ChartData & { key: string; value: number }>} 折叠后的数据
+ * @returns {Array<AnalyzeDataVo.AnalyzeData & { key: string; value: number }>} 折叠后的数据
  */
 export function foldData(
-  data: Array<AnalyzeDataVo.ChartData>,
+  data: Array<AnalyzeDataVo.AnalyzeData>,
   measureFields: string[]
-): Array<AnalyzeDataVo.ChartData & { key: string; value: number }> {
-  const foldedData: Array<AnalyzeDataVo.ChartData & { key: string; value: number }> = []
+): Array<AnalyzeDataVo.AnalyzeData & { key: string; value: number }> {
+  const foldedData: Array<AnalyzeDataVo.AnalyzeData & { key: string; value: number }> = []
   for (const item of data) {
     for (const field of measureFields) {
       const value = Number(item[field] || 0)
