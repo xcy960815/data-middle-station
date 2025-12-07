@@ -49,7 +49,7 @@ export const useChartDownload = () => {
    * @param columns 要包含的列（可选）
    * @returns 处理后的数据行
    */
-  const processDataRow = (item: AnalyzeDataVo.ChartData, columns?: string[]): ProcessedDataRow => {
+  const processDataRow = (item: AnalyzeDataVo.AnalyzeData, columns?: string[]): ProcessedDataRow => {
     const processedRow: ProcessedDataRow = {}
 
     if (Array.isArray(columns) && columns.length > 0) {
@@ -229,7 +229,7 @@ export const useChartDownload = () => {
    * @returns 处理后的数据和列宽映射
    */
   const processDataAsync = (
-    data: Array<AnalyzeDataVo.ChartData>,
+    data: Array<AnalyzeDataVo.AnalyzeData>,
     columns?: string[]
   ): Promise<{
     processedData: ProcessedDataRow[]
@@ -267,7 +267,7 @@ export const useChartDownload = () => {
    * @param columns 要包含的列（可选）
    * @returns 处理后的数据
    */
-  const processDataSync = (data: Array<AnalyzeDataVo.ChartData>, columns?: string[]): ProcessedDataRow[] => {
+  const processDataSync = (data: Array<AnalyzeDataVo.AnalyzeData>, columns?: string[]): ProcessedDataRow[] => {
     return data.map((item) => processDataRow(item, columns))
   }
 
@@ -303,7 +303,7 @@ export const useChartDownload = () => {
    * @param columns 列名（可选）
    */
   const exportToExcel = async (
-    data: Array<AnalyzeDataVo.ChartData>,
+    data: Array<AnalyzeDataVo.AnalyzeData>,
     fileName: string,
     sheetName: string,
     columns?: string[]

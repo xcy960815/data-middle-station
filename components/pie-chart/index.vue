@@ -30,7 +30,7 @@ const props = defineProps({
     default: () => ''
   },
   data: {
-    type: Array as PropType<Array<AnalyzeDataVo.ChartData>>,
+    type: Array as PropType<Array<AnalyzeDataVo.AnalyzeData>>,
     default: () => []
   },
   xAxisFields: {

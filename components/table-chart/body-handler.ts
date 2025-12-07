@@ -271,7 +271,7 @@ export const calculateColumnsInfo = () => {
  * @param {number} height - 单元格高度
  * @param {number} rowIndex - 行索引
  * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列配置
- * @param {AnalyzeDataVo.ChartData} row - 行数据
+ * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
  * @param {number} bodyFontSize - 字体大小
  */
 const drawMergedCell = (
@@ -331,7 +331,7 @@ const drawMergedCell = (
  * @param {number} height - 单元格高度
  * @param {number} rowIndex - 行索引
  * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列配置
- * @param {AnalyzeDataVo.ChartData} row - 行数据
+ * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
  * @param {number} bodyFontSize - 字体大小
  */
 const drawNormalCell = (
@@ -344,7 +344,7 @@ const drawNormalCell = (
   rowIndex: number,
   columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption
 ) => {
-  const row: AnalyzeDataVo.ChartData = tableData.value[rowIndex]
+  const row: AnalyzeDataVo.AnalyzeData = tableData.value[rowIndex]
   // 绘制单元格背景
   const cellRect = drawUnifiedRect({
     pools,
@@ -393,14 +393,14 @@ const drawNormalCell = (
 /**
  * 计算单元格合并信息
  * @param {Function} spanMethod - 合并方法
- * @param {AnalyzeDataVo.ChartData} row - 行数据
+ * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
  * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} columnOption - 列配置
  * @param {number} rowIndex - 行索引
  * @returns {Object} 合并信息
  */
 export const calculateCellSpan = (
   spanMethod: Function,
-  row: AnalyzeDataVo.ChartData,
+  row: AnalyzeDataVo.AnalyzeData,
   columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   rowIndex: number
 ) => {

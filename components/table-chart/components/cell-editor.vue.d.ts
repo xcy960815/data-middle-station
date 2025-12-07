@@ -14,7 +14,7 @@ declare const Component: DefineComponent<
     openEditor: (
       evt: KonvaEventObject<MouseEvent, Konva.Rect>,
       editType: 'input' | 'select' | 'date' | 'datetime',
-      initialValue: AnalyzeDataVo.ChartData[keyof AnalyzeDataVo.ChartData],
+      initialValue: AnalyzeDataVo.AnalyzeData[keyof AnalyzeDataVo.AnalyzeData],
       editOptions?: EditOptions[]
     ) => void
     closeEditor: () => void

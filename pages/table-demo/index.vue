@@ -168,7 +168,7 @@ const spanMethod = ({
   rowIndex,
   colIndex
 }: {
-  row: AnalyzeDataVo.ChartData
+  row: AnalyzeDataVo.AnalyzeData
   column: GroupStore.GroupOption | DimensionStore.DimensionOption
   rowIndex: number
   colIndex: number
@@ -416,7 +416,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
 /**
  * 数据
  */
-const data: Array<AnalyzeDataVo.ChartData> = Array.from({ length: 1000 }, (_, i) => {
+const data: Array<AnalyzeDataVo.AnalyzeData> = Array.from({ length: 1000 }, (_, i) => {
   const birthYear = 1970 + (i % 40)
   const birthMonth = (i % 12) + 1
   const birthDay = (i % 28) + 1

@@ -44,7 +44,7 @@ export function renderLineChart(
   }
 
   // 处理数据
-  let processedData: Array<AnalyzeDataVo.ChartData>
+  let processedData: Array<AnalyzeDataVo.AnalyzeData>
   if (useFold) {
     processedData = foldData(config.data, measureFields)
   } else {
@@ -72,7 +72,7 @@ export function renderLineChart(
   const legendData: string[] = []
 
   // 确定系列名称的生成逻辑
-  const getSeriesName = (item: AnalyzeDataVo.ChartData): string => {
+  const getSeriesName = (item: AnalyzeDataVo.AnalyzeData): string => {
     if (useFold && groupFieldName) {
       const groupValue = String(item[groupFieldName] || '')
       const keyValue = String(item['key'] || '')

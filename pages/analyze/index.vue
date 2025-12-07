@@ -50,14 +50,14 @@ import Filter from './components/filter/index.vue'
 import GroupOption from './components/group/index.vue'
 import Order from './components/order/index.vue'
 import { getAnalyzeHandler } from './getAnalyze'
-import { getChartDataHandler } from './getAnalyzeData'
+import { getAnalyzeDataHandler } from './getAnalyzeData'
 onMounted(() => {
   getAnalyzeHandler()
-  getChartDataHandler()
+  getAnalyzeDataHandler()
 })
 onActivated(() => {
   getAnalyzeHandler()
-  getChartDataHandler()
+  getAnalyzeDataHandler()
 })
 const layoutName = 'analyze'
 </script>

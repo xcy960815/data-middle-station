@@ -27,7 +27,7 @@ interface FilterItem {
 /**
  * 原始数据存储 - 不被排序或过滤修改
  */
-let originalData: Array<AnalyzeDataVo.ChartData> = []
+let originalData: Array<AnalyzeDataVo.AnalyzeData> = []
 
 /**
  * 过滤状态（数组模型）：支持多列过滤；同列内为 OR，多列之间为 AND
@@ -70,7 +70,7 @@ export const handleTableData = () => {
       const n = Number(v)
       return Number.isFinite(n) ? n : null
     }
-    const getVal = (row: AnalyzeDataVo.ChartData, key: string): string | number | undefined => {
+    const getVal = (row: AnalyzeDataVo.AnalyzeData, key: string): string | number | undefined => {
       const val = row[key]
       if (typeof val === 'string' || typeof val === 'number') return val
       return undefined

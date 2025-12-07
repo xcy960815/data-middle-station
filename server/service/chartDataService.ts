@@ -19,9 +19,9 @@ export class ChartDataService {
   /**
    * @desc 将DAO对象转换为VO对象
    * @param chartDataRecords {AnalyzeDataDao.ChartData[]} 图表数据DAO列表
-   * @returns {AnalyzeDataVo.ChartData[]} 图表数据VO列表
+   * @returns {AnalyzeDataVo.AnalyzeData[]} 图表数据VO列表
    */
-  private convertDaoToVo(chartDataRecords: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.ChartData> {
+  private convertDaoToVo(chartDataRecords: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.AnalyzeData> {
     return chartDataRecords.map((chartDataRecord) => ({
       ...chartDataRecord,
       [String(chartDataRecord.columnName)]: chartDataRecord.columnValue
@@ -114,9 +114,11 @@ export class ChartDataService {
   /**
    * @desc 获取图表数据
    * @param queryOptions {AnalyzeDataDto.ChartDataOptions} 请求参数
-   * @returns {Promise<AnalyzeDataVo.ChartData[]>} 图表数据VO列表
+   * @returns {Promise<AnalyzeDataVo.AnalyzeData[]>} 图表数据VO列表
    */
-  public async getAnalyzeData(queryOptions: AnalyzeDataDto.ChartDataOptions): Promise<Array<AnalyzeDataVo.ChartData>> {
+  public async getAnalyzeData(
+    queryOptions: AnalyzeDataDto.ChartDataOptions
+  ): Promise<Array<AnalyzeDataVo.AnalyzeData>> {
     // 归一化请求参数，确保数组字段不为空
     const normalizedOptions: AnalyzeDataDto.ChartDataOptions = {
       ...queryOptions,

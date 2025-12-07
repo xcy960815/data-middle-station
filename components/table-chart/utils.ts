@@ -349,13 +349,13 @@ export const drawUnifiedRect = (config: DrawRectConfig): Konva.Rect => {
 /**
  * 获取单元格显示值
  * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列配置
- * @param {AnalyzeDataVo.ChartData} row - 行数据
+ * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
  * @param {number} rowIndex - 行索引
  * @returns {string} 显示值
  */
 export const getCellDisplayContent = (
   columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
-  row: AnalyzeDataVo.ChartData,
+  row: AnalyzeDataVo.AnalyzeData,
   rowIndex: number
 ) => {
   const rawValue =
