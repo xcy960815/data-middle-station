@@ -84,6 +84,11 @@ let isHandDetected = false
 let handX = 0.5 // Normalized 0-1
 let handY = 0.5 // Normalized 0-1
 
+// Performance optimization: throttle hand tracking updates
+let lastHandUpdateTime = 0
+const HAND_UPDATE_INTERVAL = 100 // Update every 100ms (10fps instead of 30fps)
+let pendingHandData: { x: number; y: number; distance: number; detected: boolean } | null = null
+
 // Shapes Data (Pre-calculated positions)
 const shapes: Record<string, Float32Array> = {}
 
@@ -106,6 +111,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(animationId)
+  window.removeEventListener('resize', onWindowResize)
   if (renderer) renderer.dispose()
   if (gui) gui.destroy()
   if (cameraUtils) cameraUtils.stop()
@@ -330,6 +336,13 @@ function createStarField() {
 
 // GUI Setup
 let gui: GUI
+const sensorData = {
+  detected: false,
+  distance: 0,
+  x: 0,
+  y: 0
+}
+
 function initGUI() {
   if (!uiContainerRef.value) return
 
@@ -348,10 +361,10 @@ function initGUI() {
   gui.add(params, 'noiseStrength', 0, 0.5).name('宇宙噪点')
 
   const folder = gui.addFolder('传感器数据')
-  folder.add({ detected: false }, 'detected').listen().name('手部捕捉')
-  folder.add({ distance: 0 }, 'distance').listen().name('手指距离')
-  folder.add({ x: 0 }, 'x').listen().name('手部 X 位置')
-  folder.add({ y: 0 }, 'y').listen().name('手部 Y 位置')
+  folder.add(sensorData, 'detected').listen().name('手部捕捉')
+  folder.add(sensorData, 'distance', 0, 1).listen().name('手指距离')
+  folder.add(sensorData, 'x', 0, 1).listen().name('手部 X 位置')
+  folder.add(sensorData, 'y', 0, 1).listen().name('手部 Y 位置')
 }
 
 function morphToShape(shapeKey: string) {
@@ -379,9 +392,9 @@ async function initMediaPipe() {
 
   hands.setOptions({
     maxNumHands: 1, // Focus on single hand for rotation control
-    modelComplexity: 1,
-    minDetectionConfidence: 0.5,
-    minTrackingConfidence: 0.5
+    modelComplexity: 0, // Reduce from 1 to 0 for better performance
+    minDetectionConfidence: 0.7, // Increase to reduce false positives
+    minTrackingConfidence: 0.7 // Increase to reduce processing
   })
 
   hands.onResults(onHandsResults)
@@ -392,34 +405,72 @@ async function initMediaPipe() {
         await hands.send({ image: videoRef.value })
       }
     },
-    width: 640,
-    height: 480
+    width: 320, // Reduce resolution for better performance
+    height: 240
   })
 
   await cameraUtils.start()
 }
 
+function processHandData(landmarks: any[]) {
+  const thumbTip = landmarks[4]
+  const indexTip = landmarks[8]
+  const wrist = landmarks[0]
+
+  // Use faster distance calculation (avoid Math.pow)
+  const dx = thumbTip.x - indexTip.x
+  const dy = thumbTip.y - indexTip.y
+  const dist = Math.sqrt(dx * dx + dy * dy)
+
+  return {
+    x: wrist.x,
+    y: wrist.y,
+    distance: Math.max(0, Math.min(1, (dist - 0.05) * 4)),
+    detected: true
+  }
+}
+
 function onHandsResults(results: any) {
-  if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+  // Throttle: only process hand data at limited frequency (10fps instead of 30fps)
+  const now = Date.now()
+  if (now - lastHandUpdateTime < HAND_UPDATE_INTERVAL) {
+    // Store latest data but don't process yet
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+      pendingHandData = processHandData(results.multiHandLandmarks[0])
+    } else {
+      pendingHandData = { x: 0.5, y: 0.5, distance: 0, detected: false }
+    }
+    return
+  }
+
+  lastHandUpdateTime = now
+
+  // Process pending data or current results
+  let dataToProcess = pendingHandData
+  if (!dataToProcess) {
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+      dataToProcess = processHandData(results.multiHandLandmarks[0])
+    } else {
+      dataToProcess = { x: 0.5, y: 0.5, distance: 0, detected: false }
+    }
+  }
+  pendingHandData = null
+
+  // Update hand tracking state
+  if (dataToProcess.detected) {
     isHandDetected = true
+    sensorData.detected = true
 
-    const landmarks = results.multiHandLandmarks[0]
-    const thumbTip = landmarks[4]
-    const indexTip = landmarks[8]
-    const wrist = landmarks[0]
-
-    // 1. Pinch for Scale (Zoom)
-    const dist = Math.sqrt(Math.pow(thumbTip.x - indexTip.x, 2) + Math.pow(thumbTip.y - indexTip.y, 2))
-    handDistance = Math.max(0, Math.min(1, (dist - 0.05) * 4))
+    handDistance = dataToProcess.distance
+    sensorData.distance = handDistance
 
     const targetScale = 0.5 + handDistance * 2.5
     params.scale += (targetScale - params.scale) * 0.1
 
-    // 2. Hand Position for Rotation
-    // MediaPipe x is 0-1 (left-right), y is 0-1 (top-bottom)
-    // We map this to rotation angles
-    handX = wrist.x
-    handY = wrist.y
+    handX = dataToProcess.x
+    handY = dataToProcess.y
+    sensorData.x = handX
+    sensorData.y = handY
 
     // Map X (0-1) to Rotation Y (-PI to PI)
     const targetRotY = (handX - 0.5) * Math.PI * 2
@@ -430,6 +481,8 @@ function onHandsResults(results: any) {
     params.rotationX += (targetRotX - params.rotationX) * 0.1
   } else {
     isHandDetected = false
+    sensorData.detected = false
+    sensorData.distance = 0
     // Slowly return to neutral scale, keep rotation drifting
     params.scale += (1.0 - params.scale) * 0.05
   }
@@ -440,8 +493,6 @@ const clock = new THREE.Clock()
 
 function animate() {
   animationId = requestAnimationFrame(animate)
-
-  const time = clock.getElapsedTime()
 
   // 1. Base Rotation (Auto spin)
   if (particles) {
@@ -458,24 +509,41 @@ function animate() {
     starField.rotation.y -= 0.0005
   }
 
-  // 4. Morphing & Jitter
+  // 4. Morphing & Jitter (Optimized: batch update, reduce random calls)
   if (geometry && geometry.attributes.position && geometry.attributes.targetPosition) {
     const positions = geometry.attributes.position.array as Float32Array
     const targets = geometry.attributes.targetPosition.array as Float32Array
+    const count = params.count
+    const morphSpeed = 0.05
+    const noiseFactor = params.noiseStrength * 0.05
 
-    for (let i = 0; i < params.count; i++) {
+    // Pre-calculate random values for jitter (only if needed)
+    let randomValues: Float32Array | null = null
+    if (params.noiseStrength > 0) {
+      randomValues = new Float32Array(count * 3)
+      for (let i = 0; i < count * 3; i++) {
+        randomValues[i] = (Math.random() - 0.5) * noiseFactor
+      }
+    }
+
+    // Batch update all particles
+    for (let i = 0; i < count; i++) {
       const i3 = i * 3
 
-      // Morph
-      positions[i3] += (targets[i3] - positions[i3]) * 0.05
-      positions[i3 + 1] += (targets[i3 + 1] - positions[i3 + 1]) * 0.05
-      positions[i3 + 2] += (targets[i3 + 2] - positions[i3 + 2]) * 0.05
+      // Morph (interpolation)
+      const dx = targets[i3] - positions[i3]
+      const dy = targets[i3 + 1] - positions[i3 + 1]
+      const dz = targets[i3 + 2] - positions[i3 + 2]
 
-      // Twinkle / Jitter
-      if (params.noiseStrength > 0) {
-        positions[i3] += (Math.random() - 0.5) * params.noiseStrength * 0.05
-        positions[i3 + 1] += (Math.random() - 0.5) * params.noiseStrength * 0.05
-        positions[i3 + 2] += (Math.random() - 0.5) * params.noiseStrength * 0.05
+      positions[i3] += dx * morphSpeed
+      positions[i3 + 1] += dy * morphSpeed
+      positions[i3 + 2] += dz * morphSpeed
+
+      // Twinkle / Jitter (use pre-calculated values)
+      if (randomValues) {
+        positions[i3] += randomValues[i3]
+        positions[i3 + 1] += randomValues[i3 + 1]
+        positions[i3 + 2] += randomValues[i3 + 2]
       }
     }
     geometry.attributes.position.needsUpdate = true
@@ -500,15 +568,13 @@ function toggleFullscreen() {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 ::-webkit-scrollbar {
   width: 8px;
-}
-::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
 }
 </style>
