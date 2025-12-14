@@ -14,7 +14,7 @@ services:
       - ./logs:/app/logs
     extra_hosts:
       - 'host.docker.internal:host-gateway'
-    restart: on-failure:5
+    restart: always
     networks:
       - dms-network
     depends_on:
@@ -35,7 +35,7 @@ services:
       - '6383:6379'
     networks:
       - dms-network
-    restart: on-failure:5
+    restart: always
     healthcheck:
       test: ['CMD', 'redis-cli', '-a', '123456', 'ping']
       interval: 5s
@@ -65,7 +65,7 @@ services:
       - mysql-main-data:/var/lib/mysql
     networks:
       - dms-network
-    restart: on-failure:5
+    restart: always
     healthcheck:
       test:
         ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p123456']
@@ -96,7 +96,7 @@ services:
       - mysql-data-data:/var/lib/mysql
     networks:
       - dms-network
-    restart: on-failure:5
+    restart: always
     healthcheck:
       test:
         ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p123456']
