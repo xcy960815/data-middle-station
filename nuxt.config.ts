@@ -5,6 +5,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   // 启用服务端渲染
   ssr: true,
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        module: 'esnext'
+      }
+    }
+  },
   app: {
     head: {
       title: process.env.APP_NAME,
