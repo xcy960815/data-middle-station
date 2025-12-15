@@ -23,6 +23,3 @@ logs
 # .env
 # .env.*
 # env/.env.*
-
-# Docker env files
-.env.docker
