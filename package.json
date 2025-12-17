@@ -1,6 +1,6 @@
 {
   "name": "data-middle-station",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "使用nuxt3 + element-plus + pinia + mysql + pm2 搭建的数据中台",
   "scripts": {
     "build": "nuxt build --dotenv env/.env.daily",
