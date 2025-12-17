@@ -175,7 +175,9 @@ export default defineNuxtConfig({
     }
   },
   // 构建优化配置
-  build: {},
+  build: {
+    transpile: ['@popperjs/core', 'xlsx']
+  },
   runtimeConfig: {
     // 服务端私有键（仅在服务器端可用）
     serviceDbName: process.env.SERVICE_DB_NAME,
