@@ -12,19 +12,19 @@ export const useUserStore = defineStore<
 >(StoreNames.USER, {
   state: () => ({
     userId: '',
-    name: '',
+    userName: '',
     avatar: ''
   }),
   getters: {
     userInfo(state) {
       return {
         userId: state.userId,
-        name: state.name,
+        userName: state.userName,
         avatar: state.avatar
       }
     },
-    getName(state) {
-      return state.name
+    getUserName(state) {
+      return state.userName
     },
     getAvatar(state) {
       return state.avatar
@@ -37,11 +37,8 @@ export const useUserStore = defineStore<
     setUserId(userId: string) {
       this.userId = userId
     },
-    updateName(name: string) {
-      this.name = name
-    },
-    setName(value: string) {
-      this.name = value
+    setUserName(userName: string) {
+      this.userName = userName
     },
     setAvatar(value: string) {
       this.avatar = value

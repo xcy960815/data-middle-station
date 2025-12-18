@@ -1,74 +1,24 @@
-# DTO (Data Transfer Object) 类型定义
+# DTO (Data Transfer Object) Definitions
 
-本目录包含所有数据传输对象的 TypeScript 类型定义。DTO 用于在不同层之间传输数据，确保数据结构的一致性和类型安全。
+本目录包含数据传输对象（DTO）的 TypeScript 类型定义。
+DTO 用于定义客户端与服务器之间，或不同服务层之间传输的数据结构。它们通常对应于 API 请求的 Payload 或服务方法的输入参数。
 
 ## 文件说明
 
-### AnalyseDto.d.ts
+| 文件名                      | 描述             | 主要用途                                       |
+| :-------------------------- | :--------------- | :--------------------------------------------- |
+| `AnalyzeConfigDto.d.ts`     | 分析配置 DTO     | 定义图表、报表分析的配置参数结构               |
+| `AnalyzeDataDto.d.ts`       | 分析数据 DTO     | 定义用于分析的数据输入结构                     |
+| `AnalyzeDto.d.ts`           | 分析 DTO         | 通用的分析相关数据传输对象                     |
+| `DataBaseDto.d.ts`          | 数据库 DTO       | 数据库连接、查询相关的传输对象                 |
+| `LoginDto.d.ts`             | 登录 DTO         | 用户登录请求的数据结构（如用户名、密码）       |
+| `ScheduleTaskDto.d.ts`      | 定时任务 DTO     | 定时任务创建、更新相关的传输对象               |
+| `ScheduledEmailDto.d.ts`    | 定时邮件 DTO     | 定时邮件任务的配置和请求结构                   |
+| `ScheduledEmailLogDto.d.ts` | 定时邮件日志 DTO | 定时邮件执行日志的查询或传输结构               |
+| `SendEmailDto.d.ts`         | 发送邮件 DTO     | 邮件发送请求的数据结构（收件人、主题、内容等） |
 
-分析相关的数据传输对象类型定义
+## 使用规范
 
-- 分析配置传输对象
-- 分析结果传输对象
-- 分析查询参数对象
-
-### ChartConfigDto.d.ts
-
-图表配置相关的数据传输对象类型定义
-
-- 图表配置传输对象
-- 图表样式配置对象
-- 图表交互配置对象
-
-### ChartDataDto.d.ts
-
-图表数据相关的数据传输对象类型定义
-
-- 图表数据传输对象
-- 数据查询参数对象
-- 数据处理配置对象
-
-### LoginDto.d.ts
-
-登录相关的数据传输对象类型定义
-
-- 登录请求对象
-- 登录响应对象
-- 用户认证信息对象
-
-### SendEmailDto.d.ts
-
-邮件发送相关的数据传输对象类型定义
-
-- 邮件发送请求对象
-- 图表邮件导出配置对象
-- 邮件附件配置对象
-
-## 命名规范
-
-- 所有 DTO 类型都应该以 `Dto` 为后缀
-- 使用 PascalCase 命名方式
-- 接口名应该清晰地描述其用途
-- 嵌套命名空间使用相同的基础名称
-
-## 使用示例
-
-```typescript
-// 导入 DTO 类型
-import type { AnalyseDto } from '~/types/domain/dto/AnalyseDto'
-
-// 使用 DTO 类型
-const analyseRequest: AnalyseDto.CreateAnalyseRequest = {
-  name: '示例分析',
-  config: {
-    /* 配置对象 */
-  }
-}
-```
-
-## 注意事项
-
-1. DTO 类型仅用于数据传输，不包含业务逻辑
-2. 所有 DTO 类型都应该是只读的或包含适当的验证
-3. 保持 DTO 类型的简洁性，避免过度复杂的嵌套结构
-4. 及时更新类型定义以反映 API 变更
+1. **命名规范**: 文件名以 `Dto.d.ts` 结尾，类型定义通常放在 `declare namespace [Name]Dto` 下。
+2. **用途**: 仅用于数据传输，不应包含业务逻辑。
+3. **对应关系**: 通常与 Controller 层的接收参数或 Service 层的输入参数相对应。

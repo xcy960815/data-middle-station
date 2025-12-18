@@ -1,13 +1,22 @@
-import { createLogger, format, transports } from 'winston'
-import type { Logger as LoggerType } from 'winston'
-import DailyRotateFile from 'winston-daily-rotate-file'
 import chalk from 'chalk'
 import gradient from 'gradient-string'
+import type { Logger as LoggerType } from 'winston'
+import { createLogger, format, transports } from 'winston'
+import DailyRotateFile from 'winston-daily-rotate-file'
 // import boxen from 'boxen'
 
 interface LoggerOptions {
   fileName: string
   folderName: string
+}
+
+// 扩展的日志信息接口，包含自定义字段
+interface ExtendedLogInfo {
+  timestamp?: string | Date
+  level: string
+  message: string | unknown
+  caller?: string
+  [key: string]: unknown
 }
 
 // 日志级别对应的emoji和颜色
@@ -90,7 +99,8 @@ export class Logger {
             }),
             format.align(),
             format.printf((info) => {
-              const { timestamp, level, message, caller, ...args } = info
+              const logInfo = info as ExtendedLogInfo
+              const { timestamp, level, message, caller, ...args } = logInfo
               const ts = typeof timestamp === 'string' ? timestamp.slice(0, 19).replace('T', ' ') : ''
 
               // 获取日志级别对应的样式
@@ -137,10 +147,15 @@ export class Logger {
             format: this.logTimeFormat
           }),
           format.align(),
-          format.printf((info: any) => {
+          format.printf((info) => {
             // 这里可以自定义你的输出格式
-            const { timestamp, level, message, caller } = info
-            const ts = timestamp?.slice(0, 19).replace('T', ' ') || ''
+            const logInfo = info as ExtendedLogInfo
+            const { timestamp, level, message, caller } = logInfo
+            const ts = timestamp
+              ? typeof timestamp === 'string'
+                ? timestamp.slice(0, 19).replace('T', ' ')
+                : String(timestamp).slice(0, 19).replace('T', ' ')
+              : ''
             const callerInfo = caller ? `[${caller}]` : ''
             return `${ts} [${folderName} ${level}]: ${message} ${callerInfo}`
           })

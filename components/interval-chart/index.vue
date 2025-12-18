@@ -1,16 +1,40 @@
 <template>
   <!-- 柱状图 -->
   <div
-    id="interval-container"
+    ref="chartContainer"
     class="h-full w-full"
     data-canvas-type="interval-chart"
     data-canvas-component="IntervalChart"
   ></div>
 </template>
 
-<script lang="ts" setup>
-import { Chart } from '@antv/g2'
-import { renderIntervalChart, type IntervalChartConfig } from '~/composables/useChartRender'
+<script setup lang="ts">
+import { BarChart } from 'echarts/charts'
+import {
+  DataZoomComponent,
+  GraphicComponent,
+  GridComponent,
+  LegendComponent,
+  TitleComponent,
+  TooltipComponent
+} from 'echarts/components'
+import { init, type ECharts } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type PropType } from 'vue'
+import { useChartRender } from '~/composables/useChartRender/index'
+
+// 注册必要的组件
+import { use } from 'echarts/core'
+use([
+  BarChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  DataZoomComponent,
+  GraphicComponent,
+  CanvasRenderer
+])
 
 defineOptions({
   name: 'IntervalChart'
@@ -22,7 +46,7 @@ const props = defineProps({
     default: () => ''
   },
   data: {
-    type: Array as PropType<Array<ChartDataVo.ChartData>>,
+    type: Array as PropType<Array<AnalyzeDataVo.AnalyzeData>>,
     default: () => []
   },
   xAxisFields: {
@@ -32,110 +56,126 @@ const props = defineProps({
   yAxisFields: {
     type: Array as PropType<Array<DimensionStore.DimensionOption>>,
     default: () => []
+  },
+  chartWidth: {
+    type: [Number, String],
+    default: () => '100%'
+  },
+  chartHeight: {
+    type: [Number, String],
+    default: () => '100%'
   }
 })
 
-/**
- * 定义事件
- */
 const emits = defineEmits(['renderChartStart', 'renderChartEnd'])
 
+const chartContainer = ref<HTMLElement | null>(null)
+
+const chartInstance = shallowRef<ECharts | null>(null)
+
+// 使用图表渲染 composable
+const { renderIntervalChart, createEmptyChartOption } = useChartRender()
+
+// 获取图表配置
 const chartConfigStore = useChartConfigStore()
 
-/**
- * 默认配置
- */
-const defaultIntervalConfig: IntervalChartConfig = {
-  showPercentage: false,
-  displayMode: 'levelDisplay',
-  showLabel: false,
-  horizontalDisplay: false,
-  horizontalBar: false
-}
-
-/**
- * 属性配置
- */
-const intervalChartConfig = computed(() => {
-  return chartConfigStore.privateChartConfig?.interval || defaultIntervalConfig
+const chartConfig = computed(() => {
+  return (
+    chartConfigStore.privateChartConfig?.interval || {
+      displayMode: 'levelDisplay',
+      showPercentage: false,
+      showLabel: false,
+      horizontalDisplay: false,
+      horizontalBar: false
+    }
+  )
 })
 
-/**
- * 监听属性配置变化
- */
-watch(
-  () => intervalChartConfig.value,
-  () => {
-    initChart()
-  },
-  {
-    deep: true
-  }
-)
-
-/**
- * 初始化图表
- */
 const initChart = () => {
   emits('renderChartStart')
-
-  // 如果没有数据，不渲染图表
-  if (!props.data || props.data.length === 0) {
+  if (!chartContainer.value) {
     emits('renderChartEnd')
     return
   }
 
+  // 如果图表实例已存在，先销毁
+  if (chartInstance.value) {
+    chartInstance.value.dispose()
+    chartInstance.value = null
+  }
+
   // 初始化图表实例
-  const chart = new Chart({
-    container: 'interval-container',
-    theme: 'classic',
-    autoFit: true
-  })
+  try {
+    chartInstance.value = markRaw(init(chartContainer.value))
+  } catch (error) {
+    console.error('IntervalChart: init error', error)
+    emits('renderChartEnd')
+    return
+  }
 
-  // 使用共享的渲染逻辑
-  renderIntervalChart(
-    chart,
-    {
-      title: props.title,
-      data: props.data,
-      xAxisFields: props.xAxisFields,
-      yAxisFields: props.yAxisFields
-    },
-    intervalChartConfig.value
-  )
+  // 使用 renderIntervalChart 生成配置
+  const config = {
+    title: props.title,
+    data: props.data,
+    xAxisFields: props.xAxisFields || [],
+    yAxisFields: props.yAxisFields
+  }
 
-  chart.render()
+  const option = renderIntervalChart(config, chartConfig.value)
+
+  // 如果没有数据，显示空图表
+  if (!option) {
+    const emptyOption = createEmptyChartOption(props.title, 'interval')
+    chartInstance.value.setOption(emptyOption)
+    emits('renderChartEnd')
+    return
+  }
+
+  // 设置配置项并渲染
+  try {
+    chartInstance.value.setOption(option, true) // true 表示不合并，完全替换
+  } catch (error) {
+    console.error('IntervalChart: setOption error', error)
+  }
 
   emits('renderChartEnd')
 }
 
-onMounted(() => {
-  initChart()
-})
+// 监听数据和配置变化
+watch(
+  () => [props.data, props.xAxisFields, props.yAxisFields, chartConfig.value],
+  () => {
+    nextTick(() => {
+      initChart()
+    })
+  },
+  { deep: true }
+)
 
 watch(
-  () => props.data,
+  () => [props.chartWidth, props.chartHeight],
   () => {
-    initChart()
+    if (!chartInstance.value) return
+    nextTick(initChart)
   }
 )
-watch(
-  () => props.xAxisFields,
-  () => {
+
+onMounted(() => {
+  nextTick(() => {
     initChart()
-  },
-  {
-    deep: true
+  })
+})
+
+onBeforeUnmount(() => {
+  if (chartInstance.value) {
+    chartInstance.value.dispose()
+    chartInstance.value = null
   }
-)
-watch(
-  () => props.yAxisFields,
-  () => {
-    initChart()
-  },
-  {
-    deep: true
-  }
-)
+})
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+div[data-canvas-type='interval-chart'] {
+  min-height: 300px;
+  position: relative;
+}
+</style>

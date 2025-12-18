@@ -9,51 +9,51 @@
               size="30"
               fill="#333"
               class="cursor-pointer"
-              @click="handleCreateAnalyse"
+              @click="handleCreateAnalyze"
             ></icon-park>
           </el-tooltip>
         </template>
       </custom-header>
     </template>
     <template #content>
-      <div class="homepage-container relative" ref="container">
+      <div class="homepage-container relative h-full" ref="container">
         <chart-card
           ref="cards"
           class="card-chart"
-          v-for="chart in analyseList"
+          v-for="chart in analyzeList"
           :create-time="chart.createTime"
           :update-time="chart.updateTime"
           :created-by="chart.createdBy"
           :updated-by="chart.updatedBy"
-          :analyse-name="chart.analyseName"
+          :analyze-name="chart.analyzeName"
           :id="chart.id"
           :key="chart.id"
           :view-count="chart.viewCount"
-          @delete="handleDeleteAnalyse"
-          @edit="handleEditAnalyse"
+          @delete="handleDeleteAnalyze"
+          @edit="handleEditAnalyze"
         >
         </chart-card>
       </div>
 
       <!-- 创建&编辑分析 -->
-      <el-dialog v-model="addOrEditAnalyseDialogVisible" :title="addOrEditAnalyseTitle" width="30%">
+      <el-dialog v-model="addOrEditAnalyzeDialogVisible" :title="addOrEditAnalyzeTitle" width="30%">
         <el-form
-          :model="addOrEditAnalyseFormData"
-          ref="addOrEditAnalyseFormRef"
+          :model="addOrEditAnalyzeFormData"
+          ref="addOrEditAnalyzeFormRef"
           label-width="auto"
-          :rules="addOrEditAnalyseFormRules"
+          :rules="addOrEditAnalyzeFormRules"
         >
-          <el-form-item label="分析名称" prop="analyseName">
-            <el-input v-model="addOrEditAnalyseFormData.analyseName" />
+          <el-form-item label="分析名称" prop="analyzeName">
+            <el-input v-model="addOrEditAnalyzeFormData.analyzeName" />
           </el-form-item>
-          <el-form-item label="分析描述" prop="analyseDesc">
-            <el-input v-model="addOrEditAnalyseFormData.analyseDesc" />
+          <el-form-item label="分析描述" prop="analyzeDesc">
+            <el-input v-model="addOrEditAnalyzeFormData.analyzeDesc" />
           </el-form-item>
         </el-form>
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="addOrEditAnalyseDialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="handleSaveAnalyse">确定</el-button>
+            <el-button @click="addOrEditAnalyzeDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="handleSaveAnalyze">确定</el-button>
           </span>
         </template>
       </el-dialog>
@@ -71,36 +71,36 @@ const homePageStore = useHomepageStore()
 /**
  * @desc 创建&编辑分析表单
  */
-const addOrEditAnalyseFormRef = ref<FormInstance>()
+const addOrEditAnalyzeFormRef = ref<FormInstance>()
 /**
  * @desc 创建&编辑分析标题
  */
-const addOrEditAnalyseTitle = ref('创建分析')
-const addOrEditAnalyseDialogVisible = ref(false)
+const addOrEditAnalyzeTitle = ref('创建分析')
+const addOrEditAnalyzeDialogVisible = ref(false)
 /**
  * @desc 创建&编辑分析表单数据
  */
-const addOrEditAnalyseFormData = reactive<{
+const addOrEditAnalyzeFormData = reactive<{
   id: number | null
-  analyseName: string
-  analyseDesc: string
+  analyzeName: string
+  analyzeDesc: string
 }>({
   id: null,
-  analyseName: '',
-  analyseDesc: ''
+  analyzeName: '',
+  analyzeDesc: ''
 })
 /**
  * @desc 创建&编辑分析表单验证规则
  */
-const addOrEditAnalyseFormRules: FormRules = {
-  analyseName: [
+const addOrEditAnalyzeFormRules: FormRules = {
+  analyzeName: [
     {
       required: true,
       message: '请输入分析名称',
       trigger: 'blur'
     }
   ],
-  analyseDesc: [
+  analyzeDesc: [
     {
       required: true,
       message: '请输入分析描述',
@@ -112,19 +112,19 @@ const addOrEditAnalyseFormRules: FormRules = {
 /**
  * @desc 分析列表
  */
-const analyseList = computed(() => {
-  return homePageStore.getAnalyses
+const analyzeList = computed(() => {
+  return homePageStore.getAnalyzes
 })
 const container = ref<HTMLDivElement>()
 /**
  * @description 获取所有的分析
  */
-const getAnalyses = async () => {
-  const res = await $fetch('/api/getAnalyses', {
+const getAnalyzes = async () => {
+  const res = await httpRequest('/api/getAnalyzes', {
     method: 'POST'
   })
   if (res.code === 200) {
-    homePageStore.setAnalyses(res.data || [])
+    homePageStore.setAnalyzes(res.data || [])
     // nextTick(() => {
     //   // 添加window 日历效果
     //   const cards =
@@ -147,12 +147,12 @@ const getAnalyses = async () => {
 /**
  * @desc 删除分析
  */
-const handleDeleteAnalyse = (id: number, analyseName: string) => {
-  ElMessageBox.confirm(`确定删除【${analyseName}】吗？`, '提示', {
+const handleDeleteAnalyze = (id: number, analyzeName: string) => {
+  ElMessageBox.confirm(`确定删除【${analyzeName}】吗？`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消'
   }).then(async () => {
-    const res = await $fetch('/api/deleteAnalyse', {
+    const res = await httpRequest('/api/deleteAnalyze', {
       method: 'DELETE',
       body: {
         id
@@ -160,7 +160,7 @@ const handleDeleteAnalyse = (id: number, analyseName: string) => {
     })
     if (res.code === 200) {
       ElMessage.success('删除成功')
-      getAnalyses()
+      getAnalyzes()
     } else {
       ElMessage.error(res.message || '删除失败')
     }
@@ -170,71 +170,71 @@ const handleDeleteAnalyse = (id: number, analyseName: string) => {
 /**
  * @desc 编辑分析 打开弹窗
  */
-const handleEditAnalyse = async (id: number) => {
-  const res = await $fetch('/api/getAnalyse', {
+const handleEditAnalyze = async (id: number) => {
+  const res = await httpRequest('/api/getAnalyze', {
     method: 'POST',
     body: {
       id
     }
   })
   if (res.code === 200) {
-    addOrEditAnalyseFormData.id = res.data?.id || null
-    addOrEditAnalyseFormData.analyseName = res.data?.analyseName || ''
-    addOrEditAnalyseFormData.analyseDesc = res.data?.analyseDesc || ''
+    addOrEditAnalyzeFormData.id = res.data?.id || null
+    addOrEditAnalyzeFormData.analyzeName = res.data?.analyzeName || ''
+    addOrEditAnalyzeFormData.analyzeDesc = res.data?.analyzeDesc || ''
   }
-  addOrEditAnalyseTitle.value = '编辑分析'
-  addOrEditAnalyseDialogVisible.value = true
+  addOrEditAnalyzeTitle.value = '编辑分析'
+  addOrEditAnalyzeDialogVisible.value = true
   nextTick(() => {
-    addOrEditAnalyseFormRef.value?.resetFields()
+    addOrEditAnalyzeFormRef.value?.resetFields()
   })
 }
 
 /**
  * @desc 创建分析 打开弹窗
  */
-const handleCreateAnalyse = () => {
-  addOrEditAnalyseDialogVisible.value = true
-  addOrEditAnalyseTitle.value = '创建分析'
+const handleCreateAnalyze = () => {
+  addOrEditAnalyzeDialogVisible.value = true
+  addOrEditAnalyzeTitle.value = '创建分析'
   nextTick(() => {
-    addOrEditAnalyseFormRef.value?.resetFields()
+    addOrEditAnalyzeFormRef.value?.resetFields()
   })
 }
 
 /**
  * @desc 保存分析
  */
-const handleSaveAnalyse = async () => {
-  if (!addOrEditAnalyseFormRef.value) return
-  const valid = await addOrEditAnalyseFormRef.value.validate().catch(() => false)
+const handleSaveAnalyze = async () => {
+  if (!addOrEditAnalyzeFormRef.value) return
+  const valid = await addOrEditAnalyzeFormRef.value.validate().catch(() => false)
   if (!valid) return
-  if (addOrEditAnalyseFormData.id) {
-    const res = await $fetch('/api/updateAnalyse', {
+  if (addOrEditAnalyzeFormData.id) {
+    const res = await httpRequest('/api/updateAnalyze', {
       method: 'POST',
       body: {
-        id: addOrEditAnalyseFormData.id,
-        analyseName: addOrEditAnalyseFormData.analyseName,
-        analyseDesc: addOrEditAnalyseFormData.analyseDesc
+        id: addOrEditAnalyzeFormData.id,
+        analyzeName: addOrEditAnalyzeFormData.analyzeName,
+        analyzeDesc: addOrEditAnalyzeFormData.analyzeDesc
       }
     })
     if (res.code === 200) {
       ElMessage.success('更新成功')
-      addOrEditAnalyseDialogVisible.value = false
-      getAnalyses()
+      addOrEditAnalyzeDialogVisible.value = false
+      getAnalyzes()
     } else {
       ElMessage.error(res.message || '更新失败')
     }
   } else {
-    const res = await $fetch('/api/createAnalyse', {
+    const res = await httpRequest('/api/createAnalyze', {
       method: 'POST',
       body: {
-        analyseName: addOrEditAnalyseFormData.analyseName,
-        analyseDesc: addOrEditAnalyseFormData.analyseDesc
+        analyzeName: addOrEditAnalyzeFormData.analyzeName,
+        analyzeDesc: addOrEditAnalyzeFormData.analyzeDesc
       }
     })
     if (res.code === 200) {
       ElMessage.success('创建成功')
-      addOrEditAnalyseDialogVisible.value = false
-      getAnalyses()
+      addOrEditAnalyzeDialogVisible.value = false
+      getAnalyzes()
     } else {
       ElMessage.error(res.message || '创建失败')
     }
@@ -242,7 +242,7 @@ const handleSaveAnalyse = async () => {
 }
 
 onMounted(() => {
-  getAnalyses()
+  getAnalyzes()
 })
 
 onUnmounted(() => {})

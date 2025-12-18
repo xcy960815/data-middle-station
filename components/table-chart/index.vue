@@ -10,7 +10,7 @@
         :highlight-cell-background="tableChartConfig?.highlightCellBackground"
         :highlight-row-background="tableChartConfig?.highlightRowBackground"
         :highlight-col-background="tableChartConfig?.highlightColBackground"
-        :header-height="tableChartConfig?.headerRowHeight"
+        :header-row-height="tableChartConfig?.headerRowHeight"
         :summary-row-height="tableChartConfig?.summaryRowHeight"
         :enable-summary="tableChartConfig?.enableSummary"
         :body-row-height="tableChartConfig?.bodyRowHeight"
@@ -19,7 +19,6 @@
         :body-background-odd="tableChartConfig?.bodyBackgroundOdd"
         :body-background-even="tableChartConfig?.bodyBackgroundEven"
         :border-color="tableChartConfig?.borderColor"
-        :header-row-height="tableChartConfig?.headerRowHeight"
         :header-text-color="tableChartConfig?.headerTextColor"
         :body-text-color="tableChartConfig?.bodyTextColor"
         :header-font-family="tableChartConfig?.headerFontFamily"
@@ -31,16 +30,12 @@
         :summary-background="tableChartConfig?.summaryBackground"
         :summary-text-color="tableChartConfig?.summaryTextColor"
         :scrollbar-background="tableChartConfig?.scrollbarBackground"
-        :scrollbar-thumb="tableChartConfig?.scrollbarThumb"
-        :scrollbar-thumb-hover="tableChartConfig?.scrollbarThumbHover"
+        :scrollbar-thumb-background="tableChartConfig?.scrollbarThumbBackground"
+        :scrollbar-thumb-hover-background="tableChartConfig?.scrollbarThumbHoverBackground"
         :buffer-rows="tableChartConfig?.bufferRows"
         :min-auto-col-width="tableChartConfig?.minAutoColWidth"
-        :scroll-threshold="tableChartConfig?.scrollThreshold"
-        :sort-active-background="tableChartConfig?.sortActiveBackground"
         :sort-active-color="tableChartConfig?.sortActiveColor"
       >
-        <!-- :enable-row-hover-highlight="tableChartConfig?.enableRowHoverHighlight"
-        :enable-col-hover-highlight="tableChartConfig?.enableColHoverHighlight" -->
       </CanvasTable>
     </client-only>
   </div>
@@ -53,7 +48,7 @@ const chartConfigStore = useChartConfigStore()
 
 defineProps({
   data: {
-    type: Array as PropType<Array<ChartDataVo.ChartData>>,
+    type: Array as PropType<Array<AnalyzeDataVo.AnalyzeData>>,
     default: () => []
   },
   xAxisFields: {

@@ -1,5 +1,5 @@
 declare namespace UserInfoVo {
-  type UserInfoResponse = {
+  type UserInfoOptions = {
     userId: string
     userName: string
     avatar: string

@@ -1,65 +1,24 @@
-# VO (Value Object) 类型定义
+# VO (View Object) Definitions
 
-本目录包含所有值对象的 TypeScript 类型定义。VO 用于表示业务领域中的值对象，通常是不可变的数据结构，用于封装相关的数据和行为。
+本目录包含视图对象（VO）的 TypeScript 类型定义。
+VO 用于定义返回给客户端（前端）的数据结构。它们通常是经过处理、格式化或脱敏的数据，专门用于页面展示。
 
 ## 文件说明
 
-### ChartDataVo.d.ts
+| 文件名                     | 描述            | 主要用途                                       |
+| :------------------------- | :-------------- | :--------------------------------------------- |
+| `AnalyzeConfigVo.d.ts`     | 分析配置 VO     | 返回给前端的图表、报表配置信息                 |
+| `AnalyzeDataVo.d.ts`       | 分析数据 VO     | 返回给前端的具体分析数据结果                   |
+| `AnalyzeVo.d.ts`           | 分析 VO         | 通用的分析相关展示对象                         |
+| `DataBaseVo.d.ts`          | 数据库 VO       | 数据库信息展示对象（如连接状态、列表等）       |
+| `LoginVo.d.ts`             | 登录 VO         | 登录成功后的响应数据（如 Token、用户信息摘要） |
+| `ScheduledEmailLogVo.d.ts` | 定时邮件日志 VO | 定时邮件执行记录的展示对象                     |
+| `ScheduledEmailVo.d.ts`    | 定时邮件 VO     | 定时邮件任务详情的展示对象                     |
+| `SendEmailVo.d.ts`         | 发送邮件 VO     | 邮件发送操作的结果反馈                         |
+| `UserInfoVo.d.ts`          | 用户信息 VO     | 用户个人资料、权限等展示信息                   |
 
-图表数据相关的值对象类型定义
+## 使用规范
 
-- 图表数据值对象
-- 图表数据项对象
-- 图表数据处理结果对象
-
-## VO vs DTO 区别
-
-| 特征     | VO (Value Object)      | DTO (Data Transfer Object) |
-| -------- | ---------------------- | -------------------------- |
-| 用途     | 表示业务领域中的值概念 | 用于数据传输               |
-| 可变性   | 通常不可变             | 可变                       |
-| 业务逻辑 | 可包含业务逻辑         | 不包含业务逻辑             |
-| 生命周期 | 贯穿整个业务流程       | 仅在数据传输时使用         |
-| 验证     | 包含数据验证逻辑       | 简单的数据结构             |
-
-## 命名规范
-
-- 所有 VO 类型都应该以 `Vo` 为后缀
-- 使用 PascalCase 命名方式
-- 接口名应该清晰地描述其业务含义
-- 嵌套命名空间使用相同的基础名称
-
-## 使用示例
-
-```typescript
-// 导入 VO 类型
-import type { ChartDataVo } from '~/types/domain/vo/ChartDataVo'
-
-// 使用 VO 类型
-const chartData: ChartDataVo.ChartData = {
-  id: '1',
-  name: '销售数据',
-  value: 1000,
-  category: '产品A'
-}
-
-// VO 通常包含业务验证逻辑
-const validateChartData = (data: ChartDataVo.ChartData): boolean => {
-  return data.value > 0 && data.name.length > 0
-}
-```
-
-## 设计原则
-
-1. **不可变性**: VO 对象创建后不应该被修改
-2. **值相等性**: 两个 VO 对象如果所有属性都相等，则认为它们相等
-3. **自包含**: VO 应该包含完整的数据和相关的验证逻辑
-4. **业务语义**: VO 应该反映业务领域中的真实概念
-
-## 注意事项
-
-1. VO 对象应该是不可变的，避免意外修改
-2. 优先使用 `readonly` 修饰符来确保不可变性
-3. VO 可以包含计算属性和验证方法
-4. 保持 VO 的业务语义清晰，避免技术细节泄露
-5. 合理使用组合，避免过度深层嵌套
+1. **命名规范**: 文件名以 `Vo.d.ts` 结尾，类型定义通常放在 `declare namespace [Name]Vo` 下。
+2. **用途**: 用于 API 响应数据，直接对接前端视图组件。
+3. **安全性**: 注意不要在 VO 中包含敏感数据（如密码、密钥等），除非经过加密或脱敏处理。

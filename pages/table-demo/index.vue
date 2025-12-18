@@ -1,87 +1,112 @@
 <template>
   <div class="table-demo-container">
-    <ClientOnly>
-      <el-form label-width="auto" :model="tableConfig" inline>
-        <el-form-item label="是否行高亮">
-          <el-switch v-model="tableConfig.enableRowHoverHighlight" />
-        </el-form-item>
-        <el-form-item label="是否列高亮">
-          <el-switch v-model="tableConfig.enableColHoverHighlight" />
-        </el-form-item>
-        <el-form-item label="高亮 cell 背景色">
-          <el-color-picker v-model="tableConfig.highlightCellBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="高亮行背景色">
-          <el-color-picker v-model="tableConfig.highlightRowBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="高亮列背景色">
-          <el-color-picker v-model="tableConfig.highlightColBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="表头高度">
-          <el-input-number v-model="tableConfig.headerRowHeight" :step="10" />
-        </el-form-item>
-        <el-form-item label="表头字体大小">
-          <el-input-number v-model="tableConfig.headerFontSize" :step="2" />
-        </el-form-item>
-        <el-form-item label="表头字体">
-          <el-select style="width: 200px" v-model="tableConfig.headerFontFamily" placeholder="请选择表头字体">
-            <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="表头文本颜色">
-          <el-color-picker v-model="tableConfig.headerTextColor" show-alpha />
-        </el-form-item>
-        <el-form-item label="表头背景色">
-          <el-color-picker v-model="tableConfig.headerBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="表格文本颜色">
-          <el-color-picker v-model="tableConfig.bodyTextColor" show-alpha />
-        </el-form-item>
-        <el-form-item label="表格奇数行背景色">
-          <el-color-picker v-model="tableConfig.bodyBackgroundOdd" show-alpha />
-        </el-form-item>
-        <el-form-item label="表格偶数行背景色">
-          <el-color-picker v-model="tableConfig.bodyBackgroundEven" show-alpha />
-        </el-form-item>
-        <el-form-item label="滚动条背景色">
-          <el-color-picker v-model="tableConfig.scrollbarBackground" show-alpha />
-        </el-form-item>
-        <el-form-item label="滚动条滑块颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumb" show-alpha />
-        </el-form-item>
-        <el-form-item label="滚动条滑块悬停颜色">
-          <el-color-picker v-model="tableConfig.scrollbarThumbHover" show-alpha />
-        </el-form-item>
-        <el-form-item label="是否展示汇总">
-          <el-switch v-model="tableConfig.enableSummary" />
-        </el-form-item>
-        <el-form-item label="汇总高度">
-          <el-input-number v-model="tableConfig.summaryRowHeight" :step="10" />
-        </el-form-item>
-        <el-form-item label="表格高度">
-          <el-input-number v-model="tableConfig.chartHeight" :step="100" />
-        </el-form-item>
-        <el-form-item label="表格宽度">
-          <el-input-number v-model="tableConfig.chartWidth" :step="100" />
-        </el-form-item>
-      </el-form>
-
-      <!-- 合并单元格配置 -->
-      <el-divider content-position="left">合并单元格配置</el-divider>
-      <el-form label-width="auto" :model="spanConfig" inline>
-        <el-form-item label="启用合并单元格">
-          <el-switch v-model="spanConfig.enableSpan" />
-        </el-form-item>
-        <el-form-item label="第一列合并行数">
-          <el-input-number v-model="spanConfig.firstColSpan" :min="1" :max="5" />
-        </el-form-item>
-        <el-form-item label="第二列合并行数">
-          <el-input-number v-model="spanConfig.secondColSpan" :min="1" :max="5" />
-        </el-form-item>
-        <el-form-item label="启用列合并示例">
-          <el-switch v-model="spanConfig.enableColSpan" />
-        </el-form-item>
-      </el-form>
+    <el-form label-width="auto" :model="tableConfig" inline>
+      <el-form-item label="是否行高亮">
+        <el-switch v-model="tableConfig.enableRowHoverHighlight" />
+      </el-form-item>
+      <el-form-item label="是否列高亮">
+        <el-switch v-model="tableConfig.enableColHoverHighlight" />
+      </el-form-item>
+      <el-form-item label="高亮 cell 背景色">
+        <el-color-picker v-model="tableConfig.highlightCellBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="高亮行背景色">
+        <el-color-picker v-model="tableConfig.highlightRowBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="高亮列背景色">
+        <el-color-picker v-model="tableConfig.highlightColBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="表头高度">
+        <el-input-number v-model="tableConfig.headerRowHeight" :step="10" />
+      </el-form-item>
+      <el-form-item label="表头字体大小">
+        <el-input-number v-model="tableConfig.headerFontSize" :step="2" />
+      </el-form-item>
+      <el-form-item label="表头字体">
+        <el-select style="width: 200px" v-model="tableConfig.headerFontFamily" placeholder="请选择表头字体">
+          <el-option v-for="item in fontFamilyOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="表头文本颜色">
+        <el-color-picker v-model="tableConfig.headerTextColor" show-alpha />
+      </el-form-item>
+      <el-form-item label="表头背景色">
+        <el-color-picker v-model="tableConfig.headerBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="表格文本颜色">
+        <el-color-picker v-model="tableConfig.bodyTextColor" show-alpha />
+      </el-form-item>
+      <el-form-item label="表格奇数行背景色">
+        <el-color-picker v-model="tableConfig.bodyBackgroundOdd" show-alpha />
+      </el-form-item>
+      <el-form-item label="表格偶数行背景色">
+        <el-color-picker v-model="tableConfig.bodyBackgroundEven" show-alpha />
+      </el-form-item>
+      <el-form-item label="滚动条背景色">
+        <el-color-picker v-model="tableConfig.scrollbarBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="滚动条滑块颜色">
+        <el-color-picker v-model="tableConfig.scrollbarThumbBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="滚动条滑块悬停颜色">
+        <el-color-picker v-model="tableConfig.scrollbarThumbHoverBackground" show-alpha />
+      </el-form-item>
+      <el-form-item label="拖拽图标高度">
+        <el-input-number v-model="tableConfig.dragIconHeight" :min="8" :max="32" :step="2" />
+      </el-form-item>
+      <el-form-item label="拖拽图标宽度">
+        <el-input-number v-model="tableConfig.dragIconWidth" :min="6" :max="20" :step="1" />
+      </el-form-item>
+      <el-form-item label="是否展示汇总">
+        <el-switch v-model="tableConfig.enableSummary" />
+      </el-form-item>
+      <el-form-item label="汇总高度">
+        <el-input-number v-model="tableConfig.summaryRowHeight" :step="10" />
+      </el-form-item>
+      <el-form-item label="表格高度">
+        <el-input-number v-model="tableConfig.chartHeight" :step="100" />
+      </el-form-item>
+      <el-form-item label="表格宽度">
+        <el-input-number v-model="tableConfig.chartWidth" :step="100" />
+      </el-form-item>
+    </el-form>
+    <!-- 合并单元格配置 -->
+    <el-divider content-position="left">合并单元格配置</el-divider>
+    <el-form label-width="auto" :model="spanConfig" inline>
+      <el-form-item label="启用合并单元格">
+        <el-switch v-model="spanConfig.enableSpan" />
+      </el-form-item>
+      <el-form-item label="第一列合并行数">
+        <el-input-number v-model="spanConfig.firstColSpan" :min="1" :max="5" />
+      </el-form-item>
+      <el-form-item label="第二列合并行数">
+        <el-input-number v-model="spanConfig.secondColSpan" :min="1" :max="5" />
+      </el-form-item>
+      <el-form-item label="启用列合并示例">
+        <el-switch v-model="spanConfig.enableColSpan" />
+      </el-form-item>
+    </el-form>
+    <!-- 测试执行定时邮件任务 -->
+    <el-divider content-position="left">测试服务端生成 ECharts 图表</el-divider>
+    <el-form label-width="auto" inline>
+      <el-form-item label="任务ID">
+        <el-input-number v-model="testTaskId" :min="1" placeholder="请输入任务ID" style="width: 200px" />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="handleTestExecuteTask" :loading="testLoading"> 执行任务 </el-button>
+      </el-form-item>
+    </el-form>
+    <el-alert
+      v-if="testResult"
+      :title="testResult.success ? '执行成功' : '执行失败'"
+      :type="testResult.success ? 'success' : 'error'"
+      :description="testResult.message"
+      show-icon
+      :closable="true"
+      @close="testResult = null"
+      style="margin-top: 10px; margin-bottom: 10px"
+    />
+    <client-only>
       <CanvasTable
         :enable-summary="tableConfig.enableSummary"
         :summary-height="tableConfig.summaryRowHeight"
@@ -103,30 +128,29 @@
         :body-background-odd="tableConfig.bodyBackgroundOdd"
         :body-background-even="tableConfig.bodyBackgroundEven"
         :scrollbar-background="tableConfig.scrollbarBackground"
-        :scrollbar-thumb="tableConfig.scrollbarThumb"
-        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHover"
+        :scrollbar-thumb="tableConfig.scrollbarThumbBackground"
+        :scrollbar-thumb-hover="tableConfig.scrollbarThumbHoverBackground"
         :buffer-rows="tableConfig.bufferRows"
         :min-auto-col-width="tableConfig.minAutoColWidth"
-        :scroll-threshold="tableConfig.scrollThreshold"
-        :header-sort-active-background="tableConfig.sortActiveBackground"
-        :sortable-color="tableConfig.sortActiveColor"
+        :sort-active-color="tableConfig.sortActiveColor"
         :y-axis-fields="yAxisFields"
         :enable-row-hover-highlight="tableConfig.enableRowHoverHighlight"
         :enable-col-hover-highlight="tableConfig.enableColHoverHighlight"
         :data="data"
         :highlight-row-background="tableConfig.highlightRowBackground"
         :highlight-col-background="tableConfig.highlightColBackground"
+        :drag-icon-height="tableConfig.dragIconHeight"
+        :drag-icon-width="tableConfig.dragIconWidth"
+        :drag-icon-dot-size="4"
         :span-method="spanMethod"
-        @cell-click="handleCellClick"
-        @action-click="() => {}"
-        @cell-edit="handleCellEdit"
       >
       </CanvasTable>
-    </ClientOnly>
+    </client-only>
   </div>
 </template>
 
 <script setup lang="ts">
+// import TableChart from '@/components/table-chart/index.vue'
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
 import { ElMessage } from 'element-plus'
 
@@ -144,7 +168,7 @@ const spanMethod = ({
   rowIndex,
   colIndex
 }: {
-  row: ChartDataVo.ChartData
+  row: AnalyzeDataVo.AnalyzeData
   column: GroupStore.GroupOption | DimensionStore.DimensionOption
   rowIndex: number
   colIndex: number
@@ -154,19 +178,9 @@ const spanMethod = ({
     return { rowspan: 1, colspan: 1 }
   }
 
-  // 第一列（序号列）- 可配置合并行数
-  if (colIndex === 0 && spanConfig.firstColSpan > 1) {
-    if (rowIndex % spanConfig.firstColSpan === 0) {
-      return {
-        rowspan: spanConfig.firstColSpan,
-        colspan: 1
-      }
-    } else {
-      return {
-        rowspan: 0,
-        colspan: 0
-      }
-    }
+  // 第一列（序号列）- 序号列不应该合并，保持连续
+  if (colIndex === 0) {
+    return { rowspan: 1, colspan: 1 }
   }
 
   // 第二列（name列）- 可配置合并行数
@@ -243,43 +257,49 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'number',
     columnComment: '序号',
     displayName: '序号',
-    width: 100,
     fixed: 'left',
-    align: 'center'
+    width: 100,
+    align: 'center',
+    resizable: true
   },
-  // {
-  //   columnName: 'id',
-  //   columnType: 'number',
-  //   columnComment: 'id',
-  //   displayName: 'id',
-  //   width: 200,
-  //   filterable: true,
-  //   editable: true,
-  //   editType: 'input'
-  // },
+  {
+    columnName: 'id',
+    columnType: 'number',
+    columnComment: 'id',
+    displayName: 'id',
+    width: 200,
+    filterable: true,
+    editable: true,
+    editType: 'input',
+    resizable: true
+  },
   {
     columnName: 'name',
     columnType: 'string',
     columnComment: 'name',
     displayName: 'name',
+    width: 200,
     filterable: true,
     editable: true,
-    editType: 'input'
+    editType: 'input',
+    resizable: true,
+    draggable: true
   },
   {
     columnName: 'age',
     columnType: 'number',
     columnComment: 'age',
     displayName: 'age',
-    filterable: true,
+    width: 200,
+    sortable: true,
     editable: true,
     editType: 'input'
-    // fixed: 'left' as const
   },
   {
     columnName: 'gender',
     columnType: 'string',
     columnComment: 'gender',
+    width: 200,
     filterable: true,
     sortable: true,
     displayName: 'gender',
@@ -296,6 +316,8 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'country',
     width: 200,
+    resizable: true,
+    draggable: true,
     filterable: true,
     sortable: true,
     displayName: 'country',
@@ -311,7 +333,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
       { label: '加拿大', value: 'Canada' },
       { label: '澳大利亚', value: 'Australia' }
     ]
-    // fixed: 'left' as const
   },
   {
     columnName: 'city',
@@ -323,7 +344,6 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     displayName: 'city',
     editable: true,
     editType: 'input'
-    // fixed: 'left' as const
   },
   {
     columnName: 'state',
@@ -341,24 +361,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     width: 200,
     filterable: true,
     editable: true,
-    editType: 'input'
-    // fixed: 'right' as const
+    editType: 'input',
+    resizable: true
   },
-  // 注释掉action列以提升性能
-  // {
-  //   columnName: 'action',
-  //   columnType: 'string',
-  //   columnComment: '操作',
-  //   displayName: '操作',
-  //   width: 220,
-  //   fixed: 'right' as const,
-  //   align: 'center' as const,
-  //   actions: [
-  //     { key: 'view', label: '查看', type: 'primary' },
-  //     { key: 'edit', label: '编辑', type: 'success' },
-  //     { key: 'delete', label: '删除', type: 'danger' }
-  //   ]
-  // },
   {
     columnName: 'address',
     columnType: 'string',
@@ -411,7 +416,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
 /**
  * 数据
  */
-const data: Array<ChartDataVo.ChartData> = Array.from({ length: 1000 }, (_, i) => {
+const data: Array<AnalyzeDataVo.AnalyzeData> = Array.from({ length: 1000 }, (_, i) => {
   const birthYear = 1970 + (i % 40)
   const birthMonth = (i % 12) + 1
   const birthDay = (i % 28) + 1
@@ -460,31 +465,6 @@ const data: Array<ChartDataVo.ChartData> = Array.from({ length: 1000 }, (_, i) =
     email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
   }
 })
-/**
- * 单元格点击事件
- */
-const handleCellClick = (cell: { rowIndex: number; colIndex: number }) => {
-  console.log('Cell clicked:', cell)
-}
-
-// 注释掉action事件处理函数
-// const handleActionClick = (payload: { rowIndex: number; action: string; rowData: ChartDataVo.ChartData }) => {
-//   console.log('Action clicked:', payload.rowIndex, payload.action, payload.rowData)
-// }
-
-/**
- * 单元格编辑事件
- */
-const handleCellEdit = (payload: { rowIndex: number; colKey: string; rowData: ChartDataVo.ChartData }) => {
-  console.log('Cell edited:', {
-    row: payload.rowIndex,
-    column: payload.colKey,
-    rowData: payload.rowData
-  })
-
-  // 这里可以添加数据持久化逻辑，例如调用API保存到后端
-  ElMessage.success(`成功修改 ${payload.colKey}`)
-}
 
 const tableConfig = reactive({
   enableSummary: true,
@@ -509,16 +489,16 @@ const tableConfig = reactive({
   summaryBackground: '#f7f7f9',
   summaryTextColor: '#303133',
   scrollbarBackground: 'rgba(24, 144, 255, 0.5)',
-  scrollbarThumb: 'rgba(24, 144, 255, 0.5)',
-  scrollbarThumbHover: 'rgba(24, 144, 255, 0.8)',
+  scrollbarThumbBackground: 'rgba(24, 144, 255, 0.5)',
+  scrollbarThumbHoverBackground: 'rgba(24, 144, 255, 0.8)',
   bufferRows: 5,
   minAutoColWidth: 100,
-  scrollThreshold: 10,
-  sortActiveBackground: '#ecf5ff',
   sortActiveColor: '#409EFF',
   chartHeight: 360,
   chartWidth: 1500,
-  bodyRowHeight: 32
+  bodyRowHeight: 32,
+  dragIconHeight: 16,
+  dragIconWidth: 9
 })
 
 const fontFamilyOptions = [
@@ -551,6 +531,55 @@ const fontFamilyOptions = [
     value: "'Times New Roman', Times, serif"
   }
 ]
+
+// 测试执行定时邮件任务
+const testTaskId = ref<number | null>(null)
+const testLoading = ref(false)
+const testResult = ref<{ success: boolean; message: string } | null>(null)
+
+/**
+ * 处理测试执行任务
+ */
+const handleTestExecuteTask = async () => {
+  if (!testTaskId.value || testTaskId.value <= 0) {
+    ElMessage.warning('请输入有效的任务ID')
+    return
+  }
+
+  testLoading.value = true
+  testResult.value = null
+
+  try {
+    const result = await $fetch('/api/testExecuteTask', {
+      method: 'POST',
+      body: {
+        taskId: testTaskId.value
+      }
+    })
+
+    if (result.code === 200) {
+      testResult.value = {
+        success: true,
+        message: `任务执行成功！结果: ${result.data ? '成功' : '失败'}`
+      }
+      ElMessage.success('任务执行成功')
+    } else {
+      testResult.value = {
+        success: false,
+        message: result.message || '执行失败'
+      }
+      ElMessage.error(result.message || '执行失败')
+    }
+  } catch (error: any) {
+    testResult.value = {
+      success: false,
+      message: error.message || '请求失败，请稍后重试'
+    }
+    ElMessage.error(error.message || '请求失败，请稍后重试')
+  } finally {
+    testLoading.value = false
+  }
+}
 </script>
 
 <style scoped>

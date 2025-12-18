@@ -1,6 +1,6 @@
 {
   "name": "data-middle-station",
-  "version": "0.0.1",
+  "version": "0.0.10",
   "description": "使用nuxt3 + element-plus + pinia + mysql + pm2 搭建的数据中台",
   "scripts": {
     "build": "nuxt build --dotenv env/.env.daily",
@@ -34,6 +34,11 @@
   "overrides": {
     "vue": "latest"
   },
+  "pnpm": {
+    "overrides": {
+      "undici": "6.21.0"
+    }
+  },
   "optionalDependencies": {
     "@rollup/rollup-darwin-x64": "4.12.0"
   },
@@ -42,39 +47,48 @@
     "@commitlint/config-conventional": "^17.8.1",
     "@element-plus/nuxt": "^1.1.4",
     "@eslint/js": "^9.28.0",
+    "@icon-park/vue-next": "^1.4.2",
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/hands": "^0.4.1675469240",
     "@nuxt/devtools": "latest",
     "@types/node": "^20.19.0",
     "@types/node-cron": "^3.0.11",
+    "@types/node-schedule": "^2.1.8",
     "@types/nodemailer": "^7.0.1",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
     "commitlint": "^17.8.1",
     "conventional-changelog-cli": "^5.0.0",
+    "echarts": "^6.0.0",
     "eslint": "^9.28.0",
     "eslint-plugin-vue": "^10.1.0",
     "globals": "^16.2.0",
     "husky": "^8.0.3",
+    "konva": "^9.3.22",
     "less": "^4.3.0",
     "less-loader": "^11.1.4",
+    "lil-gui": "^0.21.0",
     "lint-staged": "^15.5.2",
+    "monaco-editor": "^0.52.2",
     "pm2": "^6.0.6",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "pretty-quick": "^4.1.1",
     "sass": "^1.89.0",
     "tailwindcss": "^3.4.17",
+    "three": "^0.181.2",
+    "typescript": "^5.9.3",
     "vue-eslint-parser": "^10.0.1"
   },
   "dependencies": {
-    "@antv/g2": "5.3.5",
-    "@antv/g2-ssr": "^0.1.2",
-    "@icon-park/vue-next": "^1.4.2",
     "@pinia/nuxt": "^0.5.1",
     "@popperjs/core": "npm:@sxzz/popperjs-es@^2.11.7",
     "@types/boxen": "^3.0.5",
     "@types/figlet": "^1.7.0",
     "@types/gradient-string": "^1.1.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/three": "^0.181.0",
     "boxen": "^8.0.1",
     "chalk": "^5.4.1",
     "common-watermark": "^0.0.1",
@@ -84,8 +98,6 @@
     "gradient-string": "^3.0.0",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
-    "konva": "^9.3.22",
-    "monaco-editor": "^0.52.2",
     "mysql2": "^3.14.1",
     "node-cron": "^3.0.3",
     "node-schedule": "^2.1.1",
