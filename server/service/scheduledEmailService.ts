@@ -203,13 +203,14 @@ export class ScheduledEmailService extends BaseService {
    * @returns {Promise<ScheduledEmailVo.ScheduledEmailOptions[]>}
    */
   async getScheduledEmailTaskList(
-    listOptions: ScheduledEmailDto.ScheduledEmailListQuery
+    scheduledEmailListQuery: ScheduledEmailDto.ScheduledEmailListQuery
   ): Promise<ScheduledEmailVo.ScheduledEmailOptions[]> {
     try {
-      const scheduledEmailRecordList = await this.scheduledEmailMapper.getScheduledEmailTaskList(listOptions)
-      return scheduledEmailRecordList.map((scheduledEmailRecord) => this.convertDaoToVo(scheduledEmailRecord))
+      const scheduledEmailRecordList =
+        await this.scheduledEmailMapper.getScheduledEmailTaskList(scheduledEmailListQuery)
+      return scheduledEmailRecordList.map((scheduledEmailDao) => this.convertDaoToVo(scheduledEmailDao))
     } catch (error) {
-      logger.error(`获取定时邮件任务列表失败: ${JSON.stringify(listOptions)}, ${error}`)
+      logger.error(`获取定时邮件任务列表失败: ${JSON.stringify(scheduledEmailListQuery)}, ${error}`)
       throw error
     }
   }
