@@ -260,13 +260,19 @@ onUnmounted(() => {})
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
-  padding: 0;
+  padding: 10px;
   margin: 0;
   justify-content: flex-start;
   align-items: flex-start;
+  /* 多行时让所有行挤在顶部，避免中间被拉出大空白 */
+  align-content: flex-start;
+  /* 控制卡片之间的间距：横向稍大、纵向更紧凑 */
+  column-gap: 1.25rem;
+  row-gap: 0.6rem;
 }
 
 .card-chart {
-  margin: 1rem;
+  /* 间距由父容器的 gap 控制，这里不再额外增加外边距 */
+  margin: 0;
 }
 </style>

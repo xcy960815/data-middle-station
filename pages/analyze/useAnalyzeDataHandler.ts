@@ -11,10 +11,9 @@ import dayjs from 'dayjs'
 import { computed, watch } from 'vue'
 
 /**
- * 获取图表数据的处理函数
- * 每次页面挂载都会重新注册 watcher，确保离开页面后再次进入仍能请求数据。
+ * @desc 分析数据处理逻辑（作为 composable 使用，确保在 Pinia 激活后再获取 store）
  */
-export const getAnalyzeDataHandler = () => {
+export const useAnalyzeDataHandler = () => {
   const analyzeStore = useAnalyzeStore()
   const dimensionStore = useDimensionsStore()
   const groupStore = useGroupsStore()
@@ -60,7 +59,7 @@ export const getAnalyzeDataHandler = () => {
   })
 
   // ---------- 实际请求 ----------
-  const queryAnalyzeData = async () => {
+  const getAnalyzeData = async () => {
     const chartType = analyzeStore.getChartType
     const errorMessage = chartSuggestStrategies(chartType)
     analyzeStore.setChartErrorMessage(errorMessage)
@@ -93,7 +92,7 @@ export const getAnalyzeDataHandler = () => {
   }
 
   // 使用防抖避免频繁请求
-  const debouncedQueryAnalyzeData = debounce(queryAnalyzeData, 1000)
+  const debouncedQueryAnalyzeData = debounce(getAnalyzeData, 1000)
 
   // 监听参数变化并触发防抖请求
   watch(
@@ -104,11 +103,7 @@ export const getAnalyzeDataHandler = () => {
     { deep: true }
   )
 
-  // 首次进入页面立即请求一次数据
-  queryAnalyzeData()
-
   return {
-    queryAnalyzeDataParams,
-    queryAnalyzeData
+    getAnalyzeData
   }
 }
