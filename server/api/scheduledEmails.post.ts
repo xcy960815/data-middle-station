@@ -1,5 +1,5 @@
+import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
 import Joi from 'joi'
-import { ScheduledEmailService } from '../service/scheduledEmailService'
 
 const scheduledEmailService = new ScheduledEmailService()
 
@@ -75,7 +75,7 @@ const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledE
       'string.max': '邮件内容不能超过2000个字符'
     })
   }).required(),
-  analyseOptions: Joi.object<ScheduledEmailDto.AnalyseOptions>({
+  analyzeOptions: Joi.object<ScheduledEmailDto.AnalyzeOptions>({
     filename: Joi.string().min(1).max(100).required().messages({
       'string.min': '文件名不能为空',
       'string.max': '文件名不能超过100个字符',
@@ -85,12 +85,12 @@ const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledE
       'any.only': '图表类型必须是 line、bar、pie、table 或 interval 之一',
       'any.required': '图表类型不能为空'
     }),
-    analyseName: Joi.string().min(1).max(100).required().messages({
+    analyzeName: Joi.string().min(1).max(100).required().messages({
       'string.min': '分析名称不能为空',
       'string.max': '分析名称不能超过100个字符',
       'any.required': '分析名称不能为空'
     }),
-    analyseId: Joi.number().integer().positive().required().messages({
+    analyzeId: Joi.number().integer().positive().required().messages({
       'number.base': '分析ID必须是数字',
       'number.integer': '分析ID必须是整数',
       'number.positive': '分析ID必须大于0',
@@ -123,7 +123,7 @@ export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) 
     }
 
     // 验证通过，执行业务逻辑
-    const result = await scheduledEmailService.createScheduledEmail(scheduledEmailOptions)
+    const result = await scheduledEmailService.createScheduledEmailTask(scheduledEmailOptions)
 
     logger.info(`定时邮件任务创建成功: ${scheduledEmailOptions.taskName}`)
     return ApiResponse.success(result)

@@ -42,8 +42,10 @@ export const useDimensionsStore = defineStore<
     removeDimension(index: number) {
       this.dimensions.splice(index, 1)
     },
-    updateDimension(dimension) {
-      const index = this.dimensions.findIndex((item) => item.columnName === dimension.columnName)
+    updateDimension(dimension: DimensionStore.DimensionOption) {
+      const index = this.dimensions.findIndex(
+        (item: DimensionStore.DimensionOption) => item.columnName === dimension.columnName
+      )
       if (index !== -1) {
         this.dimensions[index] = dimension
       }

@@ -59,7 +59,7 @@ declare namespace ScheduledEmailDao {
   /**
    * @desc 分析选项
    */
-  type AnalyseOptions = {
+  type AnalyzeOptions = {
     /**
      * 附件名称
      */
@@ -71,14 +71,14 @@ declare namespace ScheduledEmailDao {
     /**
      * 分析名称
      */
-    analyseName: string
+    analyzeName: string
     /**
      * 分析id
      */
-    analyseId: number
+    analyzeId: number
   }
   /**
-   * @desc 任务类型
+   * @desc 任务类型 scheduled 定时任务 recurring 重复任务
    */
   type TaskType = 'scheduled' | 'recurring'
 
@@ -125,7 +125,7 @@ declare namespace ScheduledEmailDao {
     /**
      * 图表数据
      */
-    analyseOptions: AnalyseOptions
+    analyzeOptions: AnalyzeOptions
     /**
      * 任务状态
      */
@@ -169,6 +169,76 @@ declare namespace ScheduledEmailDao {
   }
 
   /**
+   * @desc 定时邮件任务查询条件
+   */
+  type ScheduledEmailQueryOptions = {
+    /**
+     * 任务ID
+     */
+    id?: number
+    /**
+     * 任务名称
+     */
+    taskName?: string
+    /**
+     * 任务状态
+     */
+    status?: Status
+    /**
+     * 任务类型
+     */
+    taskType?: TaskType
+    /**
+     * 是否启用
+     */
+    isActive?: boolean
+    /**
+     * 创建人
+     */
+    createdBy?: string
+    /**
+     * 更新人
+     */
+    updatedBy?: string
+    /**
+     * 最小时段重试次数
+     */
+    minRetryCount?: number
+    /**
+     * 最大时段重试次数
+     */
+    maxRetryCount?: number
+    /**
+     * 最小最大重试阈值
+     */
+    maxRetries?: number
+    /**
+     * 标签/备注关键词
+     */
+    remarkKeyword?: string
+    /**
+     * 计划执行时间范围开始
+     */
+    scheduleTimeStart?: string
+    /**
+     * 计划执行时间范围结束
+     */
+    scheduleTimeEnd?: string
+    /**
+     * 下次执行时间范围开始
+     */
+    nextExecutionTimeStart?: string
+    /**
+     * 下次执行时间范围结束
+     */
+    nextExecutionTimeEnd?: string
+  }
+
+  type GetScheduledEmailOptions = Partial<ScheduledEmailOptions> & {
+    id: number
+  }
+
+  /**
    * @desc 创建任务参数
    */
   type CreateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'id'>
@@ -176,10 +246,21 @@ declare namespace ScheduledEmailDao {
   /**
    * @desc 更新任务参数
    */
-  type UpdateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'id'> & {
-    /**
-     * 任务ID
-     */
-    id: number
+  type UpdateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'createdTime' | 'createdBy'>
+
+  /**
+   * @desc 删除任务参数
+   */
+  type DeleteScheduledEmailOptions = Pick<ScheduledEmailOptions, 'id' | 'updatedBy' | 'updatedTime'>
+
+  /**
+   * @desc 任务列表查询参数
+   */
+  type ScheduledEmailListOptions = ScheduledEmailQueryOptions & {
+    keyword?: string
+    limit?: number
+    offset?: number
+    orderBy?: 'created_time' | 'schedule_time' | 'updated_time'
+    orderDirection?: 'asc' | 'desc'
   }
 }

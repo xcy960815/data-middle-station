@@ -1,11 +1,11 @@
 /**
- * @desc 登录
+ * 登录选项
  */
 declare namespace LoginVo {
   /**
-   * @desc 登录
+   * 登录选项
    */
-  type LoginOption = {
+  type LoginOptions = {
     userId: string
     userName: string
   }

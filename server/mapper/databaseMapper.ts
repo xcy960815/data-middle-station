@@ -1,9 +1,11 @@
-import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
+import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
+import { toLine } from '@/server/utils/databaseHelper'
 
 /**
  * @desc 表列表映射
  */
-export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarget {
+export class TableOptionMapping implements DataBaseDao.TableOptions, IColumnTarget {
   @Column('TABLE_NAME')
   tableName!: string
 
@@ -58,7 +60,7 @@ export class TableOptionMapping implements DatabaseDao.TableOption, IColumnTarge
 /**
  * @desc 表列映射
  */
-export class TableColumnMapping implements DatabaseDao.TableColumnOption, IColumnTarget {
+export class TableColumnMapping implements DataBaseDao.TableColumnOptions, IColumnTarget {
   /**
    * @desc 列名
    */
@@ -91,19 +93,30 @@ export class TableColumnMapping implements DatabaseDao.TableColumnOption, IColum
 const tableSchema = 'kanban_data'
 
 /**
- * @desc 数据库mapper
+ * @desc 数据库 mapper，用于查询当前 schema 下的表和列信息
  */
 export class DatabaseMapper extends BaseMapper {
+  /**
+   * @desc 当前 mapper 使用的数据源名称（与 schema 同名）
+   */
   public dataSourceName = tableSchema
   /**
-   * @desc 查询所有的表名
-   * @datasource ${tableSchema}
-   * @returns {Promise<Array<T>>}
+   * @desc 查询当前 schema 下的所有基础表
+   * @param getTableRequest 表列表查询条件（支持按表名模糊搜索）
+   * @returns 表元数据列表
    */
   @Mapping(TableOptionMapping)
-  public async queryTable<T extends DatabaseDao.TableOption = DatabaseDao.TableOption>(
-    queryTableRequest: DatabaseDto.QueryTableRequest
+  public async getDataBaseTables<T extends DataBaseDao.TableOptions = DataBaseDao.TableOptions>(
+    getTableRequest: DataBaseDao.GetTableOptions
   ): Promise<Array<T>> {
+    const whereConditions: string[] = ["table_type = 'BASE TABLE'", 'table_schema = ?']
+    const whereValues: Array<string> = [tableSchema]
+
+    if (getTableRequest.tableName) {
+      whereConditions.push('table_name LIKE ?')
+      whereValues.push(`%${getTableRequest.tableName}%`)
+    }
+
     const sql = `SELECT
         table_name,
         table_type,
@@ -118,22 +131,20 @@ export class DatabaseMapper extends BaseMapper {
         engine,
         table_collation
       FROM information_schema.tables
-      WHERE
-        table_type = 'BASE TABLE'
-        AND table_schema='${tableSchema}'
-        ${!!queryTableRequest.tableName ? `AND table_name like '%${queryTableRequest.tableName}%'` : ''}`
-    const result = await this.exe<Array<T>>(sql)
+      WHERE ${whereConditions.join(' AND ')}`
+
+    const result = await this.exe<Array<T>>(sql, whereValues)
     return result
   }
 
   /**
-   * @desc 查询表的所有列
-   * @param  tableColumnRequest  {DatabaseDto.TableColumnRequest} 查询表请求参数
-   * @returns {Promise<Array<TableInfoDao.TableColumnOption>>}
+   * @desc 查询指定表的所有列信息
+   * @param getTableColumnsRequest 表列查询参数，包含目标表名
+   * @returns 指定表的列元数据列表
    */
   @Mapping(TableColumnMapping)
-  public async queryTableColumn<T extends DatabaseDao.TableColumnOption>(
-    tableColumnRequest: DatabaseDto.TableColumnRequest
+  public async getTableColumns<T extends DataBaseDao.TableColumnOptions>(
+    getTableColumnsOptions: DataBaseDao.GetTableColumnOptions
   ): Promise<Array<T>> {
     const sql = `SELECT
         column_name,
@@ -142,9 +153,9 @@ export class DatabaseMapper extends BaseMapper {
       FROM
         information_schema.columns
       WHERE
-        table_name = '${toLine(tableColumnRequest.tableName)}'
-        AND table_schema = '${tableSchema}';`
-    const result = await this.exe<Array<T>>(sql)
+        table_name = ?
+        AND table_schema = ?;`
+    const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsOptions.tableName), tableSchema])
     return result
   }
 }

@@ -1,8 +1,11 @@
-import { BaseMapper, Column, entityColumnsMap, IColumnTarget, Mapping, mapToTarget, Row } from './baseMapper'
+import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
+import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
+import type { ResultSetHeader } from 'mysql2'
 
-import { ResultSetHeader } from 'mysql2'
-
-class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTarget {
+/**
+ * @desc 图表配置行数据映射，将数据库字段转换为图表配置实体
+ */
+class ChartConfigMapping implements AnalyzeConfigDao.ChartConfigOptions, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -17,25 +20,25 @@ class ChartConfigMapping implements ChartConfigDao.ChartConfig, IColumnTarget {
   chartType!: string
 
   @Column('columns')
-  columns: ChartConfigDao.ColumnOption[] = []
+  columns: AnalyzeConfigDao.ColumnOptions[] = []
 
   @Column('dimensions')
-  dimensions: ChartConfigDao.DimensionOption[] = []
+  dimensions: AnalyzeConfigDao.DimensionOptions[] = []
 
   @Column('filters')
-  filters: ChartConfigDao.FilterOption[] = []
+  filters: AnalyzeConfigDao.FilterOptions[] = []
 
   @Column('groups')
-  groups: ChartConfigDao.GroupOption[] = []
+  groups: AnalyzeConfigDao.GroupOptions[] = []
 
   @Column('orders')
-  orders: ChartConfigDao.OrderOption[] = []
+  orders: AnalyzeConfigDao.OrderOptions[] = []
 
   @Column('common_chart_config')
-  commonChartConfig!: ChartConfigDao.CommonChartConfig
+  commonChartConfig!: AnalyzeConfigDao.CommonChartConfig
 
   @Column('private_chart_config')
-  privateChartConfig!: ChartConfigDao.PrivateChartConfig
+  privateChartConfig!: AnalyzeConfigDao.PrivateChartConfig
 
   @Column('create_time')
   createTime!: string
@@ -84,32 +87,48 @@ const DATA_SOURCE_NAME = 'data_middle_station'
 
 export class ChartConfigMapper extends BaseMapper {
   /**
-   * @desc 数据源名称
+   * @desc 当前 mapper 使用的数据源名称
    */
   public dataSourceName = DATA_SOURCE_NAME
   /**
-   * @desc 获取图表配置
-   * @param id {number} 图表配置ID
-   * @returns {Promise<ChartConfigDao.ChartConfig>} 图表配置
+   * @desc 根据主键 ID 获取单个图表配置
+   * @param chartConfigId 图表配置主键 ID
+   * @returns 图表配置详情（若存在）
    */
   @Mapping(ChartConfigMapping)
-  public async getChartConfig<T extends ChartConfigDao.ChartConfig = ChartConfigDao.ChartConfig>(
-    id: number
+  public async getChartConfig<T extends AnalyzeConfigDao.ChartConfigOptions = AnalyzeConfigDao.ChartConfigOptions>(
+    chartConfigOptions: AnalyzeConfigDao.GetChartConfigOptions
   ): Promise<T> {
+    const { keys, values } = convertToSqlProperties(chartConfigOptions)
+    const whereClauses: string[] = []
+    const queryValues: any[] = []
+
+    keys.forEach((key, index) => {
+      if (CHART_CONFIG_BASE_FIELDS.includes(key)) {
+        const formattedKey = ['groups', 'orders', 'columns', 'dimensions', 'filters'].includes(key) ? `\`${key}\`` : key
+        whereClauses.push(`${formattedKey} = ?`)
+        queryValues.push(values[index])
+      }
+    })
+
+    if (!keys.includes('is_deleted')) {
+      whereClauses.push('is_deleted = 0')
+    }
+
     const sql = `select
           ${batchFormatSqlKey(CHART_CONFIG_BASE_FIELDS)}
             from ${CHART_CONFIG_TABLE_NAME}
-          where id = ? and is_deleted = 0`
-    const result = await this.exe<Array<T>>(sql, [id])
+          where ${whereClauses.join(' and ')}`
+    const result = await this.exe<Array<T>>(sql, queryValues)
     return result?.[0]
   }
   /**
    * @desc 创建图表配置
-   * @param chartConfig {ChartConfigDao.CreateChartConfigRequest} 图表配置
-   * @returns {Promise<number>} 图表配置ID
+   * @param {AnalyzeConfigDao.CreateChartConfigOptions} createChartConfigOptions 新建图表配置请求参数
+   * @returns 新建图表配置的主键 ID
    */
-  public async createChartConfig(createChartConfigRequest: ChartConfigDto.CreateChartConfigRequest): Promise<number> {
-    const { keys, values } = convertToSqlProperties(createChartConfigRequest)
+  public async createChartConfig(createChartConfigOptions: AnalyzeConfigDao.CreateChartConfigOptions): Promise<number> {
+    const { keys, values } = convertToSqlProperties(createChartConfigOptions)
     // 只使用数据库表中存在的字段
     const validKeys = keys.filter((key) => CHART_CONFIG_BASE_FIELDS.includes(key))
     const validValues = validKeys.map((key) => values[keys.indexOf(key)])
@@ -120,26 +139,30 @@ export class ChartConfigMapper extends BaseMapper {
 
   /**
    * @desc 更新图表配置
-   * @param chartConfig {ChartConfigDao.CreateChartConfigRequest} 图表配置
-   * @returns {Promise<number>} 图表配置ID
+   * @param updateChartConfigRequest 更新图表配置请求参数
+   * @returns 是否更新成功
    */
-  public async updateChartConfig(chartConfig: ChartConfigDto.UpdateChartConfigRequest): Promise<boolean> {
-    const { keys, values } = convertToSqlProperties(chartConfig)
+  public async updateChartConfig(
+    updateChartConfigRequest: AnalyzeConfigDao.UpdateChartConfigOptions
+  ): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(updateChartConfigRequest)
     const sql = `UPDATE ${CHART_CONFIG_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ? and is_deleted = 0`
-    return (await this.exe<number>(sql, [...values, chartConfig.id])) > 0
+    return (await this.exe<number>(sql, [...values, updateChartConfigRequest.id])) > 0
   }
 
   /**
-   * @desc 删除图表配置(逻辑删除)
-   * @param deleteParams {ChartConfigDto.ChartConfigDeleteRequest} 图表配置删除参数
+   * @desc 删除图表配置（逻辑删除）
+   * @param {AnalyzeConfigDao.DeleteChartConfigOptions} deleteChartConfigOptions
    * @returns {Promise<boolean>} 是否删除成功
    */
-  public async deleteChartConfig(deleteParams: ChartConfigDto.DeleteChartConfigRequest): Promise<boolean> {
+  public async deleteChartConfig(
+    deleteChartConfigOptions: AnalyzeConfigDao.DeleteChartConfigOptions
+  ): Promise<boolean> {
     const sql = `update ${CHART_CONFIG_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [
-      deleteParams.updatedBy,
-      deleteParams.updateTime,
-      deleteParams.id
+      deleteChartConfigOptions.updatedBy,
+      deleteChartConfigOptions.updateTime,
+      deleteChartConfigOptions.id
     ])
     return result.affectedRows > 0
   }

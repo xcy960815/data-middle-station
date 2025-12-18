@@ -1,5 +1,4 @@
-import { DatabaseMapper } from '../mapper/databaseMapper'
-import { toLine } from '../utils/databaseHelpper'
+import { DatabaseMapper } from '@/server/mapper/databaseMapper'
 
 /** 将数据库所有的类型罗列出来在前端统一展示成 number */
 const NUMBER_TYPE_ENUM = [
@@ -72,34 +71,42 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中所有表
-   * @param queryTableRequest {DatabaseDto.QueryTableRequest} 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.TableOptionVo>>}
+   * @param {DataBaseDto.GetDataBaseTablesOptions} queryOptions  查询表请求参数
+   * @returns {Promise<Array<DatabaseVo.GetDataBaseTablesOptions>>}
    */
-  public async queryTable(queryTableRequest: DatabaseDto.QueryTableRequest): Promise<Array<DatabaseVo.TableOptions>> {
-    const result = await this.databaseMapper.queryTable(queryTableRequest)
-    return result.map((item) => ({
-      ...item,
-      createTime: item.createTime,
-      updateTime: item.updateTime,
-      tableName: item.tableName,
-      tableType: item.tableType,
-      tableComment: item.tableComment,
-      engine: item.engine,
-      tableCollation: item.tableCollation
-    }))
+  public async getDataBaseTables(
+    queryOptions: DataBaseDto.GetDataBaseTablesOptions
+  ): Promise<Array<DatabaseVo.GetDataBaseTablesOptions>> {
+    const tableRecords = await this.databaseMapper.getDataBaseTables(queryOptions)
+    return tableRecords.map((tableRecord) => {
+      const dtoPayload = this.convertDaoToDtoTable(tableRecord)
+      const normalizedTableRecord = this.convertDtoToDaoTable(dtoPayload)
+      return {
+        ...normalizedTableRecord,
+        createTime: normalizedTableRecord.createTime,
+        updateTime: normalizedTableRecord.updateTime,
+        tableName: normalizedTableRecord.tableName,
+        tableType: normalizedTableRecord.tableType,
+        tableComment: normalizedTableRecord.tableComment,
+        engine: normalizedTableRecord.engine,
+        tableCollation: normalizedTableRecord.tableCollation
+      }
+    })
   }
 
   /**
    * @desc 查询当前数据库中表的列
-   * @param {DatabaseDto.TableColumnRequest} tableColumnRequest 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.TableColumnOption>>}
+   * @param {DataBaseDto.GetTableColumnsOptions} queryOptions 查询表请求参数
+   * @returns {Promise<Array<DatabaseVo.GetTableColumnsOptions>>}
    */
-  public async queryTableColumn(
-    tableColumnRequest: DatabaseDto.TableColumnRequest
-  ): Promise<Array<DatabaseVo.TableColumnOption>> {
-    const result = await this.databaseMapper.queryTableColumn(tableColumnRequest)
-    return result.map((item) => {
-      const columnTypeValue = item.columnType
+  public async getTableColumns(
+    queryOptions: DataBaseDto.GetTableColumnsOptions
+  ): Promise<Array<DatabaseVo.GetTableColumnsOptions>> {
+    const columnRecords = await this.databaseMapper.getTableColumns(queryOptions)
+    return columnRecords.map((columnRecord) => {
+      const dtoPayload = this.convertDaoToDtoColumn(columnRecord)
+      const normalizedColumnRecord = this.convertDtoToDaoColumn(dtoPayload)
+      const columnTypeValue = normalizedColumnRecord.columnType
       let columnType = ''
       if (NUMBER_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
         columnType = 'number'
@@ -111,11 +118,27 @@ export class DatabaseService {
         columnType = columnTypeValue
       }
       return {
-        columnName: item.columnName,
+        columnName: normalizedColumnRecord.columnName,
         columnType: columnType,
-        columnComment: item.columnComment,
-        displayName: item.columnComment
+        columnComment: normalizedColumnRecord.columnComment,
+        displayName: normalizedColumnRecord.columnComment
       }
     })
+  }
+
+  private convertDaoToDtoTable(tableRecord: DataBaseDao.TableOptions): DataBaseDto.TableDto {
+    return { ...tableRecord }
+  }
+
+  private convertDtoToDaoTable(tableData: DataBaseDto.TableDto): DataBaseDao.TableOptions {
+    return { ...tableData }
+  }
+
+  private convertDaoToDtoColumn(columnRecord: DataBaseDao.TableColumnOptions): DataBaseDto.TableColumnDto {
+    return { ...columnRecord }
+  }
+
+  private convertDtoToDaoColumn(columnData: DataBaseDto.TableColumnDto): DataBaseDao.TableColumnOptions {
+    return { ...columnData }
   }
 }

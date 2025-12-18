@@ -1,8 +1,8 @@
+import { SendEmailService } from '@/server/service/sendEmailService'
 import Joi from 'joi'
-import { ChartEmailService } from '../service/chartEmailService'
 
 // 发送邮件
-const chartEmailService = new ChartEmailService()
+const sendEmailService = new SendEmailService()
 
 const logger = new Logger({
   fileName: 'sendChartEmail',
@@ -10,7 +10,7 @@ const logger = new Logger({
 })
 
 // Joi 验证模式
-const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
+const sendChartEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
     to: Joi.string().email().required().messages({
       'string.email': '收件人邮箱格式不正确',
@@ -26,40 +26,33 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendChartEmailOptions>({
     })
   }).required(),
 
-  analyseOptions: Joi.object<SendEmailDto.AnalyseOptions>({
-    filename: Joi.string().min(1).max(100).required().messages({
+  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
+    filename: Joi.string().min(1).max(100).optional().messages({
       'string.min': '文件名不能为空',
-      'string.max': '文件名不能超过100个字符',
-      'any.required': '文件名不能为空'
+      'string.max': '文件名不能超过100个字符'
     }),
-    chartType: Joi.string().valid('line', 'bar', 'pie', 'table', 'interval').required().messages({
-      'any.only': '图表类型必须是 line、bar、pie、table 或 interval 之一',
-      'any.required': '图表类型不能为空'
+    chartType: Joi.string().valid('line', 'bar', 'pie', 'table', 'interval').optional().messages({
+      'any.only': '图表类型必须是 line、bar、pie、table 或 interval 之一'
     }),
-    analyseName: Joi.string().min(1).max(100).required().messages({
+    analyzeName: Joi.string().min(1).max(100).optional().messages({
       'string.min': '分析名称不能为空',
-      'string.max': '分析名称不能超过100个字符',
-      'any.required': '分析名称不能为空'
+      'string.max': '分析名称不能超过100个字符'
     }),
-    analyseId: Joi.number().integer().positive().required().messages({
+    analyzeId: Joi.number().integer().positive().required().messages({
       'number.base': '分析ID必须是数字',
       'number.integer': '分析ID必须是整数',
       'number.positive': '分析ID必须大于0',
       'any.required': '分析ID不能为空'
     })
-  })
-    .required()
-    .messages({
-      'any.required': '图表数据不能为空'
-    })
+  }).required()
 })
 
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOptions>>>(async (event) => {
   try {
-    const requestBody = await readBody<SendEmailDto.SendChartEmailOptions>(event)
+    const requestBody = await readBody<SendEmailDto.SendEmailOptions>(event)
 
     // 使用 Joi 进行数据验证
-    const { error, value: validatedData } = sendChartEmailSchema.validate(requestBody, {
+    const { error } = sendChartEmailSchema.validate(requestBody, {
       abortEarly: false, // 返回所有验证错误
       stripUnknown: true, // 移除未知字段
       convert: true // 自动类型转换
@@ -71,7 +64,7 @@ export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOpti
       return ApiResponse.error(errorMessage)
     }
 
-    const sendEmailResult = await chartEmailService.sendChartEmail(requestBody)
+    const sendEmailResult = await sendEmailService.sendMail(requestBody)
 
     return ApiResponse.success(sendEmailResult)
   } catch (error: any) {

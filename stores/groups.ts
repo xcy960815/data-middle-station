@@ -47,8 +47,8 @@ export const useGroupsStore = defineStore<
      * @param group {GroupOption}
      * @returns {void}
      */
-    updateGroup(group) {
-      const index = this.groups.findIndex((item) => item.columnName === group.columnName)
+    updateGroup(group: GroupStore.GroupOption) {
+      const index = this.groups.findIndex((item: GroupStore.GroupOption) => item.columnName === group.columnName)
       if (index !== -1) {
         this.groups[index] = group
       }
