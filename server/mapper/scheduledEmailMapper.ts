@@ -265,26 +265,31 @@ export class ScheduledEmailMapper extends BaseMapper {
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getScheduledEmailTaskList(
-    params: ScheduledEmailDao.ScheduledEmailListOptions
+    scheduledEmailListQuery: ScheduledEmailDao.ScheduledEmailListOptions
   ): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
-    const { whereConditions, whereValues } = this.buildTaskQueryConditions(params, { allowEmpty: true })
+    const { whereConditions, whereValues } = this.buildTaskQueryConditions(scheduledEmailListQuery, {
+      allowEmpty: true
+    })
 
-    if (params.keyword) {
+    if (scheduledEmailListQuery.keyword) {
       whereConditions.push('(task_name LIKE ? OR remark LIKE ?)')
-      whereValues.push(`%${params.keyword}%`, `%${params.keyword}%`)
+      whereValues.push(`%${scheduledEmailListQuery.keyword}%`, `%${scheduledEmailListQuery.keyword}%`)
     }
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : ''
-    const limit = typeof params.limit === 'number' ? params.limit : 100
-    const offset = typeof params.offset === 'number' ? params.offset : 0
+    const limit = typeof scheduledEmailListQuery.limit === 'number' ? scheduledEmailListQuery.limit : 100
+    const offset = typeof scheduledEmailListQuery.offset === 'number' ? scheduledEmailListQuery.offset : 0
 
     const orderByMap: Record<string, string> = {
       created_time: 'created_time',
       schedule_time: 'schedule_time',
       updated_time: 'updated_time'
     }
-    const orderByColumn = params.orderBy && orderByMap[params.orderBy] ? orderByMap[params.orderBy] : 'created_time'
-    const orderDirection = params.orderDirection === 'asc' ? 'ASC' : 'DESC'
+    const orderByColumn =
+      scheduledEmailListQuery.orderBy && orderByMap[scheduledEmailListQuery.orderBy]
+        ? orderByMap[scheduledEmailListQuery.orderBy]
+        : 'created_time'
+    const orderDirection = scheduledEmailListQuery.orderDirection === 'asc' ? 'ASC' : 'DESC'
 
     const sql = `
       SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
@@ -352,8 +357,14 @@ export class ScheduledEmailMapper extends BaseMapper {
     return this.exe<ScheduledEmailDao.ScheduledEmailOptions[]>(sql)
   }
 
+  /**
+   * 构建定时邮件任务查询条件
+   * @param scheduledEmailQueryOptions
+   * @param options 选项
+   * @returns 查询条件
+   */
   private buildTaskQueryConditions(
-    query: ScheduledEmailDao.ScheduledEmailQueryOptions,
+    scheduledEmailQueryOptions: ScheduledEmailDao.ScheduledEmailQueryOptions,
     options?: { allowEmpty?: boolean }
   ): {
     whereConditions: string[]
@@ -376,65 +387,65 @@ export class ScheduledEmailMapper extends BaseMapper {
       }
     }
 
-    appendNumberCondition('id', query.id)
-    appendStringCondition('task_name', query.taskName)
+    appendNumberCondition('id', scheduledEmailQueryOptions.id)
+    appendStringCondition('task_name', scheduledEmailQueryOptions.taskName)
 
-    if (query.status) {
+    if (scheduledEmailQueryOptions.status) {
       whereConditions.push('status = ?')
-      whereValues.push(query.status)
+      whereValues.push(scheduledEmailQueryOptions.status)
     }
 
-    if (query.taskType) {
+    if (scheduledEmailQueryOptions.taskType) {
       whereConditions.push('task_type = ?')
-      whereValues.push(query.taskType)
+      whereValues.push(scheduledEmailQueryOptions.taskType)
     }
 
-    if (typeof query.isActive === 'boolean') {
+    if (typeof scheduledEmailQueryOptions.isActive === 'boolean') {
       whereConditions.push('is_active = ?')
-      whereValues.push(query.isActive ? 1 : 0)
+      whereValues.push(scheduledEmailQueryOptions.isActive ? 1 : 0)
     }
 
-    appendStringCondition('created_by', query.createdBy)
-    appendStringCondition('updated_by', query.updatedBy)
+    appendStringCondition('created_by', scheduledEmailQueryOptions.createdBy)
+    appendStringCondition('updated_by', scheduledEmailQueryOptions.updatedBy)
 
-    if (typeof query.minRetryCount === 'number') {
+    if (typeof scheduledEmailQueryOptions.minRetryCount === 'number') {
       whereConditions.push('retry_count >= ?')
-      whereValues.push(query.minRetryCount)
+      whereValues.push(scheduledEmailQueryOptions.minRetryCount)
     }
 
-    if (typeof query.maxRetryCount === 'number') {
+    if (typeof scheduledEmailQueryOptions.maxRetryCount === 'number') {
       whereConditions.push('retry_count <= ?')
-      whereValues.push(query.maxRetryCount)
+      whereValues.push(scheduledEmailQueryOptions.maxRetryCount)
     }
 
-    if (typeof query.maxRetries === 'number') {
+    if (typeof scheduledEmailQueryOptions.maxRetries === 'number') {
       whereConditions.push('max_retries = ?')
-      whereValues.push(query.maxRetries)
+      whereValues.push(scheduledEmailQueryOptions.maxRetries)
     }
 
-    if (query.remarkKeyword && query.remarkKeyword.trim() !== '') {
+    if (scheduledEmailQueryOptions.remarkKeyword && scheduledEmailQueryOptions.remarkKeyword.trim() !== '') {
       whereConditions.push('remark LIKE ?')
-      whereValues.push(`%${query.remarkKeyword.trim()}%`)
+      whereValues.push(`%${scheduledEmailQueryOptions.remarkKeyword.trim()}%`)
     }
 
-    if (query.scheduleTimeStart) {
+    if (scheduledEmailQueryOptions.scheduleTimeStart) {
       whereConditions.push('schedule_time >= ?')
-      whereValues.push(query.scheduleTimeStart)
+      whereValues.push(scheduledEmailQueryOptions.scheduleTimeStart)
     }
 
-    if (query.scheduleTimeEnd) {
+    if (scheduledEmailQueryOptions.scheduleTimeEnd) {
       whereConditions.push('schedule_time <= ?')
-      whereValues.push(query.scheduleTimeEnd)
+      whereValues.push(scheduledEmailQueryOptions.scheduleTimeEnd)
     }
 
-    if (query.nextExecutionTimeStart) {
+    if (scheduledEmailQueryOptions.nextExecutionTimeStart) {
       whereConditions.push('next_execution_time >= ?')
-      whereValues.push(query.nextExecutionTimeStart)
+      whereValues.push(scheduledEmailQueryOptions.nextExecutionTimeStart)
     }
 
-    if (query.nextExecutionTimeEnd) {
+    if (scheduledEmailQueryOptions.nextExecutionTimeEnd) {
       whereConditions.push('next_execution_time <= ?')
-      whereValues.push(query.nextExecutionTimeEnd)
+      whereValues.push(scheduledEmailQueryOptions.nextExecutionTimeEnd)
     }
 
     if (!options?.allowEmpty && whereConditions.length === 0) {
