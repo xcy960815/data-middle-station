@@ -21,11 +21,11 @@
 
 <script setup lang="ts">
 import { ElButton, ElMessage, ElMessageBox, ElTag } from 'element-plus'
-import { getAnalyzeDataHandler } from '../../getAnalyzeData'
 import { updateAnalyzeHandler } from '../../updateAnalyze'
+import { useAnalyzeDataHandler } from '../../useAnalyzeDataHandler'
 import SendEmailDtoDialog from './components/send-email-dialog.vue'
-const { queryAnalyzeData } = getAnalyzeDataHandler()
 const { handleUpdateAnalyze } = updateAnalyzeHandler()
+const { getAnalyzeData } = useAnalyzeDataHandler()
 const analyzeStore = useAnalyzeStore()
 const chartConfigStore = useChartConfigStore()
 const { handleDownload } = useChartDownload()
@@ -65,8 +65,8 @@ onUnmounted(() => {
  * @desc 点刷新按钮
  * @returns void
  */
-const handleClickRefresh = () => {
-  queryAnalyzeData()
+const handleClickRefresh = async () => {
+  getAnalyzeData()
 }
 /**
  * @desc 点报警按钮

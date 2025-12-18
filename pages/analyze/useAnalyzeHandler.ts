@@ -1,22 +1,28 @@
 import { httpRequest } from '@/composables/useHttpRequest'
+import { ElMessage } from 'element-plus'
 
 /**
  * @desc 获取图表配置 handler
  */
-export const getAnalyzeHandler = () => {
+export const useAnalyzeHandler = () => {
   const analyzeStore = useAnalyzeStore()
   const columnStore = useColumnsStore()
   const dimensionStore = useDimensionsStore()
   const filterStore = useFiltersStore()
   const groupStore = useGroupsStore()
   const orderStore = useOrdersStore()
+  const chartConfigStore = useChartConfigStore()
+
   /**
    * @desc 获取图表配置
    */
   const getAnalyze = async () => {
     const router = useRouter()
     const id = router.currentRoute.value.query.id
-    if (!id) return
+    if (!id) {
+      ElMessage.error('图表id不能为空')
+      return
+    }
 
     const result = await httpRequest<ApiResponseI<AnalyzeVo.GetAnalyzeOptions>>('/api/getAnalyze', {
       method: 'post',
@@ -43,17 +49,15 @@ export const getAnalyzeHandler = () => {
       groupStore.setGroups((chartConfig?.groups as GroupStore.GroupOption[]) || [])
       orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
       // 设置公共配置与图表配置
-      useChartConfigStore().setCommonChartConfig(
-        chartConfig?.commonChartConfig || useChartConfigStore().$state.commonChartConfig
-      )
-      useChartConfigStore().setPrivateChartConfig(
-        chartConfig?.privateChartConfig || useChartConfigStore().$state.privateChartConfig
+      chartConfigStore.setCommonChartConfig(chartConfig?.commonChartConfig || chartConfigStore.$state.commonChartConfig)
+      chartConfigStore.setPrivateChartConfig(
+        chartConfig?.privateChartConfig || chartConfigStore.$state.privateChartConfig
       )
       columnStore.setDataSource(chartConfig?.dataSource || '')
     }
   }
 
-  onMounted(() => {
-    getAnalyze()
-  })
+  return {
+    getAnalyze
+  }
 }
