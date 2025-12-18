@@ -1,6 +1,8 @@
 import { ElMessage } from 'element-plus'
 
-/** */
+/**
+ * @desc 更新分析 handler
+ */
 export const updateAnalyzeHandler = () => {
   const chartConfigStore = useChartConfigStore()
   const analyzeStore = useAnalyzeStore()

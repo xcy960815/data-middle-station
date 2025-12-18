@@ -1,4 +1,5 @@
 import { ChartSnapshotService } from '@/server/service/chartSnapshotService'
+import chalk from 'chalk'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import weekday from 'dayjs/plugin/weekday.js'
@@ -124,7 +125,7 @@ export class SendEmailService {
       envelope: sendResult.envelope
     })
 
-    logger.info(`邮件已发送，messageId=${sendResult.messageId}，收件人=${sendOptions.emailConfig.to}`)
+    logger.info(`邮件已发送，messageId=${sendResult.messageId}，收件人=${chalk.cyan(sendOptions.emailConfig.to)}`)
 
     return {
       messageId: sendResultData.messageId,
