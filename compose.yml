@@ -7,7 +7,7 @@ services:
   # Nuxt3 应用服务
   nuxt3:
     image: xcy960815/data-middle-station:${IMAGE_VERSION:-latest}
-    container_name: dms-container
+    container_name: dms-app
     ports:
       - '${NUXT_PORT}:12583'
     volumes:
@@ -24,13 +24,8 @@ services:
   # Redis 缓存服务
   redis:
     image: redis:7.2.5
-    container_name: dms-redis-container
-    command:
-      - redis-server
-      - --bind
-      - 0.0.0.0
-      - --requirepass
-      - '${REDIS_PASSWORD}'
+    container_name: dms-redis
+    command: ["redis-server", "--bind", "0.0.0.0", "--requirepass", "${REDIS_PASSWORD}"]
     ports:
       - '${REDIS_PORT}:6379'
     networks:
@@ -46,10 +41,11 @@ services:
   # 主数据库 MySQL（应用数据）
   mysql-main:
     image: mysql:8.4.2
-    container_name: dms-mysql-container
+    container_name: dms-mysql-main
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - TZ=Asia/Shanghai
     command:
       [
         '--bind-address=0.0.0.0',
@@ -67,8 +63,7 @@ services:
       - dms-network
     restart: always
     healthcheck:
-      test:
-        ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${MYSQL_ROOT_PASSWORD}']
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${MYSQL_ROOT_PASSWORD}']
       timeout: 20s
       retries: 10
       interval: 5s
@@ -77,10 +72,11 @@ services:
   # 看板数据 MySQL（业务数据）
   mysql-data:
     image: mysql:8.4.2
-    container_name: dms-data-mysql-container
+    container_name: dms-mysql-data
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATA_DATABASE}
+      - TZ=Asia/Shanghai
     command:
       [
         '--bind-address=0.0.0.0',
@@ -98,8 +94,7 @@ services:
       - dms-network
     restart: always
     healthcheck:
-      test:
-        ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${MYSQL_ROOT_PASSWORD}']
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${MYSQL_ROOT_PASSWORD}']
       timeout: 20s
       retries: 10
       interval: 5s
@@ -117,12 +112,3 @@ volumes:
   mysql-data-data:
     name: dms-mysql-data-data
     driver: local
-
-# 启动所有服务
-# docker-compose up -d --remove-orphans
-
-# 停止所有服务
-# docker-compose down
-
-# 只启动数据库服务
-# docker-compose up -d mysql-main mysql-data redis
