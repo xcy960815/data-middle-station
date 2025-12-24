@@ -55,6 +55,47 @@ service firewall restart
 
 ## 结论
 
-- **根因**: istoreOS/OpenWrt 默认防火墙未允许自定义 Docker bridge (`br-4e4eb4db3fbd`, `172.18.0.0/16`) 出口访问 465，且缺少 NAT，导致容器到外网 SMTPS 流量被拒绝
-- **修复方案**: 针对该 bridge 接口添加 FORWARD 放行与 MASQUERADE 规则，并持久化到 `/etc/firewall.user`
-- **修复结果**: 恢复 `docker-compose` 的 bridge 网络模式，容器发送邮件与主机一致，不再需要 `--network=host`
+- **根因**: istoreOS/OpenWrt 默认防火墙未允许自定义 Docker bridge 出口访问 465，且缺少 NAT。由于 Docker Compose 重新启动时会重新创建网络，导致网桥 ID（如 `br-xxxx`）和子网发生变化，硬编码的防火墙规则会失效。
+- **修复方案**: 针对该 bridge 接口添加 FORWARD 放行与 MASQUERADE 规则，并使用动态脚本自动识别当前容器使用的网桥和子网，持久化到 `/etc/firewall.user`。
+- **修复结果**: 容器发送邮件恢复正常，且在 `docker-compose` 重启或网络重建后规则能自动重新应用。
+
+## 动态修复脚本 (`/etc/firewall.user`)
+
+```bash
+# --- Docker dms-network 动态放行脚本 ---
+
+# 尝试通过标签获取网络名称（兼容 Compose 自动生成的名称）
+NETWORK_NAME=$(docker network ls --filter label=com.docker.compose.network=dms-network --format "{{.Name}}" | head -n 1)
+
+# 如果没找到，尝试默认名称
+if [ -z "$NETWORK_NAME" ]; then
+    NETWORK_NAME="dms-network"
+fi
+
+# 动态获取网桥名和子网
+DMS_ID=$(docker network inspect $NETWORK_NAME -f '{{.Id}}' 2>/dev/null | cut -c1-12)
+if [ -n "$DMS_ID" ]; then
+    DMS_BRIDGE="br-$DMS_ID"
+    DMS_SUBNET=$(docker network inspect $NETWORK_NAME -f '{{(index .IPAM.Config 0).Subnet}}' 2>/dev/null)
+    WAN_INTERFACE=$(uci get network.wan.device 2>/dev/null || echo "eth0")
+
+    # 清理旧规则（防止重复叠加）
+    iptables -D FORWARD -i $DMS_BRIDGE -p tcp --dport 465 -j ACCEPT 2>/dev/null
+    iptables -D FORWARD -o $WAN_INTERFACE -p tcp --sport 465 -j ACCEPT 2>/dev/null
+    iptables -t nat -D POSTROUTING -s $DMS_SUBNET -o $WAN_INTERFACE -j MASQUERADE 2>/dev/null
+
+    # 重新插入规则
+    iptables -I FORWARD 1 -i $DMS_BRIDGE -p tcp --dport 465 -j ACCEPT
+    iptables -I FORWARD 1 -o $WAN_INTERFACE -p tcp --sport 465 -j ACCEPT
+    iptables -t nat -I POSTROUTING 1 -s $DMS_SUBNET -o $WAN_INTERFACE -j MASQUERADE
+
+    echo "DMS Firewall rules applied: $DMS_BRIDGE ($DMS_SUBNET) -> $WAN_INTERFACE"
+fi
+```
+
+## 验证结果
+
+执行 `docker exec dms-app nc -vz 220.197.33.215 465`：
+
+- 结果：`220.197.33.215 (220.197.33.215:465) open`
+- 状态：**已修复**
