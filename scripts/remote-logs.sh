@@ -20,10 +20,10 @@ read -p "Select service [1-5] (default: 1): " choice
 choice=${choice:-1}
 
 case $choice in
-    1) CONTAINER="dms-container" ;;
-    2) CONTAINER="dms-mysql-container" ;;
-    3) CONTAINER="dms-data-mysql-container" ;;
-    4) CONTAINER="dms-redis-container" ;;
+    1) CONTAINER="dms-app" ;;
+    2) CONTAINER="dms-mysql-main" ;;
+    3) CONTAINER="dms-mysql-data" ;;
+    4) CONTAINER="dms-redis" ;;
     5) CONTAINER="" ;;
     *) echo "Invalid choice"; exit 1 ;;
 esac

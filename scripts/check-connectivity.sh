@@ -10,7 +10,7 @@ HOST="100.109.41.26"
 USER="root"
 TARGET_IP="220.197.33.205"
 TARGET_PORT="465"
-CONTAINER_NAME="dms-container"
+CONTAINER_NAME="dms-app"
 
 # 如果没有设置环境变量 SSH_PASS，则交互式询问
 if [ -z "$SSH_PASS" ]; then
