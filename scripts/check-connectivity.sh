@@ -30,7 +30,8 @@ REMOTE_COMMAND=$(cat <<EOF
     fi
 
     echo "Testing connection from inside the container..."
-    if docker exec $CONTAINER_NAME bash -c "timeout 5 bash -c 'cat < /dev/tcp/$TARGET_IP/$TARGET_PORT' > /dev/null 2>&1"; then
+    # 使用 Node.js 进行 TCP 连接测试，因为 Alpine 镜像没有 bash 的 /dev/tcp 功能
+    if docker exec $CONTAINER_NAME node -e "const net = require('net'); const client = net.createConnection({host: '$TARGET_IP', port: $TARGET_PORT, timeout: 5000}, () => { console.log('Connected'); client.end(); process.exit(0); }); client.on('error', (err) => { console.error(err.message); process.exit(1); }); client.on('timeout', () => { console.error('Timeout'); process.exit(1); });" > /dev/null 2>&1; then
         echo "✅ SUCCESS: Container can reach $TARGET_IP:$TARGET_PORT"
     else
         echo "❌ FAILED: Container cannot reach $TARGET_IP:$TARGET_PORT"
