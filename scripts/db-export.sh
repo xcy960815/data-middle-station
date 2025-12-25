@@ -45,11 +45,11 @@ export_db() {
 }
 
 case $choice in
-    1) export_db "dms-mysql-container" "dms_db" ;;
-    2) export_db "dms-data-mysql-container" "dms_data_db" ;;
+    1) export_db "dms-mysql-main" "dms_db" ;;
+    2) export_db "dms-mysql-data" "dms_data_db" ;;
     3)
-        export_db "dms-mysql-container" "dms_db"
-        export_db "dms-data-mysql-container" "dms_data_db"
+        export_db "dms-mysql-main" "dms_db"
+        export_db "dms-mysql-data" "dms_data_db"
         ;;
     *) echo "Invalid choice"; exit 1 ;;
 esac
