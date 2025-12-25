@@ -8,8 +8,14 @@
 
 HOST="100.109.41.26"
 USER="root"
-PASSWORD="xuchongyu87v5"
+# PASSWORD 建议通过环境变量设置，或者运行脚本时手动输入
 NETWORK_NAME="dms-network"
+
+# 如果没有设置环境变量 SSH_PASS，则交互式询问
+if [ -z "$SSH_PASS" ]; then
+    read -sp "Enter password for $USER@$HOST: " SSH_PASS
+    echo ""
+fi
 
 echo "Connecting to $HOST to fix Docker network issues..."
 
@@ -47,8 +53,8 @@ EOF
 # 注意：这里假设你本地环境支持 sshpass，或者已经配置了 SSH 免密登录
 # 如果没有 sshpass，建议配置 SSH Key 免密登录，安全性更高
 if command -v sshpass &> /dev/null; then
-    sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no $USER@$HOST "$REMOTE_COMMANDS"
+    sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $USER@$HOST "$REMOTE_COMMANDS"
 else
-    echo "Warning: 'sshpass' not found. Trying standard ssh (you might need to enter password manually)..."
+    echo "Warning: 'sshpass' not found. Trying standard ssh..."
     ssh -o StrictHostKeyChecking=no $USER@$HOST "$REMOTE_COMMANDS"
 fi

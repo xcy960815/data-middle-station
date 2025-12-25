@@ -8,7 +8,14 @@
 
 HOST="100.109.41.26"
 USER="root"
-PASSWORD="xuchongyu87v5"
+NETWORK_NAME="dms-network"
+
+# 如果没有设置环境变量 SSH_PASS，则交互式询问
+if [ -z "$SSH_PASS" ]; then
+    read -sp "Enter password for $USER@$HOST: " SSH_PASS
+    echo ""
+fi
+
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="./sql/backups"
 
@@ -28,7 +35,7 @@ export_db() {
     local filename="${db_name}_${DATE}.sql"
 
     echo "Exporting $db_name from $container..."
-    ssh $USER@$HOST "docker exec $container mysqldump -u root -p$PASSWORD $db_name" > "$BACKUP_DIR/$filename"
+    sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $USER@$HOST "docker exec $container mysqldump -u root -p$SSH_PASS $db_name" > "$BACKUP_DIR/$filename"
 
     if [ $? -eq 0 ]; then
         echo "✅ Success: $BACKUP_DIR/$filename"
