@@ -7,7 +7,7 @@ services:
   # Nuxt3 应用服务
   nuxt3:
     image: xcy960815/data-middle-station:${IMAGE_VERSION:-latest}
-    container_name: dms-app
+    container_name: dms-app-container
     ports:
       - '${NUXT_PORT}:12583'
     volumes:
@@ -24,7 +24,7 @@ services:
   # Redis 缓存服务
   redis:
     image: redis:7.2.5
-    container_name: dms-redis
+    container_name: dms-redis-container
     command: ["redis-server", "--bind", "0.0.0.0", "--requirepass", "${REDIS_PASSWORD}"]
     ports:
       - '${REDIS_PORT}:6379'
@@ -41,7 +41,7 @@ services:
   # 主数据库 MySQL（应用数据）
   mysql-main:
     image: mysql:8.4.2
-    container_name: dms-mysql-main
+    container_name: dms-mysql-main-container
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -72,7 +72,7 @@ services:
   # 看板数据 MySQL（业务数据）
   mysql-data:
     image: mysql:8.4.2
-    container_name: dms-mysql-data
+    container_name: dms-mysql-data-container
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATA_DATABASE}
