@@ -359,12 +359,18 @@ const drawNormalCell = (
     group: bodyGroup
   })
   if (columnOption.editable) {
-    cellRect.on('click', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+    cellRect.on('dblclick', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
       cellEditorRef.value?.openEditor(
         event,
         columnOption.editType!,
         row[columnOption.columnName] as string | number,
-        columnOption.editOptions
+        columnOption.editOptions,
+        {
+          align: columnOption.align ?? 'left',
+          fontSize: staticParams.bodyFontSize,
+          fontFamily: staticParams.bodyFontFamily,
+          padding: staticParams.textPaddingHorizontal
+        }
       )
     })
   }
