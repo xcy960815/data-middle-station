@@ -14,6 +14,7 @@
         v-if="editDown.editType === 'input'"
         ref="inputRef"
         v-model="editDown.initialValue"
+        :input-style="{ textAlign: editDown.styleOptions?.align || 'left' }"
         @change="handleSaveEditorValue"
         @keydown.stop
       />
@@ -68,6 +69,13 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { stageVars } from '../stage-handler'
 
+interface EditorStyleOptions {
+  align: 'left' | 'center' | 'right'
+  fontSize: number
+  fontFamily: string
+  padding: number
+}
+
 interface EditDown {
   visible: boolean
   x: number
@@ -78,6 +86,7 @@ interface EditDown {
   editOptions?: EditOptions[]
   initialValue: string | number
   originalValue: string | number
+  styleOptions?: EditorStyleOptions
 }
 
 interface EditOptions {
@@ -104,18 +113,21 @@ const editDown = reactive<EditDown>({
 
 // 计算编辑器样式
 const editorStyle = computed(() => {
+  const { fontSize, fontFamily } = editDown.styleOptions || {}
   return {
     position: 'fixed' as const,
-    left: `${editDown.x + 1}px`,
-    top: `${editDown.y + 1}px`,
-    width: `${editDown.width - 3}px`,
-    height: `${editDown.height - 2}px`,
+    left: `${editDown.x}px`, // 移除偏移，完全覆盖
+    top: `${editDown.y}px`,
+    width: `${editDown.width + 1}px`, // 稍微宽一点覆盖边框
+    height: `${editDown.height + 1}px`,
     zIndex: 999999,
     background: '#fff',
     padding: 0,
     margin: 0,
     boxSizing: 'border-box' as const,
-    overflow: 'hidden'
+    overflow: 'hidden',
+    fontSize: fontSize ? `${fontSize}px` : undefined,
+    fontFamily: fontFamily
   }
 })
 
@@ -125,12 +137,14 @@ const editorStyle = computed(() => {
  * @param {string} editType 编辑类型
  * @param {string | number} initialValue 初始值
  * @param {EditOptions[]} editOptions 编辑选项
+ * @param {EditorStyleOptions} styleOptions 样式选项
  */
 const openEditor = (
   evt: KonvaEventObject<MouseEvent, Konva.Rect>,
   editType: 'input' | 'select' | 'date' | 'datetime',
   initialValue: AnalyzeDataVo.AnalyzeData[keyof AnalyzeDataVo.AnalyzeData],
-  editOptions?: EditOptions[]
+  editOptions?: EditOptions[],
+  styleOptions?: EditorStyleOptions
 ) => {
   const target = evt.target
   // 假设 rect 是 Konva.Rect 实例
@@ -153,6 +167,7 @@ const openEditor = (
     editDown.y = absoluteY
     editDown.editType = editType
     editDown.editOptions = editOptions
+    editDown.styleOptions = styleOptions
     const safeValue = (initialValue ?? '') as string | number
     editDown.initialValue = safeValue
     editDown.originalValue = safeValue
@@ -164,10 +179,13 @@ const openEditor = (
           inputRef.value?.focus()
           break
         case 'select':
+          selectRef.value?.focus()
           break
         case 'date':
+          ;(dateRef.value as any)?.focus()
           break
         case 'datetime':
+          ;(datetimeRef.value as any)?.focus()
           break
       }
     })
@@ -198,8 +216,8 @@ const closeEditor = () => {
  * 更新编辑器位置（用于表格内部滚动）
  */
 const updatePositions = () => {
-  // 本次开发先隐藏掉
-  if (editDown.visible && editorRef.value) {
+  // 滚动时直接关闭编辑器，因为虚拟滚动会导致单元格位置不可靠
+  if (editDown.visible) {
     editDown.visible = false
   }
 }
@@ -228,8 +246,7 @@ const onGlobalMousedown = (mouseEvent: MouseEvent) => {
  * 初始化事件监听器
  */
 const initListeners = () => {
-  window.addEventListener('scroll', updatePositions)
-  document.addEventListener('scroll', updatePositions)
+  window.addEventListener('scroll', updatePositions, true) // 捕获阶段，确保能监听到所有滚动
   document.addEventListener('mousedown', onGlobalMousedown, true)
 }
 
@@ -237,8 +254,7 @@ const initListeners = () => {
  * 清理事件监听器
  */
 const cleanupListeners = () => {
-  window.removeEventListener('scroll', updatePositions)
-  document.removeEventListener('scroll', updatePositions)
+  window.removeEventListener('scroll', updatePositions, true)
   document.removeEventListener('mousedown', onGlobalMousedown, true)
 }
 
@@ -271,7 +287,7 @@ defineExpose({
       box-shadow: none;
       background: transparent;
       border-radius: 0;
-      padding: 0 8px;
+      padding: 0 8px; // 保持与 Canvas 渲染一致的 padding
       line-height: 1;
       display: flex;
       align-items: center;
@@ -288,7 +304,8 @@ defineExpose({
       height: 100%;
       border: none;
       padding: 0;
-      font-size: 14px;
+      font-size: inherit; // 继承父级字体大小
+      font-family: inherit; // 继承父级字体
       line-height: 1;
 
       &:hover,
@@ -311,6 +328,7 @@ defineExpose({
       padding-top: 0;
       padding-bottom: 0;
       border-radius: 0;
+      min-height: 100%; // 确保高度充满
     }
   }
 
@@ -342,7 +360,8 @@ defineExpose({
       height: 100%;
       border: none;
       padding: 0;
-      font-size: 14px;
+      font-size: inherit;
+      font-family: inherit;
       line-height: 1;
 
       &:hover,
