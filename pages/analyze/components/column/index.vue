@@ -16,6 +16,7 @@
         @mousedown.stop
       >
         <icon-park
+          :title="column.columnType"
           class="mx-1"
           v-if="columnIconName(column)"
           :type="columnIconName(column)"
@@ -62,16 +63,16 @@ const DATE_ICON_NAME = 'calendar-thirty'
 // 字符串图标
 const STRING_ICON_NAME = 'text'
 
-const columnDisplayNames = (column: ColumnsStore.ColumnOption) => {
+const columnDisplayNames = (column: ColumnsStore.ColumnOptions) => {
   return column.displayName || column.columnName
 }
 
 /**
  * @desc 列类名
- * @param column {ColumnsStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOptions} 列选项
  * @returns {string} 类名
  */
-const columnClasses = computed(() => (column: ColumnsStore.ColumnOption) => {
+const columnClasses = computed(() => (column: ColumnsStore.ColumnOptions) => {
   const dimensionSelected = useDimensionsStore().getDimensions.find(
     (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
@@ -87,19 +88,34 @@ const columnClasses = computed(() => (column: ColumnsStore.ColumnOption) => {
 
 /**
  * @desc 根据列类型返回对应的图标名称
- * @param column {ColumnsStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOptions} 列选项
  * @returns {string} 图标名称
  */
-const columnIconName = computed(() => (column: ColumnsStore.ColumnOption) => {
+const columnIconName = computed(() => (column: ColumnsStore.ColumnOptions) => {
   const { columnType } = column
-  if (columnType === 'number') {
+  const NumberTypes = [
+    'tinyint',
+    'smallint',
+    'mediumint',
+    'int',
+    'bigint',
+    'decimal',
+    'float',
+    'double',
+    'real',
+    'bit',
+    'boolean',
+    'serial'
+  ]
+
+  const DateTypes = ['date', 'datetime', 'timestamp', 'time', 'year', 'datetime2', 'datetimeoffset', 'smalldatetime']
+
+  if (NumberTypes.includes(columnType)) {
     return NUMBER_ICON_NAME
-  } else if (columnType === 'date') {
+  } else if (DateTypes.includes(columnType)) {
     return DATE_ICON_NAME
-  } else if (columnType === 'string') {
-    return STRING_ICON_NAME
   } else {
-    return ''
+    return STRING_ICON_NAME
   }
 })
 
@@ -121,17 +137,17 @@ const columnList = computed(() => {
 /**
  * @desc 当前选中的列
  */
-const currentColumn = ref<ColumnsStore.ColumnOption>()
+const currentColumn = ref<ColumnsStore.ColumnOptions>()
 
 const contextmenu = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 /**
  * @desc 拖拽开始事件
- * @param column {ColumnsStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOptions} 列选项
  * @param index {number} 列索引
  * @param event {DragEvent} 拖拽事件
  */
-const dragstartHandler = (column: ColumnsStore.ColumnOption, index: number, event: DragEvent) => {
+const dragstartHandler = (column: ColumnsStore.ColumnOptions, index: number, event: DragEvent) => {
   if (!event.dataTransfer) return
   event.dataTransfer.setData(
     'text/plain',
@@ -201,9 +217,9 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const columnIndex = columnStore.getColumns.findIndex(
-    (column: ColumnsStore.ColumnOption) => column.columnName === data.value.columnName
+    (column: ColumnsStore.ColumnOptions) => column.columnName === data.value.columnName
   )
 
   switch (data.from) {
@@ -241,9 +257,11 @@ const dropHandler = (dragEvent: DragEvent) => {
 
 /**
  * @desc 右键点击事件
- * @param column {ColumnsStore.ColumnOption} 列选项
+ * @param column {ColumnsStore.ColumnOptions} 列选项
+ * @param event {MouseEvent} 鼠标事件
+ * @returns {void}
  */
-const contextmenuHandler = (column: ColumnsStore.ColumnOption, event: MouseEvent) => {
+const contextmenuHandler = (column: ColumnsStore.ColumnOptions, event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
   currentColumn.value = column
@@ -335,8 +353,9 @@ watch(
  * @returns {Promise<void>}
  */
 const queryTableColumn = async (tableName: string) => {
-  const result = await httpRequest<ApiResponseI<DatabaseVo.GetTableColumnsOptions[]>>('/api/queryTableColumn', {
-    params: {
+  const result = await httpRequest<ApiResponseI<DatabaseVo.GetTableColumnsOptions[]>>('/api/getTableColumns', {
+    method: 'POST',
+    body: {
       tableName
     }
   })

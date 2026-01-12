@@ -11,7 +11,7 @@
         @click="clearAll('dimensions')"
       />
     </div>
-    <div class="dimension__content flex-1">
+    <div class="dimension__content flex-1" @contextmenu.prevent="handleContextMenu">
       <div
         data-action="drag"
         class="dimension__item my-1"
@@ -35,12 +35,59 @@
         </selector-dimension>
       </div>
     </div>
+    <context-menu ref="contextmenuRef">
+      <context-menu-item @click="handleCreateCustomColumn">创建自定义列</context-menu-item>
+    </context-menu>
+
+    <!-- 自定义列弹窗 -->
+    <el-dialog v-model="customColumnDialogVisible" title="创建自定义列" width="800px" append-to-body>
+      <div class="flex h-[400px] border border-gray-200 overflow-hidden">
+        <div class="flex-1 h-full border-r border-gray-200 min-w-0">
+          <monaco-editor
+            v-model="customColumnSql"
+            language="sql"
+            height="100%"
+            width="100%"
+            :databaseOptions="databaseOptions"
+            :customKeywords="customKeywords"
+          />
+        </div>
+        <!-- 右侧字段列表 -->
+        <div class="w-[200px] h-full overflow-y-auto bg-gray-50">
+          <div class="p-2 text-sm font-bold border-b border-gray-200">可用字段</div>
+          <div class="p-2">
+            <div
+              v-for="col in columnStore.getColumns"
+              :key="col.columnName"
+              class="mb-2 text-xs cursor-pointer hover:bg-gray-200 p-1 rounded"
+              @click="insertColumnToEditor(col.columnName)"
+            >
+              <div class="font-medium text-gray-700">{{ col.displayName }}</div>
+              <div class="flex items-center justify-between text-gray-500 mt-1">
+                <span>{{ col.columnName }}</span>
+                <span class="bg-gray-200 px-1 rounded scale-90 origin-right">{{ getColumnType(col) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="customColumnDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleConfirmCustomColumn">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
+import ContextMenu from '../../../../components/context-menu/index.vue'
 import { clearAllHandler } from '../clearAll'
+
+const MonacoEditor = defineAsyncComponent(() => import('../../../../components/monaco-editor/index.vue'))
+
 const { clearAll, hasClearAll } = clearAllHandler()
 
 // 初始化数据
@@ -49,7 +96,7 @@ const dimensionStore = useDimensionsStore()
 const groupStore = useGroupsStore()
 
 /**
- * @desc dimensions
+ * @desc dimensions 数据
  * @returns {ComputedRef<DimensionStore.DimensionOption[]>}
  */
 const dimensions = computed(() => {
@@ -57,14 +104,14 @@ const dimensions = computed(() => {
 })
 
 /**
- * @desc groupList
+ * @desc groupList 数据
  */
 const groupList = computed<GroupStore.GroupState['groups']>(() => {
   return groupStore.getGroups
 })
 
 /**
- * @desc addDimension
+ * @desc addDimension 添加维度
  * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
  */
 const addDimension = (dimension: DimensionStore.DimensionOption | Array<DimensionStore.DimensionOption>) => {
@@ -73,10 +120,10 @@ const addDimension = (dimension: DimensionStore.DimensionOption | Array<Dimensio
 }
 
 /**
- * @desc getTargetIndex
- * @param {number} index
- * @param {DragEvent} dragEvent
- * @returns {number}
+ * @desc getTargetIndex 获取目标索引
+ * @param {number} index 源索引
+ * @param {DragEvent} dragEvent 拖拽事件
+ * @returns {number} 目标索引
  */
 const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
   const dropY = dragEvent.clientY // 落点Y
@@ -95,8 +142,8 @@ const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
 
 /**
  * @desc 发起拖拽
- * @param {number} index
- * @param {DragEvent} dragEvent
+ * @param {number} index 源索引
+ * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
 const dragstartHandler = (index: number, dragEvent: DragEvent) => {
@@ -112,8 +159,8 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
 
 /**
  * @desc 结束拖拽
- * @param {number} index
- * @param {DragEvent} dragEvent
+ * @param {number} index 源索引
+ * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
 const dragHandler = (index: number, dragEvent: DragEvent) => {
@@ -122,7 +169,7 @@ const dragHandler = (index: number, dragEvent: DragEvent) => {
 
 /**
  * @desc 拖拽开始
- * @param {DragEvent} dragEvent
+ * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
 const dragoverHandler = (dragEvent: DragEvent) => {
@@ -131,12 +178,12 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 
 /**
  * @desc 拖拽结束
- * @param {DragEvent} dragEvent
+ * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const dimensionOption: DimensionStore.DimensionOption = {
     ...data.value,
     __invalid: false,
@@ -178,6 +225,100 @@ const dropHandler = (dragEvent: DragEvent) => {
       addDimension(dimensionOption)
       break
   }
+}
+
+/**
+ * @desc 右键菜单引用
+ */
+const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+
+/**
+ * @desc 右键菜单事件
+ * @param {MouseEvent} event
+ */
+const handleContextMenu = (event: MouseEvent) => {
+  event.preventDefault()
+  if (contextmenuRef.value) {
+    contextmenuRef.value.show(event)
+  }
+}
+
+/**
+ * @desc 创建自定义列
+ */
+const handleCreateCustomColumn = () => {
+  customColumnDialogVisible.value = true
+}
+
+/**
+ * @desc 自定义列弹窗可见性
+ */
+const customColumnDialogVisible = ref(false)
+
+/**
+ * @desc 自定义列 SQL
+ */
+const customColumnSql = ref('')
+
+/**
+ * @desc 确认创建自定义列
+ */
+const handleConfirmCustomColumn = () => {
+  console.log('Custom Column SQL:', customColumnSql.value)
+  // TODO: Implement actual creation logic
+  customColumnDialogVisible.value = false
+  customColumnSql.value = ''
+}
+
+/**
+ * @desc 数据库选项，用于 SQL 联想
+ */
+const databaseOptions = computed(() => {
+  const columns = columnStore.getColumns
+  const fieldOptions = columns.map((col: any) => ({
+    fieldName: col.columnName,
+    fieldType: col.type || col.dataType || 'string',
+    fieldComment: col.displayName,
+    databaseName: 'default',
+    tableName: 'current_table'
+  }))
+
+  return [
+    {
+      databaseName: 'default',
+      tableOptions: [
+        {
+          tableName: 'current_table',
+          tableComment: '当前表',
+          fieldOptions: fieldOptions
+        }
+      ]
+    }
+  ]
+})
+
+/**
+ * @desc 自定义关键字，用于 SQL 联想
+ */
+const customKeywords = computed(() => {
+  return ['SUM', 'COUNT', 'AVG', 'MAX', 'MIN']
+})
+
+/**
+ * @desc 插入字段到编辑器
+ * @param {string} columnName 字段名
+ */
+const insertColumnToEditor = (columnName: string) => {
+  customColumnSql.value += ` ${columnName}`
+}
+
+/**
+ * @desc 获取字段类型
+ * @param {any} col 字段对象
+ * @returns {string} 字段类型
+ */
+const getColumnType = (col: any) => {
+  return col.columnType || col.type || col.dataType || 'String'
 }
 </script>
 

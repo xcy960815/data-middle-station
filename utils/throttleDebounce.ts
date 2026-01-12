@@ -1,154 +1,142 @@
 /**
  * @desc 防抖装饰器
- * @param delay {number}
- * @param immediate {boolean}
+ * @param delay {number} 延迟时间
+ * @param immediate {boolean} 是否立即执行
  * @returns {MethodDecorator}
  */
 export function Debounce(delay: number, immediate = false) {
-  return function <A extends any[]>(
-    _target: Object,
-    _propertyKey: string | symbol,
-    descriptor: TypedPropertyDescriptor<(...args: A) => unknown>
-  ): TypedPropertyDescriptor<(...args: A) => void> | undefined {
-    let timeoutId: ReturnType<typeof setTimeout> | null
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
 
-    if (originalMethod) {
-      descriptor.value = function (this: ThisParameterType<(...args: A) => unknown>, ...args: A) {
-        const context = this
-        if (timeoutId) {
-          clearTimeout(timeoutId)
-          timeoutId = null
-        }
-        if (immediate && !timeoutId) {
-          return originalMethod.apply(context, args)
-        }
+    descriptor.value = function (this: any, ...args: any[]) {
+      const context = this
 
-        const later = () => {
-          timeoutId = null
-          if (!immediate) {
-            return originalMethod.apply(context, args)
-          }
-        }
-
-        timeoutId && clearTimeout(timeoutId)
-        timeoutId = setTimeout(later, delay)
-
-        if (immediate && !timeoutId) {
-          return originalMethod.apply(context, args)
-        }
+      if (timeoutId) {
+        clearTimeout(timeoutId)
       }
-      return descriptor
-    }
-  }
-}
 
-/**
- * @desc 节流装饰器
- * @param delay {number}
- * @param leading {boolean}
- * @returns {MethodDecorator}
- */
-export function Throttle(delay: number, leading: boolean = true) {
-  return function <A extends any[], R>(
-    _target: any,
-    _propertyKey: string | symbol,
-    descriptor: TypedPropertyDescriptor<(...args: A) => Promise<R>>
-  ) {
-    let previous = 0
-    let timeoutId: ReturnType<typeof setTimeout> | null
-    const originalMethod = descriptor.value!
-
-    descriptor.value = function (this: ThisParameterType<(...args: A) => Promise<R>>, ...args: A): Promise<R> {
-      const now = Date.now()
-      if (leading && !previous) {
-        const result = originalMethod.apply(this, args)
-        previous = now
-        return result
-      } else if (now - previous > delay) {
-        timeoutId && clearTimeout(timeoutId)
+      if (immediate) {
+        const callNow = !timeoutId
         timeoutId = setTimeout(() => {
-          const result = originalMethod.apply(this, args)
-          previous = Date.now()
-          return result
+          timeoutId = null
+        }, delay)
+        if (callNow) {
+          return originalMethod.apply(context, args)
+        }
+      } else {
+        timeoutId = setTimeout(() => {
+          originalMethod.apply(context, args)
         }, delay)
       }
-
-      return new Promise((resolve, reject) => {
-        timeoutId = setTimeout(async () => {
-          try {
-            const result = await originalMethod.apply(this, args)
-            resolve(result)
-            previous = Date.now()
-          } catch (error) {
-            reject(error)
-          }
-        }, delay)
-      })
     }
-
     return descriptor
   }
 }
 
 /**
- * @desc 防抖函数
+ * @desc 节流装饰器
+ * @param delay {number} 延迟时间
+ * @param leading {boolean} 是否首次立即执行
+ * @returns {MethodDecorator}
+ */
+export function Throttle(delay: number, leading = true) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value
+    let lastTime = 0
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+    descriptor.value = function (this: any, ...args: any[]) {
+      const now = Date.now()
+      if (!lastTime && !leading) lastTime = now
+
+      const remaining = delay - (now - lastTime)
+
+      if (remaining <= 0 || remaining > delay) {
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+        lastTime = now
+        return originalMethod.apply(this, args)
+      } else if (!timeoutId) {
+        timeoutId = setTimeout(() => {
+          lastTime = leading ? Date.now() : 0
+          timeoutId = null
+          originalMethod.apply(this, args)
+        }, remaining)
+      }
+    }
+    return descriptor
+  }
+}
+
+/**
+ * @desc 防抖函数 (支持 Promise 返回)
  * @param func {Function} 需要防抖的函数
  * @param delay {number} 延迟时间
+ * @param immediate {boolean} 是否立即执行
  * @returns {Function}
  */
-export function debounce<F extends (...args: any[]) => any>(
-  func: F,
-  delay: number
-): (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>> {
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number,
+  immediate = false
+): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null
-  let pendingPromise: Promise<Awaited<ReturnType<F>>> | null = null
-  let resolveRef: ((value: Awaited<ReturnType<F>>) => void) | null = null
-  let rejectRef: ((reason?: unknown) => void) | null = null
-  let lastArgs: Parameters<F>
-  let lastThis: ThisParameterType<F>
+  let resultPromise: Promise<Awaited<ReturnType<T>>> | null = null
+  let resolveRef: ((value: Awaited<ReturnType<T>>) => void) | null = null
+  let rejectRef: ((reason?: any) => void) | null = null
 
-  const debounced = function (this: ThisParameterType<F>, ...args: Parameters<F>) {
-    lastArgs = args
-    lastThis = this
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+    const context = this
 
     if (timeoutId) clearTimeout(timeoutId)
 
-    if (!pendingPromise) {
-      pendingPromise = new Promise<Awaited<ReturnType<F>>>((resolve, reject) => {
-        resolveRef = resolve
-        rejectRef = reject
-      })
-    }
+    if (immediate) {
+      const callNow = !timeoutId
 
-    timeoutId = setTimeout(() => {
-      timeoutId = null
-      const resolve = resolveRef
-      const reject = rejectRef
-      resolveRef = null
-      rejectRef = null
-      const toResolve = pendingPromise
-      pendingPromise = null
-
-      try {
-        const result = func.apply(lastThis, lastArgs) as ReturnType<F>
-        Promise.resolve(result).then(
-          (val) => {
-            resolve && toResolve && resolve(val as Awaited<ReturnType<F>>)
-          },
-          (err) => {
-            reject && toResolve && reject(err)
+      if (callNow) {
+        resultPromise = new Promise((resolve, reject) => {
+          try {
+            const result = func.apply(context, args)
+            Promise.resolve(result).then(resolve, reject)
+          } catch (e) {
+            reject(e)
           }
-        )
-      } catch (err) {
-        reject && toResolve && reject(err)
+        })
       }
-    }, delay)
 
-    return pendingPromise
+      timeoutId = setTimeout(() => {
+        timeoutId = null
+        resultPromise = null
+      }, delay)
+
+      return resultPromise || (Promise.resolve() as any)
+    } else {
+      if (!resultPromise) {
+        resultPromise = new Promise((resolve, reject) => {
+          resolveRef = resolve
+          rejectRef = reject
+        })
+      }
+
+      timeoutId = setTimeout(() => {
+        timeoutId = null
+        try {
+          const result = func.apply(context, args)
+          Promise.resolve(result).then(resolveRef, rejectRef)
+        } catch (e) {
+          rejectRef?.(e)
+        }
+        resultPromise = null
+        resolveRef = null
+        rejectRef = null
+      }, delay)
+
+      return resultPromise
+    }
   }
-
-  return debounced
 }
 
 /**
@@ -157,25 +145,29 @@ export function debounce<F extends (...args: any[]) => any>(
  * @param delay {number} 延迟时间
  * @returns {Function}
  */
-export function throttle<F extends (...args: any[]) => any>(
-  func: F,
-  delay: number
-): (...args: Parameters<F>) => ReturnType<F> {
-  let previous = 0
-  let timeoutId: ReturnType<typeof setTimeout> | null
+export function throttle<T extends (...args: any[]) => any>(func: T, delay: number): (...args: Parameters<T>) => void {
+  let lastTime = 0
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
 
-  const throttledFunction = function (this: ThisParameterType<F>, ...args: Parameters<F>) {
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     const context = this
     const now = Date.now()
 
-    if (now - previous > delay) {
-      timeoutId && clearTimeout(timeoutId)
+    const remaining = delay - (now - lastTime)
+
+    if (remaining <= 0 || remaining > delay) {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+      lastTime = now
+      func.apply(context, args)
+    } else if (!timeoutId) {
       timeoutId = setTimeout(() => {
+        lastTime = Date.now()
+        timeoutId = null
         func.apply(context, args)
-        previous = Date.now()
-      }, delay)
+      }, remaining)
     }
   }
-
-  return throttledFunction as (...args: Parameters<F>) => ReturnType<F>
 }

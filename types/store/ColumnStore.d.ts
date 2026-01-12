@@ -10,7 +10,7 @@ declare namespace ColumnsStore {
   /**
    * @desc 列选项
    */
-  type ColumnOption = DatabaseVo.GetTableColumnsOptions
+  type ColumnOptions = DatabaseVo.GetTableColumnsOptions
 
   /**
    * @desc 数据源选项
