@@ -68,6 +68,66 @@ declare namespace DataBaseDao {
   }
 
   /**
+   * @desc 数字类型
+   */
+  export type NumberColumnType =
+    | 'tinyint'
+    | 'smallint'
+    | 'mediumint'
+    | 'int'
+    | 'bigint'
+    | 'decimal'
+    | 'float'
+    | 'double'
+    | 'real'
+    | 'bit'
+    | 'boolean'
+    | 'serial'
+
+  /**
+   * @desc 字符串类型
+   */
+  export type StringColumnType =
+    | 'char'
+    | 'varchar'
+    | 'tinytext'
+    | 'text'
+    | 'mediumtext'
+    | 'longtext'
+    | 'tinyblob'
+    | 'blob'
+    | 'mediumblob'
+    | 'longblob'
+    | 'binary'
+    | 'varbinary'
+    | 'enum'
+    | 'set'
+    | 'json'
+    | 'geometry'
+    | 'point'
+    | 'linestring'
+    | 'polygon'
+    | 'multipoint'
+    | 'multilinestring'
+    | 'multipolygon'
+    | 'geometrycollection'
+
+  /**
+   * @desc 日期类型
+   */
+  export type DateColumnType =
+    | 'date'
+    | 'datetime'
+    | 'timestamp'
+    | 'time'
+    | 'year'
+    | 'datetime2'
+    | 'datetimeoffset'
+    | 'smalldatetime'
+
+  export type ColumnType = NumberColumnType | StringColumnType | DateColumnType
+
+  /**
    * @desc 左侧数据源字段类型 刚从数据库出来的字段
    */
   export type TableColumnOptions = {
@@ -78,7 +138,7 @@ declare namespace DataBaseDao {
     /**
      * @desc 列类型
      */
-    columnType: string
+    columnType: ColumnType
     /**
      * @desc 列注释
      */
