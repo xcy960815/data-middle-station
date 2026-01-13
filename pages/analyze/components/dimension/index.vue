@@ -44,7 +44,7 @@
       <div class="mb-3 flex items-center">
         <span class="text-sm font-medium mr-2">列名：</span>
         <el-input v-model="customColumnName" placeholder="请输入列名 (例如: new_column)" style="width: 240px" />
-        <span class="text-xs text-gray-400 ml-2">请在下方编辑器中输入 SQL 表达式，无需包含 AS 别名</span>
+        <span class="text-xs text-gray-400 ml-2">请输入 SQL 表达式 (如: price * num 或 '文本')，无需包含 AS 别名</span>
       </div>
       <div class="flex h-[400px] border border-gray-200 overflow-hidden">
         <div class="flex-1 h-full border-r border-gray-200 min-w-0">
@@ -325,10 +325,9 @@ const handleConfirmCustomColumn = () => {
     return
   }
 
-  const newColumn: any = {
+  const newColumn: ColumnsStore.ColumnOptions = {
     columnName: alias,
-    columnType: 'string', // 默认类型
-    dataType: 'string',
+    columnType: 'varchar', // 默认类型
     columnComment: '自定义列',
     displayName: alias,
     isCustom: true,
