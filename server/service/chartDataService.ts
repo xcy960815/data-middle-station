@@ -21,7 +21,7 @@ export class ChartDataService {
    * @param chartDataRecords {AnalyzeDataDao.ChartData[]} 图表数据DAO列表
    * @returns {AnalyzeDataVo.AnalyzeData[]} 图表数据VO列表
    */
-  private convertDaoToVo(chartDataRecords: Array<AnalyzeDataDao.ChartData>): Array<AnalyzeDataVo.AnalyzeData> {
+  private convertDaoToVo(chartDataRecords: Array<AnalyzeDataDao.AnalyzeData>): Array<AnalyzeDataVo.AnalyzeData> {
     return chartDataRecords.map((chartDataRecord) => ({
       ...chartDataRecord,
       [String(chartDataRecord.columnName)]: chartDataRecord.columnValue
@@ -48,6 +48,13 @@ export class ChartDataService {
 
     allColumns.forEach((columnOption: AnalyzeDataDto.DimensionOption | AnalyzeDataDto.GroupOption) => {
       const columnName = toLine(columnOption.columnName)
+
+      // 处理自定义列
+      if (columnOption.isCustom && columnOption.expression) {
+        selectClause += ` ${columnOption.expression} AS ${columnName},`
+        return
+      }
+
       // 检查是否是日期时间类型的列
       const isDateTimeColumn = /date|time|created_at|updated_at/i.test(columnName)
       const fieldExpression = isDateTimeColumn ? `DATE_FORMAT(${columnName}, '%Y-%m-%d %H:%i:%s')` : columnName
@@ -66,7 +73,9 @@ export class ChartDataService {
     const whereClause = filterOptions
       .map((filterOption) => {
         if (!filterOption.filterType || !filterOption.filterValue) return ''
-        return `${toLine(filterOption.columnName)} ${filterOption.filterType} '${filterOption.filterValue}'`
+        const columnExpression =
+          filterOption.isCustom && filterOption.expression ? filterOption.expression : toLine(filterOption.columnName)
+        return `${columnExpression} ${filterOption.filterType} '${filterOption.filterValue}'`
       })
       .filter(Boolean)
       .join(' and ')
@@ -82,10 +91,12 @@ export class ChartDataService {
     if (orderOptions.length === 0) return ''
     const orderClause = orderOptions
       .map((orderOption) => {
+        const columnExpression =
+          orderOption.isCustom && orderOption.expression ? orderOption.expression : toLine(orderOption.columnName)
         if (orderOption.aggregationType === 'raw') {
-          return `${toLine(orderOption.columnName)} ${orderOption.orderType}`
+          return `${columnExpression} ${orderOption.orderType}`
         }
-        return `${orderOption.aggregationType}(${toLine(orderOption.columnName)}) ${orderOption.orderType}`
+        return `${orderOption.aggregationType}(${columnExpression}) ${orderOption.orderType}`
       })
       .filter(Boolean)
       .join(',')
@@ -105,8 +116,14 @@ export class ChartDataService {
     if (groupOptions.length === 0) return ''
     // 合并 groups 和 dimensions 中的列名
     const allGroupColumns = [
-      ...groupOptions.map((groupOption) => toLine(groupOption.columnName)),
-      ...dimensions.map((dimensionOption) => toLine(dimensionOption.columnName))
+      ...groupOptions.map((groupOption) =>
+        groupOption.isCustom && groupOption.expression ? groupOption.expression : toLine(groupOption.columnName)
+      ),
+      ...dimensions.map((dimensionOption) =>
+        dimensionOption.isCustom && dimensionOption.expression
+          ? dimensionOption.expression
+          : toLine(dimensionOption.columnName)
+      )
     ]
     return ` group by ${allGroupColumns.join(',')}`
   }
