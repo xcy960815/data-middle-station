@@ -32,7 +32,7 @@ declare namespace ColumnsStore {
     /**
      * @desc 列
      */
-    columns: Array<ColumnOption>
+    columns: Array<ColumnOptions>
   }
 
   /**
@@ -46,7 +46,7 @@ declare namespace ColumnsStore {
     /**
      * @desc 删除列
      */
-    removeColumns: (columns: ColumnOption[]) => void
+    removeColumns: (columns: ColumnOptions[]) => void
     /**
      * @desc 设置数据源
      */
@@ -66,6 +66,6 @@ declare namespace ColumnsStore {
     /**
      * @desc 更新列
      */
-    updateColumn: (params: { column: ColumnOption; index: number }) => void
+    updateColumn: (params: { column: ColumnOptions; index: number }) => void
   }
 }

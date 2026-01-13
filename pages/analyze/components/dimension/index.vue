@@ -41,14 +41,19 @@
 
     <!-- 自定义列弹窗 -->
     <el-dialog v-model="customColumnDialogVisible" title="创建自定义列" width="800px" append-to-body>
+      <div class="mb-3 flex items-center">
+        <span class="text-sm font-medium mr-2">列名：</span>
+        <el-input v-model="customColumnName" placeholder="请输入列名 (例如: new_column)" style="width: 240px" />
+        <span class="text-xs text-gray-400 ml-2">请在下方编辑器中输入 SQL 表达式，无需包含 AS 别名</span>
+      </div>
       <div class="flex h-[400px] border border-gray-200 overflow-hidden">
         <div class="flex-1 h-full border-r border-gray-200 min-w-0">
           <monaco-editor
+            ref="monacoEditorRef"
             v-model="customColumnSql"
             language="sql"
             height="100%"
             width="100%"
-            :databaseOptions="databaseOptions"
             :customKeywords="customKeywords"
           />
         </div>
@@ -59,12 +64,15 @@
             <div
               v-for="col in columnStore.getColumns"
               :key="col.columnName"
-              class="mb-2 text-xs cursor-pointer hover:bg-gray-200 p-1 rounded"
+              class="mb-2 text-xs cursor-pointer hover:bg-gray-200 p-1 rounded transition-colors"
+              :class="{ 'bg-blue-100 text-blue-600 font-medium': isColumnUsed(col.columnName) }"
               @click="insertColumnToEditor(col.columnName)"
             >
-              <div class="font-medium text-gray-700">{{ col.displayName }}</div>
+              <div class="font-medium text-gray-700" :class="{ 'text-blue-600': isColumnUsed(col.columnName) }">
+                {{ col.displayName }}
+              </div>
               <div class="flex items-center justify-between text-gray-500 mt-1">
-                <span>{{ col.columnName }}</span>
+                <span :class="{ 'text-blue-500': isColumnUsed(col.columnName) }">{{ col.columnName }}</span>
                 <span class="bg-gray-200 px-1 rounded scale-90 origin-right">{{ getColumnType(col) }}</span>
               </div>
             </div>
@@ -83,6 +91,7 @@
 
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { ElMessage } from 'element-plus'
 import ContextMenu from '../../../../components/context-menu/index.vue'
 import { clearAllHandler } from '../clearAll'
 
@@ -94,6 +103,8 @@ const { clearAll, hasClearAll } = clearAllHandler()
 const columnStore = useColumnsStore()
 const dimensionStore = useDimensionsStore()
 const groupStore = useGroupsStore()
+
+const monacoEditorRef = ref<InstanceType<typeof MonacoEditor> | null>(null)
 
 /**
  * @desc dimensions 数据
@@ -261,41 +272,93 @@ const customColumnDialogVisible = ref(false)
 const customColumnSql = ref('')
 
 /**
- * @desc 确认创建自定义列
+ * @desc 自定义列名
  */
-const handleConfirmCustomColumn = () => {
-  console.log('Custom Column SQL:', customColumnSql.value)
-  // TODO: Implement actual creation logic
-  customColumnDialogVisible.value = false
-  customColumnSql.value = ''
+const customColumnName = ref('')
+
+/**
+ * @desc 判断字段是否被使用
+ * @param {string} name 字段名
+ * @returns {boolean}
+ */
+const isColumnUsed = (name: string) => {
+  if (!customColumnSql.value) return false
+  return customColumnSql.value.includes(name)
 }
 
 /**
- * @desc 数据库选项，用于 SQL 联想
+ * @desc 确认创建自定义列
  */
-const databaseOptions = computed(() => {
-  const columns = columnStore.getColumns
-  const fieldOptions = columns.map((col: any) => ({
-    fieldName: col.columnName,
-    fieldType: col.type || col.dataType || 'string',
-    fieldComment: col.displayName,
-    databaseName: 'default',
-    tableName: 'current_table'
-  }))
+const handleConfirmCustomColumn = () => {
+  const sql = customColumnSql.value.trim()
+  const alias = customColumnName.value.trim()
 
-  return [
-    {
-      databaseName: 'default',
-      tableOptions: [
-        {
-          tableName: 'current_table',
-          tableComment: '当前表',
-          fieldOptions: fieldOptions
-        }
-      ]
-    }
-  ]
-})
+  // 1. 别名非空校验
+  if (!alias) {
+    ElMessage.warning('请输入列名')
+    return
+  }
+
+  // 2. SQL非空校验
+  if (!sql) {
+    ElMessage.warning('请输入SQL表达式')
+    return
+  }
+
+  // 3. 别名格式校验 (不能为纯数字)
+  if (/^\d+$/.test(alias)) {
+    ElMessage.warning('列名不能为纯数字')
+    return
+  }
+
+  // 4. 重名校验
+  const exists = columnStore.getColumns.some((col) => col.columnName === alias)
+  if (exists) {
+    ElMessage.warning(`列名 [${alias}] 已存在，请更换列名`)
+    return
+  }
+
+  // 5. 危险关键字校验
+  const forbidden = [';', '--', 'drop ', 'delete ', 'update ', 'insert ', 'alter ', 'truncate ']
+  if (forbidden.some((key) => sql.toLowerCase().includes(key))) {
+    ElMessage.warning('SQL包含非法字符或关键字')
+    return
+  }
+
+  const newColumn: any = {
+    columnName: alias,
+    columnType: 'string', // 默认类型
+    dataType: 'string',
+    columnComment: '自定义列',
+    displayName: alias,
+    isCustom: true,
+    expression: sql
+  }
+
+  // 添加到左侧字段列表
+  const currentColumns = JSON.parse(JSON.stringify(columnStore.getColumns))
+  currentColumns.push(newColumn)
+  columnStore.setColumns(currentColumns)
+
+  // 自动添加到维度区域
+  addDimension({
+    ...newColumn,
+    __invalid: false,
+    __invalidMessage: '',
+    fixed: null,
+    align: null,
+    width: null,
+    showOverflowTooltip: false,
+    filterable: false,
+    sortable: false
+  })
+
+  ElMessage.success('自定义列创建成功')
+
+  customColumnDialogVisible.value = false
+  customColumnSql.value = ''
+  customColumnName.value = ''
+}
 
 /**
  * @desc 自定义关键字，用于 SQL 联想
@@ -309,7 +372,7 @@ const customKeywords = computed(() => {
  * @param {string} columnName 字段名
  */
 const insertColumnToEditor = (columnName: string) => {
-  customColumnSql.value += ` ${columnName}`
+  monacoEditorRef.value?.insertText(` ${columnName}`)
 }
 
 /**
@@ -317,8 +380,8 @@ const insertColumnToEditor = (columnName: string) => {
  * @param {any} col 字段对象
  * @returns {string} 字段类型
  */
-const getColumnType = (col: any) => {
-  return col.columnType || col.type || col.dataType || 'String'
+const getColumnType = (col: ColumnsStore.ColumnOptions) => {
+  return col.columnType
 }
 </script>
 
