@@ -143,6 +143,14 @@ declare namespace DataBaseDao {
      * @desc 列注释
      */
     columnComment: string
+    /**
+     * @desc 是否是自定义列
+     */
+    isCustom?: boolean
+    /**
+     * @desc 自定义列表达式
+     */
+    expression?: string
   }
 
   type GetTableColumnOptions = {
