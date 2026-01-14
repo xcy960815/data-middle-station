@@ -65,10 +65,10 @@ export class ChartDataService {
 
   /**
    * @desc 构建where语句
-   * @param filterOptions {AnalyzeDataDto.FilterOption[]} 过滤条件
+   * @param filterOptions {AnalyzeDataDto.FilterOptions[]} 过滤条件
    * @returns {string} where语句
    */
-  private buildWhereClause(filterOptions: AnalyzeDataDto.FilterOption[]): string {
+  private buildWhereClause(filterOptions: AnalyzeDataDto.FilterOptions[]): string {
     if (filterOptions.length === 0) return ''
     const whereClause = filterOptions
       .map((filterOption) => {
@@ -84,16 +84,18 @@ export class ChartDataService {
 
   /**
    * @desc 构建orderBy语句
-   * @param orderOptions {AnalyzeDataDto.OrderOption[]} 排序条件
+   * @param orderOptions {AnalyzeDataDto.OrderOptions[]} 排序条件
+   * @param hasGroupBy {boolean} 是否有分组
    * @returns {string} orderBy语句
    */
-  private buildOrderByClause(orderOptions: AnalyzeDataDto.OrderOption[]): string {
+  private buildOrderByClause(orderOptions: AnalyzeDataDto.OrderOptions[], hasGroupBy: boolean): string {
     if (orderOptions.length === 0) return ''
     const orderClause = orderOptions
       .map((orderOption) => {
         const columnExpression =
           orderOption.isCustom && orderOption.expression ? orderOption.expression : toLine(orderOption.columnName)
-        if (orderOption.aggregationType === 'raw') {
+        // 如果没有分组，或者聚合类型是 raw，则不使用聚合函数
+        if (!hasGroupBy || orderOption.aggregationType === 'raw') {
           return `${columnExpression} ${orderOption.orderType}`
         }
         return `${orderOption.aggregationType}(${columnExpression}) ${orderOption.orderType}`
@@ -156,7 +158,8 @@ export class ChartDataService {
     /**
      * @desc 构建orderBy语句
      */
-    const orderByClause = this.buildOrderByClause(normalizedOptions.orders)
+    const hasGroupBy = normalizedOptions.groups.length > 0
+    const orderByClause = this.buildOrderByClause(normalizedOptions.orders, hasGroupBy)
     /**
      * @desc 构建groupBy语句
      */
