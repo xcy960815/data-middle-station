@@ -30,12 +30,13 @@
           :prefix-icon="Search"
           style="margin-bottom: 8px; width: 220px"
         />
-        <el-button type="primary" style="margin-left: 8px; margin-bottom: 8px" @click="handleSearchTable"
-          >搜索</el-button
-        >
+        <el-button type="primary" style="margin-left: 8px; margin-bottom: 8px" @click="handleSearchTable">
+          搜索
+        </el-button>
       </div>
 
       <el-table
+        ref="tableRef"
         :data="dataSourceOptions"
         border
         :style="{ width: '100%' }"
@@ -57,12 +58,14 @@ import { httpRequest } from '@/composables/useHttpRequest'
 import { Search } from '@element-plus/icons-vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElButton, ElInput, ElMessage, ElPopover, ElTable, ElTableColumn } from 'element-plus'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 /**
  * @desc 列存储
  */
 const columnStore = useColumnsStore()
+
 const searchKeyword = ref('')
+const tableRef = ref<InstanceType<typeof ElTable>>()
 /**
  * @desc 是否显示弹窗
  * @returns {boolean}
@@ -96,7 +99,7 @@ const dataSourceOptions = computed(() => columnStore.getDataSourceOptions)
  * @desc 搜索按钮点击（目前只做UI，实际过滤仍为输入框实时过滤）
  */
 const handleSearchTable = () => {
-  getTable()
+  handleGetDatabaseTables()
 }
 
 /**
@@ -123,14 +126,23 @@ const rowClassName = ({ row }: { row: DatabaseVo.GetDataBaseTablesOptions }) => 
  * @desc 查询表格列表
  * @returns {Promise<void>}
  */
-const getTable = async () => {
+const handleGetDatabaseTables = async () => {
   const result = await httpRequest('/api/getDatabaseTables', {
-    params: {
+    method: 'POST',
+    body: {
       tableName: searchKeyword.value || null
     }
   })
   if (result.code === 200) {
     columnStore.setDataSourceOptions(result.data || [])
+    nextTick(() => {
+      if (dataSource.value && tableRef.value) {
+        const currentRow = columnStore.getDataSourceOptions.find((item) => item.tableName === dataSource.value)
+        if (currentRow) {
+          tableRef.value.setCurrentRow(currentRow)
+        }
+      }
+    })
   } else {
     ElMessage.error(result.message || '获取表列表失败')
     columnStore.setDataSourceOptions([])
@@ -149,7 +161,7 @@ watch(
   () => isPopoverVisible.value,
   (visible) => {
     if (visible) {
-      getTable()
+      handleGetDatabaseTables()
     }
   }
 )

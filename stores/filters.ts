@@ -21,7 +21,7 @@ export const useFiltersStore = defineStore<
   actions: {
     /**
      * @desc 设置过滤器
-     * @param filters {FilterOption[]}
+     * @param filters {FilterOptions[]}
      * @returns {void}
      */
     setFilters(filters) {
@@ -29,7 +29,7 @@ export const useFiltersStore = defineStore<
     },
     /**
      * @desc 添加过滤器
-     * @param filters {FilterOption[]}
+     * @param filters {FilterOptions[]}
      * @returns {void}
      */
     addFilters(filters) {

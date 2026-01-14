@@ -30,7 +30,7 @@ declare namespace FilterStore {
   /**
    * @desc 过滤器选项
    */
-  type FilterOption = ColumnsStore.ColumnOption & {
+  type FilterOptions = ColumnsStore.ColumnOption & {
     filterType?: FilterType
     filterValue?: string
     displayName?: string
@@ -44,7 +44,7 @@ declare namespace FilterStore {
    * @desc 过滤器状态
    */
   type FilterState = {
-    filters: Array<FilterOption>
+    filters: Array<FilterOptions>
   }
   /**
    * @desc getter
@@ -55,7 +55,7 @@ declare namespace FilterStore {
    * @desc 过滤器操作
    */
   type FilterActions = {
-    addFilters: (filters: FilterOption[]) => void
+    addFilters: (filters: FilterOptions[]) => void
     removeFilter: (index: number) => void
   }
 }

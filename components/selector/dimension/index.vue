@@ -4,7 +4,9 @@
   </div>
   <!-- 字段的操作选项 -->
   <context-menu ref="contextmenuRef">
+    <!-- 设置别名 -->
     <context-menu-item @click="handleSetAlias">设置别名</context-menu-item>
+    <!-- 设置列宽 -->
     <context-menu-item @click="handleSetColumnWidth">设置列宽</context-menu-item>
     <!-- 开启排序 -->
     <context-menu-item @click="handleSetSortable">开启排序</context-menu-item>
@@ -12,15 +14,22 @@
     <context-menu-item @click="handleSetFilterable">开启表头过滤</context-menu-item>
     <!-- 对齐方式 -->
     <context-menu-submenu title="设置对齐方式">
+      <!-- 左对齐 -->
       <context-menu-item @click="handleSetAlign('left')">左对齐</context-menu-item>
+      <!-- 居中对齐 -->
       <context-menu-item @click="handleSetAlign('center')">居中对齐</context-menu-item>
+      <!-- 右对齐 -->
       <context-menu-item @click="handleSetAlign('right')">右对齐</context-menu-item>
+      <!-- 取消对齐 -->
       <context-menu-item @click="handleSetAlign(null)">取消对齐</context-menu-item>
     </context-menu-submenu>
     <context-menu-divider></context-menu-divider>
     <context-menu-submenu title="固定列">
+      <!-- 左固定 -->
       <context-menu-item @click="handleSetFixed('left')">左固定</context-menu-item>
+      <!-- 右固定 -->
       <context-menu-item @click="handleSetFixed('right')">右固定</context-menu-item>
+      <!-- 取消固定 -->
       <context-menu-item @click="handleSetFixed(null)">取消固定</context-menu-item>
     </context-menu-submenu>
   </context-menu>
@@ -119,6 +128,8 @@ const handleSetColumnWidth = () => {
 
 /**
  * @desc 设置固定列
+ * @param {"left" | "right" | null} fixed 固定列
+ * @returns {void}
  */
 const handleSetFixed = (fixed: 'left' | 'right' | null) => {
   if (!currentDimension.value) return
@@ -129,6 +140,8 @@ const handleSetFixed = (fixed: 'left' | 'right' | null) => {
 
 /**
  * @desc 设置对齐方式
+ * @param {"left" | "right" | "center" | null} align 对齐方式
+ * @returns {void}
  */
 const handleSetAlign = (align: 'left' | 'right' | 'center' | null) => {
   if (!currentDimension.value) return
@@ -139,6 +152,7 @@ const handleSetAlign = (align: 'left' | 'right' | 'center' | null) => {
 
 /**
  * @desc 设置排序
+ * @returns {void}
  */
 const handleSetSortable = () => {
   if (!currentDimension.value) return
@@ -149,6 +163,7 @@ const handleSetSortable = () => {
 
 /**
  * @desc 设置表头过滤
+ * @returns {void}
  */
 const handleSetFilterable = () => {
   if (!currentDimension.value) return

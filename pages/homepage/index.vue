@@ -44,10 +44,10 @@
           :rules="addOrEditAnalyzeFormRules"
         >
           <el-form-item label="分析名称" prop="analyzeName">
-            <el-input v-model="addOrEditAnalyzeFormData.analyzeName" />
+            <el-input v-model="addOrEditAnalyzeFormData.analyzeName" placeholder="请输入分析名称" />
           </el-form-item>
           <el-form-item label="分析描述" prop="analyzeDesc">
-            <el-input v-model="addOrEditAnalyzeFormData.analyzeDesc" />
+            <el-input v-model="addOrEditAnalyzeFormData.analyzeDesc" placeholder="请输入分析描述" />
           </el-form-item>
         </el-form>
         <template #footer>

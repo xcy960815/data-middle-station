@@ -1,33 +1,42 @@
 <template>
   <client-only>
-    <div class="chart-selector-container px-1" :class="invalidClass">
-      <span class="chart-selector-name mr-1">{{ displayName }}</span>
-      <slot class="chart-selector-order-icon" name="order-icon"></slot>
-      <!-- 无效排序图标 -->
-      <el-tooltip
-        class="box-item"
-        effect="dark"
-        :content="invalidMessage || invalidContent"
-        placement="top"
-        v-if="hasInvalidIcon()"
-      >
-        <icon-park class="chart-selector-invalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
-      </el-tooltip>
-      <!-- 删除图标 -->
-      <icon-park
-        class="chart-selector-delete"
-        type="DeleteTwo"
-        size="14"
-        fill="#333"
-        @click.stop="handleDeleteSelector"
-        @contextmenu.stop
-      />
-    </div>
+    <el-popover placement="bottom-start" trigger="click" width="auto" :disabled="!isPopoverEnabled" ref="popoverRef">
+      <template #reference>
+        <div class="chart-selector-container px-1" :class="invalidClass">
+          <span class="chart-selector-name mr-1">{{ displayName }}</span>
+          <slot class="chart-selector-order-icon" name="order-icon"></slot>
+          <!-- 无效排序图标 -->
+          <el-tooltip
+            class="box-item"
+            effect="dark"
+            :content="invalidMessage || invalidContent"
+            placement="top"
+            v-if="hasInvalidIcon()"
+          >
+            <icon-park class="chart-selector-invalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
+          </el-tooltip>
+          <!-- 删除图标 -->
+          <icon-park
+            class="chart-selector-delete"
+            type="DeleteTwo"
+            size="14"
+            fill="#333"
+            @click.stop="handleDeleteSelector"
+            @contextmenu.stop
+          />
+        </div>
+      </template>
+      <!-- 下拉内容 -->
+      <div class="chart-selector-options">
+        <slot></slot>
+      </div>
+    </el-popover>
   </client-only>
 </template>
 
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { ElPopover } from 'element-plus'
 const props = defineProps({
   // 通用参数
   invalid: {
@@ -62,7 +71,9 @@ const filterStore = useFiltersStore()
 const orderStore = useOrdersStore()
 const dimensionStore = useDimensionsStore()
 const groupStore = useGroupsStore()
-const selectorVisible = ref(false)
+const isPopoverEnabled = computed(() => {
+  return ['order', 'filter'].includes(props.cast)
+})
 /**
  * @desc 无效样式
  */
@@ -108,11 +119,20 @@ const handleDeleteSelector = () => {
   }
 }
 
-onMounted(() => {
-  // 如果cast为filter或order，则默认显示
-  if (props.cast === 'filter' || props.cast === 'order') {
-    selectorVisible.value = true
-  }
+/**
+ * @desc popover ref
+ */
+const popoverRef = ref<InstanceType<typeof ElPopover>>()
+
+/**
+ * @desc 关闭 popover
+ */
+const closePopover = () => {
+  popoverRef.value?.hide()
+}
+
+defineExpose({
+  closePopover
 })
 </script>
 <style lang="scss" scoped>

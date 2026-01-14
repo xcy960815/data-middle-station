@@ -16,7 +16,8 @@ export const useAnalyzeStore = defineStore<
     chartType: 'table',
     chartConfigId: null,
     chartLoading: false,
-    analyzeData: []
+    analyzeData: [],
+    chartErrorAnalysis: ''
   }),
   getters: {
     /**
@@ -80,6 +81,12 @@ export const useAnalyzeStore = defineStore<
      */
     getAnalyzeData(state) {
       return state.analyzeData
+    },
+    /**
+     * @desc 获取图表错误分析
+     */
+    getChartErrorAnalysis(state): string {
+      return state.chartErrorAnalysis
     }
   },
   actions: {
@@ -158,6 +165,12 @@ export const useAnalyzeStore = defineStore<
      */
     setAnalyzeData(analyzeData) {
       this.analyzeData = analyzeData
+    },
+    /**
+     * @desc 设置图表错误分析
+     */
+    setChartErrorAnalysis(chartErrorAnalysis) {
+      this.chartErrorAnalysis = chartErrorAnalysis
     }
   }
 })

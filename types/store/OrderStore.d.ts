@@ -25,13 +25,13 @@ declare namespace OrderStore {
   type OrderAggregationsType = AnalyzeConfigVo.OrderAggregationsType
   /**
    * @desc 左侧列字段
-   * @interface OrderOption
+   * @interface OrderOptions
    * @property {string} name 列名
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type OrderOption = ColumnsStore.ColumnOption & {
-    orderType: OrderType | null
+  type OrderOptions = ColumnsStore.ColumnOptions & {
+    orderType: OrderType
     aggregationType?: OrderAggregationsType
     __invalid?: boolean | null
     __invalidMessage?: string | null
@@ -41,7 +41,7 @@ declare namespace OrderStore {
    * @desc 排序状态
    */
   type OrderState = {
-    orders: OrderOption[]
+    orders: OrderOptions[]
   }
   /**
    * @desc getter
@@ -52,9 +52,9 @@ declare namespace OrderStore {
    * @desc 排序操作
    */
   type OrderActions = {
-    updateOrder: ({ order: OrderOption, index: number }) => void
+    updateOrder: ({ order: OrderOptions, index: number }) => void
   } & {
-    addOrders: (orders: OrderOption[]) => void
+    addOrders: (orders: OrderOptions[]) => void
     removeOrder: (index: number) => void
   }
 }

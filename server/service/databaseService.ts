@@ -107,19 +107,19 @@ export class DatabaseService {
       const dtoPayload = this.convertDaoToDtoColumn(columnRecord)
       const normalizedColumnRecord = this.convertDtoToDaoColumn(dtoPayload)
       const columnTypeValue = normalizedColumnRecord.columnType
-      let columnType = ''
-      if (NUMBER_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
-        columnType = 'number'
-      } else if (STRING_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
-        columnType = 'string'
-      } else if (DATE_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
-        columnType = 'date'
-      } else {
-        columnType = columnTypeValue
-      }
+      // let columnType = ''
+      // if (NUMBER_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
+      //   columnType = 'number'
+      // } else if (STRING_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
+      //   columnType = 'string'
+      // } else if (DATE_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
+      //   columnType = 'date'
+      // } else {
+      //   columnType = columnTypeValue
+      // }
       return {
         columnName: normalizedColumnRecord.columnName,
-        columnType: columnType,
+        columnType: columnTypeValue,
         columnComment: normalizedColumnRecord.columnComment,
         displayName: normalizedColumnRecord.columnComment
       }
