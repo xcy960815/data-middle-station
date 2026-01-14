@@ -10,11 +10,13 @@ export class ApiResponse {
       message: 'success'
     }
   }
-  static error<T extends Object>(message: string): ApiResponseI<T> {
+  static error<T extends Object>(message: string, sql?: string, queryParams?: any): ApiResponseI<T> {
     return {
       code: 500,
       data: null,
-      message
+      message,
+      sql,
+      queryParams
     }
   }
 }

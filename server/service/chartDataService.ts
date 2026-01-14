@@ -175,8 +175,12 @@ export class ChartDataService {
     /**
      * @desc 获取图表数据
      */
-    const chartDataRecords = await this.chartDataMapper.getAnalyzeData(sql)
-
-    return this.convertDaoToVo(chartDataRecords)
+    try {
+      const chartDataRecords = await this.chartDataMapper.getAnalyzeData(sql)
+      return this.convertDaoToVo(chartDataRecords)
+    } catch (error: any) {
+      error.sql = sql
+      throw error
+    }
   }
 }
