@@ -1,10 +1,15 @@
 <template>
   <div class="chart relative h-full w-full overflow-hidden">
     <template v-if="chartErrorMessage">
-      <div class="absolute inset-0 flex justify-center items-center">
-        <div class="text-red-500 text-[14px]">
+      <div class="absolute inset-0 flex flex-col justify-center items-center p-4 overflow-auto">
+        <div class="text-red-500 text-[14px] mb-4 font-bold">
           {{ chartErrorMessage }}
         </div>
+        <div
+          v-if="chartErrorAnalysis"
+          class="text-gray-700 text-[13px] w-full max-w-[800px] bg-gray-50 p-4 rounded border border-gray-200 markdown-body"
+          v-html="renderMarkdownText(chartErrorAnalysis)"
+        ></div>
       </div>
     </template>
     <template v-else>
@@ -101,6 +106,13 @@ const chartTitle = computed(() => analyzeStore.getAnalyzeName)
  */
 const chartErrorMessage = computed(() => {
   return analyzeStore.getChartErrorMessage
+})
+
+/**
+ * @desc 图表错误分析
+ */
+const chartErrorAnalysis = computed(() => {
+  return analyzeStore.getChartErrorAnalysis
 })
 
 /**

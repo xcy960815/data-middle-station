@@ -66,6 +66,10 @@ declare namespace AnalyzeStore {
      * 图表加载状态
      */
     chartLoading: boolean
+    /**
+     * 图表错误分析
+     */
+    chartErrorAnalysis: string
   }
   /**
    * @desc 图表getter

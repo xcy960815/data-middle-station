@@ -7,14 +7,15 @@ const chartDataService = new ChartDataService()
  * @returns {Promise<ResponseModule.Response<AnalyzeDataVo.AnalyzeData[]>>}
  */
 export default defineEventHandler<Promise<ApiResponseI<AnalyzeDataVo.AnalyzeData[]>>>(async (event) => {
+  let chartDataParams: AnalyzeDataDto.ChartDataOptions | undefined
   try {
-    const chartDataParams = await readBody<AnalyzeDataDto.ChartDataOptions>(event)
+    chartDataParams = await readBody<AnalyzeDataDto.ChartDataOptions>(event)
 
     const data = await chartDataService.getAnalyzeData(chartDataParams)
 
     return ApiResponse.success(data)
   } catch (error: any) {
     console.error(error)
-    return ApiResponse.error(error.message)
+    return ApiResponse.error(error.message, error.sql, chartDataParams)
   }
 })
