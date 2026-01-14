@@ -17,12 +17,12 @@ declare namespace AnalyzeDataDto {
   /**
    * @desc 过滤配置
    */
-  type FilterOption = AnalyzeConfigDao.FilterOptions
+  type FilterOptions = AnalyzeConfigDao.FilterOptions
 
   /**
    * @desc 排序配置
    */
-  type OrderOption = AnalyzeConfigDao.OrderOptions
+  type OrderOptions = AnalyzeConfigDao.OrderOptions
 
   /**
    * @desc 获取图表数据请求参数
@@ -31,11 +31,11 @@ declare namespace AnalyzeDataDto {
     /**
      * @desc 过滤配置
      */
-    filters: FilterOption[]
+    filters: FilterOptions[]
     /**
      * @desc 排序配置
      */
-    orders: OrderOption[]
+    orders: OrderOptions[]
     /**
      * @desc 分组配置
      */

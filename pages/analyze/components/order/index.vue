@@ -8,7 +8,7 @@
       <div
         data-action="drag"
         class="order__item my-1"
-        v-for="(orderOption, index) in orderList"
+        v-for="(orderOptions, index) in orderList"
         :key="index"
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
@@ -18,14 +18,14 @@
         <selector-order
           class="order__item__name"
           cast="order"
-          :display-name="orderOption.displayName"
-          v-model:orderType="orderOption.orderType"
-          :column-name="orderOption.columnName"
+          :display-name="orderOptions.displayName"
+          v-model:orderType="orderOptions.orderType"
+          :column-name="orderOptions.columnName"
           :index="index"
-          v-model:aggregationType="orderOption.aggregationType"
-          :order="orderOption"
-          :invalid="orderOption.__invalid"
-          :invalidMessage="orderOption.__invalidMessage"
+          v-model:aggregationType="orderOptions.aggregationType"
+          :order="orderOptions"
+          :invalid="orderOptions.__invalid"
+          :invalidMessage="orderOptions.__invalidMessage"
         ></selector-order>
       </div>
     </div>
@@ -40,15 +40,13 @@ const orderStore = useOrdersStore()
 /**
  * @desc orderList
  */
-const orderList = computed<OrderStore.OrderState['orders']>(() => {
-  return orderStore.getOrders
-})
+const orderList = computed<OrderStore.OrderOptions[]>(() => orderStore.getOrders)
 
 /**
  * @desc addOrder
- * @param {OrderStore.OrderOption|Array<OrderStore.OrderOption>} orders
+ * @param {OrderStore.OrderOptions|Array<OrderStore.OrderOptions>} orders
  */
-const addOrder = (order: OrderStore.OrderOption | Array<OrderStore.OrderOption>) => {
+const addOrder = (order: OrderStore.OrderOptions | Array<OrderStore.OrderOptions>) => {
   order = Array.isArray(order) ? order : [order]
   orderStore.addOrders(order)
 }
@@ -75,8 +73,8 @@ const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
 
 /**
  * @desc dragstartHandler
- * @param {number} index
- * @param {DragEvent} dragEvent
+ * @param {number} index 当前拖拽的index
+ * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
 const dragstartHandler = (index: number, dragEvent: DragEvent) => {
@@ -90,17 +88,17 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   )
 }
 /**
- * @desc dragHandler
- * @param {number} index
- * @param {DragEvent} dragEvent
+ * @desc dragHandler 拖拽事件
+ * @param {number} index 当前拖拽的index
+ * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
 const dragHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
 /**
- * @desc dragoverHandler
- * @param {DragEvent} dragEvent
+ * @desc dragoverHandler 拖拽事件
+ * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
 const dragoverHandler = (dragEvent: DragEvent) => {
@@ -108,15 +106,15 @@ const dragoverHandler = (dragEvent: DragEvent) => {
   // dragEvent.dataTransfer.dropEffect = 'move';
 }
 /**
- * @desc dropHandler
- * @param {DragEvent} dragEvent
+ * @desc dropHandler 拖拽事件
+ * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnsStore.ColumnOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
 
-  const orderOption: OrderStore.OrderOption = {
+  const orderOption: OrderStore.OrderOptions = {
     ...data.value,
     // 默认降序
     orderType: 'desc',

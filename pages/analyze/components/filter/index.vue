@@ -48,10 +48,10 @@ const filterStore = useFiltersStore()
 const filterList = computed(() => filterStore.getFilters)
 /**
  * @desc addFilter
- * @param filter {FilterStore.FilterOption | Array<FilterStore.FilterOption>}
+ * @param filter {FilterStore.FilterOptions | Array<FilterStore.FilterOptions>}
  * @returns {void}
  */
-const addFilter = (filter: FilterStore.FilterOption | Array<FilterStore.FilterOption>) => {
+const addFilter = (filter: FilterStore.FilterOptions | Array<FilterStore.FilterOptions>) => {
   filter = Array.isArray(filter) ? filter : [filter]
   filterStore.addFilters(filter)
 }
@@ -117,7 +117,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
  */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<FilterStore.FilterOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  const data: DragData<FilterStore.FilterOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   // 自己处理成自己需要的数据
   const filter = data.value
 

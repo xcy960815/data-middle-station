@@ -45,9 +45,9 @@ export const useAnalyzeHandler = () => {
       columnStore.setColumns(chartConfig?.columns || [])
       // TODO
       dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
-      filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
+      filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOptions[]) || [])
       groupStore.setGroups((chartConfig?.groups as GroupStore.GroupOption[]) || [])
-      orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
+      orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOptions[]) || [])
       // 设置公共配置与图表配置
       chartConfigStore.setCommonChartConfig(chartConfig?.commonChartConfig || chartConfigStore.$state.commonChartConfig)
       chartConfigStore.setPrivateChartConfig(
