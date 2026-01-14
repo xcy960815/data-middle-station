@@ -1,17 +1,13 @@
-# restart 策略可选值：
-#   no              - 不自动重启（默认）
-#   always          - 总是自动重启
-#   on-failure[:N]  - 失败时自动重启，最多N次
-#   unless-stopped  - 除非手动停止，否则总是重启
+# 本compose适应于部署在自己的服务上使用的，为了做数据持久化
 services:
   # Nuxt3 应用服务
   nuxt3:
     image: xcy960815/data-middle-station:${IMAGE_VERSION:-latest}
-    container_name: dms-app
+    container_name: dms-app-container
     ports:
       - '${NUXT_PORT}:12583'
     volumes:
-      - ./logs:/app/logs
+      - /mnt/sata1-4/AppData/dms/logs:/app/logs
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     restart: always
@@ -24,10 +20,12 @@ services:
   # Redis 缓存服务
   redis:
     image: redis:7.2.5
-    container_name: dms-redis
+    container_name: dms-redis-container
     command: ["redis-server", "--bind", "0.0.0.0", "--requirepass", "${REDIS_PASSWORD}"]
     ports:
       - '${REDIS_PORT}:6379'
+    volumes:
+      - /mnt/sata1-4/AppData/dms/redis/data:/data
     networks:
       - dms-network
     restart: always
@@ -41,7 +39,7 @@ services:
   # 主数据库 MySQL（应用数据）
   mysql-main:
     image: mysql:8.4.2
-    container_name: dms-mysql-main
+    container_name: dms-mysql-main-container
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -58,7 +56,7 @@ services:
     ports:
       - '${MYSQL_MAIN_PORT}:3306'
     volumes:
-      - mysql-main-data:/var/lib/mysql
+      - /mnt/sata1-4/AppData/dms/mysql-main/data:/var/lib/mysql
     networks:
       - dms-network
     restart: always
@@ -72,7 +70,7 @@ services:
   # 看板数据 MySQL（业务数据）
   mysql-data:
     image: mysql:8.4.2
-    container_name: dms-mysql-data
+    container_name: dms-mysql-data-container
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATA_DATABASE}
@@ -89,7 +87,7 @@ services:
     ports:
       - '${MYSQL_DATA_PORT}:3306'
     volumes:
-      - mysql-data-data:/var/lib/mysql
+      - /mnt/sata1-4/AppData/dms/mysql-data/data:/var/lib/mysql
     networks:
       - dms-network
     restart: always
@@ -104,11 +102,3 @@ networks:
   dms-network:
     name: dms-network
     driver: bridge
-
-volumes:
-  mysql-main-data:
-    name: dms-mysql-main-data
-    driver: local
-  mysql-data-data:
-    name: dms-mysql-data-data
-    driver: local

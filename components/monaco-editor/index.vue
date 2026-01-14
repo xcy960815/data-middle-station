@@ -249,7 +249,26 @@ onBeforeUnmount(() => {
   resizeObserver.value?.disconnect()
 })
 
+/**
+ * @desc 在光标处插入文本
+ * @param {string} text 文本
+ */
+const insertText = (text: string) => {
+  if (!monacoEditor.value) return
+  const position = monacoEditor.value.getPosition()
+  if (!position) return
+  monacoEditor.value.executeEdits('', [
+    {
+      range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+      text: text,
+      forceMoveMarkers: true
+    }
+  ])
+  monacoEditor.value.focus()
+}
+
 defineExpose({
-  resetEditor
+  resetEditor,
+  insertText
 })
 </script>

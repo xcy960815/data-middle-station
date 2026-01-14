@@ -10,4 +10,6 @@ declare interface ApiResponseI<D extends Object = any> {
   data: D | null
   message: string
   success?: boolean
+  sql?: string
+  queryParams?: AnalyzeDataDto.ChartDataOptions
 }

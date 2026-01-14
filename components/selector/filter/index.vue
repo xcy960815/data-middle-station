@@ -1,30 +1,53 @@
 <template>
-  <selector-template v-bind="$attrs" :display-name="displayName">
+  <selector-template v-bind="$attrs" :display-name="displayName" ref="selectorTemplateRef">
     <template #default>
-      <div
-        class="aggregation-option step-1"
-        v-if="!aggregationType"
-        @click="handleChangeAggregation(filterAggregation.value)"
-        v-for="filterAggregation in filterAggregations"
-      >
-        <icon-park
-          class="aggregation-mark"
-          type="correct"
-          size="14"
-          fill="#333"
-          v-if="filterAggregation.value === aggregationType"
-        />
-        <span>{{ filterAggregation.label }}</span>
-      </div>
-      <div class="filter-selector relative step-2" style="width: 500px" v-else>
-        <el-select v-model="localFilterType" placeholder="请选择过滤条件" class="w-full mb-1">
-          <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-        <el-input v-if="hasFilterValue()" v-model="localFilterValue" placeholder="请输入过滤值"></el-input>
-        <div class="handle-box mt-1">
-          <el-button @click="handleConfirm">确定</el-button>
+      <!-- Step 1: 聚合方式列表 -->
+      <template v-if="!aggregationType">
+        <div
+          class="aggregation-option flex items-center cursor-pointer hover:bg-gray-100 py-1 px-1 justify-between transition-colors"
+          @click="handleChangeAggregation(filterAggregation.value)"
+          v-for="filterAggregation in filterAggregations"
+          :key="filterAggregation.value"
+        >
+          <span class="text-xs">{{ filterAggregation.label }}</span>
+          <icon-park class="aggregation-mark text-xs" type="right" size="12" theme="outline" />
         </div>
-      </div>
+      </template>
+
+      <!-- Step 2: 过滤条件设置 -->
+      <template v-else>
+        <div class="filter-selector w-[200px]">
+          <!-- 头部：返回按钮 + 当前聚合方式 -->
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+            <div
+              class="flex items-center cursor-pointer text-gray-600 hover:text-blue-600 transition-colors group"
+              @click="handleBackToStep1"
+            >
+              <icon-park type="left" size="12" class="mr-1" />
+              <span class="text-xs font-medium">{{ currentAggregationLabel }}</span>
+            </div>
+          </div>
+
+          <!-- 表单区域 -->
+          <div class="space-y-3">
+            <el-select v-model="localFilterType" placeholder="请选择条件" class="w-full" size="small">
+              <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+
+            <el-input
+              v-if="hasFilterValue()"
+              v-model="localFilterValue"
+              placeholder="请输入值"
+              size="small"
+              clearable
+            />
+
+            <div class="flex justify-end pt-1">
+              <el-button type="primary" size="small" @click="handleConfirm" class="w-full">确定</el-button>
+            </div>
+          </div>
+        </div>
+      </template>
     </template>
   </selector-template>
 </template>
@@ -133,6 +156,20 @@ const handleChangeAggregation = (aggregationType: FilterStore.FilterAggregationT
 }
 
 /**
+ * @desc 返回第一步
+ */
+const handleBackToStep1 = () => {
+  emits('update:aggregationType', '')
+}
+
+/**
+ * @desc 当前聚合方式的显示名称
+ */
+const currentAggregationLabel = computed(() => {
+  return filterAggregations.value.find((item) => item.value === props.aggregationType)?.label || '选择聚合'
+})
+
+/**
  * @desc 过滤选项
  */
 const filterOptions = computed(() => {
@@ -226,7 +263,13 @@ const handleConfirm = () => {
   )
   emits('update:filterType', localFilterType.value)
   emits('update:filterValue', localFilterValue.value)
+  selectorTemplateRef.value?.closePopover()
 }
+
+/**
+ * @desc selector-template ref
+ */
+const selectorTemplateRef = ref()
 
 onMounted(() => {
   localFilterType.value = props.filterType

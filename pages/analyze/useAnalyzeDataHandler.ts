@@ -63,6 +63,7 @@ export const useAnalyzeDataHandler = () => {
     const chartType = analyzeStore.getChartType
     const errorMessage = chartSuggestStrategies(chartType)
     analyzeStore.setChartErrorMessage(errorMessage)
+    analyzeStore.setChartErrorAnalysis('')
     if (errorMessage) return
 
     analyzeStore.setChartLoading(true)
@@ -78,9 +79,54 @@ export const useAnalyzeDataHandler = () => {
     if (result.code === 200) {
       analyzeStore.setAnalyzeData(result.data || [])
       analyzeStore.setChartErrorMessage('')
+      analyzeStore.setChartErrorAnalysis('')
     } else {
       analyzeStore.setAnalyzeData([])
-      analyzeStore.setChartErrorMessage(result.message)
+      let errorMessage = `查询失败: ${result.message}`
+      analyzeStore.setChartErrorMessage(errorMessage)
+
+      // 如果有 SQL，触发 AI 分析
+      if (result.sql) {
+        let analysisMessage = '🤖 正在进行 AI 智能分析...\n'
+        analyzeStore.setChartErrorAnalysis(analysisMessage)
+
+        try {
+          const response = await fetch('/api/analyzeError', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sql: result.sql,
+              errorMessage: result.message,
+              queryParams: queryAnalyzeDataParams.value
+            })
+          })
+
+          const reader = response.body?.getReader()
+          const decoder = new TextDecoder()
+
+          if (reader) {
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) break
+              const chunk = decoder.decode(value, { stream: true })
+              const lines = chunk.split('\n')
+              for (const line of lines) {
+                if (!line.trim()) continue
+                try {
+                  const json = JSON.parse(line)
+                  if (json.type === 'ai_chunk') {
+                    analysisMessage += json.content
+                    analyzeStore.setChartErrorAnalysis(analysisMessage)
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+        } catch (e) {
+          analysisMessage += '\n(AI 分析服务暂时不可用)'
+          analyzeStore.setChartErrorAnalysis(analysisMessage)
+        }
+      }
     }
 
     // 更新计时信息
