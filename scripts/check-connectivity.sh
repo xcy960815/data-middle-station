@@ -30,12 +30,25 @@ REMOTE_COMMAND=$(cat <<EOF
     fi
 
     echo "Testing connection from inside the container..."
-    # 使用 Node.js 进行 TCP 连接测试，因为 Alpine 镜像没有 bash 的 /dev/tcp 功能
+
+    # Check SMTP (465)
+    echo -n "Checking SMTP ($TARGET_IP:$TARGET_PORT)... "
     if docker exec $CONTAINER_NAME node -e "const net = require('net'); const client = net.createConnection({host: '$TARGET_IP', port: $TARGET_PORT, timeout: 5000}, () => { console.log('Connected'); client.end(); process.exit(0); }); client.on('error', (err) => { console.error(err.message); process.exit(1); }); client.on('timeout', () => { console.error('Timeout'); process.exit(1); });" > /dev/null 2>&1; then
-        echo "✅ SUCCESS: Container can reach $TARGET_IP:$TARGET_PORT"
+        echo "✅ SUCCESS"
     else
-        echo "❌ FAILED: Container cannot reach $TARGET_IP:$TARGET_PORT"
-        echo "Possible reasons: Firewall rules, ISP blocking port 465, or incorrect NAT configuration."
+        echo "❌ FAILED"
+    fi
+
+    # Check HTTPS (443) - using a known reliable host like baidu.com or the specific IP if known
+    # Using the IP from the error message: 81.70.124.99
+    HTTPS_TARGET_IP="81.70.124.99"
+    HTTPS_PORT="443"
+
+    echo -n "Checking HTTPS (\$HTTPS_TARGET_IP:\$HTTPS_PORT)... "
+    if docker exec $CONTAINER_NAME node -e "const net = require('net'); const client = net.createConnection({host: '\$HTTPS_TARGET_IP', port: \$HTTPS_PORT, timeout: 5000}, () => { console.log('Connected'); client.end(); process.exit(0); }); client.on('error', (err) => { console.error(err.message); process.exit(1); }); client.on('timeout', () => { console.error('Timeout'); process.exit(1); });" > /dev/null 2>&1; then
+        echo "✅ SUCCESS"
+    else
+        echo "❌ FAILED"
     fi
 EOF
 )
