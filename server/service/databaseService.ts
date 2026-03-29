@@ -1,58 +1,5 @@
 import { DatabaseMapper } from '@/server/mapper/databaseMapper'
 
-/** 将数据库所有的类型罗列出来在前端统一展示成 number */
-const NUMBER_TYPE_ENUM = [
-  'tinyint',
-  'smallint',
-  'mediumint',
-  'int',
-  'bigint',
-  'decimal',
-  'float',
-  'double',
-  'real',
-  'bit',
-  'boolean',
-  'serial'
-] as const
-/** 将数据库所有的类型罗列出来在前端统一展示成 string */
-const STRING_TYPE_ENUM = [
-  'char',
-  'varchar',
-  'tinytext',
-  'text',
-  'mediumtext',
-  'longtext',
-  'tinyblob',
-  'blob',
-  'mediumblob',
-  'longblob',
-  'binary',
-  'varbinary',
-  'enum',
-  'set',
-  'json',
-  'geometry',
-  'point',
-  'linestring',
-  'polygon',
-  'multipoint',
-  'multilinestring',
-  'multipolygon',
-  'geometrycollection'
-] as const
-/** 将数据库所有的类型罗列出来在前端统一展示成 date */
-const DATE_TYPE_ENUM = [
-  'date',
-  'datetime',
-  'timestamp',
-  'time',
-  'year',
-  'datetime2',
-  'datetimeoffset',
-  'smalldatetime'
-] as const
-
 /**
  * @desc 数据库服务
  */

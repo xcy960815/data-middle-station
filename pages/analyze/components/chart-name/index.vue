@@ -24,7 +24,7 @@ const analyzeDesc = computed(() => {
   return analyzeStore.getAnalyzeDesc
 })
 
-const props = defineProps({
+defineProps({
   analyzeName: {
     type: String,
     default: ''

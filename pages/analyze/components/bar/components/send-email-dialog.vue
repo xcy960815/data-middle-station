@@ -166,6 +166,11 @@ import {
   ElTag,
   ElTimePicker
 } from 'element-plus'
+import {
+  getUnsupportedMailChartTypeMessage,
+  isMailSupportedChartType,
+  validateEmailRecipients
+} from '~/shared/emailUtils'
 
 export interface EmailFormData {
   /**
@@ -306,16 +311,17 @@ const emailFormRules: FormRules<EmailFormData> = {
           callback(new Error('请输入收件人邮箱'))
           return
         }
-        // const emails = value
-        //   .split(',')
-        //   .map((email) => email.trim())
-        //   .filter((email) => email)
-        // const emailValidation = validateEmails(emails)
-        // if (!emailValidation.valid) {
-        //   callback(new Error(`邮件地址格式错误: ${emailValidation.invalidEmails.join(', ')}`))
-        // } else {
-        //   callback()
-        // }
+        const emailValidation = validateEmailRecipients(value)
+        if (!emailValidation.valid) {
+          callback(
+            new Error(
+              emailValidation.invalidRecipients.length > 0
+                ? `邮件地址格式错误: ${emailValidation.invalidRecipients.join(', ')}`
+                : '请输入至少一个有效邮箱，多个邮箱可用逗号分隔'
+            )
+          )
+          return
+        }
         callback()
       },
       trigger: 'blur'
@@ -404,6 +410,30 @@ const emailFormRules: FormRules<EmailFormData> = {
 
 // 获取 store
 const analyzeStore = useAnalyzeStore()
+
+/**
+ * 在提交前拦截当前邮件模块尚不支持的图表类型。
+ */
+const ensureMailChartTypeSupported = () => {
+  if (isMailSupportedChartType(analyzeStore.getChartType)) {
+    return true
+  }
+
+  ElMessage.error(getUnsupportedMailChartTypeMessage(analyzeStore.getChartType))
+  return false
+}
+
+/**
+ * 为邮件附件生成稳定的 SVG 文件名。
+ */
+const getAttachmentFilename = () => {
+  const analyzeName = (analyzeStore.getAnalyzeName || 'analyze').trim()
+  if (!analyzeName) {
+    return 'analyze.svg'
+  }
+
+  return analyzeName.toLowerCase().endsWith('.svg') ? analyzeName : `${analyzeName}.svg`
+}
 
 // 生成默认邮件主题
 const generateDefaultSubject = () => {
@@ -505,27 +535,35 @@ const handleConfirm = async () => {
   }
 
   isSending.value = true
+  let success = false
   if (emailFormData.sendMode === 'immediate') {
-    await sendEmail()
+    success = await sendEmail()
   } else if (emailFormData.sendMode === 'scheduled') {
     // 定时任务
-    await saveScheduledTask()
+    success = await saveScheduledTask()
   } else if (emailFormData.sendMode === 'recurring') {
     // 重复任务
-    await saveRecurringTask()
+    success = await saveRecurringTask()
   }
 
-  emits('update:visible', false)
-  resetEmailForm()
+  if (success) {
+    emits('update:visible', false)
+    resetEmailForm()
+  }
 }
 
 /**
  * 发送邮件
+ * @description 即时发送成功后返回 true，供弹窗决定是否关闭。
  */
 const sendEmail = async () => {
   const valid = await emailFormRef.value?.validate().catch(() => false)
   if (!valid) {
-    return
+    return false
+  }
+  if (!ensureMailChartTypeSupported()) {
+    isSending.value = false
+    return false
   }
   // 构建邮件数据
   const emailData: SendEmailDto.SendChartEmailRequest = {
@@ -535,7 +573,7 @@ const sendEmail = async () => {
       additionalContent: emailFormData.additionalContent
     },
     analyzeOptions: {
-      filename: analyzeStore.getAnalyzeName,
+      filename: getAttachmentFilename(),
       chartType: analyzeStore.getChartType,
       analyzeName: analyzeStore.getAnalyzeName,
       analyzeId: analyzeStore.getAnalyzeId!
@@ -549,18 +587,25 @@ const sendEmail = async () => {
   })
   if (response.code === 200) {
     ElMessage.success('邮件发送成功！')
+    return true
   } else {
-    ElMessage.error('邮件发送失败！')
+    ElMessage.error(response.message || '邮件发送失败！')
+    return false
   }
 }
 
 /**
  * 保存定时任务
+ * @description 仅在服务端创建成功后返回 true，失败时保留当前表单状态。
  */
 const saveScheduledTask = async () => {
   const valid = await emailFormRef.value?.validate().catch(() => false)
   if (!valid) {
-    return
+    return false
+  }
+  if (!ensureMailChartTypeSupported()) {
+    isSending.value = false
+    return false
   }
   // 构建定时任务数据
   const scheduledEmailData: ScheduledEmailDto.CreateScheduledEmailOptions = {
@@ -575,7 +620,7 @@ const saveScheduledTask = async () => {
       additionalContent: emailFormData.additionalContent
     },
     analyzeOptions: {
-      filename: analyzeStore.getAnalyzeName,
+      filename: getAttachmentFilename(),
       chartType: analyzeStore.getChartType, // 图表类型
       analyzeName: analyzeStore.getAnalyzeName,
       analyzeId: analyzeStore.getAnalyzeId!
@@ -593,18 +638,25 @@ const saveScheduledTask = async () => {
 
   if (response.code === 200) {
     ElMessage.success('定时任务保存成功！')
+    return true
   } else {
-    ElMessage.error('定时任务保存失败！')
+    ElMessage.error(response.message || '定时任务保存失败！')
+    return false
   }
 }
 
 /**
  * 保存重复任务
+ * @description 与定时任务共用同一组前端校验，但由 sendMode 区分参数结构。
  */
 const saveRecurringTask = async () => {
   const valid = await emailFormRef.value?.validate().catch(() => false)
   if (!valid) {
-    return
+    return false
+  }
+  if (!ensureMailChartTypeSupported()) {
+    isSending.value = false
+    return false
   }
   // 构建重复任务数据
   const recurringTaskData: ScheduledEmailDto.CreateScheduledEmailOptions = {
@@ -620,7 +672,7 @@ const saveRecurringTask = async () => {
       additionalContent: emailFormData.additionalContent
     },
     analyzeOptions: {
-      filename: analyzeStore.getAnalyzeName,
+      filename: getAttachmentFilename(),
       chartType: analyzeStore.getChartType,
       analyzeName: analyzeStore.getAnalyzeName,
       analyzeId: analyzeStore.getAnalyzeId!
@@ -637,46 +689,11 @@ const saveRecurringTask = async () => {
 
   if (response.code === 200) {
     ElMessage.success('重复任务保存成功！')
+    return true
   } else {
-    ElMessage.error('重复任务保存失败！')
+    ElMessage.error(response.message || '重复任务保存失败！')
+    return false
   }
-}
-
-/**
- * 计算下次执行时间
- */
-const calculateNextExecutionTime = (recurringDays: number[], recurringTime: string): string => {
-  const now = new Date()
-  const today = now.getDay() // 0=周日, 1=周一, ..., 6=周六
-  const currentTime = now.getHours() * 60 + now.getMinutes()
-  const [targetHour, targetMinute] = recurringTime.split(':').map(Number)
-  const targetTime = targetHour * 60 + targetMinute
-
-  // 找到下一个执行时间
-  for (let i = 0; i < 7; i++) {
-    const checkDay = (today + i) % 7
-
-    if (recurringDays.includes(checkDay)) {
-      const checkDate = new Date(now)
-      checkDate.setDate(now.getDate() + i)
-      checkDate.setHours(targetHour, targetMinute, 0, 0)
-
-      // 如果是今天，需要检查时间是否已过
-      if (i === 0 && targetTime <= currentTime) {
-        continue
-      }
-
-      return checkDate.toISOString().slice(0, 19).replace('T', ' ')
-    }
-  }
-
-  // 如果没有找到，返回下周的第一个执行日
-  const firstDay = Math.min(...recurringDays)
-  const nextWeekDate = new Date(now)
-  nextWeekDate.setDate(now.getDate() + 7 + firstDay - today)
-  nextWeekDate.setHours(targetHour, targetMinute, 0, 0)
-
-  return nextWeekDate.toISOString().slice(0, 19).replace('T', ' ')
 }
 
 /**
@@ -691,7 +708,9 @@ const handleCancel = () => {
   emits('update:visible', false)
 }
 
-// 重置邮件表单的方法，供父组件调用
+/**
+ * 重置弹窗表单到初始状态，供关闭弹窗或父组件主动调用。
+ */
 const resetEmailForm = () => {
   if (emailFormRef.value) {
     emailFormRef.value.resetFields()

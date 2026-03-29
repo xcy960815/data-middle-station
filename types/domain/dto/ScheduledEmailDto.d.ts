@@ -80,7 +80,18 @@ declare namespace ScheduledEmailDto {
    */
   type CreateScheduledEmailOptions = Omit<
     ScheduledEmailOptions,
-    'id' | 'createdTime' | 'createdBy' | 'updatedTime' | 'updatedBy'
+    | 'id'
+    | 'createdTime'
+    | 'createdBy'
+    | 'updatedTime'
+    | 'updatedBy'
+    | 'isActive'
+    | 'nextExecutionTime'
+    | 'status'
+    | 'executedTime'
+    | 'errorMessage'
+    | 'retryCount'
+    | 'maxRetries'
   >
 
   /**

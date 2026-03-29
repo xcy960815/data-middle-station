@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import weekday from 'dayjs/plugin/weekday.js'
 import nodemailer, { type Transporter } from 'nodemailer'
+import { isMailSupportedChartType, normalizeEmailRecipients } from '~/shared/emailUtils'
 
 dayjs.extend(weekday)
 
@@ -79,6 +80,7 @@ export class SendEmailService {
 
   /**
    * @desc 创建邮件传输器
+   * @description 根据运行时 SMTP 配置初始化 nodemailer 传输实例。
    */
   private createTransporter(): void {
     this.transporter = nodemailer.createTransport({
@@ -105,12 +107,27 @@ export class SendEmailService {
       this.createTransporter()
     }
 
+    const normalizedRecipients = normalizeEmailRecipients(sendOptions.emailConfig.to)
+    if (normalizedRecipients.length === 0) {
+      throw new Error('缺少有效的收件人地址')
+    }
+
     // 根据 analyzeId 自动补全图表信息
     const resolvedAnalyzeOptions = await this.resolveAnalyzeOptions(sendOptions.analyzeOptions)
 
     // 构建附件配置
     const attachments = this.buildAttachments(resolvedAnalyzeOptions)
-    const mailPayload = this.convertDtoToDao(sendOptions, attachments, resolvedAnalyzeOptions)
+    const mailPayload = this.convertDtoToDao(
+      {
+        ...sendOptions,
+        emailConfig: {
+          ...sendOptions.emailConfig,
+          to: normalizedRecipients
+        }
+      },
+      attachments,
+      resolvedAnalyzeOptions
+    )
 
     const sendResult = await this.transporter!.sendMail(mailPayload)
     const sendResultData = this.convertDaoToDto({
@@ -125,7 +142,7 @@ export class SendEmailService {
       envelope: sendResult.envelope
     })
 
-    logger.info(`邮件已发送，messageId=${sendResult.messageId}，收件人=${chalk.cyan(sendOptions.emailConfig.to)}`)
+    logger.info(`邮件已发送，messageId=${sendResult.messageId}，收件人=${chalk.cyan(normalizedRecipients.join(', '))}`)
 
     return {
       messageId: sendResultData.messageId,
@@ -158,6 +175,7 @@ export class SendEmailService {
    * @param sendOptions {SendEmailDto.SendEmailOptions} 邮件请求
    * @param attachments {Attachment[]} 附件列表
    * @param analyzeOptions {SendEmailDto.AnalyzeOptions} 图表选项
+   * @description 统一把业务层请求组装为 nodemailer 可直接消费的 payload。
    */
   private convertDtoToDao(
     sendOptions: SendEmailDto.SendEmailOptions,
@@ -189,6 +207,7 @@ export class SendEmailService {
    * @desc 构建附件配置
    * @param analyzeOptions {SendEmailDto.AnalyzeOptions}
    * @returns {Array}
+   * @description 当前邮件模块统一以 SVG 快照作为附件输出。
    */
   private buildAttachments(analyzeOptions: SendEmailDto.AnalyzeOptions): Array<Attachment> {
     if (!analyzeOptions.filename) {
@@ -196,12 +215,9 @@ export class SendEmailService {
     }
 
     // 根据文件扩展名设置 content type
-    const isSvg = analyzeOptions.filename.toLowerCase().endsWith('.svg')
-    const contentType = isSvg ? 'image/svg+xml' : 'image/svg+xml'
-
     const attachment: Attachment = {
       filename: analyzeOptions.filename,
-      contentType
+      contentType: 'image/svg+xml'
     }
 
     // 优先使用文件内容
@@ -220,10 +236,15 @@ export class SendEmailService {
 
   /**
    * 根据 analyzeId 自动生成附件所需的图表快照
+   * @description 若调用方未直接提供附件内容，则退化为服务端按分析配置生成快照。
    */
   private async resolveAnalyzeOptions(
     analyzeOptions: SendEmailDto.AnalyzeOptions
   ): Promise<SendEmailDto.AnalyzeOptions> {
+    if (analyzeOptions.chartType && !isMailSupportedChartType(analyzeOptions.chartType)) {
+      throw new Error(`邮件功能暂不支持 ${analyzeOptions.chartType} 图表`)
+    }
+
     if (analyzeOptions.fileContent || analyzeOptions.filePath) {
       if (!analyzeOptions.filename) {
         throw new Error('缺少附件文件名，无法发送邮件')
@@ -252,14 +273,17 @@ export class SendEmailService {
    * @param emailConfig {SendEmailDto.EmailConfig}
    * @param analyzeOptions {SendEmailDto.AnalyzeOptions}
    * @returns {string}
+   * @description 构建邮件正文时会对用户输入做基础 HTML 转义，避免破坏模板结构。
    */
   private buildEmailContent(
     emailConfig: SendEmailDto.EmailConfig,
     analyzeOptions: SendEmailDto.AnalyzeOptions
   ): string {
+    const safeSubject = this.escapeHtml(emailConfig.subject)
+    const safeAnalyzeName = this.escapeHtml(analyzeOptions.analyzeName || '未命名分析')
     const additionalContent = emailConfig.additionalContent
       ? `<div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
-           <p style="margin: 0; color: #495057;">${emailConfig.additionalContent.replace(/\n/g, '<br>')}</p>
+           <p style="margin: 0; color: #495057;">${this.escapeHtml(emailConfig.additionalContent).replace(/\n/g, '<br>')}</p>
          </div>`
       : ''
 
@@ -268,7 +292,7 @@ export class SendEmailService {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${emailConfig.subject}</title>
+        <title>${safeSubject}</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -290,7 +314,7 @@ export class SendEmailService {
 
             <div class="chart-info">
               <h3 style="margin-top: 0; color: #495057;">📈 图表信息</h3>
-              <p style="margin: 5px 0;"><strong>图表标题:</strong> ${analyzeOptions.analyzeName}</p>
+              <p style="margin: 5px 0;"><strong>图表标题:</strong> ${safeAnalyzeName}</p>
               <p style="margin: 5px 0;"><strong>生成时间:</strong> ${dayjs().locale('zh-cn').format('YYYY年MM月DD日 HH:mm:ss')}</p>
             </div>
 
@@ -309,6 +333,7 @@ export class SendEmailService {
 
   /**
    * 获取默认发件地址
+   * @description 优先使用显式配置的发件地址，其次回退到 SMTP 用户名。
    */
   public getSenderAddress(): string {
     return this.smtpFrom || this.smtpUser || 'system@unknown'
@@ -316,6 +341,7 @@ export class SendEmailService {
 
   /**
    * 获取传输信息
+   * @description 供日志记录与调度层透传 SMTP 链路信息。
    */
   public getTransportInfo(): { host: string; port: number; secure: boolean } {
     return {
@@ -327,8 +353,21 @@ export class SendEmailService {
 
   /**
    * 获取当前通道
+   * @description 用于日志中区分 SMTP 与 SMTPS。
    */
   public getChannel(): string {
     return this.smtpSecure ? 'smtps' : 'smtp'
+  }
+
+  /**
+   * 对注入到 HTML 模板中的文本做基础转义。
+   */
+  private escapeHtml(content: string): string {
+    return content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
   }
 }

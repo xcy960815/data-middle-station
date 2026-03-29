@@ -252,13 +252,13 @@ export const createDragIcon = (
   }
 
   // 添加悬停效果到背景矩形
-  dragIconRect.on('mouseenter', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+  dragIconRect.on('mouseenter', (_event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
     if (!headerVars.isDraggingColumn) {
       setPointerStyle(stageVars.stage, true, 'grab')
     }
   })
 
-  dragIconRect.on('mouseleave', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+  dragIconRect.on('mouseleave', (_event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
     if (!headerVars.isDraggingColumn) {
       setPointerStyle(stageVars.stage, false, 'default')
     }

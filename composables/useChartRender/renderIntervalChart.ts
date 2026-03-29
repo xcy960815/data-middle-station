@@ -123,7 +123,7 @@ export function renderIntervalChart(
     }
 
     // 转换为百分比
-    for (const [seriesName, seriesData] of seriesMap.entries()) {
+    for (const [_seriesName, seriesData] of seriesMap.entries()) {
       for (let i = 0; i < seriesData.length; i++) {
         if (totals[i] > 0) {
           seriesData[i] = (seriesData[i] / totals[i]) * 100

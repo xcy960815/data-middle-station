@@ -164,9 +164,6 @@ const currentReferenceElement = ref<ContextMenu.ContextMenuElement>()
  * @desc 当前触发元素的配置
  * @type {ComputedRef<ContextMenu.ContextMenuOptions>}
  */
-const currentTriggerOptions = computed(
-  () => currentReferenceElement.value && contextMenuOptions.value.get(currentReferenceElement.value)
-)
 /**
  * @desc 添加触发元素
  * @param {ContextMenu.ContextMenuElement} contextMenuElement

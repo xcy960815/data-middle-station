@@ -221,7 +221,7 @@ const handleAnalyze = async () => {
 
     // 用户确认保存
     handleUpdateAnalyze()
-  } catch (error) {
+  } catch (_error) {
     // 用户取消或关闭对话框
     ElMessage.info('已取消保存')
   }

@@ -174,7 +174,7 @@ export function usePromiseUtils() {
     for (let i = 0; i < promiseList.length; i += concurrency) {
       const batch = promiseList.slice(i, i + concurrency)
 
-      const batchPromises = batch.map(async (promiseFactory, index) => {
+      const batchPromises = batch.map(async (promiseFactory) => {
         try {
           let promise = promiseFactory()
 

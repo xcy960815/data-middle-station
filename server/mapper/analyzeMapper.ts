@@ -112,7 +112,7 @@ export class AnalyzeMapper extends BaseMapper {
    * @returns {Promise<boolean>} 是否更新成功
    */
   public async updateAnalyze(updateAnalyzeOptions: AnalyzeDao.UpdateAnalyzeOptions): Promise<boolean> {
-    const { viewCount, ...updatableFields } = updateAnalyzeOptions
+    const { viewCount: _viewCount, ...updatableFields } = updateAnalyzeOptions
     const { keys: analyzeOptionKeys, values: analyzeOptionValues } = convertToSqlProperties(updatableFields)
     const analyzeOptionSetClause = analyzeOptionKeys.map((key) => `${key} = ?`).join(', ')
     const updateAnalyzeSql = `UPDATE ${ANALYZE_TABLE_NAME} SET ${analyzeOptionSetClause} WHERE id = ? and is_deleted = 0`

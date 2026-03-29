@@ -1,5 +1,6 @@
 import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
 import Joi from 'joi'
+import { MAIL_SUPPORTED_CHART_TYPES, validateEmailRecipients } from '~/shared/emailUtils'
 
 const scheduledEmailService = new ScheduledEmailService()
 
@@ -8,7 +9,31 @@ const logger = new Logger({
   folderName: 'api'
 })
 
-// Joi 验证模式
+/**
+ * 定时任务接口共用的收件人校验器。
+ */
+const recipientsSchema = Joi.alternatives()
+  .try(Joi.string(), Joi.array().items(Joi.string()))
+  .required()
+  .custom((value, helpers) => {
+    const { valid, recipients, invalidRecipients } = validateEmailRecipients(value)
+
+    if (!valid) {
+      return helpers.error('any.custom', {
+        customMessage:
+          invalidRecipients.length > 0 ? `邮件地址格式错误: ${invalidRecipients.join(', ')}` : '收件人不能为空'
+      })
+    }
+
+    return recipients
+  })
+  .messages({
+    'any.custom': '{{#customMessage}}'
+  })
+
+/**
+ * 创建定时/重复邮件任务的 Joi 校验模式。
+ */
 const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledEmailOptions>({
   taskName: Joi.string().min(1).max(100).required().messages({
     'string.min': '任务名称不能为空',
@@ -62,8 +87,7 @@ const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledE
     otherwise: Joi.optional()
   }),
   emailConfig: Joi.object<ScheduledEmailDto.EmailConfig>({
-    to: Joi.string().email().required().messages({
-      'string.email': '收件人邮箱格式不正确',
+    to: recipientsSchema.messages({
       'any.required': '收件人不能为空'
     }),
     subject: Joi.string().min(1).max(200).required().messages({
@@ -81,10 +105,13 @@ const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledE
       'string.max': '文件名不能超过100个字符',
       'any.required': '文件名不能为空'
     }),
-    chartType: Joi.string().valid('line', 'bar', 'pie', 'table', 'interval').required().messages({
-      'any.only': '图表类型必须是 line、bar、pie、table 或 interval 之一',
-      'any.required': '图表类型不能为空'
-    }),
+    chartType: Joi.string()
+      .valid(...MAIL_SUPPORTED_CHART_TYPES)
+      .required()
+      .messages({
+        'any.only': `图表类型必须是 ${MAIL_SUPPORTED_CHART_TYPES.join('、')} 之一`,
+        'any.required': '图表类型不能为空'
+      }),
     analyzeName: Joi.string().min(1).max(100).required().messages({
       'string.min': '分析名称不能为空',
       'string.max': '分析名称不能超过100个字符',

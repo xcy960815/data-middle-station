@@ -36,11 +36,6 @@ import { ElAvatar, ElDropdown, ElDropdownItem, ElDropdownMenu, ElOption, ElSelec
 
 type Theme = 'light' | 'dark' | 'auto'
 /**
- * @desc 主题选项
- */
-const themeOptions = ['light', 'dark', 'auto']
-
-/**
  * @Desc 监听系统主题变化
  */
 const mediaQuery = ref<MediaQueryList | undefined>()

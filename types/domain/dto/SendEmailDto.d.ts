@@ -51,6 +51,9 @@ declare namespace SendEmailDto {
      */
     analyzeOptions: AnalyzeOptions
   }
+
+  type SendChartEmailRequest = SendEmailOptions
+
   /**
    * 图表导出配置
    */

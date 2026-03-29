@@ -104,7 +104,7 @@ export const useChartConfigStore = defineStore<
      * @desc 设置表格图配置条件
      * @param conditions 条件
      */
-    setTableChartConditions(conditions) {
+    setTableChartConditions(_conditions) {
       // if (this.chartConfig) {
       //   this.chartConfig.table.conditions = JSON.parse(
       //     JSON.stringify(conditions)

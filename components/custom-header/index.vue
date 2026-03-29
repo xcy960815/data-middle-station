@@ -17,7 +17,7 @@
 <script lang="ts" setup>
 import HeaderRight from './header-right/index.vue'
 const appName = useRuntimeConfig().public.appName
-const props = defineProps({
+defineProps({
   analyzeName: {
     type: String,
     default: ''

@@ -63,19 +63,33 @@ export default defineNitroPlugin(async () => {
 
 /**
  * 加载所有待执行任务并注册到 node-schedule
+ * @description 这里不会只盯着 pending，而是先加载活跃任务，再按任务类型筛选真正可调度的集合，
+ * 这样重复任务在失败重试或服务重启后不会丢失调度。
  */
 const loadAndScheduleAllTasks = async (): Promise<void> => {
   try {
-    // 获取所有待执行的任务
-    const pendingTasks = await scheduledEmailService.getScheduledEmailTaskList({
-      status: 'pending'
+    // 获取所有活跃任务，再按任务类型过滤可调度状态
+    const activeTasks = await scheduledEmailService.getScheduledEmailTaskList({
+      isActive: true,
+      limit: 1000
+    })
+    const schedulableTasks = activeTasks.filter((taskOptions) => {
+      if (taskOptions.status === 'cancelled' || taskOptions.status === 'completed') {
+        return false
+      }
+
+      if (taskOptions.taskType === 'scheduled') {
+        return taskOptions.status === 'pending'
+      }
+
+      return true
     })
 
-    logger.info(`📦 从数据库加载了 ${pendingTasks.length} 个待执行任务`)
+    logger.info(`📦 从数据库加载了 ${activeTasks.length} 个活跃任务，其中 ${schedulableTasks.length} 个可调度`)
 
     // 清理已存在的调度任务（避免重复注册）
     for (const [taskId, job] of scheduledJobs.entries()) {
-      const taskExists = pendingTasks.some((taskOptions) => taskOptions.id === taskId)
+      const taskExists = schedulableTasks.some((taskOptions) => taskOptions.id === taskId)
       if (!taskExists) {
         job.cancel()
         scheduledJobs.delete(taskId)
@@ -84,12 +98,7 @@ const loadAndScheduleAllTasks = async (): Promise<void> => {
     }
 
     // 为每个任务创建调度
-    for (const taskOptions of pendingTasks) {
-      // 跳过未激活的任务
-      if (!taskOptions.isActive) {
-        continue
-      }
-
+    for (const taskOptions of schedulableTasks) {
       // 如果任务已经在调度器中，先取消
       if (scheduledJobs.has(taskOptions.id)) {
         scheduledJobs.get(taskOptions.id)?.cancel()
@@ -208,6 +217,7 @@ const scheduleRecurringTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptio
  * 执行任务
  * @param {ScheduledEmailVo.ScheduledEmailOptions} taskOptions 任务选项
  * @returns {Promise<void>}
+ * @description 调度器层只负责触发与日志，真正的状态推进仍交由 ScheduledEmailService 统一处理。
  */
 const executeTask = async (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): Promise<void> => {
   try {

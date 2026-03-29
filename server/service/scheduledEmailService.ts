@@ -4,6 +4,7 @@ import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogServ
 import { SendEmailService } from '@/server/service/sendEmailService'
 import { calculateNextExecutionTime } from '@/server/utils/schedulerUtils'
 import dayjs from 'dayjs'
+import { normalizeEmailRecipients } from '~/shared/emailUtils'
 
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
 
@@ -320,6 +321,11 @@ export class ScheduledEmailService extends BaseService {
         return false
       }
 
+      if (!this.canExecuteTask(scheduledEmailRecord)) {
+        logger.warn(`任务 ${scheduledEmailRecord.id} 当前状态为 ${scheduledEmailRecord.status}，跳过执行`)
+        return false
+      }
+
       return await this.processTask(scheduledEmailRecord)
     } catch (error) {
       logger.error(`执行任务失败: ${JSON.stringify(queryOptions)}, ${error}`)
@@ -447,6 +453,7 @@ export class ScheduledEmailService extends BaseService {
    * 处理单个任务
    * @param {ScheduledEmailDao.ScheduledEmailOptions} scheduledEmailRecord 定时任务参数
    * @returns {Promise<boolean>}
+   * @description 单次任务成功后终态为 completed，重复任务成功后会重新回到 pending 并推进下次执行时间。
    */
   private async processTask(scheduledEmailRecord: ScheduledEmailDao.ScheduledEmailOptions): Promise<boolean> {
     const startTime = Date.now()
@@ -486,7 +493,7 @@ export class ScheduledEmailService extends BaseService {
       // 使用 SendEmailService 发送邮件
       const result = await this.sendEmailService.sendMail({
         emailConfig: {
-          to: Array.isArray(emailConfig.to) ? emailConfig.to[0] : emailConfig.to,
+          to: emailConfig.to,
           subject: emailConfig.subject,
           additionalContent: emailConfig.additionalContent || ''
         },
@@ -495,12 +502,27 @@ export class ScheduledEmailService extends BaseService {
         }
       })
 
+      const nextExecutionTime =
+        scheduledEmailRecord.taskType === 'recurring'
+          ? calculateNextExecutionTime(
+              scheduledEmailRecord.recurringDays || [],
+              scheduledEmailRecord.recurringTime || '',
+              new Date()
+            )
+          : scheduledEmailRecord.nextExecutionTime || null
+
+      if (scheduledEmailRecord.taskType === 'recurring' && !nextExecutionTime) {
+        throw new Error('重复任务执行成功后无法计算下次执行时间')
+      }
+
       // 更新任务状态为完成
       await this.scheduledEmailMapper.updateScheduledEmailTask({
         ...scheduledEmailRecord,
         id: scheduledEmailRecord.id,
-        status: 'completed',
+        status: scheduledEmailRecord.taskType === 'recurring' ? 'pending' : 'completed',
         errorMessage: undefined,
+        retryCount: 0,
+        nextExecutionTime,
         updatedTime: updateTime,
         updatedBy: updatedBy
       })
@@ -522,15 +544,15 @@ export class ScheduledEmailService extends BaseService {
 
       // 增加重试次数
       const newRetryCount = scheduledEmailRecord.retryCount + 1
-      const status = newRetryCount >= scheduledEmailRecord.maxRetries ? 'failed' : 'pending'
 
       // 更新任务状态
       await this.scheduledEmailMapper.updateScheduledEmailTask({
         ...scheduledEmailRecord,
         id: scheduledEmailRecord.id,
-        status,
+        status: 'failed',
         errorMessage: errorMessage,
         retryCount: newRetryCount,
+        executedTime: updateTime,
         updatedTime: updateTime,
         updatedBy: updatedBy
       })
@@ -716,6 +738,7 @@ export class ScheduledEmailService extends BaseService {
    * 确保字符串数组
    * @param {string | string[] | null | undefined} value 字符串或字符串数组
    * @returns {string[] | undefined} 字符串数组
+   * @description 主要用于把日志层可能返回的单值字段统一包装成数组。
    */
   private ensureStringArray(value: string | string[] | null | undefined): string[] | undefined {
     if (!value) {
@@ -728,18 +751,10 @@ export class ScheduledEmailService extends BaseService {
    * 规范化收件人
    * @param {string | string[]} recipients 收件人
    * @returns {string[]} 规范化后的收件人
+   * @description 复用共享工具，保持 API 校验、发送服务和日志记录对收件人的理解一致。
    */
   private normalizeRecipients(recipients?: string | string[]): string[] {
-    if (!recipients) {
-      return []
-    }
-    if (Array.isArray(recipients)) {
-      return recipients.map((recipient) => recipient.trim()).filter(Boolean)
-    }
-    return recipients
-      .split(/[,;]/)
-      .map((item) => item.trim())
-      .filter(Boolean)
+    return normalizeEmailRecipients(recipients)
   }
 
   /**
@@ -765,5 +780,17 @@ export class ScheduledEmailService extends BaseService {
    */
   private getCurrentTimezone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  }
+
+  /**
+   * 判断任务当前是否允许被调度器或人工执行。
+   * 已完成、已取消和运行中的任务都会被直接跳过。
+   */
+  private canExecuteTask(task: ScheduledEmailDao.ScheduledEmailOptions): boolean {
+    if (task.status === 'cancelled' || task.status === 'completed' || task.status === 'running') {
+      return false
+    }
+
+    return task.status === 'pending' || task.status === 'failed'
   }
 }

@@ -163,8 +163,8 @@ const spanConfig = reactive({
 })
 
 const spanMethod = ({
-  row,
-  column,
+  row: _row,
+  column: _column,
   rowIndex,
   colIndex
 }: {

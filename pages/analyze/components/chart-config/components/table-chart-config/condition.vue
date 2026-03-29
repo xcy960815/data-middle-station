@@ -84,15 +84,6 @@
  * @desc 条件格式dialog
  */
 // const conditionDialogVisible = ref(false)
-/**
- * @desc 维度store
- */
-const dimensionStore = useDimensionsStore()
-/**
- * @desc 分组store
- */
-const groupStore = useGroupsStore()
-
 // /**
 //  * @desc 条件符号映射
 //  */

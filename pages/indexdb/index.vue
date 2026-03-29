@@ -173,7 +173,6 @@ const sortOrder = ref<'asc' | 'desc'>('desc')
 
 const isAdding = ref(false)
 const isUpdating = ref(false)
-const isClearing = ref(false)
 const editDialogVisible = ref(false)
 
 // 生命周期
@@ -236,7 +235,7 @@ const addUser = async () => {
 
     await refreshData()
     ElMessage.success('用户添加成功')
-  } catch (error: any) {
+  } catch (_error: any) {
     ElMessage.error('用户添加失败')
   } finally {
     isAdding.value = false
@@ -273,7 +272,7 @@ const generateRandomUsers = async () => {
     await $indexdb.addDataAsync(database.value, tableName, testUsers as any[])
     await refreshData()
     ElMessage.success('测试数据生成成功')
-  } catch (error: any) {
+  } catch (_error: any) {
     ElMessage.error('生成测试数据失败')
   }
 }
@@ -294,7 +293,7 @@ const updateUser = async () => {
     editDialogVisible.value = false
     await refreshData()
     ElMessage.success('用户更新成功')
-  } catch (error: any) {
+  } catch (_error: any) {
     ElMessage.error('用户更新失败')
   } finally {
     isUpdating.value = false
@@ -317,56 +316,6 @@ const deleteUser = async (userId: string) => {
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error('用户删除失败')
-    }
-  }
-}
-
-const clearAllData = async () => {
-  if (!database.value) {
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm('确定要清空所有数据吗？此操作不可恢复！', '确认清空', {
-      type: 'warning'
-    })
-
-    isClearing.value = true
-    await $indexdb.clearData(database.value, tableName)
-    await refreshData()
-    ElMessage.success('数据清空成功')
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error('清空数据失败')
-    }
-  } finally {
-    isClearing.value = false
-  }
-}
-
-const deleteDatabase = async () => {
-  try {
-    await ElMessageBox.confirm('确定要删除整个数据库吗？此操作不可恢复！', '确认删除', {
-      type: 'warning'
-    })
-
-    if (database.value) {
-      database.value.close()
-      database.value = null
-    }
-
-    const success = await $indexdb.deleteDatabase(dbName)
-    if (success) {
-      users.value = []
-      displayUsers.value = []
-      totalUsers.value = 0
-      ElMessage.success('数据库删除成功')
-    } else {
-      throw new Error('删除失败')
-    }
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除数据库失败')
     }
   }
 }

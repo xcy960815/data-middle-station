@@ -10,7 +10,7 @@ onMounted(() => {
   const eventSource = new EventSource('/api/eventsource')
 
   //对于建立链接的监听
-  eventSource.onopen = function (event) {
+  eventSource.onopen = function (_event) {
     console.log('长连接打开', eventSource.readyState)
   }
 
@@ -22,7 +22,7 @@ onMounted(() => {
   }
 
   //对断开链接的监听
-  eventSource.onerror = function (event) {
+  eventSource.onerror = function (_event) {
     console.log('长连接中断', eventSource.readyState)
   }
 })

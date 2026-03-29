@@ -47,7 +47,7 @@ interface Emits {
   (event: 'update-positions-in-table'): void
 }
 
-const emits = defineEmits<Emits>()
+defineEmits<Emits>()
 
 // // 获取依赖
 // const { filterState, handleTableData, tableVars } = variableHandlder({ props: props.props })
