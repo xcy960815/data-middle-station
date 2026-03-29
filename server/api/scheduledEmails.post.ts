@@ -1,6 +1,7 @@
 import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
+import { emailRecipientsSchema } from '@/server/utils/emailRequestHelper'
 import Joi from 'joi'
-import { MAIL_SUPPORTED_CHART_TYPES, validateEmailRecipients } from '~/shared/emailUtils'
+import { MAIL_SUPPORTED_CHART_TYPES } from '~/shared/emailUtils'
 
 const scheduledEmailService = new ScheduledEmailService()
 
@@ -8,28 +9,6 @@ const logger = new Logger({
   fileName: 'scheduledEmails',
   folderName: 'api'
 })
-
-/**
- * 定时任务接口共用的收件人校验器。
- */
-const recipientsSchema = Joi.alternatives()
-  .try(Joi.string(), Joi.array().items(Joi.string()))
-  .required()
-  .custom((value, helpers) => {
-    const { valid, recipients, invalidRecipients } = validateEmailRecipients(value)
-
-    if (!valid) {
-      return helpers.error('any.custom', {
-        customMessage:
-          invalidRecipients.length > 0 ? `邮件地址格式错误: ${invalidRecipients.join(', ')}` : '收件人不能为空'
-      })
-    }
-
-    return recipients
-  })
-  .messages({
-    'any.custom': '{{#customMessage}}'
-  })
 
 /**
  * 创建定时/重复邮件任务的 Joi 校验模式。
@@ -87,7 +66,7 @@ const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledE
     otherwise: Joi.optional()
   }),
   emailConfig: Joi.object<ScheduledEmailDto.EmailConfig>({
-    to: recipientsSchema.messages({
+    to: emailRecipientsSchema.messages({
       'any.required': '收件人不能为空'
     }),
     subject: Joi.string().min(1).max(200).required().messages({

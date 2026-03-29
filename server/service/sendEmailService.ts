@@ -68,12 +68,12 @@ export class SendEmailService {
   private chartSnapshotService: ChartSnapshotService
 
   constructor() {
-    this.smtpHost = useRuntimeConfig().smtpHost
+    this.smtpHost = this.normalizeRuntimeString(useRuntimeConfig().smtpHost)
     this.smtpPort = useRuntimeConfig().smtpPort ? Number(useRuntimeConfig().smtpPort) : 465
     this.smtpSecure = String(useRuntimeConfig().smtpSecure || 'true') === 'true'
-    this.smtpUser = useRuntimeConfig().smtpUser
-    this.smtpPass = useRuntimeConfig().smtpPass
-    this.smtpFrom = useRuntimeConfig().smtpFrom
+    this.smtpUser = this.normalizeRuntimeString(useRuntimeConfig().smtpUser)
+    this.smtpPass = this.normalizeRuntimeString(useRuntimeConfig().smtpPass)
+    this.smtpFrom = this.normalizeRuntimeString(useRuntimeConfig().smtpFrom)
     this.createTransporter()
     this.chartSnapshotService = new ChartSnapshotService()
   }
@@ -83,6 +83,7 @@ export class SendEmailService {
    * @description 根据运行时 SMTP 配置初始化 nodemailer 传输实例。
    */
   private createTransporter(): void {
+    this.assertSmtpConfig()
     this.transporter = nodemailer.createTransport({
       host: this.smtpHost!,
       port: this.smtpPort!,
@@ -129,7 +130,9 @@ export class SendEmailService {
       resolvedAnalyzeOptions
     )
 
-    const sendResult = await this.transporter!.sendMail(mailPayload)
+    const sendResult = await this.transporter!.sendMail(mailPayload).catch((error) => {
+      throw this.normalizeSendMailError(error)
+    })
     const sendResultData = this.convertDaoToDto({
       messageId: sendResult.messageId,
       accepted: sendResult.accepted,
@@ -369,5 +372,77 @@ export class SendEmailService {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;')
+  }
+
+  /**
+   * 统一清洗运行时配置字符串，避免 dotenv 中的空格或空串影响认证。
+   */
+  private normalizeRuntimeString(value: unknown): string | null {
+    if (typeof value !== 'string') {
+      return null
+    }
+    const normalized = value.trim()
+    return normalized.length > 0 ? normalized : null
+  }
+
+  /**
+   * 在创建 SMTP 连接前先校验关键配置，避免进入模糊的底层报错。
+   */
+  private assertSmtpConfig(): void {
+    if (!this.smtpHost || !this.smtpPort || !this.smtpUser || !this.smtpPass) {
+      throw new Error('SMTP 配置不完整，请检查 SMTP_HOST、SMTP_PORT、SMTP_USER、SMTP_PASS')
+    }
+  }
+
+  /**
+   * 把底层 SMTP 错误归一化成更适合接口层透出的提示。
+   */
+  private normalizeSendMailError(error: unknown): Error {
+    const smtpError = error as {
+      message?: string
+      code?: string
+      command?: string
+      response?: string
+      responseCode?: number
+    }
+
+    const errorMessage = smtpError?.message || '邮件发送失败'
+    const detailText = [smtpError?.response, errorMessage].filter(Boolean).join(' | ')
+
+    if (
+      smtpError?.code === 'EAUTH' ||
+      smtpError?.command === 'AUTH' ||
+      /Invalid login/i.test(detailText) ||
+      /User has no permission/i.test(detailText)
+    ) {
+      logger.error(
+        `SMTP认证失败: host=${this.smtpHost}, port=${this.smtpPort}, user=${this.maskEmail(this.smtpUser)}, from=${this.maskEmail(this.getSenderAddress())}, response=${detailText}`
+      )
+      return new Error(
+        'SMTP认证失败，请检查 SMTP_USER/SMTP_PASS 是否正确，确认邮箱已开启 SMTP/客户端授权，并确认 SMTP_FROM 与认证账号一致'
+      )
+    }
+
+    return error instanceof Error ? error : new Error(errorMessage)
+  }
+
+  /**
+   * 日志里对邮箱地址做简单脱敏，保留必要定位信息。
+   */
+  private maskEmail(email?: string | null): string {
+    if (!email) {
+      return 'unknown'
+    }
+
+    const [localPart, domainPart] = email.split('@')
+    if (!localPart || !domainPart) {
+      return email
+    }
+
+    if (localPart.length <= 2) {
+      return `${localPart[0] || '*'}***@${domainPart}`
+    }
+
+    return `${localPart.slice(0, 2)}***${localPart.slice(-1)}@${domainPart}`
   }
 }
