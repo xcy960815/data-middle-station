@@ -178,6 +178,7 @@ module.exports = [
       '@typescript-eslint': typescript
     },
     rules: {
+      'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -215,6 +216,7 @@ module.exports = [
       'vue/no-v-html': 'off',
       'vue/require-default-prop': 'off',
       'vue/no-multiple-template-root': 'off',
+      'no-undef': 'off',
       // TypeScript 规则自定义
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
@@ -235,6 +237,7 @@ module.exports = [
   {
     files: ['**/*.d.ts'],
     rules: {
+      'no-undef': 'off',
       '@typescript-eslint/no-unused-vars': 'off'
     }
   },

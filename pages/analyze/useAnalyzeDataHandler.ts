@@ -118,11 +118,13 @@ export const useAnalyzeDataHandler = () => {
                     analysisMessage += json.content
                     analyzeStore.setChartErrorAnalysis(analysisMessage)
                   }
-                } catch (e) {}
+                } catch (_error) {
+                  continue
+                }
               }
             }
           }
-        } catch (e) {
+        } catch (_error) {
           analysisMessage += '\n(AI 分析服务暂时不可用)'
           analyzeStore.setChartErrorAnalysis(analysisMessage)
         }

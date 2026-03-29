@@ -63,7 +63,9 @@ export default defineEventHandler(async (event) => {
                   if (content) {
                     send({ type: 'ai_chunk', content })
                   }
-                } catch (e) {}
+                } catch (_error) {
+                  continue
+                }
               }
             }
           }

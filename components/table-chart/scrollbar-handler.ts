@@ -336,7 +336,7 @@ const setupVerticalScrollbarEvents = () => {
     stageVars.stage?.setPointersPositions(event.evt)
   })
   // 启用滚动条悬停效果
-  if (!!scrollbarVars.verticalScrollbarThumb) {
+  if (scrollbarVars.verticalScrollbarThumb) {
     scrollbarVars.verticalScrollbarThumb.on('mouseenter', () => {
       scrollbarVars.verticalScrollbarThumb?.fill(staticParams.scrollbarThumbHoverBackground)
       setPointerStyle(stageVars.stage, true, 'grab')
@@ -458,7 +458,7 @@ const setupHorizontalScrollbarEvents = () => {
 
   // 启用滚动条悬停效果
   scrollbarVars.horizontalScrollbarThumb.on('mouseenter', () => {
-    if (!!scrollbarVars.horizontalScrollbarThumb) {
+    if (scrollbarVars.horizontalScrollbarThumb) {
       scrollbarVars.horizontalScrollbarThumb.fill(staticParams.scrollbarThumbHoverBackground)
       setPointerStyle(stageVars.stage, true, 'grab')
     }

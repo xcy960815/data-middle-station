@@ -4,7 +4,7 @@
  * @returns {string}
  */
 export const toHump = (name: string) => {
-  return name.replace(/\_(\w)/g, function (all, letter) {
+  return name.replace(/_(\w)/g, function (all, letter) {
     return letter.toUpperCase()
   })
 }
@@ -37,7 +37,7 @@ export function convertToSqlProperties<T extends Record<string, any>>(
       const underlineKey = k.replace(/([A-Z])/g, '_$1').toLowerCase()
       // order group 字段单独处理一下
       if (specialKeys.includes(underlineKey) && typeof value === 'string') {
-        keys.push('\`' + underlineKey + '\`')
+        keys.push('`' + underlineKey + '`')
       } else {
         keys.push(underlineKey)
       }
