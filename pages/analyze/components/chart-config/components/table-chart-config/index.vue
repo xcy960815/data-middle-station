@@ -788,6 +788,15 @@ const fontFamilyOptions = [
     }
 
     .el-form-item__slot {
+      width: 100%;
+      gap: 8px;
+      min-width: 0;
+
+      > :last-child {
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+
       .el-form-item-label {
         font-size: 14px;
         font-weight: 500;
