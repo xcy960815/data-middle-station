@@ -3,7 +3,7 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 import { ref } from 'vue'
 import CellEditor from './components/cell-editor.vue'
 import { staticParams, tableData } from './parameter'
-import { scrollbarVars } from './scrollbar-handler'
+import { calculateScrollRange, scrollbarVars } from './scrollbar-handler'
 import { getStageSize, stageVars } from './stage-handler'
 import { getSummaryRowHeight } from './summary-handler'
 import {
@@ -156,8 +156,10 @@ export const calculateVisibleRows = () => {
   if (!stageVars.stage) return
 
   const { height: stageHeight } = getStageSize()
+  const { maxHorizontalScroll } = calculateScrollRange()
+  const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0
 
-  const bodyHeight = stageHeight - staticParams.headerRowHeight - getSummaryRowHeight() - staticParams.scrollbarSize
+  const bodyHeight = stageHeight - staticParams.headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
 
   // 计算可视区域能显示的行数
   bodyVars.visibleRowCount = Math.ceil(bodyHeight / staticParams.bodyRowHeight)
@@ -370,6 +372,11 @@ const drawNormalCell = (
           fontSize: staticParams.bodyFontSize,
           fontFamily: staticParams.bodyFontFamily,
           padding: staticParams.textPaddingHorizontal
+        },
+        {
+          row,
+          columnName: columnOption.columnName,
+          columnType: columnOption.columnType
         }
       )
     })

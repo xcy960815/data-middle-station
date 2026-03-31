@@ -67,7 +67,8 @@ import { ElDatePicker, ElInput, ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { stageVars } from '../stage-handler'
+import { commitCellValueChange } from '../data-handler'
+import { refreshTable, stageVars } from '../stage-handler'
 
 interface EditorStyleOptions {
   align: 'left' | 'center' | 'right'
@@ -87,11 +88,20 @@ interface EditDown {
   initialValue: string | number
   originalValue: string | number
   styleOptions?: EditorStyleOptions
+  row?: AnalyzeDataVo.AnalyzeData
+  columnName: string
+  columnType?: string | null
 }
 
 interface EditOptions {
   label: string
   value: string | number
+}
+
+interface EditContext {
+  row: AnalyzeDataVo.AnalyzeData
+  columnName: string
+  columnType?: string | null
 }
 
 const editorRef = ref<HTMLElement>()
@@ -108,8 +118,59 @@ const editDown = reactive<EditDown>({
   height: 0,
   editType: 'input',
   initialValue: '',
-  originalValue: ''
+  originalValue: '',
+  row: undefined,
+  columnName: '',
+  columnType: undefined
 })
+
+/**
+ * 判断是否为数值列
+ * @param columnType 列类型
+ * @returns boolean
+ */
+const isNumericColumnType = (columnType?: string | null): boolean => {
+  if (!columnType) return false
+  return /(number|int|decimal|numeric|float|double|real)/i.test(columnType)
+}
+
+/**
+ * 规范化编辑后的值
+ * @param value 用户输入的新值
+ * @param columnType 列类型
+ * @param fallbackValue 回退值
+ * @returns string | number
+ */
+const normalizeEditedValue = (
+  value: string | number,
+  columnType?: string | null,
+  fallbackValue?: string | number
+): string | number => {
+  if (!isNumericColumnType(columnType)) {
+    return value
+  }
+
+  if (value === '') {
+    return ''
+  }
+
+  const numericValue = Number(value)
+  return Number.isFinite(numericValue) ? numericValue : (fallbackValue ?? value)
+}
+
+/**
+ * 重置编辑器状态
+ */
+const resetEditState = () => {
+  editDown.visible = false
+  editDown.editOptions = undefined
+  editDown.styleOptions = undefined
+  editDown.initialValue = ''
+  editDown.originalValue = ''
+  editDown.row = undefined
+  editDown.columnName = ''
+  editDown.columnType = undefined
+}
 
 // 计算编辑器样式
 const editorStyle = computed(() => {
@@ -144,7 +205,8 @@ const openEditor = (
   editType: 'input' | 'select' | 'date' | 'datetime',
   initialValue: AnalyzeDataVo.AnalyzeData[keyof AnalyzeDataVo.AnalyzeData],
   editOptions?: EditOptions[],
-  styleOptions?: EditorStyleOptions
+  styleOptions?: EditorStyleOptions,
+  editContext?: EditContext
 ) => {
   const target = evt.target
   // 假设 rect 是 Konva.Rect 实例
@@ -168,6 +230,9 @@ const openEditor = (
     editDown.editType = editType
     editDown.editOptions = editOptions
     editDown.styleOptions = styleOptions
+    editDown.row = editContext?.row
+    editDown.columnName = editContext?.columnName || ''
+    editDown.columnType = editContext?.columnType
     const safeValue = (initialValue ?? '') as string | number
     editDown.initialValue = safeValue
     editDown.originalValue = safeValue
@@ -196,20 +261,26 @@ const openEditor = (
  * 保存编辑
  */
 const handleSaveEditorValue = () => {
+  if (!editDown.visible) return
+
   // 只有当值发生变化时才保存
   if (editDown.initialValue !== editDown.originalValue) {
-    // 保存数据
-    console.log('保存数据', editDown.initialValue)
-    editDown.visible = false
-  } else {
-    editDown.visible = false
+    const nextValue = normalizeEditedValue(editDown.initialValue, editDown.columnType, editDown.originalValue)
+    const didUpdate =
+      nextValue !== editDown.originalValue && commitCellValueChange(editDown.row, editDown.columnName, nextValue)
+
+    if (didUpdate) {
+      refreshTable(false)
+    }
   }
+
+  resetEditState()
 }
 
 // 取消编辑
 const closeEditor = () => {
   if (!editDown.visible) return
-  editDown.visible = false
+  resetEditState()
 }
 
 /**
@@ -218,7 +289,7 @@ const closeEditor = () => {
 const updatePositions = () => {
   // 滚动时直接关闭编辑器，因为虚拟滚动会导致单元格位置不可靠
   if (editDown.visible) {
-    editDown.visible = false
+    resetEditState()
   }
 }
 

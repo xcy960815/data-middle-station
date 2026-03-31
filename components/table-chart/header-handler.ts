@@ -2,7 +2,13 @@ import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { ref } from 'vue'
 import { columnsInfo } from './body-handler'
-import { filterColumns, getColumnSortStatus, handleMultiColumnSort, handleTableData } from './data-handler'
+import {
+  getColumnFilterValues,
+  getColumnSortStatus,
+  getUniqueColumnValues,
+  handleMultiColumnSort,
+  handleTableData
+} from './data-handler'
 import { staticParams } from './parameter'
 import { scrollbarVars } from './scrollbar-handler'
 import { clearGroups, getStageSize, refreshTable, scheduleLayersBatchDraw, stageVars } from './stage-handler'
@@ -293,8 +299,8 @@ const createFilterIcon = (
   // 检查列是否可过滤
   if (!columnOption.filterable) return
 
-  const filterItem = filterColumns.value.find((f) => f.columnName === columnOption.columnName)
-  const isFilter = !!(filterItem && filterItem.values.size > 0)
+  const currentSelection = getColumnFilterValues(columnOption.columnName)
+  const isFilter = currentSelection.length > 0
   const filterColor = isFilter ? staticParams.sortActiveColor : COLORS.INACTIVE
   const xCoordinate = x + columnOption.width - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - staticParams.textPaddingHorizontal
   const yCoordinate = (staticParams.headerRowHeight - LAYOUT_CONSTANTS.FILTER_ICON_SIZE) / 2
@@ -344,13 +350,7 @@ const createFilterIcon = (
   filterIcon.on('mouseleave', () => setPointerStyle(stageVars.stage, false, 'default'))
 
   filterIcon.on('click', (evt: KonvaEventObject<MouseEvent, Konva.Shape>) => {
-    const uniqueValues = new Set<string>()
-
-    // TODO 需要优化 遍历时间太长 暂时注释掉
-    // tableData.value.forEach((row) => uniqueValues.add(String(row[columnOption.columnName] ?? '')))
-
-    const availableOptions = Array.from(uniqueValues)
-    const currentSelection = filterItem ? Array.from(filterItem.values) : []
+    const availableOptions = getUniqueColumnValues(columnOption.columnName)
     const allOptions = Array.from(new Set([...availableOptions, ...currentSelection]))
 
     filterDropdownRef.value?.openFilterDropdown(evt, columnOption.columnName, allOptions, currentSelection)

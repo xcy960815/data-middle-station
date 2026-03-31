@@ -37,7 +37,12 @@
   "pnpm": {
     "overrides": {
       "undici": "6.21.0"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "vue-demi"
+    ]
   },
   "optionalDependencies": {
     "@rollup/rollup-darwin-x64": "4.12.0"

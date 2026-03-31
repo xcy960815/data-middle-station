@@ -324,10 +324,8 @@ export const drawUnifiedRect = (config: DrawRectConfig): Konva.Rect => {
     ? getFromPool(pools.cellRects, () => new Konva.Rect({ listening, name }))
     : new Konva.Rect({ listening, name })
 
-  // 移除旧的事件监听器（避免对象池复用时累积事件）
-  rectNode.off('click')
-  rectNode.off('mouseenter')
-  rectNode.off('mouseleave')
+  // 移除旧的事件监听器，避免对象池复用时事件累积
+  rectNode.off()
 
   // 统一设置属性
   rectNode.setAttrs({

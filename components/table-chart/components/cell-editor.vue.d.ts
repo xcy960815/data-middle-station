@@ -8,6 +8,12 @@ interface EditOptions {
   value: string | number
 }
 
+interface EditContext {
+  row: AnalyzeDataVo.AnalyzeData
+  columnName: string
+  columnType?: string | null
+}
+
 declare const Component: DefineComponent<
   {},
   {
@@ -15,7 +21,14 @@ declare const Component: DefineComponent<
       evt: KonvaEventObject<MouseEvent, Konva.Rect>,
       editType: 'input' | 'select' | 'date' | 'datetime',
       initialValue: AnalyzeDataVo.AnalyzeData[keyof AnalyzeDataVo.AnalyzeData],
-      editOptions?: EditOptions[]
+      editOptions?: EditOptions[],
+      styleOptions?: {
+        align: 'left' | 'center' | 'right'
+        fontSize: number
+        fontFamily: string
+        padding: number
+      },
+      editContext?: EditContext
     ) => void
     closeEditor: () => void
     updatePositions: () => void

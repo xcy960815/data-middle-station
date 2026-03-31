@@ -29,7 +29,7 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { filterColumns, handleTableData } from '../data-handler'
+import { handleTableData, updateColumnFilter } from '../data-handler'
 import { rebuildGroups, stageVars } from '../stage-handler'
 import { getDropdownPosition } from '../utils'
 export interface FilterDropdown {
@@ -189,17 +189,8 @@ const onGlobalMousedown = (mouseEvent: MouseEvent) => {
 const handleSelectedFilter = () => {
   const colName = filterDropdown.colName
   const selectedValues = filterDropdown.selectedValues
-  if (!selectedValues || selectedValues.length === 0) {
-    const filterItem = filterColumns.value.find((f) => f.columnName === colName)
-    if (filterItem) {
-      filterItem.values.clear()
-    }
-  } else {
-    const filterItem = filterColumns.value.find((f) => f.columnName === colName)
-    if (filterItem) {
-      filterItem.values = new Set(selectedValues)
-    }
-  }
+  updateColumnFilter(colName, selectedValues || [])
+
   // 重新处理表格数据，应用过滤条件
   handleTableData()
   rebuildGroups()

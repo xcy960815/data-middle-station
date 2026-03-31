@@ -25,6 +25,17 @@ interface FilterItem {
 }
 
 /**
+ * 唯一值缓存
+ */
+const uniqueColumnValuesCache = new Map<string, string[]>()
+
+/**
+ * 原始数据引用缓存，用于感知数据源切换
+ */
+let lastRawDataRef: Array<AnalyzeDataVo.AnalyzeData> | null = null
+let lastRawDataLength = 0
+
+/**
  * 原始数据存储 - 不被排序或过滤修改
  */
 let originalData: Array<AnalyzeDataVo.AnalyzeData> = []
@@ -40,10 +51,123 @@ export const filterColumns = ref<FilterItem[]>([])
 export const sortColumns = ref<SortColumn[]>([])
 
 /**
+ * 统一格式化单元格值，便于过滤和下拉展示
+ * @param value 原始值
+ * @returns string
+ */
+const normalizeCellValue = (value: unknown): string => String(value ?? '')
+
+/**
+ * 清理唯一值缓存
+ * @param columnName 指定列名，不传则清理全部
+ */
+export const invalidateUniqueColumnValues = (columnName?: string) => {
+  if (columnName) {
+    uniqueColumnValuesCache.delete(columnName)
+    return
+  }
+
+  uniqueColumnValuesCache.clear()
+}
+
+/**
+ * 获取列过滤项
+ * @param columnName 列名
+ * @returns FilterItem | undefined
+ */
+const getFilterItem = (columnName: string): FilterItem | undefined =>
+  filterColumns.value.find((item) => item.columnName === columnName)
+
+/**
+ * 获取列当前过滤值
+ * @param columnName 列名
+ * @returns string[]
+ */
+export const getColumnFilterValues = (columnName: string): string[] => {
+  const filterItem = getFilterItem(columnName)
+  return filterItem ? Array.from(filterItem.values) : []
+}
+
+/**
+ * 更新列过滤条件
+ * @param columnName 列名
+ * @param selectedValues 已选值
+ */
+export const updateColumnFilter = (columnName: string, selectedValues: string[]) => {
+  const normalizedValues = selectedValues.map((value) => normalizeCellValue(value))
+  const existingFilter = getFilterItem(columnName)
+
+  if (normalizedValues.length === 0) {
+    if (!existingFilter) return
+
+    filterColumns.value = filterColumns.value.filter((item) => item.columnName !== columnName)
+    return
+  }
+
+  if (existingFilter) {
+    existingFilter.values = new Set(normalizedValues)
+    return
+  }
+
+  filterColumns.value.push({
+    columnName,
+    values: new Set(normalizedValues)
+  })
+}
+
+/**
+ * 获取列的唯一值列表
+ * @param columnName 列名
+ * @returns string[]
+ */
+export const getUniqueColumnValues = (columnName: string): string[] => {
+  const cachedValues = uniqueColumnValuesCache.get(columnName)
+  if (cachedValues) {
+    return cachedValues
+  }
+
+  const uniqueValues = Array.from(new Set(originalData.map((row) => normalizeCellValue(row[columnName])))).sort(
+    (a, b) =>
+      a.localeCompare(b, undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      })
+  )
+  uniqueColumnValuesCache.set(columnName, uniqueValues)
+  return uniqueValues
+}
+
+/**
+ * 提交单元格值变更
+ * @param row 行对象
+ * @param columnName 列名
+ * @param nextValue 新值
+ * @returns boolean
+ */
+export const commitCellValueChange = (
+  row: AnalyzeDataVo.AnalyzeData | null | undefined,
+  columnName: string,
+  nextValue: string | number
+): boolean => {
+  if (!row || !columnName) return false
+
+  row[columnName] = nextValue
+  invalidateUniqueColumnValues(columnName)
+  handleTableData()
+  return true
+}
+
+/**
  * 处理表格数据
  * @returns {void}
  */
 export const handleTableData = () => {
+  if (lastRawDataRef !== staticParams.data || lastRawDataLength !== staticParams.data.length) {
+    invalidateUniqueColumnValues()
+    lastRawDataRef = staticParams.data
+    lastRawDataLength = staticParams.data.length
+  }
+
   // 保存原始数据
   originalData = staticParams.data.filter((row) => row && typeof row === 'object')
 
@@ -57,7 +181,7 @@ export const handleTableData = () => {
       processedData = processedData.filter((row) => {
         for (const f of activeFilters) {
           const val = row[f.columnName]
-          if (!f.values.has(String(val ?? ''))) return false
+          if (!f.values.has(normalizeCellValue(val))) return false
         }
         return true
       })
