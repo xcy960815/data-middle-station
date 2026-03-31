@@ -1,3 +1,4 @@
+import { SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/service/chartSnapshotService'
 import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
 import { SendEmailService } from '@/server/service/sendEmailService'
 import Joi from 'joi'
@@ -19,7 +20,12 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
   }),
   analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
     filename: Joi.string().optional(),
-    chartType: Joi.string().optional(),
+    chartType: Joi.string()
+      .valid(...SUPPORTED_SERVER_RENDER_CHART_TYPES)
+      .optional()
+      .messages({
+        'any.only': `图表类型必须是 ${SUPPORTED_SERVER_RENDER_CHART_TYPES.join('、')} 之一`
+      }),
     analyzeName: Joi.string().optional(),
     analyzeId: Joi.number().required()
   })

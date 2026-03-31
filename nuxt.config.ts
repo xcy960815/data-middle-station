@@ -217,6 +217,7 @@ export default defineNuxtConfig({
     smtpHost: process.env.SMTP_HOST,
     smtpPort: String(process.env.SMTP_PORT),
     smtpSecure: String(process.env.SMTP_SECURE),
+    smtpRejectUnauthorized: String(process.env.SMTP_REJECT_UNAUTHORIZED ?? 'true'),
     smtpUser: process.env.SMTP_USER,
     smtpPass: process.env.SMTP_PASS,
     smtpFrom: process.env.SMTP_FROM,

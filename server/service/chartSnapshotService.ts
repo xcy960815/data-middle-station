@@ -24,6 +24,12 @@ echarts.use([
   SVGRenderer
 ])
 
+export const SUPPORTED_SERVER_RENDER_CHART_TYPES = ['line', 'interval', 'bar', 'pie'] as const
+
+export const isServerRenderableChartType = (chartType?: string): boolean =>
+  typeof chartType === 'string' &&
+  SUPPORTED_SERVER_RENDER_CHART_TYPES.includes(chartType as (typeof SUPPORTED_SERVER_RENDER_CHART_TYPES)[number])
+
 /**
  * 服务端生成图表快照返回结果
  */

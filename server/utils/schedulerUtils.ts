@@ -1,3 +1,5 @@
+import dayjs from 'dayjs'
+
 /**
  * 调度器工具函数
  */
@@ -52,7 +54,7 @@ export function calculateNextExecutionTime(
       targetDate.setDate(now.getDate() + i)
       targetDate.setHours(targetHour, targetMinute, 0, 0)
 
-      return targetDate.toISOString()
+      return dayjs(targetDate).format('YYYY-MM-DD HH:mm:ss')
     }
   }
 

@@ -50,6 +50,10 @@ export class SendEmailService {
    */
   private smtpSecure: boolean = false
   /**
+   * @desc 是否校验证书
+   */
+  private smtpRejectUnauthorized: boolean = true
+  /**
    * @desc 邮件用户
    */
   private smtpUser: string | null = null
@@ -70,10 +74,10 @@ export class SendEmailService {
     this.smtpHost = useRuntimeConfig().smtpHost
     this.smtpPort = useRuntimeConfig().smtpPort ? Number(useRuntimeConfig().smtpPort) : 465
     this.smtpSecure = String(useRuntimeConfig().smtpSecure || 'true') === 'true'
+    this.smtpRejectUnauthorized = String(useRuntimeConfig().smtpRejectUnauthorized ?? 'true') !== 'false'
     this.smtpUser = useRuntimeConfig().smtpUser
     this.smtpPass = useRuntimeConfig().smtpPass
     this.smtpFrom = useRuntimeConfig().smtpFrom
-    this.createTransporter()
     this.chartSnapshotService = new ChartSnapshotService()
   }
 
@@ -81,6 +85,18 @@ export class SendEmailService {
    * @desc 创建邮件传输器
    */
   private createTransporter(): void {
+    const missingConfigs = [
+      ['SMTP_HOST', this.smtpHost],
+      ['SMTP_USER', this.smtpUser],
+      ['SMTP_PASS', this.smtpPass]
+    ]
+      .filter(([, value]) => !value)
+      .map(([configKey]) => configKey)
+
+    if (missingConfigs.length > 0) {
+      throw new Error(`SMTP配置缺失: ${missingConfigs.join(', ')}`)
+    }
+
     this.transporter = nodemailer.createTransport({
       host: this.smtpHost!,
       port: this.smtpPort!,
@@ -90,7 +106,7 @@ export class SendEmailService {
         pass: this.smtpPass!
       },
       tls: {
-        rejectUnauthorized: false
+        rejectUnauthorized: this.smtpRejectUnauthorized
       }
     })
   }

@@ -232,9 +232,37 @@ export class ScheduledEmailMapper extends BaseMapper {
   public async updateScheduledEmailTask(
     scheduledEmailOptions: ScheduledEmailDao.UpdateScheduledEmailOptions
   ): Promise<boolean> {
-    const { keys, values } = convertToSqlProperties(scheduledEmailOptions)
+    const entries = Object.entries(scheduledEmailOptions).filter(
+      ([key, value]) => key !== 'id' && typeof value !== 'undefined'
+    )
+    const keys = entries.map(([key]) => key.replace(/([A-Z])/g, '_$1').toLowerCase())
+    const values = entries.map(([, value]) =>
+      typeof value === 'object' && value !== null ? JSON.stringify(value) : value
+    )
     const sql = `UPDATE ${SCHEDULED_EMAIL_TASK_TABLE_NAME} set ${batchFormatSqlSet(keys)} where id = ?`
     return (await this.exe<number>(sql, [...values, scheduledEmailOptions.id])) > 0
+  }
+
+  /**
+   * 原子抢占任务执行权，防止同一个任务被重复执行
+   */
+  public async claimTaskForExecution(taskId: number, allowedStatuses: ScheduledEmailDao.Status[]): Promise<boolean> {
+    if (!allowedStatuses.length) {
+      return false
+    }
+
+    const placeholders = allowedStatuses.map(() => '?').join(', ')
+    const sql = `
+      UPDATE ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
+      SET status = 'running',
+          executed_time = NOW(),
+          updated_time = NOW()
+      WHERE id = ?
+        AND is_active = 1
+        AND status IN (${placeholders})
+    `
+    const result = await this.exe<ResultSetHeader>(sql, [taskId, ...allowedStatuses])
+    return (result.affectedRows || 0) > 0
   }
 
   /**

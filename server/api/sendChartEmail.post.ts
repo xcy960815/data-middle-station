@@ -1,3 +1,4 @@
+import { SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/service/chartSnapshotService'
 import { SendEmailService } from '@/server/service/sendEmailService'
 import Joi from 'joi'
 
@@ -31,9 +32,12 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
       'string.min': '文件名不能为空',
       'string.max': '文件名不能超过100个字符'
     }),
-    chartType: Joi.string().valid('line', 'bar', 'pie', 'table', 'interval').optional().messages({
-      'any.only': '图表类型必须是 line、bar、pie、table 或 interval 之一'
-    }),
+    chartType: Joi.string()
+      .valid(...SUPPORTED_SERVER_RENDER_CHART_TYPES)
+      .optional()
+      .messages({
+        'any.only': `图表类型必须是 ${SUPPORTED_SERVER_RENDER_CHART_TYPES.join('、')} 之一`
+      }),
     analyzeName: Joi.string().min(1).max(100).optional().messages({
       'string.min': '分析名称不能为空',
       'string.max': '分析名称不能超过100个字符'

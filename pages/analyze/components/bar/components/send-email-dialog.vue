@@ -224,7 +224,7 @@ const dialogVisible = computed({
  * @desc 邮件表单数据
  */
 const emailFormData = reactive<EmailFormData>({
-  to: 'xinxin87v5@icloud.com',
+  to: 'xuchongyu668@gmail.com',
   subject: '',
   additionalContent: '额外说明额外说明额外说明',
   sendMode: 'immediate',
@@ -696,7 +696,7 @@ const resetEmailForm = () => {
   if (emailFormRef.value) {
     emailFormRef.value.resetFields()
   }
-  emailFormData.to = 'xinxin87v5@icloud.com'
+  emailFormData.to = 'xuchongyu668@gmail.com'
   emailFormData.subject = ''
   emailFormData.additionalContent = ''
   emailFormData.sendMode = 'immediate'
