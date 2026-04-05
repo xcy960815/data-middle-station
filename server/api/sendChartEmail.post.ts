@@ -1,6 +1,9 @@
-import { SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/service/chartSnapshotService'
-import { SendEmailService } from '@/server/service/sendEmailService'
-import Joi from 'joi'
+import {
+  chartSendEmailSchema,
+  formatSendEmailValidationError,
+  SendEmailService,
+  validateSendEmailPayload
+} from '@/server/service/sendEmailService'
 
 // 发送邮件
 const sendEmailService = new SendEmailService()
@@ -10,65 +13,19 @@ const logger = new Logger({
   folderName: 'api'
 })
 
-// Joi 验证模式
-const sendChartEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
-  emailConfig: Joi.object<SendEmailDto.EmailConfig>({
-    to: Joi.string().email().required().messages({
-      'string.email': '收件人邮箱格式不正确',
-      'any.required': '收件人邮箱不能为空'
-    }),
-    subject: Joi.string().min(1).max(200).required().messages({
-      'string.min': '邮件主题不能为空',
-      'string.max': '邮件主题不能超过200个字符',
-      'any.required': '邮件主题不能为空'
-    }),
-    additionalContent: Joi.string().max(5000).optional().messages({
-      'string.max': '附加内容不能超过5000个字符'
-    })
-  }).required(),
-
-  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOption>({
-    filename: Joi.string().min(1).max(100).optional().messages({
-      'string.min': '文件名不能为空',
-      'string.max': '文件名不能超过100个字符'
-    }),
-    chartType: Joi.string()
-      .valid(...SUPPORTED_SERVER_RENDER_CHART_TYPES)
-      .optional()
-      .messages({
-        'any.only': `图表类型必须是 ${SUPPORTED_SERVER_RENDER_CHART_TYPES.join('、')} 之一`
-      }),
-    analyzeName: Joi.string().min(1).max(100).optional().messages({
-      'string.min': '分析名称不能为空',
-      'string.max': '分析名称不能超过100个字符'
-    }),
-    analyzeId: Joi.number().integer().positive().required().messages({
-      'number.base': '分析ID必须是数字',
-      'number.integer': '分析ID必须是整数',
-      'number.positive': '分析ID必须大于0',
-      'any.required': '分析ID不能为空'
-    })
-  }).required()
-})
-
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOptions>>>(async (event) => {
   try {
     const requestBody = await readBody<SendEmailDto.SendEmailOptions>(event)
 
-    // 使用 Joi 进行数据验证
-    const { error } = sendChartEmailSchema.validate(requestBody, {
-      abortEarly: false, // 返回所有验证错误
-      stripUnknown: true, // 移除未知字段
-      convert: true // 自动类型转换
-    })
+    const { error, value } = validateSendEmailPayload(chartSendEmailSchema, requestBody)
 
     if (error) {
-      const errorMessage = error.details.map((detail) => detail.message).join('; ')
+      const errorMessage = formatSendEmailValidationError(error)
       logger.warn(`图表邮件发送数据验证失败: ${errorMessage}`)
       return ApiResponse.error(errorMessage)
     }
 
-    const sendEmailResult = await sendEmailService.sendMail(requestBody)
+    const sendEmailResult = await sendEmailService.sendMail(value)
 
     return ApiResponse.success(sendEmailResult)
   } catch (error: any) {

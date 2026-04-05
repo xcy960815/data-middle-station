@@ -1,7 +1,10 @@
-import { SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/service/chartSnapshotService'
 import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
-import { SendEmailService } from '@/server/service/sendEmailService'
-import Joi from 'joi'
+import {
+  formatSendEmailValidationError,
+  manualSendEmailSchema,
+  SendEmailService,
+  validateSendEmailPayload
+} from '@/server/service/sendEmailService'
 
 const sendEmailService = new SendEmailService()
 const scheduledEmailLogService = new ScheduledEmailLogService()
@@ -11,43 +14,20 @@ const logger = new Logger({
   folderName: 'api'
 })
 
-// Joi 验证模式
-const sendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
-  emailConfig: Joi.object<SendEmailDto.EmailConfig>({
-    to: Joi.string().email().required(),
-    subject: Joi.string().required(),
-    additionalContent: Joi.string().required()
-  }),
-  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOption>({
-    filename: Joi.string().optional(),
-    chartType: Joi.string()
-      .valid(...SUPPORTED_SERVER_RENDER_CHART_TYPES)
-      .optional()
-      .messages({
-        'any.only': `图表类型必须是 ${SUPPORTED_SERVER_RENDER_CHART_TYPES.join('、')} 之一`
-      }),
-    analyzeName: Joi.string().optional(),
-    analyzeId: Joi.number().required()
-  })
-})
-
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOptions>>>(async (event) => {
   let sendEmailRequest: SendEmailDto.SendEmailOptions | null = null
   try {
-    sendEmailRequest = await readBody<SendEmailDto.SendEmailOptions>(event)
+    const requestBody = await readBody<SendEmailDto.SendEmailOptions>(event)
 
-    // 使用 Joi 进行数据验证
-    const { error } = sendEmailSchema.validate(sendEmailRequest, {
-      abortEarly: false, // 返回所有验证错误
-      stripUnknown: true, // 移除未知字段
-      convert: true // 自动类型转换
-    })
+    const { error, value } = validateSendEmailPayload(manualSendEmailSchema, requestBody)
 
     if (error) {
-      const errorMessage = error.details.map((detail) => detail.message).join('; ')
+      const errorMessage = formatSendEmailValidationError(error)
       logger.warn(`邮件发送数据验证失败: ${errorMessage}`)
       return ApiResponse.error(errorMessage)
     }
+
+    sendEmailRequest = value
 
     const sendEmailResult = await sendEmailService.sendMail(sendEmailRequest)
 

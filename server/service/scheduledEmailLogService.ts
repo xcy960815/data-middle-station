@@ -1,5 +1,6 @@
 import { ScheduledEmailLogMapper } from '@/server/mapper/scheduledEmailLogMapper'
 import { BaseService } from '@/server/service/baseService'
+import { SendEmailService } from '@/server/service/sendEmailService'
 import dayjs from 'dayjs'
 
 const logger = new Logger({ fileName: 'scheduled-email-log', folderName: 'server' })
@@ -12,10 +13,15 @@ export class ScheduledEmailLogService extends BaseService {
    * 定时邮件日志Mapper
    */
   private scheduledEmailLogMapper: ScheduledEmailLogMapper
+  /**
+   * 邮件发送服务
+   */
+  private sendEmailService: SendEmailService
 
   constructor() {
     super()
     this.scheduledEmailLogMapper = new ScheduledEmailLogMapper()
+    this.sendEmailService = new SendEmailService()
   }
 
   /**
@@ -398,39 +404,112 @@ export class ScheduledEmailLogService extends BaseService {
     await this.logTaskFailure(0, executionTime, errorMessage, 0, '即时邮件发送失败', metadata)
   }
 
+  public buildTaskBaseMetadata(
+    emailConfig: {
+      to: string | string[]
+      subject: string
+      additionalContent?: string
+    },
+    analyzeOptions: SendEmailDto.AnalyzeOption,
+    retryCount: number
+  ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
+    const recipients = this.normalizeRecipients(emailConfig.to)
+    const attachments = analyzeOptions.filename ? [analyzeOptions.filename] : []
+    const transport = this.sendEmailService.getTransportInfo()
+
+    return {
+      senderEmail: this.sendEmailService.getSenderAddress(),
+      recipientTo: recipients.length > 0 ? recipients : undefined,
+      emailSubject: emailConfig.subject,
+      attachmentNames: attachments.length > 0 ? attachments : undefined,
+      attachmentCount: attachments.length || undefined,
+      emailChannel: this.sendEmailService.getChannel(),
+      provider: transport.host || 'nodemailer',
+      retryCount,
+      executionTimezone: this.getCurrentTimezone(),
+      rawRequestPayload: {
+        emailConfig,
+        analyzeOptions
+      },
+      smtpHost: transport.host,
+      smtpPort: transport.port
+    }
+  }
+
+  public enrichSendResultMetadata(
+    baseMetadata: Partial<ScheduledEmailLogDto.CreateLogOptions>,
+    sendResult: SendEmailVo.SendEmailOptions
+  ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
+    const attachmentNames = sendResult.attachments
+      ?.map((item) => item.filename)
+      .filter((item): item is string => Boolean(item))
+    const acceptedRecipients = this.flattenNodemailerRecipients(sendResult.accepted)
+    const rejectedRecipients = this.flattenNodemailerRecipients(sendResult.rejected)
+    const envelopeRecipients =
+      sendResult.envelope?.to && sendResult.envelope.to.length > 0 ? sendResult.envelope.to : undefined
+
+    return {
+      ...baseMetadata,
+      senderEmail: sendResult.sender || baseMetadata.senderEmail,
+      recipientTo: envelopeRecipients || baseMetadata.recipientTo,
+      attachmentNames: attachmentNames && attachmentNames.length > 0 ? attachmentNames : baseMetadata.attachmentNames,
+      attachmentCount:
+        typeof sendResult.attachments?.length !== 'undefined'
+          ? sendResult.attachments.length
+          : baseMetadata.attachmentCount,
+      emailChannel: sendResult.channel || baseMetadata.emailChannel,
+      provider: sendResult.transport?.host || baseMetadata.provider || 'nodemailer',
+      providerResponse: sendResult.response || baseMetadata.providerResponse,
+      acceptedRecipients: acceptedRecipients || baseMetadata.acceptedRecipients,
+      rejectedRecipients: rejectedRecipients || baseMetadata.rejectedRecipients,
+      rawResponsePayload: sendResult,
+      smtpHost: sendResult.transport?.host || baseMetadata.smtpHost,
+      smtpPort: sendResult.transport?.port || baseMetadata.smtpPort
+    }
+  }
+
   private buildManualSendMetadata(
     sendRequest: SendEmailDto.SendEmailOptions,
     sendResult?: SendEmailVo.SendEmailOptions
   ): Partial<ScheduledEmailLogDto.CreateScheduledEmailLogOptions> {
-    const recipients = Array.isArray(sendRequest.emailConfig.to)
-      ? sendRequest.emailConfig.to
-      : sendRequest.emailConfig.to
-          .split(/[,;]/)
-          .map((item) => item.trim())
-          .filter(Boolean)
     const attachmentNames = sendResult?.attachments
       ?.map((attachment) => attachment.filename)
       .filter((filename): filename is string => Boolean(filename))
+    const fallbackAttachmentNames = sendRequest.analyzeOptions.filename
+      ? [sendRequest.analyzeOptions.filename]
+      : undefined
+    const transportHost = sendResult?.transport?.host || this.sendEmailService.getTransportInfo().host || undefined
+    const transportPort = sendResult?.transport?.port || this.sendEmailService.getTransportInfo().port || undefined
+
     return {
-      senderEmail: sendResult?.sender || this.getSenderAddressFallback(),
-      recipientTo: recipients,
+      senderEmail: sendResult?.sender || this.sendEmailService.getSenderAddress(),
+      recipientTo: this.normalizeRecipients(sendRequest.emailConfig.to),
       emailSubject: sendRequest.emailConfig.subject,
-      attachmentNames: attachmentNames && attachmentNames.length > 0 ? attachmentNames : undefined,
-      attachmentCount: attachmentNames?.length || undefined,
-      emailChannel: sendResult?.channel,
-      provider: sendResult?.transport?.host,
+      attachmentNames: attachmentNames && attachmentNames.length > 0 ? attachmentNames : fallbackAttachmentNames,
+      attachmentCount: attachmentNames?.length || fallbackAttachmentNames?.length || undefined,
+      emailChannel: sendResult?.channel || this.sendEmailService.getChannel(),
+      provider: transportHost,
       providerResponse: sendResult?.response,
       acceptedRecipients: sendResult?.accepted ? this.flattenNodemailerRecipients(sendResult.accepted) : undefined,
       rejectedRecipients: sendResult?.rejected ? this.flattenNodemailerRecipients(sendResult.rejected) : undefined,
       rawRequestPayload: sendRequest,
       rawResponsePayload: sendResult,
-      smtpHost: sendResult?.transport?.host,
-      smtpPort: sendResult?.transport?.port
+      smtpHost: transportHost,
+      smtpPort: transportPort
     }
   }
 
-  private getSenderAddressFallback(): string {
-    return 'system@unknown'
+  private normalizeRecipients(recipients?: string | string[]): string[] {
+    if (!recipients) {
+      return []
+    }
+    if (Array.isArray(recipients)) {
+      return recipients.map((recipient) => recipient.trim()).filter(Boolean)
+    }
+    return recipients
+      .split(/[,;]/)
+      .map((item) => item.trim())
+      .filter(Boolean)
   }
 
   private flattenNodemailerRecipients(

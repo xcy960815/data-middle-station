@@ -554,7 +554,11 @@ export class ScheduledEmailService extends BaseService {
       }
 
       // 解析配置
-      const baseLogMetadata = this.buildBaseLogMetadata(emailConfig, analyzeOptions, latestTaskRecord.retryCount)
+      const baseLogMetadata = this.scheduledEmailLogService.buildTaskBaseMetadata(
+        emailConfig,
+        analyzeOptions,
+        latestTaskRecord.retryCount
+      )
 
       // 使用 SendEmailService 发送邮件
       const result = await this.sendEmailService.sendMail({
@@ -596,7 +600,7 @@ export class ScheduledEmailService extends BaseService {
         result.messageId,
         Date.now() - startTime,
         '邮件发送成功',
-        this.enrichLogMetadata(baseLogMetadata, result)
+        this.scheduledEmailLogService.enrichSendResultMetadata(baseLogMetadata, result)
       )
 
       success = true
@@ -639,7 +643,7 @@ export class ScheduledEmailService extends BaseService {
         Date.now() - startTime,
         '邮件发送失败',
         {
-          ...this.buildBaseLogMetadata(emailConfig, analyzeOptions, newRetryCount),
+          ...this.scheduledEmailLogService.buildTaskBaseMetadata(emailConfig, analyzeOptions, newRetryCount),
           providerResponse: errorMessage,
           rawResponsePayload: {
             error: errorMessage
@@ -752,79 +756,6 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 构建基础日志元数据
-   * @param {ScheduledEmailDto.EmailConfig} emailConfig 邮件配置
-   * @param {ScheduledEmailDto.AnalyzeOption} analyzeOptions 分析选项
-   * @param {number} retryCount 重试次数
-   * @returns {Partial<ScheduledEmailLogDto.CreateLogOptions>} 基础日志元数据
-   */
-  private buildBaseLogMetadata(
-    emailConfig: ScheduledEmailDto.EmailConfig,
-    analyzeOptions: ScheduledEmailDto.AnalyzeOption,
-    retryCount: number
-  ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
-    const recipients = this.normalizeRecipients(emailConfig.to)
-    const timezone = this.getCurrentTimezone()
-    const attachments = analyzeOptions.filename ? [analyzeOptions.filename] : []
-    const transport = this.sendEmailService.getTransportInfo()
-    return {
-      senderEmail: this.sendEmailService.getSenderAddress(),
-      recipientTo: recipients,
-      emailSubject: emailConfig.subject,
-      attachmentNames: attachments.length ? attachments : undefined,
-      attachmentCount: attachments.length || undefined,
-      emailChannel: this.sendEmailService.getChannel(),
-      provider: transport.host || 'nodemailer',
-      retryCount,
-      executionTimezone: timezone,
-      rawRequestPayload: {
-        emailConfig,
-        analyzeOptions
-      },
-      smtpHost: transport.host,
-      smtpPort: transport.port
-    }
-  }
-
-  /**
-   * 增强日志元数据
-   * @param {Partial<ScheduledEmailLogDto.CreateLogOptions>} baseMetadata 基础日志元数据
-   * @param {SendEmailVo.SendEmailOptions} sendResult 发送结果
-   * @returns {Partial<ScheduledEmailLogDto.CreateLogOptions>} 增强后的日志元数据
-   */
-  private enrichLogMetadata(
-    baseMetadata: Partial<ScheduledEmailLogDto.CreateLogOptions>,
-    sendResult: SendEmailVo.SendEmailOptions
-  ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
-    const attachments = sendResult.attachments
-      ?.map((item) => item.filename)
-      .filter((item): item is string => Boolean(item))
-    const accepted = this.flattenNodemailerRecipients(sendResult.accepted)
-    const rejected = this.flattenNodemailerRecipients(sendResult.rejected)
-    const envelopeRecipients =
-      sendResult.envelope?.to && sendResult.envelope.to.length > 0 ? sendResult.envelope.to : undefined
-
-    return {
-      ...baseMetadata,
-      senderEmail: sendResult.sender || baseMetadata.senderEmail,
-      recipientTo: envelopeRecipients || baseMetadata.recipientTo,
-      attachmentNames: attachments && attachments.length > 0 ? attachments : baseMetadata.attachmentNames,
-      attachmentCount:
-        typeof sendResult.attachments?.length !== 'undefined'
-          ? sendResult.attachments.length
-          : baseMetadata.attachmentCount,
-      emailChannel: sendResult.channel || baseMetadata.emailChannel,
-      provider: sendResult.transport?.host || baseMetadata.provider || 'nodemailer',
-      providerResponse: sendResult.response || baseMetadata.providerResponse,
-      acceptedRecipients: accepted || baseMetadata.acceptedRecipients,
-      rejectedRecipients: rejected || baseMetadata.rejectedRecipients,
-      rawResponsePayload: sendResult,
-      smtpHost: sendResult.transport?.host || baseMetadata.smtpHost,
-      smtpPort: sendResult.transport?.port || baseMetadata.smtpPort
-    }
-  }
-
-  /**
    * 确保字符串数组
    * @param {string | string[] | null | undefined} value 字符串或字符串数组
    * @returns {string[] | undefined} 字符串数组
@@ -834,48 +765,5 @@ export class ScheduledEmailService extends BaseService {
       return undefined
     }
     return Array.isArray(value) ? value : [value]
-  }
-
-  /**
-   * 规范化收件人
-   * @param {string | string[]} recipients 收件人
-   * @returns {string[]} 规范化后的收件人
-   */
-  private normalizeRecipients(recipients?: string | string[]): string[] {
-    if (!recipients) {
-      return []
-    }
-    if (Array.isArray(recipients)) {
-      return recipients.map((recipient) => recipient.trim()).filter(Boolean)
-    }
-    return recipients
-      .split(/[,;]/)
-      .map((item) => item.trim())
-      .filter(Boolean)
-  }
-
-  /**
-   * 扁平化Nodemailer收件人
-   * @param {string | { name?: string; address: string }[]} recipients 收件人
-   * @returns {string[] | undefined} 扁平化后的收件人
-   */
-  private flattenNodemailerRecipients(
-    recipients?: (string | { name?: string; address: string })[]
-  ): string[] | undefined {
-    if (!recipients || recipients.length === 0) {
-      return undefined
-    }
-    const normalized = recipients
-      .map((recipient) => (typeof recipient === 'string' ? recipient : recipient.address))
-      .filter((address): address is string => Boolean(address))
-    return normalized.length > 0 ? normalized : undefined
-  }
-
-  /**
-   * 获取当前时区
-   * @returns {string} 当前时区
-   */
-  private getCurrentTimezone(): string {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   }
 }

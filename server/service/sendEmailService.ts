@@ -1,13 +1,80 @@
-import { ChartSnapshotService } from '@/server/service/chartSnapshotService'
+import { ChartSnapshotService, SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/service/chartSnapshotService'
 import chalk from 'chalk'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import weekday from 'dayjs/plugin/weekday.js'
+import Joi from 'joi'
 import nodemailer, { type Transporter } from 'nodemailer'
 
 dayjs.extend(weekday)
 
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
+const SEND_EMAIL_VALIDATE_OPTIONS: Joi.ValidationOptions = {
+  abortEarly: false,
+  stripUnknown: true,
+  convert: true
+}
+
+const sendEmailChartTypeSchema = Joi.string()
+  .valid(...SUPPORTED_SERVER_RENDER_CHART_TYPES)
+  .optional()
+  .messages({
+    'any.only': `图表类型必须是 ${SUPPORTED_SERVER_RENDER_CHART_TYPES.join('、')} 之一`
+  })
+
+export const manualSendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
+  emailConfig: Joi.object<SendEmailDto.EmailConfig>({
+    to: Joi.string().email().required(),
+    subject: Joi.string().required(),
+    additionalContent: Joi.string().required()
+  }).required(),
+  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOption>({
+    filename: Joi.string().optional(),
+    chartType: sendEmailChartTypeSchema,
+    analyzeName: Joi.string().optional(),
+    analyzeId: Joi.number().required()
+  }).required()
+})
+
+export const chartSendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
+  emailConfig: Joi.object<SendEmailDto.EmailConfig>({
+    to: Joi.string().email().required().messages({
+      'string.email': '收件人邮箱格式不正确',
+      'any.required': '收件人邮箱不能为空'
+    }),
+    subject: Joi.string().min(1).max(200).required().messages({
+      'string.min': '邮件主题不能为空',
+      'string.max': '邮件主题不能超过200个字符',
+      'any.required': '邮件主题不能为空'
+    }),
+    additionalContent: Joi.string().max(5000).optional().messages({
+      'string.max': '附加内容不能超过5000个字符'
+    })
+  }).required(),
+  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOption>({
+    filename: Joi.string().min(1).max(100).optional().messages({
+      'string.min': '文件名不能为空',
+      'string.max': '文件名不能超过100个字符'
+    }),
+    chartType: sendEmailChartTypeSchema,
+    analyzeName: Joi.string().min(1).max(100).optional().messages({
+      'string.min': '分析名称不能为空',
+      'string.max': '分析名称不能超过100个字符'
+    }),
+    analyzeId: Joi.number().integer().positive().required().messages({
+      'number.base': '分析ID必须是数字',
+      'number.integer': '分析ID必须是整数',
+      'number.positive': '分析ID必须大于0',
+      'any.required': '分析ID不能为空'
+    })
+  }).required()
+})
+
+export const validateSendEmailPayload = <T>(schema: Joi.ObjectSchema<T>, payload: unknown): Joi.ValidationResult<T> =>
+  schema.validate(payload, SEND_EMAIL_VALIDATE_OPTIONS)
+
+export const formatSendEmailValidationError = (error: Joi.ValidationError): string =>
+  error.details.map((detail) => detail.message).join('; ')
 
 /**
  * @desc 邮件附件定义
