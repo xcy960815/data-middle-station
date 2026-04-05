@@ -138,6 +138,11 @@ data-middle-station/
 └── utils/          # 工具函数
 ```
 
+## 更多文档
+
+- `docs/project-documentation.md` - 项目技术文档
+- `docs/project-improvement-review-2026-04-05.md` - 项目改进评审记录
+
 ## 版本管理
 
 项目使用语义化版本控制，可以通过以下命令更新版本：

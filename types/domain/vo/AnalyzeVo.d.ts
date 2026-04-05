@@ -2,6 +2,21 @@
  * @desc  分析响应
  */
 declare namespace AnalyzeVo {
+  type AnalyzeListItem = Pick<
+    AnalyzeDao.AnalyzeOptions,
+    'id' | 'analyzeName' | 'analyzeDesc' | 'viewCount' | 'createTime' | 'updateTime' | 'createdBy' | 'updatedBy'
+  >
+
+  type GetAnalyzesOptions = {
+    list: AnalyzeListItem[]
+    total: number
+    page: number
+    pageSize: number
+    keyword: string
+    sortField: AnalyzeDao.AnalyzeListSortField
+    sortOrder: AnalyzeDao.AnalyzeListSortOrder
+  }
+
   /**
    * @desc 分析选项
    */
@@ -25,7 +40,7 @@ declare namespace AnalyzeVo {
   /**
    * @desc 更新分析响应
    */
-  type UpdateAnalyzeOptions = boolean
+  type UpdateAnalyzeOptions = AnalyzeOptions
 
   /**
    * @desc 更新分析名称响应

@@ -14,23 +14,12 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 const analyzeStore = useAnalyzeStore()
-const chartId = computed(() => {
-  return analyzeStore.getAnalyzeId
-})
 const analyzeName = computed(() => {
   return analyzeStore.getAnalyzeName
 })
 const analyzeDesc = computed(() => {
   return analyzeStore.getAnalyzeDesc
 })
-
-const props = defineProps({
-  analyzeName: {
-    type: String,
-    default: ''
-  }
-})
-
 /**
  * 更新图表名称
  * @param {string} value 图表名称
@@ -51,25 +40,8 @@ const handleUpdateAnalyzeName = () => {
     updateAnalyzeName(value.trim())
   })
 }
-/**
- * 更新图表名称
- * @param {string} value 图表名称
- */
-const updateAnalyzeName = async (value: string) => {
-  const result = await httpRequest('/api/updateAnalyzeName', {
-    method: 'POST',
-    body: {
-      id: chartId.value,
-      analyzeName: value
-    }
-  })
-  if (result.code === 200) {
-    ElMessage({
-      type: 'success',
-      message: '更新成功'
-    })
-    analyzeStore.setAnalyzeName(value)
-  }
+const updateAnalyzeName = (value: string) => {
+  analyzeStore.setAnalyzeName(value)
 }
 /**
  * 更新图表描述
@@ -91,25 +63,8 @@ const handleUpdateChartDesc = () => {
     updateChartDesc(value.trim())
   })
 }
-/**
- * 更新图表描述
- * @param {string} value 图表描述
- */
-const updateChartDesc = async (value: string) => {
-  const result = await httpRequest('/api/updateAnalyzeDesc', {
-    method: 'POST',
-    body: {
-      id: chartId.value,
-      analyzeDesc: value
-    }
-  })
-  if (result.code === 200) {
-    ElMessage({
-      type: 'success',
-      message: '更新成功'
-    })
-    analyzeStore.setAnalyzeDesc(value)
-  }
+const updateChartDesc = (value: string) => {
+  analyzeStore.setAnalyzeDesc(value)
 }
 </script>
 

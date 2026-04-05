@@ -1,5 +1,6 @@
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
 import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
+import { convertToSqlProperties } from '@/server/utils/databaseHelper'
 import type { ResultSetHeader } from 'mysql2'
 
 // 基础字段字典
@@ -14,6 +15,17 @@ export const ANALYZE_BASE_FIELDS = [
   'updated_by',
   'chart_config_id',
   'is_deleted'
+]
+
+export const ANALYZE_LIST_FIELDS = [
+  'id',
+  'analyze_name',
+  'analyze_desc',
+  'view_count',
+  'create_time',
+  'update_time',
+  'created_by',
+  'updated_by'
 ]
 
 /**
@@ -58,11 +70,41 @@ export class AnalyzeMapping implements AnalyzeDao.AnalyzeOptions, IColumnTarget 
 
   // 图表配置ID
   @Column('chart_config_id')
-  chartConfigId!: number
+  chartConfigId!: number | null
 
   // 是否删除
   @Column('is_deleted')
   isDeleted!: number
+}
+
+export class AnalyzeListMapping implements AnalyzeVo.AnalyzeListItem, IColumnTarget {
+  columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
+    return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
+  }
+
+  @Column('id')
+  id!: number
+
+  @Column('analyze_name')
+  analyzeName!: string
+
+  @Column('analyze_desc')
+  analyzeDesc!: string
+
+  @Column('view_count')
+  viewCount!: number
+
+  @Column('create_time')
+  createTime!: string
+
+  @Column('update_time')
+  updateTime!: string
+
+  @Column('created_by')
+  createdBy!: string
+
+  @Column('updated_by')
+  updatedBy!: string
 }
 
 /**
@@ -74,6 +116,13 @@ const ANALYZE_TABLE_NAME = '`analyze`'
  * 本文件使用到的数据源
  */
 const DATA_SOURCE_NAME = 'data_middle_station'
+
+const ANALYZE_LIST_SORT_FIELD_MAP: Record<AnalyzeDao.AnalyzeListSortField, string> = {
+  analyzeName: 'analyze_name',
+  createTime: 'create_time',
+  updateTime: 'update_time',
+  viewCount: 'view_count'
+}
 
 /**
  * @desc 分析 mapper，负责对分析配置的增删改查
@@ -112,8 +161,7 @@ export class AnalyzeMapper extends BaseMapper {
    * @returns {Promise<boolean>} 是否更新成功
    */
   public async updateAnalyze(updateAnalyzeOptions: AnalyzeDao.UpdateAnalyzeOptions): Promise<boolean> {
-    const { viewCount, ...updatableFields } = updateAnalyzeOptions
-    const { keys: analyzeOptionKeys, values: analyzeOptionValues } = convertToSqlProperties(updatableFields)
+    const { keys: analyzeOptionKeys, values: analyzeOptionValues } = convertToSqlProperties(updateAnalyzeOptions)
     const analyzeOptionSetClause = analyzeOptionKeys.map((key) => `${key} = ?`).join(', ')
     const updateAnalyzeSql = `UPDATE ${ANALYZE_TABLE_NAME} SET ${analyzeOptionSetClause} WHERE id = ? and is_deleted = 0`
     const analyzeResult = await this.exe<ResultSetHeader>(updateAnalyzeSql, [
@@ -157,13 +205,14 @@ export class AnalyzeMapper extends BaseMapper {
    * @param {number} analyzeId 图表主键 ID
    * @returns {Promise<number>} 更新后的访问次数
    */
-  public async updateViewCount(analyzeId: number): Promise<number> {
+  public async updateViewCount(analyzeId: number): Promise<boolean> {
     const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET view_count = view_count + 1 WHERE id = ?`
-    return await this.exe<number>(sql, [analyzeId])
+    const result = await this.exe<ResultSetHeader>(sql, [analyzeId])
+    return result.affectedRows > 0
   }
 
   /**
-   * @desc 获取单个分析详情，同时自增访问次数
+   * @desc 获取单个分析详情
    * @param {AnalyzeDao.GetAnalyzeOptions} analyzeDao 查询参数（至少包含分析 ID，可附带创建/更新人等过滤条件）
    * @returns {Promise<T>} 匹配的分析配置（若存在）
    */
@@ -172,8 +221,6 @@ export class AnalyzeMapper extends BaseMapper {
     analyzeOptions: AnalyzeDao.GetAnalyzeOptions
   ): Promise<T> {
     const { id, analyzeName, analyzeDesc, updatedBy, updateTime, createdBy } = analyzeOptions
-    await this.updateViewCount(id)
-
     let whereClause = `where id = ? and is_deleted = 0`
     const whereValues: Array<string | number> = [id]
 
@@ -203,6 +250,44 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
+   * @desc 获取分析数量
+   * @param queryOptions 列表查询参数
+   * @returns 数量
+   */
+  public async countAnalyzes(queryOptions: AnalyzeDao.GetAnalyzeListOptions): Promise<number> {
+    const { whereClause, params } = this.buildAnalyzeListWhereClause(queryOptions.keyword)
+    const sql = `select count(1) as total from ${ANALYZE_TABLE_NAME} ${whereClause}`
+    const result = await this.exe<Array<{ total: number }>>(sql, params)
+    return Number(result?.[0]?.total || 0)
+  }
+
+  /**
+   * @desc 获取分析列表
+   * @param queryOptions 列表查询参数
+   * @returns 分析列表
+   */
+  @Mapping(AnalyzeListMapping)
+  public async getAnalyzeList<T extends AnalyzeVo.AnalyzeListItem = AnalyzeVo.AnalyzeListItem>(
+    queryOptions: AnalyzeDao.GetAnalyzeListOptions
+  ): Promise<Array<T>> {
+    const { whereClause, params } = this.buildAnalyzeListWhereClause(queryOptions.keyword)
+    const sortField = ANALYZE_LIST_SORT_FIELD_MAP[queryOptions.sortField] || ANALYZE_LIST_SORT_FIELD_MAP.updateTime
+    const sortOrder = queryOptions.sortOrder === 'asc' ? 'ASC' : 'DESC'
+    const page = Math.max(1, Math.floor(queryOptions.page))
+    const pageSize = Math.max(1, Math.floor(queryOptions.pageSize))
+    const offset = (page - 1) * pageSize
+    const sql = `
+      select
+        ${ANALYZE_LIST_FIELDS.join(',\n        ')}
+      from ${ANALYZE_TABLE_NAME}
+      ${whereClause}
+      order by ${sortField} ${sortOrder}
+      limit ? offset ?`
+
+    return await this.exe<Array<T>>(sql, [...params, pageSize, offset])
+  }
+
+  /**
    * @desc 删除图表（逻辑删除）
    * @param {AnalyzeDao.DeleteAnalyzeOptions} deleteAnalyzeDao 删除参数（包含 ID、操作者及时间）
    * @returns 是否删除成功
@@ -226,5 +311,26 @@ export class AnalyzeMapper extends BaseMapper {
     from ${ANALYZE_TABLE_NAME}
     where is_deleted = 0`
     return await this.exe<Array<T>>(sql)
+  }
+
+  /**
+   * @desc 构建列表查询条件
+   * @param keyword 搜索关键字
+   * @returns where 条件和参数
+   */
+  private buildAnalyzeListWhereClause(keyword?: string): { whereClause: string; params: string[] } {
+    const whereConditions = ['is_deleted = 0']
+    const params: string[] = []
+
+    if (keyword?.trim()) {
+      whereConditions.push('(analyze_name like ? or analyze_desc like ?)')
+      const normalizedKeyword = `%${keyword.trim()}%`
+      params.push(normalizedKeyword, normalizedKeyword)
+    }
+
+    return {
+      whereClause: `where ${whereConditions.join(' and ')}`,
+      params
+    }
   }
 }

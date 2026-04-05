@@ -1,9 +1,32 @@
 {
   "compilerOptions": {
+    "rootDir": "..",
     "outDir": "./",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true
   },
-  "extends": "../.nuxt/tsconfig.server.json"
+  "extends": "../.nuxt/tsconfig.server.json",
+  "files": ["../.nuxt/types/nitro-nuxt.d.ts", "../.nuxt/types/nitro.d.ts"],
+  "include": ["../server/**/*", "../shared/**/*", "../types/**/*.d.ts"],
+  "exclude": [
+    "../node_modules",
+    "../dist",
+    "../.output",
+    "../pages",
+    "../components",
+    "../layouts",
+    "../plugins",
+    "../middleware",
+    "../stores",
+    "../composables",
+    "../app.vue",
+    "../error.vue",
+    "../nuxt.config.ts",
+    "../tailwind.config.ts",
+    "../eslint.config.js",
+    "../changelog.config.js",
+    "../commitlint.config.js",
+    "../ecosystem.config.js"
+  ]
 }

@@ -70,6 +70,26 @@ declare namespace AnalyzeStore {
      * 图表错误分析
      */
     chartErrorAnalysis: string
+    /**
+     * 编辑器是否有未保存改动
+     */
+    editorDirty: boolean
+    /**
+     * 编辑器是否正在保存
+     */
+    editorSaving: boolean
+    /**
+     * 编辑器是否处于初始化填充阶段
+     */
+    editorHydrating: boolean
+    /**
+     * 最近一次保存时间
+     */
+    lastSavedAt: string
+    /**
+     * 最近一次保存快照
+     */
+    lastSavedSnapshot: string
   }
   /**
    * @desc 图表getter

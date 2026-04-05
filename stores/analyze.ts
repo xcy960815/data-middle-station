@@ -17,7 +17,12 @@ export const useAnalyzeStore = defineStore<
     chartConfigId: null,
     chartLoading: false,
     analyzeData: [],
-    chartErrorAnalysis: ''
+    chartErrorAnalysis: '',
+    editorDirty: false,
+    editorSaving: false,
+    editorHydrating: true,
+    lastSavedAt: '',
+    lastSavedSnapshot: ''
   }),
   getters: {
     /**
@@ -87,6 +92,36 @@ export const useAnalyzeStore = defineStore<
      */
     getChartErrorAnalysis(state): string {
       return state.chartErrorAnalysis
+    },
+    /**
+     * @desc 获取是否存在未保存改动
+     */
+    getEditorDirty(state): boolean {
+      return state.editorDirty
+    },
+    /**
+     * @desc 获取是否正在保存
+     */
+    getEditorSaving(state): boolean {
+      return state.editorSaving
+    },
+    /**
+     * @desc 获取是否处于初始化同步阶段
+     */
+    getEditorHydrating(state): boolean {
+      return state.editorHydrating
+    },
+    /**
+     * @desc 获取最近一次保存时间
+     */
+    getLastSavedAt(state): string {
+      return state.lastSavedAt
+    },
+    /**
+     * @desc 获取最近一次保存快照
+     */
+    getLastSavedSnapshot(state): string {
+      return state.lastSavedSnapshot
     }
   },
   actions: {
@@ -171,6 +206,36 @@ export const useAnalyzeStore = defineStore<
      */
     setChartErrorAnalysis(chartErrorAnalysis) {
       this.chartErrorAnalysis = chartErrorAnalysis
+    },
+    /**
+     * @desc 设置脏状态
+     */
+    setEditorDirty(editorDirty: boolean) {
+      this.editorDirty = editorDirty
+    },
+    /**
+     * @desc 设置保存状态
+     */
+    setEditorSaving(editorSaving: boolean) {
+      this.editorSaving = editorSaving
+    },
+    /**
+     * @desc 设置初始化同步状态
+     */
+    setEditorHydrating(editorHydrating: boolean) {
+      this.editorHydrating = editorHydrating
+    },
+    /**
+     * @desc 设置最近一次保存时间
+     */
+    setLastSavedAt(lastSavedAt: string) {
+      this.lastSavedAt = lastSavedAt
+    },
+    /**
+     * @desc 设置最近一次保存快照
+     */
+    setLastSavedSnapshot(lastSavedSnapshot: string) {
+      this.lastSavedSnapshot = lastSavedSnapshot
     }
   }
 })

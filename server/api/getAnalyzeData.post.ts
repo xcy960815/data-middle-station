@@ -7,9 +7,12 @@ const chartDataService = new ChartDataService()
  * @returns {Promise<ResponseModule.Response<AnalyzeDataVo.AnalyzeData[]>>}
  */
 export default defineEventHandler<Promise<ApiResponseI<AnalyzeDataVo.AnalyzeData[]>>>(async (event) => {
-  let chartDataParams: AnalyzeDataDto.ChartDataOptions | undefined
+  let chartDataParams: AnalyzeDataDto.ChartDataOptions | null = null
   try {
-    chartDataParams = await readBody<AnalyzeDataDto.ChartDataOptions>(event)
+    chartDataParams = await readBody<AnalyzeDataDto.ChartDataOptions | null>(event)
+    if (!chartDataParams) {
+      throw new Error('查询参数不能为空')
+    }
 
     const data = await chartDataService.getAnalyzeData(chartDataParams)
 

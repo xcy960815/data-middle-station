@@ -74,39 +74,55 @@ export class AnalyzeService extends BaseService {
    * @returns {Promise<AnalyzeVo.GetAnalyzeResponse>}
    */
   public async getAnalyze(queryOptions: AnalyzeDto.GetAnalyzeOptions): Promise<AnalyzeVo.GetAnalyzeOptions> {
-    const analyzeRecord = await this.analyzeMapper.getAnalyze(queryOptions)
+    const { trackViewCount = false, ...analyzeQueryOptions } = queryOptions
+    const analyzeRecord = await this.analyzeMapper.getAnalyze(analyzeQueryOptions)
     if (!analyzeRecord) {
       throw new Error('分析不存在')
-    } else if (analyzeRecord.chartConfigId) {
+    }
+
+    if (trackViewCount) {
+      await this.analyzeMapper.updateViewCount(analyzeRecord.id)
+      analyzeRecord.viewCount += 1
+    }
+
+    if (analyzeRecord.chartConfigId) {
       const getChartConfigOptions: AnalyzeConfigDao.GetChartConfigOptions = {
         id: analyzeRecord.chartConfigId
       }
       const chartConfigVo = await this.chartConfigService.getChartConfig(getChartConfigOptions)
       return this.convertDaoToVo(analyzeRecord, chartConfigVo)
-    } else {
-      return this.convertDaoToVo(analyzeRecord, null)
     }
+
+    return this.convertDaoToVo(analyzeRecord, null)
   }
 
   /**
    * @desc 获取所有图表
    * @returns {Promise<Array<AnalyzeVo.GetAnalyzeResponse>>}
    */
-  public async getAnalyzes(): Promise<Array<AnalyzeVo.GetAnalyzeOptions>> {
-    const analyzeRecordList = await this.analyzeMapper.getAnalyzes()
-    const promises = analyzeRecordList.map(async (analyzeRecord) => {
-      if (analyzeRecord.chartConfigId) {
-        const getChartConfigOptions: AnalyzeConfigDao.GetChartConfigOptions = {
-          id: analyzeRecord.chartConfigId
-        }
-        const chartConfigVo = await this.chartConfigService.getChartConfig(getChartConfigOptions)
-        return this.convertDaoToVo(analyzeRecord, chartConfigVo)
-      } else {
-        return this.convertDaoToVo(analyzeRecord, null)
-      }
-    })
-    const getAnalyzesResult = await Promise.all(promises)
-    return getAnalyzesResult
+  public async getAnalyzes(queryOptions: AnalyzeDto.GetAnalyzesOptions = {}): Promise<AnalyzeVo.GetAnalyzesOptions> {
+    const normalizedQueryOptions: AnalyzeDao.GetAnalyzeListOptions = {
+      page: Math.max(1, Math.floor(Number(queryOptions.page || 1))),
+      pageSize: Math.min(100, Math.max(1, Math.floor(Number(queryOptions.pageSize || 12)))),
+      keyword: queryOptions.keyword?.trim() || '',
+      sortField: queryOptions.sortField || 'updateTime',
+      sortOrder: queryOptions.sortOrder || 'desc'
+    }
+
+    const [total, list] = await Promise.all([
+      this.analyzeMapper.countAnalyzes(normalizedQueryOptions),
+      this.analyzeMapper.getAnalyzeList(normalizedQueryOptions)
+    ])
+
+    return {
+      list,
+      total,
+      page: normalizedQueryOptions.page,
+      pageSize: normalizedQueryOptions.pageSize,
+      keyword: normalizedQueryOptions.keyword || '',
+      sortField: normalizedQueryOptions.sortField,
+      sortOrder: normalizedQueryOptions.sortOrder
+    }
   }
 
   /**
@@ -141,8 +157,11 @@ export class AnalyzeService extends BaseService {
       chartConfigId
     }
     const updateAnalyzeResponse = await this.analyzeMapper.updateAnalyze(updateParams)
+    if (!updateAnalyzeResponse) {
+      throw new Error('保存失败')
+    }
 
-    return updateAnalyzeResponse
+    return await this.getAnalyze({ id: updateParams.id })
   }
 
   /**

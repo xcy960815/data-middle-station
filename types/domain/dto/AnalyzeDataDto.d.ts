@@ -57,5 +57,5 @@ declare namespace AnalyzeDataDto {
   /**
    * @desc 图表数据响应
    */
-  type ChartDataResponse = AnalyzeDataDao.ChartData
+  type AnalyzeDataResponse = AnalyzeDataDao.AnalyzeData
 }

@@ -6,25 +6,39 @@ declare namespace AnalyzeDto {
     chartConfig?: AnalyzeConfigDao.ChartConfigOptions
   }
 
+  type AnalyzeListSortField = AnalyzeDao.AnalyzeListSortField
+
+  type AnalyzeListSortOrder = AnalyzeDao.AnalyzeListSortOrder
+
   /**
    * 获取分析请求参数
    */
   type GetAnalyzeOptions = Partial<AnalyzeOptions> & {
     id: number
+    trackViewCount?: boolean
+  }
+
+  /**
+   * 获取分析列表请求参数
+   */
+  type GetAnalyzesOptions = {
+    page?: number
+    pageSize?: number
+    keyword?: string
+    sortField?: AnalyzeListSortField
+    sortOrder?: AnalyzeListSortOrder
   }
 
   /**
    * 更新分析请求参数
    */
-  type UpdateAnalyzeOptions = Omit<
-    AnalyzeDao.AnalyzeOptions,
-    'createTime' | 'createdBy' | 'updateTime' | 'updatedBy' | 'isDeleted'
-  > & {
-    chartConfig?: Omit<
-      AnalyzeConfigDao.ChartConfigOptions,
-      'id' | 'createTime' | 'createdBy' | 'updateTime' | 'updatedBy' | 'isDeleted'
-    >
-  }
+  type UpdateAnalyzeOptions = Pick<AnalyzeDao.AnalyzeOptions, 'id'> &
+    Partial<Pick<AnalyzeDao.AnalyzeOptions, 'analyzeName' | 'analyzeDesc' | 'chartConfigId'>> & {
+      chartConfig?: Omit<
+        AnalyzeConfigDao.ChartConfigOptions,
+        'id' | 'createTime' | 'createdBy' | 'updateTime' | 'updatedBy' | 'isDeleted'
+      >
+    }
 
   /**
    * 删除分析请求参数
@@ -34,10 +48,8 @@ declare namespace AnalyzeDto {
   /**
    * 创建分析请求参数
    */
-  type CreateAnalyzeOptions = Omit<
-    AnalyzeDao.AnalyzeOptions,
-    'id' | 'createTime' | 'createdBy' | 'updateTime' | 'updatedBy' | 'isDeleted'
-  > & {
+  type CreateAnalyzeOptions = Pick<AnalyzeDao.AnalyzeOptions, 'analyzeName' | 'analyzeDesc'> & {
+    chartConfigId?: number | null
     chartConfig?: Omit<
       AnalyzeConfigDao.ChartConfigOptions,
       'id' | 'createTime' | 'createdBy' | 'updateTime' | 'updatedBy' | 'isDeleted'

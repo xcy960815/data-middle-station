@@ -6,7 +6,13 @@
     <el-button link @click="handleClickFullScreen">全屏</el-button>
     <el-button link @click="handleDownload">下载</el-button>
     <el-button link @click="handleClickSendEmailDto">邮件</el-button>
-    <el-button link @click="handleAnalyze">保存</el-button>
+    <el-button link @click="handleAnalyze" :loading="editorSaving" :disabled="!editorDirty && !editorSaving"
+      >保存</el-button
+    >
+    <el-tag v-show="editorDirty" size="small" class="pr-[10px] ml-[10px]" type="warning">未保存</el-tag>
+    <el-tag v-show="!editorDirty && lastSavedAt" size="small" class="pr-[10px] ml-[10px]" type="success"
+      >已保存：{{ lastSavedAt }}</el-tag
+    >
     <el-tag v-show="chartUpdateTakesTime" size="small" class="pr-[10px] ml-[10px]" type="info"
       >更新耗时 ：{{ chartUpdateTakesTime }}</el-tag
     >
@@ -20,17 +26,23 @@
 </template>
 
 <script setup lang="ts">
+import { useChartDownload } from '@/composables/useChartDownload'
 import { ElButton, ElMessage, ElMessageBox, ElTag } from 'element-plus'
+import { onBeforeRouteLeave } from 'vue-router'
 import { updateAnalyzeHandler } from '../../updateAnalyze'
 import { useAnalyzeDataHandler } from '../../useAnalyzeDataHandler'
 import SendEmailDtoDialog from './components/send-email-dialog.vue'
-const { handleUpdateAnalyze } = updateAnalyzeHandler()
+const { handleUpdateAnalyze, serializeAnalyzeDraft } = updateAnalyzeHandler()
 const { getAnalyzeData } = useAnalyzeDataHandler()
 const analyzeStore = useAnalyzeStore()
 const chartConfigStore = useChartConfigStore()
 const { handleDownload } = useChartDownload()
 const chartUpdateTime = computed(() => analyzeStore.getChartUpdateTime)
 const chartUpdateTakesTime = computed(() => analyzeStore.getChartUpdateTakesTime)
+const editorDirty = computed(() => analyzeStore.getEditorDirty)
+const editorSaving = computed(() => analyzeStore.getEditorSaving)
+const lastSavedAt = computed(() => analyzeStore.getLastSavedAt)
+const draftSnapshot = computed(() => serializeAnalyzeDraft())
 
 // 发送邮件对话框相关状态
 const emailDialogVisible = ref(false)
@@ -41,6 +53,17 @@ const emits = defineEmits<{
   requestChartRef: []
 }>()
 
+watch(
+  draftSnapshot,
+  (snapshot) => {
+    if (analyzeStore.getEditorHydrating) return
+    analyzeStore.setEditorDirty(snapshot !== analyzeStore.getLastSavedSnapshot)
+  },
+  {
+    immediate: true
+  }
+)
+
 /**
  * @desc 键盘事件处理
  */
@@ -48,18 +71,43 @@ const handleKeyDown = (event: KeyboardEvent) => {
   // Cmd+S (Mac) 或 Ctrl+S (Windows/Linux) 快捷键
   if ((event.metaKey || event.ctrlKey) && event.key === 's') {
     event.preventDefault() // 阻止浏览器默认的保存行为
-    handleAnalyze()
+    void handleAnalyze()
   }
+}
+
+const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+  if (!analyzeStore.getEditorDirty || analyzeStore.getEditorSaving) return
+  event.preventDefault()
+  event.returnValue = ''
 }
 
 // 组件挂载时添加键盘事件监听
 onMounted(() => {
   document.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 // 组件卸载时移除键盘事件监听
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+onBeforeRouteLeave(async () => {
+  if (!analyzeStore.getEditorDirty || analyzeStore.getEditorSaving) {
+    return true
+  }
+
+  try {
+    await ElMessageBox.confirm('当前分析有未保存的改动，确认要离开当前页面吗？', '未保存改动', {
+      type: 'warning',
+      confirmButtonText: '仍然离开',
+      cancelButtonText: '继续编辑'
+    })
+    return true
+  } catch (_error) {
+    return false
+  }
 })
 /**
  * @desc 点刷新按钮
@@ -95,136 +143,12 @@ const handleClickFullScreen = () => {
  * @returns void
  */
 const handleAnalyze = async () => {
-  try {
-    // 给用户提示
-    await ElMessageBox({
-      title: '确认保存',
-      customClass: 'custom-message-box',
-      message: h(
-        'div',
-        {
-          style: {
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '16px',
-            padding: '8px 0'
-          }
-        },
-        [
-          // 图标区域
-          h(
-            'div',
-            {
-              style: {
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                backgroundColor: '#e6f7ff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '24px',
-                color: '#1890ff'
-              }
-            },
-            '💾'
-          ),
-
-          // 主要文本
-          h(
-            'div',
-            {
-              style: {
-                textAlign: 'center',
-                fontSize: '16px',
-                color: '#333',
-                lineHeight: '1.5'
-              }
-            },
-            [
-              h('div', { style: { marginBottom: '8px' } }, '即将保存分析'),
-              h(
-                'div',
-                {
-                  style: {
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }
-                },
-                [
-                  h('span', '「'),
-                  h(
-                    'span',
-                    {
-                      style: {
-                        color: '#1890ff',
-                        fontWeight: '600',
-                        backgroundColor: '#f0f9ff',
-                        padding: '4px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid #bae7ff'
-                      }
-                    },
-                    analyzeStore.getAnalyzeName
-                  ),
-                  h('span', '」')
-                ]
-              )
-            ]
-          ),
-
-          // 提示文本
-          h(
-            'div',
-            {
-              style: {
-                color: '#666',
-                fontSize: '14px',
-                textAlign: 'center',
-                lineHeight: '1.4'
-              }
-            },
-            [
-              h('div', '确认要保存当前的分析配置吗？'),
-              h(
-                'div',
-                {
-                  style: {
-                    fontSize: '12px',
-                    color: '#999',
-                    marginTop: '8px',
-                    fontStyle: 'italic'
-                  }
-                },
-                '按 Enter 键确认，Esc 键取消'
-              )
-            ]
-          )
-        ]
-      ),
-      showCancelButton: true,
-      confirmButtonText: '确认保存',
-      cancelButtonText: '取消',
-      confirmButtonClass: 'el-button--primary',
-      cancelButtonClass: 'el-button--default',
-      center: true,
-      closeOnPressEscape: true,
-      distinguishCancelAndClose: false,
-      autofocus: true,
-      customStyle: {
-        borderRadius: '12px',
-        padding: '24px'
-      }
-    })
-
-    // 用户确认保存
-    handleUpdateAnalyze()
-  } catch (error) {
-    // 用户取消或关闭对话框
-    ElMessage.info('已取消保存')
+  if (!analyzeStore.getEditorDirty && !analyzeStore.getEditorSaving) {
+    ElMessage.info('当前没有需要保存的改动')
+    return
   }
+
+  await handleUpdateAnalyze()
 }
 
 /**
@@ -241,24 +165,5 @@ const handleClickSendEmailDto = () => {
 .bar {
   display: flex;
   align-items: center;
-}
-</style>
-
-<style lang="scss">
-.custom-message-box {
-  .el-message-box__header {
-    text-align: center;
-    padding-bottom: 20px;
-
-    .el-message-box__title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-    }
-  }
-
-  .el-message-box__content {
-    padding: 0 20px 20px;
-  }
 }
 </style>

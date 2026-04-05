@@ -17,10 +17,11 @@ export class ChartDataMapper extends BaseMapper {
   /**
    * @desc 执行 SQL 并返回图表分析数据
    * @param sql 用于查询图表数据的完整 SQL 语句
+   * @param params 预编译参数
    * @returns 图表数据列表
    */
-  public async getAnalyzeData<T extends Array<AnalyzeDataDao.ChartData>>(sql: string): Promise<T> {
-    const data = await this.exe<T>(sql)
+  public async getAnalyzeData<T extends Array<AnalyzeDataDao.AnalyzeData>>(sql: string, params?: any[]): Promise<T> {
+    const data = await this.exe<T>(sql, params)
     return data
   }
 }

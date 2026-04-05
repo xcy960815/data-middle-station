@@ -16,7 +16,29 @@
       </custom-header>
     </template>
     <template #content>
-      <div class="homepage-container relative h-full" ref="container">
+      <div class="homepage-toolbar flex items-center gap-3 px-4 py-3">
+        <el-input
+          v-model="keyword"
+          clearable
+          placeholder="搜索分析名称或描述"
+          class="toolbar-search"
+          @keyup.enter="handleSearch"
+          @clear="handleSearch"
+        />
+        <el-select v-model="sortField" class="toolbar-select" @change="handleSortChange">
+          <el-option v-for="item in sortFieldOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+        <el-select v-model="sortOrder" class="toolbar-select" @change="handleSortChange">
+          <el-option v-for="item in sortOrderOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+        <el-select v-model="pageSize" class="toolbar-select toolbar-page-size" @change="handlePageSizeChange">
+          <el-option v-for="size in pageSizeOptions" :key="size" :label="`${size} 条/页`" :value="size" />
+        </el-select>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
+        <el-button @click="handleReset">重置</el-button>
+      </div>
+
+      <div class="homepage-container relative h-full" v-loading="listLoading">
         <chart-card
           ref="cards"
           class="card-chart"
@@ -33,6 +55,19 @@
           @edit="handleEditAnalyze"
         >
         </chart-card>
+      </div>
+
+      <el-empty v-if="!listLoading && analyzeList.length === 0" description="暂无符合条件的分析" />
+
+      <div class="homepage-pagination px-4 py-3 flex justify-end" v-if="total > 0">
+        <el-pagination
+          background
+          layout="prev, pager, next, total"
+          :current-page="page"
+          :page-size="pageSize"
+          :total="total"
+          @current-change="handlePageChange"
+        />
       </div>
 
       <!-- 创建&编辑分析 -->
@@ -62,12 +97,29 @@
 </template>
 
 <script lang="ts" setup>
+import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import ChartCard from './components/chart-card.vue'
 const layoutName = 'homepage'
 
 const homePageStore = useHomepageStore()
+const page = ref(1)
+const pageSize = ref(12)
+const keyword = ref('')
+const sortField = ref<AnalyzeDto.AnalyzeListSortField>('updateTime')
+const sortOrder = ref<AnalyzeDto.AnalyzeListSortOrder>('desc')
+const pageSizeOptions = [12, 24, 48]
+const sortFieldOptions: Array<{ label: string; value: AnalyzeDto.AnalyzeListSortField }> = [
+  { label: '最近更新', value: 'updateTime' },
+  { label: '创建时间', value: 'createTime' },
+  { label: '访问次数', value: 'viewCount' },
+  { label: '分析名称', value: 'analyzeName' }
+]
+const sortOrderOptions: Array<{ label: string; value: AnalyzeDto.AnalyzeListSortOrder }> = [
+  { label: '降序', value: 'desc' },
+  { label: '升序', value: 'asc' }
+]
 /**
  * @desc 创建&编辑分析表单
  */
@@ -115,33 +167,59 @@ const addOrEditAnalyzeFormRules: FormRules = {
 const analyzeList = computed(() => {
   return homePageStore.getAnalyzes
 })
-const container = ref<HTMLDivElement>()
+const total = computed(() => homePageStore.getTotal)
+const listLoading = computed(() => homePageStore.getLoading)
 /**
  * @description 获取所有的分析
  */
-const getAnalyzes = async () => {
-  const res = await httpRequest('/api/getAnalyzes', {
-    method: 'POST'
+const getAnalyzes = async (targetPage = page.value) => {
+  homePageStore.setLoading(true)
+  const res = await httpRequest<ApiResponseI<AnalyzeVo.GetAnalyzesOptions>>('/api/getAnalyzes', {
+    method: 'POST',
+    body: {
+      page: targetPage,
+      pageSize: pageSize.value,
+      keyword: keyword.value.trim(),
+      sortField: sortField.value,
+      sortOrder: sortOrder.value
+    }
+  }).finally(() => {
+    homePageStore.setLoading(false)
   })
-  if (res.code === 200) {
-    homePageStore.setAnalyzes(res.data || [])
-    // nextTick(() => {
-    //   // 添加window 日历效果
-    //   const cards =
-    //     container.value!.querySelectorAll<HTMLDivElement>(
-    //       '.card-chart'
-    //     )
-    //   container.value!.onmousemove = (e) => {
-    //     for (const card of cards) {
-    //       const rect = card.getBoundingClientRect()
-    //       const x = e.clientX - rect.left - rect.width / 2
-    //       const y = e.clientY - rect.top - rect.height / 2
-    //       card.style.setProperty('--x', `${x}px`)
-    //       card.style.setProperty('--y', `${y}px`)
-    //     }
-    //   }
-    // })
+  if (res.code === 200 && res.data) {
+    page.value = res.data.page
+    pageSize.value = res.data.pageSize
+    homePageStore.setAnalyzes(res.data.list || [])
+    homePageStore.setTotal(res.data.total || 0)
+  } else {
+    homePageStore.setAnalyzes([])
+    homePageStore.setTotal(0)
+    ElMessage.error(res.message || '获取分析列表失败')
   }
+}
+
+const handleSearch = () => {
+  getAnalyzes(1)
+}
+
+const handleReset = () => {
+  keyword.value = ''
+  sortField.value = 'updateTime'
+  sortOrder.value = 'desc'
+  pageSize.value = 12
+  getAnalyzes(1)
+}
+
+const handleSortChange = () => {
+  getAnalyzes(1)
+}
+
+const handlePageSizeChange = () => {
+  getAnalyzes(1)
+}
+
+const handlePageChange = (nextPage: number) => {
+  getAnalyzes(nextPage)
 }
 
 /**
@@ -185,7 +263,7 @@ const handleEditAnalyze = async (id: number) => {
   addOrEditAnalyzeTitle.value = '编辑分析'
   addOrEditAnalyzeDialogVisible.value = true
   nextTick(() => {
-    addOrEditAnalyzeFormRef.value?.resetFields()
+    addOrEditAnalyzeFormRef.value?.clearValidate()
   })
 }
 
@@ -193,10 +271,13 @@ const handleEditAnalyze = async (id: number) => {
  * @desc 创建分析 打开弹窗
  */
 const handleCreateAnalyze = () => {
+  addOrEditAnalyzeFormData.id = null
+  addOrEditAnalyzeFormData.analyzeName = ''
+  addOrEditAnalyzeFormData.analyzeDesc = ''
   addOrEditAnalyzeDialogVisible.value = true
   addOrEditAnalyzeTitle.value = '创建分析'
   nextTick(() => {
-    addOrEditAnalyzeFormRef.value?.resetFields()
+    addOrEditAnalyzeFormRef.value?.clearValidate()
   })
 }
 
@@ -244,8 +325,6 @@ const handleSaveAnalyze = async () => {
 onMounted(() => {
   getAnalyzes()
 })
-
-onUnmounted(() => {})
 </script>
 
 <style lang="scss" scoped>
@@ -269,6 +348,20 @@ onUnmounted(() => {})
   /* 控制卡片之间的间距：横向稍大、纵向更紧凑 */
   column-gap: 1.25rem;
   row-gap: 0.6rem;
+}
+
+.homepage-toolbar {
+  .toolbar-search {
+    max-width: 320px;
+  }
+
+  .toolbar-select {
+    width: 140px;
+  }
+
+  .toolbar-page-size {
+    width: 120px;
+  }
 }
 
 .card-chart {

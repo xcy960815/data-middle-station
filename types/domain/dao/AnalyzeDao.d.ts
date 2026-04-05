@@ -2,6 +2,10 @@
  * @desc  分析表结构
  */
 declare namespace AnalyzeDao {
+  type AnalyzeListSortField = 'analyzeName' | 'createTime' | 'updateTime' | 'viewCount'
+
+  type AnalyzeListSortOrder = 'asc' | 'desc'
+
   /**
    * 分析配置
    */
@@ -53,15 +57,32 @@ declare namespace AnalyzeDao {
   type GetAnalyzeOptions = Partial<AnalyzeOptions> & {
     id: number
   }
+
+  /**
+   * 获取分析列表请求参数
+   */
+  type GetAnalyzeListOptions = {
+    page: number
+    pageSize: number
+    keyword?: string
+    sortField: AnalyzeListSortField
+    sortOrder: AnalyzeListSortOrder
+  }
   /**
    * 创建分析请求参数
    */
-  type CreateAnalyzeOptions = Omit<AnalyzeOptions, 'id' | 'isDeleted'>
+  type CreateAnalyzeOptions = Pick<
+    AnalyzeOptions,
+    'analyzeName' | 'analyzeDesc' | 'createdBy' | 'updatedBy' | 'createTime' | 'updateTime'
+  > & {
+    chartConfigId?: number | null
+  }
 
   /**
    * 更新分析请求参数
    */
-  type UpdateAnalyzeOptions = Omit<AnalyzeOptions, 'isDeleted' | 'createTime' | 'createdBy'>
+  type UpdateAnalyzeOptions = Pick<AnalyzeOptions, 'id' | 'updatedBy' | 'updateTime'> &
+    Partial<Pick<AnalyzeOptions, 'analyzeName' | 'analyzeDesc' | 'chartConfigId'>>
 
   /**
    * 更新分析描述请求参数

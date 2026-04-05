@@ -1,60 +1,43 @@
+import { httpRequest } from '@/composables/useHttpRequest'
 import { ElMessage } from 'element-plus'
+import { useAnalyzeDraft } from './useAnalyzeDraft'
 
 /**
  * @desc 更新分析 handler
  */
 export const updateAnalyzeHandler = () => {
-  const chartConfigStore = useChartConfigStore()
   const analyzeStore = useAnalyzeStore()
-  const columnStore = useColumnsStore()
-  const dimensionStore = useDimensionsStore()
-  const groupStore = useGroupsStore()
-  const orderStore = useOrdersStore()
-  const filterStore = useFiltersStore()
+  const { buildAnalyzeDraftPayload, serializeAnalyzeDraft } = useAnalyzeDraft()
   /**
    * @desc 点击保存
    */
   const handleUpdateAnalyze = async () => {
-    const privateChartConfig = chartConfigStore.getPrivateChartConfig
-    const chartConfigId = analyzeStore.getChartConfigId
-    const columns = columnStore.getColumns
-    const dimensions = dimensionStore.getDimensions
-    const groups = groupStore.getGroups
-    const orders = orderStore.getOrders
-    const filters = filterStore.getFilters
-    const commonChartConfig = chartConfigStore.getCommonChartConfig
-    const id = analyzeStore.getAnalyzeId
-    const analyzeName = analyzeStore.getAnalyzeName
-    const analyzeDesc = analyzeStore.getAnalyzeDesc
-    const chartType = analyzeStore.getChartType
-    const dataSource = columnStore.getDataSource
-    const result = await httpRequest('/api/updateAnalyze', {
+    if (!analyzeStore.getAnalyzeId) {
+      ElMessage.error('分析ID不存在，无法保存')
+      return false
+    }
+    const payload = buildAnalyzeDraftPayload()
+    analyzeStore.setEditorSaving(true)
+    const result = await httpRequest<ApiResponseI<AnalyzeVo.UpdateAnalyzeOptions>>('/api/updateAnalyze', {
       method: 'POST',
-      body: {
-        id,
-        analyzeName,
-        analyzeDesc,
-        chartConfigId,
-        chartConfig: {
-          dataSource,
-          columns,
-          dimensions,
-          groups,
-          orders,
-          filters,
-          chartType,
-          commonChartConfig,
-          privateChartConfig
-        }
-      }
+      body: payload
+    }).finally(() => {
+      analyzeStore.setEditorSaving(false)
     })
-    if (result.code === 200) {
+    if (result.code === 200 && result.data) {
+      analyzeStore.setChartConfigId(result.data.chartConfigId)
+      analyzeStore.setLastSavedSnapshot(serializeAnalyzeDraft())
+      analyzeStore.setEditorDirty(false)
+      analyzeStore.setLastSavedAt(result.data.updateTime || '')
       ElMessage.success('保存成功')
+      return true
     } else {
-      ElMessage.error('保存失败')
+      ElMessage.error(result.message || '保存失败')
+      return false
     }
   }
   return {
-    handleUpdateAnalyze
+    handleUpdateAnalyze,
+    serializeAnalyzeDraft
   }
 }
