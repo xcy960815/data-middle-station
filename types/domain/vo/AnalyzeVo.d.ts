@@ -3,7 +3,7 @@
  */
 declare namespace AnalyzeVo {
   type AnalyzeListItem = Pick<
-    AnalyzeDao.AnalyzeOptions,
+    AnalyzeDao.AnalyzeOption,
     'id' | 'analyzeName' | 'analyzeDesc' | 'viewCount' | 'createTime' | 'updateTime' | 'createdBy' | 'updatedBy'
   >
 
@@ -20,7 +20,7 @@ declare namespace AnalyzeVo {
   /**
    * @desc 分析选项
    */
-  type AnalyzeOptions = AnalyzeDao.AnalyzeOptions & {
+  type AnalyzeOption = AnalyzeDao.AnalyzeOption & {
     /**
      * 图表配置
      */
@@ -30,17 +30,17 @@ declare namespace AnalyzeVo {
   /**
    * @desc 获取分析响应
    */
-  type GetAnalyzeOptions = AnalyzeOptions
+  type GetAnalyzeOptions = AnalyzeOption
 
   /**
    * @desc 创建分析响应
    */
-  type CreateAnalyzeOptions = AnalyzeOptions
+  type CreateAnalyzeOptions = AnalyzeOption
 
   /**
    * @desc 更新分析响应
    */
-  type UpdateAnalyzeOptions = AnalyzeOptions
+  type UpdateAnalyzeOptions = AnalyzeOption
 
   /**
    * @desc 更新分析名称响应

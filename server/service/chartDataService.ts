@@ -426,10 +426,10 @@ export class ChartDataService {
 
   /**
    * @desc 构建where语句
-   * @param filterOptions {AnalyzeDataDto.FilterOptions[]} 过滤条件
+   * @param filterOptions {AnalyzeDataDto.FilterOption[]} 过滤条件
    * @returns {string} where语句
    */
-  private buildWhereClause(filterOptions: AnalyzeDataDto.FilterOptions[], context: QueryContext): SqlFragment {
+  private buildWhereClause(filterOptions: AnalyzeDataDto.FilterOption[], context: QueryContext): SqlFragment {
     if (filterOptions.length === 0) {
       return {
         sql: '',
@@ -477,12 +477,12 @@ export class ChartDataService {
 
   /**
    * @desc 构建orderBy语句
-   * @param orderOptions {AnalyzeDataDto.OrderOptions[]} 排序条件
+   * @param orderOptions {AnalyzeDataDto.OrderOption[]} 排序条件
    * @param hasGroupBy {boolean} 是否有分组
    * @returns {string} orderBy语句
    */
   private buildOrderByClause(
-    orderOptions: AnalyzeDataDto.OrderOptions[],
+    orderOptions: AnalyzeDataDto.OrderOption[],
     hasGroupBy: boolean,
     context: QueryContext
   ): SqlFragment {

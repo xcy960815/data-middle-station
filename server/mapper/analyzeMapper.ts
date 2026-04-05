@@ -31,7 +31,7 @@ export const ANALYZE_LIST_FIELDS = [
 /**
  * @desc 分析页面的行数据映射，将数据库字段转换为领域对象属性
  */
-export class AnalyzeMapping implements AnalyzeDao.AnalyzeOptions, IColumnTarget {
+export class AnalyzeMapping implements AnalyzeDao.AnalyzeOption, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -217,7 +217,7 @@ export class AnalyzeMapper extends BaseMapper {
    * @returns {Promise<T>} 匹配的分析配置（若存在）
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyze<T extends AnalyzeDao.AnalyzeOptions = AnalyzeDao.AnalyzeOptions>(
+  public async getAnalyze<T extends AnalyzeDao.AnalyzeOption = AnalyzeDao.AnalyzeOption>(
     analyzeOptions: AnalyzeDao.GetAnalyzeOptions
   ): Promise<T> {
     const { id, analyzeName, analyzeDesc, updatedBy, updateTime, createdBy } = analyzeOptions
@@ -301,10 +301,10 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 获取所有的图表
-   * @returns {Promise<Array<AnalyzeDao.AnalyzeOptions>>}
+   * @returns {Promise<Array<AnalyzeDao.AnalyzeOption>>}
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyzes<T extends AnalyzeDao.AnalyzeOptions = AnalyzeDao.AnalyzeOptions>(): Promise<Array<T>> {
+  public async getAnalyzes<T extends AnalyzeDao.AnalyzeOption = AnalyzeDao.AnalyzeOption>(): Promise<Array<T>> {
     const sql = `
     select
       ${ANALYZE_BASE_FIELDS.join(',\n    ')}

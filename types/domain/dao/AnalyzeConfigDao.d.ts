@@ -54,7 +54,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 过滤配置
    */
-  type FilterOptions = ColumnOptions & {
+  type FilterOption = ColumnOptions & {
     /**
      * 过滤类型
      */
@@ -104,7 +104,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 排序配置
    */
-  type OrderOptions = ColumnOptions & {
+  type OrderOption = ColumnOptions & {
     /**
      * 排序类型
      */
@@ -425,7 +425,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 过滤配置
      */
-    filters: FilterOptions[]
+    filters: FilterOption[]
     /**
      * 分组配置
      */
@@ -433,7 +433,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 排序配置
      */
-    orders: OrderOptions[]
+    orders: OrderOption[]
     /**
      * 公共图表配置
      */

@@ -22,6 +22,8 @@
     "../composables",
     "../app.vue",
     "../error.vue",
+    "../types/plugins/**/*",
+    "../types/vue-shims.d.ts",
     "../nuxt.config.ts",
     "../tailwind.config.ts",
     "../eslint.config.js",

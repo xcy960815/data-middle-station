@@ -40,13 +40,13 @@ const orderStore = useOrdersStore()
 /**
  * @desc orderList
  */
-const orderList = computed<OrderStore.OrderOptions[]>(() => orderStore.getOrders)
+const orderList = computed<OrderStore.OrderOption[]>(() => orderStore.getOrders)
 
 /**
  * @desc addOrder
- * @param {OrderStore.OrderOptions|Array<OrderStore.OrderOptions>} orders
+ * @param {OrderStore.OrderOption|Array<OrderStore.OrderOption>} orders
  */
-const addOrder = (order: OrderStore.OrderOptions | Array<OrderStore.OrderOptions>) => {
+const addOrder = (order: OrderStore.OrderOption | Array<OrderStore.OrderOption>) => {
   order = Array.isArray(order) ? order : [order]
   orderStore.addOrders(order)
 }
@@ -114,7 +114,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
 
-  const orderOption: OrderStore.OrderOptions = {
+  const orderOption: OrderStore.OrderOption = {
     ...data.value,
     // 默认降序
     orderType: 'desc',

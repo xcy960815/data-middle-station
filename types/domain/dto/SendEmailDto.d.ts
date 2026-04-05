@@ -14,7 +14,7 @@ declare namespace SendEmailDto {
     additionalContent: string
   }
 
-  interface AnalyzeOptions {
+  interface AnalyzeOption {
     /**
      * 文件名
      */
@@ -49,7 +49,7 @@ declare namespace SendEmailDto {
     /**
      * 分析选项
      */
-    analyzeOptions: AnalyzeOptions
+    analyzeOptions: AnalyzeOption
   }
   /**
    * 图表导出配置

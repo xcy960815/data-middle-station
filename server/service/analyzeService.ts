@@ -24,14 +24,14 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc DAO 转 VO
-   * @param analyzeRecord {AnalyzeDao.AnalyzeOptions} 分析记录
+   * @param analyzeRecord {AnalyzeDao.AnalyzeOption} 分析记录
    * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigOptions | null} 关联图表配置
    * @returns {AnalyzeVo.GetAnalyzeOptions}
    */
   private convertDaoToVo(
-    analyzeRecord: AnalyzeDao.AnalyzeOptions,
+    analyzeRecord: AnalyzeDao.AnalyzeOption,
     resolvedChartConfig: AnalyzeConfigVo.ChartConfigOptions | null
-  ): AnalyzeVo.AnalyzeOptions {
+  ): AnalyzeVo.AnalyzeOption {
     return {
       ...analyzeRecord,
       chartConfig: resolvedChartConfig

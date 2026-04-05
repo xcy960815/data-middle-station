@@ -173,12 +173,12 @@ export class SendEmailService {
    * @desc DTO -> nodemailer 发送参数转换
    * @param sendOptions {SendEmailDto.SendEmailOptions} 邮件请求
    * @param attachments {Attachment[]} 附件列表
-   * @param analyzeOptions {SendEmailDto.AnalyzeOptions} 图表选项
+   * @param analyzeOptions {SendEmailDto.AnalyzeOption} 图表选项
    */
   private convertDtoToDao(
     sendOptions: SendEmailDto.SendEmailOptions,
     attachments: Attachment[],
-    analyzeOptions: SendEmailDto.AnalyzeOptions
+    analyzeOptions: SendEmailDto.AnalyzeOption
   ): SendMailPayload {
     return {
       from: this.getSenderAddress(),
@@ -203,10 +203,10 @@ export class SendEmailService {
 
   /**
    * @desc 构建附件配置
-   * @param analyzeOptions {SendEmailDto.AnalyzeOptions}
+   * @param analyzeOptions {SendEmailDto.AnalyzeOption}
    * @returns {Array}
    */
-  private buildAttachments(analyzeOptions: SendEmailDto.AnalyzeOptions): Array<Attachment> {
+  private buildAttachments(analyzeOptions: SendEmailDto.AnalyzeOption): Array<Attachment> {
     if (!analyzeOptions.filename) {
       return []
     }
@@ -237,9 +237,7 @@ export class SendEmailService {
   /**
    * 根据 analyzeId 自动生成附件所需的图表快照
    */
-  private async resolveAnalyzeOptions(
-    analyzeOptions: SendEmailDto.AnalyzeOptions
-  ): Promise<SendEmailDto.AnalyzeOptions> {
+  private async resolveAnalyzeOptions(analyzeOptions: SendEmailDto.AnalyzeOption): Promise<SendEmailDto.AnalyzeOption> {
     if (analyzeOptions.fileContent || analyzeOptions.filePath) {
       if (!analyzeOptions.filename) {
         throw new Error('缺少附件文件名，无法发送邮件')
@@ -266,13 +264,10 @@ export class SendEmailService {
   /**
    * @desc 构建邮件内容
    * @param emailConfig {SendEmailDto.EmailConfig}
-   * @param analyzeOptions {SendEmailDto.AnalyzeOptions}
+   * @param analyzeOptions {SendEmailDto.AnalyzeOption}
    * @returns {string}
    */
-  private buildEmailContent(
-    emailConfig: SendEmailDto.EmailConfig,
-    analyzeOptions: SendEmailDto.AnalyzeOptions
-  ): string {
+  private buildEmailContent(emailConfig: SendEmailDto.EmailConfig, analyzeOptions: SendEmailDto.AnalyzeOption): string {
     const additionalContent = emailConfig.additionalContent
       ? `<div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
            <p style="margin: 0; color: #495057;">${emailConfig.additionalContent.replace(/\n/g, '<br>')}</p>

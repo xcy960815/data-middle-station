@@ -9,7 +9,7 @@ declare namespace AnalyzeDao {
   /**
    * 分析配置
    */
-  type AnalyzeOptions = {
+  type AnalyzeOption = {
     /**
      * 分析id
      */
@@ -54,7 +54,7 @@ declare namespace AnalyzeDao {
   /**
    * 获取分析请求参数
    */
-  type GetAnalyzeOptions = Partial<AnalyzeOptions> & {
+  type GetAnalyzeOptions = Partial<AnalyzeOption> & {
     id: number
   }
 
@@ -72,7 +72,7 @@ declare namespace AnalyzeDao {
    * 创建分析请求参数
    */
   type CreateAnalyzeOptions = Pick<
-    AnalyzeOptions,
+    AnalyzeOption,
     'analyzeName' | 'analyzeDesc' | 'createdBy' | 'updatedBy' | 'createTime' | 'updateTime'
   > & {
     chartConfigId?: number | null
@@ -81,19 +81,19 @@ declare namespace AnalyzeDao {
   /**
    * 更新分析请求参数
    */
-  type UpdateAnalyzeOptions = Pick<AnalyzeOptions, 'id' | 'updatedBy' | 'updateTime'> &
-    Partial<Pick<AnalyzeOptions, 'analyzeName' | 'analyzeDesc' | 'chartConfigId'>>
+  type UpdateAnalyzeOptions = Pick<AnalyzeOption, 'id' | 'updatedBy' | 'updateTime'> &
+    Partial<Pick<AnalyzeOption, 'analyzeName' | 'analyzeDesc' | 'chartConfigId'>>
 
   /**
    * 更新分析描述请求参数
    */
-  type UpdateAnalyzeDescOptions = Pick<AnalyzeOptions, 'id' | 'analyzeDesc' | 'updatedBy' | 'updateTime'>
+  type UpdateAnalyzeDescOptions = Pick<AnalyzeOption, 'id' | 'analyzeDesc' | 'updatedBy' | 'updateTime'>
   /**
    * 更新分析名称请求参数
    */
-  type UpdateAnalyzeNameOptions = Pick<AnalyzeOptions, 'id' | 'analyzeName' | 'updatedBy' | 'updateTime'>
+  type UpdateAnalyzeNameOptions = Pick<AnalyzeOption, 'id' | 'analyzeName' | 'updatedBy' | 'updateTime'>
   /**
    * 删除分析请求参数
    */
-  type DeleteAnalyzeOptions = Pick<AnalyzeOptions, 'id' | 'updatedBy' | 'updateTime'>
+  type DeleteAnalyzeOptions = Pick<AnalyzeOption, 'id' | 'updatedBy' | 'updateTime'>
 }

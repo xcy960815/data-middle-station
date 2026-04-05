@@ -138,7 +138,7 @@ declare namespace DataBaseDao {
     /**
      * @desc 列类型（字段类型）
      */
-    columnType: ColumnType
+    columnType: string
     /**
      * @desc 列注释
      */

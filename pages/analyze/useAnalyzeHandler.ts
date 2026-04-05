@@ -50,9 +50,9 @@ export const useAnalyzeHandler = () => {
         analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')
         columnStore.setColumns(chartConfig?.columns || [])
         dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
-        filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOptions[]) || [])
+        filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
         groupStore.setGroups((chartConfig?.groups as GroupStore.GroupOption[]) || [])
-        orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOptions[]) || [])
+        orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
         // 设置公共配置与图表配置
         chartConfigStore.setCommonChartConfig(
           chartConfig?.commonChartConfig || chartConfigStore.$state.commonChartConfig

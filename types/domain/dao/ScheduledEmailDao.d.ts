@@ -59,7 +59,7 @@ declare namespace ScheduledEmailDao {
   /**
    * @desc 分析选项
    */
-  type AnalyzeOptions = {
+  type AnalyzeOption = {
     /**
      * 附件名称
      */
@@ -125,7 +125,7 @@ declare namespace ScheduledEmailDao {
     /**
      * 图表数据
      */
-    analyzeOptions: AnalyzeOptions
+    analyzeOptions: AnalyzeOption
     /**
      * 任务状态
      */

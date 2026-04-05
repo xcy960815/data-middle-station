@@ -754,13 +754,13 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 构建基础日志元数据
    * @param {ScheduledEmailDto.EmailConfig} emailConfig 邮件配置
-   * @param {ScheduledEmailDto.AnalyzeOptions} analyzeOptions 分析选项
+   * @param {ScheduledEmailDto.AnalyzeOption} analyzeOptions 分析选项
    * @param {number} retryCount 重试次数
    * @returns {Partial<ScheduledEmailLogDto.CreateLogOptions>} 基础日志元数据
    */
   private buildBaseLogMetadata(
     emailConfig: ScheduledEmailDto.EmailConfig,
-    analyzeOptions: ScheduledEmailDto.AnalyzeOptions,
+    analyzeOptions: ScheduledEmailDto.AnalyzeOption,
     retryCount: number
   ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
     const recipients = this.normalizeRecipients(emailConfig.to)

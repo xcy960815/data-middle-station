@@ -27,7 +27,7 @@ const sendChartEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
     })
   }).required(),
 
-  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
+  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOption>({
     filename: Joi.string().min(1).max(100).optional().messages({
       'string.min': '文件名不能为空',
       'string.max': '文件名不能超过100个字符'

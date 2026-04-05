@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { defineNuxtConfig } from 'nuxt/config'
 import { type PreRenderedAsset } from 'rollup'
 export default defineNuxtConfig({
   compatibilityDate: '2025-12-06',
@@ -8,7 +9,9 @@ export default defineNuxtConfig({
   typescript: {
     tsConfig: {
       compilerOptions: {
-        module: 'esnext'
+        module: 'esnext',
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true
       }
     }
   },

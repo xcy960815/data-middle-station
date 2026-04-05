@@ -37,7 +37,7 @@ export class ChartConfigService extends BaseService {
       /**
        * 过滤配置
        */
-      filters: normalizedData.filters.map((item: AnalyzeConfigDao.FilterOptions) => ({
+      filters: normalizedData.filters.map((item: AnalyzeConfigDao.FilterOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
@@ -51,7 +51,7 @@ export class ChartConfigService extends BaseService {
       /**
        * 排序配置
        */
-      orders: normalizedData.orders.map((item: AnalyzeConfigDao.OrderOptions) => ({
+      orders: normalizedData.orders.map((item: AnalyzeConfigDao.OrderOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       }))

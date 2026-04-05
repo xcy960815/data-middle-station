@@ -26,13 +26,13 @@ class ChartConfigMapping implements AnalyzeConfigDao.ChartConfigOptions, IColumn
   dimensions: AnalyzeConfigDao.DimensionOptions[] = []
 
   @Column('filters')
-  filters: AnalyzeConfigDao.FilterOptions[] = []
+  filters: AnalyzeConfigDao.FilterOption[] = []
 
   @Column('groups')
   groups: AnalyzeConfigDao.GroupOptions[] = []
 
   @Column('orders')
-  orders: AnalyzeConfigDao.OrderOptions[] = []
+  orders: AnalyzeConfigDao.OrderOption[] = []
 
   @Column('common_chart_config')
   commonChartConfig!: AnalyzeConfigDao.CommonChartConfig

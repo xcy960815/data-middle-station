@@ -3,6 +3,26 @@
  */
 declare namespace Webworker {
   /**
+   * @desc Web Worker 插件实例
+   */
+  export interface Instance {
+    readonly stats: Readonly<WorkerStats>
+    readonly actionCount: number
+    createWorkerScript<T>(callback: () => T): string
+    run<R>(callback: () => R, options?: WorkerOptions): Promise<WorkerResult<R>>
+    postMessage<R>(messageName: string, options?: WorkerOptions): Promise<WorkerResult<R>>
+    postMessageAll<T = any>(params?: PostAllParams): Promise<WorkerResult<T>[]>
+    addActions(actions: Action | Action[]): number
+    removeActions(messageNames: string | string[]): number
+    clearActions(): void
+    getActionNames(): string[]
+    hasAction(messageName: string): boolean
+    getAction(messageName: string): Action | undefined
+    batchExecute<T>(callbacks: Array<() => T>, options?: WorkerOptions): Promise<WorkerResult<T>[]>
+    resetStats(): void
+  }
+
+  /**
    * @desc 动作
    */
   export interface Action<T = any, R = any> {

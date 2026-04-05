@@ -21,7 +21,7 @@ export const useColumnsStore = defineStore<
     /**
      * @desc 返回列名
      * @param state {ColumnState}
-     * @returns {ColumnOption[]}
+     * @returns {ColumnOptions[]}
      */
     getColumns(state) {
       return state.columns
@@ -55,11 +55,11 @@ export const useColumnsStore = defineStore<
      * @desc 删除列名
      */
     removeColumns(columns) {
-      this.columns = this.columns.filter((column: ColumnsStore.ColumnOption) => !columns.includes(column))
+      this.columns = this.columns.filter((column: ColumnsStore.ColumnOptions) => !columns.includes(column))
     },
     /**
      * @desc 更新列名
-     * @param params {{ column: ColumnOption, index: number }}
+     * @param params {{ column: ColumnOptions, index: number }}
      */
     updateColumn({ column, index }) {
       this.columns[index] = column

@@ -107,7 +107,7 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
    * 分析选项
    */
   @Column('analyze_options')
-  analyzeOptions!: ScheduledEmailDao.AnalyzeOptions
+  analyzeOptions!: ScheduledEmailDao.AnalyzeOption
 
   /**
    * 任务状态

@@ -50,7 +50,7 @@ declare namespace ScheduledEmailDto {
   }
 
   type EmailConfig = ScheduledEmailDao.EmailConfig
-  type AnalyzeOptions = ScheduledEmailDao.AnalyzeOptions
+  type AnalyzeOption = ScheduledEmailDao.AnalyzeOption
 
   type ScheduledEmailOptions = ScheduledEmailDao.ScheduledEmailOptions
   type ScheduledEmailQueryOptions = ScheduledEmailDao.ScheduledEmailQueryOptions

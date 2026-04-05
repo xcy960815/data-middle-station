@@ -18,7 +18,7 @@ const sendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
     subject: Joi.string().required(),
     additionalContent: Joi.string().required()
   }),
-  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOptions>({
+  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOption>({
     filename: Joi.string().optional(),
     chartType: Joi.string()
       .valid(...SUPPORTED_SERVER_RENDER_CHART_TYPES)
