@@ -5,12 +5,12 @@ declare namespace AnalyzeConfigDao {
   /**
    * 列配置
    */
-  type ColumnOptions = DataBaseDao.TableColumnOptions & { displayName: string }
+  type ColumnOptions = DatabaseDao.TableColumnOptions & { displayName: string }
 
   /**
    * 维度配置
    */
-  type DimensionOptions = ColumnOptions
+  type DimensionOption = ColumnOptions
 
   /**
    * 过滤聚合方式
@@ -72,7 +72,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 分组配置
    */
-  type GroupOptions = ColumnOptions
+  type GroupOption = ColumnOptions
 
   /**
    * 排序类型
@@ -421,7 +421,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 维度配置
      */
-    dimensions: DimensionOptions[]
+    dimensions: DimensionOption[]
     /**
      * 过滤配置
      */
@@ -429,7 +429,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 分组配置
      */
-    groups: GroupOptions[]
+    groups: GroupOption[]
     /**
      * 排序配置
      */

@@ -15,7 +15,7 @@ declare namespace ColumnsStore {
   /**
    * @desc 数据源选项
    */
-  type DataSourceOption = DatabaseVo.GetDataBaseTablesOptions
+  type DataSourceOption = DatabaseVo.GetDatabaseTablesOptions
 
   /**
    * @desc 列状态

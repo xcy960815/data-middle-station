@@ -12,7 +12,7 @@ declare namespace AnalyzeDataDto {
   /**
    * @desc 分组配置
    */
-  type GroupOption = AnalyzeConfigDao.GroupOptions
+  type GroupOption = AnalyzeConfigDao.GroupOption
 
   /**
    * @desc 过滤配置
@@ -27,7 +27,7 @@ declare namespace AnalyzeDataDto {
   /**
    * @desc 获取图表数据请求参数
    */
-  type ChartDataOptions = {
+  type AnalyzeDataQuery = {
     /**
      * @desc 过滤配置
      */

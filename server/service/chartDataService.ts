@@ -116,13 +116,13 @@ export class ChartDataService {
 
   /**
    * @desc 将DAO对象转换为VO对象
-   * @param chartDataRecords {AnalyzeDataDao.AnalyzeData[]} 图表数据DAO列表
+   * @param analyzeDataRecords {AnalyzeDataDao.AnalyzeData[]} 图表数据DAO列表
    * @returns {AnalyzeDataVo.AnalyzeData[]} 图表数据VO列表
    */
-  private convertDaoToVo(chartDataRecords: Array<AnalyzeDataDao.AnalyzeData>): Array<AnalyzeDataVo.AnalyzeData> {
-    return chartDataRecords.map((chartDataRecord) => ({
-      ...chartDataRecord,
-      [String(chartDataRecord.columnName)]: chartDataRecord.columnValue
+  private convertDaoToVo(analyzeDataRecords: Array<AnalyzeDataDao.AnalyzeData>): Array<AnalyzeDataVo.AnalyzeData> {
+    return analyzeDataRecords.map((analyzeDataRecord) => ({
+      ...analyzeDataRecord,
+      [String(analyzeDataRecord.columnName)]: analyzeDataRecord.columnValue
     }))
   }
 
@@ -562,40 +562,40 @@ export class ChartDataService {
 
   /**
    * @desc 获取图表数据
-   * @param queryOptions {AnalyzeDataDto.ChartDataOptions} 请求参数
+   * @param analyzeDataQuery {AnalyzeDataDto.AnalyzeDataQuery} 请求参数
    * @returns {Promise<AnalyzeDataVo.AnalyzeData[]>} 图表数据VO列表
    */
   public async getAnalyzeData(
-    queryOptions: AnalyzeDataDto.ChartDataOptions
+    analyzeDataQuery: AnalyzeDataDto.AnalyzeDataQuery
   ): Promise<Array<AnalyzeDataVo.AnalyzeData>> {
     // 归一化请求参数，确保数组字段不为空
-    const normalizedOptions: AnalyzeDataDto.ChartDataOptions = {
-      ...queryOptions,
-      filters: queryOptions.filters || [],
-      orders: queryOptions.orders || [],
-      groups: queryOptions.groups || [],
-      dimensions: queryOptions.dimensions || []
+    const normalizedQuery: AnalyzeDataDto.AnalyzeDataQuery = {
+      ...analyzeDataQuery,
+      filters: analyzeDataQuery.filters || [],
+      orders: analyzeDataQuery.orders || [],
+      groups: analyzeDataQuery.groups || [],
+      dimensions: analyzeDataQuery.dimensions || []
     }
-    const queryContext = await this.createQueryContext(normalizedOptions.dataSource)
-    const safeLimit = this.normalizeLimit(normalizedOptions.commonChartConfig?.limit)
+    const queryContext = await this.createQueryContext(normalizedQuery.dataSource)
+    const safeLimit = this.normalizeLimit(normalizedQuery.commonChartConfig?.limit)
 
     /**
      * @desc 构建select语句
      */
-    const selectClause = this.buildSelectClause(normalizedOptions.dimensions, normalizedOptions.groups, queryContext)
+    const selectClause = this.buildSelectClause(normalizedQuery.dimensions, normalizedQuery.groups, queryContext)
     /**
      * @desc 构建where语句
      */
-    const whereClause = this.buildWhereClause(normalizedOptions.filters, queryContext)
+    const whereClause = this.buildWhereClause(normalizedQuery.filters, queryContext)
     /**
      * @desc 构建orderBy语句
      */
-    const hasGroupBy = normalizedOptions.groups.length > 0
-    const orderByClause = this.buildOrderByClause(normalizedOptions.orders, hasGroupBy, queryContext)
+    const hasGroupBy = normalizedQuery.groups.length > 0
+    const orderByClause = this.buildOrderByClause(normalizedQuery.orders, hasGroupBy, queryContext)
     /**
      * @desc 构建groupBy语句
      */
-    const groupByClause = this.buildGroupByClause(normalizedOptions.groups, normalizedOptions.dimensions, queryContext)
+    const groupByClause = this.buildGroupByClause(normalizedQuery.groups, normalizedQuery.dimensions, queryContext)
 
     /**
      * @desc 构建sql语句
@@ -607,8 +607,8 @@ export class ChartDataService {
      * @desc 获取图表数据
      */
     try {
-      const chartDataRecords = await this.chartDataMapper.getAnalyzeData(sql, params)
-      return this.convertDaoToVo(chartDataRecords)
+      const analyzeDataRecords = await this.chartDataMapper.getAnalyzeData(sql, params)
+      return this.convertDaoToVo(analyzeDataRecords)
     } catch (error: any) {
       error.sql = sql
       throw error

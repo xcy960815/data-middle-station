@@ -11,5 +11,5 @@ declare interface ApiResponseI<D extends Object = any> {
   message: string
   success?: boolean
   sql?: string
-  queryParams?: AnalyzeDataDto.ChartDataOptions
+  queryParams?: AnalyzeDataDto.AnalyzeDataQuery
 }

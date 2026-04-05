@@ -7,7 +7,7 @@ const databaseService = new DatabaseService()
 export default defineEventHandler<Promise<ApiResponseI<Array<DatabaseVo.GetTableColumnsOptions>>>>(
   async (event): Promise<ApiResponseI<Array<DatabaseVo.GetTableColumnsOptions>>> => {
     try {
-      const getTableColumnsRequest = await readBody<DataBaseDto.GetTableColumnsOptions>(event)
+      const getTableColumnsRequest = await readBody<DatabaseDto.GetTableColumnsOptions>(event)
       const getTableColumnsResponse = await databaseService.getTableColumns(getTableColumnsRequest)
       return ApiResponse.success(getTableColumnsResponse)
     } catch (error: any) {

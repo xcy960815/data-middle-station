@@ -25,7 +25,7 @@ export const useOrdersStore = defineStore<
     },
     /**
      * @desc 添加排序
-     * @param orders {OrderOptions[]}
+     * @param orders {OrderOption[]}
      * @returns {void}
      */
     addOrders(orders) {
@@ -33,7 +33,7 @@ export const useOrdersStore = defineStore<
     },
     /**
      * @desc 更新排序
-     * @param order {OrderOptions}
+     * @param order {OrderOption}
      * @param index {number}
      * @returns {void}
      */

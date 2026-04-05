@@ -10,7 +10,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 维度配置选项
    */
-  type DimensionOptions = DatabaseVo.GetTableColumnsOptions & {
+  type DimensionOption = DatabaseVo.GetTableColumnsOptions & {
     __invalid?: boolean
   }
 
@@ -44,7 +44,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 分组配置选项
    */
-  type GroupOptions = DatabaseVo.GetTableColumnsOptions & {
+  type GroupOption = DatabaseVo.GetTableColumnsOptions & {
     __invalid?: boolean
   }
 

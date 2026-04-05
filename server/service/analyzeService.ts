@@ -89,8 +89,8 @@ export class AnalyzeService extends BaseService {
       const getChartConfigOptions: AnalyzeConfigDao.GetChartConfigOptions = {
         id: analyzeRecord.chartConfigId
       }
-      const chartConfigVo = await this.chartConfigService.getChartConfig(getChartConfigOptions)
-      return this.convertDaoToVo(analyzeRecord, chartConfigVo)
+      const resolvedChartConfig = await this.chartConfigService.getChartConfig(getChartConfigOptions)
+      return this.convertDaoToVo(analyzeRecord, resolvedChartConfig)
     }
 
     return this.convertDaoToVo(analyzeRecord, null)
@@ -131,8 +131,8 @@ export class AnalyzeService extends BaseService {
    * @returns {Promise<AnalyzeVo.UpdateAnalyzeResponse>}
    */
   public async updateAnalyze(updateOptions: AnalyzeDto.UpdateAnalyzeOptions): Promise<AnalyzeVo.UpdateAnalyzeOptions> {
-    // 解构分析配置，剩余的为分析配置
-    const { chartConfig, ...restOption } = updateOptions
+    // 拆出图表配置后，剩余字段为分析实体本身的更新载荷
+    const { chartConfig, ...analyzeUpdatePayload } = updateOptions
     let chartConfigId = updateOptions.chartConfigId
     if (chartConfig) {
       if (!chartConfigId) {
@@ -151,7 +151,7 @@ export class AnalyzeService extends BaseService {
     const { updatedBy, updateTime } = await super.getDefaultInfo()
 
     const updateParams: AnalyzeDao.UpdateAnalyzeOptions = {
-      ...restOption,
+      ...analyzeUpdatePayload,
       updateTime,
       updatedBy,
       chartConfigId
@@ -186,8 +186,8 @@ export class AnalyzeService extends BaseService {
       updateTime,
       chartConfigId
     }
-    const createAnalyzeResponseId = await this.analyzeMapper.createAnalyze(createAnalyzeOptions)
-    return this.getAnalyze({ id: createAnalyzeResponseId })
+    const analyzeId = await this.analyzeMapper.createAnalyze(createAnalyzeOptions)
+    return this.getAnalyze({ id: analyzeId })
   }
 
   /**

@@ -30,7 +30,7 @@ export class ChartConfigService extends BaseService {
       /**
        * 维度配置
        */
-      dimensions: normalizedData.dimensions.map((item: AnalyzeConfigDao.DimensionOptions) => ({
+      dimensions: normalizedData.dimensions.map((item: AnalyzeConfigDao.DimensionOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
@@ -44,7 +44,7 @@ export class ChartConfigService extends BaseService {
       /**
        * 分组配置
        */
-      groups: normalizedData.groups.map((item: AnalyzeConfigDao.GroupOptions) => ({
+      groups: normalizedData.groups.map((item: AnalyzeConfigDao.GroupOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),

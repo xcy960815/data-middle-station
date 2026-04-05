@@ -86,33 +86,33 @@ export class ChartSnapshotService {
       throw new Error(`分析 ${analyzeId} 缺少图表配置，无法生成图像`)
     }
 
-    const chartConfigVo = analyzeVo.chartConfig
+    const chartConfig = analyzeVo.chartConfig
 
-    if (!chartConfigVo.dataSource) {
+    if (!chartConfig.dataSource) {
       throw new Error(`分析 ${analyzeId} 缺少数据源配置`)
     }
 
-    if (!chartConfigVo.dimensions || chartConfigVo.dimensions.length === 0) {
+    if (!chartConfig.dimensions || chartConfig.dimensions.length === 0) {
       throw new Error(`分析 ${analyzeId} 缺少维度配置`)
     }
 
     const analyzeData = await this.chartDataService.getAnalyzeData({
-      filters: chartConfigVo.filters || [],
-      orders: chartConfigVo.orders || [],
-      groups: chartConfigVo.groups || [],
-      dimensions: chartConfigVo.dimensions,
-      dataSource: chartConfigVo.dataSource,
-      commonChartConfig: chartConfigVo.commonChartConfig
+      filters: chartConfig.filters || [],
+      orders: chartConfig.orders || [],
+      groups: chartConfig.groups || [],
+      dimensions: chartConfig.dimensions,
+      dataSource: chartConfig.dataSource,
+      commonChartConfig: chartConfig.commonChartConfig
     })
 
     const renderConfig: ChartRenderConfig = {
       title: analyzeVo.analyzeName,
       data: analyzeData,
-      xAxisFields: chartConfigVo.groups || [],
-      yAxisFields: chartConfigVo.dimensions
+      xAxisFields: chartConfig.groups || [],
+      yAxisFields: chartConfig.dimensions
     }
 
-    const chartOption = this.buildChartOption(chartConfigVo.chartType, renderConfig, chartConfigVo.privateChartConfig)
+    const chartOption = this.buildChartOption(chartConfig.chartType, renderConfig, chartConfig.privateChartConfig)
     if (!chartOption) {
       throw new Error(`分析 ${analyzeId} 生成图表配置失败`)
     }
@@ -124,7 +124,7 @@ export class ChartSnapshotService {
     const snapshotBuffer = this.renderOption(chartOption)
     const snapshotVo: ChartSnapshotVo = {
       buffer: snapshotBuffer,
-      chartType: chartConfigVo.chartType,
+      chartType: chartConfig.chartType,
       filename: this.generateFilename(analyzeVo.analyzeName, analyzeId),
       analyzeName: analyzeVo.analyzeName
     }

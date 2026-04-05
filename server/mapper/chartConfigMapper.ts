@@ -23,13 +23,13 @@ class ChartConfigMapping implements AnalyzeConfigDao.ChartConfigOptions, IColumn
   columns: AnalyzeConfigDao.ColumnOptions[] = []
 
   @Column('dimensions')
-  dimensions: AnalyzeConfigDao.DimensionOptions[] = []
+  dimensions: AnalyzeConfigDao.DimensionOption[] = []
 
   @Column('filters')
   filters: AnalyzeConfigDao.FilterOption[] = []
 
   @Column('groups')
-  groups: AnalyzeConfigDao.GroupOptions[] = []
+  groups: AnalyzeConfigDao.GroupOption[] = []
 
   @Column('orders')
   orders: AnalyzeConfigDao.OrderOption[] = []

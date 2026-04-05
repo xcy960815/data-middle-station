@@ -5,7 +5,7 @@ import { toLine } from '@/server/utils/databaseHelper'
 /**
  * @desc 表列表映射
  */
-export class TableOptionMapping implements DataBaseDao.TableOptions, IColumnTarget {
+export class TableOptionMapping implements DatabaseDao.TableOptions, IColumnTarget {
   @Column('TABLE_NAME')
   tableName!: string
 
@@ -60,7 +60,7 @@ export class TableOptionMapping implements DataBaseDao.TableOptions, IColumnTarg
 /**
  * @desc 表列映射
  */
-export class TableColumnMapping implements DataBaseDao.TableColumnOptions, IColumnTarget {
+export class TableColumnMapping implements DatabaseDao.TableColumnOptions, IColumnTarget {
   /**
    * @desc 列名
    */
@@ -106,8 +106,8 @@ export class DatabaseMapper extends BaseMapper {
    * @returns 表元数据列表
    */
   @Mapping(TableOptionMapping)
-  public async getDataBaseTables<T extends DataBaseDao.TableOptions = DataBaseDao.TableOptions>(
-    getTableRequest: DataBaseDao.GetTableOptions
+  public async getDatabaseTables<T extends DatabaseDao.TableOptions = DatabaseDao.TableOptions>(
+    getTableRequest: DatabaseDao.GetTableOptions
   ): Promise<Array<T>> {
     const whereConditions: string[] = ["table_type = 'BASE TABLE'", 'table_schema = ?']
     const whereValues: Array<string> = [tableSchema]
@@ -143,8 +143,8 @@ export class DatabaseMapper extends BaseMapper {
    * @returns 指定表的列元数据列表
    */
   @Mapping(TableColumnMapping)
-  public async getTableColumns<T extends DataBaseDao.TableColumnOptions>(
-    getTableColumnsOptions: DataBaseDao.GetTableColumnOptions
+  public async getTableColumns<T extends DatabaseDao.TableColumnOptions>(
+    getTableColumnsOptions: DatabaseDao.GetTableColumnOptions
   ): Promise<Array<T>> {
     const sql = `SELECT
         column_name,
