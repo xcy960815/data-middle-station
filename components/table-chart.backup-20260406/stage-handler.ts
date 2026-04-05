@@ -49,7 +49,7 @@ import {
   summaryDropdownRef,
   summaryVars
 } from './summary-handler'
-import { clearPool, setPointerStyle } from './utils'
+import { clearPool, getTableContainer, setPointerStyle } from './utils'
 
 interface StageVars {
   stage: Konva.Stage | null
@@ -74,35 +74,37 @@ export const getStageSize = () => {
   }
 }
 
-const clearHeaderGroups = () => {
+/**
+ * 清除分组 清理所有分组
+ * @returns {void}
+ */
+export const clearGroups = () => {
+  // 表头相关
   headerVars.headerLayer?.destroyChildren()
-  headerVars.leftHeaderGroup = null
-  headerVars.centerHeaderGroup = null
-  headerVars.rightHeaderGroup = null
-  headerVars.resizeIndicatorLine = null
-  headerVars.dragDropIndicator = null
-}
 
-const clearBodyGroups = () => {
+  // 主体相关
   bodyVars.bodyLayer?.destroyChildren()
   bodyVars.fixedBodyLayer?.destroyChildren()
-  bodyVars.leftBodyGroup = null
-  bodyVars.centerBodyGroup = null
-  bodyVars.rightBodyGroup = null
+  // 清理 Body 对象池
+  clearPool(bodyVars.leftBodyPools.cellRects)
+  clearPool(bodyVars.leftBodyPools.cellTexts)
+  clearPool(bodyVars.centerBodyPools.cellRects)
+  clearPool(bodyVars.centerBodyPools.cellTexts)
+  clearPool(bodyVars.rightBodyPools.cellRects)
+  clearPool(bodyVars.rightBodyPools.cellTexts)
+  // 重置单元格选择与虚拟滚动状态
   bodyVars.highlightRect = null
   bodyVars.visibleRowStart = 0
   bodyVars.visibleRowEnd = 0
   bodyVars.visibleRowCount = 0
-}
 
-const clearSummaryGroups = () => {
+  // 汇总相关
   summaryVars.summaryLayer?.destroyChildren()
   summaryVars.leftSummaryGroup = null
   summaryVars.centerSummaryGroup = null
   summaryVars.rightSummaryGroup = null
-}
 
-const clearScrollbarGroups = () => {
+  // 滚动条相关
   scrollbarVars.scrollbarLayer?.destroyChildren()
   scrollbarVars.verticalScrollbarGroup = null
   scrollbarVars.horizontalScrollbarGroup = null
@@ -111,28 +113,17 @@ const clearScrollbarGroups = () => {
 }
 
 /**
- * 清除分组 清理所有分组
- * @returns {void}
- */
-export const clearGroups = () => {
-  clearHeaderGroups()
-  clearBodyGroups()
-  clearSummaryGroups()
-  clearScrollbarGroups()
-}
-
-/**
  * 初始化 Stage 和所有 Layer
  * @returns {void}
  */
-export const initStage = (tableContainer?: HTMLDivElement | null) => {
-  const containerElement = tableContainer || (stageVars.stage?.container() as HTMLDivElement | undefined | null) || null
-  if (!containerElement) return
-  const width = containerElement.clientWidth
-  const height = containerElement.clientHeight
+export const initStage = () => {
+  const tableContainer = getTableContainer()
+  if (!tableContainer) return
+  const width = tableContainer.clientWidth
+  const height = tableContainer.clientHeight
 
   if (!stageVars.stage) {
-    stageVars.stage = new Konva.Stage({ container: containerElement, width, height })
+    stageVars.stage = new Konva.Stage({ container: tableContainer, width, height })
   } else {
     stageVars.stage.size({ width, height })
   }
@@ -194,13 +185,6 @@ export const initStage = (tableContainer?: HTMLDivElement | null) => {
 export const destroyStage = () => {
   stageVars.stage?.destroy()
 
-  clearPool(bodyVars.leftBodyPools.cellRects)
-  clearPool(bodyVars.leftBodyPools.cellTexts)
-  clearPool(bodyVars.centerBodyPools.cellRects)
-  clearPool(bodyVars.centerBodyPools.cellTexts)
-  clearPool(bodyVars.rightBodyPools.cellRects)
-  clearPool(bodyVars.rightBodyPools.cellTexts)
-
   stageVars.stage = null
   // 表头相关
   headerVars.headerLayer = null
@@ -238,35 +222,6 @@ export const refreshTable = (resetScroll: boolean) => {
   }
   clearGroups()
   rebuildGroups()
-}
-
-export const refreshHeaderSection = () => {
-  if (!stageVars.stage) return
-  clearHeaderGroups()
-  rebuildHeaderGroup()
-  scheduleLayersBatchDraw(['header'])
-}
-
-export const refreshBodySection = () => {
-  if (!stageVars.stage) return
-  clearBodyGroups()
-  rebuildBodyGroup()
-  scheduleLayersBatchDraw(['body', 'fixed'])
-}
-
-export const refreshSummarySection = () => {
-  if (!stageVars.stage) return
-  clearSummaryGroups()
-  rebuildSummaryGroup()
-  scheduleLayersBatchDraw(['summary'])
-}
-
-export const refreshScrollbarSection = () => {
-  if (!stageVars.stage) return
-  clearScrollbarGroups()
-  rebuildVerticalScrollbarGroup()
-  rebuildHorizontalScrollbarGroup()
-  scheduleLayersBatchDraw(['scrollbar'])
 }
 
 /**

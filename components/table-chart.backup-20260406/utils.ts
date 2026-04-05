@@ -153,6 +153,13 @@ export const recoverKonvaNode = (bodyGroup: Konva.Group, pools: KonvaNodePools) 
   textsToRecover.forEach((text) => returnToPool(pools.cellTexts, text))
   rectsToRecover.forEach((rect) => returnToPool(pools.cellRects, rect))
 }
+/**
+ * 获取容器元素
+ * @returns {HTMLDivElement | null} 容器元素
+ */
+export const getTableContainer = (): HTMLDivElement | null => {
+  return document.getElementById('table-container') as HTMLDivElement | null
+}
 
 /**
  * 将数值约束到指定区间 [min, max]
@@ -165,29 +172,6 @@ export const constrainToRange = (n: number, min: number, max: number) => {
   return Math.max(min, Math.min(max, n))
 }
 
-const textMeasureCanvas = typeof document !== 'undefined' ? document.createElement('canvas') : null
-const textMeasureContext = textMeasureCanvas?.getContext('2d') || null
-const textWidthCache = new Map<string, number>()
-
-const measureTextWidth = (text: string, fontSize: number, fontFamily: string): number => {
-  const cacheKey = `${fontSize}:${fontFamily}:${text}`
-  const cachedWidth = textWidthCache.get(cacheKey)
-  if (cachedWidth !== undefined) {
-    return cachedWidth
-  }
-
-  if (!textMeasureContext) {
-    const fallbackWidth = text.length * fontSize
-    textWidthCache.set(cacheKey, fallbackWidth)
-    return fallbackWidth
-  }
-
-  textMeasureContext.font = `${fontSize}px ${fontFamily}`
-  const measuredWidth = textMeasureContext.measureText(text).width
-  textWidthCache.set(cacheKey, measuredWidth)
-  return measuredWidth
-}
-
 /**
  * 超出最大宽度时裁剪文本，并追加省略号
  * @param text 文本
@@ -197,11 +181,16 @@ const measureTextWidth = (text: string, fontSize: number, fontFamily: string): n
  * @returns 裁剪后的文本
  */
 export const truncateText = (text: string, maxWidth: number, fontSize: number, fontFamily: string): string => {
-  if (maxWidth <= 0) {
-    return ''
-  }
+  // 创建一个临时文本节点来测量文本宽度
+  const tempTextNode = new Konva.Text({
+    text: text,
+    fontSize: fontSize,
+    fontFamily: fontFamily
+  })
 
-  if (measureTextWidth(text, fontSize, fontFamily) <= maxWidth) {
+  // 如果文本宽度小于等于 maxWidth，直接返回
+  if (tempTextNode.width() <= maxWidth) {
+    tempTextNode.destroy()
     return text
   }
 
@@ -213,7 +202,10 @@ export const truncateText = (text: string, maxWidth: number, fontSize: number, f
   while (left <= right) {
     const mid = Math.floor((left + right) / 2)
     const testText = text.substring(0, mid) + '...'
-    if (measureTextWidth(testText, fontSize, fontFamily) <= maxWidth) {
+
+    tempTextNode.text(testText)
+
+    if (tempTextNode.width() <= maxWidth) {
       result = testText
       left = mid + 1
     } else {
@@ -221,6 +213,7 @@ export const truncateText = (text: string, maxWidth: number, fontSize: number, f
     }
   }
 
+  tempTextNode.destroy()
   return result || '...'
 }
 
@@ -289,18 +282,12 @@ export const drawUnifiedText = (config: DrawTextConfig) => {
 
   // 统一设置属性（仅在使用对象池时需要更新所有属性）
   if (pools) {
-    textNode.setAttrs({
-      name,
-      text,
-      fontSize,
-      fontFamily,
-      fill,
-      align,
-      verticalAlign,
-      width,
-      height,
-      listening: false
-    })
+    textNode.text(text)
+    textNode.fontSize(fontSize)
+    textNode.fontFamily(fontFamily)
+    textNode.fill(fill)
+    textNode.align(align)
+    textNode.verticalAlign(verticalAlign)
   }
 
   // 处理水平对齐
@@ -309,10 +296,8 @@ export const drawUnifiedText = (config: DrawTextConfig) => {
     textNode.offsetX(textNode.width() / 2)
   } else if (align === 'right') {
     textNode.x(x + width - staticParams.textPaddingHorizontal)
-    textNode.offsetX(0)
   } else {
     textNode.x(x + staticParams.textPaddingHorizontal)
-    textNode.offsetX(0)
   }
 
   // 处理垂直对齐
@@ -321,7 +306,6 @@ export const drawUnifiedText = (config: DrawTextConfig) => {
     textNode.offsetY(textNode.height() / 2)
   } else {
     textNode.y(y)
-    textNode.offsetY(0)
   }
 
   group.add(textNode)
@@ -345,7 +329,6 @@ export const drawUnifiedRect = (config: DrawRectConfig): Konva.Rect => {
 
   // 统一设置属性
   rectNode.setAttrs({
-    name,
     x,
     y,
     width,
@@ -353,8 +336,7 @@ export const drawUnifiedRect = (config: DrawRectConfig): Konva.Rect => {
     fill,
     stroke,
     strokeWidth,
-    cornerRadius,
-    listening: listening ?? false
+    cornerRadius
   })
 
   group.add(rectNode)

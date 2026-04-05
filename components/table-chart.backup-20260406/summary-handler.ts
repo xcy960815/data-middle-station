@@ -1,5 +1,6 @@
 import Konva from 'konva'
 import { reactive, ref } from 'vue'
+// import { webworker } from '@/composables/useWebworker';
 import type { KonvaEventObject } from 'konva/lib/Node'
 import SummaryDropdown from './components/summary-dropdown.vue'
 import { staticParams, tableData } from './parameter'
@@ -12,6 +13,7 @@ import {
   setPointerStyle,
   truncateText
 } from './utils'
+const webworker = useNuxtApp().$webworker
 interface SummaryVars {
   summaryLayer: Konva.Layer | null
   leftSummaryGroup: Konva.Group | null
@@ -114,21 +116,15 @@ export const getSummaryRowHeight = () => (staticParams.enableSummary ? staticPar
 export const summaryState = reactive<Record<string, string>>({})
 
 /**
- * 重置汇总状态
- */
-export const resetSummaryState = () => {
-  Object.keys(summaryState).forEach((key) => {
-    delete summaryState[key]
-  })
-}
-
-/**
  * 计算某列的汇总显示值
  * @param {CanvasTable.GroupOption | CanvasTable.DimensionOption} col - 列
  * @param {string} rule - 规则
- * @returns {string} 汇总显示值
+ * @returns {Promise<string>} 汇总显示值
  */
-const computeSummaryValueForColumn = (col: CanvasTable.GroupOption | CanvasTable.DimensionOption, rule: string) => {
+const computeSummaryValueForColumn = async (
+  col: CanvasTable.GroupOption | CanvasTable.DimensionOption,
+  rule: string
+) => {
   if (rule === 'nodisplay') return '不显示'
   const key = col.columnName
   const values = tableData.value.map((r) => r?.[key])
@@ -144,13 +140,33 @@ const computeSummaryValueForColumn = (col: CanvasTable.GroupOption | CanvasTable
       case 'min':
         return String(Math.min(...nums))
       case 'avg': {
-        const sum = nums.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
-        const avg = sum / nums.length
-        return String(Number.isFinite(avg) ? Number(avg.toFixed(4)) : '')
+        // 使用 webworker 参与计算，避免大数据量时阻塞主线程
+        try {
+          const fn = new Function(
+            `const nums = ${JSON.stringify(nums)}; const s = nums.reduce((a,b)=>a+b,0); return s / nums.length;`
+          ) as () => number
+          const result = await webworker.run<number>(fn)
+          const avg = result && result.success ? result.data : nums.reduce((a, b) => a + b, 0) / nums.length
+          return String(Number.isFinite(avg) ? Number(avg.toFixed(4)) : '')
+        } catch {
+          const s = nums.reduce((a, b) => a + b, 0)
+          const avg = s / nums.length
+          return String(Number.isFinite(avg) ? Number(avg.toFixed(4)) : '')
+        }
       }
       case 'sum': {
-        const sum = nums.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
-        return String(Number.isFinite(sum) ? sum : '')
+        // 使用 webworker 参与计算，避免大数据量时阻塞主线程
+        try {
+          const fn = new Function(
+            `const nums = ${JSON.stringify(nums)}; return nums.reduce((a,b)=>a+b,0);`
+          ) as () => number
+          const result = await webworker.run<number>(fn)
+          const s = result && result.success ? result.data : nums.reduce((a, b) => a + b, 0)
+          return String(Number.isFinite(s) ? s : '')
+        } catch {
+          const s = nums.reduce((a, b) => a + b, 0)
+          return String(Number.isFinite(s) ? s : '')
+        }
       }
       default:
         return ''
@@ -251,12 +267,16 @@ export const drawSummaryPart = (
       group: summaryGroup
     })
 
+    // 异步计算汇总值并更新文本
     if (rule !== 'nodisplay') {
-      const summaryText = computeSummaryValueForColumn(columnOption, rule)
-      const ruleLabel = getRuleLabel(rule)
-      const displayText = ruleLabel ? `${ruleLabel}: ${summaryText}` : summaryText
-      const finalText = truncateText(displayText, textMaxWidth, staticParams.summaryFontSize, summaryFontFamily)
-      summaryCellText.text(finalText)
+      computeSummaryValueForColumn(columnOption, rule).then((summaryText) => {
+        const ruleLabel = getRuleLabel(rule)
+        const displayText = ruleLabel ? `${ruleLabel}: ${summaryText}` : summaryText
+        const finalText = truncateText(displayText, textMaxWidth, staticParams.summaryFontSize, summaryFontFamily)
+        summaryCellText.text(finalText)
+        const layer = summaryGroup.getLayer()
+        layer?.batchDraw()
+      })
     }
     // 注释悬停效果以提升性能
     summaryCellRect.on('mouseenter', () => setPointerStyle(stageVars.stage, true, 'pointer'))

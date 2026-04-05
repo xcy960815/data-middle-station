@@ -4,7 +4,7 @@ import { filterDropdownRef, headerVars } from './header-handler'
 import { staticParams, tableData } from './parameter'
 import { getStageSize, scheduleLayersBatchDraw, stageVars } from './stage-handler'
 import { getSummaryRowHeight, summaryDropdownRef, summaryVars } from './summary-handler'
-import { constrainToRange, createGroup, drawUnifiedRect, setPointerStyle } from './utils'
+import { constrainToRange, createGroup, drawUnifiedRect, getTableContainer, setPointerStyle } from './utils'
 
 interface ScrollbarVars {
   /**
@@ -336,7 +336,7 @@ const setupVerticalScrollbarEvents = () => {
     stageVars.stage?.setPointersPositions(event.evt)
   })
   // 启用滚动条悬停效果
-  if (scrollbarVars.verticalScrollbarThumb) {
+  if (!!scrollbarVars.verticalScrollbarThumb) {
     scrollbarVars.verticalScrollbarThumb.on('mouseenter', () => {
       scrollbarVars.verticalScrollbarThumb?.fill(staticParams.scrollbarThumbHoverBackground)
       setPointerStyle(stageVars.stage, true, 'grab')
@@ -458,7 +458,7 @@ const setupHorizontalScrollbarEvents = () => {
 
   // 启用滚动条悬停效果
   scrollbarVars.horizontalScrollbarThumb.on('mouseenter', () => {
-    if (scrollbarVars.horizontalScrollbarThumb) {
+    if (!!scrollbarVars.horizontalScrollbarThumb) {
       scrollbarVars.horizontalScrollbarThumb.fill(staticParams.scrollbarThumbHoverBackground)
       setPointerStyle(stageVars.stage, true, 'grab')
     }
@@ -564,7 +564,8 @@ const handleMouseWheel = (wheelEvent: WheelEvent) => {
  * 初始化滚轮事件监听器
  * @returns {void}
  */
-export const initWheelListener = (tableContainer: HTMLDivElement | null) => {
+export const initWheelListener = () => {
+  const tableContainer = getTableContainer()
   tableContainer?.addEventListener('wheel', handleMouseWheel, { passive: false })
 }
 
@@ -572,6 +573,7 @@ export const initWheelListener = (tableContainer: HTMLDivElement | null) => {
  * 清理滚轮事件监听器
  * @returns {void}
  */
-export const cleanupWheelListener = (tableContainer: HTMLDivElement | null) => {
+export const cleanupWheelListener = () => {
+  const tableContainer = getTableContainer()
   tableContainer?.removeEventListener('wheel', handleMouseWheel)
 }

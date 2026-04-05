@@ -51,19 +51,6 @@ export const filterColumns = ref<FilterItem[]>([])
 export const sortColumns = ref<SortColumn[]>([])
 
 /**
- * 重置表格运行时状态，避免重挂载后沿用旧的过滤、排序和缓存
- */
-export const resetTableDataState = () => {
-  uniqueColumnValuesCache.clear()
-  lastRawDataRef = null
-  lastRawDataLength = 0
-  originalData = []
-  filterColumns.value = []
-  sortColumns.value = []
-  tableData.value = []
-}
-
-/**
  * 统一格式化单元格值，便于过滤和下拉展示
  * @param value 原始值
  * @returns string

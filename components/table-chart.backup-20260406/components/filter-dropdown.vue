@@ -30,7 +30,7 @@ import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { handleTableData, updateColumnFilter } from '../data-handler'
-import { refreshTable, stageVars } from '../stage-handler'
+import { rebuildGroups, stageVars } from '../stage-handler'
 import { getDropdownPosition } from '../utils'
 export interface FilterDropdown {
   visible: boolean
@@ -42,6 +42,12 @@ export interface FilterDropdown {
   originalClientX: number
   originalClientY: number
 }
+
+interface Emits {
+  (event: 'update-positions-in-table'): void
+}
+
+const emits = defineEmits<Emits>()
 
 // // 获取依赖
 // const { filterState, handleTableData, tableVars } = variableHandlder({ props: props.props })
@@ -187,7 +193,7 @@ const handleSelectedFilter = () => {
 
   // 重新处理表格数据，应用过滤条件
   handleTableData()
-  refreshTable(true)
+  rebuildGroups()
 }
 
 /**

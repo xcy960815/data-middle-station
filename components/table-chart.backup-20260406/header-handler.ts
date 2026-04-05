@@ -11,7 +11,7 @@ import {
 } from './data-handler'
 import { staticParams } from './parameter'
 import { scrollbarVars } from './scrollbar-handler'
-import { getStageSize, refreshTable, scheduleLayersBatchDraw, stageVars } from './stage-handler'
+import { clearGroups, getStageSize, refreshTable, scheduleLayersBatchDraw, stageVars } from './stage-handler'
 import {
   LAYOUT_CONSTANTS,
   calculateTextWidth,
@@ -258,13 +258,13 @@ export const createDragIcon = (
   }
 
   // 添加悬停效果到背景矩形
-  dragIconRect.on('mouseenter', (_event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+  dragIconRect.on('mouseenter', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
     if (!headerVars.isDraggingColumn) {
       setPointerStyle(stageVars.stage, true, 'grab')
     }
   })
 
-  dragIconRect.on('mouseleave', (_event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+  dragIconRect.on('mouseleave', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
     if (!headerVars.isDraggingColumn) {
       setPointerStyle(stageVars.stage, false, 'default')
     }
@@ -507,7 +507,7 @@ const handleSortAction = (
 ) => {
   handleMultiColumnSort(columnOption, order)
   handleTableData()
-  refreshTable(true)
+  clearGroups()
 }
 
 /**

@@ -68,7 +68,7 @@ import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { commitCellValueChange } from '../data-handler'
-import { refreshBodySection, refreshSummarySection, stageVars } from '../stage-handler'
+import { refreshTable, stageVars } from '../stage-handler'
 
 interface EditorStyleOptions {
   align: 'left' | 'center' | 'right'
@@ -270,8 +270,7 @@ const handleSaveEditorValue = () => {
       nextValue !== editDown.originalValue && commitCellValueChange(editDown.row, editDown.columnName, nextValue)
 
     if (didUpdate) {
-      refreshBodySection()
-      refreshSummarySection()
+      refreshTable(false)
     }
   }
 

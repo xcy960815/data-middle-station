@@ -25,7 +25,7 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { refreshSummarySection, stageVars } from '../stage-handler'
+import { refreshTable, stageVars } from '../stage-handler'
 import { summaryState } from '../summary-handler'
 import { getDropdownPosition } from '../utils'
 
@@ -39,7 +39,7 @@ const handleSummaryChange = () => {
   const colName = summaryDropdown.colName
   const selected = summaryDropdown.selectedValue
   summaryState[colName] = selected
-  refreshSummarySection()
+  refreshTable(false)
   // 选择后关闭弹框
   summaryDropdown.visible = false
 }

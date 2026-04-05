@@ -1,5 +1,5 @@
 <template>
-  <div ref="tableContainerRef" :title="title" class="table-container" :style="tableContainerStyle"></div>
+  <div id="table-container" :title="title" class="table-container" :style="tableContainerStyle"></div>
   <!-- 过滤器下拉组件 -->
   <filter-dropdown ref="filterDropdownRef" />
   <!-- 汇总下拉组件 -->
@@ -8,12 +8,12 @@
   <cell-editor ref="cellEditorRef" />
 </template>
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { cellEditorRef } from './body-handler'
 import CellEditor from './components/cell-editor.vue'
 import FilterDropdown from './components/filter-dropdown.vue'
 import SummaryDropdown from './components/summary-dropdown.vue'
-import { handleTableData, resetTableDataState } from './data-handler'
+import { handleTableData, sortColumns } from './data-handler'
 import { filterDropdownRef } from './header-handler'
 import { staticParams, tableProps } from './parameter'
 import { cleanupWheelListener, initWheelListener } from './scrollbar-handler'
@@ -22,16 +22,11 @@ import {
   destroyStage,
   initStage,
   initStageListeners,
-  refreshBodySection,
-  refreshHeaderSection,
-  refreshScrollbarSection,
-  refreshSummarySection,
   refreshTable,
   stageVars
 } from './stage-handler'
-import { resetSummaryState, summaryDropdownRef } from './summary-handler'
+import { summaryDropdownRef } from './summary-handler'
 const props = defineProps(tableProps)
-const tableContainerRef = ref<HTMLDivElement | null>(null)
 
 /**
  * 表格容器样式
@@ -131,7 +126,7 @@ watch(
     // 等待demo节点发生变更再触发该方法
     await nextTick()
 
-    initStage(tableContainerRef.value)
+    initStage()
     handleTableData()
     refreshTable(true)
   }
@@ -142,18 +137,18 @@ watch(
  * @returns {void}
  */
 watch(
-  () => [props.headerRowHeight],
+  () => [
+    props.headerRowHeight,
+    props.headerFontFamily,
+    props.headerFontSize,
+    props.headerTextColor,
+    props.headerBackground
+    // props.dragIconHeight,
+    // props.dragIconWidth
+  ],
   () => {
     if (!stageVars.stage) return
     refreshTable(false)
-  }
-)
-
-watch(
-  () => [props.headerFontFamily, props.headerFontSize, props.headerTextColor, props.headerBackground],
-  () => {
-    if (!stageVars.stage) return
-    refreshHeaderSection()
   }
 )
 
@@ -162,29 +157,15 @@ watch(
  * @returns {void}
  */
 watch(
-  () => [props.bodyRowHeight],
-  () => {
-    if (!stageVars.stage) return
-    refreshTable(false)
-  }
-)
-
-watch(
   () => [
+    props.bodyRowHeight,
     props.bodyBackgroundOdd,
     props.bodyBackgroundEven,
+    props.borderColor,
     props.bodyTextColor,
     props.bodyFontSize,
     props.bodyFontFamily
   ],
-  () => {
-    if (!stageVars.stage) return
-    refreshBodySection()
-  }
-)
-
-watch(
-  () => [props.borderColor],
   () => {
     if (!stageVars.stage) return
     refreshTable(false)
@@ -196,18 +177,17 @@ watch(
  * @returns {void}
  */
 watch(
-  () => [props.enableSummary, props.summaryRowHeight],
+  () => [
+    props.enableSummary,
+    props.summaryRowHeight,
+    props.summaryFontFamily,
+    props.summaryFontSize,
+    props.summaryBackground,
+    props.summaryTextColor
+  ],
   () => {
     if (!stageVars.stage) return
     refreshTable(false)
-  }
-)
-
-watch(
-  () => [props.summaryFontFamily, props.summaryFontSize, props.summaryBackground, props.summaryTextColor],
-  () => {
-    if (!stageVars.stage) return
-    refreshSummarySection()
   }
 )
 
@@ -216,18 +196,15 @@ watch(
  * @returns {void}
  */
 watch(
-  () => [props.scrollbarSize],
+  () => [
+    props.scrollbarBackground,
+    props.scrollbarThumbBackground,
+    props.scrollbarThumbHoverBackground,
+    props.scrollbarSize
+  ],
   () => {
     if (!stageVars.stage) return
     refreshTable(false)
-  }
-)
-
-watch(
-  () => [props.scrollbarBackground, props.scrollbarThumbBackground, props.scrollbarThumbHoverBackground],
-  () => {
-    if (!stageVars.stage) return
-    refreshScrollbarSection()
   }
 )
 
@@ -239,7 +216,7 @@ watch(
   () => [props.sortActiveColor, props.highlightCellBackground],
   () => {
     if (!stageVars.stage) return
-    refreshHeaderSection()
+    refreshTable(false)
   }
 )
 
@@ -251,7 +228,7 @@ watch(
   () => [props.bufferRows],
   () => {
     if (!stageVars.stage) return
-    refreshBodySection()
+    refreshTable(false)
   }
 )
 
@@ -259,21 +236,28 @@ watch(
  * 排序状态变化时重新渲染表格
  * @returns {void}
  */
+watch(
+  () => sortColumns.value,
+  () => {
+    if (!stageVars.stage) return
+    refreshTable(false)
+  },
+  {
+    deep: true
+  }
+)
+
 onMounted(async () => {
-  resetTableDataState()
-  resetSummaryState()
-  initStage(tableContainerRef.value)
+  initStage()
   handleTableData()
   refreshTable(true)
-  initWheelListener(tableContainerRef.value)
+  initWheelListener()
   initStageListeners()
 })
 
 onUnmounted(() => {
   destroyStage()
-  cleanupWheelListener(tableContainerRef.value)
+  cleanupWheelListener()
   cleanupStageListeners()
-  resetTableDataState()
-  resetSummaryState()
 })
 </script>

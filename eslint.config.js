@@ -72,6 +72,7 @@ const commonGlobals = {
   GroupStore: 'readonly',
   DimensionStore: 'readonly',
   ColumnsStore: 'readonly',
+  CanvasTable: 'readonly',
   FilterStore: 'readonly',
   OrderStore: 'readonly',
   AnalyzeStore: 'readonly',
