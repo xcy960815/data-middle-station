@@ -2,6 +2,7 @@ import Konva from 'konva'
 import { bodyVars, calculateVisibleRows, cellEditorRef, columnsInfo, drawBodyPart } from './body-handler'
 import { filterDropdownRef, headerVars } from './header-handler'
 import { staticParams, tableData } from './parameter'
+import { measureTablePerf, updateTablePerfSnapshot } from './perf'
 import { getStageSize, scheduleLayersBatchDraw, stageVars } from './stage-handler'
 import { getSummaryRowHeight, summaryDropdownRef, summaryVars } from './summary-handler'
 import { constrainToRange, createGroup, drawUnifiedRect, setPointerStyle } from './utils'
@@ -185,36 +186,42 @@ export const calculateScrollRange = () => {
  */
 export const updateHorizontalScroll = (offsetX: number, isAbsolute: boolean = false) => {
   if (!stageVars.stage || !headerVars.centerHeaderGroup || !bodyVars.centerBodyGroup) return
-  const { maxHorizontalScroll } = calculateScrollRange()
+  measureTablePerf('horizontalScroll', () => {
+    const centerHeaderGroup = headerVars.centerHeaderGroup
+    const centerBodyGroup = bodyVars.centerBodyGroup
+    if (!centerHeaderGroup || !centerBodyGroup) return
 
-  // 根据模式计算新的滚动位置
-  const newScrollX = isAbsolute ? offsetX : scrollbarVars.stageScrollX + offsetX
-  scrollbarVars.stageScrollX = constrainToRange(newScrollX, 0, maxHorizontalScroll)
-  const headerX = columnsInfo.leftPartWidth - scrollbarVars.stageScrollX
-  const centerX = -scrollbarVars.stageScrollX
+    const { maxHorizontalScroll } = calculateScrollRange()
 
-  // 主体相关 - 中间区域随横向滚动
-  headerVars.centerHeaderGroup.x(headerX)
-  bodyVars.centerBodyGroup?.x(centerX)
-  summaryVars.centerSummaryGroup?.x(headerX)
-  if (stageVars.stage) {
-    const { width: stageWidth } = getStageSize()
-    const { maxHorizontalScroll: maxHScroll, maxVerticalScroll } = calculateScrollRange()
+    const newScrollX = isAbsolute ? offsetX : scrollbarVars.stageScrollX + offsetX
+    scrollbarVars.stageScrollX = constrainToRange(newScrollX, 0, maxHorizontalScroll)
+    const headerX = columnsInfo.leftPartWidth - scrollbarVars.stageScrollX
+    const centerX = -scrollbarVars.stageScrollX
 
-    // 更新水平滚动条位置
-    if (scrollbarVars.horizontalScrollbarThumb && maxHScroll > 0) {
-      const visibleWidth =
-        stageWidth -
-        columnsInfo.leftPartWidth -
-        columnsInfo.rightPartWidth -
-        (maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0)
-      const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / columnsInfo.centerPartWidth)
-      const thumbX = columnsInfo.leftPartWidth + (scrollbarVars.stageScrollX / maxHScroll) * (visibleWidth - thumbWidth)
-      scrollbarVars.horizontalScrollbarThumb.x(thumbX)
+    centerHeaderGroup.x(headerX)
+    centerBodyGroup.x(centerX)
+    summaryVars.centerSummaryGroup?.x(headerX)
+    if (stageVars.stage) {
+      const { width: stageWidth } = getStageSize()
+      const { maxHorizontalScroll: maxHScroll, maxVerticalScroll } = calculateScrollRange()
+
+      if (scrollbarVars.horizontalScrollbarThumb && maxHScroll > 0) {
+        const visibleWidth =
+          stageWidth -
+          columnsInfo.leftPartWidth -
+          columnsInfo.rightPartWidth -
+          (maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0)
+        const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / columnsInfo.centerPartWidth)
+        const thumbX =
+          columnsInfo.leftPartWidth + (scrollbarVars.stageScrollX / maxHScroll) * (visibleWidth - thumbWidth)
+        scrollbarVars.horizontalScrollbarThumb.x(thumbX)
+      }
     }
-  }
-  // 水平滚动需要更新表头、主体、固定列和汇总行
-  scheduleLayersBatchDraw(['header', 'body', 'fixed', 'scrollbar', 'summary'])
+    scheduleLayersBatchDraw(['header', 'body', 'fixed', 'scrollbar', 'summary'])
+    updateTablePerfSnapshot({
+      scrollX: scrollbarVars.stageScrollX
+    })
+  })
 }
 
 /**
@@ -237,84 +244,74 @@ interface ScrollOptions {
  */
 export const updateVerticalScroll = (offsetY: number, options: ScrollOptions = {}) => {
   if (!stageVars.stage || !bodyVars.leftBodyGroup || !bodyVars.centerBodyGroup || !bodyVars.rightBodyGroup) return
-  const { isAbsolute = false, skipThresholdCheck = false, forceRerender = false } = options
-  const { maxVerticalScroll } = calculateScrollRange()
+  measureTablePerf('verticalScroll', () => {
+    const { isAbsolute = false, skipThresholdCheck = false, forceRerender = false } = options
+    const { maxVerticalScroll } = calculateScrollRange()
 
-  // 保存旧的滚动位置和可视范围
-  const oldScrollY = scrollbarVars.stageScrollY
-  const oldVisibleStart = bodyVars.visibleRowStart
-  const oldVisibleEnd = bodyVars.visibleRowEnd
+    const oldScrollY = scrollbarVars.stageScrollY
+    const oldVisibleStart = bodyVars.visibleRowStart
+    const oldVisibleEnd = bodyVars.visibleRowEnd
 
-  // 根据模式更新滚动位置
-  if (isAbsolute) {
-    // 拖拽模式：直接设置绝对位置
-    scrollbarVars.stageScrollY = constrainToRange(offsetY, 0, maxVerticalScroll)
-  } else {
-    // 滚轮模式：增量更新
-    scrollbarVars.stageScrollY = constrainToRange(scrollbarVars.stageScrollY + offsetY, 0, maxVerticalScroll)
-  }
-
-  // 重新计算可视行范围
-  calculateVisibleRows()
-
-  // 判断是否需要重渲染
-  const visibleRangeChanged = bodyVars.visibleRowStart !== oldVisibleStart || bodyVars.visibleRowEnd !== oldVisibleEnd
-
-  const significantScroll =
-    skipThresholdCheck || Math.abs(scrollbarVars.stageScrollY - oldScrollY) > staticParams.bodyRowHeight * 5
-
-  const needsRerender = forceRerender || visibleRangeChanged || significantScroll
-
-  if (needsRerender) {
-    // 重新渲染可视区域
-    // 主体相关 - 批量执行重绘操作，减少单独的绘制调用
-    const renderOperations = [
-      () => drawBodyPart(bodyVars.leftBodyGroup, columnsInfo.leftColumns, bodyVars.leftBodyPools),
-      () => drawBodyPart(bodyVars.centerBodyGroup, columnsInfo.centerColumns, bodyVars.centerBodyPools),
-      () => drawBodyPart(bodyVars.rightBodyGroup, columnsInfo.rightColumns, bodyVars.rightBodyPools)
-    ]
-
-    // 执行所有渲染操作
-    renderOperations.forEach((operation) => operation())
-
-    // 重新绘制后，确保点击高亮矩形位于最顶层
-    if (bodyVars.highlightRect) {
-      bodyVars.highlightRect.moveToTop()
+    if (isAbsolute) {
+      scrollbarVars.stageScrollY = constrainToRange(offsetY, 0, maxVerticalScroll)
+    } else {
+      scrollbarVars.stageScrollY = constrainToRange(scrollbarVars.stageScrollY + offsetY, 0, maxVerticalScroll)
     }
-  }
 
-  // 修复：统一使用相对于裁剪组的坐标系统
-  const fixedColumnsY = -scrollbarVars.stageScrollY // 左右固定列相对于裁剪组
-  const centerY = -scrollbarVars.stageScrollY
+    calculateVisibleRows()
 
-  // 主体相关 - 固定列和中间列随垂直滚动
-  bodyVars.leftBodyGroup?.y(fixedColumnsY)
-  bodyVars.rightBodyGroup?.y(fixedColumnsY)
-  bodyVars.centerBodyGroup?.y(centerY)
+    const visibleRangeChanged = bodyVars.visibleRowStart !== oldVisibleStart || bodyVars.visibleRowEnd !== oldVisibleEnd
+    const significantScroll =
+      skipThresholdCheck || Math.abs(scrollbarVars.stageScrollY - oldScrollY) > staticParams.bodyRowHeight * 5
+    const needsRerender = forceRerender || visibleRangeChanged || significantScroll
 
-  /* 更新滚动条位置 */
-  if (stageVars.stage) {
-    const { height: stageHeight } = getStageSize()
-    const { maxHorizontalScroll, maxVerticalScroll: maxVScroll } = calculateScrollRange()
+    if (needsRerender) {
+      const renderOperations = [
+        () => drawBodyPart(bodyVars.leftBodyGroup, columnsInfo.leftColumns, bodyVars.leftBodyPools),
+        () => drawBodyPart(bodyVars.centerBodyGroup, columnsInfo.centerColumns, bodyVars.centerBodyPools),
+        () => drawBodyPart(bodyVars.rightBodyGroup, columnsInfo.rightColumns, bodyVars.rightBodyPools)
+      ]
 
-    // 更新垂直滚动条位置
-    if (scrollbarVars.verticalScrollbarThumb && maxVScroll > 0) {
-      const trackHeight =
-        stageHeight -
-        staticParams.headerRowHeight -
-        staticParams.summaryRowHeight -
-        (maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0)
-      const thumbHeight = Math.max(
-        20,
-        (trackHeight * trackHeight) / (tableData.value.length * staticParams.bodyRowHeight)
-      )
-      const thumbY =
-        staticParams.headerRowHeight + (scrollbarVars.stageScrollY / maxVScroll) * (trackHeight - thumbHeight)
-      scrollbarVars.verticalScrollbarThumb.y(thumbY)
+      renderOperations.forEach((operation) => operation())
+
+      if (bodyVars.highlightRect) {
+        bodyVars.highlightRect.moveToTop()
+      }
     }
-  }
 
-  scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar', 'summary'])
+    const fixedColumnsY = -scrollbarVars.stageScrollY
+    const centerY = -scrollbarVars.stageScrollY
+
+    bodyVars.leftBodyGroup?.y(fixedColumnsY)
+    bodyVars.rightBodyGroup?.y(fixedColumnsY)
+    bodyVars.centerBodyGroup?.y(centerY)
+
+    if (stageVars.stage) {
+      const { height: stageHeight } = getStageSize()
+      const { maxHorizontalScroll, maxVerticalScroll: maxVScroll } = calculateScrollRange()
+
+      if (scrollbarVars.verticalScrollbarThumb && maxVScroll > 0) {
+        const trackHeight =
+          stageHeight -
+          staticParams.headerRowHeight -
+          staticParams.summaryRowHeight -
+          (maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0)
+        const thumbHeight = Math.max(
+          20,
+          (trackHeight * trackHeight) / (tableData.value.length * staticParams.bodyRowHeight)
+        )
+        const thumbY =
+          staticParams.headerRowHeight + (scrollbarVars.stageScrollY / maxVScroll) * (trackHeight - thumbHeight)
+        scrollbarVars.verticalScrollbarThumb.y(thumbY)
+      }
+    }
+
+    scheduleLayersBatchDraw(['body', 'fixed', 'scrollbar', 'summary'])
+    updateTablePerfSnapshot({
+      visibleRows: Math.max(0, bodyVars.visibleRowEnd - bodyVars.visibleRowStart + 1),
+      scrollY: scrollbarVars.stageScrollY
+    })
+  })
 }
 
 /**

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { staticParams, tableData } from './parameter'
+import { measureTablePerf, updateTablePerfSnapshot } from './perf'
 
 /**
  * 排序列接口
@@ -175,59 +176,67 @@ export const commitCellValueChange = (
  * @returns {void}
  */
 export const handleTableData = () => {
-  if (lastRawDataRef !== staticParams.data || lastRawDataLength !== staticParams.data.length) {
-    invalidateUniqueColumnValues()
-    lastRawDataRef = staticParams.data
-    lastRawDataLength = staticParams.data.length
-  }
+  measureTablePerf('handleTableData', () => {
+    if (lastRawDataRef !== staticParams.data || lastRawDataLength !== staticParams.data.length) {
+      invalidateUniqueColumnValues()
+      lastRawDataRef = staticParams.data
+      lastRawDataLength = staticParams.data.length
+    }
 
-  // 保存原始数据
-  originalData = staticParams.data.filter((row) => row && typeof row === 'object')
+    // 保存原始数据
+    originalData = staticParams.data.filter((row) => row && typeof row === 'object')
 
-  // 开始处理数据
-  let processedData = [...originalData]
+    // 开始处理数据
+    let processedData = [...originalData]
 
-  // 应用过滤（AND across columns, OR within column values）
-  if (filterColumns.value.length) {
-    const activeFilters = filterColumns.value.filter((f) => f.values && f.values.size > 0)
-    if (activeFilters.length) {
-      processedData = processedData.filter((row) => {
-        for (const f of activeFilters) {
-          const val = row[f.columnName]
-          if (!f.values.has(normalizeCellValue(val))) return false
+    // 应用过滤（AND across columns, OR within column values）
+    if (filterColumns.value.length) {
+      const activeFilters = filterColumns.value.filter((filterItem) => filterItem.values && filterItem.values.size > 0)
+      if (activeFilters.length) {
+        processedData = processedData.filter((row) => {
+          for (const filterItem of activeFilters) {
+            const currentValue = row[filterItem.columnName]
+            if (!filterItem.values.has(normalizeCellValue(currentValue))) return false
+          }
+          return true
+        })
+      }
+    }
+
+    // 应用排序
+    if (sortColumns.value.length) {
+      const toNum = (v: string | number | null | undefined) => {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : null
+      }
+      const getVal = (row: AnalyzeDataVo.AnalyzeData, key: string): string | number | undefined => {
+        const val = row[key]
+        if (typeof val === 'string' || typeof val === 'number') return val
+        return undefined
+      }
+      processedData.sort((leftRow, rightRow) => {
+        for (const sortColumn of sortColumns.value) {
+          const key = sortColumn.columnName
+          const leftValue = getVal(leftRow, key)
+          const rightValue = getVal(rightRow, key)
+          const leftNumericValue = toNum(leftValue)
+          const rightNumericValue = toNum(rightValue)
+          let compareResult = 0
+          if (leftNumericValue !== null && rightNumericValue !== null)
+            compareResult = leftNumericValue - rightNumericValue
+          else compareResult = String(leftValue ?? '').localeCompare(String(rightValue ?? ''))
+          if (compareResult !== 0) return sortColumn.order === 'asc' ? compareResult : -compareResult
         }
-        return true
+        return 0
       })
     }
-  }
-
-  // 应用排序
-  if (sortColumns.value.length) {
-    const toNum = (v: string | number | null | undefined) => {
-      const n = Number(v)
-      return Number.isFinite(n) ? n : null
-    }
-    const getVal = (row: AnalyzeDataVo.AnalyzeData, key: string): string | number | undefined => {
-      const val = row[key]
-      if (typeof val === 'string' || typeof val === 'number') return val
-      return undefined
-    }
-    processedData.sort((a, b) => {
-      for (const s of sortColumns.value) {
-        const key = s.columnName
-        const av = getVal(a, key)
-        const bv = getVal(b, key)
-        const an = toNum(av)
-        const bn = toNum(bv)
-        let cmp = 0
-        if (an !== null && bn !== null) cmp = an - bn
-        else cmp = String(av ?? '').localeCompare(String(bv ?? ''))
-        if (cmp !== 0) return s.order === 'asc' ? cmp : -cmp
-      }
-      return 0
+    tableData.value = processedData
+    updateTablePerfSnapshot({
+      sourceRows: staticParams.data.length,
+      processedRows: processedData.length,
+      bufferRows: staticParams.bufferRows
     })
-  }
-  tableData.value = processedData
+  })
 }
 
 /**

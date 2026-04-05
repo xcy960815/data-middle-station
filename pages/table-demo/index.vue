@@ -106,6 +106,66 @@
       @close="testResult = null"
       style="margin-top: 10px; margin-bottom: 10px"
     />
+    <el-divider content-position="left">Canvas Table 性能面板</el-divider>
+    <div class="perf-panel">
+      <div class="perf-toolbar">
+        <div class="perf-runtime">
+          <span>源数据 {{ perfSnapshot.sourceRows }} 行</span>
+          <span>过滤后 {{ perfSnapshot.processedRows }} 行</span>
+          <span>列数 {{ perfSnapshot.columnCount }}</span>
+          <span>可视行 {{ perfSnapshot.visibleRows }}</span>
+          <span>缓冲 {{ perfSnapshot.bufferRows }}</span>
+          <span>舞台 {{ perfSnapshot.stageWidth }} x {{ perfSnapshot.stageHeight }}</span>
+        </div>
+        <el-button size="small" @click="handleResetPerfMetrics">重置指标</el-button>
+      </div>
+      <div class="perf-overview-grid">
+        <div v-for="card in perfOverviewCards" :key="card.key" class="perf-overview-card">
+          <div class="perf-overview-label">{{ card.label }}</div>
+          <div class="perf-overview-value">{{ card.value }}</div>
+          <div class="perf-overview-meta">{{ card.meta }}</div>
+        </div>
+      </div>
+      <div class="perf-metric-grid">
+        <div v-for="metric in perfMetrics" :key="metric.key" class="perf-metric-card">
+          <div class="perf-metric-head">
+            <div>
+              <div class="perf-metric-title">{{ metric.label }}</div>
+              <div class="perf-metric-subtitle">最近 {{ metric.recent.length || 0 }} 次样本</div>
+            </div>
+            <div class="perf-metric-badges">
+              <span class="perf-badge">count {{ metric.count }}</span>
+              <span class="perf-badge">p95 {{ formatPerfMs(metric.p95) }}</span>
+            </div>
+          </div>
+          <div class="perf-metric-values">
+            <span>last {{ formatPerfMs(metric.last) }}</span>
+            <span>avg {{ formatPerfMs(metric.avg) }}</span>
+            <span>max {{ formatPerfMs(metric.max) }}</span>
+          </div>
+          <div class="perf-meter">
+            <div class="perf-meter-fill" :style="{ width: `${metric.budgetUsage}%` }"></div>
+          </div>
+          <div class="perf-metric-values">
+            <span>超 16ms {{ metric.over16 }}</span>
+            <span>超 33ms {{ metric.over33 }}</span>
+          </div>
+          <div class="perf-sparkline">
+            <div
+              v-for="(sample, index) in metric.sparkline"
+              :key="`${metric.key}-${index}`"
+              class="perf-sparkline-bar"
+              :class="{
+                'is-warning': sample.value > 16.7,
+                'is-danger': sample.value > 33.3
+              }"
+              :style="{ height: sample.height }"
+              :title="formatPerfMs(sample.value)"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <client-only>
       <CanvasTable
         :enable-summary="tableConfig.enableSummary"
@@ -152,7 +212,58 @@
 <script setup lang="ts">
 // import TableChart from '@/components/table-chart/index.vue'
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
+import { resetTablePerfState, TABLE_PERF_METRIC_ORDER, tablePerfState } from '@/components/table-chart/perf'
 import { ElMessage } from 'element-plus'
+
+const formatPerfMs = (value: number) => `${Number(value || 0).toFixed(2)} ms`
+
+const perfSnapshot = computed(() => tablePerfState.snapshot)
+
+const perfMetrics = computed(() =>
+  TABLE_PERF_METRIC_ORDER.map((key) => {
+    const metric = tablePerfState.metrics[key]
+    return {
+      key,
+      ...metric,
+      budgetUsage: Math.min(100, Number((((metric.p95 || 0) / 33.3) * 100).toFixed(2))),
+      sparkline: metric.recent.map((value) => ({
+        value,
+        height: `${Math.max(10, Math.min(100, (value / 33.3) * 100))}%`
+      }))
+    }
+  })
+)
+
+const perfOverviewCards = computed(() => [
+  {
+    key: 'firstRender',
+    label: '首屏渲染',
+    value: formatPerfMs(tablePerfState.metrics.firstRender.last),
+    meta: `p95 ${formatPerfMs(tablePerfState.metrics.firstRender.p95)}`
+  },
+  {
+    key: 'handleTableData',
+    label: '数据处理',
+    value: formatPerfMs(tablePerfState.metrics.handleTableData.last),
+    meta: `avg ${formatPerfMs(tablePerfState.metrics.handleTableData.avg)}`
+  },
+  {
+    key: 'refreshTable',
+    label: '整表刷新',
+    value: formatPerfMs(tablePerfState.metrics.refreshTable.last),
+    meta: `p95 ${formatPerfMs(tablePerfState.metrics.refreshTable.p95)}`
+  },
+  {
+    key: 'verticalScroll',
+    label: '纵向滚动',
+    value: formatPerfMs(tablePerfState.metrics.verticalScroll.last),
+    meta: `p95 ${formatPerfMs(tablePerfState.metrics.verticalScroll.p95)}`
+  }
+])
+
+const handleResetPerfMetrics = () => {
+  resetTablePerfState()
+}
 
 // 合并单元格配置
 const spanConfig = reactive({
@@ -163,8 +274,8 @@ const spanConfig = reactive({
 })
 
 const spanMethod = ({
-  row,
-  column,
+  row: _row,
+  column: _column,
   rowIndex,
   colIndex
 }: {
@@ -587,5 +698,166 @@ const handleTestExecuteTask = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 16px;
+  padding-bottom: 32px;
+}
+
+.perf-panel {
+  width: min(1500px, 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #dbe7f3;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.perf-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.perf-runtime {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.perf-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.perf-overview-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.perf-overview-label {
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.perf-overview-value {
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.perf-overview-meta {
+  color: #475569;
+  font-size: 12px;
+}
+
+.perf-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.perf-metric-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.perf-metric-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.perf-metric-title {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.perf-metric-subtitle {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.perf-metric-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.perf-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+}
+
+.perf-metric-values {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #475569;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.perf-meter {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.perf-meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e 0%, #f59e0b 60%, #ef4444 100%);
+}
+
+.perf-sparkline {
+  height: 84px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding-top: 6px;
+}
+
+.perf-sparkline-bar {
+  flex: 1;
+  min-width: 3px;
+  border-radius: 999px 999px 0 0;
+  background: #93c5fd;
+}
+
+.perf-sparkline-bar.is-warning {
+  background: #fbbf24;
+}
+
+.perf-sparkline-bar.is-danger {
+  background: #f87171;
+}
+
+@media (max-width: 900px) {
+  .perf-toolbar {
+    flex-direction: column;
+  }
 }
 </style>

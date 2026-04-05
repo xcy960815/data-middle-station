@@ -16,6 +16,7 @@ import SummaryDropdown from './components/summary-dropdown.vue'
 import { handleTableData, resetTableDataState } from './data-handler'
 import { filterDropdownRef } from './header-handler'
 import { staticParams, tableProps } from './parameter'
+import { measureTablePerf } from './perf'
 import { cleanupWheelListener, initWheelListener } from './scrollbar-handler'
 import {
   cleanupStageListeners,
@@ -262,9 +263,11 @@ watch(
 onMounted(async () => {
   resetTableDataState()
   resetSummaryState()
-  initStage(tableContainerRef.value)
-  handleTableData()
-  refreshTable(true)
+  measureTablePerf('firstRender', () => {
+    initStage(tableContainerRef.value)
+    handleTableData()
+    refreshTable(true)
+  })
   initWheelListener(tableContainerRef.value)
   initStageListeners()
 })

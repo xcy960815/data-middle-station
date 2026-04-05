@@ -49,6 +49,7 @@ import {
   summaryDropdownRef,
   summaryVars
 } from './summary-handler'
+import { measureTablePerf, updateTablePerfSnapshot } from './perf'
 import { clearPool, setPointerStyle } from './utils'
 
 interface StageVars {
@@ -72,6 +73,20 @@ export const getStageSize = () => {
     width: stageVars.stage.width(),
     height: stageVars.stage.height()
   }
+}
+
+const syncTablePerfSnapshot = () => {
+  const { width, height } = getStageSize()
+  updateTablePerfSnapshot({
+    stageWidth: width,
+    stageHeight: height,
+    columnCount: columnsInfo.leftColumns.length + columnsInfo.centerColumns.length + columnsInfo.rightColumns.length,
+    visibleRows: Math.max(0, bodyVars.visibleRowEnd - bodyVars.visibleRowStart + 1),
+    bufferRows: staticParams.bufferRows,
+    processedRows: tableData.value.length,
+    scrollX: scrollbarVars.stageScrollX,
+    scrollY: scrollbarVars.stageScrollY
+  })
 }
 
 const clearHeaderGroups = () => {
@@ -232,12 +247,15 @@ export const destroyStage = () => {
  * @param {boolean} resetScroll - 是否重置滚动位置
  */
 export const refreshTable = (resetScroll: boolean) => {
-  if (resetScroll) {
-    scrollbarVars.stageScrollX = 0
-    scrollbarVars.stageScrollY = 0
-  }
-  clearGroups()
-  rebuildGroups()
+  measureTablePerf('refreshTable', () => {
+    if (resetScroll) {
+      scrollbarVars.stageScrollX = 0
+      scrollbarVars.stageScrollY = 0
+    }
+    clearGroups()
+    rebuildGroups()
+    syncTablePerfSnapshot()
+  })
 }
 
 export const refreshHeaderSection = () => {
@@ -245,6 +263,7 @@ export const refreshHeaderSection = () => {
   clearHeaderGroups()
   rebuildHeaderGroup()
   scheduleLayersBatchDraw(['header'])
+  syncTablePerfSnapshot()
 }
 
 export const refreshBodySection = () => {
@@ -252,6 +271,7 @@ export const refreshBodySection = () => {
   clearBodyGroups()
   rebuildBodyGroup()
   scheduleLayersBatchDraw(['body', 'fixed'])
+  syncTablePerfSnapshot()
 }
 
 export const refreshSummarySection = () => {
@@ -259,6 +279,7 @@ export const refreshSummarySection = () => {
   clearSummaryGroups()
   rebuildSummaryGroup()
   scheduleLayersBatchDraw(['summary'])
+  syncTablePerfSnapshot()
 }
 
 export const refreshScrollbarSection = () => {
@@ -267,6 +288,7 @@ export const refreshScrollbarSection = () => {
   rebuildVerticalScrollbarGroup()
   rebuildHorizontalScrollbarGroup()
   scheduleLayersBatchDraw(['scrollbar'])
+  syncTablePerfSnapshot()
 }
 
 /**
@@ -275,34 +297,37 @@ export const refreshScrollbarSection = () => {
  */
 const rebuildHeaderGroup = () => {
   if (!headerVars.headerLayer) return
-  const { width: stageWidth } = getStageSize()
-  const { maxVerticalScroll } = calculateScrollRange()
-  const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
-  // 为中间表头也创建裁剪组，防止表头横向滚动时遮挡固定列
-  const headerClipGroup = createHeaderClipGroup(0, 0, {
-    x: 0,
-    y: 0,
-    width: stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-    height: staticParams.headerRowHeight
+  measureTablePerf('refreshHeader', () => {
+    const headerLayer = headerVars.headerLayer
+    if (!headerLayer) return
+
+    const { width: stageWidth } = getStageSize()
+    const { maxVerticalScroll } = calculateScrollRange()
+    const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
+    const headerClipGroup = createHeaderClipGroup(0, 0, {
+      x: 0,
+      y: 0,
+      width: stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
+      height: staticParams.headerRowHeight
+    })
+
+    headerLayer.add(headerClipGroup)
+
+    headerVars.leftHeaderGroup = createHeaderLeftGroup(0, 0)
+    headerVars.centerHeaderGroup = createHeaderCenterGroup(-scrollbarVars.stageScrollX + columnsInfo.leftPartWidth, 0)
+    headerVars.rightHeaderGroup = createHeaderRightGroup(
+      stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
+      0
+    )
+
+    headerClipGroup.add(headerVars.centerHeaderGroup)
+
+    headerLayer.add(headerVars.leftHeaderGroup, headerVars.rightHeaderGroup)
+
+    drawHeaderPart(headerVars.leftHeaderGroup, columnsInfo.leftColumns)
+    drawHeaderPart(headerVars.centerHeaderGroup, columnsInfo.centerColumns)
+    drawHeaderPart(headerVars.rightHeaderGroup, columnsInfo.rightColumns)
   })
-
-  headerVars.headerLayer.add(headerClipGroup)
-
-  headerVars.leftHeaderGroup = createHeaderLeftGroup(0, 0)
-  headerVars.centerHeaderGroup = createHeaderCenterGroup(-scrollbarVars.stageScrollX + columnsInfo.leftPartWidth, 0)
-  headerVars.rightHeaderGroup = createHeaderRightGroup(
-    stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-    0
-  )
-
-  headerClipGroup.add(headerVars.centerHeaderGroup)
-
-  headerVars.headerLayer.add(headerVars.leftHeaderGroup, headerVars.rightHeaderGroup)
-
-  // 绘制表头
-  drawHeaderPart(headerVars.leftHeaderGroup, columnsInfo.leftColumns)
-  drawHeaderPart(headerVars.centerHeaderGroup, columnsInfo.centerColumns)
-  drawHeaderPart(headerVars.rightHeaderGroup, columnsInfo.rightColumns)
 }
 
 /**
@@ -311,65 +336,67 @@ const rebuildHeaderGroup = () => {
  */
 const rebuildBodyGroup = () => {
   if (!bodyVars.bodyLayer || !bodyVars.fixedBodyLayer) return
-  const { width: stageWidth, height: stageHeight } = getStageSize()
-  const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
-  const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
-  const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0
-  // 为中间可滚动区域创建裁剪组，防止遮挡固定列
-  const bodyClipGroupHeight =
-    stageHeight - staticParams.headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
-  const bodyClipGroupWidth =
-    stageWidth - columnsInfo.leftPartWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth
-  const centerBodyClipGroup = createCenterBodyClipGroup(columnsInfo.leftPartWidth, staticParams.headerRowHeight, {
-    x: 0,
-    y: 0,
-    width: bodyClipGroupWidth,
-    height: bodyClipGroupHeight
-  })
+  measureTablePerf('refreshBody', () => {
+    const bodyLayer = bodyVars.bodyLayer
+    const fixedBodyLayer = bodyVars.fixedBodyLayer
+    if (!bodyLayer || !fixedBodyLayer) return
 
-  bodyVars.bodyLayer.add(centerBodyClipGroup)
-  bodyVars.leftBodyGroup = createBodyLeftGroup(0, 0) // 现在相对于裁剪组，初始位置为0
-  bodyVars.centerBodyGroup = createBodyCenterGroup(-scrollbarVars.stageScrollX, -scrollbarVars.stageScrollY)
-  bodyVars.rightBodyGroup = createBodyRightGroup(0, 0) // 现在相对于裁剪组，初始位置为0
-
-  centerBodyClipGroup.add(bodyVars.centerBodyGroup)
-
-  const leftBodyClipGroup = createLeftBodyClipGroup(0, staticParams.headerRowHeight, {
-    x: 0,
-    y: 0,
-    width: columnsInfo.leftPartWidth,
-    height: bodyClipGroupHeight
-  })
-
-  const rightBodyClipGroup = createRightBodyClipGroup(
-    stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-    staticParams.headerRowHeight,
-    {
+    const { width: stageWidth, height: stageHeight } = getStageSize()
+    const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
+    const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
+    const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0
+    const bodyClipGroupHeight =
+      stageHeight - staticParams.headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
+    const bodyClipGroupWidth =
+      stageWidth - columnsInfo.leftPartWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth
+    const centerBodyClipGroup = createCenterBodyClipGroup(columnsInfo.leftPartWidth, staticParams.headerRowHeight, {
       x: 0,
       y: 0,
-      width: columnsInfo.rightPartWidth,
+      width: bodyClipGroupWidth,
       height: bodyClipGroupHeight
-    }
-  )
+    })
 
-  leftBodyClipGroup.add(bodyVars.leftBodyGroup)
-  rightBodyClipGroup.add(bodyVars.rightBodyGroup)
+    bodyLayer.add(centerBodyClipGroup)
+    bodyVars.leftBodyGroup = createBodyLeftGroup(0, 0)
+    bodyVars.centerBodyGroup = createBodyCenterGroup(-scrollbarVars.stageScrollX, -scrollbarVars.stageScrollY)
+    bodyVars.rightBodyGroup = createBodyRightGroup(0, 0)
 
-  // 调整左右body组的位置，使其相对于裁剪组
-  bodyVars.leftBodyGroup.x(0)
-  bodyVars.leftBodyGroup.y(-scrollbarVars.stageScrollY)
-  bodyVars.rightBodyGroup.x(0)
-  bodyVars.rightBodyGroup.y(-scrollbarVars.stageScrollY)
+    centerBodyClipGroup.add(bodyVars.centerBodyGroup)
 
-  bodyVars.fixedBodyLayer.add(leftBodyClipGroup, rightBodyClipGroup) // 添加裁剪组到固定层
+    const leftBodyClipGroup = createLeftBodyClipGroup(0, staticParams.headerRowHeight, {
+      x: 0,
+      y: 0,
+      width: columnsInfo.leftPartWidth,
+      height: bodyClipGroupHeight
+    })
 
-  // 计算可视行范围
-  calculateVisibleRows()
+    const rightBodyClipGroup = createRightBodyClipGroup(
+      stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
+      staticParams.headerRowHeight,
+      {
+        x: 0,
+        y: 0,
+        width: columnsInfo.rightPartWidth,
+        height: bodyClipGroupHeight
+      }
+    )
 
-  // 主体相关 - 绘制所有主体部分
-  drawBodyPart(bodyVars.leftBodyGroup, columnsInfo.leftColumns, bodyVars.leftBodyPools)
-  drawBodyPart(bodyVars.centerBodyGroup, columnsInfo.centerColumns, bodyVars.centerBodyPools)
-  drawBodyPart(bodyVars.rightBodyGroup, columnsInfo.rightColumns, bodyVars.rightBodyPools)
+    leftBodyClipGroup.add(bodyVars.leftBodyGroup)
+    rightBodyClipGroup.add(bodyVars.rightBodyGroup)
+
+    bodyVars.leftBodyGroup.x(0)
+    bodyVars.leftBodyGroup.y(-scrollbarVars.stageScrollY)
+    bodyVars.rightBodyGroup.x(0)
+    bodyVars.rightBodyGroup.y(-scrollbarVars.stageScrollY)
+
+    fixedBodyLayer.add(leftBodyClipGroup, rightBodyClipGroup)
+
+    calculateVisibleRows()
+
+    drawBodyPart(bodyVars.leftBodyGroup, columnsInfo.leftColumns, bodyVars.leftBodyPools)
+    drawBodyPart(bodyVars.centerBodyGroup, columnsInfo.centerColumns, bodyVars.centerBodyPools)
+    drawBodyPart(bodyVars.rightBodyGroup, columnsInfo.rightColumns, bodyVars.rightBodyPools)
+  })
 }
 
 /**
@@ -378,43 +405,47 @@ const rebuildBodyGroup = () => {
  */
 const rebuildSummaryGroup = () => {
   if (!summaryVars.summaryLayer) return
-  // 创建汇总行组（完全参考header的实现方式）
-  if (staticParams.enableSummary) {
-    const { width: stageWidth, height: stageHeight } = getStageSize()
-    const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
-    const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
-    const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0
-    const y = stageHeight - getSummaryRowHeight() - horizontalScrollbarHeight
-    const centerSummaryClipGroup = createSummaryClipGroup(0, y, {
-      x: 0,
-      y: 0,
-      width: stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-      height: getSummaryRowHeight()
-    })
+  measureTablePerf('refreshSummary', () => {
+    const summaryLayer = summaryVars.summaryLayer
+    if (!summaryLayer) return
 
-    summaryVars.summaryLayer.add(centerSummaryClipGroup)
+    if (staticParams.enableSummary) {
+      const { width: stageWidth, height: stageHeight } = getStageSize()
+      const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
+      const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
+      const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0
+      const y = stageHeight - getSummaryRowHeight() - horizontalScrollbarHeight
+      const centerSummaryClipGroup = createSummaryClipGroup(0, y, {
+        x: 0,
+        y: 0,
+        width: stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
+        height: getSummaryRowHeight()
+      })
 
-    summaryVars.leftSummaryGroup = createSummaryLeftGroup(0, y) // 直接定位到汇总行位置
-    summaryVars.centerSummaryGroup = createSummaryCenterGroup(
-      -scrollbarVars.stageScrollX + columnsInfo.leftPartWidth,
-      0
-    )
-    summaryVars.rightSummaryGroup = createSummaryRightGroup(
-      stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-      y
-    )
+      summaryLayer.add(centerSummaryClipGroup)
 
-    centerSummaryClipGroup.add(summaryVars.centerSummaryGroup)
-    summaryVars.summaryLayer.add(summaryVars.leftSummaryGroup, summaryVars.rightSummaryGroup)
+      summaryVars.leftSummaryGroup = createSummaryLeftGroup(0, y)
+      summaryVars.centerSummaryGroup = createSummaryCenterGroup(
+        -scrollbarVars.stageScrollX + columnsInfo.leftPartWidth,
+        0
+      )
+      summaryVars.rightSummaryGroup = createSummaryRightGroup(
+        stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
+        y
+      )
 
-    drawSummaryPart(summaryVars.leftSummaryGroup, columnsInfo.leftColumns)
-    drawSummaryPart(summaryVars.centerSummaryGroup, columnsInfo.centerColumns)
-    drawSummaryPart(summaryVars.rightSummaryGroup, columnsInfo.rightColumns)
-  } else {
-    summaryVars.leftSummaryGroup = null
-    summaryVars.centerSummaryGroup = null
-    summaryVars.rightSummaryGroup = null
-  }
+      centerSummaryClipGroup.add(summaryVars.centerSummaryGroup)
+      summaryLayer.add(summaryVars.leftSummaryGroup, summaryVars.rightSummaryGroup)
+
+      drawSummaryPart(summaryVars.leftSummaryGroup, columnsInfo.leftColumns)
+      drawSummaryPart(summaryVars.centerSummaryGroup, columnsInfo.centerColumns)
+      drawSummaryPart(summaryVars.rightSummaryGroup, columnsInfo.rightColumns)
+    } else {
+      summaryVars.leftSummaryGroup = null
+      summaryVars.centerSummaryGroup = null
+      summaryVars.rightSummaryGroup = null
+    }
+  })
 }
 
 /**
@@ -460,6 +491,7 @@ export const rebuildGroups = () => {
   rebuildHorizontalScrollbarGroup()
   // 批量绘制所有层 - 按正确的渲染顺序
   scheduleLayersBatchDraw(['body', 'fixed', 'header', 'summary', 'scrollbar'])
+  syncTablePerfSnapshot()
 }
 
 /**
