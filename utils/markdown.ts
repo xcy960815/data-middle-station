@@ -1,5 +1,5 @@
 import markdownItKatex from '@vscode/markdown-it-katex'
-import splitAtDelimiters from 'katex/contrib/auto-render/splitAtDelimiters'
+import splitAtDelimiters from 'katex/contrib/auto-render/splitAtDelimiters.js'
 import 'katex/dist/contrib/mhchem.min.js'
 import 'katex/dist/katex.min.css'
 import MarkdownIt from 'markdown-it'
