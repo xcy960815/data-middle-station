@@ -378,7 +378,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'number',
     columnComment: 'id',
     displayName: 'id',
+    fixed: null,
     width: 200,
+    align: null,
     filterable: true,
     editable: true,
     editType: 'input',
@@ -389,7 +391,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'name',
     displayName: 'name',
+    fixed: null,
     width: 200,
+    align: null,
     filterable: true,
     editable: true,
     editType: 'input',
@@ -401,7 +405,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'number',
     columnComment: 'age',
     displayName: 'age',
+    fixed: null,
     width: 200,
+    align: null,
     sortable: true,
     editable: true,
     editType: 'input'
@@ -410,7 +416,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'gender',
     columnType: 'string',
     columnComment: 'gender',
+    fixed: null,
     width: 200,
+    align: null,
     filterable: true,
     sortable: true,
     displayName: 'gender',
@@ -426,7 +434,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'country',
     columnType: 'string',
     columnComment: 'country',
+    fixed: null,
     width: 200,
+    align: null,
     resizable: true,
     draggable: true,
     filterable: true,
@@ -449,7 +459,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnName: 'city',
     columnType: 'string',
     columnComment: 'city',
+    fixed: null,
     width: 200,
+    align: null,
     filterable: true,
     sortable: true,
     displayName: 'city',
@@ -461,6 +473,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'state',
     displayName: 'state',
+    fixed: null,
+    width: 200,
+    align: null,
     editable: true,
     editType: 'input'
   },
@@ -469,7 +484,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'number',
     columnComment: 'zipcode',
     displayName: 'zipcode',
+    fixed: null,
     width: 200,
+    align: null,
     filterable: true,
     editable: true,
     editType: 'input',
@@ -480,8 +497,10 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'address',
     displayName: 'address',
+    fixed: null,
     showOverflowTooltip: true,
     width: 200,
+    align: null,
     editable: true,
     editType: 'input'
   },
@@ -490,14 +509,18 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'string',
     columnComment: 'phone',
     displayName: 'phone',
+    fixed: null,
     width: 200,
+    align: null,
     editable: true,
     editType: 'input'
   },
   {
     columnName: 'mobile',
     columnType: 'string',
+    fixed: null,
     width: 200,
+    align: null,
     columnComment: 'mobile',
     displayName: 'mobile',
     editable: true,
@@ -508,7 +531,9 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnType: 'date',
     columnComment: '生日',
     displayName: '生日',
+    fixed: null,
     width: 150,
+    align: null,
     editable: true,
     editType: 'date'
   },
@@ -518,6 +543,7 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
     columnComment: '最后登录时间',
     displayName: '最后登录时间',
     width: 180,
+    align: null,
     editable: true,
     editType: 'datetime',
     fixed: 'right' as const
@@ -770,6 +796,7 @@ const handleTestExecuteTask = async () => {
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 14px;
+  overflow: hidden;
 }
 
 .perf-metric-head {
@@ -833,16 +860,18 @@ const handleTestExecuteTask = async () => {
 }
 
 .perf-sparkline {
+  width: 100%;
   height: 84px;
   display: flex;
   align-items: flex-end;
-  gap: 3px;
+  gap: 2px;
   padding-top: 6px;
+  overflow: hidden;
 }
 
 .perf-sparkline-bar {
-  flex: 1;
-  min-width: 3px;
+  flex: 1 1 0;
+  min-width: 0;
   border-radius: 999px 999px 0 0;
   background: #93c5fd;
 }
