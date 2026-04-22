@@ -21,6 +21,8 @@ logs
 .vscode
 
 # Local env files (不要提交到仓库的本地配置)
-# .env
-# .env.*
-# env/.env.*
+.env
+.env.*
+!.env.compose.example
+env/.env.*
+!env/.env.*.example

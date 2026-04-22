@@ -63,22 +63,30 @@ if [ $? -eq 0 ]; then
     echo "  - xcy960815/data-middle-station:$VERSION"
     echo "  - xcy960815/data-middle-station:latest"
 
-    # 更新 .env 文件中的 IMAGE_VERSION
-    if [ -f .env ]; then
-        # 如果 .env 存在，使用 sed 更新 IMAGE_VERSION
+    # 更新 Compose 环境文件中的 IMAGE_VERSION
+    COMPOSE_ENV_FILE=".env.compose"
+    if [ -f "$COMPOSE_ENV_FILE" ]; then
+        # 如果 .env.compose 存在，使用 sed 更新 IMAGE_VERSION
         # 兼容 macOS 和 Linux 的 sed 差异
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" "$COMPOSE_ENV_FILE"
+        else
+            sed -i "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" "$COMPOSE_ENV_FILE"
+        fi
+    elif [ -f .env ]; then
+        # 兼容旧命名，优先保留现有本地配置
         if [[ "$OSTYPE" == "darwin"* ]]; then
             sed -i '' "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" .env
         else
             sed -i "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" .env
         fi
     else
-        # 如果 .env 不存在，创建它
-        echo "IMAGE_VERSION=$VERSION" > .env
+        # 如果环境文件不存在，则创建新的 .env.compose
+        echo "IMAGE_VERSION=$VERSION" > "$COMPOSE_ENV_FILE"
     fi
 
-    echo -e "${GREEN}>>> 已更新 .env 文件，版本号: $VERSION${NC}"
-    echo "启动容器时可以使用: docker-compose -p dms-service -f compose.yml up -d"
+    echo -e "${GREEN}>>> 已更新 Compose 环境文件中的版本号: $VERSION${NC}"
+    echo "启动容器时可以使用: docker compose --env-file .env.compose -p dms-service -f docker-compose.yml up -d"
 
     read -p "是否立即构建多架构镜像(amd64/arm64)并推送到 Docker Hub? (y/n) [n]: " push_choice
     push_choice=${push_choice:-n}

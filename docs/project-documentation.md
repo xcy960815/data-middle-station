@@ -305,8 +305,27 @@ module.exports = {
 项目包含 Dockerfile 和 docker-compose 配置：
 
 - `Dockerfile`: 应用容器化配置
-- `dms-service-compose.yml`: 服务编排配置
-- `dms-service-data-compose.yml`: 数据服务配置
+- `docker-compose.yml`: 服务编排配置
+
+### 环境变量分层
+
+项目当前使用两套环境变量文件：
+
+- `env/.env.daily`、`env/.env.pre`、`env/.env.prod`
+  - 面向 Nuxt 应用本身。
+  - 由 `pnpm dev`、`pnpm build` 等脚本通过 `--dotenv` 显式读取。
+  - 负责数据库、Redis、JWT、SMTP、日志、前端标题等应用配置。
+- `.env.compose`
+  - 面向 Docker Compose 部署。
+  - 通过 `docker compose --env-file .env.compose` 读取。
+  - 负责镜像版本、容器对外端口、MySQL/Redis 容器参数等部署配置。
+
+仓库提供以下模板文件：
+
+- `.env.compose.example`
+- `env/.env.daily.example`
+- `env/.env.pre.example`
+- `env/.env.prod.example`
 
 ### 多平台构建 (Multi-Platform Build)
 
@@ -359,30 +378,68 @@ npm run docker:build:multi
    ```
 
 3. **环境配置**
-   创建环境配置文件 `env/.env.daily`：
+   从模板复制本地环境文件：
+
+   ```bash
+   cp env/.env.daily.example env/.env.daily
+   cp env/.env.pre.example env/.env.pre
+   cp env/.env.prod.example env/.env.prod
+   cp .env.compose.example .env.compose
+   ```
+
+   `env/.env.daily` 示例：
 
    ```env
+   APP_NAME=数据分析平台
+
    # 数据库配置
-   SERVICE_DB_HOST=localhost
-   SERVICE_DB_PORT=3306
+   SERVICE_DB_HOST=127.0.0.1
+   SERVICE_DB_PORT=3310
    SERVICE_DB_USER=root
-   SERVICE_DB_PASSWORD=password
+   SERVICE_DB_PASSWORD=change_me
    SERVICE_DB_NAME=data_middle_station
+   SERVICE_DB_TIMEZONE=+08:00
+   SERVICE_DB_DATE_STRINGS=true
+   SERVICE_DB_DECIMAL_NUMBERS=true
+
+   # 业务数据数据库配置
+   SERVICE_DATA_DB_HOST=127.0.0.1
+   SERVICE_DATA_DB_PORT=3311
+   SERVICE_DATA_DB_USER=root
+   SERVICE_DATA_DB_PASSWORD=change_me
+   SERVICE_DATA_DB_NAME=kanban_data
+   SERVICE_DATA_DB_TIMEZONE=+08:00
+   SERVICE_DATA_DB_DATE_STRINGS=true
+   SERVICE_DATA_DB_DECIMAL_NUMBERS=true
 
    # Redis配置
-   SERVICE_REDIS_HOST=localhost
-   SERVICE_REDIS_PORT=6379
-   SERVICE_REDIS_PASSWORD=
+   SERVICE_REDIS_HOST=127.0.0.1
+   SERVICE_REDIS_PORT=6383
+   SERVICE_REDIS_PASSWORD=change_me
 
    # JWT配置
-   JWT_SECRET_KEY=your_secret_key
-   JWT_EXPIRES_IN=7d
+   JWT_SECRET_KEY=replace_with_a_long_random_secret
+   JWT_EXPIRES_IN=24h
 
    # 邮件配置
    SMTP_HOST=smtp.example.com
-   SMTP_PORT=587
+   SMTP_PORT=465
    SMTP_USER=your_email@example.com
-   SMTP_PASS=your_password
+   SMTP_PASS=your_smtp_password
+   ```
+
+   `.env.compose` 示例：
+
+   ```env
+   IMAGE_VERSION=latest
+   NUXT_PORT=12583
+   REDIS_PASSWORD=change_me
+   REDIS_PORT=6379
+   MYSQL_ROOT_PASSWORD=change_me
+   MYSQL_DATABASE=data_middle_station
+   MYSQL_MAIN_PORT=3310
+   MYSQL_DATA_DATABASE=kanban_data
+   MYSQL_DATA_PORT=3311
    ```
 
 4. **数据库初始化**

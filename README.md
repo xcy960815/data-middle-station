@@ -51,18 +51,47 @@ yarn install
 ```
 
 3. 环境配置
-   创建 `.env` 文件并配置必要的环境变量：
+
+项目使用两层环境变量：
+
+- `env/.env.daily`、`env/.env.pre`、`env/.env.prod`：应用运行配置，供 `pnpm dev/build` 通过 `--dotenv` 读取。
+- `.env.compose`：Docker Compose 部署配置，供 `docker compose --env-file .env.compose` 读取。
+
+推荐从示例文件复制：
+
+```bash
+cp env/.env.daily.example env/.env.daily
+cp env/.env.pre.example env/.env.pre
+cp env/.env.prod.example env/.env.prod
+cp .env.compose.example .env.compose
+```
+
+`env/.env.daily` 示例：
 
 ```env
-# 数据库配置
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=your_username
-DB_PASSWORD=your_password
-DB_NAME=your_database
+# 应用标题
+APP_NAME=数据分析平台
 
-# 其他配置
-...
+# 数据库配置
+SERVICE_DB_HOST=127.0.0.1
+SERVICE_DB_PORT=3310
+SERVICE_DB_USER=root
+SERVICE_DB_PASSWORD=change_me
+SERVICE_DB_NAME=data_middle_station
+SERVICE_DB_TIMEZONE=+08:00
+SERVICE_DB_DATE_STRINGS=true
+SERVICE_DB_DECIMAL_NUMBERS=true
+
+# Redis 配置
+SERVICE_REDIS_HOST=127.0.0.1
+SERVICE_REDIS_PORT=6383
+SERVICE_REDIS_PASSWORD=change_me
+
+# 认证和邮件
+JWT_SECRET_KEY=replace_with_a_long_random_secret
+SMTP_HOST=smtp.example.com
+SMTP_USER=your_email@example.com
+SMTP_PASS=your_smtp_password
 ```
 
 ## 开发
@@ -80,7 +109,7 @@ npm run dev
 yarn dev
 ```
 
-开发服务器将在 `http://localhost:3000` 启动。
+默认开发环境会读取 `env/.env.daily`，服务端口由该文件中的 `PORT` 控制。
 
 ## 构建和部署
 
@@ -95,6 +124,12 @@ npm run build
 
 # 或使用 yarn
 yarn build
+```
+
+如果通过 Docker Compose 部署，使用：
+
+```bash
+docker compose --env-file .env.compose -p dms-service -f docker-compose.yml up -d
 ```
 
 预览生产构建：
@@ -124,6 +159,7 @@ yarn preview
 
 ```
 data-middle-station/
+├── .env.compose.example # Docker Compose 环境变量模板
 ├── assets/          # 静态资源
 ├── components/      # 组件
 ├── composables/     # 组合式函数
@@ -132,6 +168,7 @@ data-middle-station/
 ├── pages/          # 页面
 ├── plugins/        # 插件
 ├── public/         # 公共资源
+├── env/            # Nuxt 应用环境变量模板与本地配置
 ├── server/         # 服务端代码
 ├── stores/         # 状态管理
 ├── types/          # TypeScript 类型定义

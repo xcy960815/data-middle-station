@@ -19,6 +19,11 @@ dist
 node_modules
 .pnpm-store
 
+# 本地部署环境变量（不需要进入镜像构建上下文）
+.env
+.env.*
+!.env.compose.example
+
 # 日志文件（运行时生成）
 logs
 *.log
