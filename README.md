@@ -57,6 +57,8 @@ yarn install
 - `env/.env.daily`、`env/.env.pre`、`env/.env.prod`：应用运行配置，供 `pnpm dev/build` 通过 `--dotenv` 读取。
 - `.env.compose`：Docker Compose 部署配置，供 `docker compose --env-file .env.compose` 读取。
 
+这些本地环境文件不会提交到仓库，请始终从 `*.example` 模板复制后再填写真实值。
+
 推荐从示例文件复制：
 
 ```bash
@@ -69,8 +71,11 @@ cp .env.compose.example .env.compose
 `env/.env.daily` 示例：
 
 ```env
+NODE_ENV=daily
+PORT=12581
 # 应用标题
 APP_NAME=数据分析平台
+API_BASE=/api
 
 # 数据库配置
 SERVICE_DB_HOST=127.0.0.1
@@ -85,13 +90,25 @@ SERVICE_DB_DECIMAL_NUMBERS=true
 # Redis 配置
 SERVICE_REDIS_HOST=127.0.0.1
 SERVICE_REDIS_PORT=6383
+SERVICE_REDIS_USERNAME=default
 SERVICE_REDIS_PASSWORD=change_me
+SERVICE_REDIS_DB=0
+SERVICE_REDIS_BASE=dms-redis
+
+# 日志配置
+LOG_PATH=./logs
+LOG_TIME_FORMAT=YYYY-MM-DD HH:mm:ss
 
 # 认证和邮件
 JWT_SECRET_KEY=replace_with_a_long_random_secret
+JWT_EXPIRES_IN=24h
 SMTP_HOST=smtp.example.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_REJECT_UNAUTHORIZED=true
 SMTP_USER=your_email@example.com
 SMTP_PASS=your_smtp_password
+SMTP_FROM=your_email@example.com
 ```
 
 ## 开发

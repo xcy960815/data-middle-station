@@ -320,6 +320,8 @@ module.exports = {
   - 通过 `docker compose --env-file .env.compose` 读取。
   - 负责镜像版本、容器对外端口、MySQL/Redis 容器参数等部署配置。
 
+这些本地环境文件不会提交到仓库，请从模板复制后再填写真实凭证：
+
 仓库提供以下模板文件：
 
 - `.env.compose.example`
@@ -390,7 +392,10 @@ npm run docker:build:multi
    `env/.env.daily` 示例：
 
    ```env
+   NODE_ENV=daily
+   PORT=12581
    APP_NAME=数据分析平台
+   API_BASE=/api
 
    # 数据库配置
    SERVICE_DB_HOST=127.0.0.1
@@ -415,7 +420,14 @@ npm run docker:build:multi
    # Redis配置
    SERVICE_REDIS_HOST=127.0.0.1
    SERVICE_REDIS_PORT=6383
+   SERVICE_REDIS_USERNAME=default
    SERVICE_REDIS_PASSWORD=change_me
+   SERVICE_REDIS_DB=0
+   SERVICE_REDIS_BASE=dms-redis
+
+   # 日志配置
+   LOG_PATH=./logs
+   LOG_TIME_FORMAT=YYYY-MM-DD HH:mm:ss
 
    # JWT配置
    JWT_SECRET_KEY=replace_with_a_long_random_secret
@@ -424,8 +436,11 @@ npm run docker:build:multi
    # 邮件配置
    SMTP_HOST=smtp.example.com
    SMTP_PORT=465
+   SMTP_SECURE=true
+   SMTP_REJECT_UNAUTHORIZED=true
    SMTP_USER=your_email@example.com
    SMTP_PASS=your_smtp_password
+   SMTP_FROM=your_email@example.com
    ```
 
    `.env.compose` 示例：

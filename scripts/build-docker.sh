@@ -65,24 +65,21 @@ if [ $? -eq 0 ]; then
 
     # 更新 Compose 环境文件中的 IMAGE_VERSION
     COMPOSE_ENV_FILE=".env.compose"
-    if [ -f "$COMPOSE_ENV_FILE" ]; then
-        # 如果 .env.compose 存在，使用 sed 更新 IMAGE_VERSION
-        # 兼容 macOS 和 Linux 的 sed 差异
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" "$COMPOSE_ENV_FILE"
+    COMPOSE_ENV_TEMPLATE=".env.compose.example"
+    if [ ! -f "$COMPOSE_ENV_FILE" ]; then
+        if [ -f "$COMPOSE_ENV_TEMPLATE" ]; then
+            cp "$COMPOSE_ENV_TEMPLATE" "$COMPOSE_ENV_FILE"
         else
-            sed -i "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" "$COMPOSE_ENV_FILE"
+            echo "IMAGE_VERSION=$VERSION" > "$COMPOSE_ENV_FILE"
         fi
-    elif [ -f .env ]; then
-        # 兼容旧命名，优先保留现有本地配置
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" .env
-        else
-            sed -i "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" .env
-        fi
+    fi
+
+    # 使用现有本地配置，仅更新 IMAGE_VERSION
+    # 兼容 macOS 和 Linux 的 sed 差异
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" "$COMPOSE_ENV_FILE"
     else
-        # 如果环境文件不存在，则创建新的 .env.compose
-        echo "IMAGE_VERSION=$VERSION" > "$COMPOSE_ENV_FILE"
+        sed -i "s/^IMAGE_VERSION=.*/IMAGE_VERSION=$VERSION/" "$COMPOSE_ENV_FILE"
     fi
 
     echo -e "${GREEN}>>> 已更新 Compose 环境文件中的版本号: $VERSION${NC}"
