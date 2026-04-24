@@ -55,7 +55,7 @@ yarn install
 项目使用两层环境变量：
 
 - `env/.env.daily`、`env/.env.pre`、`env/.env.prod`：应用运行配置，供 `pnpm dev/build` 通过 `--dotenv` 读取。
-- `.env.compose`：Docker Compose 部署配置，供 `docker compose --env-file .env.compose` 读取。
+- `.env.compose`：Docker Compose 部署配置，供 `docker compose --env-file .env.compose` 读取；Compose 会通过 `NUXT_SERVICE_*` 环境变量让应用直连内部 `redis`、`mysql-main`、`mysql-data` 服务。
 
 这些本地环境文件不会提交到仓库，请始终从 `*.example` 模板复制后再填写真实值。
 
@@ -148,6 +148,8 @@ yarn build
 ```bash
 docker compose --env-file .env.compose -p dms-service -f docker-compose.yml up -d
 ```
+
+Docker Compose 版本只对外暴露 Nuxt Web 端口，Redis 和两个 MySQL 服务仅在 `dms-network` 内部可访问。
 
 预览生产构建：
 

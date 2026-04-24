@@ -1,4 +1,4 @@
-# 本compose适应于部署在自己的服务上使用的，为了做数据持久化
+# 本 compose 适用于容器内服务互通的部署场景，Redis 与 MySQL 仅在 Docker 网络内部访问
 services:
   # Nuxt3 应用服务
   nuxt3:
@@ -8,13 +8,38 @@ services:
       - '${NUXT_PORT}:12583'
     volumes:
       - /mnt/sata1-4/AppData/dms/logs:/app/logs
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
+    environment:
+      NUXT_SERVICE_DB_HOST: mysql-main
+      NUXT_SERVICE_DB_PORT: 3306
+      NUXT_SERVICE_DB_USER: root
+      NUXT_SERVICE_DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      NUXT_SERVICE_DB_NAME: ${MYSQL_DATABASE}
+      NUXT_SERVICE_DB_TIMEZONE: +08:00
+      NUXT_SERVICE_DB_DATE_STRINGS: 'true'
+      NUXT_SERVICE_DB_DECIMAL_NUMBERS: 'true'
+      NUXT_SERVICE_DATA_DB_HOST: mysql-data
+      NUXT_SERVICE_DATA_DB_PORT: 3306
+      NUXT_SERVICE_DATA_DB_USER: root
+      NUXT_SERVICE_DATA_DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      NUXT_SERVICE_DATA_DB_NAME: ${MYSQL_DATA_DATABASE}
+      NUXT_SERVICE_DATA_DB_TIMEZONE: +08:00
+      NUXT_SERVICE_DATA_DB_DATE_STRINGS: 'true'
+      NUXT_SERVICE_DATA_DB_DECIMAL_NUMBERS: 'true'
+      NUXT_SERVICE_REDIS_HOST: redis
+      NUXT_SERVICE_REDIS_PORT: 6379
+      NUXT_SERVICE_REDIS_USERNAME: default
+      NUXT_SERVICE_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      NUXT_SERVICE_REDIS_DB: '0'
+      NUXT_SERVICE_REDIS_BASE: dms-redis
     restart: always
     networks:
       - dms-network
     depends_on:
       mysql-main:
+        condition: service_healthy
+      mysql-data:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   # Redis 缓存服务
@@ -22,8 +47,6 @@ services:
     image: redis:7.2.5
     container_name: dms-redis-container
     command: ["redis-server", "--bind", "0.0.0.0", "--requirepass", "${REDIS_PASSWORD}"]
-    ports:
-      - '${REDIS_PORT}:6379'
     volumes:
       - /mnt/sata1-4/AppData/dms/redis/data:/data
     networks:
@@ -53,8 +76,6 @@ services:
         '--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION',
         '--default-time-zone=+8:00',
       ]
-    ports:
-      - '${MYSQL_MAIN_PORT}:3306'
     volumes:
       - /mnt/sata1-4/AppData/dms/mysql-main/data:/var/lib/mysql
     networks:
@@ -84,8 +105,6 @@ services:
         '--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION',
         '--default-time-zone=+8:00',
       ]
-    ports:
-      - '${MYSQL_DATA_PORT}:3306'
     volumes:
       - /mnt/sata1-4/AppData/dms/mysql-data/data:/var/lib/mysql
     networks:
