@@ -6,7 +6,7 @@ import chalk from 'chalk'
  * @link https://github.com/nuxt/nuxt/pull/19230
  * @returns {void}
  */
-export default defineNitroPlugin(() => {
+export default defineNitroPlugin((nitroApp) => {
   const io = new Server(3001, {
     serveClient: false,
     cors: {
@@ -26,5 +26,9 @@ export default defineNitroPlugin(() => {
       clearInterval(intervalID)
       console.log(chalk.green('客户端已断开连接'))
     })
+  })
+
+  nitroApp.hooks.hook('close', () => {
+    io.close()
   })
 })

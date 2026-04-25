@@ -95,6 +95,9 @@ const transformThinkMarkdown = (source: string): string => {
   return result
 }
 
+/**
+ * @desc 渲染 Markdown 文本，包含思考块和数学公式预处理。
+ */
 export const renderMarkdownText = (content: string) => {
   const thinkTransformed = transformThinkMarkdown(content)
   const mathTransformed = transformMathMarkdown(thinkTransformed)

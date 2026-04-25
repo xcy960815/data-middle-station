@@ -126,18 +126,30 @@ export class DatabaseService {
     })
   }
 
+  /**
+   * @desc 将数据库表记录转换为 DTO。
+   */
   private convertDaoToDtoTable(tableRecord: DatabaseDao.TableOptions): DatabaseDto.TableDto {
     return { ...tableRecord }
   }
 
+  /**
+   * @desc 将数据库表 DTO 转换为 DAO。
+   */
   private convertDtoToDaoTable(tableData: DatabaseDto.TableDto): DatabaseDao.TableOptions {
     return { ...tableData }
   }
 
+  /**
+   * @desc 将数据库字段记录转换为 DTO。
+   */
   private convertDaoToDtoColumn(columnRecord: DatabaseDao.TableColumnOptions): DatabaseDto.TableColumnDto {
     return { ...columnRecord }
   }
 
+  /**
+   * @desc 将数据库字段 DTO 转换为 DAO。
+   */
   private convertDtoToDaoColumn(columnData: DatabaseDto.TableColumnDto): DatabaseDao.TableColumnOptions {
     return { ...columnData }
   }

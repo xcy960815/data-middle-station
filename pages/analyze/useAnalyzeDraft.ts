@@ -1,3 +1,6 @@
+/**
+ * @desc 提供分析草稿的读取、保存和清理能力。
+ */
 export const useAnalyzeDraft = () => {
   const chartConfigStore = useChartConfigStore()
   const analyzeStore = useAnalyzeStore()

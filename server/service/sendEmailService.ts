@@ -70,9 +70,15 @@ export const chartSendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
   }).required()
 })
 
+/**
+ * @desc 校验邮件发送请求参数。
+ */
 export const validateSendEmailPayload = <T>(schema: Joi.ObjectSchema<T>, payload: unknown): Joi.ValidationResult<T> =>
   schema.validate(payload, SEND_EMAIL_VALIDATE_OPTIONS)
 
+/**
+ * @desc 格式化邮件发送参数校验错误。
+ */
 export const formatSendEmailValidationError = (error: Joi.ValidationError): string =>
   error.details.map((detail) => detail.message).join('; ')
 

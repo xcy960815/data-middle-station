@@ -1,6 +1,7 @@
 import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
 import {
   configureScheduledEmailScheduler,
+  clearScheduledEmailJobs,
   getScheduledEmailJobCount,
   syncScheduledEmailJobs
 } from '@/server/service/scheduledEmailSchedulerService'
@@ -26,7 +27,7 @@ const logger = new Logger({
  * 1. scheduled - 定时任务：在指定时间执行一次
  * 2. recurring - 重复任务：按照指定的周期和时间重复执行
  */
-export default defineNitroPlugin(async () => {
+export default defineNitroPlugin(async (nitroApp) => {
   logger.info('📧 邮件发送调度系统初始化中...')
   logger.info('🔧 调度引擎: node-schedule')
 
@@ -43,7 +44,7 @@ export default defineNitroPlugin(async () => {
   await loadAndScheduleAllTasks()
 
   // 每5分钟检查一次失败任务的重试
-  schedule.scheduleJob('*/5 * * * *', async () => {
+  const retryFailedTasksJob = schedule.scheduleJob('*/5 * * * *', async () => {
     try {
       logger.info('🔄 开始检查需要重试的失败任务...')
       await scheduledEmailService.retryFailedTasks()
@@ -53,7 +54,7 @@ export default defineNitroPlugin(async () => {
   })
 
   // 每小时同步一次数据库任务状态（防止任务漏执行）
-  schedule.scheduleJob('0 * * * *', async () => {
+  const syncTasksJob = schedule.scheduleJob('0 * * * *', async () => {
     try {
       logger.info('🔄 同步数据库任务状态...')
       await loadAndScheduleAllTasks()
@@ -67,6 +68,13 @@ export default defineNitroPlugin(async () => {
   logger.info(`  - 已加载 ${getScheduledEmailJobCount()} 个任务到调度器`)
   logger.info('  - 每5分钟检查失败任务重试')
   logger.info('  - 每小时同步数据库任务状态')
+
+  nitroApp.hooks.hook('close', () => {
+    retryFailedTasksJob?.cancel()
+    syncTasksJob?.cancel()
+    clearScheduledEmailJobs()
+    logger.info('邮件发送调度系统已停止')
+  })
 })
 
 /**

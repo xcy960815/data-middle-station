@@ -115,10 +115,16 @@ const scheduleRecurringTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptio
   }
 }
 
+/**
+ * @desc 配置定时邮件任务执行器。
+ */
 export const configureScheduledEmailScheduler = (taskExecutor: ScheduledTaskExecutor): void => {
   scheduledTaskExecutor = taskExecutor
 }
 
+/**
+ * @desc 从调度器中移除指定邮件任务。
+ */
 export const removeScheduledEmailJob = (taskId: number): void => {
   const job = scheduledJobs.get(taskId)
   if (job) {
@@ -128,6 +134,9 @@ export const removeScheduledEmailJob = (taskId: number): void => {
   }
 }
 
+/**
+ * @desc 新增或更新定时邮件任务的调度。
+ */
 export const upsertScheduledEmailJob = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): void => {
   removeScheduledEmailJob(taskOptions.id)
 
@@ -143,6 +152,9 @@ export const upsertScheduledEmailJob = (taskOptions: ScheduledEmailVo.ScheduledE
   scheduleRecurringTask(taskOptions)
 }
 
+/**
+ * @desc 根据数据库任务列表同步内存中的调度任务。
+ */
 export const syncScheduledEmailJobs = (taskOptionsList: ScheduledEmailVo.ScheduledEmailOptions[]): void => {
   const activeTaskIds = new Set(taskOptionsList.map((taskOptions) => taskOptions.id))
 
@@ -157,4 +169,19 @@ export const syncScheduledEmailJobs = (taskOptionsList: ScheduledEmailVo.Schedul
   }
 }
 
+/**
+ * @desc 获取当前已注册的定时邮件任务数量。
+ */
 export const getScheduledEmailJobCount = (): number => scheduledJobs.size
+
+/**
+ * @desc 清理所有定时邮件调度任务。
+ */
+export const clearScheduledEmailJobs = (): void => {
+  for (const [taskId, job] of scheduledJobs.entries()) {
+    job.cancel()
+    logger.info(`任务 ${taskId} 已从调度器移除`)
+  }
+  scheduledJobs.clear()
+  scheduledTaskExecutor = null
+}

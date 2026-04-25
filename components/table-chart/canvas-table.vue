@@ -15,7 +15,7 @@ import FilterDropdown from './components/filter-dropdown.vue'
 import SummaryDropdown from './components/summary-dropdown.vue'
 import { handleTableData, resetTableDataState } from './data-handler'
 import { filterDropdownRef } from './header-handler'
-import { staticParams, tableProps } from './parameter'
+import { resetStaticParams, staticParams, tableProps } from './parameter'
 import { measureTablePerf } from './perf'
 import { cleanupWheelListener, initWheelListener } from './scrollbar-handler'
 import {
@@ -277,6 +277,7 @@ onUnmounted(() => {
   cleanupWheelListener(tableContainerRef.value)
   cleanupStageListeners()
   resetTableDataState()
+  resetStaticParams()
   resetSummaryState()
 })
 </script>

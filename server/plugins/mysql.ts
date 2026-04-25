@@ -127,13 +127,15 @@ const getDatasourceConfig = () => {
  */
 export async function checkMysqlConnection(pools: Map<string, mysql.Pool>) {
   for (const [name, pool] of pools.entries()) {
+    let conn: mysql.PoolConnection | null = null
     try {
-      const conn = await pool.getConnection()
+      conn = await pool.getConnection()
       await conn.ping()
-      conn.release()
       logger.info(chalk.green(`MySQL 数据源 [${name}] 连接成功`))
     } catch (error) {
       logger.error(chalk.red(`MySQL 数据源 [${name}] 连接失败: ${error}`))
+    } finally {
+      conn?.release()
     }
   }
 }

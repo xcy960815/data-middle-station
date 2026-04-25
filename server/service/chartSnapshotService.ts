@@ -26,6 +26,9 @@ echarts.use([
 
 export const SUPPORTED_SERVER_RENDER_CHART_TYPES = ['line', 'interval', 'bar', 'pie'] as const
 
+/**
+ * @desc 判断图表类型是否支持服务端渲染。
+ */
 export const isServerRenderableChartType = (chartType?: string): boolean =>
   typeof chartType === 'string' &&
   SUPPORTED_SERVER_RENDER_CHART_TYPES.includes(chartType as (typeof SUPPORTED_SERVER_RENDER_CHART_TYPES)[number])

@@ -258,6 +258,9 @@ export const refreshTable = (resetScroll: boolean) => {
   })
 }
 
+/**
+ * @desc 刷新表头区域。
+ */
 export const refreshHeaderSection = () => {
   if (!stageVars.stage) return
   clearHeaderGroups()
@@ -266,6 +269,9 @@ export const refreshHeaderSection = () => {
   syncTablePerfSnapshot()
 }
 
+/**
+ * @desc 刷新表格主体区域。
+ */
 export const refreshBodySection = () => {
   if (!stageVars.stage) return
   clearBodyGroups()
@@ -274,6 +280,9 @@ export const refreshBodySection = () => {
   syncTablePerfSnapshot()
 }
 
+/**
+ * @desc 刷新汇总行区域。
+ */
 export const refreshSummarySection = () => {
   if (!stageVars.stage) return
   clearSummaryGroups()
@@ -282,6 +291,9 @@ export const refreshSummarySection = () => {
   syncTablePerfSnapshot()
 }
 
+/**
+ * @desc 刷新滚动条区域。
+ */
 export const refreshScrollbarSection = () => {
   if (!stageVars.stage) return
   clearScrollbarGroups()

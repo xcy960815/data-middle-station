@@ -659,6 +659,9 @@ export class ScheduledEmailService extends BaseService {
     return success
   }
 
+  /**
+   * @desc 计算任务下一次执行时间。
+   */
   private calculateTaskNextExecutionTime(taskOptions: {
     taskType: ScheduledEmailDao.TaskType
     scheduleTime?: string | null

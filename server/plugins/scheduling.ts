@@ -9,7 +9,7 @@ const logger = new Logger({
  * @desc 调度任务类型
  * @link https://juejin.cn/post/6998158614963683358
  */
-export default defineNitroPlugin(() => {
+export default defineNitroPlugin((nitroApp) => {
   // ┌────────────── second (可选)
   // │ ┌──────────── 分钟 (minute，0 - 59)
   // │ │ ┌────────── 小时 (hour，0 - 23)
@@ -19,7 +19,11 @@ export default defineNitroPlugin(() => {
   // │ │ │ │ │ │
   // │ │ │ │ │ │
   // * * * * * *
-  cron.schedule('0 * * * *', () => {
+  const task = cron.schedule('0 * * * *', () => {
     logger.info('每分钟执行一次调度任务')
+  })
+
+  nitroApp.hooks.hook('close', () => {
+    task.stop()
   })
 })

@@ -247,6 +247,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   completionItemProvider.value?.dispose()
   resizeObserver.value?.disconnect()
+  monacoEditor.value?.dispose()
+  monacoEditor.value = null
+  completionItemProvider.value = undefined
+  resizeObserver.value = null
 })
 
 /**

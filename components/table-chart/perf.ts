@@ -101,6 +101,9 @@ const getP95 = (recent: number[]) => {
   return sorted[index]
 }
 
+/**
+ * @desc 记录表格渲染性能指标。
+ */
 export const recordTablePerfMetric = (key: TablePerfMetricKey, durationMs: number) => {
   const metric = tablePerfState.metrics[key]
   const duration = Number(durationMs.toFixed(2))
@@ -122,6 +125,9 @@ export const recordTablePerfMetric = (key: TablePerfMetricKey, durationMs: numbe
   metric.p95 = Number(getP95(metric.recent).toFixed(2))
 }
 
+/**
+ * @desc 测量指定表格操作的执行耗时。
+ */
 export const measureTablePerf = <T>(key: TablePerfMetricKey, callback: () => T): T => {
   const startAt = now()
   const result = callback()
@@ -129,10 +135,16 @@ export const measureTablePerf = <T>(key: TablePerfMetricKey, callback: () => T):
   return result
 }
 
+/**
+ * @desc 更新表格性能快照。
+ */
 export const updateTablePerfSnapshot = (nextSnapshot: Partial<TablePerfSnapshot>) => {
   Object.assign(tablePerfState.snapshot, nextSnapshot, { lastUpdatedAt: Date.now() })
 }
 
+/**
+ * @desc 重置表格性能统计状态。
+ */
 export const resetTablePerfState = () => {
   tablePerfState.metrics = createMetrics()
   tablePerfState.snapshot = createSnapshot()

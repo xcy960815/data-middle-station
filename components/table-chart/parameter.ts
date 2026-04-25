@@ -423,3 +423,15 @@ export const staticParams: StaticParams = {
 export const tableData: { value: Array<AnalyzeDataVo.AnalyzeData> } = {
   value: []
 }
+
+/**
+ * @desc 重置表格模块级参数，释放上一次渲染持有的数据引用。
+ */
+export const resetStaticParams = () => {
+  staticParams.title = ''
+  staticParams.data = []
+  staticParams.xAxisFields = []
+  staticParams.yAxisFields = []
+  staticParams.enableSummary = false
+  staticParams.spanMethod = undefined
+}

@@ -321,6 +321,9 @@ export class ScheduledEmailLogService extends BaseService {
     }
   }
 
+  /**
+   * @desc 将收件人数组序列化为日志字段。
+   */
   private stringifyStringArray(value?: string | string[] | null): string | undefined {
     if (!value) {
       return undefined
@@ -331,6 +334,9 @@ export class ScheduledEmailLogService extends BaseService {
     return value
   }
 
+  /**
+   * @desc 将日志中的收件人字段解析为数组。
+   */
   private parseStringArray(rawValue?: string | string[] | null): string[] | undefined {
     if (!rawValue) {
       return undefined
@@ -372,6 +378,9 @@ export class ScheduledEmailLogService extends BaseService {
     }
   }
 
+  /**
+   * @desc 获取当前运行环境的时区。
+   */
   private getCurrentTimezone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   }
@@ -404,6 +413,9 @@ export class ScheduledEmailLogService extends BaseService {
     await this.logTaskFailure(0, executionTime, errorMessage, 0, '即时邮件发送失败', metadata)
   }
 
+  /**
+   * @desc 构建定时邮件任务日志的基础元数据。
+   */
   public buildTaskBaseMetadata(
     emailConfig: {
       to: string | string[]
@@ -436,6 +448,9 @@ export class ScheduledEmailLogService extends BaseService {
     }
   }
 
+  /**
+   * @desc 使用邮件发送结果补充日志元数据。
+   */
   public enrichSendResultMetadata(
     baseMetadata: Partial<ScheduledEmailLogDto.CreateLogOptions>,
     sendResult: SendEmailVo.SendEmailOptions
@@ -468,6 +483,9 @@ export class ScheduledEmailLogService extends BaseService {
     }
   }
 
+  /**
+   * @desc 构建手动发送邮件的日志元数据。
+   */
   private buildManualSendMetadata(
     sendRequest: SendEmailDto.SendEmailOptions,
     sendResult?: SendEmailVo.SendEmailOptions
@@ -499,6 +517,9 @@ export class ScheduledEmailLogService extends BaseService {
     }
   }
 
+  /**
+   * @desc 统一收件人字段为字符串数组。
+   */
   private normalizeRecipients(recipients?: string | string[]): string[] {
     if (!recipients) {
       return []
@@ -512,6 +533,9 @@ export class ScheduledEmailLogService extends BaseService {
       .filter(Boolean)
   }
 
+  /**
+   * @desc 将 Nodemailer 返回的收件人结构拍平为地址数组。
+   */
   private flattenNodemailerRecipients(
     recipients?: (string | { name?: string; address: string })[]
   ): string[] | undefined {
