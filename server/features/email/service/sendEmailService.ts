@@ -1,5 +1,9 @@
 import { resolveMailerProfile, type MailerProfile } from '../domain/mailerProfile'
-import { ChartSnapshotService, SUPPORTED_SERVER_RENDER_CHART_TYPES } from './chartSnapshotService'
+import {
+  ChartSnapshotService,
+  getChartSnapshotService,
+  SUPPORTED_SERVER_RENDER_CHART_TYPES
+} from './chartSnapshotService'
 import chalk from 'chalk'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
@@ -123,7 +127,7 @@ export class SendEmailService {
     this.smtpRejectUnauthorized = String(useRuntimeConfig().smtpRejectUnauthorized ?? 'true') !== 'false'
     this.smtpUser = useRuntimeConfig().smtpUser
     this.smtpPass = useRuntimeConfig().smtpPass
-    this.chartSnapshotService = new ChartSnapshotService()
+    this.chartSnapshotService = getChartSnapshotService()
   }
 
   /**
@@ -383,4 +387,21 @@ export class SendEmailService {
   public getChannel(): string {
     return this.mailerProfile.channel
   }
+}
+
+/* ============================== 单例工厂 ============================== */
+
+let sendEmailServiceInstance: SendEmailService | null = null
+
+/**
+ * @desc 获取 SendEmailService 的进程级单例
+ *  - 共享 transporter，避免每次请求重新构造 SMTP 连接
+ *  - 共享 ChartSnapshotService（其内部还会拉起 AnalyzeService / ChartDataService）
+ *  - 测试场景仍可直接 `new SendEmailService()`
+ */
+export const getSendEmailService = (): SendEmailService => {
+  if (!sendEmailServiceInstance) {
+    sendEmailServiceInstance = new SendEmailService()
+  }
+  return sendEmailServiceInstance
 }

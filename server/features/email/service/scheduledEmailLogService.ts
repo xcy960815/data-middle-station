@@ -550,3 +550,17 @@ export class ScheduledEmailLogService extends BaseService {
     return normalized.length > 0 ? normalized : undefined
   }
 }
+
+/* ============================== 单例工厂 ============================== */
+
+let scheduledEmailLogServiceInstance: ScheduledEmailLogService | null = null
+
+/**
+ * @desc 获取 ScheduledEmailLogService 的进程级单例
+ */
+export const getScheduledEmailLogService = (): ScheduledEmailLogService => {
+  if (!scheduledEmailLogServiceInstance) {
+    scheduledEmailLogServiceInstance = new ScheduledEmailLogService()
+  }
+  return scheduledEmailLogServiceInstance
+}

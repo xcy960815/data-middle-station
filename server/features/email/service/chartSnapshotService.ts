@@ -197,3 +197,20 @@ export class ChartSnapshotService {
     return `${safeName}-${timestamp}.svg`
   }
 }
+
+/* ============================== 单例工厂 ============================== */
+
+let chartSnapshotServiceInstance: ChartSnapshotService | null = null
+
+/**
+ * @desc 获取 ChartSnapshotService 的进程级单例
+ *  - 懒加载：首次调用时才实例化（避免 import 阶段触发副作用）
+ *  - 共享：所有调用方拿到的是同一个实例，避免重复 new AnalyzeService / ChartDataService
+ *  - 测试场景仍可直接 `new ChartSnapshotService(customCanvasOptions)` 注入自定义实例
+ */
+export const getChartSnapshotService = (): ChartSnapshotService => {
+  if (!chartSnapshotServiceInstance) {
+    chartSnapshotServiceInstance = new ChartSnapshotService()
+  }
+  return chartSnapshotServiceInstance
+}

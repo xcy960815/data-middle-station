@@ -22,8 +22,8 @@ import {
 } from '../domain/scheduledEmailDomain'
 import { ScheduledEmailMapper } from '../mapper/scheduledEmailMapper'
 import { removeScheduledEmailJob, upsertScheduledEmailJob } from '../scheduler/scheduledEmailScheduler'
-import { ScheduledEmailExecutorService } from './scheduledEmailExecutorService'
-import { ScheduledEmailLogService } from './scheduledEmailLogService'
+import { getScheduledEmailExecutorService, ScheduledEmailExecutorService } from './scheduledEmailExecutorService'
+import { getScheduledEmailLogService, ScheduledEmailLogService } from './scheduledEmailLogService'
 
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
 
@@ -42,8 +42,8 @@ export class ScheduledEmailService extends BaseService {
   constructor() {
     super()
     this.scheduledEmailMapper = new ScheduledEmailMapper()
-    this.scheduledEmailLogService = new ScheduledEmailLogService()
-    this.scheduledEmailExecutorService = new ScheduledEmailExecutorService()
+    this.scheduledEmailLogService = getScheduledEmailLogService()
+    this.scheduledEmailExecutorService = getScheduledEmailExecutorService()
   }
 
   /* ============================== CRUD ============================== */
@@ -479,4 +479,23 @@ export class ScheduledEmailService extends BaseService {
     }
     return Array.isArray(value) ? value : [value]
   }
+}
+
+/* ============================== 单例工厂 ============================== */
+
+let scheduledEmailServiceInstance: ScheduledEmailService | null = null
+
+/**
+ * @desc 获取 ScheduledEmailService 的进程级单例
+ *
+ * 推荐 API handler / plugin 全部使用本工厂，避免：
+ *  - 每个 handler 顶层 `new ScheduledEmailService()` 时反复构造整条依赖链
+ *    (Executor / LogService / SendEmailService / ChartSnapshotService / AnalyzeService / ChartDataService)
+ *  - 不同实例间 transporter 状态不一致、runtimeConfig 读取时机不同等隐性 bug
+ */
+export const getScheduledEmailService = (): ScheduledEmailService => {
+  if (!scheduledEmailServiceInstance) {
+    scheduledEmailServiceInstance = new ScheduledEmailService()
+  }
+  return scheduledEmailServiceInstance
 }

@@ -24,8 +24,8 @@ import {
 } from '../domain/scheduledEmailDomain'
 import { ScheduledEmailMapper } from '../mapper/scheduledEmailMapper'
 import { removeScheduledEmailJob, upsertScheduledEmailJob } from '../scheduler/scheduledEmailScheduler'
-import { ScheduledEmailLogService } from './scheduledEmailLogService'
-import { SendEmailService } from './sendEmailService'
+import { getScheduledEmailLogService, ScheduledEmailLogService } from './scheduledEmailLogService'
+import { getSendEmailService, SendEmailService } from './sendEmailService'
 import dayjs from 'dayjs'
 
 const logger = new Logger({ fileName: 'scheduled-email-executor', folderName: 'server' })
@@ -74,8 +74,8 @@ export class ScheduledEmailExecutorService extends BaseService {
   constructor() {
     super()
     this.scheduledEmailMapper = new ScheduledEmailMapper()
-    this.scheduledEmailLogService = new ScheduledEmailLogService()
-    this.sendEmailService = new SendEmailService()
+    this.scheduledEmailLogService = getScheduledEmailLogService()
+    this.sendEmailService = getSendEmailService()
   }
 
   /**
@@ -406,4 +406,18 @@ export class ScheduledEmailExecutorService extends BaseService {
 
     return success
   }
+}
+
+/* ============================== 单例工厂 ============================== */
+
+let scheduledEmailExecutorServiceInstance: ScheduledEmailExecutorService | null = null
+
+/**
+ * @desc 获取 ScheduledEmailExecutorService 的进程级单例
+ */
+export const getScheduledEmailExecutorService = (): ScheduledEmailExecutorService => {
+  if (!scheduledEmailExecutorServiceInstance) {
+    scheduledEmailExecutorServiceInstance = new ScheduledEmailExecutorService()
+  }
+  return scheduledEmailExecutorServiceInstance
 }

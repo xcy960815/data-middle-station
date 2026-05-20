@@ -1,6 +1,6 @@
-import { ScheduledEmailService } from '@/server/features/email/service/scheduledEmailService'
+import { getScheduledEmailService } from '@/server/features/email/service/scheduledEmailService'
 
-const scheduledEmailService = new ScheduledEmailService()
+const scheduledEmailService = getScheduledEmailService()
 
 const logger = new Logger({
   fileName: 'scheduledEmails',

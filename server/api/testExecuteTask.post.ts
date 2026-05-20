@@ -1,6 +1,6 @@
-import { ScheduledEmailService } from '@/server/features/email/service/scheduledEmailService'
+import { getScheduledEmailService } from '@/server/features/email/service/scheduledEmailService'
 
-const scheduledEmailService = new ScheduledEmailService()
+const scheduledEmailService = getScheduledEmailService()
 
 /**
  * 测试执行定时邮件任务（用于测试服务端生成 echarts 图表）

@@ -1,13 +1,13 @@
-import { ScheduledEmailLogService } from '@/server/features/email/service/scheduledEmailLogService'
+import { getScheduledEmailLogService } from '@/server/features/email/service/scheduledEmailLogService'
 import {
   formatSendEmailValidationError,
+  getSendEmailService,
   manualSendEmailSchema,
-  SendEmailService,
   validateSendEmailPayload
 } from '@/server/features/email/service/sendEmailService'
 
-const sendEmailService = new SendEmailService()
-const scheduledEmailLogService = new ScheduledEmailLogService()
+const sendEmailService = getSendEmailService()
+const scheduledEmailLogService = getScheduledEmailLogService()
 
 const logger = new Logger({
   fileName: 'sendEmail',
