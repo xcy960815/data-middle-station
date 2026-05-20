@@ -1,3 +1,4 @@
+import { shouldScheduleTask, TaskType } from '@/server/service/scheduledEmailDomain'
 import schedule from 'node-schedule'
 
 type ScheduledTaskExecutor = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions) => Promise<void>
@@ -9,18 +10,6 @@ const logger = new Logger({
 
 const scheduledJobs = new Map<number, schedule.Job>()
 let scheduledTaskExecutor: ScheduledTaskExecutor | null = null
-
-const shouldScheduleTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): boolean => {
-  if (!taskOptions.isActive) {
-    return false
-  }
-
-  if (taskOptions.taskType === 'scheduled') {
-    return taskOptions.status === 'pending' && Boolean(taskOptions.scheduleTime)
-  }
-
-  return taskOptions.status !== 'cancelled'
-}
 
 const formatDays = (dayNumbers: number[]): string => {
   const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
@@ -144,7 +133,7 @@ export const upsertScheduledEmailJob = (taskOptions: ScheduledEmailVo.ScheduledE
     return
   }
 
-  if (taskOptions.taskType === 'scheduled') {
+  if (taskOptions.taskType === TaskType.Scheduled) {
     scheduleOnceTask(taskOptions)
     return
   }

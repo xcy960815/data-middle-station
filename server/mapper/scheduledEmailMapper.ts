@@ -331,45 +331,6 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取待执行的任务（单次定时任务）
-   * @param currentTime 当前时间，通常为调度触发时间
-   * @returns 在当前时间点应被执行的任务列表
-   */
-  @Mapping(ScheduledEmailTaskMapping)
-  public async getPendingTasks(currentTime: string): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
-    const sql = `
-      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
-      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
-      WHERE status = 'pending'
-        AND schedule_time <= ?
-      ORDER BY schedule_time ASC
-    `
-    return this.exe<ScheduledEmailDao.ScheduledEmailOptions[]>(sql, [currentTime])
-  }
-
-  /**
-   * @desc 获取精确时间范围内的待执行任务
-   * @param startTime 开始时间（左开区间）
-   * @param endTime 结束时间（右闭区间）
-   * @returns 时间区间内的任务列表
-   */
-  @Mapping(ScheduledEmailTaskMapping)
-  public async getExactTimeTasks(
-    startTime: string,
-    endTime: string
-  ): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
-    const sql = `
-      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
-      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
-      WHERE status = 'pending'
-        AND schedule_time > ?
-        AND schedule_time <= ?
-      ORDER BY schedule_time ASC
-    `
-    return this.exe<ScheduledEmailDao.ScheduledEmailOptions[]>(sql, [startTime, endTime])
-  }
-
-  /**
    * @desc 获取需要重试的失败任务
    * @returns 仍处于失败状态且未超过最大重试次数的任务列表
    */
@@ -383,6 +344,57 @@ export class ScheduledEmailMapper extends BaseMapper {
       ORDER BY schedule_time ASC
     `
     return this.exe<ScheduledEmailDao.ScheduledEmailOptions[]>(sql)
+  }
+
+  /**
+   * @desc 查找卡在 running 状态超过阈值的"僵尸任务"
+   * @description 此类任务通常由进程崩溃 / OOM / SIGKILL / 容器重启导致
+   *              （已 claimTaskForExecution 但未能写回最终状态）
+   * @param thresholdMinutes 卡死阈值（分钟），超过该时长仍处于 running 视为僵尸
+   * @returns 卡死任务列表
+   */
+  @Mapping(ScheduledEmailTaskMapping)
+  public async findStaleRunningTasks(thresholdMinutes: number): Promise<ScheduledEmailDao.ScheduledEmailOptions[]> {
+    const sql = `
+      SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_TASK_BASE_FIELDS)}
+      FROM ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
+      WHERE status = 'running'
+        AND updated_time <= DATE_SUB(NOW(), INTERVAL ? MINUTE)
+      ORDER BY id ASC
+    `
+    return this.exe<ScheduledEmailDao.ScheduledEmailOptions[]>(sql, [thresholdMinutes])
+  }
+
+  /**
+   * @desc 条件性释放卡死的 running 任务（仅当当前状态仍为 running 时才更新）
+   * @description WHERE status='running' 防止在回收窗口期内任务正常完成被覆盖的竞态
+   * @returns 是否成功释放
+   */
+  public async releaseStaleRunningTask(params: {
+    id: number
+    status: ScheduledEmailDao.Status
+    errorMessage: string | null
+    retryCount: number
+    nextExecutionTime: string | null
+  }): Promise<boolean> {
+    const sql = `
+      UPDATE ${SCHEDULED_EMAIL_TASK_TABLE_NAME}
+      SET status = ?,
+          error_message = ?,
+          retry_count = ?,
+          next_execution_time = ?,
+          updated_time = NOW()
+      WHERE id = ?
+        AND status = 'running'
+    `
+    const result = await this.exe<ResultSetHeader>(sql, [
+      params.status,
+      params.errorMessage,
+      params.retryCount,
+      params.nextExecutionTime,
+      params.id
+    ])
+    return (result.affectedRows || 0) > 0
   }
 
   /**

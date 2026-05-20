@@ -146,7 +146,7 @@ data-middle-station/
 - `createAnalyze`: 创建分析
 - `updateAnalyze`: 更新分析
 - `getAnalyzeData`: 获取图表数据
-- `sendChartEmail`: 发送图表邮件
+- `sendEmail`: 发送邮件（即时发送，支持自动渲染图表附件）
 - `scheduledEmails`: 定时邮件管理
 
 ## 核心功能特性
@@ -648,10 +648,10 @@ Response:
 
 ### 邮件服务 API
 
-#### 发送图表邮件
+#### 即时发送邮件（自动渲染图表附件）
 
 ```
-POST /api/sendChartEmail
+POST /api/sendEmail
 Content-Type: application/json
 
 {
@@ -662,7 +662,7 @@ Content-Type: application/json
   },
   "analyzeOptions": {
     "analyzeId": 1,
-    "chartType": "table",
+    "chartType": "bar",
     "analyzeName": "销售数据看板"
   }
 }

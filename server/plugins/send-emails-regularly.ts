@@ -16,6 +16,17 @@ const logger = new Logger({
 })
 
 /**
+ * 卡死(running)任务的回收阈值（分钟）
+ * 超过该时长仍处于 running 状态的任务，被视为僵尸任务并自动回收
+ */
+const STALE_RUNNING_THRESHOLD_MINUTES = Number(process.env.SCHEDULED_EMAIL_RUNNING_TIMEOUT_MINUTES || 10)
+
+/**
+ * 僵尸任务回收周期（分钟）
+ */
+const STALE_RUNNING_RECOVERY_INTERVAL_MINUTES = Number(process.env.SCHEDULED_EMAIL_RECOVERY_INTERVAL_MINUTES || 5)
+
+/**
  * @desc 定时邮件发送调度插件（基于 node-schedule）
  * 优势：
  * 1. 零轮询，按需触发，资源消耗低
@@ -40,6 +51,9 @@ export default defineNitroPlugin(async (nitroApp) => {
     }
   })
 
+  // 启动时先回收上次运行残留的卡死任务，避免 loadAndScheduleAllTasks 跳过它们
+  await recoverStaleRunningTasksSafely('启动')
+
   // 加载所有待执行的任务并注册到调度器
   await loadAndScheduleAllTasks()
 
@@ -51,6 +65,12 @@ export default defineNitroPlugin(async (nitroApp) => {
     } catch (error) {
       logger.error(`❌ 重试失败任务失败: ${error}`)
     }
+  })
+
+  // 周期回收卡死(running)任务：进程崩溃 / 容器重启等场景下任务会永远停留在 running 状态
+  const recoveryCron = `*/${STALE_RUNNING_RECOVERY_INTERVAL_MINUTES} * * * *`
+  const staleRunningRecoveryJob = schedule.scheduleJob(recoveryCron, async () => {
+    await recoverStaleRunningTasksSafely('周期')
   })
 
   // 每小时同步一次数据库任务状态（防止任务漏执行）
@@ -67,15 +87,33 @@ export default defineNitroPlugin(async (nitroApp) => {
   logger.info('📋 调度策略：')
   logger.info(`  - 已加载 ${getScheduledEmailJobCount()} 个任务到调度器`)
   logger.info('  - 每5分钟检查失败任务重试')
+  logger.info(
+    `  - 每${STALE_RUNNING_RECOVERY_INTERVAL_MINUTES}分钟回收卡死任务（阈值 ${STALE_RUNNING_THRESHOLD_MINUTES} 分钟）`
+  )
   logger.info('  - 每小时同步数据库任务状态')
 
   nitroApp.hooks.hook('close', () => {
     retryFailedTasksJob?.cancel()
+    staleRunningRecoveryJob?.cancel()
     syncTasksJob?.cancel()
     clearScheduledEmailJobs()
     logger.info('邮件发送调度系统已停止')
   })
 })
+
+/**
+ * 安全地执行一次僵尸任务回收（捕获所有异常，避免影响调用方）
+ */
+const recoverStaleRunningTasksSafely = async (trigger: string): Promise<void> => {
+  try {
+    const recoveredCount = await scheduledEmailService.recoverStaleRunningTasks(STALE_RUNNING_THRESHOLD_MINUTES)
+    if (recoveredCount > 0) {
+      logger.warn(`🩺 [${trigger}回收] 共回收 ${recoveredCount} 个僵尸任务`)
+    }
+  } catch (error) {
+    logger.error(`❌ [${trigger}回收] 僵尸任务回收异常: ${error}`)
+  }
+}
 
 /**
  * 加载所有待执行任务并注册到 node-schedule

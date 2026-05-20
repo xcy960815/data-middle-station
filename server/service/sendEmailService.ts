@@ -1,4 +1,5 @@
 import { ChartSnapshotService, SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/service/chartSnapshotService'
+import { resolveMailerProfile, type MailerProfile } from '@/server/service/mailerProfile'
 import chalk from 'chalk'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
@@ -24,20 +25,6 @@ const sendEmailChartTypeSchema = Joi.string()
 
 export const manualSendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
-    to: Joi.string().email().required(),
-    subject: Joi.string().required(),
-    additionalContent: Joi.string().required()
-  }).required(),
-  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOption>({
-    filename: Joi.string().optional(),
-    chartType: sendEmailChartTypeSchema,
-    analyzeName: Joi.string().optional(),
-    analyzeId: Joi.number().required()
-  }).required()
-})
-
-export const chartSendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
-  emailConfig: Joi.object<SendEmailDto.EmailConfig>({
     to: Joi.string().email().required().messages({
       'string.email': '收件人邮箱格式不正确',
       'any.required': '收件人邮箱不能为空'
@@ -47,7 +34,7 @@ export const chartSendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
       'string.max': '邮件主题不能超过200个字符',
       'any.required': '邮件主题不能为空'
     }),
-    additionalContent: Joi.string().max(5000).optional().messages({
+    additionalContent: Joi.string().allow('').max(5000).optional().messages({
       'string.max': '附加内容不能超过5000个字符'
     })
   }).required(),
@@ -111,46 +98,31 @@ export class SendEmailService {
    */
   private transporter: Transporter<SendEmailDao.SendEmailOptions> | null = null
   /**
-   * @desc 邮件配置
+   * @desc 发件人画像（地址 / 通道 / 传输信息），由 mailerProfile 统一解析
    */
-  private smtpHost: string | null = null
+  private mailerProfile: MailerProfile
   /**
-   * @desc 邮件端口
+   * @desc SMTP 鉴权用户
    */
-  private smtpPort: number | null = null
+  private smtpUser: string | null = null
   /**
-   * @desc 邮件是否安全
+   * @desc SMTP 鉴权密码
    */
-  private smtpSecure: boolean = false
+  private smtpPass: string | null = null
   /**
    * @desc 是否校验证书
    */
   private smtpRejectUnauthorized: boolean = true
-  /**
-   * @desc 邮件用户
-   */
-  private smtpUser: string | null = null
-  /**
-   * @desc 邮件密码
-   */
-  private smtpPass: string | null = null
-  /**
-   * @desc 邮件发件人
-   */
-  private smtpFrom: string | null = null
   /**
    * @desc 图表快照服务
    */
   private chartSnapshotService: ChartSnapshotService
 
   constructor() {
-    this.smtpHost = useRuntimeConfig().smtpHost
-    this.smtpPort = useRuntimeConfig().smtpPort ? Number(useRuntimeConfig().smtpPort) : 465
-    this.smtpSecure = String(useRuntimeConfig().smtpSecure || 'true') === 'true'
+    this.mailerProfile = resolveMailerProfile()
     this.smtpRejectUnauthorized = String(useRuntimeConfig().smtpRejectUnauthorized ?? 'true') !== 'false'
     this.smtpUser = useRuntimeConfig().smtpUser
     this.smtpPass = useRuntimeConfig().smtpPass
-    this.smtpFrom = useRuntimeConfig().smtpFrom
     this.chartSnapshotService = new ChartSnapshotService()
   }
 
@@ -159,7 +131,7 @@ export class SendEmailService {
    */
   private createTransporter(): void {
     const missingConfigs = [
-      ['SMTP_HOST', this.smtpHost],
+      ['SMTP_HOST', this.mailerProfile.transport.host],
       ['SMTP_USER', this.smtpUser],
       ['SMTP_PASS', this.smtpPass]
     ]
@@ -171,9 +143,9 @@ export class SendEmailService {
     }
 
     this.transporter = nodemailer.createTransport({
-      host: this.smtpHost!,
-      port: this.smtpPort!,
-      secure: this.smtpSecure,
+      host: this.mailerProfile.transport.host,
+      port: this.mailerProfile.transport.port,
+      secure: this.mailerProfile.transport.secure,
       auth: {
         user: this.smtpUser!,
         pass: this.smtpPass!
@@ -395,24 +367,20 @@ export class SendEmailService {
    * 获取默认发件地址
    */
   public getSenderAddress(): string {
-    return this.smtpFrom || this.smtpUser || 'system@unknown'
+    return this.mailerProfile.senderAddress
   }
 
   /**
    * 获取传输信息
    */
   public getTransportInfo(): { host: string; port: number; secure: boolean } {
-    return {
-      host: this.smtpHost || '',
-      port: this.smtpPort || 0,
-      secure: this.smtpSecure
-    }
+    return this.mailerProfile.transport
   }
 
   /**
    * 获取当前通道
    */
   public getChannel(): string {
-    return this.smtpSecure ? 'smtps' : 'smtp'
+    return this.mailerProfile.channel
   }
 }

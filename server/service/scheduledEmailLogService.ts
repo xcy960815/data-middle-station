@@ -1,6 +1,6 @@
 import { ScheduledEmailLogMapper } from '@/server/mapper/scheduledEmailLogMapper'
 import { BaseService } from '@/server/service/baseService'
-import { SendEmailService } from '@/server/service/sendEmailService'
+import { resolveMailerProfile, type MailerProfile } from '@/server/service/mailerProfile'
 import dayjs from 'dayjs'
 
 const logger = new Logger({ fileName: 'scheduled-email-log', folderName: 'server' })
@@ -14,14 +14,15 @@ export class ScheduledEmailLogService extends BaseService {
    */
   private scheduledEmailLogMapper: ScheduledEmailLogMapper
   /**
-   * 邮件发送服务
+   * 发件人画像（仅用于写日志时记录 sender/channel/host/port）
+   * @description 通过 mailerProfile 模块解析，避免反向依赖 SendEmailService
    */
-  private sendEmailService: SendEmailService
+  private mailerProfile: MailerProfile
 
   constructor() {
     super()
     this.scheduledEmailLogMapper = new ScheduledEmailLogMapper()
-    this.sendEmailService = new SendEmailService()
+    this.mailerProfile = resolveMailerProfile()
   }
 
   /**
@@ -427,15 +428,15 @@ export class ScheduledEmailLogService extends BaseService {
   ): Partial<ScheduledEmailLogDto.CreateLogOptions> {
     const recipients = this.normalizeRecipients(emailConfig.to)
     const attachments = analyzeOptions.filename ? [analyzeOptions.filename] : []
-    const transport = this.sendEmailService.getTransportInfo()
+    const { transport, senderAddress, channel } = this.mailerProfile
 
     return {
-      senderEmail: this.sendEmailService.getSenderAddress(),
+      senderEmail: senderAddress,
       recipientTo: recipients.length > 0 ? recipients : undefined,
       emailSubject: emailConfig.subject,
       attachmentNames: attachments.length > 0 ? attachments : undefined,
       attachmentCount: attachments.length || undefined,
-      emailChannel: this.sendEmailService.getChannel(),
+      emailChannel: channel,
       provider: transport.host || 'nodemailer',
       retryCount,
       executionTimezone: this.getCurrentTimezone(),
@@ -496,16 +497,17 @@ export class ScheduledEmailLogService extends BaseService {
     const fallbackAttachmentNames = sendRequest.analyzeOptions.filename
       ? [sendRequest.analyzeOptions.filename]
       : undefined
-    const transportHost = sendResult?.transport?.host || this.sendEmailService.getTransportInfo().host || undefined
-    const transportPort = sendResult?.transport?.port || this.sendEmailService.getTransportInfo().port || undefined
+    const { transport, senderAddress, channel } = this.mailerProfile
+    const transportHost = sendResult?.transport?.host || transport.host || undefined
+    const transportPort = sendResult?.transport?.port || transport.port || undefined
 
     return {
-      senderEmail: sendResult?.sender || this.sendEmailService.getSenderAddress(),
+      senderEmail: sendResult?.sender || senderAddress,
       recipientTo: this.normalizeRecipients(sendRequest.emailConfig.to),
       emailSubject: sendRequest.emailConfig.subject,
       attachmentNames: attachmentNames && attachmentNames.length > 0 ? attachmentNames : fallbackAttachmentNames,
       attachmentCount: attachmentNames?.length || fallbackAttachmentNames?.length || undefined,
-      emailChannel: sendResult?.channel || this.sendEmailService.getChannel(),
+      emailChannel: sendResult?.channel || channel,
       provider: transportHost,
       providerResponse: sendResult?.response,
       acceptedRecipients: sendResult?.accepted ? this.flattenNodemailerRecipients(sendResult.accepted) : undefined,
