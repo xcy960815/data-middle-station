@@ -1,6 +1,6 @@
-import { ScheduledEmailLogMapper } from '@/server/mapper/scheduledEmailLogMapper'
 import { BaseService } from '@/server/service/baseService'
-import { resolveMailerProfile, type MailerProfile } from '@/server/service/mailerProfile'
+import { resolveMailerProfile, type MailerProfile } from '../domain/mailerProfile'
+import { ScheduledEmailLogMapper } from '../mapper/scheduledEmailLogMapper'
 import dayjs from 'dayjs'
 
 const logger = new Logger({ fileName: 'scheduled-email-log', folderName: 'server' })

@@ -1,10 +1,10 @@
-import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
+import { ScheduledEmailService } from '@/server/features/email/service/scheduledEmailService'
 import {
   configureScheduledEmailScheduler,
   clearScheduledEmailJobs,
   getScheduledEmailJobCount,
   syncScheduledEmailJobs
-} from '@/server/service/scheduledEmailSchedulerService'
+} from '@/server/features/email/scheduler/scheduledEmailScheduler'
 import { Logger } from '@/server/utils/logger'
 import schedule from 'node-schedule'
 

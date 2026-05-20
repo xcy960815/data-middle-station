@@ -14,7 +14,6 @@
  *  - 与内存调度器联动（成功完成的 scheduled 任务从内存 Map 移除等）
  */
 
-import { ScheduledEmailMapper } from '@/server/mapper/scheduledEmailMapper'
 import { BaseService } from '@/server/service/baseService'
 import {
   calculateTaskNextExecutionTime,
@@ -22,10 +21,11 @@ import {
   TaskStatus,
   TaskType,
   type TaskStatusValue
-} from '@/server/service/scheduledEmailDomain'
-import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
-import { removeScheduledEmailJob, upsertScheduledEmailJob } from '@/server/service/scheduledEmailSchedulerService'
-import { SendEmailService } from '@/server/service/sendEmailService'
+} from '../domain/scheduledEmailDomain'
+import { ScheduledEmailMapper } from '../mapper/scheduledEmailMapper'
+import { removeScheduledEmailJob, upsertScheduledEmailJob } from '../scheduler/scheduledEmailScheduler'
+import { ScheduledEmailLogService } from './scheduledEmailLogService'
+import { SendEmailService } from './sendEmailService'
 import dayjs from 'dayjs'
 
 const logger = new Logger({ fileName: 'scheduled-email-executor', folderName: 'server' })

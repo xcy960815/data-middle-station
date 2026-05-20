@@ -1,5 +1,5 @@
-import { ChartSnapshotService, SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/service/chartSnapshotService'
-import { resolveMailerProfile, type MailerProfile } from '@/server/service/mailerProfile'
+import { resolveMailerProfile, type MailerProfile } from '../domain/mailerProfile'
+import { ChartSnapshotService, SUPPORTED_SERVER_RENDER_CHART_TYPES } from './chartSnapshotService'
 import chalk from 'chalk'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'

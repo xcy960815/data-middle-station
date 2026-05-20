@@ -15,7 +15,7 @@
  * 设计原则：纯函数 + 常量 + 类型，不持有外部依赖（mapper / service / runtime config）
  */
 
-import { calculateNextExecutionTime } from '@/server/utils/schedulerUtils'
+import { calculateNextExecutionTime } from '../scheduler/schedulerUtils'
 
 /* ============================== 任务状态 ============================== */
 

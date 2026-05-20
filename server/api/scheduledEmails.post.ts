@@ -1,5 +1,5 @@
-import { SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/service/chartSnapshotService'
-import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
+import { SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/features/email/service/chartSnapshotService'
+import { ScheduledEmailService } from '@/server/features/email/service/scheduledEmailService'
 import Joi from 'joi'
 
 const scheduledEmailService = new ScheduledEmailService()

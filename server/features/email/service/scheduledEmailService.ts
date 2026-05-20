@@ -3,15 +3,14 @@
  *
  * 拆分说明：
  *  - 原 882 行的"上帝类"被拆为：
- *    - `scheduledEmailDomain.ts`           领域常量 / 状态机判定 / 时间计算（纯函数）
- *    - `scheduledEmailExecutorService.ts`  任务执行 / 重试 / 僵尸回收
- *    - `scheduledEmailSchedulerService.ts` 内存调度器（node-schedule 包装）
- *    - 本文件                              CRUD + 状态切换 + 转换 + 对 Executor 的 Facade
+ *    - `../domain/scheduledEmailDomain.ts`     领域常量 / 状态机判定 / 时间计算（纯函数）
+ *    - `./scheduledEmailExecutorService.ts`    任务执行 / 重试 / 僵尸回收
+ *    - `../scheduler/scheduledEmailScheduler.ts` 内存调度器（node-schedule 包装）
+ *    - 本文件                                  CRUD + 状态切换 + 转换 + 对 Executor 的 Facade
  *
  *  - 对外 API（API handler、调度插件）完全保留，调用方零侵入
  */
 
-import { ScheduledEmailMapper } from '@/server/mapper/scheduledEmailMapper'
 import { BaseService } from '@/server/service/baseService'
 import {
   calculateTaskNextExecutionTime,
@@ -20,10 +19,11 @@ import {
   canToggleTaskStatus,
   TaskStatus,
   TaskType
-} from '@/server/service/scheduledEmailDomain'
-import { ScheduledEmailExecutorService } from '@/server/service/scheduledEmailExecutorService'
-import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
-import { removeScheduledEmailJob, upsertScheduledEmailJob } from '@/server/service/scheduledEmailSchedulerService'
+} from '../domain/scheduledEmailDomain'
+import { ScheduledEmailMapper } from '../mapper/scheduledEmailMapper'
+import { removeScheduledEmailJob, upsertScheduledEmailJob } from '../scheduler/scheduledEmailScheduler'
+import { ScheduledEmailExecutorService } from './scheduledEmailExecutorService'
+import { ScheduledEmailLogService } from './scheduledEmailLogService'
 
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
 

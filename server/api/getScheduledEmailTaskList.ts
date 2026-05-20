@@ -1,4 +1,4 @@
-import { ScheduledEmailService } from '@/server/service/scheduledEmailService'
+import { ScheduledEmailService } from '@/server/features/email/service/scheduledEmailService'
 
 const scheduledEmailService = new ScheduledEmailService()
 

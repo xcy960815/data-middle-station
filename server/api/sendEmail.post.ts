@@ -1,10 +1,10 @@
-import { ScheduledEmailLogService } from '@/server/service/scheduledEmailLogService'
+import { ScheduledEmailLogService } from '@/server/features/email/service/scheduledEmailLogService'
 import {
   formatSendEmailValidationError,
   manualSendEmailSchema,
   SendEmailService,
   validateSendEmailPayload
-} from '@/server/service/sendEmailService'
+} from '@/server/features/email/service/sendEmailService'
 
 const sendEmailService = new SendEmailService()
 const scheduledEmailLogService = new ScheduledEmailLogService()

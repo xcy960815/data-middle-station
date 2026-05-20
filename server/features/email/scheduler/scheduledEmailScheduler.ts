@@ -1,4 +1,4 @@
-import { shouldScheduleTask, TaskType } from '@/server/service/scheduledEmailDomain'
+import { shouldScheduleTask, TaskType } from '../domain/scheduledEmailDomain'
 import schedule from 'node-schedule'
 
 type ScheduledTaskExecutor = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions) => Promise<void>
