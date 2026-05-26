@@ -32,13 +32,11 @@
   </ClientOnly>
 </template>
 <script lang="ts" setup>
+import { httpRequest } from '@/composables/useHttpRequest'
+import { RequestCodeEnum } from '@/utils/request-enmu'
 import { ElAvatar, ElDropdown, ElDropdownItem, ElDropdownMenu, ElOption, ElSelect, ElTooltip } from 'element-plus'
 
 type Theme = 'light' | 'dark' | 'auto'
-/**
- * @desc 主题选项
- */
-const themeOptions = ['light', 'dark', 'auto']
 
 /**
  * @Desc 监听系统主题变化
@@ -50,6 +48,7 @@ const userStore = useUserStore()
 const THEME_KEY = '__theme__'
 
 const theme = ref<Theme>('light')
+const themeValues: Theme[] = ['light', 'dark', 'auto']
 
 /**
  * @desc 用户信息
@@ -75,7 +74,8 @@ const fullscreen = ref<boolean>(false)
 
 onMounted(() => {
   // 在非Mounted 中找不到 localStorage 所以在这里初始化
-  theme.value = (localStorage.getItem(THEME_KEY) as Theme) || 'light'
+  const savedTheme = localStorage.getItem(THEME_KEY) as Theme | null
+  theme.value = savedTheme && themeValues.includes(savedTheme) ? savedTheme : 'light'
 
   // 在非Mounted 中找不到 matchMedia 所以在这里初始化
   mediaQuery.value = matchMedia('(prefers-color-scheme: dark)')
@@ -166,12 +166,25 @@ const dropDownClick = (cmd: 'logout' | 'login'): void => {
 }
 
 /**
- * @desc 设置主题
+ * @desc 应用最终主题
+ * @param {Exclude<Theme, 'auto'>} theme
+ */
+const applyTheme = (theme: Exclude<Theme, 'auto'>) => {
+  document.documentElement.setAttribute('data-theme', theme)
+  document.documentElement.classList.toggle('dark', theme === 'dark')
+}
+
+/**
+ * @desc 保存用户选择并应用主题
  * @param {Theme} theme
  */
 const setTheme = (theme: Theme) => {
-  document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem(THEME_KEY, theme)
+  if (theme === 'auto') {
+    fllowSystemTheme()
+  } else {
+    applyTheme(theme)
+  }
 }
 
 /**
@@ -180,7 +193,7 @@ const setTheme = (theme: Theme) => {
 const fllowSystemTheme = () => {
   const theme = mediaQuery.value?.matches ? 'dark' : 'light'
   // document.documentElement.className = theme;
-  setTheme(theme)
+  applyTheme(theme)
 }
 
 /**
@@ -208,7 +221,12 @@ watch(
 
 onMounted(() => {
   handleWathFullscreen()
-  fllowSystemTheme()
+  if (theme.value === 'auto') {
+    fllowSystemTheme()
+    mediaQuery.value?.addEventListener('change', fllowSystemTheme)
+  } else {
+    setTheme(theme.value)
+  }
 })
 </script>
 <style lang="scss" scoped>

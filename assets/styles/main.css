@@ -1,6 +1,7 @@
 /* Path: assets/style/main.css */
 /* 引入element-plus css样式 */
 @import 'element-plus/dist/index.css';
+@import 'element-plus/theme-chalk/dark/css-vars.css';
 @import '../../components/context-menu/themes/default/index.less';
 /* @import "../iconfont//iconfont.css"; */
 /* 加载 tailwind 样式 */

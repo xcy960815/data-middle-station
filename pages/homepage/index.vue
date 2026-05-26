@@ -16,58 +16,60 @@
       </custom-header>
     </template>
     <template #content>
-      <div class="homepage-toolbar flex items-center gap-3 px-4 py-3">
-        <el-input
-          v-model="keyword"
-          clearable
-          placeholder="搜索分析名称或描述"
-          class="toolbar-search"
-          @keyup.enter="handleSearch"
-          @clear="handleSearch"
-        />
-        <el-select v-model="sortField" class="toolbar-select" @change="handleSortChange">
-          <el-option v-for="item in sortFieldOptions" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-        <el-select v-model="sortOrder" class="toolbar-select" @change="handleSortChange">
-          <el-option v-for="item in sortOrderOptions" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-        <el-select v-model="pageSize" class="toolbar-select toolbar-page-size" @change="handlePageSizeChange">
-          <el-option v-for="size in pageSizeOptions" :key="size" :label="`${size} 条/页`" :value="size" />
-        </el-select>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="handleReset">重置</el-button>
-      </div>
+      <div class="homepage-page flex h-full min-h-0 flex-col overflow-hidden">
+        <div class="homepage-toolbar flex items-center gap-3 px-4 py-3">
+          <el-input
+            v-model="keyword"
+            clearable
+            placeholder="搜索分析名称或描述"
+            class="toolbar-search"
+            @keyup.enter="handleSearch"
+            @clear="handleSearch"
+          />
+          <el-select v-model="sortField" class="toolbar-select" @change="handleSortChange">
+            <el-option v-for="item in sortFieldOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <el-select v-model="sortOrder" class="toolbar-select" @change="handleSortChange">
+            <el-option v-for="item in sortOrderOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <el-select v-model="pageSize" class="toolbar-select toolbar-page-size" @change="handlePageSizeChange">
+            <el-option v-for="size in pageSizeOptions" :key="size" :label="`${size} 条/页`" :value="size" />
+          </el-select>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </div>
 
-      <div class="homepage-container relative h-full" v-loading="listLoading">
-        <chart-card
-          ref="cards"
-          class="card-chart"
-          v-for="chart in analyzeList"
-          :create-time="chart.createTime"
-          :update-time="chart.updateTime"
-          :created-by="chart.createdBy"
-          :updated-by="chart.updatedBy"
-          :analyze-name="chart.analyzeName"
-          :id="chart.id"
-          :key="chart.id"
-          :view-count="chart.viewCount"
-          @delete="handleDeleteAnalyze"
-          @edit="handleEditAnalyze"
-        >
-        </chart-card>
-      </div>
+        <div class="homepage-container relative h-full" v-loading="listLoading">
+          <chart-card
+            ref="cards"
+            class="card-chart"
+            v-for="chart in analyzeList"
+            :create-time="chart.createTime"
+            :update-time="chart.updateTime"
+            :created-by="chart.createdBy"
+            :updated-by="chart.updatedBy"
+            :analyze-name="chart.analyzeName"
+            :id="chart.id"
+            :key="chart.id"
+            :view-count="chart.viewCount"
+            @delete="handleDeleteAnalyze"
+            @edit="handleEditAnalyze"
+          >
+          </chart-card>
 
-      <el-empty v-if="!listLoading && analyzeList.length === 0" description="暂无符合条件的分析" />
+          <el-empty v-if="!listLoading && analyzeList.length === 0" description="暂无符合条件的分析" />
+        </div>
 
-      <div class="homepage-pagination px-4 py-3 flex justify-end" v-if="total > 0">
-        <el-pagination
-          background
-          layout="prev, pager, next, total"
-          :current-page="page"
-          :page-size="pageSize"
-          :total="total"
-          @current-change="handlePageChange"
-        />
+        <div class="homepage-pagination px-4 py-3 flex justify-end" v-if="total > 0">
+          <el-pagination
+            background
+            layout="prev, pager, next, total"
+            :current-page="page"
+            :page-size="pageSize"
+            :total="total"
+            @current-change="handlePageChange"
+          />
+        </div>
       </div>
 
       <!-- 创建&编辑分析 -->
@@ -336,11 +338,15 @@ onMounted(() => {
   }
 
   display: flex;
+  flex: 1 1 0;
   flex-wrap: wrap;
   width: 100%;
+  min-height: 0;
   box-sizing: border-box;
   padding: 10px;
   margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   justify-content: flex-start;
   align-items: flex-start;
   /* 多行时让所有行挤在顶部，避免中间被拉出大空白 */

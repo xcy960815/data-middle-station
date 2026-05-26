@@ -20,13 +20,17 @@ $themes: (
 
 @mixin useTheme {
   @each $theme, $map in $themes {
-    $currentTheme: $theme;
-    @content;
+    $currentTheme: $theme !global;
+
+    html[data-theme='#{$theme}'] & {
+      @content;
+    }
   }
+
+  $currentTheme: 'light' !global;
 }
 
 @function getVar($paramName) {
-  $currentTheme: 'light';
   $themeMap: map.get($themes, $currentTheme);
   @return map.get($themeMap, $paramName);
 }

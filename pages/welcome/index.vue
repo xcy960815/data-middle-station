@@ -3,14 +3,27 @@
     <canvas ref="canvasRef" id="cvs"></canvas>
     <div class="welcome-content">
       <h1 class="title">数据分析平台</h1>
-      <div class="start-button">
-        <button @click="navigateToHome">开始使用</button>
-      </div>
+      <form class="login-panel" @submit.prevent="handleLogin">
+        <div class="login-panel__scanline"></div>
+        <label class="login-field">
+          <span>USER</span>
+          <input v-model.trim="loginForm.userName" autocomplete="username" placeholder="admin" />
+        </label>
+        <label class="login-field">
+          <span>PASS</span>
+          <input v-model="loginForm.password" autocomplete="current-password" placeholder="123456" type="password" />
+        </label>
+        <p class="login-error" :class="{ 'login-error--visible': loginError }">{{ loginError || 'placeholder' }}</p>
+        <button class="login-button" type="submit" :disabled="loginLoading">
+          {{ loginLoading ? '验证中...' : '进入中台' }}
+        </button>
+      </form>
     </div>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
+import { ElMessage } from 'element-plus'
 import { onMounted, onUnmounted, ref } from 'vue'
 /**
  * 字符配置接口，定义了字符动画所需的所有配置参数
@@ -244,26 +257,48 @@ onUnmounted(() => {
 })
 
 const userStore = useUserStore()
+const loginLoading = ref(false)
+const loginError = ref('')
+const loginForm = reactive<LoginDto.LoginOptions>({
+  userName: '',
+  password: ''
+})
 
 /**
- * 导航到主页的处理函数
+ * 登录并导航到主页
  */
-const navigateToHome = async () => {
-  const loginResult = await $fetch('/api/login', {
-    method: 'POST',
-    body: {
-      userName: 'admin',
-      password: '123456'
-    }
-  })
+const handleLogin = async () => {
+  if (loginLoading.value) return
 
-  // 根据你的 API 返回结构处理
-  if (loginResult?.code === RequestCodeEnum.Success) {
-    userStore.setUserId(loginResult.data!.userId)
-    userStore.setUserName(loginResult.data!.userName)
-    navigateTo('/homepage')
-  } else {
-    console.error('登录失败:', loginResult?.message)
+  if (!loginForm.userName || !loginForm.password) {
+    loginError.value = '请输入账号和密码'
+    return
+  }
+
+  loginLoading.value = true
+  loginError.value = ''
+  try {
+    const loginResult = await $fetch<ApiResponseI<LoginVo.LoginOptions>>('/api/login', {
+      method: 'POST',
+      body: {
+        userName: loginForm.userName,
+        password: loginForm.password
+      }
+    })
+
+    if (loginResult?.code === RequestCodeEnum.Success && loginResult.data) {
+      userStore.setUserId(loginResult.data.userId)
+      userStore.setUserName(loginResult.data.userName)
+      await navigateTo('/homepage')
+      return
+    }
+
+    loginError.value = loginResult?.message || '登录失败，请检查账号密码'
+  } catch (error) {
+    loginError.value = error instanceof Error ? error.message : '登录失败，请稍后重试'
+    ElMessage.error(loginError.value)
+  } finally {
+    loginLoading.value = false
   }
 }
 </script>
@@ -286,11 +321,12 @@ const navigateToHome = async () => {
   z-index: 10;
   text-align: center;
   user-select: none;
+  width: min(420px, calc(100vw - 40px));
 
   .title {
     font-size: clamp(32px, 5vw, 48px);
     color: #fff;
-    margin-bottom: 40px;
+    margin-bottom: 28px;
     text-shadow: 0 0 10px rgba(51, 181, 229, 0.5);
     background: linear-gradient(45deg, #33b5e5, #aa66cc);
     background-clip: text;
@@ -300,33 +336,136 @@ const navigateToHome = async () => {
   }
 }
 
-.start-button {
-  button {
-    padding: clamp(10px, 2vw, 15px) clamp(30px, 4vw, 40px);
-    font-size: clamp(16px, 2vw, 20px);
+.login-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(51, 181, 229, 0.16), rgba(170, 102, 204, 0.12)), rgba(4, 9, 18, 0.72);
+  border: 1px solid rgba(93, 213, 255, 0.42);
+  border-radius: 18px;
+  box-shadow:
+    0 0 30px rgba(51, 181, 229, 0.22),
+    inset 0 0 24px rgba(170, 102, 204, 0.12);
+  backdrop-filter: blur(14px);
+}
+
+.login-panel::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background-image:
+    linear-gradient(rgba(51, 181, 229, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51, 181, 229, 0.08) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 88%);
+}
+
+.login-panel__scanline {
+  position: absolute;
+  top: -40%;
+  left: 0;
+  width: 100%;
+  height: 40%;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(51, 181, 229, 0.2), transparent);
+  animation: panel-scan 4s linear infinite;
+}
+
+.login-field {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  align-items: center;
+  min-height: 48px;
+  overflow: hidden;
+  color: rgba(204, 243, 255, 0.88);
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(51, 181, 229, 0.28);
+  border-radius: 12px;
+
+  span {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    color: #33b5e5;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(51, 181, 229, 0.72);
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 0 14px 0 0;
     color: #fff;
-    background: linear-gradient(45deg, #33b5e5, #aa66cc);
+    caret-color: #33b5e5;
+    background: transparent;
     border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    outline: none;
 
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-      background: linear-gradient(45deg, #0099cc, #9933cc);
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.34);
     }
+  }
+}
 
-    &:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    }
+.login-error {
+  position: relative;
+  z-index: 1;
+  min-height: 18px;
+  margin: -2px 0 0;
+  font-size: 13px;
+  color: #ff6b8a;
+  text-align: left;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
 
-    &:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(51, 181, 229, 0.3);
-    }
+.login-error--visible {
+  opacity: 1;
+}
+
+.login-button {
+  position: relative;
+  z-index: 1;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(45deg, #33b5e5, #aa66cc);
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(51, 181, 229, 0.28);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+
+  &:not(:disabled):hover {
+    transform: translateY(-2px);
+    filter: saturate(1.12);
+    box-shadow: 0 14px 34px rgba(170, 102, 204, 0.32);
+  }
+
+  &:disabled {
+    cursor: wait;
+    filter: grayscale(0.2);
+    opacity: 0.7;
+  }
+}
+
+@keyframes panel-scan {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(360%);
   }
 }
 </style>
