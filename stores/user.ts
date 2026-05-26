@@ -42,6 +42,11 @@ export const useUserStore = defineStore<
     },
     setAvatar(value: string) {
       this.avatar = value
+    },
+    clearUserInfo() {
+      this.userId = ''
+      this.userName = ''
+      this.avatar = ''
     }
   }
 })

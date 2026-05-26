@@ -18,14 +18,14 @@ export const ANALYZE_BASE_FIELDS = [
 ]
 
 export const ANALYZE_LIST_FIELDS = [
-  'id',
-  'analyze_name',
-  'analyze_desc',
-  'view_count',
-  'create_time',
-  'update_time',
-  'created_by',
-  'updated_by'
+  'a.id',
+  'a.analyze_name',
+  'a.analyze_desc',
+  'a.view_count',
+  'a.create_time',
+  'a.update_time',
+  'a.created_by',
+  'a.updated_by'
 ]
 
 /**
@@ -105,6 +105,9 @@ export class AnalyzeListMapping implements AnalyzeVo.AnalyzeListItem, IColumnTar
 
   @Column('updated_by')
   updatedBy!: string
+
+  @Column('analyze_permission')
+  analyzePermission!: PermissionVo.AnalyzePermissionType
 }
 
 /**
@@ -118,10 +121,10 @@ const ANALYZE_TABLE_NAME = '`analyze`'
 const DATA_SOURCE_NAME = 'data_middle_station'
 
 const ANALYZE_LIST_SORT_FIELD_MAP: Record<AnalyzeDao.AnalyzeListSortField, string> = {
-  analyzeName: 'analyze_name',
-  createTime: 'create_time',
-  updateTime: 'update_time',
-  viewCount: 'view_count'
+  analyzeName: 'a.analyze_name',
+  createTime: 'a.create_time',
+  updateTime: 'a.update_time',
+  viewCount: 'a.view_count'
 }
 
 /**
@@ -255,8 +258,8 @@ export class AnalyzeMapper extends BaseMapper {
    * @returns 数量
    */
   public async countAnalyzes(queryOptions: AnalyzeDao.GetAnalyzeListOptions): Promise<number> {
-    const { whereClause, params } = this.buildAnalyzeListWhereClause(queryOptions.keyword)
-    const sql = `select count(1) as total from ${ANALYZE_TABLE_NAME} ${whereClause}`
+    const { fromClause, whereClause, params } = this.buildAnalyzeListQuery(queryOptions)
+    const sql = `select count(distinct a.id) as total ${fromClause} ${whereClause}`
     const result = await this.exe<Array<{ total: number }>>(sql, params)
     return Number(result?.[0]?.total || 0)
   }
@@ -270,7 +273,7 @@ export class AnalyzeMapper extends BaseMapper {
   public async getAnalyzeList<T extends AnalyzeVo.AnalyzeListItem = AnalyzeVo.AnalyzeListItem>(
     queryOptions: AnalyzeDao.GetAnalyzeListOptions
   ): Promise<Array<T>> {
-    const { whereClause, params } = this.buildAnalyzeListWhereClause(queryOptions.keyword)
+    const { fromClause, whereClause, params, permissionSelectSql } = this.buildAnalyzeListQuery(queryOptions)
     const sortField = ANALYZE_LIST_SORT_FIELD_MAP[queryOptions.sortField] || ANALYZE_LIST_SORT_FIELD_MAP.updateTime
     const sortOrder = queryOptions.sortOrder === 'asc' ? 'ASC' : 'DESC'
     const page = Math.max(1, Math.floor(queryOptions.page))
@@ -278,13 +281,57 @@ export class AnalyzeMapper extends BaseMapper {
     const offset = (page - 1) * pageSize
     const sql = `
       select
-        ${ANALYZE_LIST_FIELDS.join(',\n        ')}
-      from ${ANALYZE_TABLE_NAME}
+        ${ANALYZE_LIST_FIELDS.join(',\n        ')},
+        ${permissionSelectSql} as analyze_permission
+      ${fromClause}
       ${whereClause}
+      group by
+        a.id,
+        a.analyze_name,
+        a.analyze_desc,
+        a.view_count,
+        a.create_time,
+        a.update_time,
+        a.created_by,
+        a.updated_by
       order by ${sortField} ${sortOrder}
       limit ? offset ?`
 
     return await this.exe<Array<T>>(sql, [...params, pageSize, offset])
+  }
+
+  public async getAnalyzePermission(
+    analyzeId: number,
+    currentUserName: string,
+    roleCodes: string[] = []
+  ): Promise<PermissionVo.AnalyzePermissionType> {
+    if (roleCodes.includes('admin')) {
+      return 'manage'
+    }
+
+    const roleInSql = roleCodes.length > 0 ? `r.role_code in (${roleCodes.map(() => '?').join(',')})` : 'false'
+    const sql = `
+      select
+        case
+          when a.created_by = ? then 'manage'
+          when max(case when ${roleInSql} then case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 3 then 'manage'
+          when max(case when ${roleInSql} then case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 2 then 'edit'
+          when max(case when ${roleInSql} then case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 1 then 'view'
+          else 'none'
+        end as permissionType
+      from ${ANALYZE_TABLE_NAME} a
+      left join analyze_role_permission arp on arp.analyze_id = a.id
+      left join role r on r.id = arp.role_id and r.is_deleted = 0 and r.status = 1
+      where a.id = ? and a.is_deleted = 0
+      group by a.id, a.created_by`
+    const result = await this.exe<Array<{ permissionType: PermissionVo.AnalyzePermissionType }>>(sql, [
+      currentUserName,
+      ...roleCodes,
+      ...roleCodes,
+      ...roleCodes,
+      analyzeId
+    ])
+    return result?.[0]?.permissionType || 'none'
   }
 
   /**
@@ -318,19 +365,54 @@ export class AnalyzeMapper extends BaseMapper {
    * @param keyword 搜索关键字
    * @returns where 条件和参数
    */
-  private buildAnalyzeListWhereClause(keyword?: string): { whereClause: string; params: string[] } {
-    const whereConditions = ['is_deleted = 0']
+  private buildAnalyzeListQuery(queryOptions: AnalyzeDao.GetAnalyzeListOptions): {
+    fromClause: string
+    whereClause: string
+    params: string[]
+    permissionSelectSql: string
+  } {
+    const roleCodes = queryOptions.roleCodes || []
+    const isAdmin = roleCodes.includes('admin')
+    const whereConditions = ['a.is_deleted = 0']
     const params: string[] = []
+    const fromClause = `
+      from ${ANALYZE_TABLE_NAME} a
+      left join analyze_role_permission arp on arp.analyze_id = a.id
+      left join role r on r.id = arp.role_id and r.is_deleted = 0 and r.status = 1`
 
-    if (keyword?.trim()) {
-      whereConditions.push('(analyze_name like ? or analyze_desc like ?)')
-      const normalizedKeyword = `%${keyword.trim()}%`
+    if (queryOptions.keyword?.trim()) {
+      whereConditions.push('(a.analyze_name like ? or a.analyze_desc like ?)')
+      const normalizedKeyword = `%${queryOptions.keyword.trim()}%`
       params.push(normalizedKeyword, normalizedKeyword)
+    }
+
+    if (!isAdmin) {
+      if (roleCodes.length > 0) {
+        whereConditions.push(`(a.created_by = ? or r.role_code in (${roleCodes.map(() => '?').join(',')}))`)
+        params.push(queryOptions.currentUserName || '', ...roleCodes)
+      } else {
+        whereConditions.push('a.created_by = ?')
+        params.push(queryOptions.currentUserName || '')
+      }
     }
 
     return {
       whereClause: `where ${whereConditions.join(' and ')}`,
-      params
+      params,
+      fromClause,
+      permissionSelectSql: isAdmin
+        ? `'manage'`
+        : `case
+            when a.created_by = ${this.escapeValue(queryOptions.currentUserName || '')} then 'manage'
+            when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 3 then 'manage'
+            when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 2 then 'edit'
+            when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 1 then 'view'
+            else 'none'
+          end`
     }
+  }
+
+  private escapeValue(value: string) {
+    return `'${value.replace(/'/g, "''")}'`
   }
 }

@@ -100,13 +100,18 @@ export class AnalyzeService extends BaseService {
    * @desc 获取所有图表
    * @returns {Promise<Array<AnalyzeVo.GetAnalyzeResponse>>}
    */
-  public async getAnalyzes(queryOptions: AnalyzeDto.GetAnalyzesOptions = {}): Promise<AnalyzeVo.GetAnalyzesOptions> {
+  public async getAnalyzes(
+    queryOptions: AnalyzeDto.GetAnalyzesOptions = {},
+    currentUser?: { userName: string; roleCodes?: string[] }
+  ): Promise<AnalyzeVo.GetAnalyzesOptions> {
     const normalizedQueryOptions: AnalyzeDao.GetAnalyzeListOptions = {
       page: Math.max(1, Math.floor(Number(queryOptions.page || 1))),
       pageSize: Math.min(100, Math.max(1, Math.floor(Number(queryOptions.pageSize || 12)))),
       keyword: queryOptions.keyword?.trim() || '',
       sortField: queryOptions.sortField || 'updateTime',
-      sortOrder: queryOptions.sortOrder || 'desc'
+      sortOrder: queryOptions.sortOrder || 'desc',
+      currentUserName: currentUser?.userName,
+      roleCodes: currentUser?.roleCodes || []
     }
 
     const [total, list] = await Promise.all([

@@ -10,7 +10,12 @@ const analyzeService = new AnalyzeService()
 export default defineEventHandler<Promise<ApiResponseI<AnalyzeVo.GetAnalyzesOptions>>>(async (event) => {
   try {
     const body = (await readBody<AnalyzeDto.GetAnalyzesOptions>(event).catch(() => ({}))) || {}
-    const getAnalyzesResult = await analyzeService.getAnalyzes(body)
+    const token = JwtUtils.getTokenFromCookie(event)
+    const userInfo = JwtUtils.verifyToken(token as string)
+    const getAnalyzesResult = await analyzeService.getAnalyzes(body, {
+      userName: userInfo.userName,
+      roleCodes: userInfo.roleCodes || []
+    })
     return ApiResponse.success(getAnalyzesResult)
   } catch (e: any) {
     return ApiResponse.error(e.message)

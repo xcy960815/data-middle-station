@@ -67,6 +67,8 @@ declare namespace AnalyzeDao {
     keyword?: string
     sortField: AnalyzeListSortField
     sortOrder: AnalyzeListSortOrder
+    currentUserName?: string
+    roleCodes?: string[]
   }
   /**
    * 创建分析请求参数

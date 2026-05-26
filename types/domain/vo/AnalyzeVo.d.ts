@@ -5,7 +5,9 @@ declare namespace AnalyzeVo {
   type AnalyzeListItem = Pick<
     AnalyzeDao.AnalyzeOption,
     'id' | 'analyzeName' | 'analyzeDesc' | 'viewCount' | 'createTime' | 'updateTime' | 'createdBy' | 'updatedBy'
-  >
+  > & {
+    analyzePermission?: PermissionVo.AnalyzePermissionType
+  }
 
   type GetAnalyzesOptions = {
     list: AnalyzeListItem[]
@@ -25,6 +27,7 @@ declare namespace AnalyzeVo {
      * 图表配置
      */
     chartConfig: AnalyzeConfigVo.ChartConfigOptions | null
+    analyzePermission?: PermissionVo.AnalyzePermissionType
   }
 
   /**

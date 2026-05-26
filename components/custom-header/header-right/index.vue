@@ -34,7 +34,16 @@
 <script lang="ts" setup>
 import { httpRequest } from '@/composables/useHttpRequest'
 import { RequestCodeEnum } from '@/utils/request-enmu'
-import { ElAvatar, ElDropdown, ElDropdownItem, ElDropdownMenu, ElOption, ElSelect, ElTooltip } from 'element-plus'
+import {
+  ElAvatar,
+  ElDropdown,
+  ElDropdownItem,
+  ElDropdownMenu,
+  ElMessage,
+  ElOption,
+  ElSelect,
+  ElTooltip
+} from 'element-plus'
 
 type Theme = 'light' | 'dark' | 'auto'
 
@@ -157,11 +166,26 @@ const handleWathFullscreen = function () {
 }
 
 // 登录登出
-const dropDownClick = (cmd: 'logout' | 'login'): void => {
+const dropDownClick = async (cmd: 'logout' | 'login'): Promise<void> => {
   if (cmd === 'logout') {
-    console.log('logout')
+    await handleLogout()
   } else if (cmd === 'login') {
-    console.log('login')
+    await navigateTo('/welcome')
+  }
+}
+
+const handleLogout = async () => {
+  try {
+    const logoutResult = await httpRequest<ApiResponseI<{ success: boolean }>>('/api/logout', {
+      method: 'POST'
+    })
+    if (logoutResult.code !== RequestCodeEnum.Success) {
+      ElMessage.error(logoutResult.message || '退出登录失败')
+      return
+    }
+  } finally {
+    userStore.clearUserInfo()
+    await navigateTo('/welcome', { replace: true })
   }
 }
 

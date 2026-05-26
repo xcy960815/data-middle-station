@@ -13,22 +13,28 @@
         </div>
       </div>
       <!-- 编辑图标 -->
-      <div class="edit-icon" @click.stop="handleEditAnalyze">
+      <div v-if="canEdit" class="edit-icon" @click.stop="handleEditAnalyze">
         <!-- 编辑图标 -->
         <icon-park type="Edit" size="14" fill="#333" />
       </div>
+      <div v-if="canManage" class="permission-icon" @click.stop="handleManagePermission">
+        <icon-park type="Permissions" size="14" fill="#333" />
+      </div>
       <!-- 删除图标 -->
-      <div class="delete-icon" @click.stop="handleDeleteAnalyze">
+      <div v-if="canManage" class="delete-icon" @click.stop="handleDeleteAnalyze">
         <!-- 删除图标 -->
         <icon-park type="DeleteOne" size="14" fill="#333" />
       </div>
+      <span class="permission-badge" :class="`permission-badge--${analyzePermission}`">
+        {{ permissionText }}
+      </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
-const emit = defineEmits(['delete', 'edit'])
+const emit = defineEmits(['delete', 'edit', 'permission'])
 const props = defineProps({
   id: {
     type: Number,
@@ -60,7 +66,28 @@ const props = defineProps({
   updateTime: {
     type: String,
     default: ''
+  },
+  analyzePermission: {
+    type: String as PropType<PermissionVo.AnalyzePermissionType>,
+    default: 'view'
   }
+})
+const permissionLevelMap: Record<PermissionVo.AnalyzePermissionType, number> = {
+  none: 0,
+  view: 1,
+  edit: 2,
+  manage: 3
+}
+const canEdit = computed(() => permissionLevelMap[props.analyzePermission] >= permissionLevelMap.edit)
+const canManage = computed(() => permissionLevelMap[props.analyzePermission] >= permissionLevelMap.manage)
+const permissionText = computed(() => {
+  const textMap: Record<PermissionVo.AnalyzePermissionType, string> = {
+    none: '无权限',
+    view: '只读',
+    edit: '可编辑',
+    manage: '可管理'
+  }
+  return textMap[props.analyzePermission]
 })
 /**
  * @desc 点击卡片跳转到对应的分析页面
@@ -79,6 +106,10 @@ const handleEditAnalyze = () => {
  */
 const handleDeleteAnalyze = () => {
   emit('delete', props.id, props.analyzeName)
+}
+
+const handleManagePermission = () => {
+  emit('permission', props.id, props.analyzeName)
 }
 </script>
 
@@ -104,7 +135,8 @@ const handleDeleteAnalyze = () => {
       0 2px 8px 0 rgba(0, 0, 0, 0.08);
     cursor: pointer;
 
-    .edit-icon {
+    .edit-icon,
+    .permission-icon {
       display: flex;
     }
 
@@ -128,7 +160,7 @@ const handleDeleteAnalyze = () => {
   .edit-icon {
     position: absolute;
     top: 10px;
-    right: 50px;
+    right: 90px;
     z-index: 10;
     background: #fff;
     border-radius: 50%;
@@ -163,6 +195,56 @@ const handleDeleteAnalyze = () => {
     &:hover {
       background: #ffeaea;
     }
+  }
+
+  .permission-icon {
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    z-index: 10;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    transition: background 0.2s;
+
+    &:hover {
+      background: #eef6ff;
+    }
+  }
+
+  .permission-badge {
+    position: absolute;
+    right: 12px;
+    bottom: 40px;
+    z-index: 4;
+    padding: 2px 7px;
+    font-size: 12px;
+    border-radius: 999px;
+  }
+
+  .permission-badge--view {
+    color: #2563eb;
+    background: #dbeafe;
+  }
+
+  .permission-badge--edit {
+    color: #047857;
+    background: #d1fae5;
+  }
+
+  .permission-badge--manage {
+    color: #7c3aed;
+    background: #ede9fe;
+  }
+
+  .permission-badge--none {
+    color: #6b7280;
+    background: #f3f4f6;
   }
 
   .card-title {

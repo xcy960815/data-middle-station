@@ -91,6 +91,8 @@ const commonGlobals = {
   AnalyzeConfigDao: 'readonly',
   AnalyzeDto: 'readonly',
   AnalyzeDao: 'readonly',
+  PermissionDto: 'readonly',
+  PermissionVo: 'readonly',
   DatabaseDao: 'readonly',
   DatabaseDto: 'readonly',
   LoginDto: 'readonly',

@@ -27,5 +27,10 @@ declare namespace UserStore {
   /**
    * @desc 用户action
    */
-  type UserActions = {}
+  type UserActions = {
+    setUserId(userId: string): void
+    setUserName(userName: string): void
+    setAvatar(value: string): void
+    clearUserInfo(): void
+  }
 }
