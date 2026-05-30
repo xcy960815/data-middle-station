@@ -10,12 +10,12 @@ declare namespace FilterStore {
   /**
    * @desc 过滤器聚合方式
    */
-  const FilterAggregationsEnum: typeof AnalyzeConfigVo.FilterAggregationsEnum
+  type FilterAggregationsEnum = AnalyzeConfigVo.FilterAggregationsEnum
 
   /**
    * @desc 过滤器类型
    */
-  const FilterTypeEnums: typeof AnalyzeConfigVo.FilterTypeEnums
+  type FilterTypeEnums = AnalyzeConfigVo.FilterTypeEnums
 
   /**
    * @desc 过滤器类型

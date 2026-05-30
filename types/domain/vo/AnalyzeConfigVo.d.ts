@@ -17,12 +17,12 @@ declare namespace AnalyzeConfigVo {
   /**
    * 过滤聚合方式枚举
    */
-  const FilterAggregationsEnum: typeof AnalyzeConfigDao.FilterAggregationsEnum
+  type FilterAggregationsEnum = AnalyzeConfigDao.FilterAggregationsEnum
 
   /**
    * 过滤类型枚举
    */
-  const FilterTypeEnums: typeof AnalyzeConfigDao.FilterTypeEnums
+  type FilterTypeEnums = AnalyzeConfigDao.FilterTypeEnums
 
   /**
    * 过滤类型
@@ -51,7 +51,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 排序类型枚举
    */
-  const OrderTypeEnums: typeof AnalyzeConfigDao.OrderTypeEnums
+  type OrderTypeEnums = AnalyzeConfigDao.OrderTypeEnums
 
   /**
    * 排序类型
@@ -61,7 +61,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 排序聚合方式枚举
    */
-  const OrderAggregationsEnum: typeof AnalyzeConfigDao.OrderAggregationsEnum
+  type OrderAggregationsEnum = AnalyzeConfigDao.OrderAggregationsEnum
 
   /**
    * 排序聚合方式

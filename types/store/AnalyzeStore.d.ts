@@ -5,12 +5,7 @@ declare namespace AnalyzeStore {
   /**
    * @desc 图表类型
    */
-  const ChartTypesEnums = {
-    table: 'table',
-    line: 'line',
-    pie: 'pie',
-    interval: 'interval'
-  } as const
+  type ChartTypesEnums = typeof import('@/shared/domainTypes').CHART_TYPE_MAP
 
   /**
    * @desc 图表key
@@ -20,7 +15,7 @@ declare namespace AnalyzeStore {
   /**
    * @desc 图表类型
    */
-  type ChartType = (typeof ChartTypesEnums)[keyof typeof ChartTypesEnums]
+  type ChartType = import('@/shared/domainTypes').ChartType
 
   /**
    * @desc 图表状态

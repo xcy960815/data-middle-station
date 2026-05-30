@@ -112,10 +112,11 @@ export class ChartConfigService extends BaseService {
    * @returns {Promise<boolean>}
    */
   public async deleteChartConfig(deleteOptions: AnalyzeConfigDto.DeleteChartConfigOptions): Promise<boolean> {
+    const { updatedBy, updateTime } = await this.getDefaultInfo()
     const deleteParams: AnalyzeConfigDao.DeleteChartConfigOptions = {
       id: deleteOptions.id,
-      updatedBy: deleteOptions.updatedBy,
-      updateTime: deleteOptions.updateTime
+      updatedBy,
+      updateTime
     }
     return await this.chartConfigMapper.deleteChartConfig(deleteParams)
   }

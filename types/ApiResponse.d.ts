@@ -5,11 +5,14 @@
  * @param {string} message 响应消息
  * @return {Response}
  */
-declare interface ApiResponseI<D extends Object = any> {
+declare interface ApiResponseI<D = unknown> {
   code: 200 | 404 | 500 | 401 | 403
   data: D | null
   message: string
-  success?: boolean
+  success: boolean
+}
+
+declare interface AnalyzeDataApiResponseI<D = AnalyzeDataVo.AnalyzeData[]> extends ApiResponseI<D> {
   sql?: string
   queryParams?: AnalyzeDataDto.AnalyzeDataQuery
 }

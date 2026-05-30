@@ -10,14 +10,14 @@ declare namespace OrderStore {
   /**
    * @desc 排序类型
    */
-  const OrderTypeEnums: typeof AnalyzeConfigVo.OrderTypeEnums
+  type OrderTypeEnums = AnalyzeConfigVo.OrderTypeEnums
 
   type OrderType = AnalyzeConfigVo.OrderType
 
   /**
    * @desc 排序聚合方式
    */
-  const OrderAggregationsEnum: typeof AnalyzeConfigVo.OrderAggregationsEnum
+  type OrderAggregationsEnum = AnalyzeConfigVo.OrderAggregationsEnum
 
   /**
    * @desc 排序聚合方式

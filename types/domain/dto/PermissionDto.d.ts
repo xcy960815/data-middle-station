@@ -1,5 +1,5 @@
 declare namespace PermissionDto {
-  type AnalyzePermissionType = 'none' | 'view' | 'edit' | 'manage'
+  type AnalyzePermissionType = import('@/shared/domainTypes').AnalyzePermissionType
 
   type UpdateAnalyzeRolePermissionItem = {
     roleId: number

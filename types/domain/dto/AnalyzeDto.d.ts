@@ -43,7 +43,7 @@ declare namespace AnalyzeDto {
   /**
    * 删除分析请求参数
    */
-  type DeleteAnalyzeOptions = Pick<AnalyzeDao.AnalyzeOption, 'id' | 'updatedBy' | 'updateTime'>
+  type DeleteAnalyzeOptions = Pick<AnalyzeDao.AnalyzeOption, 'id'>
 
   /**
    * 创建分析请求参数
@@ -59,10 +59,10 @@ declare namespace AnalyzeDto {
   /**
    * 更新分析名称请求参数
    */
-  type UpdateAnalyzeNameOptions = Pick<AnalyzeDao.AnalyzeOption, 'id' | 'analyzeName' | 'updatedBy' | 'updateTime'>
+  type UpdateAnalyzeNameOptions = Pick<AnalyzeDao.AnalyzeOption, 'id' | 'analyzeName'>
 
   /**
    * 更新分析描述请求参数
    */
-  type UpdateAnalyzeDescOptions = Pick<AnalyzeDao.AnalyzeOption, 'id' | 'analyzeDesc' | 'updatedBy' | 'updateTime'>
+  type UpdateAnalyzeDescOptions = Pick<AnalyzeDao.AnalyzeOption, 'id' | 'analyzeDesc'>
 }

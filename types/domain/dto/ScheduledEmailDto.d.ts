@@ -73,7 +73,7 @@ declare namespace ScheduledEmailDto {
   /**
    * 删除定时邮件任务请求参数
    */
-  type DeleteScheduledEmailOptions = Pick<ScheduledEmailOptions, 'id' | 'updatedBy' | 'updatedTime'>
+  type DeleteScheduledEmailOptions = Pick<ScheduledEmailOptions, 'id'>
 
   /**
    * 创建定时邮件任务请求参数

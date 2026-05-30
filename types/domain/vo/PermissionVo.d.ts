@@ -1,5 +1,5 @@
 declare namespace PermissionVo {
-  type AnalyzePermissionType = 'none' | 'view' | 'edit' | 'manage'
+  type AnalyzePermissionType = import('@/shared/domainTypes').AnalyzePermissionType
 
   type RoleOption = {
     id: number

@@ -2,6 +2,11 @@
  * 图表配置
  */
 declare namespace AnalyzeConfigDao {
+  type FilterTypeMap = typeof import('@/shared/domainTypes').FILTER_TYPE_MAP
+  type FilterAggregationMap = typeof import('@/shared/domainTypes').FILTER_AGGREGATION_MAP
+  type OrderTypeMap = typeof import('@/shared/domainTypes').ORDER_TYPE_MAP
+  type OrderAggregationMap = typeof import('@/shared/domainTypes').ORDER_AGGREGATION_MAP
+
   /**
    * 列配置
    */
@@ -15,41 +20,22 @@ declare namespace AnalyzeConfigDao {
   /**
    * 过滤聚合方式
    */
-  const FilterAggregationsEnum = {
-    原始值: 'raw',
-    计数: 'count',
-    计数去重: 'countDistinct',
-    总计: 'sum',
-    平均: 'avg',
-    最大值: 'max',
-    最小值: 'min'
-  } as const
+  type FilterAggregationsEnum = FilterAggregationMap
 
   /**
    * 过滤类型
    */
-  const FilterTypeEnums = {
-    等于: 'eq',
-    不等于: 'neq',
-    大于: 'gt',
-    大于等于: 'gte',
-    小于: 'lt',
-    小于等于: 'lte',
-    包含: 'like',
-    不包含: 'notLike',
-    为空: 'isNull',
-    不为空: 'isNotNull'
-  } as const
+  type FilterTypeEnums = FilterTypeMap
 
   /**
    * 过滤类型
    */
-  type FilterType = (typeof FilterTypeEnums)[keyof typeof FilterTypeEnums]
+  type FilterType = import('@/shared/domainTypes').FilterType
 
   /**
    * 过滤聚合方式
    */
-  type FilterAggregationsType = (typeof FilterAggregationsEnum)[keyof typeof FilterAggregationsEnum]
+  type FilterAggregationsType = import('@/shared/domainTypes').FilterAggregationType
 
   /**
    * 过滤配置
@@ -77,29 +63,19 @@ declare namespace AnalyzeConfigDao {
   /**
    * 排序类型
    */
-  const OrderTypeEnums = {
-    升序: 'asc',
-    降序: 'desc'
-  } as const
+  type OrderTypeEnums = OrderTypeMap
 
-  type OrderType = (typeof OrderTypeEnums)[keyof typeof OrderTypeEnums]
+  type OrderType = import('@/shared/domainTypes').OrderType
 
   /**
    * 排序聚合方式
    */
-  const OrderAggregationsEnum = {
-    原始值: 'raw',
-    计数: 'count',
-    总计: 'sum',
-    平均: 'avg',
-    最大值: 'max',
-    最小值: 'min'
-  } as const
+  type OrderAggregationsEnum = OrderAggregationMap
 
   /**
    * 排序聚合方式
    */
-  type OrderAggregationsType = (typeof OrderAggregationsEnum)[keyof typeof OrderAggregationsEnum]
+  type OrderAggregationsType = import('@/shared/domainTypes').OrderAggregationType
 
   /**
    * 排序配置

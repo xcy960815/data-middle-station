@@ -19,7 +19,7 @@ declare namespace AnalyzeConfigDto {
   /**
    * 图表配置删除请求参数
    */
-  type DeleteChartConfigOptions = Pick<ChartConfigOptions, 'id' | 'updatedBy' | 'updateTime'>
+  type DeleteChartConfigOptions = Pick<ChartConfigOptions, 'id'>
   /**
    * 创建图表配置请求参数
    */

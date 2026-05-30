@@ -193,7 +193,7 @@ export class ScheduledEmailService extends BaseService {
    */
   async deleteScheduledEmailTask(deleteOptions: ScheduledEmailDto.DeleteScheduledEmailOptions): Promise<boolean> {
     try {
-      const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask(deleteOptions)
+      const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: deleteOptions.id })
       if (!existingRecord) {
         throw new Error('任务不存在')
       }
@@ -201,10 +201,16 @@ export class ScheduledEmailService extends BaseService {
         throw new Error('正在执行的任务不能删除')
       }
 
-      const deletedCount = await this.scheduledEmailMapper.deleteScheduledEmailTask(deleteOptions)
+      const { updatedBy, updateTime } = await super.getDefaultInfo()
+      const deleteParams: ScheduledEmailDao.DeleteScheduledEmailOptions = {
+        id: deleteOptions.id,
+        updatedBy,
+        updatedTime: updateTime
+      }
+      const deletedCount = await this.scheduledEmailMapper.deleteScheduledEmailTask(deleteParams)
       if (deletedCount > 0) {
         removeScheduledEmailJob(deleteOptions.id)
-        logger.info(`定时邮件任务删除成功: ${JSON.stringify(deleteOptions)}，删除数量 ${deletedCount}`)
+        logger.info(`定时邮件任务删除成功: ${JSON.stringify(deleteParams)}，删除数量 ${deletedCount}`)
       }
 
       return deletedCount > 0
