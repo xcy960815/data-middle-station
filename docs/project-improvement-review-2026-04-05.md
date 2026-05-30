@@ -227,6 +227,33 @@
 - 系统性做包体积优化
 - 补齐自动化测试与文档索引
 
+## 类型契约收口记录（2026-05-31）
+
+本轮已完成 Analyze / AnalyzeConfig、ScheduledEmail、Permission / UserInfo 的类型契约收口，核心目标是让数据库形态、接口入参、接口响应和服务层参数各自有明确边界，避免 `Options` 这类历史命名在不同层之间继续复用。
+
+### 已完成范围
+
+- Analyze / AnalyzeConfig：DTO 收口为 `Request` / `Payload`，VO 收口为 `Response` / `Item`，删除仅用于左手倒右手的透传别名。
+- ScheduledEmail：任务创建、任务更新、列表查询、调度器消费对象统一为明确的请求、响应或任务类型。
+- Permission / UserInfo：权限和用户信息响应类型从 `Options` 收口为 `Response`，权限更新入参收口为 `Request`。
+
+### 后续迁移原则
+
+- DAO 不再新增或保留 `Options` 命名；mapper 入参使用 `xxxParams` 或 `query`，数据库记录可按语义使用 `Record` / `Item` / `Entity`。
+- DTO 只表达前端/API 入参，命名只使用 `Request` / `Payload`。
+- VO 只表达接口响应，命名只使用 `Response` / `Item`。
+- service 方法入参命名为 `xxxRequest`。
+- mapper 方法入参命名为 `xxxParams` / `query`。
+- `createdBy`、`updatedBy`、`createTime`、`updateTime` 等审计字段由 service 内部根据当前用户和服务端时间补齐，不从 controller 或前端透传。
+- API handler 只负责读取/校验请求、调用 service、返回统一响应，不组装 DAO 审计参数。
+
+### 后续待迁移模块
+
+- Database
+- SendEmail
+- ScheduledEmailLog
+- Login / UserInfo store 相关类型
+
 ## 后续维护方式建议
 
 - 新增问题时，直接在本文件追加条目
