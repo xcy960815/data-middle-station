@@ -1,5 +1,6 @@
 import type { EventHandlerRequest, H3Event } from 'h3'
 import pkg from 'jsonwebtoken'
+import { bindRequestEvent } from '@/server/utils/request-context'
 import { RequestCodeEnum } from '~/utils/request-enmu'
 
 const { TokenExpiredError, JsonWebTokenError } = pkg
@@ -82,6 +83,7 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
   if (!pathname.startsWith('/api')) {
     return
   }
+  bindRequestEvent(event)
 
   // 白名单路径不需要验证
   if (isWhitelisted(pathname)) {

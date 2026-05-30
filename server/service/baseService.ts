@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
 import type { JwtPayload } from '@/server/utils/jwt'
+import { getCurrentRequestEvent } from '@/server/utils/request-context'
 
 /**
  * 基础的service 提供了创建时间、更新时间、创建人、更新人等信息
@@ -9,7 +10,7 @@ export class BaseService {
    * @desc 获取当前请求中间件解析出的用户信息。
    */
   protected getCurrentUser(): JwtPayload | undefined {
-    return useRequestEvent()?.context.user
+    return getCurrentRequestEvent()?.context.user
   }
 
   /**

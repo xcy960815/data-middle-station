@@ -105,11 +105,11 @@ export const useChartConfigStore = defineStore<
      * @param conditions 条件
      */
     setTableChartConditions(conditions) {
-      // if (this.chartConfig) {
-      //   this.chartConfig.table.conditions = JSON.parse(
-      //     JSON.stringify(conditions)
-      //   ) as ChartConfigStore.TableChartConfig['conditions']
-      // }
+      if (this.privateChartConfig) {
+        this.privateChartConfig.table.conditions = JSON.parse(
+          JSON.stringify(conditions)
+        ) as ChartConfigStore.TableChartConfig['conditions']
+      }
     }
   }
 })

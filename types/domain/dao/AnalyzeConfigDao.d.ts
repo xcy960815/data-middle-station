@@ -326,6 +326,10 @@ declare namespace AnalyzeConfigDao {
      * 可排序颜色
      */
     sortActiveColor: string
+    /**
+     * 条件格式配置
+     */
+    conditions: ConditionItem[]
 
     // ========== 滚动条样式配置 ==========
     /**

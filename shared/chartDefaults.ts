@@ -4,9 +4,9 @@
 
 /**
  * @desc 表格图默认配置
- * @returns {AnalyzeConfigVo.TableChartConfigOptions}
+ * @returns {AnalyzeConfigVo.TableChartConfigItem}
  */
-export const defaultTableChartConfig: AnalyzeConfigVo.TableChartConfigOptions = {
+export const defaultTableChartConfig: AnalyzeConfigVo.TableChartConfigItem = {
   /** 是否在行 hover 时高亮整行 */
   enableRowHoverHighlight: false,
   /** 是否在列 hover 时高亮整列 */
@@ -66,14 +66,16 @@ export const defaultTableChartConfig: AnalyzeConfigVo.TableChartConfigOptions = 
   /** 自动列宽最小值 */
   minAutoColWidth: 80,
   /** 排序激活态颜色 */
-  sortActiveColor: '#6b7280'
+  sortActiveColor: '#6b7280',
+  /** 条件格式配置 */
+  conditions: []
 }
 
 /**
  * @desc 饼图默认配置
- * @returns {AnalyzeConfigVo.PieChartConfigOptions}
+ * @returns {AnalyzeConfigVo.PieChartConfigItem}
  */
-export const defaultPieChartConfig: AnalyzeConfigVo.PieChartConfigOptions = {
+export const defaultPieChartConfig: AnalyzeConfigVo.PieChartConfigItem = {
   /** 是否展示标签 */
   showLabel: false,
   /** 饼图类型 */
@@ -82,9 +84,9 @@ export const defaultPieChartConfig: AnalyzeConfigVo.PieChartConfigOptions = {
 
 /**
  * @desc 柱状图默认配置
- * @returns {AnalyzeConfigVo.IntervalChartConfigOptions}
+ * @returns {AnalyzeConfigVo.IntervalChartConfigItem}
  */
-export const defaultIntervalChartConfig: AnalyzeConfigVo.IntervalChartConfigOptions = {
+export const defaultIntervalChartConfig: AnalyzeConfigVo.IntervalChartConfigItem = {
   /** 展示方式：层级 / 平铺 */
   displayMode: 'levelDisplay',
   /** 是否展示百分比 */
@@ -99,9 +101,9 @@ export const defaultIntervalChartConfig: AnalyzeConfigVo.IntervalChartConfigOpti
 
 /**
  * @desc 折线图默认配置
- * @returns {AnalyzeConfigVo.LineChartConfigOptions}
+ * @returns {AnalyzeConfigVo.LineChartConfigItem}
  */
-export const defaultLineChartConfig: AnalyzeConfigVo.LineChartConfigOptions = {
+export const defaultLineChartConfig: AnalyzeConfigVo.LineChartConfigItem = {
   /** 折线节点是否展示 */
   showPoint: false,
   /** 是否显示标签 */
@@ -116,9 +118,9 @@ export const defaultLineChartConfig: AnalyzeConfigVo.LineChartConfigOptions = {
 
 /**
  * @desc 公共图表默认配置
- * @returns {AnalyzeConfigVo.CommonChartConfigOptions}
+ * @returns {AnalyzeConfigVo.CommonChartConfigItem}
  */
-export const defaultCommonChartConfig: AnalyzeConfigVo.CommonChartConfigOptions = {
+export const defaultCommonChartConfig: AnalyzeConfigVo.CommonChartConfigItem = {
   /** 查询数据量上限 */
   limit: 1000,
   /** 分析备注 */
