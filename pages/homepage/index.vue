@@ -292,7 +292,7 @@ const handleOpenPermissionDialog = async (id: number, analyzeName: string) => {
   permissionLoading.value = true
   permissionList.value = []
   try {
-    const res = await httpRequest<ApiResponseI<PermissionVo.GetAnalyzeRolePermissionsOptions>>(
+    const res = await httpRequest<ApiResponseI<PermissionVo.AnalyzeRolePermissionsResponse>>(
       '/api/getAnalyzeRolePermissions',
       {
         method: 'POST',
@@ -316,7 +316,7 @@ const handleSavePermissions = async () => {
 
   permissionSaving.value = true
   try {
-    const res = await httpRequest<ApiResponseI<PermissionVo.UpdateAnalyzeRolePermissionsOptions>>(
+    const res = await httpRequest<ApiResponseI<PermissionVo.AnalyzeRolePermissionsResponse>>(
       '/api/updateAnalyzeRolePermissions',
       {
         method: 'POST',

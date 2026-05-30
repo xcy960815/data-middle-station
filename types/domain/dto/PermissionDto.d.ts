@@ -1,13 +1,17 @@
 declare namespace PermissionDto {
   type AnalyzePermissionType = import('@/shared/domainTypes').AnalyzePermissionType
 
-  type UpdateAnalyzeRolePermissionItem = {
+  type GetAnalyzeRolePermissionsRequest = {
+    analyzeId: number
+  }
+
+  type AnalyzeRolePermissionRequestItem = {
     roleId: number
     permissionType: AnalyzePermissionType
   }
 
-  type UpdateAnalyzeRolePermissionsOptions = {
+  type UpdateAnalyzeRolePermissionsRequest = {
     analyzeId: number
-    permissions: UpdateAnalyzeRolePermissionItem[]
+    permissions: AnalyzeRolePermissionRequestItem[]
   }
 }

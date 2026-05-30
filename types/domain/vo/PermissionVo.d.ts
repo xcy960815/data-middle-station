@@ -1,26 +1,21 @@
 declare namespace PermissionVo {
   type AnalyzePermissionType = import('@/shared/domainTypes').AnalyzePermissionType
 
-  type RoleOption = {
+  type RoleItem = {
     id: number
     roleCode: string
     roleName: string
   }
 
-  type AnalyzeRolePermissionItem = RoleOption & {
+  type AnalyzeRolePermissionItem = RoleItem & {
     permissionType: AnalyzePermissionType
   }
 
-  type GetRolesOptions = {
-    list: RoleOption[]
+  type RoleListResponse = {
+    list: RoleItem[]
   }
 
-  type GetAnalyzeRolePermissionsOptions = {
-    analyzeId: number
-    list: AnalyzeRolePermissionItem[]
-  }
-
-  type UpdateAnalyzeRolePermissionsOptions = {
+  type AnalyzeRolePermissionsResponse = {
     analyzeId: number
     list: AnalyzeRolePermissionItem[]
   }

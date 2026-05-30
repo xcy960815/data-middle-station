@@ -14,7 +14,7 @@ export class PermissionService extends BaseService {
     this.analyzeMapper = new AnalyzeMapper()
   }
 
-  public async getRoles(): Promise<PermissionVo.GetRolesOptions> {
+  public async getRoles(): Promise<PermissionVo.RoleListResponse> {
     try {
       const list = await this.permissionMapper.getRoles()
       return { list }
@@ -25,7 +25,7 @@ export class PermissionService extends BaseService {
     }
   }
 
-  public async getAnalyzeRolePermissions(analyzeId: number): Promise<PermissionVo.GetAnalyzeRolePermissionsOptions> {
+  public async getAnalyzeRolePermissions(analyzeId: number): Promise<PermissionVo.AnalyzeRolePermissionsResponse> {
     const currentUser = this.getCurrentUser()
     if (currentUser) {
       await this.assertCanManageAnalyze(analyzeId, currentUser.userName, currentUser.roleCodes || [])
@@ -47,20 +47,20 @@ export class PermissionService extends BaseService {
   }
 
   public async updateAnalyzeRolePermissions(
-    options: PermissionDto.UpdateAnalyzeRolePermissionsOptions
-  ): Promise<PermissionVo.UpdateAnalyzeRolePermissionsOptions> {
+    updateRequest: PermissionDto.UpdateAnalyzeRolePermissionsRequest
+  ): Promise<PermissionVo.AnalyzeRolePermissionsResponse> {
     const currentUser = this.getCurrentUser()
     if (!currentUser) {
       throw new Error('未获取到当前用户信息')
     }
     const operator = currentUser.userName
     const roleCodes = currentUser.roleCodes || []
-    const analyze = await this.assertCanManageAnalyze(options.analyzeId, operator, roleCodes)
+    const analyze = await this.assertCanManageAnalyze(updateRequest.analyzeId, operator, roleCodes)
     if (!analyze) {
       throw new Error('分析不存在')
     }
 
-    const normalizedPermissions = options.permissions
+    const normalizedPermissions = updateRequest.permissions
       .map((item) => ({
         roleId: Number(item.roleId),
         permissionType: this.normalizePermissionType(item.permissionType)
@@ -74,8 +74,8 @@ export class PermissionService extends BaseService {
         } => Number.isInteger(item.roleId) && item.roleId > 0 && item.permissionType !== 'none'
       )
 
-    await this.permissionMapper.replaceAnalyzeRolePermissions(options.analyzeId, normalizedPermissions, operator)
-    return await this.getAnalyzeRolePermissions(options.analyzeId)
+    await this.permissionMapper.replaceAnalyzeRolePermissions(updateRequest.analyzeId, normalizedPermissions, operator)
+    return await this.getAnalyzeRolePermissions(updateRequest.analyzeId)
   }
 
   private async assertCanManageAnalyze(analyzeId: number, operator: string, roleCodes: string[]) {

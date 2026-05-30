@@ -9,7 +9,7 @@ const ANALYZE_ROLE_PERMISSION_TABLE_NAME = '`analyze_role_permission`'
 export class PermissionMapper extends BaseMapper {
   public dataSourceName = DATA_SOURCE_NAME
 
-  public async getRoles(): Promise<PermissionVo.RoleOption[]> {
+  public async getRoles(): Promise<PermissionVo.RoleItem[]> {
     const sql = `
       select
         id,
@@ -18,7 +18,7 @@ export class PermissionMapper extends BaseMapper {
       from ${ROLE_TABLE_NAME}
       where is_deleted = 0 and status = 1
       order by id asc`
-    return await this.exe<PermissionVo.RoleOption[]>(sql)
+    return await this.exe<PermissionVo.RoleItem[]>(sql)
   }
 
   public async getAnalyzeRolePermissions(
