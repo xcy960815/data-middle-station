@@ -52,39 +52,51 @@ declare namespace ScheduledEmailDto {
   type EmailConfig = ScheduledEmailDao.EmailConfig
   type AnalyzeOption = ScheduledEmailDao.AnalyzeOption
 
-  type ScheduledEmailOptions = ScheduledEmailDao.ScheduledEmailOptions
-  type ScheduledEmailQueryOptions = ScheduledEmailDao.ScheduledEmailQueryOptions
+  type ScheduledEmailTaskPayload = Pick<
+    ScheduledEmailDao.ScheduledEmailOptions,
+    | 'taskName'
+    | 'taskType'
+    | 'scheduleTime'
+    | 'recurringDays'
+    | 'recurringTime'
+    | 'emailConfig'
+    | 'analyzeOptions'
+    | 'remark'
+  >
 
   /**
    * 获取定时邮件任务请求参数
    */
-  type GetScheduledEmailOptions = Partial<ScheduledEmailOptions> & {
-    id: number
-  }
+  type GetScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailOptions, 'id'>
 
   /**
    * 更新定时邮件任务请求参数
    */
-  type UpdateScheduledEmailOptions = Omit<
-    ScheduledEmailOptions,
-    'createdTime' | 'createdBy' | 'updatedTime' | 'updatedBy'
-  >
+  type UpdateScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailOptions, 'id'> &
+    Partial<ScheduledEmailTaskPayload>
 
   /**
    * 删除定时邮件任务请求参数
    */
-  type DeleteScheduledEmailOptions = Pick<ScheduledEmailOptions, 'id'>
+  type DeleteScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailOptions, 'id'>
 
   /**
    * 创建定时邮件任务请求参数
    */
-  type CreateScheduledEmailOptions = Omit<
-    ScheduledEmailOptions,
-    'id' | 'createdTime' | 'createdBy' | 'updatedTime' | 'updatedBy'
-  >
+  type CreateScheduledEmailRequest = ScheduledEmailTaskPayload
+
+  /**
+   * 任务 ID 请求参数
+   */
+  type ScheduledEmailTaskIdRequest = Pick<ScheduledEmailDao.ScheduledEmailOptions, 'id'>
+
+  /**
+   * 定时邮件任务查询参数
+   */
+  type ScheduledEmailQueryRequest = ScheduledEmailDao.ScheduledEmailQueryOptions
 
   /**
    * 定时邮件列表查询参数
    */
-  type ScheduledEmailListQuery = ScheduledEmailDao.ScheduledEmailListOptions
+  type ScheduledEmailListRequest = ScheduledEmailDao.ScheduledEmailListOptions
 }

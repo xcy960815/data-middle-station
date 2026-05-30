@@ -87,7 +87,7 @@ export const canToggleTaskStatus = (status: TaskStatusValue): boolean =>
  *  - scheduled 单次任务：仅当状态为 pending 且有 scheduleTime 时接管
  *  - recurring 重复任务：只要不是 cancelled 都接管（pending / failed 都可下次周期再触发）
  */
-export const shouldScheduleTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): boolean => {
+export const shouldScheduleTask = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): boolean => {
   if (!taskOptions.isActive) {
     return false
   }

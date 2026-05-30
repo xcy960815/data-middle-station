@@ -1,7 +1,7 @@
 import { shouldScheduleTask, TaskType } from '../domain/scheduledEmailDomain'
 import schedule from 'node-schedule'
 
-type ScheduledTaskExecutor = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions) => Promise<void>
+type ScheduledTaskExecutor = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse) => Promise<void>
 
 const logger = new Logger({
   fileName: 'scheduled-email-scheduler',
@@ -16,7 +16,7 @@ const formatDays = (dayNumbers: number[]): string => {
   return dayNumbers.map((dayIndex) => dayNames[dayIndex]).join('、')
 }
 
-const executeTask = async (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): Promise<void> => {
+const executeTask = async (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): Promise<void> => {
   if (!scheduledTaskExecutor) {
     logger.error(`任务 ${taskOptions.id} 缺少执行器，跳过执行`)
     return
@@ -29,7 +29,7 @@ const executeTask = async (taskOptions: ScheduledEmailVo.ScheduledEmailOptions):
   }
 }
 
-const scheduleOnceTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): void => {
+const scheduleOnceTask = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
   if (!taskOptions.scheduleTime) {
     logger.error(`任务 ${taskOptions.id} 缺少执行时间`)
     return
@@ -61,7 +61,7 @@ const scheduleOnceTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): 
   }
 }
 
-const scheduleRecurringTask = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): void => {
+const scheduleRecurringTask = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
   if (!taskOptions.recurringDays || !taskOptions.recurringTime) {
     logger.error(`任务 ${taskOptions.id} 缺少重复配置`)
     return
@@ -126,7 +126,7 @@ export const removeScheduledEmailJob = (taskId: number): void => {
 /**
  * @desc 新增或更新定时邮件任务的调度。
  */
-export const upsertScheduledEmailJob = (taskOptions: ScheduledEmailVo.ScheduledEmailOptions): void => {
+export const upsertScheduledEmailJob = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
   removeScheduledEmailJob(taskOptions.id)
 
   if (!shouldScheduleTask(taskOptions)) {
@@ -144,7 +144,7 @@ export const upsertScheduledEmailJob = (taskOptions: ScheduledEmailVo.ScheduledE
 /**
  * @desc 根据数据库任务列表同步内存中的调度任务。
  */
-export const syncScheduledEmailJobs = (taskOptionsList: ScheduledEmailVo.ScheduledEmailOptions[]): void => {
+export const syncScheduledEmailJobs = (taskOptionsList: ScheduledEmailVo.ScheduledEmailTaskResponse[]): void => {
   const activeTaskIds = new Set(taskOptionsList.map((taskOptions) => taskOptions.id))
 
   for (const taskId of scheduledJobs.keys()) {

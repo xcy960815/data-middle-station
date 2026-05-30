@@ -51,7 +51,7 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 创建定时邮件任务
    */
-  async createScheduledEmailTask(createOptions: ScheduledEmailDto.CreateScheduledEmailOptions): Promise<boolean> {
+  async createScheduledEmailTask(createOptions: ScheduledEmailDto.CreateScheduledEmailRequest): Promise<boolean> {
     try {
       this.assertCreateOptions(createOptions)
 
@@ -102,8 +102,8 @@ export class ScheduledEmailService extends BaseService {
    * 获取定时邮件任务详情
    */
   async getScheduledEmailTask(
-    queryOptions: ScheduledEmailDto.GetScheduledEmailOptions
-  ): Promise<ScheduledEmailVo.ScheduledEmailOptions | null> {
+    queryOptions: ScheduledEmailDto.GetScheduledEmailRequest
+  ): Promise<ScheduledEmailVo.ScheduledEmailTaskResponse | null> {
     const record = await this.scheduledEmailMapper.getScheduledEmailTask(queryOptions)
     return record ? this.convertDaoToVo(record) : null
   }
@@ -111,7 +111,7 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 更新定时邮件任务
    */
-  async updateScheduledEmailTask(updateOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
+  async updateScheduledEmailTask(updateOptions: ScheduledEmailDto.UpdateScheduledEmailRequest): Promise<boolean> {
     const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: updateOptions.id })
     if (!existingRecord) {
       throw new Error('任务不存在')
@@ -191,7 +191,7 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 删除定时邮件任务
    */
-  async deleteScheduledEmailTask(deleteOptions: ScheduledEmailDto.DeleteScheduledEmailOptions): Promise<boolean> {
+  async deleteScheduledEmailTask(deleteOptions: ScheduledEmailDto.DeleteScheduledEmailRequest): Promise<boolean> {
     try {
       const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: deleteOptions.id })
       if (!existingRecord) {
@@ -224,8 +224,8 @@ export class ScheduledEmailService extends BaseService {
    * 获取定时邮件任务列表
    */
   async getScheduledEmailTaskList(
-    scheduledEmailListQuery: ScheduledEmailDto.ScheduledEmailListQuery
-  ): Promise<ScheduledEmailVo.ScheduledEmailOptions[]> {
+    scheduledEmailListQuery: ScheduledEmailDto.ScheduledEmailListRequest
+  ): Promise<ScheduledEmailVo.ScheduledEmailTaskListResponse> {
     try {
       const recordList = await this.scheduledEmailMapper.getScheduledEmailTaskList(scheduledEmailListQuery)
       return recordList.map((dao) => this.convertDaoToVo(dao))
@@ -238,7 +238,7 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 切换任务状态（pending ↔ cancelled）
    */
-  async toggleTaskStatus(toggleOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
+  async toggleTaskStatus(toggleOptions: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
     try {
       const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: toggleOptions.id })
       if (!existingRecord) {
@@ -304,14 +304,14 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 立即执行任务（手动触发）
    */
-  async executeTask(executeOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
+  async executeTask(executeOptions: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
     return this.scheduledEmailExecutorService.executeTask(executeOptions)
   }
 
   /**
    * 简化版触发执行（调度器回调）
    */
-  async executeTaskWithOptions(queryOptions: ScheduledEmailDto.ScheduledEmailQueryOptions): Promise<boolean> {
+  async executeTaskWithOptions(queryOptions: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
     return this.scheduledEmailExecutorService.executeTaskWithOptions(queryOptions)
   }
 
@@ -332,7 +332,7 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 更新重复任务的下次执行时间
    */
-  async updateNextExecutionTimeTask(queryOptions: ScheduledEmailDto.ScheduledEmailQueryOptions): Promise<boolean> {
+  async updateNextExecutionTimeTask(queryOptions: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
     try {
       const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask(queryOptions)
       if (!existingRecord) {
@@ -429,7 +429,7 @@ export class ScheduledEmailService extends BaseService {
   /**
    * 校验创建参数
    */
-  private assertCreateOptions(createOptions: ScheduledEmailDto.CreateScheduledEmailOptions): void {
+  private assertCreateOptions(createOptions: ScheduledEmailDto.CreateScheduledEmailRequest): void {
     if (createOptions.taskType === TaskType.Scheduled) {
       if (!createOptions.scheduleTime) {
         throw new Error('定时任务必须指定执行时间')
@@ -450,7 +450,7 @@ export class ScheduledEmailService extends BaseService {
   /**
    * DAO -> VO
    */
-  private convertDaoToVo(record: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailVo.ScheduledEmailOptions {
+  private convertDaoToVo(record: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailVo.ScheduledEmailTaskResponse {
     return {
       id: record.id,
       taskName: record.taskName,

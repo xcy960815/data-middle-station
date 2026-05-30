@@ -36,7 +36,7 @@ const logger = new Logger({ fileName: 'scheduled-email-executor', folderName: 's
  */
 const convertDaoToVoForScheduler = (
   record: ScheduledEmailDao.ScheduledEmailOptions
-): ScheduledEmailVo.ScheduledEmailOptions => ({
+): ScheduledEmailVo.ScheduledEmailTaskResponse => ({
   id: record.id,
   taskName: record.taskName,
   taskType: record.taskType,
@@ -81,7 +81,7 @@ export class ScheduledEmailExecutorService extends BaseService {
   /**
    * @desc 立即执行指定任务（API 触发：手动执行 / 测试执行）
    */
-  async executeTask(executeOptions: ScheduledEmailDto.UpdateScheduledEmailOptions): Promise<boolean> {
+  async executeTask(executeOptions: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
     try {
       const taskRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: executeOptions.id })
       if (!taskRecord) {
@@ -102,7 +102,7 @@ export class ScheduledEmailExecutorService extends BaseService {
   /**
    * @desc 根据查询条件触发执行（调度器回调使用，容错版：失败返回 false）
    */
-  async executeTaskWithOptions(queryOptions: ScheduledEmailDto.ScheduledEmailQueryOptions): Promise<boolean> {
+  async executeTaskWithOptions(queryOptions: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
     try {
       const taskQuery: ScheduledEmailDao.ScheduledEmailQueryOptions = {
         id: queryOptions.id,
