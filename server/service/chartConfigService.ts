@@ -60,61 +60,61 @@ export class ChartConfigService extends BaseService {
 
   /**
    * @desc 获取图表
-   * @param {AnalyzeConfigDto.GetChartConfigRequest} queryOptions 图表配置请求参数
+   * @param {AnalyzeConfigDto.GetChartConfigRequest} queryRequest 图表配置请求参数
    * @returns {Promise<AnalyzeConfigVo.ChartConfigResponse>}
    */
   public async getChartConfig(
-    queryOptions: AnalyzeConfigDto.GetChartConfigRequest
+    queryRequest: AnalyzeConfigDto.GetChartConfigRequest
   ): Promise<AnalyzeConfigVo.ChartConfigResponse> {
-    const chartConfigRecord = await this.chartConfigMapper.getChartConfig(queryOptions)
+    const chartConfigRecord = await this.chartConfigMapper.getChartConfig(queryRequest)
     return this.convertDaoToVo(chartConfigRecord)
   }
 
   /**
    * @desc 更新图表配置
-   * @param {AnalyzeConfigDto.UpdateChartConfigRequest} updateOptions 图表配置
+   * @param {AnalyzeConfigDto.UpdateChartConfigRequest} updateRequest 图表配置
    * @returns {Promise<boolean>}
    */
-  public async updateChartConfig(updateOptions: AnalyzeConfigDto.UpdateChartConfigRequest): Promise<boolean> {
+  public async updateChartConfig(updateRequest: AnalyzeConfigDto.UpdateChartConfigRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    const enrichedOptions = {
-      ...updateOptions,
+    const updateParams = {
+      ...updateRequest,
       updatedBy,
       updateTime
     }
-    const updateChartResult = await this.chartConfigMapper.updateChartConfig(enrichedOptions)
+    const updateChartResult = await this.chartConfigMapper.updateChartConfig(updateParams)
     return updateChartResult
   }
 
   /**
    * @desc 创建图表配置
-   * @param {AnalyzeConfigDto.CreateChartConfigRequest} createOptions 图表配置
+   * @param {AnalyzeConfigDto.CreateChartConfigRequest} createRequest 图表配置
    * @returns {Promise<AnalyzeConfigVo.ChartConfigResponse>}
    */
   public async createChartConfig(
-    createOptions: AnalyzeConfigDto.CreateChartConfigRequest
+    createRequest: AnalyzeConfigDto.CreateChartConfigRequest
   ): Promise<AnalyzeConfigVo.ChartConfigResponse> {
     const { createdBy, createTime, updateTime, updatedBy } = await this.getDefaultInfo()
-    const enrichedOptions = {
-      ...createOptions,
+    const createParams = {
+      ...createRequest,
       createdBy,
       createTime,
       updateTime,
       updatedBy
     }
-    const chartConfigId = await this.chartConfigMapper.createChartConfig(enrichedOptions)
+    const chartConfigId = await this.chartConfigMapper.createChartConfig(createParams)
     return this.getChartConfig({ id: chartConfigId })
   }
 
   /**
    * @desc 删除图表配置
-   * @param {AnalyzeConfigDto.DeleteChartConfigRequest} deleteOptions 图表配置删除请求参数
+   * @param {AnalyzeConfigDto.DeleteChartConfigRequest} deleteRequest 图表配置删除请求参数
    * @returns {Promise<boolean>}
    */
-  public async deleteChartConfig(deleteOptions: AnalyzeConfigDto.DeleteChartConfigRequest): Promise<boolean> {
+  public async deleteChartConfig(deleteRequest: AnalyzeConfigDto.DeleteChartConfigRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const deleteParams: AnalyzeConfigDao.DeleteChartConfigOptions = {
-      id: deleteOptions.id,
+      id: deleteRequest.id,
       updatedBy,
       updateTime
     }

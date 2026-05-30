@@ -1,7 +1,7 @@
 import { shouldScheduleTask, TaskType } from '../domain/scheduledEmailDomain'
 import schedule from 'node-schedule'
 
-type ScheduledTaskExecutor = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse) => Promise<void>
+type ScheduledTaskExecutor = (task: ScheduledEmailVo.ScheduledEmailTaskResponse) => Promise<void>
 
 const logger = new Logger({
   fileName: 'scheduled-email-scheduler',
@@ -16,91 +16,91 @@ const formatDays = (dayNumbers: number[]): string => {
   return dayNumbers.map((dayIndex) => dayNames[dayIndex]).join('、')
 }
 
-const executeTask = async (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): Promise<void> => {
+const executeTask = async (task: ScheduledEmailVo.ScheduledEmailTaskResponse): Promise<void> => {
   if (!scheduledTaskExecutor) {
-    logger.error(`任务 ${taskOptions.id} 缺少执行器，跳过执行`)
+    logger.error(`任务 ${task.id} 缺少执行器，跳过执行`)
     return
   }
 
   try {
-    await scheduledTaskExecutor(taskOptions)
+    await scheduledTaskExecutor(task)
   } catch (error) {
-    logger.error(`任务 ${taskOptions.id} 执行异常: ${error}`)
+    logger.error(`任务 ${task.id} 执行异常: ${error}`)
   }
 }
 
-const scheduleOnceTask = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
-  if (!taskOptions.scheduleTime) {
-    logger.error(`任务 ${taskOptions.id} 缺少执行时间`)
+const scheduleOnceTask = (task: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
+  if (!task.scheduleTime) {
+    logger.error(`任务 ${task.id} 缺少执行时间`)
     return
   }
 
-  const executeTime = new Date(taskOptions.scheduleTime)
+  const executeTime = new Date(task.scheduleTime)
   const now = new Date()
 
   if (Number.isNaN(executeTime.getTime())) {
-    logger.error(`任务 ${taskOptions.id} 的执行时间无效: ${taskOptions.scheduleTime}`)
+    logger.error(`任务 ${task.id} 的执行时间无效: ${task.scheduleTime}`)
     return
   }
 
   if (executeTime <= now) {
-    logger.warn(`任务 ${taskOptions.id} 的执行时间已过期: ${taskOptions.scheduleTime}，立即执行`)
-    void executeTask(taskOptions)
+    logger.warn(`任务 ${task.id} 的执行时间已过期: ${task.scheduleTime}，立即执行`)
+    void executeTask(task)
     return
   }
 
   const job = schedule.scheduleJob(executeTime, async () => {
-    logger.info(`执行定时任务: ${taskOptions.id} - ${taskOptions.taskName}`)
-    await executeTask(taskOptions)
-    removeScheduledEmailJob(taskOptions.id)
+    logger.info(`执行定时任务: ${task.id} - ${task.taskName}`)
+    await executeTask(task)
+    removeScheduledEmailJob(task.id)
   })
 
   if (job) {
-    scheduledJobs.set(taskOptions.id, job)
-    logger.info(`定时任务已注册: ${taskOptions.id} - ${taskOptions.taskName}, 执行时间: ${taskOptions.scheduleTime}`)
+    scheduledJobs.set(task.id, job)
+    logger.info(`定时任务已注册: ${task.id} - ${task.taskName}, 执行时间: ${task.scheduleTime}`)
   }
 }
 
-const scheduleRecurringTask = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
-  if (!taskOptions.recurringDays || !taskOptions.recurringTime) {
-    logger.error(`任务 ${taskOptions.id} 缺少重复配置`)
+const scheduleRecurringTask = (task: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
+  if (!task.recurringDays || !task.recurringTime) {
+    logger.error(`任务 ${task.id} 缺少重复配置`)
     return
   }
 
   let cronExpression: string
 
-  if (taskOptions.recurringTime.startsWith('*/')) {
-    const intervalMinutes = taskOptions.recurringTime.substring(2)
-    cronExpression = `0 ${taskOptions.recurringTime} * * * *`
+  if (task.recurringTime.startsWith('*/')) {
+    const intervalMinutes = task.recurringTime.substring(2)
+    cronExpression = `0 ${task.recurringTime} * * * *`
     logger.info(`构建高频 cron 表达式: ${cronExpression} (每${intervalMinutes}分钟执行)`)
   } else {
-    const timeComponents = taskOptions.recurringTime.split(':')
+    const timeComponents = task.recurringTime.split(':')
     const hour = parseInt(timeComponents[0])
     const minute = parseInt(timeComponents[1])
     const second = timeComponents[2] ? parseInt(timeComponents[2]) : 0
-    const dayOfWeek = taskOptions.recurringDays.join(',')
+    const dayOfWeek = task.recurringDays.join(',')
     cronExpression = `${second} ${minute} ${hour} * * ${dayOfWeek}`
   }
 
   try {
     const job = schedule.scheduleJob(cronExpression, async () => {
-      logger.info(`执行重复任务: ${taskOptions.id} - ${taskOptions.taskName}`)
-      await executeTask(taskOptions)
+      logger.info(`执行重复任务: ${task.id} - ${task.taskName}`)
+      await executeTask(task)
     })
 
     if (job) {
-      scheduledJobs.set(taskOptions.id, job)
+      scheduledJobs.set(task.id, job)
       const nextInvocation = job.nextInvocation()
       logger.info(
-        `重复任务已注册: ${taskOptions.id} - ${taskOptions.taskName}, ` +
-          `执行周期: ${formatDays(taskOptions.recurringDays)} ${taskOptions.recurringTime}, ` +
+        `重复任务已注册: ${task.id} - ${task.taskName}, ` +
+          `执行周期: ${formatDays(task.recurringDays)} ${task.recurringTime}, ` +
           `下次执行: ${nextInvocation?.toLocaleString('zh-CN')}`
       )
     } else {
-      logger.error(`任务 ${taskOptions.id} 的 cron 表达式无效，无法创建调度: ${cronExpression}`)
+      logger.error(`任务 ${task.id} 的 cron 表达式无效，无法创建调度: ${cronExpression}`)
     }
   } catch (error) {
-    logger.error(`创建重复任务调度失败: ${taskOptions.id} - ${taskOptions.taskName}, 错误: ${error}`)
+    logger.error(`创建重复任务调度失败: ${task.id} - ${task.taskName}, 错误: ${error}`)
   }
 }
 
@@ -126,26 +126,26 @@ export const removeScheduledEmailJob = (taskId: number): void => {
 /**
  * @desc 新增或更新定时邮件任务的调度。
  */
-export const upsertScheduledEmailJob = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
-  removeScheduledEmailJob(taskOptions.id)
+export const upsertScheduledEmailJob = (task: ScheduledEmailVo.ScheduledEmailTaskResponse): void => {
+  removeScheduledEmailJob(task.id)
 
-  if (!shouldScheduleTask(taskOptions)) {
+  if (!shouldScheduleTask(task)) {
     return
   }
 
-  if (taskOptions.taskType === TaskType.Scheduled) {
-    scheduleOnceTask(taskOptions)
+  if (task.taskType === TaskType.Scheduled) {
+    scheduleOnceTask(task)
     return
   }
 
-  scheduleRecurringTask(taskOptions)
+  scheduleRecurringTask(task)
 }
 
 /**
  * @desc 根据数据库任务列表同步内存中的调度任务。
  */
-export const syncScheduledEmailJobs = (taskOptionsList: ScheduledEmailVo.ScheduledEmailTaskResponse[]): void => {
-  const activeTaskIds = new Set(taskOptionsList.map((taskOptions) => taskOptions.id))
+export const syncScheduledEmailJobs = (taskList: ScheduledEmailVo.ScheduledEmailTaskResponse[]): void => {
+  const activeTaskIds = new Set(taskList.map((task) => task.id))
 
   for (const taskId of scheduledJobs.keys()) {
     if (!activeTaskIds.has(taskId)) {
@@ -153,8 +153,8 @@ export const syncScheduledEmailJobs = (taskOptionsList: ScheduledEmailVo.Schedul
     }
   }
 
-  for (const taskOptions of taskOptionsList) {
-    upsertScheduledEmailJob(taskOptions)
+  for (const task of taskList) {
+    upsertScheduledEmailJob(task)
   }
 }
 

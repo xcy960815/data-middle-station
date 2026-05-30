@@ -87,16 +87,16 @@ export const canToggleTaskStatus = (status: TaskStatusValue): boolean =>
  *  - scheduled 单次任务：仅当状态为 pending 且有 scheduleTime 时接管
  *  - recurring 重复任务：只要不是 cancelled 都接管（pending / failed 都可下次周期再触发）
  */
-export const shouldScheduleTask = (taskOptions: ScheduledEmailVo.ScheduledEmailTaskResponse): boolean => {
-  if (!taskOptions.isActive) {
+export const shouldScheduleTask = (task: ScheduledEmailVo.ScheduledEmailTaskResponse): boolean => {
+  if (!task.isActive) {
     return false
   }
 
-  if (taskOptions.taskType === TaskType.Scheduled) {
-    return taskOptions.status === TaskStatus.Pending && Boolean(taskOptions.scheduleTime)
+  if (task.taskType === TaskType.Scheduled) {
+    return task.status === TaskStatus.Pending && Boolean(task.scheduleTime)
   }
 
-  return taskOptions.status !== TaskStatus.Cancelled
+  return task.status !== TaskStatus.Cancelled
 }
 
 /**
@@ -117,18 +117,18 @@ export const getClaimAllowedStatuses = (taskType: TaskTypeValue): TaskStatusValu
  *  - scheduled: 直接返回原 scheduleTime（一次性任务）
  *  - recurring: 根据 recurringDays / recurringTime 计算下一次匹配的时间
  */
-export const calculateTaskNextExecutionTime = (taskOptions: {
+export const calculateTaskNextExecutionTime = (task: {
   taskType: TaskTypeValue
   scheduleTime?: string | null
   recurringDays?: number[] | null
   recurringTime?: string | null
 }): string | null => {
-  if (taskOptions.taskType === TaskType.Recurring) {
-    if (!taskOptions.recurringDays || !taskOptions.recurringTime) {
+  if (task.taskType === TaskType.Recurring) {
+    if (!task.recurringDays || !task.recurringTime) {
       return null
     }
-    return calculateNextExecutionTime(taskOptions.recurringDays, taskOptions.recurringTime)
+    return calculateNextExecutionTime(task.recurringDays, task.recurringTime)
   }
 
-  return taskOptions.scheduleTime || null
+  return task.scheduleTime || null
 }

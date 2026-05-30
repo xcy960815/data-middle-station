@@ -114,7 +114,7 @@ export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) 
     const requestBody = await readBody<ScheduledEmailDto.CreateScheduledEmailRequest>(event)
 
     // 使用 Joi 进行数据验证
-    const { error, value: scheduledEmailOptions } = createScheduledEmailSchema.validate(requestBody, {
+    const { error, value: createScheduledEmailRequest } = createScheduledEmailSchema.validate(requestBody, {
       abortEarly: false, // 返回所有验证错误
       stripUnknown: true, // 移除未知字段
       convert: true // 自动类型转换
@@ -127,9 +127,9 @@ export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) 
     }
 
     // 验证通过，执行业务逻辑
-    const result = await scheduledEmailService.createScheduledEmailTask(scheduledEmailOptions)
+    const result = await scheduledEmailService.createScheduledEmailTask(createScheduledEmailRequest)
 
-    logger.info(`定时邮件任务创建成功: ${scheduledEmailOptions.taskName}`)
+    logger.info(`定时邮件任务创建成功: ${createScheduledEmailRequest.taskName}`)
     return ApiResponse.success(result)
   } catch (error: any) {
     logger.error('创建定时邮件任务失败: ' + error.message)

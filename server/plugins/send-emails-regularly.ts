@@ -42,12 +42,12 @@ export default defineNitroPlugin(async (nitroApp) => {
   logger.info('📧 邮件发送调度系统初始化中...')
   logger.info('🔧 调度引擎: node-schedule')
 
-  configureScheduledEmailScheduler(async (taskOptions) => {
-    const success = await scheduledEmailService.executeTaskWithOptions({ id: taskOptions.id })
+  configureScheduledEmailScheduler(async (task) => {
+    const success = await scheduledEmailService.executeTaskByQuery({ id: task.id })
     if (success) {
-      logger.info(`✅ 任务 ${taskOptions.id} 执行成功`)
+      logger.info(`✅ 任务 ${task.id} 执行成功`)
     } else {
-      logger.error(`❌ 任务 ${taskOptions.id} 执行失败`)
+      logger.error(`❌ 任务 ${task.id} 执行失败`)
     }
   })
 

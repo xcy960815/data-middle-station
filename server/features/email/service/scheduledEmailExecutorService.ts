@@ -81,9 +81,9 @@ export class ScheduledEmailExecutorService extends BaseService {
   /**
    * @desc 立即执行指定任务（API 触发：手动执行 / 测试执行）
    */
-  async executeTask(executeOptions: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
+  async executeTask(taskIdRequest: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
     try {
-      const taskRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: executeOptions.id })
+      const taskRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: taskIdRequest.id })
       if (!taskRecord) {
         throw new Error('任务不存在')
       }
@@ -94,7 +94,7 @@ export class ScheduledEmailExecutorService extends BaseService {
 
       return await this.processTask(taskRecord)
     } catch (error) {
-      logger.error(`立即执行任务失败: ${executeOptions.id}, ${error}`)
+      logger.error(`立即执行任务失败: ${taskIdRequest.id}, ${error}`)
       throw error
     }
   }
@@ -102,24 +102,24 @@ export class ScheduledEmailExecutorService extends BaseService {
   /**
    * @desc 根据查询条件触发执行（调度器回调使用，容错版：失败返回 false）
    */
-  async executeTaskWithOptions(queryOptions: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
+  async executeTaskByQuery(queryRequest: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
     try {
       const taskQuery: ScheduledEmailDao.ScheduledEmailQueryOptions = {
-        id: queryOptions.id,
-        taskName: queryOptions.taskName,
-        status: queryOptions.status,
-        taskType: queryOptions.taskType,
-        isActive: queryOptions.isActive,
-        createdBy: queryOptions.createdBy,
-        updatedBy: queryOptions.updatedBy,
-        minRetryCount: queryOptions.minRetryCount,
-        maxRetryCount: queryOptions.maxRetryCount,
-        maxRetries: queryOptions.maxRetries,
-        remarkKeyword: queryOptions.remarkKeyword,
-        scheduleTimeStart: queryOptions.scheduleTimeStart,
-        scheduleTimeEnd: queryOptions.scheduleTimeEnd,
-        nextExecutionTimeStart: queryOptions.nextExecutionTimeStart,
-        nextExecutionTimeEnd: queryOptions.nextExecutionTimeEnd
+        id: queryRequest.id,
+        taskName: queryRequest.taskName,
+        status: queryRequest.status,
+        taskType: queryRequest.taskType,
+        isActive: queryRequest.isActive,
+        createdBy: queryRequest.createdBy,
+        updatedBy: queryRequest.updatedBy,
+        minRetryCount: queryRequest.minRetryCount,
+        maxRetryCount: queryRequest.maxRetryCount,
+        maxRetries: queryRequest.maxRetries,
+        remarkKeyword: queryRequest.remarkKeyword,
+        scheduleTimeStart: queryRequest.scheduleTimeStart,
+        scheduleTimeEnd: queryRequest.scheduleTimeEnd,
+        nextExecutionTimeStart: queryRequest.nextExecutionTimeStart,
+        nextExecutionTimeEnd: queryRequest.nextExecutionTimeEnd
       }
       const taskRecord = await this.scheduledEmailMapper.getScheduledEmailTask(taskQuery)
       if (!taskRecord) {
@@ -133,7 +133,7 @@ export class ScheduledEmailExecutorService extends BaseService {
 
       return await this.processTask(taskRecord)
     } catch (error) {
-      logger.error(`执行任务失败: ${JSON.stringify(queryOptions)}, ${error}`)
+      logger.error(`执行任务失败: ${JSON.stringify(queryRequest)}, ${error}`)
       return false
     }
   }
