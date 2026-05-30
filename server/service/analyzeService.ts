@@ -33,12 +33,12 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc DAO 转 VO
-   * @param analyzeRecord {AnalyzeDao.AnalyzeOption} 分析记录
+   * @param analyzeRecord {AnalyzeDao.AnalyzeRecord} 分析记录
    * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigResponse | null} 关联图表配置
    * @returns {AnalyzeVo.AnalyzeDetailResponse}
    */
   private convertDaoToVo(
-    analyzeRecord: AnalyzeDao.AnalyzeOption,
+    analyzeRecord: AnalyzeDao.AnalyzeRecord,
     resolvedChartConfig: AnalyzeConfigVo.ChartConfigResponse | null
   ): AnalyzeVo.AnalyzeDetailResponse {
     return {
@@ -72,7 +72,7 @@ export class AnalyzeService extends BaseService {
    * @returns {Promise<boolean>}
    */
   public async deleteAnalyze(deleteRequest: AnalyzeDto.DeleteAnalyzeRequest): Promise<boolean> {
-    const queryParams: AnalyzeDao.GetAnalyzeOptions = {
+    const queryParams: AnalyzeDao.GetAnalyzeParams = {
       id: deleteRequest.id
     }
     const analyzeRecord = await this.analyzeMapper.getAnalyze(queryParams)
@@ -88,7 +88,7 @@ export class AnalyzeService extends BaseService {
       await this.chartConfigService.deleteChartConfig(deleteChartConfigRequest)
     }
     const { updatedBy, updateTime } = await super.getDefaultInfo()
-    const deleteAnalyzeParams: AnalyzeDao.DeleteAnalyzeOptions = {
+    const deleteAnalyzeParams: AnalyzeDao.DeleteAnalyzeParams = {
       id: analyzeRecord.id,
       updatedBy,
       updateTime
@@ -133,7 +133,7 @@ export class AnalyzeService extends BaseService {
     queryRequest: AnalyzeDto.GetAnalyzeListRequest = {}
   ): Promise<AnalyzeVo.AnalyzeListResponse> {
     const currentUser = this.getCurrentUser()
-    const normalizedQueryParams: AnalyzeDao.GetAnalyzeListOptions = {
+    const normalizedQueryParams: AnalyzeDao.GetAnalyzeListParams = {
       page: Math.max(1, Math.floor(Number(queryRequest.page || 1))),
       pageSize: Math.min(100, Math.max(1, Math.floor(Number(queryRequest.pageSize || 12)))),
       keyword: queryRequest.keyword?.trim() || '',
@@ -185,7 +185,7 @@ export class AnalyzeService extends BaseService {
     // 更新图表
     const { updatedBy, updateTime } = await super.getDefaultInfo()
 
-    const updateParams: AnalyzeDao.UpdateAnalyzeOptions = {
+    const updateParams: AnalyzeDao.UpdateAnalyzeParams = {
       ...analyzeUpdatePayload,
       updateTime,
       updatedBy,

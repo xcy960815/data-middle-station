@@ -138,13 +138,13 @@ export class ChartSnapshotService {
    * 根据图表类型构建对应的 ECharts 配置
    * @param {string} chartType 图表类型标识
    * @param {ChartRenderConfig} renderConfig 通用渲染配置
-   * @param {AnalyzeConfigVo.PrivateChartConfigOptions | null} privateChartConfig 私有定制配置
+   * @param {AnalyzeConfigVo.PrivateChartConfigItem | null} privateChartConfig 私有定制配置
    * @returns {EChartsCoreOption | null} 构建的 ECharts 配置
    */
   private buildChartOption(
     chartType: string,
     renderConfig: ChartRenderConfig,
-    privateChartConfig?: AnalyzeConfigVo.PrivateChartConfigOptions | null
+    privateChartConfig?: AnalyzeConfigVo.PrivateChartConfigItem | null
   ): EChartsCoreOption | null {
     switch (chartType) {
       case 'line':

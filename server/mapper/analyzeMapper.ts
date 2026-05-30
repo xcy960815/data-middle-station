@@ -31,7 +31,7 @@ export const ANALYZE_LIST_FIELDS = [
 /**
  * @desc 分析页面的行数据映射，将数据库字段转换为领域对象属性
  */
-export class AnalyzeMapping implements AnalyzeDao.AnalyzeOption, IColumnTarget {
+export class AnalyzeMapping implements AnalyzeDao.AnalyzeRecord, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -148,10 +148,10 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 新建分析配置
-   * @param {AnalyzeDao.CreateAnalyzeOptions} createAnalyzeDao 新建分析所需的字段（名称、描述、图表配置等）
+   * @param {AnalyzeDao.CreateAnalyzeParams} createAnalyzeDao 新建分析所需的字段（名称、描述、图表配置等）
    * @returns {Promise<number>} 创建成功后的 ID
    */
-  public async createAnalyze(createAnalyzeDao: AnalyzeDao.CreateAnalyzeOptions): Promise<number> {
+  public async createAnalyze(createAnalyzeDao: AnalyzeDao.CreateAnalyzeParams): Promise<number> {
     const { keys, values } = convertToSqlProperties(createAnalyzeDao)
     const sql = `INSERT INTO ${ANALYZE_TABLE_NAME} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`
     const result = await this.exe<ResultSetHeader>(sql, values)
@@ -160,45 +160,42 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 更新分析配置（不包含访问统计相关字段）
-   * @param {AnalyzeDao.UpdateAnalyzeOptions} updateAnalyzeDao 更新分析的请求参数
+   * @param {AnalyzeDao.UpdateAnalyzeParams} updateAnalyzeDao 更新分析的请求参数
    * @returns {Promise<boolean>} 是否更新成功
    */
-  public async updateAnalyze(updateAnalyzeOptions: AnalyzeDao.UpdateAnalyzeOptions): Promise<boolean> {
-    const { keys: analyzeOptionKeys, values: analyzeOptionValues } = convertToSqlProperties(updateAnalyzeOptions)
-    const analyzeOptionSetClause = analyzeOptionKeys.map((key) => `${key} = ?`).join(', ')
-    const updateAnalyzeSql = `UPDATE ${ANALYZE_TABLE_NAME} SET ${analyzeOptionSetClause} WHERE id = ? and is_deleted = 0`
-    const analyzeResult = await this.exe<ResultSetHeader>(updateAnalyzeSql, [
-      ...analyzeOptionValues,
-      updateAnalyzeOptions.id
-    ])
+  public async updateAnalyze(updateAnalyzeParams: AnalyzeDao.UpdateAnalyzeParams): Promise<boolean> {
+    const { keys, values } = convertToSqlProperties(updateAnalyzeParams)
+    const setClause = keys.map((key) => `${key} = ?`).join(', ')
+    const updateAnalyzeSql = `UPDATE ${ANALYZE_TABLE_NAME} SET ${setClause} WHERE id = ? and is_deleted = 0`
+    const analyzeResult = await this.exe<ResultSetHeader>(updateAnalyzeSql, [...values, updateAnalyzeParams.id])
 
     return analyzeResult.affectedRows > 0
   }
 
   /**
    * @desc 更新分析名称
-   * @param {AnalyzeDao.UpdateAnalyzeNameOptions} updateAnalyzeNameOptions 更新分析名称的请求参数
+   * @param {AnalyzeDao.UpdateAnalyzeNameParams} updateAnalyzeNameParams 更新分析名称的请求参数
    * @returns {Promise<boolean>} 是否更新成功
    */
-  public async updateAnalyzeName(updateAnalyzeNameOptions: AnalyzeDao.UpdateAnalyzeNameOptions): Promise<boolean> {
+  public async updateAnalyzeName(updateAnalyzeNameParams: AnalyzeDao.UpdateAnalyzeNameParams): Promise<boolean> {
     const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET analyze_name = ? WHERE id = ? and is_deleted = 0`
     const result = await this.exe<ResultSetHeader>(sql, [
-      updateAnalyzeNameOptions.analyzeName,
-      updateAnalyzeNameOptions.id
+      updateAnalyzeNameParams.analyzeName,
+      updateAnalyzeNameParams.id
     ])
     return result.affectedRows > 0
   }
 
   /**
    * @desc 更新分析描述
-   * @param {AnalyzeDao.UpdateAnalyzeDescOptions} updateAnalyzeDescOptions 更新分析描述的请求参数
+   * @param {AnalyzeDao.UpdateAnalyzeDescParams} updateAnalyzeDescParams 更新分析描述的请求参数
    * @returns {Promise<boolean>} 是否更新成功
    */
-  public async updateAnalyzeDesc(updateAnalyzeDescOptions: AnalyzeDao.UpdateAnalyzeDescOptions): Promise<boolean> {
+  public async updateAnalyzeDesc(updateAnalyzeDescParams: AnalyzeDao.UpdateAnalyzeDescParams): Promise<boolean> {
     const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET analyze_desc = ? WHERE id = ? and is_deleted = 0`
     const result = await this.exe<ResultSetHeader>(sql, [
-      updateAnalyzeDescOptions.analyzeDesc,
-      updateAnalyzeDescOptions.id
+      updateAnalyzeDescParams.analyzeDesc,
+      updateAnalyzeDescParams.id
     ])
     return result.affectedRows > 0
   }
@@ -216,14 +213,14 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 获取单个分析详情
-   * @param {AnalyzeDao.GetAnalyzeOptions} analyzeDao 查询参数（至少包含分析 ID，可附带创建/更新人等过滤条件）
+   * @param {AnalyzeDao.GetAnalyzeParams} analyzeDao 查询参数（至少包含分析 ID，可附带创建/更新人等过滤条件）
    * @returns {Promise<T>} 匹配的分析配置（若存在）
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyze<T extends AnalyzeDao.AnalyzeOption = AnalyzeDao.AnalyzeOption>(
-    analyzeOptions: AnalyzeDao.GetAnalyzeOptions
+  public async getAnalyze<T extends AnalyzeDao.AnalyzeRecord = AnalyzeDao.AnalyzeRecord>(
+    getAnalyzeParams: AnalyzeDao.GetAnalyzeParams
   ): Promise<T> {
-    const { id, analyzeName, analyzeDesc, updatedBy, updateTime, createdBy } = analyzeOptions
+    const { id, analyzeName, analyzeDesc, updatedBy, updateTime, createdBy } = getAnalyzeParams
     let whereClause = `where id = ? and is_deleted = 0`
     const whereValues: Array<string | number> = [id]
 
@@ -254,11 +251,11 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 获取分析数量
-   * @param queryOptions 列表查询参数
+   * @param query 列表查询参数
    * @returns 数量
    */
-  public async countAnalyzes(queryOptions: AnalyzeDao.GetAnalyzeListOptions): Promise<number> {
-    const { fromClause, whereClause, params } = this.buildAnalyzeListQuery(queryOptions)
+  public async countAnalyzes(query: AnalyzeDao.GetAnalyzeListParams): Promise<number> {
+    const { fromClause, whereClause, params } = this.buildAnalyzeListQuery(query)
     const sql = `select count(distinct a.id) as total ${fromClause} ${whereClause}`
     const result = await this.exe<Array<{ total: number }>>(sql, params)
     return Number(result?.[0]?.total || 0)
@@ -266,18 +263,18 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 获取分析列表
-   * @param queryOptions 列表查询参数
+   * @param query 列表查询参数
    * @returns 分析列表
    */
   @Mapping(AnalyzeListMapping)
   public async getAnalyzeList<T extends AnalyzeVo.AnalyzeListItem = AnalyzeVo.AnalyzeListItem>(
-    queryOptions: AnalyzeDao.GetAnalyzeListOptions
+    query: AnalyzeDao.GetAnalyzeListParams
   ): Promise<Array<T>> {
-    const { fromClause, whereClause, params, permissionSelectSql } = this.buildAnalyzeListQuery(queryOptions)
-    const sortField = ANALYZE_LIST_SORT_FIELD_MAP[queryOptions.sortField] || ANALYZE_LIST_SORT_FIELD_MAP.updateTime
-    const sortOrder = queryOptions.sortOrder === 'asc' ? 'ASC' : 'DESC'
-    const page = Math.max(1, Math.floor(queryOptions.page))
-    const pageSize = Math.max(1, Math.floor(queryOptions.pageSize))
+    const { fromClause, whereClause, params, permissionSelectSql } = this.buildAnalyzeListQuery(query)
+    const sortField = ANALYZE_LIST_SORT_FIELD_MAP[query.sortField] || ANALYZE_LIST_SORT_FIELD_MAP.updateTime
+    const sortOrder = query.sortOrder === 'asc' ? 'ASC' : 'DESC'
+    const page = Math.max(1, Math.floor(query.page))
+    const pageSize = Math.max(1, Math.floor(query.pageSize))
     const offset = (page - 1) * pageSize
     const sql = `
       select
@@ -336,10 +333,10 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 删除图表（逻辑删除）
-   * @param {AnalyzeDao.DeleteAnalyzeOptions} deleteAnalyzeDao 删除参数（包含 ID、操作者及时间）
+   * @param {AnalyzeDao.DeleteAnalyzeParams} deleteAnalyzeDao 删除参数（包含 ID、操作者及时间）
    * @returns 是否删除成功
    */
-  public async deleteAnalyze(deleteAnalyzeDao: AnalyzeDao.DeleteAnalyzeOptions): Promise<boolean> {
+  public async deleteAnalyze(deleteAnalyzeDao: AnalyzeDao.DeleteAnalyzeParams): Promise<boolean> {
     const { id, updatedBy, updateTime } = deleteAnalyzeDao
     const sql = `update ${ANALYZE_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ?`
     const result = await this.exe<ResultSetHeader>(sql, [updatedBy, updateTime, id])
@@ -348,10 +345,10 @@ export class AnalyzeMapper extends BaseMapper {
 
   /**
    * @desc 获取所有的图表
-   * @returns {Promise<Array<AnalyzeDao.AnalyzeOption>>}
+   * @returns {Promise<Array<AnalyzeDao.AnalyzeRecord>>}
    */
   @Mapping(AnalyzeMapping)
-  public async getAnalyzes<T extends AnalyzeDao.AnalyzeOption = AnalyzeDao.AnalyzeOption>(): Promise<Array<T>> {
+  public async getAnalyzes<T extends AnalyzeDao.AnalyzeRecord = AnalyzeDao.AnalyzeRecord>(): Promise<Array<T>> {
     const sql = `
     select
       ${ANALYZE_BASE_FIELDS.join(',\n    ')}
@@ -365,13 +362,13 @@ export class AnalyzeMapper extends BaseMapper {
    * @param keyword 搜索关键字
    * @returns where 条件和参数
    */
-  private buildAnalyzeListQuery(queryOptions: AnalyzeDao.GetAnalyzeListOptions): {
+  private buildAnalyzeListQuery(query: AnalyzeDao.GetAnalyzeListParams): {
     fromClause: string
     whereClause: string
     params: string[]
     permissionSelectSql: string
   } {
-    const roleCodes = queryOptions.roleCodes || []
+    const roleCodes = query.roleCodes || []
     const isAdmin = roleCodes.includes('admin')
     const whereConditions = ['a.is_deleted = 0']
     const params: string[] = []
@@ -380,19 +377,19 @@ export class AnalyzeMapper extends BaseMapper {
       left join analyze_role_permission arp on arp.analyze_id = a.id
       left join role r on r.id = arp.role_id and r.is_deleted = 0 and r.status = 1`
 
-    if (queryOptions.keyword?.trim()) {
+    if (query.keyword?.trim()) {
       whereConditions.push('(a.analyze_name like ? or a.analyze_desc like ?)')
-      const normalizedKeyword = `%${queryOptions.keyword.trim()}%`
+      const normalizedKeyword = `%${query.keyword.trim()}%`
       params.push(normalizedKeyword, normalizedKeyword)
     }
 
     if (!isAdmin) {
       if (roleCodes.length > 0) {
         whereConditions.push(`(a.created_by = ? or r.role_code in (${roleCodes.map(() => '?').join(',')}))`)
-        params.push(queryOptions.currentUserName || '', ...roleCodes)
+        params.push(query.currentUserName || '', ...roleCodes)
       } else {
         whereConditions.push('a.created_by = ?')
-        params.push(queryOptions.currentUserName || '')
+        params.push(query.currentUserName || '')
       }
     }
 
@@ -403,7 +400,7 @@ export class AnalyzeMapper extends BaseMapper {
       permissionSelectSql: isAdmin
         ? `'manage'`
         : `case
-            when a.created_by = ${this.escapeValue(queryOptions.currentUserName || '')} then 'manage'
+            when a.created_by = ${this.escapeValue(query.currentUserName || '')} then 'manage'
             when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 3 then 'manage'
             when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 2 then 'edit'
             when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 1 then 'view'

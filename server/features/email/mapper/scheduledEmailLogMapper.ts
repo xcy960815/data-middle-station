@@ -52,9 +52,9 @@ const SCHEDULED_EMAIL_LOG_TABLE_NAME = 'scheduled_email_logs'
 const DATA_SOURCE_NAME = 'data_middle_station'
 
 /**
- * @desc 执行日志选项映射
+ * @desc 执行日志映射
  */
-class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLogOptions, IColumnTarget {
+class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLogRecord, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -251,13 +251,13 @@ export class ScheduledEmailLogMapper extends BaseMapper {
 
   /**
    * @desc 创建执行日志
-   * @param scheduledEmailLogOptions 创建执行日志所需字段（任务 ID、执行时间、结果等）
+   * @param createScheduledEmailLogParams 创建执行日志所需字段（任务 ID、执行时间、结果等）
    * @returns 新建日志记录的主键 ID
    */
   public async createScheduledEmailLog(
-    scheduledEmailLogOptions: ScheduledEmailLogDao.CreateScheduledEmailLogOptions
+    createScheduledEmailLogParams: ScheduledEmailLogDao.CreateScheduledEmailLogParams
   ): Promise<number> {
-    const { keys, values } = convertToSqlProperties(scheduledEmailLogOptions)
+    const { keys, values } = convertToSqlProperties(createScheduledEmailLogParams)
     // 只使用数据库表中存在的字段
     const validKeys = keys.filter((key) => SCHEDULED_EMAIL_LOG_BASE_FIELDS.includes(key))
     const validValues = validKeys.map((key) => values[keys.indexOf(key)])
@@ -273,7 +273,7 @@ export class ScheduledEmailLogMapper extends BaseMapper {
    */
   @Mapping(ScheduledEmailLogMapping)
   public async getScheduledEmailLog<
-    T extends ScheduledEmailLogDao.ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
+    T extends ScheduledEmailLogDao.ScheduledEmailLogRecord = ScheduledEmailLogDao.ScheduledEmailLogRecord
   >(query: ScheduledEmailLogDao.GetScheduledEmailLogQuery): Promise<T | null> {
     const whereConditions: string[] = []
     const whereValues: Array<string | number | ScheduledEmailLogDao.Status> = []
@@ -328,13 +328,13 @@ export class ScheduledEmailLogMapper extends BaseMapper {
 
   /**
    * @desc 获取任务执行日志列表
-   * @param {ScheduledEmailLogDao.LogListQuery} query  查询参数
-   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogOptions[]>} 执行日志列表
+   * @param query 查询参数
+   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogRecord[]>} 执行日志列表
    */
   @Mapping(ScheduledEmailLogMapping)
   public async getScheduledEmailLogList(
     query: ScheduledEmailLogDao.LogListQuery
-  ): Promise<ScheduledEmailLogDao.ScheduledEmailLogOptions[]> {
+  ): Promise<ScheduledEmailLogDao.ScheduledEmailLogRecord[]> {
     const whereConditions: string[] = []
     const whereValues: Array<string | number | ScheduledEmailLogDao.Status> = []
 
@@ -372,12 +372,12 @@ export class ScheduledEmailLogMapper extends BaseMapper {
       LIMIT ? OFFSET ?
     `
 
-    return this.exe<ScheduledEmailLogDao.ScheduledEmailLogOptions[]>(sql, [...whereValues, limit, offset])
+    return this.exe<ScheduledEmailLogDao.ScheduledEmailLogRecord[]>(sql, [...whereValues, limit, offset])
   }
 
   /**
    * @desc 获取任务执行日志总数
-   * @param {ScheduledEmailLogDao.LogListQuery} query  查询参数
+   * @param query 查询参数
    * @returns {Promise<number>} 总数
    */
   public async getScheduledEmailLogCount(query: ScheduledEmailLogDao.LogListQuery): Promise<number> {
@@ -420,11 +420,11 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   /**
    * @desc 根据任务ID获取最新的执行日志
    * @param {number} taskId  任务ID
-   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogOptions | null>} 最新执行日志
+   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogRecord | null>} 最新执行日志
    */
   @Mapping(ScheduledEmailLogMapping)
   public async getLatestLogByTaskId<
-    T extends ScheduledEmailLogDao.ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
+    T extends ScheduledEmailLogDao.ScheduledEmailLogRecord = ScheduledEmailLogDao.ScheduledEmailLogRecord
   >(taskId: number): Promise<T | null> {
     const sql = `
       SELECT ${batchFormatSqlKey(SCHEDULED_EMAIL_LOG_BASE_FIELDS)}
@@ -442,7 +442,7 @@ export class ScheduledEmailLogMapper extends BaseMapper {
    * @param query 查询条件
    * @returns {Promise<number>} 删除的条数
    */
-  public async deleteLogs(query: ScheduledEmailLogDao.DeleteScheduledEmailLogOptions): Promise<number> {
+  public async deleteLogs(query: ScheduledEmailLogDao.DeleteScheduledEmailLogParams): Promise<number> {
     const whereConditions: string[] = []
     const whereValues: Array<string | number | ScheduledEmailLogDao.Status> = []
 

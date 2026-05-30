@@ -10,12 +10,12 @@ declare namespace AnalyzeConfigDao {
   /**
    * 列配置
    */
-  type ColumnOptions = DatabaseDao.TableColumnOptions & { displayName: string }
+  type ColumnItem = DatabaseDao.TableColumnRecord & { displayName: string }
 
   /**
    * 维度配置
    */
-  type DimensionOption = ColumnOptions
+  type DimensionOption = ColumnItem
 
   /**
    * 过滤聚合方式
@@ -40,7 +40,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 过滤配置
    */
-  type FilterOption = ColumnOptions & {
+  type FilterOption = ColumnItem & {
     /**
      * 过滤类型
      */
@@ -58,7 +58,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 分组配置
    */
-  type GroupOption = ColumnOptions
+  type GroupOption = ColumnItem
 
   /**
    * 排序类型
@@ -80,7 +80,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 排序配置
    */
-  type OrderOption = ColumnOptions & {
+  type OrderOption = ColumnItem & {
     /**
      * 排序类型
      */
@@ -178,7 +178,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * @desc 表格配置条件选项
    */
-  type ConditionOptions = {
+  type ConditionItem = {
     /**
      * 条件
      */
@@ -377,7 +377,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 数据库图表配置
    */
-  type ChartConfigOptions = {
+  type ChartConfigRecord = {
     /**
      * 图表id
      */
@@ -393,7 +393,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 列配置
      */
-    columns: ColumnOptions[]
+    columns: ColumnItem[]
     /**
      * 维度配置
      */
@@ -443,22 +443,22 @@ declare namespace AnalyzeConfigDao {
   /**
    * 获取图表配置请求参数
    */
-  type GetChartConfigOptions = Partial<ChartConfigOptions> & {
+  type GetChartConfigParams = Partial<ChartConfigRecord> & {
     id: number
   }
 
   /**
    * 创建图表配置请求参数
    */
-  type CreateChartConfigOptions = Omit<ChartConfigOptions, 'id' | 'isDeleted'>
+  type CreateChartConfigParams = Omit<ChartConfigRecord, 'id' | 'isDeleted'>
 
   /**
    * 更新图表配置请求参数
    */
-  type UpdateChartConfigOptions = Omit<ChartConfigOptions, 'createTime' | 'createdBy' | 'isDeleted'>
+  type UpdateChartConfigParams = Omit<ChartConfigRecord, 'createTime' | 'createdBy' | 'isDeleted'>
 
   /**
    * 删除图表配置请求参数
    */
-  type DeleteChartConfigOptions = Pick<ChartConfigOptions, 'id' | 'updatedBy' | 'updateTime'>
+  type DeleteChartConfigParams = Pick<ChartConfigRecord, 'id' | 'updatedBy' | 'updateTime'>
 }

@@ -3,7 +3,7 @@
  */
 declare namespace AnalyzeConfigDto {
   type ChartConfigPayload = Omit<
-    AnalyzeConfigDao.ChartConfigOptions,
+    AnalyzeConfigDao.ChartConfigRecord,
     'id' | 'createTime' | 'createdBy' | 'updateTime' | 'updatedBy' | 'isDeleted'
   >
 
@@ -17,12 +17,12 @@ declare namespace AnalyzeConfigDto {
   /**
    * 图表配置更新请求参数
    */
-  type UpdateChartConfigRequest = Pick<AnalyzeConfigDao.ChartConfigOptions, 'id'> & Partial<ChartConfigPayload>
+  type UpdateChartConfigRequest = Pick<AnalyzeConfigDao.ChartConfigRecord, 'id'> & Partial<ChartConfigPayload>
 
   /**
    * 图表配置删除请求参数
    */
-  type DeleteChartConfigRequest = Pick<AnalyzeConfigDao.ChartConfigOptions, 'id'>
+  type DeleteChartConfigRequest = Pick<AnalyzeConfigDao.ChartConfigRecord, 'id'>
 
   /**
    * 创建图表配置请求参数

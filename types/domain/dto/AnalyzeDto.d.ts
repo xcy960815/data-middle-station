@@ -9,7 +9,7 @@ declare namespace AnalyzeDto {
   /**
    * 获取分析请求参数
    */
-  type GetAnalyzeRequest = Pick<AnalyzeDao.AnalyzeOption, 'id'> & {
+  type GetAnalyzeRequest = Pick<AnalyzeDao.AnalyzeRecord, 'id'> & {
     trackViewCount?: boolean
   }
 
@@ -27,20 +27,20 @@ declare namespace AnalyzeDto {
   /**
    * 更新分析请求参数
    */
-  type UpdateAnalyzeRequest = Pick<AnalyzeDao.AnalyzeOption, 'id'> &
-    Partial<Pick<AnalyzeDao.AnalyzeOption, 'analyzeName' | 'analyzeDesc' | 'chartConfigId'>> & {
+  type UpdateAnalyzeRequest = Pick<AnalyzeDao.AnalyzeRecord, 'id'> &
+    Partial<Pick<AnalyzeDao.AnalyzeRecord, 'analyzeName' | 'analyzeDesc' | 'chartConfigId'>> & {
       chartConfig?: AnalyzeConfigDto.ChartConfigPayload
     }
 
   /**
    * 删除分析请求参数
    */
-  type DeleteAnalyzeRequest = Pick<AnalyzeDao.AnalyzeOption, 'id'>
+  type DeleteAnalyzeRequest = Pick<AnalyzeDao.AnalyzeRecord, 'id'>
 
   /**
    * 创建分析请求参数
    */
-  type CreateAnalyzeRequest = Pick<AnalyzeDao.AnalyzeOption, 'analyzeName' | 'analyzeDesc'> & {
+  type CreateAnalyzeRequest = Pick<AnalyzeDao.AnalyzeRecord, 'analyzeName' | 'analyzeDesc'> & {
     chartConfigId?: number | null
     chartConfig?: AnalyzeConfigDto.ChartConfigPayload
   }
@@ -48,10 +48,10 @@ declare namespace AnalyzeDto {
   /**
    * 更新分析名称请求参数
    */
-  type UpdateAnalyzeNameRequest = Pick<AnalyzeDao.AnalyzeOption, 'id' | 'analyzeName'>
+  type UpdateAnalyzeNameRequest = Pick<AnalyzeDao.AnalyzeRecord, 'id' | 'analyzeName'>
 
   /**
    * 更新分析描述请求参数
    */
-  type UpdateAnalyzeDescRequest = Pick<AnalyzeDao.AnalyzeOption, 'id' | 'analyzeDesc'>
+  type UpdateAnalyzeDescRequest = Pick<AnalyzeDao.AnalyzeRecord, 'id' | 'analyzeDesc'>
 }

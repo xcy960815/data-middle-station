@@ -76,7 +76,7 @@ const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledE
       'string.max': '邮件内容不能超过2000个字符'
     })
   }).required(),
-  analyzeOptions: Joi.object<ScheduledEmailDto.AnalyzeOption>({
+  analyzeOptions: Joi.object<ScheduledEmailDto.AnalyzePayload>({
     filename: Joi.string().min(1).max(100).required().messages({
       'string.min': '文件名不能为空',
       'string.max': '文件名不能超过100个字符',

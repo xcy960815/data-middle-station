@@ -71,42 +71,33 @@ export class DatabaseService {
 
   /**
    * @desc 查询当前数据库中所有表
-   * @param {DatabaseDto.GetDatabaseTablesOptions} queryOptions  查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.GetDatabaseTablesOptions>>}
+   * @param {DatabaseDto.GetDatabaseTablesRequest} getDatabaseTablesRequest 查询表请求参数
+   * @returns {Promise<Array<DatabaseVo.TableItem>>}
    */
   public async getDatabaseTables(
-    queryOptions: DatabaseDto.GetDatabaseTablesOptions
-  ): Promise<Array<DatabaseVo.GetDatabaseTablesOptions>> {
-    const tableRecords = await this.databaseMapper.getDatabaseTables(queryOptions)
-    return tableRecords.map((tableRecord) => {
-      const dtoPayload = this.convertDaoToDtoTable(tableRecord)
-      const normalizedTableRecord = this.convertDtoToDaoTable(dtoPayload)
-      return {
-        ...normalizedTableRecord,
-        createTime: normalizedTableRecord.createTime,
-        updateTime: normalizedTableRecord.updateTime,
-        tableName: normalizedTableRecord.tableName,
-        tableType: normalizedTableRecord.tableType,
-        tableComment: normalizedTableRecord.tableComment,
-        engine: normalizedTableRecord.engine,
-        tableCollation: normalizedTableRecord.tableCollation
-      }
-    })
+    getDatabaseTablesRequest: DatabaseDto.GetDatabaseTablesRequest
+  ): Promise<Array<DatabaseVo.TableItem>> {
+    const tableParams: DatabaseDao.GetTablesParams = {
+      tableName: getDatabaseTablesRequest.tableName
+    }
+    const tableRecords = await this.databaseMapper.getDatabaseTables(tableParams)
+    return tableRecords.map((tableRecord) => this.convertTableRecordToItem(tableRecord))
   }
 
   /**
    * @desc 查询当前数据库中表的列
-   * @param {DatabaseDto.GetTableColumnsOptions} queryOptions 查询表请求参数
-   * @returns {Promise<Array<DatabaseVo.GetTableColumnsOptions>>}
+   * @param {DatabaseDto.GetTableColumnsRequest} getTableColumnsRequest 查询表请求参数
+   * @returns {Promise<Array<DatabaseVo.TableColumnItem>>}
    */
   public async getTableColumns(
-    queryOptions: DatabaseDto.GetTableColumnsOptions
-  ): Promise<Array<DatabaseVo.GetTableColumnsOptions>> {
-    const columnRecords = await this.databaseMapper.getTableColumns(queryOptions)
+    getTableColumnsRequest: DatabaseDto.GetTableColumnsRequest
+  ): Promise<Array<DatabaseVo.TableColumnItem>> {
+    const tableColumnParams: DatabaseDao.GetTableColumnsParams = {
+      tableName: getTableColumnsRequest.tableName
+    }
+    const columnRecords = await this.databaseMapper.getTableColumns(tableColumnParams)
     return columnRecords.map((columnRecord) => {
-      const dtoPayload = this.convertDaoToDtoColumn(columnRecord)
-      const normalizedColumnRecord = this.convertDtoToDaoColumn(dtoPayload)
-      const columnTypeValue = normalizedColumnRecord.columnType
+      const columnTypeValue = columnRecord.columnType
       // let columnType = ''
       // if (NUMBER_TYPE_ENUM.some((type) => columnTypeValue.includes(type))) {
       //   columnType = 'number'
@@ -118,39 +109,27 @@ export class DatabaseService {
       //   columnType = columnTypeValue
       // }
       return {
-        columnName: normalizedColumnRecord.columnName,
+        columnName: columnRecord.columnName,
         columnType: columnTypeValue,
-        columnComment: normalizedColumnRecord.columnComment,
-        displayName: normalizedColumnRecord.columnComment
+        columnComment: columnRecord.columnComment,
+        displayName: columnRecord.columnComment
       }
     })
   }
 
   /**
-   * @desc 将数据库表记录转换为 DTO。
+   * @desc 将数据库表记录转换为接口返回对象。
    */
-  private convertDaoToDtoTable(tableRecord: DatabaseDao.TableOptions): DatabaseDto.TableDto {
-    return { ...tableRecord }
-  }
-
-  /**
-   * @desc 将数据库表 DTO 转换为 DAO。
-   */
-  private convertDtoToDaoTable(tableData: DatabaseDto.TableDto): DatabaseDao.TableOptions {
-    return { ...tableData }
-  }
-
-  /**
-   * @desc 将数据库字段记录转换为 DTO。
-   */
-  private convertDaoToDtoColumn(columnRecord: DatabaseDao.TableColumnOptions): DatabaseDto.TableColumnDto {
-    return { ...columnRecord }
-  }
-
-  /**
-   * @desc 将数据库字段 DTO 转换为 DAO。
-   */
-  private convertDtoToDaoColumn(columnData: DatabaseDto.TableColumnDto): DatabaseDao.TableColumnOptions {
-    return { ...columnData }
+  private convertTableRecordToItem(tableRecord: DatabaseDao.TableRecord): DatabaseVo.TableItem {
+    return {
+      ...tableRecord,
+      createTime: tableRecord.createTime,
+      updateTime: tableRecord.updateTime,
+      tableName: tableRecord.tableName,
+      tableType: tableRecord.tableType,
+      tableComment: tableRecord.tableComment,
+      engine: tableRecord.engine,
+      tableCollation: tableRecord.tableCollation
+    }
   }
 }

@@ -5,12 +5,12 @@ declare namespace AnalyzeConfigVo {
   /**
    * 列配置选项
    */
-  type ColumnOptions = DatabaseVo.GetTableColumnsOptions
+  type ColumnItem = DatabaseVo.TableColumnItem
 
   /**
    * 维度配置选项
    */
-  type DimensionOption = DatabaseVo.GetTableColumnsOptions & {
+  type DimensionOption = DatabaseVo.TableColumnItem & {
     __invalid?: boolean
   }
 
@@ -44,7 +44,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 分组配置选项
    */
-  type GroupOption = DatabaseVo.GetTableColumnsOptions & {
+  type GroupOption = DatabaseVo.TableColumnItem & {
     __invalid?: boolean
   }
 
@@ -78,21 +78,21 @@ declare namespace AnalyzeConfigVo {
   /**
    * @desc 公共图表配置
    */
-  type CommonChartConfigOptions = AnalyzeConfigDao.CommonChartConfig
+  type CommonChartConfigItem = AnalyzeConfigDao.CommonChartConfig
 
   /**
    * @desc 私有图表配置
    */
-  type PrivateChartConfigOptions = AnalyzeConfigDao.PrivateChartConfig
+  type PrivateChartConfigItem = AnalyzeConfigDao.PrivateChartConfig
 
   /**
    * 图表配置响应
    */
   type ChartConfigResponse = Omit<
-    AnalyzeConfigDao.ChartConfigOptions,
+    AnalyzeConfigDao.ChartConfigRecord,
     'columns' | 'dimensions' | 'filters' | 'groups' | 'orders'
   > & {
-    columns: ColumnOptions[]
+    columns: ColumnItem[]
     dimensions: DimensionOption[]
     filters: FilterOption[]
     groups: GroupOption[]
@@ -102,25 +102,25 @@ declare namespace AnalyzeConfigVo {
   /**
    * @desc 饼图配置
    */
-  type PieChartConfigOptions = AnalyzeConfigDao.PieChartConfig
+  type PieChartConfigItem = AnalyzeConfigDao.PieChartConfig
 
   /**
    * @desc 柱状图配置
    */
-  type IntervalChartConfigOptions = AnalyzeConfigDao.IntervalChartConfig
+  type IntervalChartConfigItem = AnalyzeConfigDao.IntervalChartConfig
 
   /**
    * @desc 折线图配置
    */
-  type LineChartConfigOptions = AnalyzeConfigDao.LineChartConfig
+  type LineChartConfigItem = AnalyzeConfigDao.LineChartConfig
 
   /**
    * @desc 表格配置
    */
-  type TableChartConfigOptions = AnalyzeConfigDao.TableChartConfig
+  type TableChartConfigItem = AnalyzeConfigDao.TableChartConfig
 
   /**
    * @desc 表格配置条件选项
    */
-  type ConditionOptions = AnalyzeConfigDao.ConditionOptions
+  type ConditionItem = AnalyzeConfigDao.ConditionItem
 }

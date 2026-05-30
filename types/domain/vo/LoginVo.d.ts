@@ -5,7 +5,7 @@ declare namespace LoginVo {
   /**
    * 登录选项
    */
-  type LoginOptions = {
+  type LoginResponse = {
     userId: string
     userName: string
   }

@@ -10,31 +10,31 @@ declare namespace ChartConfigStore {
   /**
    * @desc 表格配置
    */
-  type TableChartConfig = AnalyzeConfigVo.TableChartConfigOptions
+  type TableChartConfig = AnalyzeConfigVo.TableChartConfigItem
 
   /**
    * @desc 饼图配置
    */
-  type PieChartConfig = AnalyzeConfigVo.PieChartConfigOptions
+  type PieChartConfig = AnalyzeConfigVo.PieChartConfigItem
 
   /**
    * @desc 柱状图配置
    */
-  type IntervalChartConfig = AnalyzeConfigVo.IntervalChartConfigOptions
+  type IntervalChartConfig = AnalyzeConfigVo.IntervalChartConfigItem
 
   /**
    * @desc 折线图配置
    */
-  type LineChartConfig = AnalyzeConfigVo.LineChartConfigOptions
+  type LineChartConfig = AnalyzeConfigVo.LineChartConfigItem
 
   /**
    * @desc 图表公共配置
    */
-  type CommonChartConfig = AnalyzeConfigVo.CommonChartConfigOptions
+  type CommonChartConfig = AnalyzeConfigVo.CommonChartConfigItem
   /**
    * @desc 私有图表配置
    */
-  type PrivateChartConfig = AnalyzeConfigVo.PrivateChartConfigOptions
+  type PrivateChartConfig = AnalyzeConfigVo.PrivateChartConfigItem
 
   /**
    * @desc 图表配置状态
@@ -71,7 +71,7 @@ declare namespace ChartConfigStore {
     /**
      * @desc 设置表格图配置条件
      */
-    setTableChartConditions(conditions: AnalyzeConfigVo.ConditionOptions[]): void
+    setTableChartConditions(conditions: AnalyzeConfigVo.ConditionItem[]): void
     /**
      * @desc 设置表格图配置
      */

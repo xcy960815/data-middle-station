@@ -27,7 +27,7 @@ const sendEmailChartTypeSchema = Joi.string()
     'any.only': `图表类型必须是 ${SUPPORTED_SERVER_RENDER_CHART_TYPES.join('、')} 之一`
   })
 
-export const manualSendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
+export const manualSendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
     to: Joi.string().email().required().messages({
       'string.email': '收件人邮箱格式不正确',
@@ -42,7 +42,7 @@ export const manualSendEmailSchema = Joi.object<SendEmailDto.SendEmailOptions>({
       'string.max': '附加内容不能超过5000个字符'
     })
   }).required(),
-  analyzeOptions: Joi.object<SendEmailDto.AnalyzeOption>({
+  analyzeOptions: Joi.object<SendEmailDto.AnalyzePayload>({
     filename: Joi.string().min(1).max(100).optional().messages({
       'string.min': '文件名不能为空',
       'string.max': '文件名不能超过100个字符'
@@ -100,7 +100,7 @@ export class SendEmailService {
   /**
    * @desc 邮件传输器
    */
-  private transporter: Transporter<SendEmailDao.SendEmailOptions> | null = null
+  private transporter: Transporter<SendEmailDao.SendEmailResultRecord> | null = null
   /**
    * @desc 发件人画像（地址 / 通道 / 传输信息），由 mailerProfile 统一解析
    */
@@ -162,23 +162,23 @@ export class SendEmailService {
 
   /**
    * @desc 发送邮件
-   * @param sendOptions {SendEmailDto.SendEmailOptions}
-   * @returns {Promise<SendEmailVo.SendEmailOptions>} messageId
+   * @param sendEmailRequest {SendEmailDto.SendChartEmailRequest}
+   * @returns {Promise<SendEmailVo.SendEmailResponse>} messageId
    */
-  public async sendMail(sendOptions: SendEmailDto.SendEmailOptions): Promise<SendEmailVo.SendEmailOptions> {
+  public async sendMail(sendEmailRequest: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailResponse> {
     if (!this.transporter) {
       this.createTransporter()
     }
 
     // 根据 analyzeId 自动补全图表信息
-    const resolvedAnalyzeOptions = await this.resolveAnalyzeOptions(sendOptions.analyzeOptions)
+    const resolvedAnalyzePayload = await this.resolveAnalyzePayload(sendEmailRequest.analyzeOptions)
 
     // 构建附件配置
-    const attachments = this.buildAttachments(resolvedAnalyzeOptions)
-    const mailPayload = this.convertDtoToDao(sendOptions, attachments, resolvedAnalyzeOptions)
+    const attachments = this.buildAttachments(resolvedAnalyzePayload)
+    const mailPayload = this.buildSendMailPayload(sendEmailRequest, attachments, resolvedAnalyzePayload)
 
     const sendResult = await this.transporter!.sendMail(mailPayload)
-    const sendResultData = this.convertDaoToDto({
+    const sendResultResponse = this.convertResultRecordToResponse({
       messageId: sendResult.messageId,
       accepted: sendResult.accepted,
       rejected: sendResult.rejected,
@@ -190,20 +190,20 @@ export class SendEmailService {
       envelope: sendResult.envelope
     })
 
-    logger.info(`邮件已发送，messageId=${sendResult.messageId}，收件人=${chalk.cyan(sendOptions.emailConfig.to)}`)
+    logger.info(`邮件已发送，messageId=${sendResult.messageId}，收件人=${chalk.cyan(sendEmailRequest.emailConfig.to)}`)
 
     return {
-      messageId: sendResultData.messageId,
-      accepted: sendResultData.accepted,
-      rejected: sendResultData.rejected,
-      ehlo: sendResultData.ehlo,
-      envelopeTime: sendResultData.envelopeTime,
-      messageTime: sendResultData.messageTime,
-      messageSize: sendResultData.messageSize,
-      response: sendResultData.response,
-      envelope: sendResultData.envelope,
-      sender: sendResultData.sender || this.getSenderAddress(),
-      channel: sendResultData.channel || this.getChannel(),
+      messageId: sendResultResponse.messageId,
+      accepted: sendResultResponse.accepted,
+      rejected: sendResultResponse.rejected,
+      ehlo: sendResultResponse.ehlo,
+      envelopeTime: sendResultResponse.envelopeTime,
+      messageTime: sendResultResponse.messageTime,
+      messageSize: sendResultResponse.messageSize,
+      response: sendResultResponse.response,
+      envelope: sendResultResponse.envelope,
+      sender: sendResultResponse.sender || this.getSenderAddress(),
+      channel: sendResultResponse.channel || this.getChannel(),
       transport: this.getTransportInfo(),
       attachments: attachments.map((item) => ({
         filename: item.filename,
@@ -219,30 +219,30 @@ export class SendEmailService {
   }
 
   /**
-   * @desc DTO -> nodemailer 发送参数转换
-   * @param sendOptions {SendEmailDto.SendEmailOptions} 邮件请求
+   * @desc 组装 nodemailer 发送参数。
+   * @param sendEmailRequest {SendEmailDto.SendChartEmailRequest} 邮件请求
    * @param attachments {Attachment[]} 附件列表
-   * @param analyzeOptions {SendEmailDto.AnalyzeOption} 图表选项
+   * @param analyzeOptions {SendEmailDto.AnalyzePayload} 图表选项
    */
-  private convertDtoToDao(
-    sendOptions: SendEmailDto.SendEmailOptions,
+  private buildSendMailPayload(
+    sendEmailRequest: SendEmailDto.SendChartEmailRequest,
     attachments: Attachment[],
-    analyzeOptions: SendEmailDto.AnalyzeOption
+    analyzeOptions: SendEmailDto.AnalyzePayload
   ): SendMailPayload {
     return {
       from: this.getSenderAddress(),
-      to: sendOptions.emailConfig.to,
-      subject: sendOptions.emailConfig.subject,
-      html: this.buildEmailContent(sendOptions.emailConfig, analyzeOptions),
+      to: sendEmailRequest.emailConfig.to,
+      subject: sendEmailRequest.emailConfig.subject,
+      html: this.buildEmailContent(sendEmailRequest.emailConfig, analyzeOptions),
       attachments
     }
   }
 
   /**
-   * @desc nodemailer 结果 -> DTO 转换
-   * @param sendResult {SendEmailDao.SendEmailOptions} nodemailer 返回结果
+   * @desc nodemailer 结果 -> 接口响应转换
+   * @param sendResult {SendEmailDao.SendEmailResultRecord} nodemailer 返回结果
    */
-  private convertDaoToDto(sendResult: SendEmailDao.SendEmailOptions): SendEmailDto.SendEmailResultDto {
+  private convertResultRecordToResponse(sendResult: SendEmailDao.SendEmailResultRecord): SendEmailVo.SendEmailResponse {
     return {
       ...sendResult,
       sender: this.getSenderAddress(),
@@ -252,10 +252,10 @@ export class SendEmailService {
 
   /**
    * @desc 构建附件配置
-   * @param analyzeOptions {SendEmailDto.AnalyzeOption}
+   * @param analyzeOptions {SendEmailDto.AnalyzePayload}
    * @returns {Array}
    */
-  private buildAttachments(analyzeOptions: SendEmailDto.AnalyzeOption): Array<Attachment> {
+  private buildAttachments(analyzeOptions: SendEmailDto.AnalyzePayload): Array<Attachment> {
     if (!analyzeOptions.filename) {
       return []
     }
@@ -286,7 +286,9 @@ export class SendEmailService {
   /**
    * 根据 analyzeId 自动生成附件所需的图表快照
    */
-  private async resolveAnalyzeOptions(analyzeOptions: SendEmailDto.AnalyzeOption): Promise<SendEmailDto.AnalyzeOption> {
+  private async resolveAnalyzePayload(
+    analyzeOptions: SendEmailDto.AnalyzePayload
+  ): Promise<SendEmailDto.AnalyzePayload> {
     if (analyzeOptions.fileContent || analyzeOptions.filePath) {
       if (!analyzeOptions.filename) {
         throw new Error('缺少附件文件名，无法发送邮件')
@@ -313,10 +315,13 @@ export class SendEmailService {
   /**
    * @desc 构建邮件内容
    * @param emailConfig {SendEmailDto.EmailConfig}
-   * @param analyzeOptions {SendEmailDto.AnalyzeOption}
+   * @param analyzeOptions {SendEmailDto.AnalyzePayload}
    * @returns {string}
    */
-  private buildEmailContent(emailConfig: SendEmailDto.EmailConfig, analyzeOptions: SendEmailDto.AnalyzeOption): string {
+  private buildEmailContent(
+    emailConfig: SendEmailDto.EmailConfig,
+    analyzeOptions: SendEmailDto.AnalyzePayload
+  ): string {
     const additionalContent = emailConfig.additionalContent
       ? `<div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
            <p style="margin: 0; color: #495057;">${emailConfig.additionalContent.replace(/\n/g, '<br>')}</p>

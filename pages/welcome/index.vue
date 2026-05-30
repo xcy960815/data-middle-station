@@ -259,7 +259,7 @@ onUnmounted(() => {
 const userStore = useUserStore()
 const loginLoading = ref(false)
 const loginError = ref('')
-const loginForm = reactive<LoginDto.LoginOptions>({
+const loginForm = reactive<LoginDto.LoginRequest>({
   userName: '',
   password: ''
 })
@@ -278,7 +278,7 @@ const handleLogin = async () => {
   loginLoading.value = true
   loginError.value = ''
   try {
-    const loginResult = await $fetch<ApiResponseI<LoginVo.LoginOptions>>('/api/login', {
+    const loginResult = await $fetch<ApiResponseI<LoginVo.LoginResponse>>('/api/login', {
       method: 'POST',
       body: {
         userName: loginForm.userName,

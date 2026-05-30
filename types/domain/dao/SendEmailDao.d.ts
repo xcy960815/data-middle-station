@@ -5,7 +5,7 @@ declare namespace SendEmailDao {
   /**
    * @desc 发送邮件结果
    */
-  type SendEmailOptions = {
+  type SendEmailResultRecord = {
     /**
      * 邮件消息ID
      */

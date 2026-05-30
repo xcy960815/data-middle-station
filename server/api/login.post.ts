@@ -31,23 +31,23 @@ async function writeLoginLog(options: Parameters<UserMapper['createLoginLog']>[0
 /**
  * 登录API
  */
-export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginOptions>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginResponse>>>(async (event) => {
   const loginIp = getRealClientIP(event)
   const userAgent = getHeader(event, 'user-agent') || ''
   try {
     // 获取请求体数据
-    const body = await readBody<LoginDto.LoginOptions>(event)
+    const loginRequest = await readBody<LoginDto.LoginRequest>(event)
     /**
      * @desc 判断用户名和密码是否为空
      */
-    if (!body.userName || !body.password) {
+    if (!loginRequest.userName || !loginRequest.password) {
       return ApiResponse.error('用户名和密码不能为空')
     }
-    const user = await userMapper.getUserForLogin(body.userName)
+    const user = await userMapper.getUserForLogin(loginRequest.userName)
     if (!user) {
-      logger.warn(chalk.yellow(`用户 ${body.userName} 登录失败: 用户名或密码错误`))
+      logger.warn(chalk.yellow(`用户 ${loginRequest.userName} 登录失败: 用户名或密码错误`))
       await writeLoginLog({
-        userName: body.userName,
+        userName: loginRequest.userName,
         loginIp,
         userAgent,
         status: 'failed',
@@ -68,7 +68,7 @@ export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginOptions>>>(a
       return ApiResponse.error('用户已禁用')
     }
 
-    const passwordMatched = await verifyPassword(body.password, user.passwordHash)
+    const passwordMatched = await verifyPassword(loginRequest.password, user.passwordHash)
     if (!passwordMatched) {
       await writeLoginLog({
         userId: user.id,

@@ -35,7 +35,7 @@ const logger = new Logger({ fileName: 'scheduled-email-executor', folderName: 's
  * @description Executor 内部需要在回收成功后重新把任务加入调度器，调度器消费的是 Vo 形态
  */
 const convertDaoToVoForScheduler = (
-  record: ScheduledEmailDao.ScheduledEmailOptions
+  record: ScheduledEmailDao.ScheduledEmailRecord
 ): ScheduledEmailVo.ScheduledEmailTaskResponse => ({
   id: record.id,
   taskName: record.taskName,
@@ -104,7 +104,7 @@ export class ScheduledEmailExecutorService extends BaseService {
    */
   async executeTaskByQuery(queryRequest: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
     try {
-      const taskQuery: ScheduledEmailDao.ScheduledEmailQueryOptions = {
+      const taskQuery: ScheduledEmailDao.ScheduledEmailQuery = {
         id: queryRequest.id,
         taskName: queryRequest.taskName,
         status: queryRequest.status,
@@ -272,7 +272,7 @@ export class ScheduledEmailExecutorService extends BaseService {
    *
    * @returns 是否最终发送成功
    */
-  private async processTask(taskRecord: ScheduledEmailDao.ScheduledEmailOptions): Promise<boolean> {
+  private async processTask(taskRecord: ScheduledEmailDao.ScheduledEmailRecord): Promise<boolean> {
     const startTime = Date.now()
     let success = false
     let errorMessage = ''

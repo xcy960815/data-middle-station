@@ -13,17 +13,17 @@ export class ChartConfigService extends BaseService {
   }
   /**
    * @desc 将dao对象转换为vo对象
-   * @param chartConfigRecord {AnalyzeConfigDao.ChartConfigOptions} 图表配置
+   * @param chartConfigRecord {AnalyzeConfigDao.ChartConfigRecord} 图表配置
    * @returns {AnalyzeConfigVo.ChartConfigResponse} 图表配置
    */
-  private convertDaoToVo(chartConfigRecord: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigVo.ChartConfigResponse {
+  private convertDaoToVo(chartConfigRecord: AnalyzeConfigDao.ChartConfigRecord): AnalyzeConfigVo.ChartConfigResponse {
     const normalizedData = this.convertDaoToDto(chartConfigRecord)
     return {
       ...normalizedData,
       /**
        * 列配置
        */
-      columns: normalizedData.columns.map((item: AnalyzeConfigDao.ColumnOptions) => ({
+      columns: normalizedData.columns.map((item: AnalyzeConfigDao.ColumnItem) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
@@ -113,7 +113,7 @@ export class ChartConfigService extends BaseService {
    */
   public async deleteChartConfig(deleteRequest: AnalyzeConfigDto.DeleteChartConfigRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
-    const deleteParams: AnalyzeConfigDao.DeleteChartConfigOptions = {
+    const deleteParams: AnalyzeConfigDao.DeleteChartConfigParams = {
       id: deleteRequest.id,
       updatedBy,
       updateTime
@@ -124,7 +124,7 @@ export class ChartConfigService extends BaseService {
   /**
    * @desc DAO -> DTO
    */
-  private convertDaoToDto(chartConfigRecord: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigDao.ChartConfigOptions {
+  private convertDaoToDto(chartConfigRecord: AnalyzeConfigDao.ChartConfigRecord): AnalyzeConfigDao.ChartConfigRecord {
     return {
       ...chartConfigRecord,
       columns: chartConfigRecord.columns || [],
@@ -140,8 +140,8 @@ export class ChartConfigService extends BaseService {
    */
   private convertDtoToDao(
     chartConfigData: AnalyzeConfigDto.UpdateChartConfigRequest &
-      Pick<AnalyzeConfigDao.UpdateChartConfigOptions, 'updatedBy' | 'updateTime'>
-  ): AnalyzeConfigDao.UpdateChartConfigOptions {
+      Pick<AnalyzeConfigDao.UpdateChartConfigParams, 'updatedBy' | 'updateTime'>
+  ): AnalyzeConfigDao.UpdateChartConfigParams {
     return {
       ...chartConfigData,
       updatedBy: chartConfigData.updatedBy,

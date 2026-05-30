@@ -3,14 +3,14 @@
  */
 declare namespace ScheduledEmailLogVo {
   /**
-   * @desc 执行日志选项
+   * @desc 执行日志项
    */
-  type ScheduledEmailLogOptions = ScheduledEmailLogDao.ScheduledEmailLogOptions
+  type ExecutionLogItem = ScheduledEmailLogDao.ScheduledEmailLogRecord
 
   /**
    * @desc 获取日志响应
    */
-  type GetScheduledEmailLogOptions = ScheduledEmailLogOptions
+  type ExecutionLogResponse = ExecutionLogItem
 
   /**
    * @desc 日志统计信息
@@ -18,13 +18,13 @@ declare namespace ScheduledEmailLogVo {
   type LogStatistics = ScheduledEmailLogDao.LogStatistics
 
   /**
-   * @desc 日志列表选项
+   * @desc 日志列表响应
    */
-  interface LogListOptions {
+  interface LogListResponse {
     /**
      * 日志列表
      */
-    logs: ScheduledEmailLogOptions[]
+    logs: ExecutionLogItem[]
     /**
      * 总数
      */

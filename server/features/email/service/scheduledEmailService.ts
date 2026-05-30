@@ -58,7 +58,7 @@ export class ScheduledEmailService extends BaseService {
       const { createdBy, updatedBy, createTime, updateTime } = await super.getDefaultInfo()
       const nextExecutionTime = calculateTaskNextExecutionTime(createRequest)
 
-      const createParams: ScheduledEmailDao.CreateScheduledEmailOptions = {
+      const createParams: ScheduledEmailDao.CreateScheduledEmailParams = {
         taskName: createRequest.taskName,
         scheduleTime: createRequest.scheduleTime || null,
         taskType: createRequest.taskType,
@@ -157,7 +157,7 @@ export class ScheduledEmailService extends BaseService {
 
     const { updatedBy, updateTime } = await super.getDefaultInfo()
 
-    const updateParams: ScheduledEmailDao.UpdateScheduledEmailOptions = {
+    const updateParams: ScheduledEmailDao.UpdateScheduledEmailParams = {
       ...existingRecord,
       id: updateRequest.id,
       taskType: finalTaskType,
@@ -202,7 +202,7 @@ export class ScheduledEmailService extends BaseService {
       }
 
       const { updatedBy, updateTime } = await super.getDefaultInfo()
-      const deleteParams: ScheduledEmailDao.DeleteScheduledEmailOptions = {
+      const deleteParams: ScheduledEmailDao.DeleteScheduledEmailParams = {
         id: deleteRequest.id,
         updatedBy,
         updatedTime: updateTime
@@ -382,8 +382,8 @@ export class ScheduledEmailService extends BaseService {
    * 获取任务执行日志
    */
   async getScheduledEmailLogList(
-    queryRequest: ScheduledEmailLogDto.LogListQuery
-  ): Promise<ScheduledEmailDto.ExecutionLog[]> {
+    queryRequest: ScheduledEmailLogDto.LogListRequest
+  ): Promise<ScheduledEmailDto.ExecutionLogItem[]> {
     try {
       const normalizedLogListQuery = {
         limit: queryRequest.limit ?? 20,
@@ -450,7 +450,7 @@ export class ScheduledEmailService extends BaseService {
   /**
    * DAO -> VO
    */
-  private convertDaoToVo(record: ScheduledEmailDao.ScheduledEmailOptions): ScheduledEmailVo.ScheduledEmailTaskResponse {
+  private convertDaoToVo(record: ScheduledEmailDao.ScheduledEmailRecord): ScheduledEmailVo.ScheduledEmailTaskResponse {
     return {
       id: record.id,
       taskName: record.taskName,

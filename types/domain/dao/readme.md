@@ -23,7 +23,7 @@
 
 ```typescript
 // 在 Service 或 Mapper 中使用
-const chartConfig: AnalyzeConfigDao.ChartConfigOptions = {
+const chartConfig: AnalyzeConfigDao.ChartConfigRecord = {
   // ...
 }
 ```

@@ -3,14 +3,14 @@
  */
 declare namespace DatabaseVo {
   /**
-   * 表配置选项
+   * 表信息
    */
-  type GetDatabaseTablesOptions = DatabaseDao.TableOptions
+  type TableItem = DatabaseDao.TableRecord
 
   /**
-   * 表列配置选项
+   * 表列信息
    */
-  type GetTableColumnsOptions = DatabaseDao.TableColumnOptions & {
+  type TableColumnItem = DatabaseDao.TableColumnRecord & {
     displayName: string
   }
 }

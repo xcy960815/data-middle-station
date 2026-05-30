@@ -14,10 +14,10 @@ const logger = new Logger({
   folderName: 'api'
 })
 
-export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailOptions>>>(async (event) => {
-  let sendEmailRequest: SendEmailDto.SendEmailOptions | null = null
+export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
+  let sendEmailRequest: SendEmailDto.SendChartEmailRequest | null = null
   try {
-    const requestBody = await readBody<SendEmailDto.SendEmailOptions>(event)
+    const requestBody = await readBody<SendEmailDto.SendChartEmailRequest>(event)
 
     const { error, value } = validateSendEmailPayload(manualSendEmailSchema, requestBody)
 

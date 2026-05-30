@@ -59,7 +59,7 @@ declare namespace ScheduledEmailDao {
   /**
    * @desc 分析选项
    */
-  type AnalyzeOption = {
+  type AnalyzeSnapshot = {
     /**
      * 附件名称
      */
@@ -85,7 +85,7 @@ declare namespace ScheduledEmailDao {
   /**
    * @desc 定时邮件任务选项
    */
-  type ScheduledEmailOptions = {
+  type ScheduledEmailRecord = {
     /**
      * 任务ID
      */
@@ -125,7 +125,7 @@ declare namespace ScheduledEmailDao {
     /**
      * 图表数据
      */
-    analyzeOptions: AnalyzeOption
+    analyzeOptions: AnalyzeSnapshot
     /**
      * 任务状态
      */
@@ -171,7 +171,7 @@ declare namespace ScheduledEmailDao {
   /**
    * @desc 定时邮件任务查询条件
    */
-  type ScheduledEmailQueryOptions = {
+  type ScheduledEmailQuery = {
     /**
      * 任务ID
      */
@@ -234,29 +234,29 @@ declare namespace ScheduledEmailDao {
     nextExecutionTimeEnd?: string
   }
 
-  type GetScheduledEmailOptions = Partial<ScheduledEmailOptions> & {
+  type GetScheduledEmailParams = Partial<ScheduledEmailRecord> & {
     id: number
   }
 
   /**
    * @desc 创建任务参数
    */
-  type CreateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'id'>
+  type CreateScheduledEmailParams = Omit<ScheduledEmailRecord, 'id'>
 
   /**
    * @desc 更新任务参数
    */
-  type UpdateScheduledEmailOptions = Omit<ScheduledEmailOptions, 'createdTime' | 'createdBy'>
+  type UpdateScheduledEmailParams = Omit<ScheduledEmailRecord, 'createdTime' | 'createdBy'>
 
   /**
    * @desc 删除任务参数
    */
-  type DeleteScheduledEmailOptions = Pick<ScheduledEmailOptions, 'id' | 'updatedBy' | 'updatedTime'>
+  type DeleteScheduledEmailParams = Pick<ScheduledEmailRecord, 'id' | 'updatedBy' | 'updatedTime'>
 
   /**
    * @desc 任务列表查询参数
    */
-  type ScheduledEmailListOptions = ScheduledEmailQueryOptions & {
+  type ScheduledEmailListParams = ScheduledEmailQuery & {
     keyword?: string
     limit?: number
     offset?: number

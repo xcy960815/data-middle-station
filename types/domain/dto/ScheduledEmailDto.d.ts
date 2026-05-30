@@ -5,7 +5,7 @@ declare namespace ScheduledEmailDto {
   /**
    * 执行日志 (Snake Case for frontend/external use)
    */
-  interface ExecutionLog {
+  interface ExecutionLogItem {
     id: number
     task_id: number
     execution_time: string
@@ -50,10 +50,10 @@ declare namespace ScheduledEmailDto {
   }
 
   type EmailConfig = ScheduledEmailDao.EmailConfig
-  type AnalyzeOption = ScheduledEmailDao.AnalyzeOption
+  type AnalyzePayload = ScheduledEmailDao.AnalyzeSnapshot
 
   type ScheduledEmailTaskPayload = Pick<
-    ScheduledEmailDao.ScheduledEmailOptions,
+    ScheduledEmailDao.ScheduledEmailRecord,
     | 'taskName'
     | 'taskType'
     | 'scheduleTime'
@@ -67,18 +67,18 @@ declare namespace ScheduledEmailDto {
   /**
    * 获取定时邮件任务请求参数
    */
-  type GetScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailOptions, 'id'>
+  type GetScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailRecord, 'id'>
 
   /**
    * 更新定时邮件任务请求参数
    */
-  type UpdateScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailOptions, 'id'> &
+  type UpdateScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailRecord, 'id'> &
     Partial<ScheduledEmailTaskPayload>
 
   /**
    * 删除定时邮件任务请求参数
    */
-  type DeleteScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailOptions, 'id'>
+  type DeleteScheduledEmailRequest = Pick<ScheduledEmailDao.ScheduledEmailRecord, 'id'>
 
   /**
    * 创建定时邮件任务请求参数
@@ -88,15 +88,15 @@ declare namespace ScheduledEmailDto {
   /**
    * 任务 ID 请求参数
    */
-  type ScheduledEmailTaskIdRequest = Pick<ScheduledEmailDao.ScheduledEmailOptions, 'id'>
+  type ScheduledEmailTaskIdRequest = Pick<ScheduledEmailDao.ScheduledEmailRecord, 'id'>
 
   /**
    * 定时邮件任务查询参数
    */
-  type ScheduledEmailQueryRequest = ScheduledEmailDao.ScheduledEmailQueryOptions
+  type ScheduledEmailQueryRequest = ScheduledEmailDao.ScheduledEmailQuery
 
   /**
    * 定时邮件列表查询参数
    */
-  type ScheduledEmailListRequest = ScheduledEmailDao.ScheduledEmailListOptions
+  type ScheduledEmailListRequest = ScheduledEmailDao.ScheduledEmailListParams
 }

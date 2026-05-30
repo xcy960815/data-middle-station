@@ -14,7 +14,7 @@ declare namespace SendEmailDto {
     additionalContent: string
   }
 
-  interface AnalyzeOption {
+  interface AnalyzePayload {
     /**
      * 文件名
      */
@@ -41,7 +41,7 @@ declare namespace SendEmailDto {
     analyzeId: number
   }
 
-  interface SendEmailOptions {
+  interface SendChartEmailRequest {
     /**
      * 邮件配置
      */
@@ -49,7 +49,7 @@ declare namespace SendEmailDto {
     /**
      * 分析选项
      */
-    analyzeOptions: AnalyzeOption
+    analyzeOptions: AnalyzePayload
   }
   /**
    * 图表导出配置
@@ -63,10 +63,7 @@ declare namespace SendEmailDto {
     scale?: number
   }
 
-  type SendEmailResultDto = SendEmailDao.SendEmailOptions & {
-    sender?: string
-    channel?: string
-  }
+  type SendChartEmailPayload = SendChartEmailRequest
 }
 
 // export = SendEmailDto

@@ -9,7 +9,7 @@ declare namespace ScheduledEmailVo {
   /**
    * @desc 定时邮件任务响应
    */
-  type ScheduledEmailTaskResponse = Omit<ScheduledEmailDao.ScheduledEmailOptions, 'emailConfig'> & {
+  type ScheduledEmailTaskResponse = Omit<ScheduledEmailDao.ScheduledEmailRecord, 'emailConfig'> & {
     emailConfig: ScheduledEmailTaskEmailConfig
   }
 

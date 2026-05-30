@@ -5,23 +5,13 @@ declare namespace DatabaseDto {
   /**
    * @desc 查询表列请求参数
    */
-  type GetTableColumnsOptions = {
+  type GetTableColumnsRequest = {
     tableName: string
   }
   /**
    * @desc 查询表请求参数
    */
-  type GetDatabaseTablesOptions = {
+  type GetDatabaseTablesRequest = {
     tableName?: string
   }
-
-  /**
-   * @desc 数据表 DTO
-   */
-  type TableDto = DatabaseDao.TableOptions
-
-  /**
-   * @desc 数据列 DTO
-   */
-  type TableColumnDto = DatabaseDao.TableColumnOptions
 }

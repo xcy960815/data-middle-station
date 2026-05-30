@@ -2,7 +2,7 @@
  * @desc  分析响应
  */
 declare namespace AnalyzeVo {
-  type AnalyzeDetailResponse = AnalyzeDao.AnalyzeOption & {
+  type AnalyzeDetailResponse = AnalyzeDao.AnalyzeRecord & {
     /**
      * 图表配置
      */
@@ -11,7 +11,7 @@ declare namespace AnalyzeVo {
   }
 
   type AnalyzeListItem = Pick<
-    AnalyzeDao.AnalyzeOption,
+    AnalyzeDao.AnalyzeRecord,
     'id' | 'analyzeName' | 'analyzeDesc' | 'viewCount' | 'createTime' | 'updateTime' | 'createdBy' | 'updatedBy'
   > & {
     analyzePermission?: PermissionVo.AnalyzePermissionType

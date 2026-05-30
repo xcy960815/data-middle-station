@@ -353,7 +353,7 @@ watch(
  * @returns {Promise<void>}
  */
 const queryTableColumn = async (tableName: string) => {
-  const result = await httpRequest<ApiResponseI<DatabaseVo.GetTableColumnsOptions[]>>('/api/getTableColumns', {
+  const result = await httpRequest<ApiResponseI<DatabaseVo.TableColumnItem[]>>('/api/getTableColumns', {
     method: 'POST',
     body: {
       tableName

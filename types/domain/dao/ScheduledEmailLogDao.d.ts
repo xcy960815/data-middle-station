@@ -6,7 +6,7 @@ declare namespace ScheduledEmailLogDao {
   /**
    * @desc 执行日志选项
    */
-  type ScheduledEmailLogOptions = {
+  type ScheduledEmailLogRecord = {
     /**
      * 日志ID
      */
@@ -133,7 +133,7 @@ declare namespace ScheduledEmailLogDao {
   /**
    * @desc 创建日志参数
    */
-  type CreateScheduledEmailLogOptions = Omit<ScheduledEmailLogOptions, 'id'>
+  type CreateScheduledEmailLogParams = Omit<ScheduledEmailLogRecord, 'id'>
 
   /**
    * @desc 日志查询参数
@@ -202,7 +202,7 @@ declare namespace ScheduledEmailLogDao {
   /**
    * @desc 获取日志请求参数
    */
-  type GetScheduledEmailLogOptions = Partial<ScheduledEmailLogOptions> & {
+  type GetScheduledEmailLogParams = Partial<ScheduledEmailLogRecord> & {
     id: number
   }
 
@@ -267,7 +267,7 @@ declare namespace ScheduledEmailLogDao {
   /**
    * @desc 执行日志删除参数
    */
-  type DeleteScheduledEmailLogOptions = GetScheduledEmailLogQuery
+  type DeleteScheduledEmailLogParams = GetScheduledEmailLogQuery
 
   /**
    * @desc 成功率统计查询参数

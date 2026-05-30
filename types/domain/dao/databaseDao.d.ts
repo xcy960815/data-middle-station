@@ -5,7 +5,7 @@ declare namespace DatabaseDao {
   /**
    * @desc 左侧数据源列表
    */
-  export type TableOptions = {
+  export type TableRecord = {
     /**
      * @desc 表名
      */
@@ -63,7 +63,7 @@ declare namespace DatabaseDao {
   /**
    * @desc 查询表请求参数
    */
-  type GetTableOptions = {
+  type GetTablesParams = {
     tableName?: string
   }
 
@@ -130,7 +130,7 @@ declare namespace DatabaseDao {
   /**
    * @desc 左侧数据源字段类型 刚从数据库出来的字段
    */
-  export type TableColumnOptions = {
+  export type TableColumnRecord = {
     /**
      * @desc 列名
      */
@@ -153,7 +153,7 @@ declare namespace DatabaseDao {
     expression?: string
   }
 
-  type GetTableColumnOptions = {
+  type GetTableColumnsParams = {
     tableName: string
   }
 }

@@ -5,7 +5,7 @@ import { toLine } from '@/server/utils/databaseHelper'
 /**
  * @desc 表列表映射
  */
-export class TableOptionMapping implements DatabaseDao.TableOptions, IColumnTarget {
+export class TableMapping implements DatabaseDao.TableRecord, IColumnTarget {
   @Column('TABLE_NAME')
   tableName!: string
 
@@ -60,7 +60,7 @@ export class TableOptionMapping implements DatabaseDao.TableOptions, IColumnTarg
 /**
  * @desc 表列映射
  */
-export class TableColumnMapping implements DatabaseDao.TableColumnOptions, IColumnTarget {
+export class TableColumnMapping implements DatabaseDao.TableColumnRecord, IColumnTarget {
   /**
    * @desc 列名
    */
@@ -105,16 +105,16 @@ export class DatabaseMapper extends BaseMapper {
    * @param getTableRequest 表列表查询条件（支持按表名模糊搜索）
    * @returns 表元数据列表
    */
-  @Mapping(TableOptionMapping)
-  public async getDatabaseTables<T extends DatabaseDao.TableOptions = DatabaseDao.TableOptions>(
-    getTableRequest: DatabaseDao.GetTableOptions
+  @Mapping(TableMapping)
+  public async getDatabaseTables<T extends DatabaseDao.TableRecord = DatabaseDao.TableRecord>(
+    getTablesParams: DatabaseDao.GetTablesParams
   ): Promise<Array<T>> {
     const whereConditions: string[] = ["table_type = 'BASE TABLE'", 'table_schema = ?']
     const whereValues: Array<string> = [tableSchema]
 
-    if (getTableRequest.tableName) {
+    if (getTablesParams.tableName) {
       whereConditions.push('table_name LIKE ?')
-      whereValues.push(`%${getTableRequest.tableName}%`)
+      whereValues.push(`%${getTablesParams.tableName}%`)
     }
 
     const sql = `SELECT
@@ -143,8 +143,8 @@ export class DatabaseMapper extends BaseMapper {
    * @returns 指定表的列元数据列表
    */
   @Mapping(TableColumnMapping)
-  public async getTableColumns<T extends DatabaseDao.TableColumnOptions>(
-    getTableColumnsOptions: DatabaseDao.GetTableColumnOptions
+  public async getTableColumns<T extends DatabaseDao.TableColumnRecord>(
+    getTableColumnsParams: DatabaseDao.GetTableColumnsParams
   ): Promise<Array<T>> {
     const sql = `SELECT
         column_name,
@@ -155,7 +155,7 @@ export class DatabaseMapper extends BaseMapper {
       WHERE
         table_name = ?
         AND table_schema = ?;`
-    const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsOptions.tableName), tableSchema])
+    const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsParams.tableName), tableSchema])
     return result
   }
 }
