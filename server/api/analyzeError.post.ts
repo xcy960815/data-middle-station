@@ -1,3 +1,5 @@
+import { sendStream, setResponseHeader } from 'h3'
+
 /**
  * @desc AI 分析错误
  */
@@ -63,7 +65,9 @@ export default defineEventHandler(async (event) => {
                   if (content) {
                     send({ type: 'ai_chunk', content })
                   }
-                } catch (e) {}
+                } catch (_error) {
+                  // 忽略 DeepSeek 流式响应中的非 JSON 行
+                }
               }
             }
           }

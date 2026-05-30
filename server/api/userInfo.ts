@@ -3,8 +3,7 @@ import { AVATAR } from '@/server/api/login.post'
  * @desc 获取用户信息
  */
 export default defineEventHandler<Promise<ApiResponseI<UserInfoVo.UserInfoOptions>>>(async (event) => {
-  const token = JwtUtils.getTokenFromCookie(event)
-  const userInfo = JwtUtils.verifyToken(token as string)
+  const userInfo = event.context.user
   const userId = userInfo.userId
   const userName = userInfo.userName
   return ApiResponse.success({

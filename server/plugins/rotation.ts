@@ -1,23 +1,12 @@
-import dayjs from 'dayjs'
-
 const logger = new Logger({
   fileName: 'rotation',
   folderName: 'plugins'
 })
+
 /**
- * @desc 轮训类型任务
- * @returns Promise<void>
- */
-async function queryTasks() {
-  logger.info(`queryTasks ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`)
-  await serverSleep(3000000)
-  queryTasks()
-}
-/**
- * @desc 可以在这里做一些轮询操作
- * @returns {Promise<void>}
+ * @desc 预留给非邮件类周期任务的插件。
+ * 当前没有已启用任务，避免启动空轮询造成日志噪音和无法显式清理的递归定时器。
  */
 export default defineNitroPlugin(() => {
-  logger.info('其他调度任务开启')
-  queryTasks()
+  logger.info('其他调度任务插件已加载，当前无启用任务')
 })

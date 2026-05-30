@@ -1,13 +1,15 @@
 import { AnalyzeMapper } from '@/server/mapper/analyzeMapper'
 import { PermissionMapper } from '@/server/mapper/permissionMapper'
+import { BaseService } from '@/server/service/baseService'
 
 const PERMISSION_TYPES = new Set<PermissionVo.AnalyzePermissionType>(['none', 'view', 'edit', 'manage'])
 
-export class PermissionService {
+export class PermissionService extends BaseService {
   private permissionMapper: PermissionMapper
   private analyzeMapper: AnalyzeMapper
 
   constructor() {
+    super()
     this.permissionMapper = new PermissionMapper()
     this.analyzeMapper = new AnalyzeMapper()
   }
@@ -23,10 +25,8 @@ export class PermissionService {
     }
   }
 
-  public async getAnalyzeRolePermissions(
-    analyzeId: number,
-    currentUser?: { userName: string; roleCodes?: string[] }
-  ): Promise<PermissionVo.GetAnalyzeRolePermissionsOptions> {
+  public async getAnalyzeRolePermissions(analyzeId: number): Promise<PermissionVo.GetAnalyzeRolePermissionsOptions> {
+    const currentUser = this.getCurrentUser()
     if (currentUser) {
       await this.assertCanManageAnalyze(analyzeId, currentUser.userName, currentUser.roleCodes || [])
     }
@@ -47,10 +47,14 @@ export class PermissionService {
   }
 
   public async updateAnalyzeRolePermissions(
-    options: PermissionDto.UpdateAnalyzeRolePermissionsOptions,
-    operator: string,
-    roleCodes: string[] = []
+    options: PermissionDto.UpdateAnalyzeRolePermissionsOptions
   ): Promise<PermissionVo.UpdateAnalyzeRolePermissionsOptions> {
+    const currentUser = this.getCurrentUser()
+    if (!currentUser) {
+      throw new Error('未获取到当前用户信息')
+    }
+    const operator = currentUser.userName
+    const roleCodes = currentUser.roleCodes || []
     const analyze = await this.assertCanManageAnalyze(options.analyzeId, operator, roleCodes)
     if (!analyze) {
       throw new Error('分析不存在')

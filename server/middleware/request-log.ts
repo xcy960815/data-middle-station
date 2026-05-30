@@ -58,10 +58,8 @@ export default defineEventHandler((event: H3Event<EventHandlerRequest>) => {
   const clientIP = getRealClientIP(event)
 
   try {
-    // 尝试从请求头获取 token
-    const token = JwtUtils.getTokenFromCookie(event)
-    if (token) {
-      const payload = JwtUtils.verifyToken(token)
+    const payload = event.context.user
+    if (payload) {
       // 记录已认证用户的访问日志
       logger.info(`用户 ${payload.userName} (ID: ${payload.userId}) 访问接口: ${method} ${pathname} - IP: ${clientIP}`)
     } else {

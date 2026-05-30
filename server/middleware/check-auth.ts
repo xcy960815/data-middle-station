@@ -106,6 +106,7 @@ export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) =>
       // 返回 401 错误而不是重定向
       return createAuthError(RequestCodeEnum.Unauthorized, 'token已过期')
     }
+    event.context.user = payload
     // 记录成功的认证日志
     logger.info(`认证成功: ${payload.userName} (ID: ${payload.userId}) ${method} ${pathname} - IP: ${clientIP}`)
   } catch (error) {

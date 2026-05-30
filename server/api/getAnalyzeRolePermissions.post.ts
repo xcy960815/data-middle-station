@@ -10,12 +10,7 @@ export default defineEventHandler<Promise<ApiResponseI<PermissionVo.GetAnalyzeRo
       if (!Number.isInteger(analyzeId) || analyzeId <= 0) {
         return ApiResponse.error('分析ID不合法')
       }
-      const token = JwtUtils.getTokenFromCookie(event)
-      const userInfo = JwtUtils.verifyToken(token as string)
-      const permissions = await permissionService.getAnalyzeRolePermissions(analyzeId, {
-        userName: userInfo.userName,
-        roleCodes: userInfo.roleCodes || []
-      })
+      const permissions = await permissionService.getAnalyzeRolePermissions(analyzeId)
       return ApiResponse.success(permissions)
     } catch (error) {
       return ApiResponse.error((error as Error).message)

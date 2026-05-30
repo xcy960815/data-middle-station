@@ -92,6 +92,7 @@
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
+import { defineAsyncComponent } from 'vue'
 import ContextMenu from '../../../../components/context-menu/index.vue'
 import { clearAllHandler } from '../clearAll'
 

@@ -181,6 +181,7 @@ module.exports = [
       '@typescript-eslint': typescript
     },
     rules: {
+      'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -214,6 +215,7 @@ module.exports = [
     },
     rules: {
       // Vue 规则自定义
+      'no-undef': 'off',
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
       'vue/require-default-prop': 'off',

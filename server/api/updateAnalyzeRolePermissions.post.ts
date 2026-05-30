@@ -6,13 +6,7 @@ export default defineEventHandler<Promise<ApiResponseI<PermissionVo.UpdateAnalyz
   async (event) => {
     try {
       const body = await readBody<PermissionDto.UpdateAnalyzeRolePermissionsOptions>(event)
-      const token = JwtUtils.getTokenFromCookie(event)
-      const userInfo = JwtUtils.verifyToken(token as string)
-      const permissions = await permissionService.updateAnalyzeRolePermissions(
-        body,
-        userInfo.userName,
-        userInfo.roleCodes || []
-      )
+      const permissions = await permissionService.updateAnalyzeRolePermissions(body)
       return ApiResponse.success(permissions)
     } catch (error) {
       return ApiResponse.error((error as Error).message)

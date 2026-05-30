@@ -2,6 +2,15 @@ import { AnalyzeMapper } from '@/server/mapper/analyzeMapper'
 import { BaseService } from '@/server/service/baseService'
 import { ChartConfigService } from '@/server/service/chartConfigService'
 
+type AnalyzePermissionLevel = 'view' | 'edit' | 'manage'
+
+const ANALYZE_PERMISSION_LEVEL_MAP: Record<PermissionVo.AnalyzePermissionType, number> = {
+  none: 0,
+  view: 1,
+  edit: 2,
+  manage: 3
+}
+
 /**
  * @desc 分析服务
  */
@@ -37,6 +46,26 @@ export class AnalyzeService extends BaseService {
       chartConfig: resolvedChartConfig
     }
   }
+
+  /**
+   * @desc 校验当前用户对分析的最低权限。
+   */
+  private async assertAnalyzePermission(analyzeId: number, requiredPermission: AnalyzePermissionLevel): Promise<void> {
+    const currentUser = this.getCurrentUser()
+    if (!currentUser) {
+      return
+    }
+
+    const permission = await this.analyzeMapper.getAnalyzePermission(
+      analyzeId,
+      currentUser.userName,
+      currentUser.roleCodes || []
+    )
+    if (ANALYZE_PERMISSION_LEVEL_MAP[permission] < ANALYZE_PERMISSION_LEVEL_MAP[requiredPermission]) {
+      throw new Error('无权访问该分析')
+    }
+  }
+
   /**
    * @desc 删除分析
    * @param {AnalyzeDto.DeleteAnalyzeOptions} deleteOptions
@@ -50,6 +79,7 @@ export class AnalyzeService extends BaseService {
     if (!analyzeRecord) {
       throw new Error('分析不存在')
     }
+    await this.assertAnalyzePermission(deleteOptions.id, 'manage')
     if (analyzeRecord.chartConfigId) {
       const deleteChartConfigOptions: AnalyzeConfigDao.DeleteChartConfigOptions = {
         id: analyzeRecord.chartConfigId,
@@ -79,6 +109,7 @@ export class AnalyzeService extends BaseService {
     if (!analyzeRecord) {
       throw new Error('分析不存在')
     }
+    await this.assertAnalyzePermission(analyzeRecord.id, 'view')
 
     if (trackViewCount) {
       await this.analyzeMapper.updateViewCount(analyzeRecord.id)
@@ -100,10 +131,8 @@ export class AnalyzeService extends BaseService {
    * @desc 获取所有图表
    * @returns {Promise<Array<AnalyzeVo.GetAnalyzeResponse>>}
    */
-  public async getAnalyzes(
-    queryOptions: AnalyzeDto.GetAnalyzesOptions = {},
-    currentUser?: { userName: string; roleCodes?: string[] }
-  ): Promise<AnalyzeVo.GetAnalyzesOptions> {
+  public async getAnalyzes(queryOptions: AnalyzeDto.GetAnalyzesOptions = {}): Promise<AnalyzeVo.GetAnalyzesOptions> {
+    const currentUser = this.getCurrentUser()
     const normalizedQueryOptions: AnalyzeDao.GetAnalyzeListOptions = {
       page: Math.max(1, Math.floor(Number(queryOptions.page || 1))),
       pageSize: Math.min(100, Math.max(1, Math.floor(Number(queryOptions.pageSize || 12)))),
@@ -136,6 +165,7 @@ export class AnalyzeService extends BaseService {
    * @returns {Promise<AnalyzeVo.UpdateAnalyzeResponse>}
    */
   public async updateAnalyze(updateOptions: AnalyzeDto.UpdateAnalyzeOptions): Promise<AnalyzeVo.UpdateAnalyzeOptions> {
+    await this.assertAnalyzePermission(updateOptions.id, 'edit')
     // 拆出图表配置后，剩余字段为分析实体本身的更新载荷
     const { chartConfig, ...analyzeUpdatePayload } = updateOptions
     let chartConfigId = updateOptions.chartConfigId
@@ -203,6 +233,7 @@ export class AnalyzeService extends BaseService {
   public async updateAnalyzeName(
     updateOptions: AnalyzeDto.UpdateAnalyzeNameOptions
   ): Promise<AnalyzeVo.UpdateAnalyzeNameOptions> {
+    await this.assertAnalyzePermission(updateOptions.id, 'edit')
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const updateAnalyzeNameOptions = {
       ...updateOptions,
@@ -221,6 +252,7 @@ export class AnalyzeService extends BaseService {
   public async updateAnalyzeDesc(
     updateOptions: AnalyzeDto.UpdateAnalyzeDescOptions
   ): Promise<AnalyzeVo.UpdateAnalyzeDescOptions> {
+    await this.assertAnalyzePermission(updateOptions.id, 'edit')
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const updateAnalyzeDescOptions = {
       ...updateOptions,

@@ -163,10 +163,10 @@ export default defineNuxtConfig({
     },
     // 服务端路由缓存
     routeRules: {
-      // API 路由缓存配置
+      // API 默认包含登录态、POST 查询与写操作，不能被代理层缓存。
       '/api/**': {
         headers: {
-          'Cache-Control': 's-maxage=300' // 5分钟缓存
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
         }
       },
       // 静态资源缓存

@@ -150,6 +150,7 @@
 </template>
 
 <script setup lang="ts">
+import { httpRequest } from '@/composables/useHttpRequest'
 import type { FormInstance, FormRules } from 'element-plus'
 import {
   ElButton,
