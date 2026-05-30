@@ -214,7 +214,7 @@ const permissionDialogTitle = computed(
  */
 const getAnalyzes = async (targetPage = page.value) => {
   homePageStore.setLoading(true)
-  const res = await httpRequest<ApiResponseI<AnalyzeVo.GetAnalyzesOptions>>('/api/getAnalyzes', {
+  const res = await httpRequest<ApiResponseI<AnalyzeVo.AnalyzeListResponse>>('/api/getAnalyzes', {
     method: 'POST',
     body: {
       page: targetPage,

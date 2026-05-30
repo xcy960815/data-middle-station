@@ -5,11 +5,11 @@ const analyzeService = new AnalyzeService()
 /**
  * @desc 获取分析列表
  * @param event
- * @returns {Promise<ApiResponseI<AnalyzeVo.GetAnalyzesOptions>>}
+ * @returns {Promise<ApiResponseI<AnalyzeVo.AnalyzeListResponse>>}
  */
-export default defineEventHandler<Promise<ApiResponseI<AnalyzeVo.GetAnalyzesOptions>>>(async (event) => {
+export default defineEventHandler<Promise<ApiResponseI<AnalyzeVo.AnalyzeListResponse>>>(async (event) => {
   try {
-    const body = (await readBody<AnalyzeDto.GetAnalyzesOptions>(event).catch(() => ({}))) || {}
+    const body = (await readBody<AnalyzeDto.GetAnalyzeListRequest>(event).catch(() => ({}))) || {}
     const getAnalyzesResult = await analyzeService.getAnalyzes(body)
     return ApiResponse.success(getAnalyzesResult)
   } catch (e: any) {

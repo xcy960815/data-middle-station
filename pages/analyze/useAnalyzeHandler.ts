@@ -29,7 +29,7 @@ export const useAnalyzeHandler = () => {
     analyzeStore.setEditorHydrating(true)
 
     try {
-      const result = await httpRequest<ApiResponseI<AnalyzeVo.GetAnalyzeOptions>>('/api/getAnalyze', {
+      const result = await httpRequest<ApiResponseI<AnalyzeVo.AnalyzeDetailResponse>>('/api/getAnalyze', {
         method: 'post',
         body: {
           id,

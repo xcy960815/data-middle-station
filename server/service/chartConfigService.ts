@@ -14,9 +14,9 @@ export class ChartConfigService extends BaseService {
   /**
    * @desc 将dao对象转换为vo对象
    * @param chartConfigRecord {AnalyzeConfigDao.ChartConfigOptions} 图表配置
-   * @returns {AnalyzeConfigVo.ChartConfigOptions} 图表配置
+   * @returns {AnalyzeConfigVo.ChartConfigResponse} 图表配置
    */
-  private convertDaoToVo(chartConfigRecord: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigVo.ChartConfigOptions {
+  private convertDaoToVo(chartConfigRecord: AnalyzeConfigDao.ChartConfigOptions): AnalyzeConfigVo.ChartConfigResponse {
     const normalizedData = this.convertDaoToDto(chartConfigRecord)
     return {
       ...normalizedData,
@@ -60,22 +60,22 @@ export class ChartConfigService extends BaseService {
 
   /**
    * @desc 获取图表
-   * @param {AnalyzeConfigDto.GetChartConfigOptions} queryOptions 图表配置请求参数
-   * @returns {Promise<AnalyzeConfigVo.ChartConfigOptions>}
+   * @param {AnalyzeConfigDto.GetChartConfigRequest} queryOptions 图表配置请求参数
+   * @returns {Promise<AnalyzeConfigVo.ChartConfigResponse>}
    */
   public async getChartConfig(
-    queryOptions: AnalyzeConfigDto.GetChartConfigOptions
-  ): Promise<AnalyzeConfigVo.ChartConfigOptions> {
+    queryOptions: AnalyzeConfigDto.GetChartConfigRequest
+  ): Promise<AnalyzeConfigVo.ChartConfigResponse> {
     const chartConfigRecord = await this.chartConfigMapper.getChartConfig(queryOptions)
     return this.convertDaoToVo(chartConfigRecord)
   }
 
   /**
    * @desc 更新图表配置
-   * @param {AnalyzeConfigDto.UpdateChartConfigOptions} updateOptions 图表配置
+   * @param {AnalyzeConfigDto.UpdateChartConfigRequest} updateOptions 图表配置
    * @returns {Promise<boolean>}
    */
-  public async updateChartConfig(updateOptions: AnalyzeConfigDto.UpdateChartConfigOptions): Promise<boolean> {
+  public async updateChartConfig(updateOptions: AnalyzeConfigDto.UpdateChartConfigRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const enrichedOptions = {
       ...updateOptions,
@@ -88,12 +88,12 @@ export class ChartConfigService extends BaseService {
 
   /**
    * @desc 创建图表配置
-   * @param {AnalyzeConfigDto.CreateChartConfigOptions} createOptions 图表配置
-   * @returns {Promise<number>}
+   * @param {AnalyzeConfigDto.CreateChartConfigRequest} createOptions 图表配置
+   * @returns {Promise<AnalyzeConfigVo.ChartConfigResponse>}
    */
   public async createChartConfig(
-    createOptions: AnalyzeConfigDto.CreateChartConfigOptions
-  ): Promise<AnalyzeConfigVo.CreateChartConfigOptions> {
+    createOptions: AnalyzeConfigDto.CreateChartConfigRequest
+  ): Promise<AnalyzeConfigVo.ChartConfigResponse> {
     const { createdBy, createTime, updateTime, updatedBy } = await this.getDefaultInfo()
     const enrichedOptions = {
       ...createOptions,
@@ -108,10 +108,10 @@ export class ChartConfigService extends BaseService {
 
   /**
    * @desc 删除图表配置
-   * @param {AnalyzeConfigDto.DeleteChartConfigOptions} deleteOptions 图表配置删除请求参数
+   * @param {AnalyzeConfigDto.DeleteChartConfigRequest} deleteOptions 图表配置删除请求参数
    * @returns {Promise<boolean>}
    */
-  public async deleteChartConfig(deleteOptions: AnalyzeConfigDto.DeleteChartConfigOptions): Promise<boolean> {
+  public async deleteChartConfig(deleteOptions: AnalyzeConfigDto.DeleteChartConfigRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const deleteParams: AnalyzeConfigDao.DeleteChartConfigOptions = {
       id: deleteOptions.id,
@@ -139,7 +139,7 @@ export class ChartConfigService extends BaseService {
    * @desc DTO -> DAO
    */
   private convertDtoToDao(
-    chartConfigData: AnalyzeConfigDto.UpdateChartConfigOptions &
+    chartConfigData: AnalyzeConfigDto.UpdateChartConfigRequest &
       Pick<AnalyzeConfigDao.UpdateChartConfigOptions, 'updatedBy' | 'updateTime'>
   ): AnalyzeConfigDao.UpdateChartConfigOptions {
     return {

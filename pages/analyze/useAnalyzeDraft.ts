@@ -10,7 +10,7 @@ export const useAnalyzeDraft = () => {
   const orderStore = useOrdersStore()
   const filterStore = useFiltersStore()
 
-  const buildAnalyzeDraftPayload = (): AnalyzeDto.UpdateAnalyzeOptions => {
+  const buildAnalyzeDraftPayload = (): AnalyzeDto.UpdateAnalyzeRequest => {
     return {
       id: analyzeStore.getAnalyzeId!,
       analyzeName: analyzeStore.getAnalyzeName,

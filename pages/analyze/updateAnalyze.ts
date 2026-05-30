@@ -18,7 +18,7 @@ export const updateAnalyzeHandler = () => {
     }
     const payload = buildAnalyzeDraftPayload()
     analyzeStore.setEditorSaving(true)
-    const result = await httpRequest<ApiResponseI<AnalyzeVo.UpdateAnalyzeOptions>>('/api/updateAnalyze', {
+    const result = await httpRequest<ApiResponseI<AnalyzeVo.AnalyzeDetailResponse>>('/api/updateAnalyze', {
       method: 'POST',
       body: payload
     }).finally(() => {

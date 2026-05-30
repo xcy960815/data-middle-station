@@ -2,6 +2,14 @@
  * @desc  分析响应
  */
 declare namespace AnalyzeVo {
+  type AnalyzeDetailResponse = AnalyzeDao.AnalyzeOption & {
+    /**
+     * 图表配置
+     */
+    chartConfig: AnalyzeConfigVo.ChartConfigResponse | null
+    analyzePermission?: PermissionVo.AnalyzePermissionType
+  }
+
   type AnalyzeListItem = Pick<
     AnalyzeDao.AnalyzeOption,
     'id' | 'analyzeName' | 'analyzeDesc' | 'viewCount' | 'createTime' | 'updateTime' | 'createdBy' | 'updatedBy'
@@ -9,7 +17,7 @@ declare namespace AnalyzeVo {
     analyzePermission?: PermissionVo.AnalyzePermissionType
   }
 
-  type GetAnalyzesOptions = {
+  type AnalyzeListResponse = {
     list: AnalyzeListItem[]
     total: number
     page: number
@@ -18,45 +26,4 @@ declare namespace AnalyzeVo {
     sortField: AnalyzeDao.AnalyzeListSortField
     sortOrder: AnalyzeDao.AnalyzeListSortOrder
   }
-
-  /**
-   * @desc 分析选项
-   */
-  type AnalyzeOption = AnalyzeDao.AnalyzeOption & {
-    /**
-     * 图表配置
-     */
-    chartConfig: AnalyzeConfigVo.ChartConfigOptions | null
-    analyzePermission?: PermissionVo.AnalyzePermissionType
-  }
-
-  /**
-   * @desc 获取分析响应
-   */
-  type GetAnalyzeOptions = AnalyzeOption
-
-  /**
-   * @desc 创建分析响应
-   */
-  type CreateAnalyzeOptions = AnalyzeOption
-
-  /**
-   * @desc 更新分析响应
-   */
-  type UpdateAnalyzeOptions = AnalyzeOption
-
-  /**
-   * @desc 更新分析名称响应
-   */
-  type UpdateAnalyzeNameOptions = boolean
-
-  /**
-   * @desc 更新分析描述响应
-   */
-  type UpdateAnalyzeDescOptions = boolean
-
-  /**
-   * @desc 删除分析响应
-   */
-  type DeleteAnalyzeOptions = boolean
 }

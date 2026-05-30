@@ -34,13 +34,13 @@ export class AnalyzeService extends BaseService {
   /**
    * @desc DAO 转 VO
    * @param analyzeRecord {AnalyzeDao.AnalyzeOption} 分析记录
-   * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigOptions | null} 关联图表配置
-   * @returns {AnalyzeVo.GetAnalyzeOptions}
+   * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigResponse | null} 关联图表配置
+   * @returns {AnalyzeVo.AnalyzeDetailResponse}
    */
   private convertDaoToVo(
     analyzeRecord: AnalyzeDao.AnalyzeOption,
-    resolvedChartConfig: AnalyzeConfigVo.ChartConfigOptions | null
-  ): AnalyzeVo.AnalyzeOption {
+    resolvedChartConfig: AnalyzeConfigVo.ChartConfigResponse | null
+  ): AnalyzeVo.AnalyzeDetailResponse {
     return {
       ...analyzeRecord,
       chartConfig: resolvedChartConfig
@@ -68,10 +68,10 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 删除分析
-   * @param {AnalyzeDto.DeleteAnalyzeOptions} deleteOptions
-   * @returns {Promise<AnalyzeVo.DeleteAnalyzeResponse>}
+   * @param {AnalyzeDto.DeleteAnalyzeRequest} deleteOptions
+   * @returns {Promise<boolean>}
    */
-  public async deleteAnalyze(deleteOptions: AnalyzeDto.DeleteAnalyzeOptions): Promise<AnalyzeVo.DeleteAnalyzeOptions> {
+  public async deleteAnalyze(deleteOptions: AnalyzeDto.DeleteAnalyzeRequest): Promise<boolean> {
     const queryOptions: AnalyzeDao.GetAnalyzeOptions = {
       id: deleteOptions.id
     }
@@ -100,10 +100,10 @@ export class AnalyzeService extends BaseService {
   }
   /**
    * @desc 获取分析
-   * @param {AnalyzeDto.GetAnalyzeOptions} queryOptions
-   * @returns {Promise<AnalyzeVo.GetAnalyzeResponse>}
+   * @param {AnalyzeDto.GetAnalyzeRequest} queryOptions
+   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>}
    */
-  public async getAnalyze(queryOptions: AnalyzeDto.GetAnalyzeOptions): Promise<AnalyzeVo.GetAnalyzeOptions> {
+  public async getAnalyze(queryOptions: AnalyzeDto.GetAnalyzeRequest): Promise<AnalyzeVo.AnalyzeDetailResponse> {
     const { trackViewCount = false, ...analyzeQueryOptions } = queryOptions
     const analyzeRecord = await this.analyzeMapper.getAnalyze(analyzeQueryOptions)
     if (!analyzeRecord) {
@@ -129,9 +129,11 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 获取所有图表
-   * @returns {Promise<Array<AnalyzeVo.GetAnalyzeResponse>>}
+   * @returns {Promise<AnalyzeVo.AnalyzeListResponse>}
    */
-  public async getAnalyzes(queryOptions: AnalyzeDto.GetAnalyzesOptions = {}): Promise<AnalyzeVo.GetAnalyzesOptions> {
+  public async getAnalyzes(
+    queryOptions: AnalyzeDto.GetAnalyzeListRequest = {}
+  ): Promise<AnalyzeVo.AnalyzeListResponse> {
     const currentUser = this.getCurrentUser()
     const normalizedQueryOptions: AnalyzeDao.GetAnalyzeListOptions = {
       page: Math.max(1, Math.floor(Number(queryOptions.page || 1))),
@@ -161,10 +163,10 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 更新分析
-   * @param {AnalyzeDto.UpdateAnalyzeOptions} updateOptions
-   * @returns {Promise<AnalyzeVo.UpdateAnalyzeResponse>}
+   * @param {AnalyzeDto.UpdateAnalyzeRequest} updateOptions
+   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>}
    */
-  public async updateAnalyze(updateOptions: AnalyzeDto.UpdateAnalyzeOptions): Promise<AnalyzeVo.UpdateAnalyzeOptions> {
+  public async updateAnalyze(updateOptions: AnalyzeDto.UpdateAnalyzeRequest): Promise<AnalyzeVo.AnalyzeDetailResponse> {
     await this.assertAnalyzePermission(updateOptions.id, 'edit')
     // 拆出图表配置后，剩余字段为分析实体本身的更新载荷
     const { chartConfig, ...analyzeUpdatePayload } = updateOptions
@@ -201,10 +203,10 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 创建图表
-   * @param {AnalyzeDto.CreateAnalyzeOptions} createOptions
-   * @returns {Promise<AnalyzeVo.CreateAnalyzeOptions>}
+   * @param {AnalyzeDto.CreateAnalyzeRequest} createOptions
+   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>}
    */
-  public async createAnalyze(createOptions: AnalyzeDto.CreateAnalyzeOptions): Promise<AnalyzeVo.CreateAnalyzeOptions> {
+  public async createAnalyze(createOptions: AnalyzeDto.CreateAnalyzeRequest): Promise<AnalyzeVo.AnalyzeDetailResponse> {
     const { chartConfig, ...restAnalyzeOption } = createOptions
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
     let chartConfigId = createOptions.chartConfigId || null
@@ -227,12 +229,10 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 更新图表名称
-   * @param {AnalyzeDto.UpdateAnalyzeNameOptions} updateOptions
-   * @returns {Promise<AnalyzeVo.UpdateAnalyzeNameOptions>}
+   * @param {AnalyzeDto.UpdateAnalyzeNameRequest} updateOptions
+   * @returns {Promise<boolean>}
    */
-  public async updateAnalyzeName(
-    updateOptions: AnalyzeDto.UpdateAnalyzeNameOptions
-  ): Promise<AnalyzeVo.UpdateAnalyzeNameOptions> {
+  public async updateAnalyzeName(updateOptions: AnalyzeDto.UpdateAnalyzeNameRequest): Promise<boolean> {
     await this.assertAnalyzePermission(updateOptions.id, 'edit')
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const updateAnalyzeNameOptions = {
@@ -246,12 +246,10 @@ export class AnalyzeService extends BaseService {
 
   /**
    * @desc 更新图表描述
-   * @param {AnalyzeDto.UpdateAnalyzeDescOptions} updateOptions
-   * @returns {Promise<AnalyzeVo.UpdateAnalyzeDescOptions>}
+   * @param {AnalyzeDto.UpdateAnalyzeDescRequest} updateOptions
+   * @returns {Promise<boolean>}
    */
-  public async updateAnalyzeDesc(
-    updateOptions: AnalyzeDto.UpdateAnalyzeDescOptions
-  ): Promise<AnalyzeVo.UpdateAnalyzeDescOptions> {
+  public async updateAnalyzeDesc(updateOptions: AnalyzeDto.UpdateAnalyzeDescRequest): Promise<boolean> {
     await this.assertAnalyzePermission(updateOptions.id, 'edit')
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const updateAnalyzeDescOptions = {
