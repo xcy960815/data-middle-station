@@ -66,8 +66,9 @@
 import { ElDatePicker, ElInput, ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
 import { commitCellValueChange } from '../data-handler'
+import { type CanvasTableContext, runWithTableContext } from '../parameter'
 import { refreshBodySection, refreshSummarySection, stageVars } from '../stage-handler'
 
 interface EditorStyleOptions {
@@ -109,6 +110,20 @@ const inputRef = ref<InstanceType<typeof ElInput>>()
 const selectRef = ref<InstanceType<typeof ElSelect>>()
 const dateRef = ref<InstanceType<typeof ElDatePicker>>()
 const datetimeRef = ref<InstanceType<typeof ElDatePicker>>()
+const tableContext = shallowRef<CanvasTableContext | null>(null)
+
+const runInTableContext = (handler: () => void) => {
+  if (tableContext.value) {
+    runWithTableContext(tableContext.value, handler)
+    return
+  }
+
+  handler()
+}
+
+const setTableContext = (context: CanvasTableContext) => {
+  tableContext.value = context
+}
 
 const editDown = reactive<EditDown>({
   visible: false,
@@ -261,21 +276,23 @@ const openEditor = (
  * 保存编辑
  */
 const handleSaveEditorValue = () => {
-  if (!editDown.visible) return
+  runInTableContext(() => {
+    if (!editDown.visible) return
 
-  // 只有当值发生变化时才保存
-  if (editDown.initialValue !== editDown.originalValue) {
-    const nextValue = normalizeEditedValue(editDown.initialValue, editDown.columnType, editDown.originalValue)
-    const didUpdate =
-      nextValue !== editDown.originalValue && commitCellValueChange(editDown.row, editDown.columnName, nextValue)
+    // 只有当值发生变化时才保存
+    if (editDown.initialValue !== editDown.originalValue) {
+      const nextValue = normalizeEditedValue(editDown.initialValue, editDown.columnType, editDown.originalValue)
+      const didUpdate =
+        nextValue !== editDown.originalValue && commitCellValueChange(editDown.row, editDown.columnName, nextValue)
 
-    if (didUpdate) {
-      refreshBodySection()
-      refreshSummarySection()
+      if (didUpdate) {
+        refreshBodySection()
+        refreshSummarySection()
+      }
     }
-  }
 
-  resetEditState()
+    resetEditState()
+  })
 }
 
 // 取消编辑
@@ -299,19 +316,21 @@ const updatePositions = () => {
  * @param {MouseEvent} mouseEvent 鼠标事件
  */
 const onGlobalMousedown = (mouseEvent: MouseEvent) => {
-  if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
-  const target = mouseEvent.target as HTMLElement | null
-  if (!target) return
+  runInTableContext(() => {
+    if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
+    const target = mouseEvent.target as HTMLElement | null
+    if (!target) return
 
-  if (!editDown.visible) return
-  const panel = editorRef.value
+    if (!editDown.visible) return
+    const panel = editorRef.value
 
-  if (panel && panel.contains(target)) return
-  const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper, .el-popper, .el-picker-panel')
-  if (!inElSelectDropdown) {
-    // 点击外部时保存数据而不是取消
-    handleSaveEditorValue()
-  }
+    if (panel && panel.contains(target)) return
+    const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper, .el-popper, .el-picker-panel')
+    if (!inElSelectDropdown) {
+      // 点击外部时保存数据而不是取消
+      handleSaveEditorValue()
+    }
+  })
 }
 
 /**
@@ -341,6 +360,7 @@ onBeforeUnmount(() => {
 
 // 暴露方法供外部使用
 defineExpose({
+  setTableContext,
   openEditor,
   closeEditor,
   updatePositions

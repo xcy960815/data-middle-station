@@ -101,6 +101,12 @@ declare namespace GroupStore {
      */
     addGroups: (groups: GroupOption[]) => void
     /**
+     * @desc 设置分组
+     * @param groups {GroupOption[]}
+     * @returns {void}
+     */
+    setGroups: (groups: GroupOption[]) => void
+    /**
      * @desc 删除分组
      * @param index {number}
      * @returns {void}

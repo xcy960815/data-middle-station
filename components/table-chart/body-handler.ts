@@ -1,8 +1,7 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { ref } from 'vue'
 import CellEditor from './components/cell-editor.vue'
-import { staticParams, tableData } from './parameter'
+import { bindCurrentTableContext, getTableParams, getProcessedRows, getRuntimeState } from './parameter'
 import { calculateScrollRange, scrollbarVars } from './scrollbar-handler'
 import { getStageSize, stageVars } from './stage-handler'
 import { getSummaryRowHeight } from './summary-handler'
@@ -16,77 +15,35 @@ import {
   truncateText
 } from './utils'
 
+import type { BodyState, ColumnsInfo } from './runtime-state'
 import type { KonvaNodePools } from './utils'
 
-interface BodyVars {
-  /**
-   * 左侧主体组对象池
-   */
-  leftBodyPools: KonvaNodePools
-  /**
-   * 中间主体组对象池
-   */
-  centerBodyPools: KonvaNodePools
-  /**
-   * 右侧主体组对象池
-   */
-  rightBodyPools: KonvaNodePools
+export const bodyVars = new Proxy({} as BodyState, {
+  get: (_target, property: keyof BodyState) => getRuntimeState().body[property],
+  set: (_target, property: keyof BodyState, value) => {
+    getRuntimeState().body[property] = value as never
+    return true
+  }
+})
 
-  bodyLayer: Konva.Layer | null
-  /**
-   * 固定表body层
-   */
-  fixedBodyLayer: Konva.Layer | null
-
-  /**
-   * 左侧主体组
-   */
-  leftBodyGroup: Konva.Group | null
-  /**
-   * 中间主体组
-   */
-  centerBodyGroup: Konva.Group | null
-  /**
-   * 右侧主体组
-   */
-  rightBodyGroup: Konva.Group | null
-  highlightRect: Konva.Rect | null
-  visibleRowStart: number
-  visibleRowEnd: number
-  visibleRowCount: number
-}
-
-export const bodyVars: BodyVars = {
-  leftBodyPools: {
-    cellRects: [],
-    cellTexts: []
-  },
-  centerBodyPools: {
-    cellRects: [],
-    cellTexts: []
-  },
-  rightBodyPools: {
-    cellRects: [],
-    cellTexts: []
-  },
-  bodyLayer: null,
-  fixedBodyLayer: null,
-  leftBodyGroup: null,
-  centerBodyGroup: null,
-  rightBodyGroup: null,
-  /**
-   * 高亮矩形
-   */
-  highlightRect: null,
-  visibleRowStart: 0,
-  visibleRowEnd: 0,
-  visibleRowCount: 0
-}
+export const columnsInfo = new Proxy({} as ColumnsInfo, {
+  get: (_target, property: keyof ColumnsInfo) => getRuntimeState().columns[property],
+  set: (_target, property: keyof ColumnsInfo, value) => {
+    getRuntimeState().columns[property] = value as never
+    return true
+  }
+})
 
 /**
  * 单元格编辑器组件引用
  */
-export const cellEditorRef = ref<InstanceType<typeof CellEditor> | null>(null)
+export const cellEditorRef = new Proxy({} as { value: InstanceType<typeof CellEditor> | null }, {
+  get: (_target, property: 'value') => getRuntimeState().cellEditorRef[property],
+  set: (_target, property: 'value', value) => {
+    getRuntimeState().cellEditorRef[property] = value
+    return true
+  }
+})
 
 /**
  * 创建body左侧组
@@ -157,49 +114,53 @@ export const calculateVisibleRows = () => {
 
   const { height: stageHeight } = getStageSize()
   const { maxHorizontalScroll } = calculateScrollRange()
-  const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0
+  const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? getTableParams().scrollbarSize : 0
 
-  const bodyHeight = stageHeight - staticParams.headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
+  const bodyHeight = stageHeight - getTableParams().headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
 
   // 计算可视区域能显示的行数
-  bodyVars.visibleRowCount = Math.ceil(bodyHeight / staticParams.bodyRowHeight)
+  bodyVars.visibleRowCount = Math.ceil(bodyHeight / getTableParams().bodyRowHeight)
 
   // 根据scrollY计算起始行
-  const startRow = Math.floor(scrollbarVars.stageScrollY / staticParams.bodyRowHeight)
+  const startRow = Math.floor(scrollbarVars.stageScrollY / getTableParams().bodyRowHeight)
 
   // 算上缓冲条数的开始下标+结束下标
-  bodyVars.visibleRowStart = Math.max(0, startRow - staticParams.bufferRows)
+  bodyVars.visibleRowStart = Math.max(0, startRow - getTableParams().bufferRows)
 
   bodyVars.visibleRowEnd = Math.min(
-    tableData.value.length - 1,
-    startRow + bodyVars.visibleRowCount + staticParams.bufferRows
+    getProcessedRows().value.length - 1,
+    startRow + bodyVars.visibleRowCount + getTableParams().bufferRows
   )
 }
 
-/**
- * 列信息存储结果
- */
-interface ColumnsInfo {
-  leftColumns: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
-  centerColumns: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
-  rightColumns: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
-  leftPartWidth: number
-  centerPartWidth: number
-  rightPartWidth: number
-  totalWidth: number
+export const resetColumnsInfo = () => {
+  columnsInfo.leftColumns = []
+  columnsInfo.centerColumns = []
+  columnsInfo.rightColumns = []
+  columnsInfo.leftPartWidth = 0
+  columnsInfo.centerPartWidth = 0
+  columnsInfo.rightPartWidth = 0
+  columnsInfo.totalWidth = 0
 }
 
-/**
- * 已计算的列信息（可以直接访问使用）
- */
-export const columnsInfo: ColumnsInfo = {
-  leftColumns: [],
-  centerColumns: [],
-  rightColumns: [],
-  leftPartWidth: 0,
-  centerPartWidth: 0,
-  rightPartWidth: 0,
-  totalWidth: 0
+export const resetBodyState = () => {
+  bodyVars.leftBodyPools.cellRects = []
+  bodyVars.leftBodyPools.cellTexts = []
+  bodyVars.centerBodyPools.cellRects = []
+  bodyVars.centerBodyPools.cellTexts = []
+  bodyVars.rightBodyPools.cellRects = []
+  bodyVars.rightBodyPools.cellTexts = []
+  bodyVars.bodyLayer = null
+  bodyVars.fixedBodyLayer = null
+  bodyVars.leftBodyGroup = null
+  bodyVars.centerBodyGroup = null
+  bodyVars.rightBodyGroup = null
+  bodyVars.highlightRect = null
+  bodyVars.visibleRowStart = 0
+  bodyVars.visibleRowEnd = 0
+  bodyVars.visibleRowCount = 0
+  cellEditorRef.value = null
+  resetColumnsInfo()
 }
 
 /**
@@ -212,10 +173,10 @@ export const columnsInfo: ColumnsInfo = {
  */
 export const calculateColumnsInfo = () => {
   const { width: stageWidthRaw, height: stageHeightRaw } = getStageSize()
-  const { xAxisFields, yAxisFields, bodyRowHeight, headerRowHeight, scrollbarSize, minAutoColWidth } = staticParams
+  const { xAxisFields, yAxisFields, bodyRowHeight, headerRowHeight, scrollbarSize, minAutoColWidth } = getTableParams()
 
   // 数据区高度
-  const contentHeight = tableData.value.length * bodyRowHeight
+  const contentHeight = getProcessedRows().value.length * bodyRowHeight
 
   // 是否需要垂直滚动条
   const needVScroll = contentHeight > stageHeightRaw - headerRowHeight - getSummaryRowHeight()
@@ -286,7 +247,7 @@ const drawMergedCell = (
   rowIndex: number,
   columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption
 ) => {
-  const row = tableData.value[rowIndex]
+  const row = getProcessedRows().value[rowIndex]
   // 绘制合并单元格背景
   drawUnifiedRect({
     pools,
@@ -295,8 +256,8 @@ const drawMergedCell = (
     y,
     width: width,
     height: height,
-    fill: rowIndex % 2 === 0 ? staticParams.bodyBackgroundOdd : staticParams.bodyBackgroundEven,
-    stroke: staticParams.borderColor,
+    fill: rowIndex % 2 === 0 ? getTableParams().bodyBackgroundOdd : getTableParams().bodyBackgroundEven,
+    stroke: getTableParams().borderColor,
     strokeWidth: 1,
     group: bodyGroup
   })
@@ -304,7 +265,12 @@ const drawMergedCell = (
   // 绘制合并单元格文本
   const value = getCellDisplayContent(columnOption, row, rowIndex)
   const maxTextWidth = calculateTextWidth.forBodyCell(columnOption)
-  const truncatedValue = truncateText(value, maxTextWidth, staticParams.bodyFontSize, staticParams.bodyFontFamily)
+  const truncatedValue = truncateText(
+    value,
+    maxTextWidth,
+    getTableParams().bodyFontSize,
+    getTableParams().bodyFontFamily
+  )
 
   drawUnifiedText({
     pools,
@@ -312,9 +278,9 @@ const drawMergedCell = (
     text: truncatedValue,
     x,
     y,
-    fontSize: staticParams.bodyFontSize,
-    fontFamily: staticParams.bodyFontFamily,
-    fill: staticParams.bodyTextColor,
+    fontSize: getTableParams().bodyFontSize,
+    fontFamily: getTableParams().bodyFontFamily,
+    fill: getTableParams().bodyTextColor,
     align: columnOption.align ?? 'left',
     verticalAlign: columnOption.verticalAlign ?? 'middle',
     height: height,
@@ -346,7 +312,7 @@ const drawNormalCell = (
   rowIndex: number,
   columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption
 ) => {
-  const row: AnalyzeDataVo.AnalyzeData = tableData.value[rowIndex]
+  const row: AnalyzeDataVo.AnalyzeData = getProcessedRows().value[rowIndex]
   // 绘制单元格背景
   const cellRect = drawUnifiedRect({
     pools,
@@ -355,37 +321,45 @@ const drawNormalCell = (
     y,
     width: width,
     height: height,
-    fill: rowIndex % 2 === 0 ? staticParams.bodyBackgroundOdd : staticParams.bodyBackgroundEven,
-    stroke: staticParams.borderColor,
+    fill: rowIndex % 2 === 0 ? getTableParams().bodyBackgroundOdd : getTableParams().bodyBackgroundEven,
+    stroke: getTableParams().borderColor,
     strokeWidth: 1,
     group: bodyGroup
   })
   if (columnOption.editable) {
-    cellRect.on('dblclick', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
-      cellEditorRef.value?.openEditor(
-        event,
-        columnOption.editType!,
-        row[columnOption.columnName] as string | number,
-        columnOption.editOptions,
-        {
-          align: columnOption.align ?? 'left',
-          fontSize: staticParams.bodyFontSize,
-          fontFamily: staticParams.bodyFontFamily,
-          padding: staticParams.textPaddingHorizontal
-        },
-        {
-          row,
-          columnName: columnOption.columnName,
-          columnType: columnOption.columnType
-        }
-      )
-    })
+    cellRect.on(
+      'dblclick',
+      bindCurrentTableContext((event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+        cellEditorRef.value?.openEditor(
+          event,
+          columnOption.editType!,
+          row[columnOption.columnName] as string | number,
+          columnOption.editOptions,
+          {
+            align: columnOption.align ?? 'left',
+            fontSize: getTableParams().bodyFontSize,
+            fontFamily: getTableParams().bodyFontFamily,
+            padding: getTableParams().textPaddingHorizontal
+          },
+          {
+            row,
+            columnName: columnOption.columnName,
+            columnType: columnOption.columnType
+          }
+        )
+      })
+    )
   }
 
   // 绘制单元格文本
   const value = getCellDisplayContent(columnOption, row, rowIndex)
   const maxTextWidth = calculateTextWidth.forBodyCell(columnOption)
-  const truncatedValue = truncateText(value, maxTextWidth, staticParams.bodyFontSize, staticParams.bodyFontFamily)
+  const truncatedValue = truncateText(
+    value,
+    maxTextWidth,
+    getTableParams().bodyFontSize,
+    getTableParams().bodyFontFamily
+  )
   drawUnifiedText({
     pools,
     name: 'cell-text',
@@ -394,9 +368,9 @@ const drawNormalCell = (
     y,
     height: height,
     width: width,
-    fontSize: staticParams.bodyFontSize,
-    fontFamily: staticParams.bodyFontFamily,
-    fill: staticParams.bodyTextColor,
+    fontSize: getTableParams().bodyFontSize,
+    fontFamily: getTableParams().bodyFontFamily,
+    fill: getTableParams().bodyTextColor,
     align: columnOption.align ?? 'left',
     verticalAlign: columnOption.verticalAlign ?? 'middle',
     group: bodyGroup
@@ -472,7 +446,7 @@ export const drawBodyPart = (
 ) => {
   if (!stageVars.stage || !bodyGroup) return
 
-  const spanMethod = typeof staticParams.spanMethod === 'function' ? staticParams.spanMethod : null
+  const spanMethod = typeof getTableParams().spanMethod === 'function' ? getTableParams().spanMethod : null
   const hasSpanMethod = !!spanMethod
 
   // 清理旧节点
@@ -480,8 +454,8 @@ export const drawBodyPart = (
 
   // 渲染可视区域的行
   for (let rowIndex = bodyVars.visibleRowStart; rowIndex <= bodyVars.visibleRowEnd; rowIndex++) {
-    const y = rowIndex * staticParams.bodyRowHeight
-    const row = tableData.value[rowIndex]
+    const y = rowIndex * getTableParams().bodyRowHeight
+    const row = getProcessedRows().value[rowIndex]
     let x = 0
 
     // 渲染一行的所有列
@@ -513,7 +487,7 @@ export const drawBodyPart = (
       }
 
       const computedRowSpan = hasSpanMethod ? spanRow : 1
-      const height = computedRowSpan * staticParams.bodyRowHeight
+      const height = computedRowSpan * getTableParams().bodyRowHeight
       const width = calculateMergedCellWidth(spanCol, colIndex, bodyCols, columnWidth)
 
       // 绘制单元格

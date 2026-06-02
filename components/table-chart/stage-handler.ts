@@ -11,7 +11,8 @@ import {
   createCenterBodyClipGroup,
   createLeftBodyClipGroup,
   createRightBodyClipGroup,
-  drawBodyPart
+  drawBodyPart,
+  resetBodyState
 } from './body-handler'
 import {
   cleanupDragState,
@@ -24,16 +25,25 @@ import {
   filterDropdownRef,
   handleColumnReorder,
   headerVars,
+  resetHeaderState,
   updateDragIndicator,
   updateResizeIndicator
 } from './header-handler'
-import { staticParams, tableData } from './parameter'
+import {
+  getCurrentTableContext,
+  getTableParams,
+  getProcessedRows,
+  getRuntimeState,
+  runWithTableContext,
+  updateTableColumnWidth
+} from './parameter'
 import {
   calculateScrollRange,
   createHorizontalScrollbarGroup,
   createVerticalScrollbarGroup,
   drawHorizontalScrollbarPart,
   drawVerticalScrollbarPart,
+  resetScrollbarState,
   scrollbarVars,
   updateHorizontalScroll,
   updateVerticalScroll
@@ -46,22 +56,20 @@ import {
   createSummaryRightGroup,
   drawSummaryPart,
   getSummaryRowHeight,
+  resetSummaryRuntimeState,
   summaryDropdownRef,
   summaryVars
 } from './summary-handler'
 import { measureTablePerf, updateTablePerfSnapshot } from './perf'
 import { clearPool, setPointerStyle } from './utils'
 
-interface StageVars {
-  stage: Konva.Stage | null
-}
-
-export const stageVars: StageVars = {
-  /**
-   * Stage 实例
-   */
-  stage: null
-}
+export const stageVars = new Proxy({} as { stage: Konva.Stage | null }, {
+  get: (_target, property: 'stage') => getRuntimeState().stage[property],
+  set: (_target, property: 'stage', value) => {
+    getRuntimeState().stage[property] = value
+    return true
+  }
+})
 
 /**
  * 获取 Stage 的属性
@@ -82,8 +90,8 @@ const syncTablePerfSnapshot = () => {
     stageHeight: height,
     columnCount: columnsInfo.leftColumns.length + columnsInfo.centerColumns.length + columnsInfo.rightColumns.length,
     visibleRows: Math.max(0, bodyVars.visibleRowEnd - bodyVars.visibleRowStart + 1),
-    bufferRows: staticParams.bufferRows,
-    processedRows: tableData.value.length,
+    bufferRows: getTableParams().bufferRows,
+    processedRows: getProcessedRows().value.length,
     scrollX: scrollbarVars.stageScrollX,
     scrollY: scrollbarVars.stageScrollY
   })
@@ -217,29 +225,10 @@ export const destroyStage = () => {
   clearPool(bodyVars.rightBodyPools.cellTexts)
 
   stageVars.stage = null
-  // 表头相关
-  headerVars.headerLayer = null
-
-  // 主体相关
-  bodyVars.bodyLayer = null
-  bodyVars.fixedBodyLayer = null
-  bodyVars.highlightRect = null
-  bodyVars.visibleRowStart = 0
-  bodyVars.visibleRowEnd = 0
-  bodyVars.visibleRowCount = 0
-
-  // 汇总相关
-  summaryVars.summaryLayer = null
-  summaryVars.leftSummaryGroup = null
-  summaryVars.centerSummaryGroup = null
-  summaryVars.rightSummaryGroup = null
-
-  // 滚动条相关
-  scrollbarVars.scrollbarLayer = null
-  scrollbarVars.verticalScrollbarGroup = null
-  scrollbarVars.horizontalScrollbarGroup = null
-  scrollbarVars.verticalScrollbarThumb = null
-  scrollbarVars.horizontalScrollbarThumb = null
+  resetHeaderState()
+  resetBodyState()
+  resetSummaryRuntimeState()
+  resetScrollbarState()
 }
 
 /**
@@ -315,12 +304,12 @@ const rebuildHeaderGroup = () => {
 
     const { width: stageWidth } = getStageSize()
     const { maxVerticalScroll } = calculateScrollRange()
-    const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
+    const verticalScrollbarWidth = maxVerticalScroll > 0 ? getTableParams().scrollbarSize : 0
     const headerClipGroup = createHeaderClipGroup(0, 0, {
       x: 0,
       y: 0,
       width: stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-      height: staticParams.headerRowHeight
+      height: getTableParams().headerRowHeight
     })
 
     headerLayer.add(headerClipGroup)
@@ -355,13 +344,13 @@ const rebuildBodyGroup = () => {
 
     const { width: stageWidth, height: stageHeight } = getStageSize()
     const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
-    const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
-    const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0
+    const verticalScrollbarWidth = maxVerticalScroll > 0 ? getTableParams().scrollbarSize : 0
+    const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? getTableParams().scrollbarSize : 0
     const bodyClipGroupHeight =
-      stageHeight - staticParams.headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
+      stageHeight - getTableParams().headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
     const bodyClipGroupWidth =
       stageWidth - columnsInfo.leftPartWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth
-    const centerBodyClipGroup = createCenterBodyClipGroup(columnsInfo.leftPartWidth, staticParams.headerRowHeight, {
+    const centerBodyClipGroup = createCenterBodyClipGroup(columnsInfo.leftPartWidth, getTableParams().headerRowHeight, {
       x: 0,
       y: 0,
       width: bodyClipGroupWidth,
@@ -375,7 +364,7 @@ const rebuildBodyGroup = () => {
 
     centerBodyClipGroup.add(bodyVars.centerBodyGroup)
 
-    const leftBodyClipGroup = createLeftBodyClipGroup(0, staticParams.headerRowHeight, {
+    const leftBodyClipGroup = createLeftBodyClipGroup(0, getTableParams().headerRowHeight, {
       x: 0,
       y: 0,
       width: columnsInfo.leftPartWidth,
@@ -384,7 +373,7 @@ const rebuildBodyGroup = () => {
 
     const rightBodyClipGroup = createRightBodyClipGroup(
       stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-      staticParams.headerRowHeight,
+      getTableParams().headerRowHeight,
       {
         x: 0,
         y: 0,
@@ -421,11 +410,11 @@ const rebuildSummaryGroup = () => {
     const summaryLayer = summaryVars.summaryLayer
     if (!summaryLayer) return
 
-    if (staticParams.enableSummary) {
+    if (getTableParams().enableSummary) {
       const { width: stageWidth, height: stageHeight } = getStageSize()
       const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
-      const verticalScrollbarWidth = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
-      const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0
+      const verticalScrollbarWidth = maxVerticalScroll > 0 ? getTableParams().scrollbarSize : 0
+      const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? getTableParams().scrollbarSize : 0
       const y = stageHeight - getSummaryRowHeight() - horizontalScrollbarHeight
       const centerSummaryClipGroup = createSummaryClipGroup(0, y, {
         x: 0,
@@ -521,12 +510,12 @@ const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
     const { height: stageHeight } = getStageSize()
     const trackHeight =
       stageHeight -
-      staticParams.headerRowHeight -
-      (staticParams.enableSummary ? staticParams.summaryRowHeight : 0) -
-      (maxHorizontalScroll > 0 ? staticParams.scrollbarSize : 0)
+      getTableParams().headerRowHeight -
+      (getTableParams().enableSummary ? getTableParams().summaryRowHeight : 0) -
+      (maxHorizontalScroll > 0 ? getTableParams().scrollbarSize : 0)
     const thumbHeight = Math.max(
       20,
-      (trackHeight * trackHeight) / (tableData.value.length * staticParams.bodyRowHeight)
+      (trackHeight * trackHeight) / (getProcessedRows().value.length * getTableParams().bodyRowHeight)
     )
     const scrollRatio = deltaY / (trackHeight - thumbHeight)
     const newScrollY = scrollbarVars.dragStartScrollY + scrollRatio * maxVerticalScroll
@@ -548,7 +537,7 @@ const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
     const { maxHorizontalScroll } = calculateScrollRange()
     const { width: stageWidth } = getStageSize()
     const { maxVerticalScroll } = calculateScrollRange()
-    const verticalScrollbarSpace = maxVerticalScroll > 0 ? staticParams.scrollbarSize : 0
+    const verticalScrollbarSpace = maxVerticalScroll > 0 ? getTableParams().scrollbarSize : 0
     const visibleWidth = stageWidth - columnsInfo.leftPartWidth - columnsInfo.rightPartWidth - verticalScrollbarSpace
     const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / columnsInfo.centerPartWidth)
     const scrollRatio = deltaX / (visibleWidth - thumbWidth)
@@ -598,7 +587,7 @@ const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
     scrollbarVars.isDraggingVerticalThumb = false
     setPointerStyle(stageVars.stage, false, 'default')
     if (scrollbarVars.verticalScrollbarThumb) {
-      scrollbarVars.verticalScrollbarThumb.fill(staticParams.scrollbarThumbBackground)
+      scrollbarVars.verticalScrollbarThumb.fill(getTableParams().scrollbarThumbBackground)
     }
     scheduleLayersBatchDraw(['scrollbar'])
   }
@@ -608,7 +597,7 @@ const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
     scrollbarVars.isDraggingHorizontalThumb = false
     setPointerStyle(stageVars.stage, false, 'default')
     if (scrollbarVars.horizontalScrollbarThumb) {
-      scrollbarVars.horizontalScrollbarThumb.fill(staticParams.scrollbarThumbBackground)
+      scrollbarVars.horizontalScrollbarThumb.fill(getTableParams().scrollbarThumbBackground)
     }
     scheduleLayersBatchDraw(['scrollbar'])
   }
@@ -625,12 +614,8 @@ const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
   // 列宽调整结束 - 应用最终宽度
   if (headerVars.isResizingColumn) {
     // 应用最终宽度
-    const allFields = [...staticParams.xAxisFields, ...staticParams.yAxisFields]
-    const targetField = allFields.find((f) => f.columnName === headerVars.resizingColumnName)
-
-    if (targetField && headerVars.resizeTempWidth > 0) {
-      targetField.width = headerVars.resizeTempWidth
-      // 会触发watch 走重新渲染表格的逻辑
+    if (headerVars.resizingColumnName && headerVars.resizeTempWidth > 0) {
+      updateTableColumnWidth(headerVars.resizingColumnName, headerVars.resizeTempWidth)
     }
 
     // 使用统一的清理函数
@@ -654,10 +639,16 @@ const handleGlobalResize = () => {
  * @returns {void}
  */
 export const initStageListeners = () => {
-  window.addEventListener('resize', handleGlobalResize)
+  const context = getCurrentTableContext()
+  const listeners = getRuntimeState().listeners
+  listeners.resize = () => runWithTableContext(context, handleGlobalResize)
+  listeners.mouseMove = (event) => runWithTableContext(context, () => handleGlobalMouseMove(event))
+  listeners.mouseUp = (event) => runWithTableContext(context, () => handleGlobalMouseUp(event))
+
+  window.addEventListener('resize', listeners.resize)
   // 需要保留鼠标移动监听以支持列宽拖拽功能
-  window.addEventListener('mousemove', handleGlobalMouseMove)
-  window.addEventListener('mouseup', handleGlobalMouseUp)
+  window.addEventListener('mousemove', listeners.mouseMove)
+  window.addEventListener('mouseup', listeners.mouseUp)
 }
 
 /**
@@ -665,10 +656,20 @@ export const initStageListeners = () => {
  * @returns {void}
  */
 export const cleanupStageListeners = () => {
-  window.removeEventListener('resize', handleGlobalResize)
+  const listeners = getRuntimeState().listeners
+  if (listeners.resize) {
+    window.removeEventListener('resize', listeners.resize)
+    listeners.resize = null
+  }
   // 清理鼠标移动监听
-  window.removeEventListener('mousemove', handleGlobalMouseMove)
-  window.removeEventListener('mouseup', handleGlobalMouseUp)
+  if (listeners.mouseMove) {
+    window.removeEventListener('mousemove', listeners.mouseMove)
+    listeners.mouseMove = null
+  }
+  if (listeners.mouseUp) {
+    window.removeEventListener('mouseup', listeners.mouseUp)
+    listeners.mouseUp = null
+  }
 }
 
 /**

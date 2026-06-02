@@ -1,6 +1,6 @@
 import Konva from 'konva'
 
-import { staticParams } from './parameter'
+import { getTableParams } from './parameter'
 /**
  * 布局相关常量
  */
@@ -33,18 +33,18 @@ export const calculateTextWidth = {
    */
   forHeaderCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
     // 文本的最大宽度
-    let maxTextWidth = columnOption.width - staticParams.textPaddingHorizontal * 2
+    let maxTextWidth = columnOption.width - getTableParams().textPaddingHorizontal * 2
 
     if (columnOption.draggable) {
-      maxTextWidth = maxTextWidth - staticParams.dragIconWidth - staticParams.textPaddingHorizontal
+      maxTextWidth = maxTextWidth - getTableParams().dragIconWidth - getTableParams().textPaddingHorizontal
     }
     if (columnOption.sortable) {
       // 如果有排序
-      maxTextWidth = maxTextWidth - LAYOUT_CONSTANTS.ARROW_SIZE - staticParams.textPaddingHorizontal
+      maxTextWidth = maxTextWidth - LAYOUT_CONSTANTS.ARROW_SIZE - getTableParams().textPaddingHorizontal
     }
     if (columnOption.filterable) {
       // 如果有过滤器
-      maxTextWidth = maxTextWidth - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - staticParams.textPaddingHorizontal
+      maxTextWidth = maxTextWidth - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - getTableParams().textPaddingHorizontal
     }
 
     return maxTextWidth
@@ -54,14 +54,14 @@ export const calculateTextWidth = {
    * 计算 Body 单元格的可用文本宽度
    */
   forBodyCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
-    return columnOption.width - staticParams.textPaddingHorizontal
+    return columnOption.width - getTableParams().textPaddingHorizontal
   },
 
   /**
    * 计算 Summary 单元格的可用文本宽度
    */
   forSummaryCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
-    return columnOption.width - staticParams.textPaddingHorizontal
+    return columnOption.width - getTableParams().textPaddingHorizontal
   }
 }
 
@@ -308,10 +308,10 @@ export const drawUnifiedText = (config: DrawTextConfig) => {
     textNode.x(x + width / 2)
     textNode.offsetX(textNode.width() / 2)
   } else if (align === 'right') {
-    textNode.x(x + width - staticParams.textPaddingHorizontal)
+    textNode.x(x + width - getTableParams().textPaddingHorizontal)
     textNode.offsetX(0)
   } else {
-    textNode.x(x + staticParams.textPaddingHorizontal)
+    textNode.x(x + getTableParams().textPaddingHorizontal)
     textNode.offsetX(0)
   }
 

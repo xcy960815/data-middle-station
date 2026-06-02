@@ -1,6 +1,5 @@
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { ref } from 'vue'
 import { columnsInfo } from './body-handler'
 import {
   getColumnFilterValues,
@@ -9,7 +8,7 @@ import {
   handleMultiColumnSort,
   handleTableData
 } from './data-handler'
-import { staticParams } from './parameter'
+import { bindCurrentTableContext, getTableParams, getRuntimeState, updateTableColumnOrder } from './parameter'
 import { scrollbarVars } from './scrollbar-handler'
 import { getStageSize, refreshTable, scheduleLayersBatchDraw, stageVars } from './stage-handler'
 import {
@@ -23,61 +22,7 @@ import {
 } from './utils'
 
 import FilterDropdown from './components/filter-dropdown.vue'
-
-interface HeaderVars {
-  headerLayer: Konva.Layer | null
-  leftHeaderGroup: Konva.Group | null
-  centerHeaderGroup: Konva.Group | null
-  rightHeaderGroup: Konva.Group | null
-  /**
-   * 是否正在调整列宽
-   */
-  isResizingColumn: boolean
-  /**
-   * 正在调整的列名
-   */
-  resizingColumnName: string | null
-  /**
-   * 开始拖拽时的鼠标X坐标
-   */
-  resizeStartX: number
-  /**
-   * 开始拖拽时的列宽
-   */
-  resizeStartWidth: number
-  /**
-   * 拖拽过程中的临时宽度
-   */
-  resizeTempWidth: number
-  /**
-   * 调整指示线
-   */
-  resizeIndicatorLine: Konva.Line | null
-  /**
-   * 是否正在拖拽列
-   */
-  isDraggingColumn: boolean
-  /**
-   * 正在拖拽的列配置
-   */
-  draggingColumnName: string | null
-  /**
-   * 拖拽开始时的鼠标坐标
-   */
-  dragStartX: number
-  /**
-   * 开始拖拽时的列宽
-   */
-  dragStartWidth: number
-  /**
-   * 拖拽过程中的临时宽度
-   */
-  dragTempWidth: number
-  /**
-   * 拖拽插入指示线
-   */
-  dragDropIndicator: Konva.Rect | null
-}
+import type { HeaderState } from './runtime-state'
 
 const COLORS = {
   /**
@@ -86,80 +31,44 @@ const COLORS = {
   INACTIVE: '#d0d7de'
 } as const
 
-/**
- * 排序状态 - 单独的响应式变量
- */
-export const headerVars: HeaderVars = {
-  /**
-   * 表头层
-   */
-  headerLayer: null,
-  /**
-   * 左侧表头组
-   */
-  leftHeaderGroup: null,
-  /**
-   * 中间表头组
-   */
-  centerHeaderGroup: null,
-  /**
-   * 右侧表头组
-   */
-  rightHeaderGroup: null,
-  /**
-   * 列宽调整相关字段
-   */
-  isResizingColumn: false,
-  /**
-   * 正在调整的列名
-   */
-  resizingColumnName: null,
-  /**
-   * 开始拖拽时的鼠标X坐标
-   */
-  resizeStartX: 0,
-  /**
-   * 开始拖拽时的列宽
-   */
-  resizeStartWidth: 0,
-  /**
-   * 拖拽过程中的临时宽度
-   */
-  resizeTempWidth: 0,
-  /**
-   * 调整指示线
-   */
-  resizeIndicatorLine: null,
-  /**
-   * 列拖拽相关字段
-   */
-  isDraggingColumn: false,
-  /**
-   * 正在拖拽的列配置
-   */
-  draggingColumnName: null,
-  /**
-   * 拖拽开始时的鼠标坐标
-   */
-  dragStartX: 0,
-  /**
-   * 开始拖拽时的列宽
-   */
-  dragStartWidth: 0,
-  /**
-   * 拖拽过程中的临时宽度
-   */
-  dragTempWidth: 0,
-  /**
-   * 拖拽插入指示线
-   */
-  dragDropIndicator: null
-}
+export const headerVars = new Proxy({} as HeaderState, {
+  get: (_target, property: keyof HeaderState) => getRuntimeState().header[property],
+  set: (_target, property: keyof HeaderState, value) => {
+    getRuntimeState().header[property] = value as never
+    return true
+  }
+})
 
 /**
  * 过滤下拉实例
  */
-export const filterDropdownRef = ref<InstanceType<typeof FilterDropdown> | null>(null)
+export const filterDropdownRef = new Proxy({} as { value: InstanceType<typeof FilterDropdown> | null }, {
+  get: (_target, property: 'value') => getRuntimeState().filterDropdownRef[property],
+  set: (_target, property: 'value', value) => {
+    getRuntimeState().filterDropdownRef[property] = value
+    return true
+  }
+})
+
+export const resetHeaderState = () => {
+  headerVars.headerLayer = null
+  headerVars.leftHeaderGroup = null
+  headerVars.centerHeaderGroup = null
+  headerVars.rightHeaderGroup = null
+  headerVars.isResizingColumn = false
+  headerVars.resizingColumnName = null
+  headerVars.resizeStartX = 0
+  headerVars.resizeStartWidth = 0
+  headerVars.resizeTempWidth = 0
+  headerVars.resizeIndicatorLine = null
+  headerVars.isDraggingColumn = false
+  headerVars.draggingColumnName = null
+  headerVars.dragStartX = 0
+  headerVars.dragStartWidth = 0
+  headerVars.dragTempWidth = 0
+  headerVars.dragDropIndicator = null
+  filterDropdownRef.value = null
+}
 
 /**
  * 创建表头左侧组
@@ -216,11 +125,11 @@ export const createDragIcon = (
   if (!columnOption.draggable) {
     return
   }
-  const dragIconHeight = staticParams.dragIconHeight
-  const dragIconWidth = staticParams.dragIconWidth
-  const dragIconDotSize = staticParams.dragIconDotSize
-  const xCoordinate = x + staticParams.textPaddingHorizontal
-  const yCoordinate = (staticParams.headerRowHeight - dragIconHeight) / 2
+  const dragIconHeight = getTableParams().dragIconHeight
+  const dragIconWidth = getTableParams().dragIconWidth
+  const dragIconDotSize = getTableParams().dragIconDotSize
+  const xCoordinate = x + getTableParams().textPaddingHorizontal
+  const yCoordinate = (getTableParams().headerRowHeight - dragIconHeight) / 2
 
   // 添加背景矩形增加可点击区域和调试可见性 - 直接添加到headerGroup
   const dragIconRect = drawUnifiedRect({
@@ -258,26 +167,35 @@ export const createDragIcon = (
   }
 
   // 添加悬停效果到背景矩形
-  dragIconRect.on('mouseenter', (_event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
-    if (!headerVars.isDraggingColumn) {
-      setPointerStyle(stageVars.stage, true, 'grab')
-    }
-  })
+  dragIconRect.on(
+    'mouseenter',
+    bindCurrentTableContext((_event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+      if (!headerVars.isDraggingColumn) {
+        setPointerStyle(stageVars.stage, true, 'grab')
+      }
+    })
+  )
 
-  dragIconRect.on('mouseleave', (_event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
-    if (!headerVars.isDraggingColumn) {
-      setPointerStyle(stageVars.stage, false, 'default')
-    }
-  })
+  dragIconRect.on(
+    'mouseleave',
+    bindCurrentTableContext((_event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+      if (!headerVars.isDraggingColumn) {
+        setPointerStyle(stageVars.stage, false, 'default')
+      }
+    })
+  )
   // 添加拖拽事件到背景矩形
-  dragIconRect.on('mousedown', (event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
-    event.cancelBubble = true
-    // 设置拖拽状态
-    headerVars.isDraggingColumn = true
-    headerVars.draggingColumnName = columnOption.columnName
-    headerVars.dragStartX = event.evt.clientX
-    setPointerStyle(stageVars.stage, true, 'grabbing')
-  })
+  dragIconRect.on(
+    'mousedown',
+    bindCurrentTableContext((event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+      event.cancelBubble = true
+      // 设置拖拽状态
+      headerVars.isDraggingColumn = true
+      headerVars.draggingColumnName = columnOption.columnName
+      headerVars.dragStartX = event.evt.clientX
+      setPointerStyle(stageVars.stage, true, 'grabbing')
+    })
+  )
 
   return dragIconRect
 }
@@ -301,9 +219,10 @@ const createFilterIcon = (
 
   const currentSelection = getColumnFilterValues(columnOption.columnName)
   const isFilter = currentSelection.length > 0
-  const filterColor = isFilter ? staticParams.sortActiveColor : COLORS.INACTIVE
-  const xCoordinate = x + columnOption.width - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - staticParams.textPaddingHorizontal
-  const yCoordinate = (staticParams.headerRowHeight - LAYOUT_CONSTANTS.FILTER_ICON_SIZE) / 2
+  const filterColor = isFilter ? getTableParams().sortActiveColor : COLORS.INACTIVE
+  const xCoordinate =
+    x + columnOption.width - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - getTableParams().textPaddingHorizontal
+  const yCoordinate = (getTableParams().headerRowHeight - LAYOUT_CONSTANTS.FILTER_ICON_SIZE) / 2
   const iconSize = LAYOUT_CONSTANTS.FILTER_ICON_SIZE
 
   const filterIcon = new Konva.Shape({
@@ -346,15 +265,24 @@ const createFilterIcon = (
   })
 
   // 添加鼠标交互
-  filterIcon.on('mouseenter', () => setPointerStyle(stageVars.stage, true, 'pointer'))
-  filterIcon.on('mouseleave', () => setPointerStyle(stageVars.stage, false, 'default'))
+  filterIcon.on(
+    'mouseenter',
+    bindCurrentTableContext(() => setPointerStyle(stageVars.stage, true, 'pointer'))
+  )
+  filterIcon.on(
+    'mouseleave',
+    bindCurrentTableContext(() => setPointerStyle(stageVars.stage, false, 'default'))
+  )
 
-  filterIcon.on('click', (evt: KonvaEventObject<MouseEvent, Konva.Shape>) => {
-    const availableOptions = getUniqueColumnValues(columnOption.columnName)
-    const allOptions = Array.from(new Set([...availableOptions, ...currentSelection]))
+  filterIcon.on(
+    'click',
+    bindCurrentTableContext((evt: KonvaEventObject<MouseEvent, Konva.Shape>) => {
+      const availableOptions = getUniqueColumnValues(columnOption.columnName)
+      const allOptions = Array.from(new Set([...availableOptions, ...currentSelection]))
 
-    filterDropdownRef.value?.openFilterDropdown(evt, columnOption.columnName, allOptions, currentSelection)
-  })
+      filterDropdownRef.value?.openFilterDropdown(evt, columnOption.columnName, allOptions, currentSelection)
+    })
+  )
 
   headerGroup.add(filterIcon)
 }
@@ -374,11 +302,11 @@ const createResizerIcon = (
 
   const resizerRect = drawUnifiedRect({
     name: `col-resizer-${columnOption.columnName}`,
-    x: x + (columnOption.width || 0) - staticParams.resizerWidth / 2,
+    x: x + (columnOption.width || 0) - getTableParams().resizerWidth / 2,
     y: 0,
-    width: staticParams.resizerWidth,
-    height: staticParams.headerRowHeight,
-    fill: staticParams.borderColor,
+    width: getTableParams().resizerWidth,
+    height: getTableParams().headerRowHeight,
+    fill: getTableParams().borderColor,
     stroke: 'transparent',
     strokeWidth: 0,
     listening: true,
@@ -386,25 +314,34 @@ const createResizerIcon = (
   })
 
   // 添加鼠标交互
-  resizerRect.on('mouseenter', () => {
-    if (!headerVars.isResizingColumn) {
-      setPointerStyle(stageVars.stage, true, 'col-resize')
-    }
-  })
-  resizerRect.on('mouseleave', () => {
-    if (!headerVars.isResizingColumn) {
-      setPointerStyle(stageVars.stage, false, 'default')
-    }
-  })
+  resizerRect.on(
+    'mouseenter',
+    bindCurrentTableContext(() => {
+      if (!headerVars.isResizingColumn) {
+        setPointerStyle(stageVars.stage, true, 'col-resize')
+      }
+    })
+  )
+  resizerRect.on(
+    'mouseleave',
+    bindCurrentTableContext(() => {
+      if (!headerVars.isResizingColumn) {
+        setPointerStyle(stageVars.stage, false, 'default')
+      }
+    })
+  )
 
-  resizerRect.on('mousedown', (evt: KonvaEventObject<MouseEvent, Konva.Shape | Konva.Circle>) => {
-    headerVars.isResizingColumn = true
-    headerVars.resizingColumnName = columnOption.columnName
-    headerVars.resizeStartX = evt.evt.clientX
-    headerVars.resizeStartWidth = columnOption.width || 0
-    headerVars.resizeTempWidth = columnOption.width || 0
-    setPointerStyle(stageVars.stage, true, 'col-resize')
-  })
+  resizerRect.on(
+    'mousedown',
+    bindCurrentTableContext((evt: KonvaEventObject<MouseEvent, Konva.Shape | Konva.Circle>) => {
+      headerVars.isResizingColumn = true
+      headerVars.resizingColumnName = columnOption.columnName
+      headerVars.resizeStartX = evt.evt.clientX
+      headerVars.resizeStartWidth = columnOption.width || 0
+      headerVars.resizeTempWidth = columnOption.width || 0
+      setPointerStyle(stageVars.stage, true, 'col-resize')
+    })
+  )
 
   resizerRect.moveToTop()
 }
@@ -430,13 +367,13 @@ const createSortIcon = (
   const sortOrder = getColumnSortStatus(columnOption.columnName)
 
   // 箭头的基础位置
-  let arrowX = x + columnOption.width - LAYOUT_CONSTANTS.ARROW_SIZE - staticParams.textPaddingHorizontal
+  let arrowX = x + columnOption.width - LAYOUT_CONSTANTS.ARROW_SIZE - getTableParams().textPaddingHorizontal
 
   if (columnOption.filterable) {
-    arrowX = arrowX - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - staticParams.textPaddingHorizontal
+    arrowX = arrowX - LAYOUT_CONSTANTS.FILTER_ICON_SIZE - getTableParams().textPaddingHorizontal
   }
 
-  const centerY = staticParams.headerRowHeight / 2
+  const centerY = getTableParams().headerRowHeight / 2
 
   // 上箭头（升序）- 指向上方的三角形（尖端圆润）
   const upSize = LAYOUT_CONSTANTS.ARROW_SIZE
@@ -469,28 +406,46 @@ const createSortIcon = (
   // 创建上箭头
   const upArrow = new Konva.Path({
     data: upArrowPath,
-    fill: sortOrder === 'asc' ? staticParams.sortActiveColor : COLORS.INACTIVE,
+    fill: sortOrder === 'asc' ? getTableParams().sortActiveColor : COLORS.INACTIVE,
     name: 'sort-indicator-up'
   })
 
-  upArrow.on('mouseenter', () => setPointerStyle(stageVars.stage, true, 'pointer'))
-  upArrow.on('mouseleave', () => setPointerStyle(stageVars.stage, false, 'default'))
-  upArrow.on('click', (_evt: KonvaEventObject<MouseEvent, Konva.Path>) => {
-    handleSortAction(columnOption, 'asc')
-  })
+  upArrow.on(
+    'mouseenter',
+    bindCurrentTableContext(() => setPointerStyle(stageVars.stage, true, 'pointer'))
+  )
+  upArrow.on(
+    'mouseleave',
+    bindCurrentTableContext(() => setPointerStyle(stageVars.stage, false, 'default'))
+  )
+  upArrow.on(
+    'click',
+    bindCurrentTableContext((_evt: KonvaEventObject<MouseEvent, Konva.Path>) => {
+      handleSortAction(columnOption, 'asc')
+    })
+  )
 
   // 创建下箭头
   const downArrow = new Konva.Path({
     data: downArrowPath,
-    fill: sortOrder === 'desc' ? staticParams.sortActiveColor : COLORS.INACTIVE,
+    fill: sortOrder === 'desc' ? getTableParams().sortActiveColor : COLORS.INACTIVE,
     name: 'sort-indicator-down'
   })
 
-  downArrow.on('mouseenter', () => setPointerStyle(stageVars.stage, true, 'pointer'))
-  downArrow.on('mouseleave', () => setPointerStyle(stageVars.stage, false, 'default'))
-  downArrow.on('click', (_evt: KonvaEventObject<MouseEvent, Konva.Path>) => {
-    handleSortAction(columnOption, 'desc')
-  })
+  downArrow.on(
+    'mouseenter',
+    bindCurrentTableContext(() => setPointerStyle(stageVars.stage, true, 'pointer'))
+  )
+  downArrow.on(
+    'mouseleave',
+    bindCurrentTableContext(() => setPointerStyle(stageVars.stage, false, 'default'))
+  )
+  downArrow.on(
+    'click',
+    bindCurrentTableContext((_evt: KonvaEventObject<MouseEvent, Konva.Path>) => {
+      handleSortAction(columnOption, 'desc')
+    })
+  )
 
   headerGroup.add(upArrow)
   headerGroup.add(downArrow)
@@ -526,15 +481,15 @@ const createHeaderCellText = (
   // 计算文本起始位置
   let textStartX = x
   if (columnOption.draggable) {
-    textStartX += staticParams.dragIconWidth + staticParams.textPaddingHorizontal
+    textStartX += getTableParams().dragIconWidth + getTableParams().textPaddingHorizontal
   }
   const maxTextWidth = calculateTextWidth.forHeaderCell(columnOption)
 
   const text = truncateText(
     columnOption.displayName || columnOption.columnName,
     maxTextWidth,
-    staticParams.headerFontSize,
-    staticParams.headerFontFamily
+    getTableParams().headerFontSize,
+    getTableParams().headerFontFamily
   )
 
   drawUnifiedText({
@@ -543,10 +498,10 @@ const createHeaderCellText = (
     x: textStartX,
     y: 0,
     width: columnOption.width,
-    height: staticParams.headerRowHeight,
-    fontSize: staticParams.headerFontSize,
-    fontFamily: staticParams.headerFontFamily,
-    fill: staticParams.headerTextColor,
+    height: getTableParams().headerRowHeight,
+    fontSize: getTableParams().headerFontSize,
+    fontFamily: getTableParams().headerFontFamily,
+    fill: getTableParams().headerTextColor,
     align: columnOption.align,
     verticalAlign: columnOption.verticalAlign,
     group: headerGroup
@@ -581,9 +536,9 @@ export const drawHeaderPart = (
       x,
       y: 0,
       width: columnWidth,
-      height: staticParams.headerRowHeight,
-      fill: staticParams.headerBackground,
-      stroke: staticParams.borderColor,
+      height: getTableParams().headerRowHeight,
+      fill: getTableParams().headerBackground,
+      stroke: getTableParams().borderColor,
       strokeWidth: 1,
       listening: false,
       group: headerGroup
@@ -815,7 +770,7 @@ export const handleColumnReorder = (mouseX: number) => {
   }
 
   // 获取所有列配置
-  const allFields = [...staticParams.xAxisFields, ...staticParams.yAxisFields]
+  const allFields = [...getTableParams().xAxisFields, ...getTableParams().yAxisFields]
   const draggingIndex = allFields.findIndex((field) => field.columnName === headerVars.draggingColumnName)
 
   if (draggingIndex === -1) {
@@ -837,14 +792,14 @@ export const handleColumnReorder = (mouseX: number) => {
   // 插入到新位置
   allFields.splice(adjustedTargetIndex, 0, draggingField)
 
-  // 更新 staticParams 中的列配置
+  // 更新 getTableParams() 中的列配置
   // 需要重新分离 xAxisFields 和 yAxisFields
   const newXAxisFields: GroupStore.GroupOption[] = []
   const newYAxisFields: DimensionStore.DimensionOption[] = []
 
   allFields.forEach((field) => {
     // 根据原始类型判断是 xAxisFields 还是 yAxisFields
-    const isXAxisField = staticParams.xAxisFields.some((xField) => xField.columnName === field.columnName)
+    const isXAxisField = getTableParams().xAxisFields.some((xField) => xField.columnName === field.columnName)
     if (isXAxisField) {
       newXAxisFields.push(field as GroupStore.GroupOption)
     } else {
@@ -852,9 +807,7 @@ export const handleColumnReorder = (mouseX: number) => {
     }
   })
 
-  // 更新配置
-  staticParams.xAxisFields = newXAxisFields
-  staticParams.yAxisFields = newYAxisFields
+  updateTableColumnOrder(newXAxisFields, newYAxisFields)
 
   refreshTable(false)
 }

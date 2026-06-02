@@ -98,6 +98,7 @@ declare namespace DimensionStore {
    * @desc 维度字段操作
    */
   type DimensionActions = {
+    setDimensions: (dimensions: DimensionOption[]) => void
     addDimensions: (dimensions: DimensionOption[]) => void
     removeDimension: (index: number) => void
     updateDimension: (dimension: DimensionOption) => void

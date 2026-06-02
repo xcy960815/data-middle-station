@@ -28,8 +28,9 @@
 <script setup lang="ts">
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
 import { handleTableData, updateColumnFilter } from '../data-handler'
+import { type CanvasTableContext, runWithTableContext } from '../parameter'
 import { refreshTable, stageVars } from '../stage-handler'
 import { getDropdownPosition } from '../utils'
 export interface FilterDropdown {
@@ -51,6 +52,20 @@ export interface FilterDropdown {
  * 过滤下拉浮层元素
  */
 const filterDropdownRef = ref<HTMLDivElement | null>(null)
+const tableContext = shallowRef<CanvasTableContext | null>(null)
+
+const runInTableContext = (handler: () => void) => {
+  if (tableContext.value) {
+    runWithTableContext(tableContext.value, handler)
+    return
+  }
+
+  handler()
+}
+
+const setTableContext = (context: CanvasTableContext) => {
+  tableContext.value = context
+}
 
 /**
  * 过滤下拉浮层状态（DOM）
@@ -163,31 +178,35 @@ const openFilterDropdown = (
  * @returns {void}
  */
 const onGlobalMousedown = (mouseEvent: MouseEvent) => {
-  if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
-  const target = mouseEvent.target as HTMLElement | null
-  if (!target) return
+  runInTableContext(() => {
+    if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
+    const target = mouseEvent.target as HTMLElement | null
+    if (!target) return
 
-  if (!filterDropdown.visible) return
-  const panel = filterDropdownRef.value
+    if (!filterDropdown.visible) return
+    const panel = filterDropdownRef.value
 
-  if (panel && panel.contains(target)) return
-  const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
-  if (!inElSelectDropdown) {
-    filterDropdown.visible = false
-  }
+    if (panel && panel.contains(target)) return
+    const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
+    if (!inElSelectDropdown) {
+      filterDropdown.visible = false
+    }
+  })
 }
 
 /**
  * 应用过滤下拉浮层选中的选项
  */
 const handleSelectedFilter = () => {
-  const colName = filterDropdown.colName
-  const selectedValues = filterDropdown.selectedValues
-  updateColumnFilter(colName, selectedValues || [])
+  runInTableContext(() => {
+    const colName = filterDropdown.colName
+    const selectedValues = filterDropdown.selectedValues
+    updateColumnFilter(colName, selectedValues || [])
 
-  // 重新处理表格数据，应用过滤条件
-  handleTableData()
-  refreshTable(true)
+    // 重新处理表格数据，应用过滤条件
+    handleTableData()
+    refreshTable(true)
+  })
 }
 
 /**
@@ -219,6 +238,7 @@ onBeforeUnmount(() => {
 
 // 暴露方法供外部使用
 defineExpose({
+  setTableContext,
   openFilterDropdown,
   closeFilterDropdown,
   updatePositions

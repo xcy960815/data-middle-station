@@ -1,8 +1,7 @@
 import Konva from 'konva'
-import { reactive, ref } from 'vue'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import SummaryDropdown from './components/summary-dropdown.vue'
-import { staticParams, tableData } from './parameter'
+import { bindCurrentTableContext, getTableParams, getProcessedRows, getRuntimeState } from './parameter'
 import { stageVars } from './stage-handler'
 import {
   calculateTextWidth,
@@ -12,36 +11,35 @@ import {
   setPointerStyle,
   truncateText
 } from './utils'
-interface SummaryVars {
-  summaryLayer: Konva.Layer | null
-  leftSummaryGroup: Konva.Group | null
-  centerSummaryGroup: Konva.Group | null
-  rightSummaryGroup: Konva.Group | null
-}
+import type { SummaryState } from './runtime-state'
 
-export const summaryVars: SummaryVars = {
-  /**
-   * 汇总层（汇总）
-   */
-  summaryLayer: null,
-  /**
-   * 左侧汇总组（左侧汇总）
-   */
-  leftSummaryGroup: null,
-  /**
-   * 中间汇总组（中间汇总）
-   */
-  centerSummaryGroup: null,
-  /**
-   * 右侧汇总组（右侧汇总）
-   */
-  rightSummaryGroup: null
-}
+export const summaryVars = new Proxy({} as SummaryState, {
+  get: (_target, property: keyof SummaryState) => getRuntimeState().summary[property],
+  set: (_target, property: keyof SummaryState, value) => {
+    getRuntimeState().summary[property] = value as never
+    return true
+  }
+})
 
 /**
  * 汇总下拉组件引用
  */
-export const summaryDropdownRef = ref<InstanceType<typeof SummaryDropdown> | null>(null)
+export const summaryDropdownRef = new Proxy({} as { value: InstanceType<typeof SummaryDropdown> | null }, {
+  get: (_target, property: 'value') => getRuntimeState().summaryDropdownRef[property],
+  set: (_target, property: 'value', value) => {
+    getRuntimeState().summaryDropdownRef[property] = value
+    return true
+  }
+})
+
+export const resetSummaryRuntimeState = () => {
+  summaryVars.summaryLayer = null
+  summaryVars.leftSummaryGroup = null
+  summaryVars.centerSummaryGroup = null
+  summaryVars.rightSummaryGroup = null
+  summaryDropdownRef.value = null
+  resetSummaryState()
+}
 
 /**
  * 数字列 汇总方式
@@ -106,19 +104,17 @@ export const createSummaryClipGroup = (x: number, y: number, clipOptions: ClipOp
  * 获取汇总行高度
  * @returns {number}
  */
-export const getSummaryRowHeight = () => (staticParams.enableSummary ? staticParams.summaryRowHeight : 0)
+export const getSummaryRowHeight = () => (getTableParams().enableSummary ? getTableParams().summaryRowHeight : 0)
 
-/**
- * 汇总行选择状态：列名 -> 选中的规则 - 单独的响应式变量
- */
-export const summaryState = reactive<Record<string, string>>({})
+export const getSummaryRules = () => getRuntimeState().summaryRules
 
 /**
  * 重置汇总状态
  */
 export const resetSummaryState = () => {
-  Object.keys(summaryState).forEach((key) => {
-    delete summaryState[key]
+  const summaryRules = getSummaryRules()
+  Object.keys(summaryRules).forEach((key) => {
+    delete summaryRules[key]
   })
 }
 
@@ -131,7 +127,7 @@ export const resetSummaryState = () => {
 const computeSummaryValueForColumn = (col: CanvasTable.GroupOption | CanvasTable.DimensionOption, rule: string) => {
   if (rule === 'nodisplay') return '不显示'
   const key = col.columnName
-  const values = tableData.value.map((r) => r?.[key])
+  const values = getProcessedRows().value.map((r) => r?.[key])
   const isNumber = values.some((v) => typeof v === 'number')
   if (isNumber) {
     const nums = values
@@ -203,12 +199,12 @@ export const drawSummaryPart = (
   summaryCols: Array<CanvasTable.GroupOption | CanvasTable.DimensionOption>
 ) => {
   if (!summaryGroup || !stageVars.stage) return
-  const summaryRowHeight = staticParams.summaryRowHeight
-  const summaryBackground = staticParams.summaryBackground
-  const borderColor = staticParams.borderColor
-  const summaryFontFamily = staticParams.summaryFontFamily
-  const summaryTextColor = staticParams.summaryTextColor
-  const fontSize = staticParams.summaryFontSize
+  const summaryRowHeight = getTableParams().summaryRowHeight
+  const summaryBackground = getTableParams().summaryBackground
+  const borderColor = getTableParams().borderColor
+  const summaryFontFamily = getTableParams().summaryFontFamily
+  const summaryTextColor = getTableParams().summaryTextColor
+  const fontSize = getTableParams().summaryFontSize
 
   let x = 0
   summaryCols.forEach((columnOption) => {
@@ -231,9 +227,14 @@ export const drawSummaryPart = (
     const textMaxWidth = calculateTextWidth.forSummaryCell(columnOption)
 
     // 先显示占位文本，然后异步更新
-    const rule = summaryState[columnOption.columnName] || 'nodisplay'
+    const rule = getSummaryRules()[columnOption.columnName] || 'nodisplay'
     const placeholderText = rule === 'nodisplay' ? '不显示' : '计算中...'
-    const truncatedTitle = truncateText(placeholderText, textMaxWidth, staticParams.summaryFontSize, summaryFontFamily)
+    const truncatedTitle = truncateText(
+      placeholderText,
+      textMaxWidth,
+      getTableParams().summaryFontSize,
+      summaryFontFamily
+    )
 
     // 使用统一函数创建汇总行文本
     const summaryCellText = drawUnifiedText({
@@ -255,21 +256,30 @@ export const drawSummaryPart = (
       const summaryText = computeSummaryValueForColumn(columnOption, rule)
       const ruleLabel = getRuleLabel(rule)
       const displayText = ruleLabel ? `${ruleLabel}: ${summaryText}` : summaryText
-      const finalText = truncateText(displayText, textMaxWidth, staticParams.summaryFontSize, summaryFontFamily)
+      const finalText = truncateText(displayText, textMaxWidth, getTableParams().summaryFontSize, summaryFontFamily)
       summaryCellText.text(finalText)
     }
     // 注释悬停效果以提升性能
-    summaryCellRect.on('mouseenter', () => setPointerStyle(stageVars.stage, true, 'pointer'))
-    summaryCellRect.on('mouseleave', () => setPointerStyle(stageVars.stage, false, 'default'))
-    summaryCellRect.on('click', (evt: KonvaEventObject<MouseEvent, Konva.Rect>) => {
-      if (!stageVars.stage) return
-      if (!summaryDropdownRef.value) return
-      const isNumber = columnOption.columnType === 'number'
-      const options = isNumber ? numberOptions : textOptions
-      const prev = summaryState[columnOption.columnName] || 'nodisplay'
-      const valid = options.some((o) => o.value === prev) ? prev : 'nodisplay'
-      summaryDropdownRef.value?.openSummaryDropdown(evt, columnOption.columnName, options, valid)
-    })
+    summaryCellRect.on(
+      'mouseenter',
+      bindCurrentTableContext(() => setPointerStyle(stageVars.stage, true, 'pointer'))
+    )
+    summaryCellRect.on(
+      'mouseleave',
+      bindCurrentTableContext(() => setPointerStyle(stageVars.stage, false, 'default'))
+    )
+    summaryCellRect.on(
+      'click',
+      bindCurrentTableContext((evt: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+        if (!stageVars.stage) return
+        if (!summaryDropdownRef.value) return
+        const isNumber = columnOption.columnType === 'number'
+        const options = isNumber ? numberOptions : textOptions
+        const prev = getSummaryRules()[columnOption.columnName] || 'nodisplay'
+        const valid = options.some((o) => o.value === prev) ? prev : 'nodisplay'
+        summaryDropdownRef.value?.openSummaryDropdown(evt, columnOption.columnName, options, valid)
+      })
+    )
 
     x += colWidth
   })

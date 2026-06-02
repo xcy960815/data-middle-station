@@ -1,67 +1,25 @@
-import { ref } from 'vue'
-import { staticParams, tableData } from './parameter'
+import {
+  getSourceRowIndex,
+  notifyCellValueChange,
+  getTableParams,
+  getProcessedRows,
+  getRuntimeState
+} from './parameter'
 import { measureTablePerf, updateTablePerfSnapshot } from './perf'
-
-/**
- * 排序列接口
- */
-interface SortColumn {
-  /**
-   * 列名
-   */
-  columnName: string
-  /**
-   * 排序方向
-   */
-  order: 'asc' | 'desc'
-}
-
-/**
- * 过滤项接口
- */
-interface FilterItem {
-  columnName: string
-  /** 选中的离散值集合 */
-  values: Set<string>
-}
-
-/**
- * 唯一值缓存
- */
-const uniqueColumnValuesCache = new Map<string, string[]>()
-
-/**
- * 原始数据引用缓存，用于感知数据源切换
- */
-let lastRawDataRef: Array<AnalyzeDataVo.AnalyzeData> | null = null
-let lastRawDataLength = 0
-
-/**
- * 原始数据存储 - 不被排序或过滤修改
- */
-let originalData: Array<AnalyzeDataVo.AnalyzeData> = []
-
-/**
- * 过滤状态（数组模型）：支持多列过滤；同列内为 OR，多列之间为 AND
- */
-export const filterColumns = ref<FilterItem[]>([])
-
-/**
- * 排序列
- */
-export const sortColumns = ref<SortColumn[]>([])
+import type { FilterItem } from './runtime-state'
 
 /**
  * 重置表格运行时状态，避免重挂载后沿用旧的过滤、排序和缓存
  */
 export const resetTableDataState = () => {
-  uniqueColumnValuesCache.clear()
-  lastRawDataRef = null
-  lastRawDataLength = 0
-  originalData = []
-  filterColumns.value = []
-  sortColumns.value = []
-  tableData.value = []
+  const dataState = getRuntimeState().data
+  dataState.uniqueColumnValuesCache.clear()
+  dataState.lastRawDataRef = null
+  dataState.lastRawDataLength = 0
+  dataState.originalData = []
+  dataState.filterColumns = []
+  dataState.sortColumns = []
+  getProcessedRows().value = []
 }
 
 /**
@@ -76,6 +34,7 @@ const normalizeCellValue = (value: unknown): string => String(value ?? '')
  * @param columnName 指定列名，不传则清理全部
  */
 export const invalidateUniqueColumnValues = (columnName?: string) => {
+  const uniqueColumnValuesCache = getRuntimeState().data.uniqueColumnValuesCache
   if (columnName) {
     uniqueColumnValuesCache.delete(columnName)
     return
@@ -90,7 +49,7 @@ export const invalidateUniqueColumnValues = (columnName?: string) => {
  * @returns FilterItem | undefined
  */
 const getFilterItem = (columnName: string): FilterItem | undefined =>
-  filterColumns.value.find((item) => item.columnName === columnName)
+  getRuntimeState().data.filterColumns.find((item) => item.columnName === columnName)
 
 /**
  * 获取列当前过滤值
@@ -114,7 +73,9 @@ export const updateColumnFilter = (columnName: string, selectedValues: string[])
   if (normalizedValues.length === 0) {
     if (!existingFilter) return
 
-    filterColumns.value = filterColumns.value.filter((item) => item.columnName !== columnName)
+    getRuntimeState().data.filterColumns = getRuntimeState().data.filterColumns.filter(
+      (item) => item.columnName !== columnName
+    )
     return
   }
 
@@ -123,7 +84,7 @@ export const updateColumnFilter = (columnName: string, selectedValues: string[])
     return
   }
 
-  filterColumns.value.push({
+  getRuntimeState().data.filterColumns.push({
     columnName,
     values: new Set(normalizedValues)
   })
@@ -135,17 +96,20 @@ export const updateColumnFilter = (columnName: string, selectedValues: string[])
  * @returns string[]
  */
 export const getUniqueColumnValues = (columnName: string): string[] => {
+  const dataState = getRuntimeState().data
+  const uniqueColumnValuesCache = dataState.uniqueColumnValuesCache
   const cachedValues = uniqueColumnValuesCache.get(columnName)
   if (cachedValues) {
     return cachedValues
   }
 
-  const uniqueValues = Array.from(new Set(originalData.map((row) => normalizeCellValue(row[columnName])))).sort(
-    (a, b) =>
-      a.localeCompare(b, undefined, {
-        numeric: true,
-        sensitivity: 'base'
-      })
+  const uniqueValues = Array.from(
+    new Set(dataState.originalData.map((row) => normalizeCellValue(row[columnName])))
+  ).sort((a, b) =>
+    a.localeCompare(b, undefined, {
+      numeric: true,
+      sensitivity: 'base'
+    })
   )
   uniqueColumnValuesCache.set(columnName, uniqueValues)
   return uniqueValues
@@ -166,6 +130,8 @@ export const commitCellValueChange = (
   if (!row || !columnName) return false
 
   row[columnName] = nextValue
+  const rowIndex = getSourceRowIndex(row)
+  notifyCellValueChange({ row, rowIndex, columnName, value: nextValue })
   invalidateUniqueColumnValues(columnName)
   handleTableData()
   return true
@@ -177,21 +143,27 @@ export const commitCellValueChange = (
  */
 export const handleTableData = () => {
   measureTablePerf('handleTableData', () => {
-    if (lastRawDataRef !== staticParams.data || lastRawDataLength !== staticParams.data.length) {
+    const dataState = getRuntimeState().data
+    if (
+      dataState.lastRawDataRef !== getTableParams().data ||
+      dataState.lastRawDataLength !== getTableParams().data.length
+    ) {
       invalidateUniqueColumnValues()
-      lastRawDataRef = staticParams.data
-      lastRawDataLength = staticParams.data.length
+      dataState.lastRawDataRef = getTableParams().data
+      dataState.lastRawDataLength = getTableParams().data.length
     }
 
     // 保存原始数据
-    originalData = staticParams.data.filter((row) => row && typeof row === 'object')
+    dataState.originalData = getTableParams().data.filter((row) => row && typeof row === 'object')
 
     // 开始处理数据
-    let processedData = [...originalData]
+    let processedData = [...dataState.originalData]
 
     // 应用过滤（AND across columns, OR within column values）
-    if (filterColumns.value.length) {
-      const activeFilters = filterColumns.value.filter((filterItem) => filterItem.values && filterItem.values.size > 0)
+    if (dataState.filterColumns.length) {
+      const activeFilters = dataState.filterColumns.filter(
+        (filterItem) => filterItem.values && filterItem.values.size > 0
+      )
       if (activeFilters.length) {
         processedData = processedData.filter((row) => {
           for (const filterItem of activeFilters) {
@@ -204,7 +176,7 @@ export const handleTableData = () => {
     }
 
     // 应用排序
-    if (sortColumns.value.length) {
+    if (dataState.sortColumns.length) {
       const toNum = (v: string | number | null | undefined) => {
         const n = Number(v)
         return Number.isFinite(n) ? n : null
@@ -215,7 +187,7 @@ export const handleTableData = () => {
         return undefined
       }
       processedData.sort((leftRow, rightRow) => {
-        for (const sortColumn of sortColumns.value) {
+        for (const sortColumn of dataState.sortColumns) {
           const key = sortColumn.columnName
           const leftValue = getVal(leftRow, key)
           const rightValue = getVal(rightRow, key)
@@ -230,11 +202,11 @@ export const handleTableData = () => {
         return 0
       })
     }
-    tableData.value = processedData
+    getProcessedRows().value = processedData
     updateTablePerfSnapshot({
-      sourceRows: staticParams.data.length,
+      sourceRows: getTableParams().data.length,
       processedRows: processedData.length,
-      bufferRows: staticParams.bufferRows
+      bufferRows: getTableParams().bufferRows
     })
   })
 }
@@ -245,7 +217,7 @@ export const handleTableData = () => {
  * @returns {'asc' | 'desc' | null} 排序状态
  */
 export const getColumnSortStatus = (columnName: string): 'asc' | 'desc' | null => {
-  const sortColumn = sortColumns.value.find((col) => col.columnName === columnName)
+  const sortColumn = getRuntimeState().data.sortColumns.find((col) => col.columnName === columnName)
   return sortColumn ? sortColumn.order : null
 }
 
@@ -259,19 +231,20 @@ export const handleMultiColumnSort = (
   order: 'asc' | 'desc'
 ) => {
   const columnName = columnOption.columnName
-  const existingIndex = sortColumns.value.findIndex((col) => col.columnName === columnName)
+  const sortColumns = getRuntimeState().data.sortColumns
+  const existingIndex = sortColumns.findIndex((col) => col.columnName === columnName)
 
   if (existingIndex !== -1) {
     // 如果列已存在，更新排序方向或移除
-    if (sortColumns.value[existingIndex].order === order) {
+    if (sortColumns[existingIndex].order === order) {
       // 如果点击的是相同方向，移除排序
-      sortColumns.value.splice(existingIndex, 1)
+      sortColumns.splice(existingIndex, 1)
     } else {
       // 更新排序方向
-      sortColumns.value[existingIndex].order = order
+      sortColumns[existingIndex].order = order
     }
   } else {
     // 添加新的排序列
-    sortColumns.value.push({ columnName, order })
+    sortColumns.push({ columnName, order })
   }
 }

@@ -24,24 +24,41 @@
 <script setup lang="ts">
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
+import { type CanvasTableContext, runWithTableContext } from '../parameter'
 import { refreshSummarySection, stageVars } from '../stage-handler'
-import { summaryState } from '../summary-handler'
+import { getSummaryRules } from '../summary-handler'
 import { getDropdownPosition } from '../utils'
 
 const summaryDropdownRef = ref<HTMLElement | null>(null)
+const tableContext = shallowRef<CanvasTableContext | null>(null)
+
+const runInTableContext = (handler: () => void) => {
+  if (tableContext.value) {
+    runWithTableContext(tableContext.value, handler)
+    return
+  }
+
+  handler()
+}
+
+const setTableContext = (context: CanvasTableContext) => {
+  tableContext.value = context
+}
 
 /**
  * 汇总下拉选中值变化
  * @param {string} value 选中值
  */
 const handleSummaryChange = () => {
-  const colName = summaryDropdown.colName
-  const selected = summaryDropdown.selectedValue
-  summaryState[colName] = selected
-  refreshSummarySection()
-  // 选择后关闭弹框
-  summaryDropdown.visible = false
+  runInTableContext(() => {
+    const colName = summaryDropdown.colName
+    const selected = summaryDropdown.selectedValue
+    getSummaryRules()[colName] = selected
+    refreshSummarySection()
+    // 选择后关闭弹框
+    summaryDropdown.visible = false
+  })
 }
 
 interface SummaryDropdownOption {
@@ -167,18 +184,20 @@ const closeSummaryDropdown = () => {
  * @returns {void}
  */
 const onGlobalMousedown = (mouseEvent: MouseEvent) => {
-  if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
-  const target = mouseEvent.target as HTMLElement | null
-  if (!target) return
+  runInTableContext(() => {
+    if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
+    const target = mouseEvent.target as HTMLElement | null
+    if (!target) return
 
-  if (!summaryDropdown.visible) return
-  const panel = summaryDropdownRef.value
+    if (!summaryDropdown.visible) return
+    const panel = summaryDropdownRef.value
 
-  if (panel && panel.contains(target)) return
-  const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
-  if (!inElSelectDropdown) {
-    summaryDropdown.visible = false
-  }
+    if (panel && panel.contains(target)) return
+    const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
+    if (!inElSelectDropdown) {
+      summaryDropdown.visible = false
+    }
+  })
 }
 
 /**
@@ -209,6 +228,7 @@ onBeforeUnmount(() => {
 })
 
 defineExpose({
+  setTableContext,
   openSummaryDropdown,
   closeSummaryDropdown,
   updatePositions

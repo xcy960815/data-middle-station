@@ -9,17 +9,12 @@ export default defineNuxtRouteMiddleware((to) => {
     return
   }
 
-  if (process.server) {
-    const token = useCookie<string | null>('BearToken')
-    if (!token.value) {
-      return navigateTo('/welcome', { replace: true })
-    }
+  if (!process.server) {
+    return
   }
 
-  if (process.client) {
-    const userStore = useUserStore()
-    if (!userStore.getUserId) {
-      return navigateTo('/welcome', { replace: true })
-    }
+  const token = useCookie<string | null>('BearToken')
+  if (!token.value) {
+    return navigateTo('/welcome', { replace: true })
   }
 })

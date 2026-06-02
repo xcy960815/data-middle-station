@@ -35,6 +35,11 @@
         :buffer-rows="tableChartConfig?.bufferRows"
         :min-auto-col-width="tableChartConfig?.minAutoColWidth"
         :sort-active-color="tableChartConfig?.sortActiveColor"
+        @column-width-change="handleColumnWidthChange"
+        @column-order-change="handleColumnOrderChange"
+        @cell-value-change="handleCellValueChange"
+        @render-chart-start="emit('renderChartStart')"
+        @render-chart-end="emit('renderChartEnd')"
       >
       </CanvasTable>
     </client-only>
@@ -43,8 +48,16 @@
 
 <script lang="ts" setup>
 import CanvasTable from './canvas-table.vue'
+import type { CellValueChangePayload, ColumnOrderChangePayload, ColumnWidthChangePayload } from './parameter'
 
 const chartConfigStore = useChartConfigStore()
+const analyzeStore = useAnalyzeStore()
+const groupStore = useGroupsStore()
+const dimensionStore = useDimensionsStore()
+const emit = defineEmits<{
+  renderChartStart: []
+  renderChartEnd: []
+}>()
 
 defineProps({
   data: {
@@ -75,6 +88,37 @@ defineProps({
 const tableChartConfig = computed(() => {
   return chartConfigStore.privateChartConfig?.table
 })
+
+const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload) => {
+  const group = groupStore.getGroups.find((item) => item.columnName === columnName)
+  if (group) {
+    groupStore.updateGroup({ ...group, width })
+  }
+
+  const dimension = dimensionStore.getDimensions.find((item) => item.columnName === columnName)
+  if (dimension) {
+    dimensionStore.updateDimension({ ...dimension, width })
+  }
+
+  analyzeStore.setEditorDirty(true)
+}
+
+const handleColumnOrderChange = ({ xAxisFields, yAxisFields }: ColumnOrderChangePayload) => {
+  groupStore.setGroups(xAxisFields)
+  dimensionStore.setDimensions(yAxisFields)
+  analyzeStore.setEditorDirty(true)
+}
+
+const handleCellValueChange = (_payload: CellValueChangePayload) => {
+  const { rowIndex, columnName, value } = _payload
+  if (rowIndex >= 0 && analyzeStore.analyzeData[rowIndex]) {
+    analyzeStore.analyzeData[rowIndex] = {
+      ...analyzeStore.analyzeData[rowIndex],
+      [columnName]: value
+    }
+  }
+  analyzeStore.setEditorDirty(true)
+}
 </script>
 
 <style scoped lang="scss">

@@ -8,14 +8,26 @@
   <cell-editor ref="cellEditorRef" />
 </template>
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { cellEditorRef } from './body-handler'
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import CellEditor from './components/cell-editor.vue'
 import FilterDropdown from './components/filter-dropdown.vue'
 import SummaryDropdown from './components/summary-dropdown.vue'
 import { handleTableData, resetTableDataState } from './data-handler'
-import { filterDropdownRef } from './header-handler'
-import { resetStaticParams, staticParams, tableProps } from './parameter'
+import {
+  applyTableParams,
+  type CanvasTableContext,
+  type CanvasTableParams,
+  type CellValueChangePayload,
+  type ColumnOrderChangePayload,
+  type ColumnWidthChangePayload,
+  createCanvasTableContext,
+  resetCurrentTableContext,
+  resetTableParams,
+  runWithTableContext,
+  setCurrentTableContext,
+  setTableRuntimeHandlers,
+  tableProps
+} from './parameter'
 import { measureTablePerf } from './perf'
 import { cleanupWheelListener, initWheelListener } from './scrollbar-handler'
 import {
@@ -30,9 +42,89 @@ import {
   refreshTable,
   stageVars
 } from './stage-handler'
-import { resetSummaryState, summaryDropdownRef } from './summary-handler'
+import { resetSummaryState } from './summary-handler'
 const props = defineProps(tableProps)
+const emit = defineEmits<{
+  renderChartStart: []
+  renderChartEnd: []
+  columnWidthChange: [payload: ColumnWidthChangePayload]
+  columnOrderChange: [payload: ColumnOrderChangePayload]
+  cellValueChange: [payload: CellValueChangePayload]
+}>()
 const tableContainerRef = ref<HTMLDivElement | null>(null)
+const filterDropdownRef = ref<InstanceType<typeof FilterDropdown> | null>(null)
+const summaryDropdownRef = ref<InstanceType<typeof SummaryDropdown> | null>(null)
+const cellEditorRef = ref<InstanceType<typeof CellEditor> | null>(null)
+const tableContext = shallowRef<CanvasTableContext | null>(null)
+
+const runInTableContext = (handler: () => void) => {
+  if (!tableContext.value) return false
+
+  runWithTableContext(tableContext.value, handler)
+  return true
+}
+
+const updateTableParams = (params: Partial<CanvasTableParams>) => {
+  let didUpdate = false
+
+  runInTableContext(() => {
+    applyTableParams(params)
+    didUpdate = true
+  })
+
+  return didUpdate
+}
+
+const syncAllTableParamsFromProps = () => {
+  updateTableParams({
+    title: props.title ?? '',
+    data: props.data,
+    xAxisFields: props.xAxisFields,
+    yAxisFields: props.yAxisFields,
+    enableSummary: props.enableSummary,
+    bufferRows: props.bufferRows,
+    minAutoColWidth: props.minAutoColWidth,
+    highlightCellBackground: props.highlightCellBackground,
+    highlightRowBackground: props.highlightRowBackground,
+    highlightColBackground: props.highlightColBackground,
+    headerRowHeight: props.headerRowHeight,
+    resizerWidth: props.resizerWidth,
+    textPaddingHorizontal: props.textPaddingHorizontal,
+    headerBackground: props.headerBackground,
+    headerTextColor: props.headerTextColor,
+    headerFontFamily: props.headerFontFamily,
+    headerFontSize: props.headerFontSize,
+    bodyRowHeight: props.bodyRowHeight,
+    bodyBackgroundOdd: props.bodyBackgroundOdd,
+    bodyBackgroundEven: props.bodyBackgroundEven,
+    bodyTextColor: props.bodyTextColor,
+    bodyFontFamily: props.bodyFontFamily,
+    bodyFontSize: props.bodyFontSize,
+    borderColor: props.borderColor,
+    summaryRowHeight: props.summaryRowHeight,
+    summaryBackground: props.summaryBackground,
+    summaryTextColor: props.summaryTextColor,
+    summaryFontFamily: props.summaryFontFamily,
+    summaryFontSize: props.summaryFontSize,
+    scrollbarSize: props.scrollbarSize,
+    scrollbarBackground: props.scrollbarBackground,
+    scrollbarThumbBackground: props.scrollbarThumbBackground,
+    scrollbarThumbHoverBackground: props.scrollbarThumbHoverBackground,
+    sortActiveColor: props.sortActiveColor,
+    dragIconHeight: props.dragIconHeight,
+    dragIconWidth: props.dragIconWidth,
+    dragIconDotSize: props.dragIconDotSize,
+    spanMethod: props.spanMethod
+  })
+}
+
+const updateAndRefresh = (params: Partial<CanvasTableParams>, refreshHandler: () => void) => {
+  runInTableContext(() => {
+    applyTableParams(params)
+    if (!stageVars.stage) return
+    refreshHandler()
+  })
+}
 
 /**
  * 表格容器样式
@@ -47,67 +139,16 @@ const tableContainerStyle = computed(() => {
   }
 })
 
-/**
- * 监听所有的props
- */
-watch(
-  props,
-  () => {
-    // 使用类型安全的属性赋值
-    if (props.title !== undefined) staticParams.title = props.title
-    if (props.data !== undefined) staticParams.data = props.data
-    if (props.xAxisFields !== undefined) staticParams.xAxisFields = props.xAxisFields
-    if (props.yAxisFields !== undefined) staticParams.yAxisFields = props.yAxisFields
-    if (props.enableSummary !== undefined) staticParams.enableSummary = props.enableSummary
-    if (props.bufferRows !== undefined) staticParams.bufferRows = props.bufferRows
-    if (props.minAutoColWidth !== undefined) staticParams.minAutoColWidth = props.minAutoColWidth
-    if (props.highlightCellBackground !== undefined)
-      staticParams.highlightCellBackground = props.highlightCellBackground
-    if (props.highlightRowBackground !== undefined) staticParams.highlightRowBackground = props.highlightRowBackground
-    if (props.highlightColBackground !== undefined) staticParams.highlightColBackground = props.highlightColBackground
-    if (props.headerRowHeight !== undefined) staticParams.headerRowHeight = props.headerRowHeight
-    if (props.resizerWidth !== undefined) staticParams.resizerWidth = props.resizerWidth
-    if (props.textPaddingHorizontal !== undefined) staticParams.textPaddingHorizontal = props.textPaddingHorizontal
-    if (props.headerBackground !== undefined) staticParams.headerBackground = props.headerBackground
-    if (props.headerTextColor !== undefined) staticParams.headerTextColor = props.headerTextColor
-    if (props.headerFontFamily !== undefined) staticParams.headerFontFamily = props.headerFontFamily
-    if (props.headerFontSize !== undefined) staticParams.headerFontSize = props.headerFontSize
-    if (props.bodyRowHeight !== undefined) staticParams.bodyRowHeight = props.bodyRowHeight
-    if (props.bodyBackgroundOdd !== undefined) staticParams.bodyBackgroundOdd = props.bodyBackgroundOdd
-    if (props.bodyBackgroundEven !== undefined) staticParams.bodyBackgroundEven = props.bodyBackgroundEven
-    if (props.bodyTextColor !== undefined) staticParams.bodyTextColor = props.bodyTextColor
-    if (props.bodyFontFamily !== undefined) staticParams.bodyFontFamily = props.bodyFontFamily
-    if (props.bodyFontSize !== undefined) staticParams.bodyFontSize = props.bodyFontSize
-    if (props.borderColor !== undefined) staticParams.borderColor = props.borderColor
-    if (props.summaryRowHeight !== undefined) staticParams.summaryRowHeight = props.summaryRowHeight
-    if (props.summaryBackground !== undefined) staticParams.summaryBackground = props.summaryBackground
-    if (props.summaryTextColor !== undefined) staticParams.summaryTextColor = props.summaryTextColor
-    if (props.summaryFontFamily !== undefined) staticParams.summaryFontFamily = props.summaryFontFamily
-    if (props.summaryFontSize !== undefined) staticParams.summaryFontSize = props.summaryFontSize
-    if (props.scrollbarSize !== undefined) staticParams.scrollbarSize = props.scrollbarSize
-    if (props.scrollbarBackground !== undefined) staticParams.scrollbarBackground = props.scrollbarBackground
-    if (props.scrollbarThumbBackground !== undefined)
-      staticParams.scrollbarThumbBackground = props.scrollbarThumbBackground
-    if (props.scrollbarThumbHoverBackground !== undefined)
-      staticParams.scrollbarThumbHoverBackground = props.scrollbarThumbHoverBackground
-    if (props.sortActiveColor !== undefined) staticParams.sortActiveColor = props.sortActiveColor
-    if (props.dragIconHeight !== undefined) staticParams.dragIconHeight = props.dragIconHeight
-    if (props.dragIconWidth !== undefined) staticParams.dragIconWidth = props.dragIconWidth
-    if (props.spanMethod !== undefined) staticParams.spanMethod = props.spanMethod
-  },
-  {
-    deep: true,
-    immediate: true
-  }
-)
-
 watch(
   () => [props.data],
   async () => {
-    if (!stageVars.stage) return
+    runInTableContext(() => {
+      applyTableParams({ data: props.data })
+      if (!stageVars.stage) return
 
-    handleTableData()
-    refreshTable(true)
+      handleTableData()
+      refreshTable(true)
+    })
   },
   {
     deep: true
@@ -117,8 +158,11 @@ watch(
 watch(
   () => [props.xAxisFields, props.yAxisFields],
   () => {
-    if (!stageVars.stage) return
-    refreshTable(false)
+    runInTableContext(() => {
+      applyTableParams({ xAxisFields: props.xAxisFields, yAxisFields: props.yAxisFields })
+      if (!stageVars.stage) return
+      refreshTable(false)
+    })
   },
   {
     deep: true
@@ -128,13 +172,16 @@ watch(
 watch(
   () => [props.chartWidth, props.chartHeight],
   async () => {
-    if (!stageVars.stage) return
+    if (!tableContext.value) return
     // 等待demo节点发生变更再触发该方法
     await nextTick()
+    runInTableContext(() => {
+      if (!stageVars.stage) return
 
-    initStage(tableContainerRef.value)
-    handleTableData()
-    refreshTable(true)
+      initStage(tableContainerRef.value)
+      handleTableData()
+      refreshTable(true)
+    })
   }
 )
 
@@ -143,18 +190,45 @@ watch(
  * @returns {void}
  */
 watch(
-  () => [props.headerRowHeight],
+  () => [
+    props.headerRowHeight,
+    props.resizerWidth,
+    props.textPaddingHorizontal,
+    props.minAutoColWidth,
+    props.dragIconHeight,
+    props.dragIconWidth,
+    props.dragIconDotSize,
+    props.spanMethod
+  ],
   () => {
-    if (!stageVars.stage) return
-    refreshTable(false)
+    updateAndRefresh(
+      {
+        headerRowHeight: props.headerRowHeight,
+        resizerWidth: props.resizerWidth,
+        textPaddingHorizontal: props.textPaddingHorizontal,
+        minAutoColWidth: props.minAutoColWidth,
+        dragIconHeight: props.dragIconHeight,
+        dragIconWidth: props.dragIconWidth,
+        dragIconDotSize: props.dragIconDotSize,
+        spanMethod: props.spanMethod
+      },
+      () => refreshTable(false)
+    )
   }
 )
 
 watch(
   () => [props.headerFontFamily, props.headerFontSize, props.headerTextColor, props.headerBackground],
   () => {
-    if (!stageVars.stage) return
-    refreshHeaderSection()
+    updateAndRefresh(
+      {
+        headerFontFamily: props.headerFontFamily,
+        headerFontSize: props.headerFontSize,
+        headerTextColor: props.headerTextColor,
+        headerBackground: props.headerBackground
+      },
+      refreshHeaderSection
+    )
   }
 )
 
@@ -165,8 +239,7 @@ watch(
 watch(
   () => [props.bodyRowHeight],
   () => {
-    if (!stageVars.stage) return
-    refreshTable(false)
+    updateAndRefresh({ bodyRowHeight: props.bodyRowHeight }, () => refreshTable(false))
   }
 )
 
@@ -179,16 +252,23 @@ watch(
     props.bodyFontFamily
   ],
   () => {
-    if (!stageVars.stage) return
-    refreshBodySection()
+    updateAndRefresh(
+      {
+        bodyBackgroundOdd: props.bodyBackgroundOdd,
+        bodyBackgroundEven: props.bodyBackgroundEven,
+        bodyTextColor: props.bodyTextColor,
+        bodyFontSize: props.bodyFontSize,
+        bodyFontFamily: props.bodyFontFamily
+      },
+      refreshBodySection
+    )
   }
 )
 
 watch(
   () => [props.borderColor],
   () => {
-    if (!stageVars.stage) return
-    refreshTable(false)
+    updateAndRefresh({ borderColor: props.borderColor }, () => refreshTable(false))
   }
 )
 
@@ -199,16 +279,24 @@ watch(
 watch(
   () => [props.enableSummary, props.summaryRowHeight],
   () => {
-    if (!stageVars.stage) return
-    refreshTable(false)
+    updateAndRefresh({ enableSummary: props.enableSummary, summaryRowHeight: props.summaryRowHeight }, () =>
+      refreshTable(false)
+    )
   }
 )
 
 watch(
   () => [props.summaryFontFamily, props.summaryFontSize, props.summaryBackground, props.summaryTextColor],
   () => {
-    if (!stageVars.stage) return
-    refreshSummarySection()
+    updateAndRefresh(
+      {
+        summaryFontFamily: props.summaryFontFamily,
+        summaryFontSize: props.summaryFontSize,
+        summaryBackground: props.summaryBackground,
+        summaryTextColor: props.summaryTextColor
+      },
+      refreshSummarySection
+    )
   }
 )
 
@@ -219,16 +307,21 @@ watch(
 watch(
   () => [props.scrollbarSize],
   () => {
-    if (!stageVars.stage) return
-    refreshTable(false)
+    updateAndRefresh({ scrollbarSize: props.scrollbarSize }, () => refreshTable(false))
   }
 )
 
 watch(
   () => [props.scrollbarBackground, props.scrollbarThumbBackground, props.scrollbarThumbHoverBackground],
   () => {
-    if (!stageVars.stage) return
-    refreshScrollbarSection()
+    updateAndRefresh(
+      {
+        scrollbarBackground: props.scrollbarBackground,
+        scrollbarThumbBackground: props.scrollbarThumbBackground,
+        scrollbarThumbHoverBackground: props.scrollbarThumbHoverBackground
+      },
+      refreshScrollbarSection
+    )
   }
 )
 
@@ -237,10 +330,22 @@ watch(
  * @returns {void}
  */
 watch(
-  () => [props.sortActiveColor, props.highlightCellBackground],
+  () => [
+    props.sortActiveColor,
+    props.highlightCellBackground,
+    props.highlightRowBackground,
+    props.highlightColBackground
+  ],
   () => {
-    if (!stageVars.stage) return
-    refreshHeaderSection()
+    updateAndRefresh(
+      {
+        sortActiveColor: props.sortActiveColor,
+        highlightCellBackground: props.highlightCellBackground,
+        highlightRowBackground: props.highlightRowBackground,
+        highlightColBackground: props.highlightColBackground
+      },
+      refreshHeaderSection
+    )
   }
 )
 
@@ -251,8 +356,7 @@ watch(
 watch(
   () => [props.bufferRows],
   () => {
-    if (!stageVars.stage) return
-    refreshBodySection()
+    updateAndRefresh({ bufferRows: props.bufferRows }, refreshBodySection)
   }
 )
 
@@ -261,23 +365,45 @@ watch(
  * @returns {void}
  */
 onMounted(async () => {
-  resetTableDataState()
-  resetSummaryState()
-  measureTablePerf('firstRender', () => {
-    initStage(tableContainerRef.value)
-    handleTableData()
-    refreshTable(true)
+  tableContext.value = createCanvasTableContext()
+  setCurrentTableContext(tableContext.value)
+  tableContext.value.runtimeState.filterDropdownRef.value = filterDropdownRef.value
+  tableContext.value.runtimeState.summaryDropdownRef.value = summaryDropdownRef.value
+  tableContext.value.runtimeState.cellEditorRef.value = cellEditorRef.value
+  filterDropdownRef.value?.setTableContext(tableContext.value)
+  summaryDropdownRef.value?.setTableContext(tableContext.value)
+  cellEditorRef.value?.setTableContext(tableContext.value)
+  syncAllTableParamsFromProps()
+  runInTableContext(() => {
+    setTableRuntimeHandlers({
+      onColumnWidthChange: (payload) => emit('columnWidthChange', payload),
+      onColumnOrderChange: (payload) => emit('columnOrderChange', payload),
+      onCellValueChange: (payload) => emit('cellValueChange', payload)
+    })
+    resetTableDataState()
+    resetSummaryState()
+    emit('renderChartStart')
+    measureTablePerf('firstRender', () => {
+      initStage(tableContainerRef.value)
+      handleTableData()
+      refreshTable(true)
+    })
+    emit('renderChartEnd')
+    initWheelListener(tableContainerRef.value)
+    initStageListeners()
   })
-  initWheelListener(tableContainerRef.value)
-  initStageListeners()
 })
 
 onUnmounted(() => {
-  destroyStage()
-  cleanupWheelListener(tableContainerRef.value)
-  cleanupStageListeners()
-  resetTableDataState()
-  resetStaticParams()
-  resetSummaryState()
+  runInTableContext(() => {
+    cleanupWheelListener(tableContainerRef.value)
+    cleanupStageListeners()
+    destroyStage()
+    resetTableDataState()
+    resetTableParams()
+    resetSummaryState()
+  })
+  resetCurrentTableContext(tableContext.value)
+  tableContext.value = null
 })
 </script>

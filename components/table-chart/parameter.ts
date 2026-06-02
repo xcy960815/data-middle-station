@@ -1,9 +1,35 @@
 import type { PropType } from 'vue'
+import { createCanvasTableRuntimeState, type CanvasTableRuntimeState } from './runtime-state'
 
 /**
  * 默认字体
  */
 const defaultFontFamily = 'Arial, sans-serif'
+
+type TableColumn = GroupStore.GroupOption | DimensionStore.DimensionOption
+
+export interface ColumnWidthChangePayload {
+  columnName: string
+  width: number
+}
+
+export interface ColumnOrderChangePayload {
+  xAxisFields: GroupStore.GroupOption[]
+  yAxisFields: DimensionStore.DimensionOption[]
+}
+
+export interface CellValueChangePayload {
+  row: AnalyzeDataVo.AnalyzeData
+  rowIndex: number
+  columnName: string
+  value: string | number
+}
+
+interface TableRuntimeHandlers {
+  onColumnWidthChange?: (payload: ColumnWidthChangePayload) => void
+  onColumnOrderChange?: (payload: ColumnOrderChangePayload) => void
+  onCellValueChange?: (payload: CellValueChangePayload) => void
+}
 
 /**
  * 表格Props
@@ -210,7 +236,7 @@ export const tableProps = {
   dragIconDotSize: { type: Number, default: 3 }
 }
 
-interface StaticParams {
+export interface CanvasTableParams {
   /**
    * 图表标题
    */
@@ -366,16 +392,13 @@ interface StaticParams {
    */
   spanMethod?: (config: {
     row: AnalyzeDataVo.AnalyzeData
-    column: GroupStore.GroupOption | DimensionStore.DimensionOption
+    column: TableColumn
     rowIndex: number
     colIndex: number
   }) => { rowspan: number; colspan: number } | [number, number] | null | undefined
 }
 
-/**
- * 充当全局变量 避免在各个handler之间传递 props
- */
-export const staticParams: StaticParams = {
+const createDefaultTableParams = (): CanvasTableParams => ({
   title: '',
   data: [],
   xAxisFields: [],
@@ -383,7 +406,6 @@ export const staticParams: StaticParams = {
   enableSummary: false,
   bufferRows: 50,
   minAutoColWidth: 100,
-
   highlightCellBackground: 'rgba(24, 144, 255, 1)',
   highlightRowBackground: 'rgba(64, 158, 255, 0.1)',
   highlightColBackground: 'rgba(64, 158, 255, 0.08)',
@@ -411,27 +433,142 @@ export const staticParams: StaticParams = {
   scrollbarThumbBackground: '#c1c1c1',
   scrollbarThumbHoverBackground: '#a8a8a8',
   sortActiveColor: '#409EFF',
-  dragIconHeight: 14,
+  dragIconHeight: 16,
   dragIconWidth: 9,
   dragIconDotSize: 3,
   spanMethod: undefined
+})
+
+const cloneColumns = <T extends TableColumn>(columns: T[]): T[] => columns.map((column) => ({ ...column }))
+
+const SOURCE_ROW_INDEX_KEY = '__dmsTableSourceRowIndex__'
+
+const cloneRows = (rows: AnalyzeDataVo.AnalyzeData[]): AnalyzeDataVo.AnalyzeData[] =>
+  rows.map((row, rowIndex) => {
+    const clonedRow = { ...row }
+    Object.defineProperty(clonedRow, SOURCE_ROW_INDEX_KEY, {
+      value: rowIndex,
+      enumerable: false,
+      configurable: true
+    })
+    return clonedRow
+  })
+
+export const getSourceRowIndex = (row: AnalyzeDataVo.AnalyzeData): number => {
+  const sourceRowIndex = (row as Record<string, unknown>)[SOURCE_ROW_INDEX_KEY]
+  return typeof sourceRowIndex === 'number' ? sourceRowIndex : -1
+}
+
+export interface CanvasTableContext {
+  params: CanvasTableParams
+  processedRows: {
+    value: Array<AnalyzeDataVo.AnalyzeData>
+  }
+  runtimeHandlers: TableRuntimeHandlers
+  runtimeState: CanvasTableRuntimeState
+}
+
+export const createCanvasTableContext = (): CanvasTableContext => ({
+  params: createDefaultTableParams(),
+  processedRows: {
+    value: []
+  },
+  runtimeHandlers: {},
+  runtimeState: createCanvasTableRuntimeState()
+})
+
+let currentContext: CanvasTableContext | null = null
+
+export const setCurrentTableContext = (context: CanvasTableContext) => {
+  currentContext = context
+}
+
+export const runWithTableContext = <T>(context: CanvasTableContext, handler: () => T): T => {
+  const previousContext = currentContext
+  currentContext = context
+  try {
+    return handler()
+  } finally {
+    currentContext = previousContext
+  }
+}
+
+export const bindCurrentTableContext = <Args extends unknown[], T>(handler: (...args: Args) => T) => {
+  const context = getCurrentTableContext()
+  return (...args: Args): T => runWithTableContext(context, () => handler(...args))
+}
+
+export const getCurrentTableContext = () => {
+  if (!currentContext) {
+    throw new Error('CanvasTableContext 尚未绑定，请先调用 setCurrentTableContext。')
+  }
+
+  return currentContext
+}
+
+export const getTableParams = () => getCurrentTableContext().params
+
+export const getProcessedRows = () => getCurrentTableContext().processedRows
+
+export const getRuntimeState = () => getCurrentTableContext().runtimeState
+
+export const resetCurrentTableContext = (context?: CanvasTableContext | null) => {
+  if (!context || currentContext === context) {
+    currentContext = null
+  }
+}
+
+export const setTableRuntimeHandlers = (handlers: TableRuntimeHandlers) => {
+  const context = getCurrentTableContext()
+  context.runtimeHandlers.onColumnWidthChange = handlers.onColumnWidthChange
+  context.runtimeHandlers.onColumnOrderChange = handlers.onColumnOrderChange
+  context.runtimeHandlers.onCellValueChange = handlers.onCellValueChange
+}
+
+export const resetTableRuntimeHandlers = () => {
+  const context = getCurrentTableContext()
+  context.runtimeHandlers.onColumnWidthChange = undefined
+  context.runtimeHandlers.onColumnOrderChange = undefined
+  context.runtimeHandlers.onCellValueChange = undefined
+}
+
+export const applyTableParams = (nextParams: Partial<CanvasTableParams>) => {
+  const params = getTableParams()
+  Object.assign(params, nextParams)
+  if (nextParams.data) params.data = cloneRows(nextParams.data)
+  if (nextParams.xAxisFields) params.xAxisFields = cloneColumns(nextParams.xAxisFields)
+  if (nextParams.yAxisFields) params.yAxisFields = cloneColumns(nextParams.yAxisFields)
+}
+
+export const updateTableColumnWidth = (columnName: string, width: number) => {
+  const params = getTableParams()
+  const applyWidth = (column: TableColumn) => (column.columnName === columnName ? { ...column, width } : column)
+  params.xAxisFields = params.xAxisFields.map((column) => applyWidth(column) as GroupStore.GroupOption)
+  params.yAxisFields = params.yAxisFields.map((column) => applyWidth(column) as DimensionStore.DimensionOption)
+  getCurrentTableContext().runtimeHandlers.onColumnWidthChange?.({ columnName, width })
+}
+
+export const updateTableColumnOrder = (
+  xAxisFields: GroupStore.GroupOption[],
+  yAxisFields: DimensionStore.DimensionOption[]
+) => {
+  const params = getTableParams()
+  params.xAxisFields = cloneColumns(xAxisFields)
+  params.yAxisFields = cloneColumns(yAxisFields)
+  getCurrentTableContext().runtimeHandlers.onColumnOrderChange?.({
+    xAxisFields: cloneColumns(xAxisFields),
+    yAxisFields: cloneColumns(yAxisFields)
+  })
+}
+
+export const notifyCellValueChange = (payload: CellValueChangePayload) => {
+  getCurrentTableContext().runtimeHandlers.onCellValueChange?.(payload)
 }
 
 /**
- * 表格数据 不参与视图更新啥的 没必要整成响应式数据
+ * @desc 重置当前表格参数，释放上一次渲染持有的数据引用。
  */
-export const tableData: { value: Array<AnalyzeDataVo.AnalyzeData> } = {
-  value: []
-}
-
-/**
- * @desc 重置表格模块级参数，释放上一次渲染持有的数据引用。
- */
-export const resetStaticParams = () => {
-  staticParams.title = ''
-  staticParams.data = []
-  staticParams.xAxisFields = []
-  staticParams.yAxisFields = []
-  staticParams.enableSummary = false
-  staticParams.spanMethod = undefined
+export const resetTableParams = () => {
+  Object.assign(getTableParams(), createDefaultTableParams())
+  resetTableRuntimeHandlers()
 }
