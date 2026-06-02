@@ -23,13 +23,19 @@ import {
   createCanvasTableContext,
   resetCurrentTableContext,
   resetTableParams,
+  getTableParams,
   runWithTableContext,
   setCurrentTableContext,
   setTableRuntimeHandlers,
   tableProps
 } from './parameter'
-import { measureTablePerf } from './perf'
-import { cleanupWheelListener, initWheelListener } from './scrollbar-handler'
+import { measureTablePerf, runTableScrollStressTest, type TableScrollStressOptions } from './perf'
+import {
+  cleanupWheelListener,
+  initWheelListener,
+  updateHorizontalScroll,
+  updateVerticalScroll
+} from './scrollbar-handler'
 import {
   cleanupStageListeners,
   destroyStage,
@@ -405,5 +411,25 @@ onUnmounted(() => {
   })
   resetCurrentTableContext(tableContext.value)
   tableContext.value = null
+})
+
+const runScrollStressTest = async (options?: TableScrollStressOptions) => {
+  const context = tableContext.value
+  if (!context) return null
+
+  return runTableScrollStressTest(
+    {
+      verticalScroll: (delta) => runWithTableContext(context, () => updateVerticalScroll(delta)),
+      horizontalScroll: (delta) => runWithTableContext(context, () => updateHorizontalScroll(delta))
+    },
+    {
+      verticalDelta: runWithTableContext(context, () => getTableParams().bodyRowHeight),
+      ...options
+    }
+  )
+}
+
+defineExpose({
+  runScrollStressTest
 })
 </script>

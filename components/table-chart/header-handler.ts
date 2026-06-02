@@ -9,6 +9,7 @@ import {
   handleTableData
 } from './data-handler'
 import { bindCurrentTableContext, getTableParams, getRuntimeState, updateTableColumnOrder } from './parameter'
+import { measureTablePerf } from './perf'
 import { scrollbarVars } from './scrollbar-handler'
 import { getStageSize, refreshTable, scheduleLayersBatchDraw, stageVars } from './stage-handler'
 import {
@@ -460,9 +461,11 @@ const handleSortAction = (
   columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption,
   order: 'asc' | 'desc'
 ) => {
-  handleMultiColumnSort(columnOption, order)
-  handleTableData()
-  refreshTable(true)
+  measureTablePerf('applySort', () => {
+    handleMultiColumnSort(columnOption, order)
+    handleTableData()
+    refreshTable(true)
+  })
 }
 
 /**
@@ -809,7 +812,10 @@ export const handleColumnReorder = (mouseX: number) => {
 
   updateTableColumnOrder(newXAxisFields, newYAxisFields)
 
-  refreshTable(false)
+  measureTablePerf('reorderColumn', () => {
+    refreshTable(false)
+  })
+  return true
 }
 
 /**

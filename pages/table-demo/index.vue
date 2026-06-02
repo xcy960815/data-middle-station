@@ -1,12 +1,21 @@
 <template>
   <div class="table-demo-container">
+    <el-divider content-position="left">测试场景</el-divider>
+    <el-form label-width="auto" inline>
+      <el-form-item label="数据行数">
+        <el-select v-model="rowCount" style="width: 140px">
+          <el-option v-for="option in rowCountOptions" :key="option" :label="`${option} 行`" :value="option" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="启用分组列">
+        <el-switch v-model="enableGroupColumns" />
+      </el-form-item>
+      <el-form-item label="缓冲行数">
+        <el-input-number v-model="tableConfig.bufferRows" :min="0" :max="30" />
+      </el-form-item>
+    </el-form>
+    <el-divider content-position="left">样式配置</el-divider>
     <el-form label-width="auto" :model="tableConfig" inline>
-      <el-form-item label="是否行高亮">
-        <el-switch v-model="tableConfig.enableRowHoverHighlight" />
-      </el-form-item>
-      <el-form-item label="是否列高亮">
-        <el-switch v-model="tableConfig.enableColHoverHighlight" />
-      </el-form-item>
       <el-form-item label="高亮 cell 背景色">
         <el-color-picker v-model="tableConfig.highlightCellBackground" show-alpha />
       </el-form-item>
@@ -86,38 +95,24 @@
         <el-switch v-model="spanConfig.enableColSpan" />
       </el-form-item>
     </el-form>
-    <!-- 测试执行定时邮件任务 -->
-    <el-divider content-position="left">测试服务端生成 ECharts 图表</el-divider>
-    <el-form label-width="auto" inline>
-      <el-form-item label="任务ID">
-        <el-input-number v-model="testTaskId" :min="1" placeholder="请输入任务ID" style="width: 200px" />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="handleTestExecuteTask" :loading="testLoading"> 执行任务 </el-button>
-      </el-form-item>
-    </el-form>
-    <el-alert
-      v-if="testResult"
-      :title="testResult.success ? '执行成功' : '执行失败'"
-      :type="testResult.success ? 'success' : 'error'"
-      :description="testResult.message"
-      show-icon
-      :closable="true"
-      @close="testResult = null"
-      style="margin-top: 10px; margin-bottom: 10px"
-    />
     <el-divider content-position="left">Canvas Table 性能面板</el-divider>
     <div class="perf-panel">
       <div class="perf-toolbar">
         <div class="perf-runtime">
           <span>源数据 {{ perfSnapshot.sourceRows }} 行</span>
           <span>过滤后 {{ perfSnapshot.processedRows }} 行</span>
-          <span>列数 {{ perfSnapshot.columnCount }}</span>
+          <span>分组列 {{ perfSnapshot.groupColumnCount }}</span>
+          <span>维度列 {{ perfSnapshot.dimensionColumnCount }}</span>
           <span>可视行 {{ perfSnapshot.visibleRows }}</span>
           <span>缓冲 {{ perfSnapshot.bufferRows }}</span>
+          <span>scrollX {{ perfSnapshot.scrollX }}</span>
+          <span>scrollY {{ perfSnapshot.scrollY }}</span>
           <span>舞台 {{ perfSnapshot.stageWidth }} x {{ perfSnapshot.stageHeight }}</span>
         </div>
-        <el-button size="small" @click="handleResetPerfMetrics">重置指标</el-button>
+        <div class="perf-toolbar-actions">
+          <el-button size="small" :loading="stressLoading" @click="handleRunScrollStress">滚动压测</el-button>
+          <el-button size="small" @click="handleResetPerfMetrics">重置指标</el-button>
+        </div>
       </div>
       <div class="perf-overview-grid">
         <div v-for="card in perfOverviewCards" :key="card.key" class="perf-overview-card">
@@ -126,48 +121,52 @@
           <div class="perf-overview-meta">{{ card.meta }}</div>
         </div>
       </div>
-      <div class="perf-metric-grid">
-        <div v-for="metric in perfMetrics" :key="metric.key" class="perf-metric-card">
-          <div class="perf-metric-head">
-            <div>
-              <div class="perf-metric-title">{{ metric.label }}</div>
-              <div class="perf-metric-subtitle">最近 {{ metric.recent.length || 0 }} 次样本</div>
+      <div v-for="section in perfMetricSections" :key="section.key" class="perf-section">
+        <div class="perf-section-title">{{ section.title }}</div>
+        <div class="perf-metric-grid">
+          <div v-for="metric in section.metrics" :key="metric.key" class="perf-metric-card">
+            <div class="perf-metric-head">
+              <div>
+                <div class="perf-metric-title">{{ metric.label }}</div>
+                <div class="perf-metric-subtitle">最近 {{ metric.recent.length || 0 }} 次样本</div>
+              </div>
+              <div class="perf-metric-badges">
+                <span class="perf-badge">count {{ metric.count }}</span>
+                <span class="perf-badge">p95 {{ formatPerfMs(metric.p95) }}</span>
+              </div>
             </div>
-            <div class="perf-metric-badges">
-              <span class="perf-badge">count {{ metric.count }}</span>
-              <span class="perf-badge">p95 {{ formatPerfMs(metric.p95) }}</span>
+            <div class="perf-metric-values">
+              <span>last {{ formatPerfMs(metric.last) }}</span>
+              <span>avg {{ formatPerfMs(metric.avg) }}</span>
+              <span>max {{ formatPerfMs(metric.max) }}</span>
             </div>
-          </div>
-          <div class="perf-metric-values">
-            <span>last {{ formatPerfMs(metric.last) }}</span>
-            <span>avg {{ formatPerfMs(metric.avg) }}</span>
-            <span>max {{ formatPerfMs(metric.max) }}</span>
-          </div>
-          <div class="perf-meter">
-            <div class="perf-meter-fill" :style="{ width: `${metric.budgetUsage}%` }"></div>
-          </div>
-          <div class="perf-metric-values">
-            <span>超 16ms {{ metric.over16 }}</span>
-            <span>超 33ms {{ metric.over33 }}</span>
-          </div>
-          <div class="perf-sparkline">
-            <div
-              v-for="(sample, index) in metric.sparkline"
-              :key="`${metric.key}-${index}`"
-              class="perf-sparkline-bar"
-              :class="{
-                'is-warning': sample.value > 16.7,
-                'is-danger': sample.value > 33.3
-              }"
-              :style="{ height: sample.height }"
-              :title="formatPerfMs(sample.value)"
-            ></div>
+            <div class="perf-meter">
+              <div class="perf-meter-fill" :style="{ width: `${metric.budgetUsage}%` }"></div>
+            </div>
+            <div class="perf-metric-values">
+              <span>超 16ms {{ metric.over16 }}</span>
+              <span>超 33ms {{ metric.over33 }}</span>
+            </div>
+            <div class="perf-sparkline">
+              <div
+                v-for="(sample, index) in metric.sparkline"
+                :key="`${metric.key}-${index}`"
+                class="perf-sparkline-bar"
+                :class="{
+                  'is-warning': sample.value > 16.7,
+                  'is-danger': sample.value > 33.3
+                }"
+                :style="{ height: sample.height }"
+                :title="formatPerfMs(sample.value)"
+              ></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <client-only>
       <CanvasTable
+        ref="canvasTableRef"
         :enable-summary="tableConfig.enableSummary"
         :summary-row-height="tableConfig.summaryRowHeight"
         :chart-height="tableConfig.chartHeight"
@@ -203,6 +202,8 @@
         :drag-icon-width="tableConfig.dragIconWidth"
         :drag-icon-dot-size="4"
         :span-method="spanMethod"
+        @column-width-change="handleColumnWidthChange"
+        @column-order-change="handleColumnOrderChange"
       >
       </CanvasTable>
     </client-only>
@@ -210,28 +211,43 @@
 </template>
 
 <script setup lang="ts">
-// import TableChart from '@/components/table-chart/index.vue'
 import CanvasTable from '@/components/table-chart/canvas-table.vue'
-import { resetTablePerfState, TABLE_PERF_METRIC_ORDER, tablePerfState } from '@/components/table-chart/perf'
+import type { ColumnOrderChangePayload, ColumnWidthChangePayload } from '@/components/table-chart/parameter'
+import {
+  formatPerfMs,
+  getPerfBudgetUsage,
+  resetTablePerfState,
+  TABLE_PERF_METRIC_SECTIONS,
+  tablePerfState
+} from '@/components/table-chart/perf'
 import { ElMessage } from 'element-plus'
 
-const formatPerfMs = (value: number) => `${Number(value || 0).toFixed(2)} ms`
+const rowCountOptions = [1000, 5000, 10000, 50000] as const
+const rowCount = ref<(typeof rowCountOptions)[number]>(1000)
+const enableGroupColumns = ref(true)
+const canvasTableRef = ref<InstanceType<typeof CanvasTable> | null>(null)
+const stressLoading = ref(false)
 
 const perfSnapshot = computed(() => tablePerfState.snapshot)
 
-const perfMetrics = computed(() =>
-  TABLE_PERF_METRIC_ORDER.map((key) => {
-    const metric = tablePerfState.metrics[key]
-    return {
-      key,
-      ...metric,
-      budgetUsage: Math.min(100, Number((((metric.p95 || 0) / 33.3) * 100).toFixed(2))),
-      sparkline: metric.recent.map((value) => ({
-        value,
-        height: `${Math.max(10, Math.min(100, (value / 33.3) * 100))}%`
-      }))
-    }
-  })
+const buildMetricView = (key: (typeof TABLE_PERF_METRIC_SECTIONS)[number]['metrics'][number]) => {
+  const metric = tablePerfState.metrics[key]
+  return {
+    key,
+    ...metric,
+    budgetUsage: getPerfBudgetUsage(metric.p95),
+    sparkline: metric.recent.map((value) => ({
+      value,
+      height: `${Math.max(10, Math.min(100, (value / 33.3) * 100))}%`
+    }))
+  }
+}
+
+const perfMetricSections = computed(() =>
+  TABLE_PERF_METRIC_SECTIONS.map((section) => ({
+    ...section,
+    metrics: section.metrics.map((key) => buildMetricView(key))
+  }))
 )
 
 const perfOverviewCards = computed(() => [
@@ -263,6 +279,79 @@ const perfOverviewCards = computed(() => [
 
 const handleResetPerfMetrics = () => {
   resetTablePerfState()
+}
+
+const handleRunScrollStress = async () => {
+  if (!canvasTableRef.value) {
+    ElMessage.warning('表格尚未就绪')
+    return
+  }
+
+  stressLoading.value = true
+  try {
+    const result = await canvasTableRef.value.runScrollStressTest({
+      verticalSteps: 200,
+      horizontalSteps: 100
+    })
+    if (!result) {
+      ElMessage.warning('压测未执行')
+      return
+    }
+
+    ElMessage.success(
+      `压测完成：纵向 ${result.verticalSteps} 次 p95 ${formatPerfMs(result.verticalP95)}，横向 ${result.horizontalSteps} 次 p95 ${formatPerfMs(result.horizontalP95)}`
+    )
+  } finally {
+    stressLoading.value = false
+  }
+}
+
+const createGroupColumns = (): GroupStore.GroupOption[] => [
+  {
+    columnName: 'department',
+    columnType: 'string',
+    columnComment: '部门',
+    displayName: '部门',
+    fixed: 'left',
+    width: 140,
+    align: 'left',
+    resizable: true,
+    draggable: true,
+    filterable: true,
+    sortable: true
+  }
+]
+
+const groupColumns = ref<GroupStore.GroupOption[]>(createGroupColumns())
+
+const xAxisFields = computed(() => (enableGroupColumns.value ? groupColumns.value : []))
+
+watch(enableGroupColumns, (enabled) => {
+  if (enabled && groupColumns.value.length === 0) {
+    groupColumns.value = createGroupColumns()
+  }
+})
+
+const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload) => {
+  if (groupColumns.value.some((column) => column.columnName === columnName)) {
+    groupColumns.value = groupColumns.value.map((column) =>
+      column.columnName === columnName ? { ...column, width } : column
+    )
+    return
+  }
+
+  yAxisFields.value = yAxisFields.value.map((column) =>
+    column.columnName === columnName ? { ...column, width } : column
+  )
+}
+
+const handleColumnOrderChange = ({
+  xAxisFields: nextXAxisFields,
+  yAxisFields: nextYAxisFields
+}: ColumnOrderChangePayload) => {
+  groupColumns.value = nextXAxisFields.map((column) => ({ ...column }))
+  enableGroupColumns.value = nextXAxisFields.length > 0
+  yAxisFields.value = nextYAxisFields.map((column) => ({ ...column }))
 }
 
 // 合并单元格配置
@@ -354,11 +443,6 @@ const spanMethod = ({
     colspan: 1
   }
 }
-/**
- * 分组列
- */
-const xAxisFields = ref<GroupStore.GroupOption[]>([])
-
 /**
  * 维度列
  */
@@ -550,64 +634,69 @@ const yAxisFields = ref<DimensionStore.DimensionOption[]>([
   }
 ])
 
-/**
- * 数据
- */
-const data: Array<AnalyzeDataVo.AnalyzeData> = Array.from({ length: 1000 }, (_, i) => {
-  const birthYear = 1970 + (i % 40)
-  const birthMonth = (i % 12) + 1
-  const birthDay = (i % 28) + 1
-  const birthday = `${birthYear}-${birthMonth.toString().padStart(2, '0')}-${birthDay.toString().padStart(2, '0')}`
+const createDemoRows = (count: number): Array<AnalyzeDataVo.AnalyzeData> =>
+  Array.from({ length: count }, (_, i) => {
+    const birthYear = 1970 + (i % 40)
+    const birthMonth = (i % 12) + 1
+    const birthDay = (i % 28) + 1
+    const birthday = `${birthYear}-${birthMonth.toString().padStart(2, '0')}-${birthDay.toString().padStart(2, '0')}`
 
-  const lastLoginHour = i % 24
-  const lastLoginMinute = (i * 7) % 60
-  const lastLoginSecond = (i * 13) % 60
-  const lastLogin = `2024-01-${((i % 30) + 1).toString().padStart(2, '0')} ${lastLoginHour.toString().padStart(2, '0')}:${lastLoginMinute.toString().padStart(2, '0')}:${lastLoginSecond.toString().padStart(2, '0')}`
+    const lastLoginHour = i % 24
+    const lastLoginMinute = (i * 7) % 60
+    const lastLoginSecond = (i * 13) % 60
+    const lastLogin = `2024-01-${((i % 30) + 1).toString().padStart(2, '0')} ${lastLoginHour.toString().padStart(2, '0')}:${lastLoginMinute.toString().padStart(2, '0')}:${lastLoginSecond.toString().padStart(2, '0')}`
 
-  return {
-    id: i + 1,
-    name: `User ${i + 1}`,
-    age: 18 + i,
-    gender: ['Male', 'Female', 'Other'][(i * 3) % 3],
-    country: ['China', 'USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia'][(i * 3) % 8],
-    city: ['Beijing', 'Shanghai', 'New York', 'London', 'Berlin', 'Paris', 'Tokyo', 'Toronto', 'Sydney'][(i * 5) % 9],
-    state: ['CA', 'NY', 'TX', 'FL', 'WA', 'IL', 'PA', 'OH', 'GA', 'NC'][(i * 7) % 10],
-    zipcode: `${10000 + ((i * 123) % 90000)}`,
-    address: `${i + 1} Main Street, Apt ${(i % 50) + 1}--${i + 1} Main Street, Apt ${(i % 50) + 1}---${i + 1} Main Street, Apt ${(i % 50) + 1}`,
-    phone: `+1-555-${String(1000 + i).slice(-4)}`,
-    mobile: `+1-666-${String(2000 + i).slice(-4)}`,
-    birthday,
-    lastLogin,
-    company: ['TechCorp', 'DataSoft', 'CloudInc', 'WebSolutions', 'AppDev', 'SystemsLtd', 'CodeWorks', 'DigitalPro'][
-      (i * 11) % 8
-    ],
-    department: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Support', 'Design'][(i * 13) % 8],
-    position: ['Developer', 'Manager', 'Analyst', 'Designer', 'Consultant', 'Specialist', 'Coordinator', 'Director'][
-      (i * 17) % 8
-    ],
-    salary: `$${(30000 + ((i * 1000) % 120000)).toLocaleString()}`,
-    experience: `${(i % 20) + 1} years`,
-    education: ['Bachelor', 'Master', 'PhD', 'Associate', 'High School', 'Certificate'][(i * 19) % 6],
-    skills: [
-      'JavaScript, React',
-      'Python, Django',
-      'Java, Spring',
-      'C#, .NET',
-      'PHP, Laravel',
-      'Go, Gin',
-      'Ruby, Rails',
-      'Node.js, Express'
-    ][(i * 23) % 8],
-    notes: `Additional notes for user ${i + 1}. Lorem ipsum dolor sit amet.`,
-    email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
-  }
+    return {
+      id: i + 1,
+      name: `User ${i + 1}`,
+      age: 18 + (i % 60),
+      gender: ['Male', 'Female', 'Other'][(i * 3) % 3],
+      country: ['China', 'USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia'][(i * 3) % 8],
+      city: ['Beijing', 'Shanghai', 'New York', 'London', 'Berlin', 'Paris', 'Tokyo', 'Toronto', 'Sydney'][(i * 5) % 9],
+      state: ['CA', 'NY', 'TX', 'FL', 'WA', 'IL', 'PA', 'OH', 'GA', 'NC'][(i * 7) % 10],
+      zipcode: `${10000 + ((i * 123) % 90000)}`,
+      address: `${i + 1} Main Street, Apt ${(i % 50) + 1}`,
+      phone: `+1-555-${String(1000 + i).slice(-4)}`,
+      mobile: `+1-666-${String(2000 + i).slice(-4)}`,
+      birthday,
+      lastLogin,
+      company: ['TechCorp', 'DataSoft', 'CloudInc', 'WebSolutions', 'AppDev', 'SystemsLtd', 'CodeWorks', 'DigitalPro'][
+        (i * 11) % 8
+      ],
+      department: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Support', 'Design'][
+        (i * 13) % 8
+      ],
+      position: ['Developer', 'Manager', 'Analyst', 'Designer', 'Consultant', 'Specialist', 'Coordinator', 'Director'][
+        (i * 17) % 8
+      ],
+      salary: `$${(30000 + ((i * 1000) % 120000)).toLocaleString()}`,
+      experience: `${(i % 20) + 1} years`,
+      education: ['Bachelor', 'Master', 'PhD', 'Associate', 'High School', 'Certificate'][(i * 19) % 6],
+      skills: [
+        'JavaScript, React',
+        'Python, Django',
+        'Java, Spring',
+        'C#, .NET',
+        'PHP, Laravel',
+        'Go, Gin',
+        'Ruby, Rails',
+        'Node.js, Express'
+      ][(i * 23) % 8],
+      notes: `Additional notes for user ${i + 1}.`,
+      email: `user${i + 1}@${['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'example.org'][(i * 29) % 5]}`
+    }
+  })
+
+const data = shallowRef(createDemoRows(rowCount.value))
+
+watch(rowCount, (count) => {
+  data.value = createDemoRows(count)
+  resetTablePerfState()
 })
 
 const tableConfig = reactive({
   enableSummary: true,
   summaryRowHeight: 32,
-  enableRowHoverHighlight: false,
-  enableColHoverHighlight: false,
   highlightRowBackground: 'rgba(24, 144, 255, 0.15)',
   highlightColBackground: 'rgba(24, 144, 255, 0.15)',
   highlightCellBackground: 'rgba(24, 144, 255, 0.12)',
@@ -668,55 +757,6 @@ const fontFamilyOptions = [
     value: "'Times New Roman', Times, serif"
   }
 ]
-
-// 测试执行定时邮件任务
-const testTaskId = ref<number | null>(null)
-const testLoading = ref(false)
-const testResult = ref<{ success: boolean; message: string } | null>(null)
-
-/**
- * 处理测试执行任务
- */
-const handleTestExecuteTask = async () => {
-  if (!testTaskId.value || testTaskId.value <= 0) {
-    ElMessage.warning('请输入有效的任务ID')
-    return
-  }
-
-  testLoading.value = true
-  testResult.value = null
-
-  try {
-    const result = await $fetch('/api/testExecuteTask', {
-      method: 'POST',
-      body: {
-        taskId: testTaskId.value
-      }
-    })
-
-    if (result.code === 200) {
-      testResult.value = {
-        success: true,
-        message: `任务执行成功！结果: ${result.data ? '成功' : '失败'}`
-      }
-      ElMessage.success('任务执行成功')
-    } else {
-      testResult.value = {
-        success: false,
-        message: result.message || '执行失败'
-      }
-      ElMessage.error(result.message || '执行失败')
-    }
-  } catch (error: any) {
-    testResult.value = {
-      success: false,
-      message: error.message || '请求失败，请稍后重试'
-    }
-    ElMessage.error(error.message || '请求失败，请稍后重试')
-  } finally {
-    testLoading.value = false
-  }
-}
 </script>
 
 <style scoped>
@@ -751,6 +791,23 @@ const handleTestExecuteTask = async () => {
   gap: 8px 12px;
   color: #475569;
   font-size: 13px;
+}
+
+.perf-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.perf-section + .perf-section {
+  margin-top: 16px;
+}
+
+.perf-section-title {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
 }
 
 .perf-overview-grid {

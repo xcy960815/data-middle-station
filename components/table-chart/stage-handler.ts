@@ -85,10 +85,14 @@ export const getStageSize = () => {
 
 const syncTablePerfSnapshot = () => {
   const { width, height } = getStageSize()
+  const groupColumnCount = getTableParams().xAxisFields.length
+  const dimensionColumnCount = getTableParams().yAxisFields.length
   updateTablePerfSnapshot({
     stageWidth: width,
     stageHeight: height,
-    columnCount: columnsInfo.leftColumns.length + columnsInfo.centerColumns.length + columnsInfo.rightColumns.length,
+    groupColumnCount,
+    dimensionColumnCount,
+    columnCount: groupColumnCount + dimensionColumnCount,
     visibleRows: Math.max(0, bodyVars.visibleRowEnd - bodyVars.visibleRowStart + 1),
     bufferRows: getTableParams().bufferRows,
     processedRows: getProcessedRows().value.length,
@@ -285,11 +289,13 @@ export const refreshSummarySection = () => {
  */
 export const refreshScrollbarSection = () => {
   if (!stageVars.stage) return
-  clearScrollbarGroups()
-  rebuildVerticalScrollbarGroup()
-  rebuildHorizontalScrollbarGroup()
-  scheduleLayersBatchDraw(['scrollbar'])
-  syncTablePerfSnapshot()
+  measureTablePerf('refreshScrollbar', () => {
+    clearScrollbarGroups()
+    rebuildVerticalScrollbarGroup()
+    rebuildHorizontalScrollbarGroup()
+    scheduleLayersBatchDraw(['scrollbar'])
+    syncTablePerfSnapshot()
+  })
 }
 
 /**
@@ -613,13 +619,13 @@ const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
 
   // 列宽调整结束 - 应用最终宽度
   if (headerVars.isResizingColumn) {
-    // 应用最终宽度
-    if (headerVars.resizingColumnName && headerVars.resizeTempWidth > 0) {
-      updateTableColumnWidth(headerVars.resizingColumnName, headerVars.resizeTempWidth)
-    }
-
-    // 使用统一的清理函数
-    cleanupResizeState()
+    measureTablePerf('resizeColumn', () => {
+      if (headerVars.resizingColumnName && headerVars.resizeTempWidth > 0) {
+        updateTableColumnWidth(headerVars.resizingColumnName, headerVars.resizeTempWidth)
+        refreshTable(false)
+      }
+      cleanupResizeState()
+    })
     setPointerStyle(stageVars.stage, false, 'default')
   }
 }
@@ -629,9 +635,11 @@ const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
  * @returns {void}
  */
 const handleGlobalResize = () => {
-  initStage()
-  clearGroups()
-  rebuildGroups()
+  measureTablePerf('windowResize', () => {
+    initStage()
+    clearGroups()
+    rebuildGroups()
+  })
 }
 
 /**

@@ -1,18 +1,43 @@
 import { reactive } from 'vue'
 
-export const TABLE_PERF_METRIC_ORDER = [
+export const TABLE_PERF_CORE_METRICS = [
   'firstRender',
   'handleTableData',
   'refreshTable',
   'refreshHeader',
   'refreshBody',
   'refreshSummary',
-  'refreshScrollbar',
-  'verticalScroll',
-  'horizontalScroll'
+  'refreshScrollbar'
+] as const
+
+export const TABLE_PERF_INTERACTION_METRICS = [
+  'applyFilter',
+  'applySort',
+  'resizeColumn',
+  'reorderColumn',
+  'editCell',
+  'windowResize'
+] as const
+
+export const TABLE_PERF_SCROLL_METRICS = ['verticalScroll', 'horizontalScroll'] as const
+
+export const TABLE_PERF_METRIC_ORDER = [
+  ...TABLE_PERF_CORE_METRICS,
+  ...TABLE_PERF_INTERACTION_METRICS,
+  ...TABLE_PERF_SCROLL_METRICS
 ] as const
 
 export type TablePerfMetricKey = (typeof TABLE_PERF_METRIC_ORDER)[number]
+
+export const TABLE_PERF_METRIC_SECTIONS: Array<{
+  key: string
+  title: string
+  metrics: readonly TablePerfMetricKey[]
+}> = [
+  { key: 'core', title: '渲染核心', metrics: TABLE_PERF_CORE_METRICS },
+  { key: 'interaction', title: '交互操作', metrics: TABLE_PERF_INTERACTION_METRICS },
+  { key: 'scroll', title: '滚动', metrics: TABLE_PERF_SCROLL_METRICS }
+]
 
 export interface TablePerfMetricStat {
   label: string
@@ -26,9 +51,11 @@ export interface TablePerfMetricStat {
   recent: number[]
 }
 
-interface TablePerfSnapshot {
+export interface TablePerfSnapshot {
   sourceRows: number
   processedRows: number
+  groupColumnCount: number
+  dimensionColumnCount: number
   columnCount: number
   visibleRows: number
   bufferRows: number
@@ -40,6 +67,8 @@ interface TablePerfSnapshot {
 }
 
 const RECENT_SAMPLE_LIMIT = 60
+const FRAME_BUDGET_MS = 16.7
+const JANK_BUDGET_MS = 33.3
 
 const PERF_METRIC_LABELS: Record<TablePerfMetricKey, string> = {
   firstRender: '首屏渲染',
@@ -49,6 +78,12 @@ const PERF_METRIC_LABELS: Record<TablePerfMetricKey, string> = {
   refreshBody: '主体刷新',
   refreshSummary: '汇总刷新',
   refreshScrollbar: '滚动条刷新',
+  applyFilter: '应用过滤',
+  applySort: '应用排序',
+  resizeColumn: '调整列宽',
+  reorderColumn: '调整列序',
+  editCell: '编辑单元格',
+  windowResize: '窗口缩放',
   verticalScroll: '纵向滚动',
   horizontalScroll: '横向滚动'
 }
@@ -77,6 +112,8 @@ const createMetrics = (): Record<TablePerfMetricKey, TablePerfMetricStat> =>
 const createSnapshot = (): TablePerfSnapshot => ({
   sourceRows: 0,
   processedRows: 0,
+  groupColumnCount: 0,
+  dimensionColumnCount: 0,
   columnCount: 0,
   visibleRows: 0,
   bufferRows: 0,
@@ -101,6 +138,11 @@ const getP95 = (recent: number[]) => {
   return sorted[index]
 }
 
+export const formatPerfMs = (value: number) => `${Number(value || 0).toFixed(2)} ms`
+
+export const getPerfBudgetUsage = (p95: number, budgetMs: number = JANK_BUDGET_MS) =>
+  Math.min(100, Number((((p95 || 0) / budgetMs) * 100).toFixed(2)))
+
 /**
  * @desc 记录表格渲染性能指标。
  */
@@ -112,10 +154,10 @@ export const recordTablePerfMetric = (key: TablePerfMetricKey, durationMs: numbe
   metric.last = duration
   metric.max = Math.max(metric.max, duration)
   metric.avg = Number(((metric.avg * (metric.count - 1) + duration) / metric.count).toFixed(2))
-  if (duration > 16.7) {
+  if (duration > FRAME_BUDGET_MS) {
     metric.over16 += 1
   }
-  if (duration > 33.3) {
+  if (duration > JANK_BUDGET_MS) {
     metric.over33 += 1
   }
   metric.recent.push(duration)
@@ -148,4 +190,69 @@ export const updateTablePerfSnapshot = (nextSnapshot: Partial<TablePerfSnapshot>
 export const resetTablePerfState = () => {
   tablePerfState.metrics = createMetrics()
   tablePerfState.snapshot = createSnapshot()
+}
+
+export interface TableScrollStressOptions {
+  verticalSteps?: number
+  horizontalSteps?: number
+  verticalDelta?: number
+  horizontalDelta?: number
+  yieldEvery?: number
+}
+
+export interface TableScrollStressResult {
+  verticalSteps: number
+  horizontalSteps: number
+  verticalP95: number
+  horizontalP95: number
+}
+
+/**
+ * @desc 连续触发滚动操作，用于压测并汇总 p95。
+ */
+export const runTableScrollStressTest = async (
+  handlers: {
+    verticalScroll?: (delta: number) => void
+    horizontalScroll?: (delta: number) => void
+  },
+  options: TableScrollStressOptions = {}
+): Promise<TableScrollStressResult> => {
+  const {
+    verticalSteps = 200,
+    horizontalSteps = 100,
+    verticalDelta = 32,
+    horizontalDelta = 48,
+    yieldEvery = 20
+  } = options
+
+  const verticalBefore = tablePerfState.metrics.verticalScroll.count
+  const horizontalBefore = tablePerfState.metrics.horizontalScroll.count
+
+  for (let index = 0; index < verticalSteps; index += 1) {
+    handlers.verticalScroll?.(verticalDelta)
+    if (index > 0 && index % yieldEvery === 0) {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve())
+      })
+    }
+  }
+
+  for (let index = 0; index < horizontalSteps; index += 1) {
+    handlers.horizontalScroll?.(horizontalDelta)
+    if (index > 0 && index % yieldEvery === 0) {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve())
+      })
+    }
+  }
+
+  const verticalRecorded = tablePerfState.metrics.verticalScroll.count - verticalBefore
+  const horizontalRecorded = tablePerfState.metrics.horizontalScroll.count - horizontalBefore
+
+  return {
+    verticalSteps: verticalRecorded,
+    horizontalSteps: horizontalRecorded,
+    verticalP95: tablePerfState.metrics.verticalScroll.p95,
+    horizontalP95: tablePerfState.metrics.horizontalScroll.p95
+  }
 }

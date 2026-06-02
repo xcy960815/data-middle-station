@@ -5,18 +5,30 @@
       v-show="summaryDropdown.visible"
       class="dms-summary-dropdown"
       :style="summaryDropdownStyle"
+      @click.stop
+      @mousedown.stop
     >
-      <el-select
-        v-model="summaryDropdown.selectedValue"
-        size="small"
-        placeholder="选择汇总"
-        style="width: 160px"
-        @change="handleSummaryChange"
-        @blur="closeSummaryDropdown"
-        @keydown.stop
-      >
-        <el-option v-for="opt in summaryDropdown.options" :key="opt.value" :label="opt.label" :value="opt.value" />
-      </el-select>
+      <div class="dms-summary-dropdown__header">
+        <span class="dms-summary-dropdown__title">{{ summaryDropdown.colName }}</span>
+        <span class="dms-summary-dropdown__subtitle">汇总方式</span>
+      </div>
+
+      <div class="dms-summary-dropdown__list">
+        <label v-for="opt in summaryDropdown.options" :key="opt.value" class="dms-summary-dropdown__option">
+          <input
+            type="radio"
+            name="summary-rule"
+            :value="opt.value"
+            v-model="summaryDropdown.selectedValue"
+            @change="handleSummaryChange"
+          />
+          <span>{{ opt.label }}</span>
+        </label>
+      </div>
+
+      <div class="dms-summary-dropdown__footer">
+        <button type="button" class="dms-summary-dropdown__btn is-primary" @click="closeSummaryDropdown">完成</button>
+      </div>
     </div>
   </teleport>
 </template>
@@ -29,37 +41,6 @@ import { type CanvasTableContext, runWithTableContext } from '../parameter'
 import { refreshSummarySection, stageVars } from '../stage-handler'
 import { getSummaryRules } from '../summary-handler'
 import { getDropdownPosition } from '../utils'
-
-const summaryDropdownRef = ref<HTMLElement | null>(null)
-const tableContext = shallowRef<CanvasTableContext | null>(null)
-
-const runInTableContext = (handler: () => void) => {
-  if (tableContext.value) {
-    runWithTableContext(tableContext.value, handler)
-    return
-  }
-
-  handler()
-}
-
-const setTableContext = (context: CanvasTableContext) => {
-  tableContext.value = context
-}
-
-/**
- * 汇总下拉选中值变化
- * @param {string} value 选中值
- */
-const handleSummaryChange = () => {
-  runInTableContext(() => {
-    const colName = summaryDropdown.colName
-    const selected = summaryDropdown.selectedValue
-    getSummaryRules()[colName] = selected
-    refreshSummarySection()
-    // 选择后关闭弹框
-    summaryDropdown.visible = false
-  })
-}
 
 interface SummaryDropdownOption {
   label: string
@@ -77,17 +58,22 @@ export interface SummaryDropdown {
   originalClientY: number
 }
 
-/**
- * 过滤下拉浮层样式
- */
-const summaryDropdownStyle = computed(() => {
-  return {
-    position: 'fixed' as const,
-    left: summaryDropdown.x + 'px',
-    top: summaryDropdown.y + 'px',
-    zIndex: 3000
+const summaryDropdownRef = ref<HTMLDivElement | null>(null)
+const tableContext = shallowRef<CanvasTableContext | null>(null)
+let ignoreOutsideMouseDownUntil = 0
+
+const runInTableContext = (handler: () => void) => {
+  if (tableContext.value) {
+    runWithTableContext(tableContext.value, handler)
+    return
   }
-})
+
+  handler()
+}
+
+const setTableContext = (context: CanvasTableContext) => {
+  tableContext.value = context
+}
 
 const summaryDropdown = reactive<SummaryDropdown>({
   visible: false,
@@ -96,129 +82,96 @@ const summaryDropdown = reactive<SummaryDropdown>({
   colName: '',
   options: [],
   selectedValue: '',
-  // 存储原始点击位置，用于滚动时重新计算
   originalClientX: 0,
   originalClientY: 0
 })
 
-/**
- * 打开汇总下拉
- * @param {KonvaEventObject<MouseEvent, Konva.Rect>} evt 事件对象
- * @param {string} colName 列名
- * @param {Array<SummaryDropdownOption>} options 选项列表
- * @param {string} selected 已选中的选项
- */
+const summaryDropdownStyle = computed(() => ({
+  position: 'fixed' as const,
+  left: `${summaryDropdown.x}px`,
+  top: `${summaryDropdown.y}px`,
+  zIndex: 3000
+}))
+
+const handleSummaryChange = () => {
+  runInTableContext(() => {
+    getSummaryRules()[summaryDropdown.colName] = summaryDropdown.selectedValue
+    refreshSummarySection()
+    summaryDropdown.visible = false
+  })
+}
+
+const closeSummaryDropdown = () => {
+  if (!summaryDropdown.visible) return
+  summaryDropdown.visible = false
+}
+
 const openSummaryDropdown = (
   evt: KonvaEventObject<MouseEvent, Konva.Rect>,
   colName: string,
   options: Array<SummaryDropdownOption>,
   selected?: string
 ) => {
-  // 存储原始点击位置（转换为页面坐标，考虑滚动偏移）
   const { clientX, clientY } = evt.evt
   const scrollX = window.pageXOffset || document.documentElement.scrollLeft
   const scrollY = window.pageYOffset || document.documentElement.scrollTop
+
   summaryDropdown.originalClientX = clientX + scrollX
   summaryDropdown.originalClientY = clientY + scrollY
+  summaryDropdown.colName = colName
+  summaryDropdown.options = options
+  summaryDropdown.selectedValue = selected || 'nodisplay'
+  ignoreOutsideMouseDownUntil = Date.now() + 300
   summaryDropdown.visible = true
+
   nextTick(() => {
     if (!summaryDropdownRef.value) return
-    const summaryDropdownEl = summaryDropdownRef.value
-    if (!summaryDropdownEl) return
-    const summaryDropdownElRect = summaryDropdownEl.getBoundingClientRect()
-    const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
-    const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
+
+    const summaryDropdownElRect = summaryDropdownRef.value.getBoundingClientRect()
     const { dropdownX, dropdownY } = getDropdownPosition(
       clientX,
       clientY,
-      summaryDropdownElWidth,
-      summaryDropdownElHeight
+      Math.ceil(summaryDropdownElRect.width),
+      Math.ceil(summaryDropdownElRect.height)
     )
+
     summaryDropdown.x = dropdownX
     summaryDropdown.y = dropdownY
-    summaryDropdown.colName = colName
-    summaryDropdown.options = options
-    summaryDropdown.selectedValue = selected || 'nodisplay'
   })
 }
 
-/**
- * 更新汇总下拉浮层位置
- */
 const updatePositions = () => {
-  // 本次开发先隐藏掉
-  if (summaryDropdown.visible && summaryDropdownRef.value) {
+  if (summaryDropdown.visible) {
     summaryDropdown.visible = false
   }
-  // // 如果汇总下拉框可见，重新计算位置
-  // if (summaryDropdown.visible && summaryDropdownRef.value) {
-  //   const summaryDropdownElRect = summaryDropdownRef.value.getBoundingClientRect()
-  //   const summaryDropdownElHeight = Math.ceil(summaryDropdownElRect.height)
-  //   const summaryDropdownElWidth = Math.ceil(summaryDropdownElRect.width)
-
-  //   // 对于表格内部滚动，使用保存的原始客户端坐标
-  //   const { dropdownX, dropdownY } = getDropdownPosition(
-  //     summaryDropdown.originalClientX,
-  //     summaryDropdown.originalClientY,
-  //     summaryDropdownElWidth,
-  //     summaryDropdownElHeight
-  //   )
-  //   summaryDropdown.x = dropdownX
-  //   summaryDropdown.y = dropdownY
-  // }
 }
 
-/**
- * 关闭汇总下拉
- * @returns {void}
- */
-const closeSummaryDropdown = () => {
-  if (!summaryDropdown.visible) return
-  summaryDropdown.visible = false
-}
-
-/**
- * 点击外部关闭（允许点击 Element Plus 下拉面板）
- * @param 「MouseEvent mouseEvent 鼠标事件
- * @param {HTMLElement | null} target 目标元素
- * @returns {void}
- */
 const onGlobalMousedown = (mouseEvent: MouseEvent) => {
   runInTableContext(() => {
+    if (Date.now() < ignoreOutsideMouseDownUntil) return
     if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
+
     const target = mouseEvent.target as HTMLElement | null
-    if (!target) return
+    if (!target || !summaryDropdown.visible) return
 
-    if (!summaryDropdown.visible) return
-    const panel = summaryDropdownRef.value
+    if (summaryDropdownRef.value?.contains(target)) return
 
-    if (panel && panel.contains(target)) return
-    const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper')
-    if (!inElSelectDropdown) {
-      summaryDropdown.visible = false
-    }
+    closeSummaryDropdown()
   })
 }
 
-/**
- * 初始化事件监听器
- */
 const initListeners = () => {
-  window.addEventListener('scroll', updatePositions)
-  document.addEventListener('scroll', updatePositions)
+  window.addEventListener('scroll', updatePositions, true)
+  document.addEventListener('scroll', updatePositions, true)
   document.addEventListener('mousedown', onGlobalMousedown, true)
 }
 
-/**
- * 清理事件监听器
- */
 const cleanupListeners = () => {
-  window.removeEventListener('scroll', updatePositions)
-  document.removeEventListener('scroll', updatePositions)
+  window.removeEventListener('scroll', updatePositions, true)
+  document.removeEventListener('scroll', updatePositions, true)
   document.removeEventListener('mousedown', onGlobalMousedown, true)
 }
 
-// 生命周期
 onMounted(() => {
   initListeners()
 })
@@ -237,10 +190,81 @@ defineExpose({
 
 <style lang="scss" scoped>
 .dms-summary-dropdown {
+  width: 180px;
   background: #fff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #ebeef5;
-  padding: 5px 8px;
-  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.dms-summary-dropdown__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.dms-summary-dropdown__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dms-summary-dropdown__subtitle {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.dms-summary-dropdown__list {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 0;
+  margin-bottom: 8px;
+}
+
+.dms-summary-dropdown__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #334155;
+
+  &:hover {
+    background: #f8fafc;
+  }
+
+  input {
+    margin: 0;
+    flex-shrink: 0;
+  }
+}
+
+.dms-summary-dropdown__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dms-summary-dropdown__btn {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+  cursor: pointer;
+
+  &.is-primary {
+    border-color: #409eff;
+    background: #409eff;
+    color: #fff;
+  }
 }
 </style>

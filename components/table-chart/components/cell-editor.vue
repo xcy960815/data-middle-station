@@ -5,69 +5,67 @@
       ref="editorRef"
       class="dms-cell-editor"
       :style="editorStyle"
-      @keydown.enter="handleSaveEditorValue"
-      @keydown.esc="closeEditor"
+      @keydown.esc.stop="closeEditor"
       @click.stop
     >
-      <!-- 输入框编辑器 -->
-      <el-input
+      <input
         v-if="editDown.editType === 'input'"
-        ref="inputRef"
-        v-model="editDown.initialValue"
-        :input-style="{ textAlign: editDown.styleOptions?.align || 'left' }"
-        @change="handleSaveEditorValue"
-        @keydown.stop
+        ref="nativeControlRef"
+        v-model="editorValue"
+        class="dms-cell-native-control"
+        :style="nativeControlStyle"
+        type="text"
+        @keydown.enter.stop="handleSaveEditorValue"
+        @blur="handleSaveEditorValue"
       />
 
-      <!-- 下拉选择编辑器 -->
-      <el-select
+      <select
         v-else-if="editDown.editType === 'select'"
-        ref="selectRef"
-        v-model="editDown.initialValue"
+        ref="nativeControlRef"
+        v-model="editorValue"
+        class="dms-cell-native-control dms-cell-native-select"
+        :style="nativeControlStyle"
         @change="handleSaveEditorValue"
-        @keydown.stop
+        @keydown.enter.stop="handleSaveEditorValue"
+        @keydown.esc.stop="closeEditor"
       >
-        <el-option
-          v-for="option in editDown.editOptions"
-          :key="option.value"
-          :label="option.label"
-          :value="option.value"
-        />
-      </el-select>
+        <option v-for="option in selectEditorOptions" :key="String(option.value)" :value="String(option.value)">
+          {{ option.label }}
+        </option>
+      </select>
 
-      <!-- 日期编辑器 -->
-      <el-date-picker
+      <input
         v-else-if="editDown.editType === 'date'"
-        ref="dateRef"
-        v-model="editDown.initialValue"
+        ref="nativeControlRef"
+        v-model="editorValue"
+        class="dms-cell-native-control"
+        :style="nativeControlStyle"
         type="date"
-        format="YYYY-MM-DD"
-        value-format="YYYY-MM-DD"
-        @blur="handleSaveEditorValue"
-        @keydown.stop
+        @change="handleSaveEditorValue"
+        @keydown.enter.stop="handleSaveEditorValue"
       />
 
-      <!-- 日期时间编辑器 -->
-      <el-date-picker
+      <input
         v-else-if="editDown.editType === 'datetime'"
-        ref="datetimeRef"
-        v-model="editDown.initialValue"
-        type="datetime"
-        format="YYYY-MM-DD HH:mm:ss"
-        value-format="YYYY-MM-DD HH:mm:ss"
-        @blur="handleSaveEditorValue"
-        @keydown.stop
+        ref="nativeControlRef"
+        v-model="editorValue"
+        class="dms-cell-native-control"
+        :style="nativeControlStyle"
+        type="datetime-local"
+        step="1"
+        @change="handleSaveEditorValue"
+        @keydown.enter.stop="handleSaveEditorValue"
       />
     </div>
   </teleport>
 </template>
 
 <script setup lang="ts">
-import { ElDatePicker, ElInput, ElOption, ElSelect } from 'element-plus'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
 import { commitCellValueChange } from '../data-handler'
+import { measureTablePerf } from '../perf'
 import { type CanvasTableContext, runWithTableContext } from '../parameter'
 import { refreshBodySection, refreshSummarySection, stageVars } from '../stage-handler'
 
@@ -86,7 +84,6 @@ interface EditDown {
   height: number
   editType: 'input' | 'select' | 'date' | 'datetime'
   editOptions?: EditOptions[]
-  initialValue: string | number
   originalValue: string | number
   styleOptions?: EditorStyleOptions
   row?: AnalyzeDataVo.AnalyzeData
@@ -106,11 +103,10 @@ interface EditContext {
 }
 
 const editorRef = ref<HTMLElement>()
-const inputRef = ref<InstanceType<typeof ElInput>>()
-const selectRef = ref<InstanceType<typeof ElSelect>>()
-const dateRef = ref<InstanceType<typeof ElDatePicker>>()
-const datetimeRef = ref<InstanceType<typeof ElDatePicker>>()
+const nativeControlRef = ref<HTMLInputElement | HTMLSelectElement>()
+const editorValue = ref('')
 const tableContext = shallowRef<CanvasTableContext | null>(null)
+let ignoreOutsideMouseDownUntil = 0
 
 const runInTableContext = (handler: () => void) => {
   if (tableContext.value) {
@@ -132,30 +128,55 @@ const editDown = reactive<EditDown>({
   width: 0,
   height: 0,
   editType: 'input',
-  initialValue: '',
   originalValue: '',
   row: undefined,
   columnName: '',
   columnType: undefined
 })
 
-/**
- * 判断是否为数值列
- * @param columnType 列类型
- * @returns boolean
- */
 const isNumericColumnType = (columnType?: string | null): boolean => {
   if (!columnType) return false
   return /(number|int|decimal|numeric|float|double|real)/i.test(columnType)
 }
 
-/**
- * 规范化编辑后的值
- * @param value 用户输入的新值
- * @param columnType 列类型
- * @param fallbackValue 回退值
- * @returns string | number
- */
+const toNativeDatetimeValue = (value: string | number): string => {
+  const text = String(value ?? '').trim()
+  if (!text) return ''
+
+  const normalized = text.includes('T') ? text : text.replace(' ', 'T')
+  const match = normalized.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::(\d{2}))?/)
+  if (!match) return normalized
+
+  const [, datePart, hourMinute, secondPart] = match
+  return secondPart ? `${datePart}T${hourMinute}:${secondPart}` : `${datePart}T${hourMinute}`
+}
+
+const fromNativeDatetimeValue = (value: string): string => {
+  const text = value.trim()
+  if (!text) return ''
+
+  const normalized = text.replace('T', ' ')
+  const match = normalized.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})(?::(\d{2}))?/)
+  if (!match) return normalized
+
+  const [, datePart, hourMinute, secondPart] = match
+  return `${datePart} ${hourMinute}:${secondPart ?? '00'}`
+}
+
+const toEditorValue = (value: string | number, editType: EditDown['editType']): string => {
+  if (editType === 'datetime') {
+    return toNativeDatetimeValue(value)
+  }
+  return String(value ?? '')
+}
+
+const fromEditorValue = (value: string, editType: EditDown['editType']): string | number => {
+  if (editType === 'datetime') {
+    return fromNativeDatetimeValue(value)
+  }
+  return value
+}
+
 const normalizeEditedValue = (
   value: string | number,
   columnType?: string | null,
@@ -173,28 +194,24 @@ const normalizeEditedValue = (
   return Number.isFinite(numericValue) ? numericValue : (fallbackValue ?? value)
 }
 
-/**
- * 重置编辑器状态
- */
 const resetEditState = () => {
   editDown.visible = false
   editDown.editOptions = undefined
   editDown.styleOptions = undefined
-  editDown.initialValue = ''
+  editorValue.value = ''
   editDown.originalValue = ''
   editDown.row = undefined
   editDown.columnName = ''
   editDown.columnType = undefined
 }
 
-// 计算编辑器样式
 const editorStyle = computed(() => {
   const { fontSize, fontFamily } = editDown.styleOptions || {}
   return {
     position: 'fixed' as const,
-    left: `${editDown.x}px`, // 移除偏移，完全覆盖
+    left: `${editDown.x}px`,
     top: `${editDown.y}px`,
-    width: `${editDown.width + 1}px`, // 稍微宽一点覆盖边框
+    width: `${editDown.width + 1}px`,
     height: `${editDown.height + 1}px`,
     zIndex: 999999,
     background: '#fff',
@@ -207,14 +224,51 @@ const editorStyle = computed(() => {
   }
 })
 
-/**
- * 打开编辑器
- * @param {KonvaEventObject<MouseEvent, Konva.Shape>} evt 事件对象
- * @param {string} editType 编辑类型
- * @param {string | number} initialValue 初始值
- * @param {EditOptions[]} editOptions 编辑选项
- * @param {EditorStyleOptions} styleOptions 样式选项
- */
+const nativeControlStyle = computed(() => ({
+  textAlign: editDown.styleOptions?.align || 'left',
+  paddingLeft: `${editDown.styleOptions?.padding ?? 8}px`,
+  paddingRight: `${editDown.styleOptions?.padding ?? 8}px`
+}))
+
+const selectEditorOptions = computed(() => {
+  const options = editDown.editOptions ?? []
+  const currentValue = String(editorValue.value ?? '')
+  if (!currentValue || options.some((option) => String(option.value) === currentValue)) {
+    return options
+  }
+
+  return [{ label: currentValue, value: currentValue }, ...options]
+})
+
+const focusNativeControl = () => {
+  const control = nativeControlRef.value
+  if (!control) return
+
+  control.focus()
+
+  if (control instanceof HTMLSelectElement) {
+    openNativeSelectPicker(control)
+    return
+  }
+
+  if (editDown.editType === 'input' && control instanceof HTMLInputElement) {
+    control.select()
+  }
+}
+
+const openNativeSelectPicker = (selectElement: HTMLSelectElement) => {
+  if (typeof selectElement.showPicker === 'function') {
+    try {
+      selectElement.showPicker()
+      return
+    } catch {
+      // 部分浏览器在未由用户手势触发时会抛错，回退到 click。
+    }
+  }
+
+  selectElement.click()
+}
+
 const openEditor = (
   evt: KonvaEventObject<MouseEvent, Konva.Rect>,
   editType: 'input' | 'select' | 'date' | 'datetime',
@@ -224,70 +278,51 @@ const openEditor = (
   editContext?: EditContext
 ) => {
   const target = evt.target
-  // 假设 rect 是 Konva.Rect 实例
   const stage = target.getStage()
   const position = target.getClientRect()
   const stageContainer = stage?.container().getBoundingClientRect()!
 
-  // 计算 rect 在浏览器窗口中的坐标
   const absoluteX = stageContainer?.left + position.x
   const absoluteY = stageContainer?.top + position.y
-  const attr = target.attrs
-  const { height, width } = attr
+  const { height, width } = target.attrs
+  const safeValue = (initialValue ?? '') as string | number
+
   editDown.width = width
   editDown.height = height
+  editDown.x = absoluteX
+  editDown.y = absoluteY
+  editDown.editType = editType
+  editDown.editOptions = editOptions
+  editDown.styleOptions = styleOptions
+  editDown.row = editContext?.row
+  editDown.columnName = editContext?.columnName || ''
+  editDown.columnType = editContext?.columnType
+  editDown.originalValue = safeValue
+  editorValue.value = toEditorValue(safeValue, editType)
+  ignoreOutsideMouseDownUntil = Date.now() + 300
   editDown.visible = true
 
-  nextTick(() => {
-    if (!editorRef.value) return
-    editDown.x = absoluteX
-    editDown.y = absoluteY
-    editDown.editType = editType
-    editDown.editOptions = editOptions
-    editDown.styleOptions = styleOptions
-    editDown.row = editContext?.row
-    editDown.columnName = editContext?.columnName || ''
-    editDown.columnType = editContext?.columnType
-    const safeValue = (initialValue ?? '') as string | number
-    editDown.initialValue = safeValue
-    editDown.originalValue = safeValue
-
-    // 聚焦编辑器
-    nextTick(() => {
-      switch (editDown.editType) {
-        case 'input':
-          inputRef.value?.focus()
-          break
-        case 'select':
-          selectRef.value?.focus()
-          break
-        case 'date':
-          ;(dateRef.value as any)?.focus()
-          break
-        case 'datetime':
-          ;(datetimeRef.value as any)?.focus()
-          break
-      }
-    })
-  })
+  nextTick(focusNativeControl)
 }
 
-/**
- * 保存编辑
- */
 const handleSaveEditorValue = () => {
   runInTableContext(() => {
     if (!editDown.visible) return
 
-    // 只有当值发生变化时才保存
-    if (editDown.initialValue !== editDown.originalValue) {
-      const nextValue = normalizeEditedValue(editDown.initialValue, editDown.columnType, editDown.originalValue)
-      const didUpdate =
-        nextValue !== editDown.originalValue && commitCellValueChange(editDown.row, editDown.columnName, nextValue)
+    const nextValue = normalizeEditedValue(
+      fromEditorValue(editorValue.value, editDown.editType),
+      editDown.columnType,
+      editDown.originalValue
+    )
+
+    if (nextValue !== editDown.originalValue) {
+      const didUpdate = commitCellValueChange(editDown.row, editDown.columnName, nextValue)
 
       if (didUpdate) {
-        refreshBodySection()
-        refreshSummarySection()
+        measureTablePerf('editCell', () => {
+          refreshBodySection()
+          refreshSummarySection()
+        })
       }
     }
 
@@ -295,61 +330,40 @@ const handleSaveEditorValue = () => {
   })
 }
 
-// 取消编辑
 const closeEditor = () => {
   if (!editDown.visible) return
   resetEditState()
 }
 
-/**
- * 更新编辑器位置（用于表格内部滚动）
- */
 const updatePositions = () => {
-  // 滚动时直接关闭编辑器，因为虚拟滚动会导致单元格位置不可靠
   if (editDown.visible) {
     resetEditState()
   }
 }
 
-/**
- * 点击外部关闭编辑器（允许点击 Element Plus 下拉面板）
- * @param {MouseEvent} mouseEvent 鼠标事件
- */
 const onGlobalMousedown = (mouseEvent: MouseEvent) => {
   runInTableContext(() => {
+    if (Date.now() < ignoreOutsideMouseDownUntil) return
     if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
     const target = mouseEvent.target as HTMLElement | null
-    if (!target) return
+    if (!target || !editDown.visible) return
 
-    if (!editDown.visible) return
-    const panel = editorRef.value
+    if (editorRef.value?.contains(target)) return
 
-    if (panel && panel.contains(target)) return
-    const inElSelectDropdown = target.closest('.el-select-dropdown, .el-select__popper, .el-popper, .el-picker-panel')
-    if (!inElSelectDropdown) {
-      // 点击外部时保存数据而不是取消
-      handleSaveEditorValue()
-    }
+    handleSaveEditorValue()
   })
 }
 
-/**
- * 初始化事件监听器
- */
 const initListeners = () => {
-  window.addEventListener('scroll', updatePositions, true) // 捕获阶段，确保能监听到所有滚动
+  window.addEventListener('scroll', updatePositions, true)
   document.addEventListener('mousedown', onGlobalMousedown, true)
 }
 
-/**
- * 清理事件监听器
- */
 const cleanupListeners = () => {
   window.removeEventListener('scroll', updatePositions, true)
   document.removeEventListener('mousedown', onGlobalMousedown, true)
 }
 
-// 生命周期
 onMounted(() => {
   initListeners()
 })
@@ -358,7 +372,6 @@ onBeforeUnmount(() => {
   cleanupListeners()
 })
 
-// 暴露方法供外部使用
 defineExpose({
   setTableContext,
   openEditor,
@@ -369,106 +382,33 @@ defineExpose({
 
 <style lang="scss" scoped>
 .dms-cell-editor {
-  // 输入框样式
-  :deep(.el-input) {
-    height: 100%;
+  border: 1px solid #409eff;
+}
 
-    .el-input__wrapper {
-      height: 100%;
-      border: none;
-      box-shadow: none;
-      background: transparent;
-      border-radius: 0;
-      padding: 0 8px; // 保持与 Canvas 渲染一致的 padding
-      line-height: 1;
-      display: flex;
-      align-items: center;
+.dms-cell-native-control {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  box-sizing: border-box;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  line-height: 1;
 
-      &:hover,
-      &:focus,
-      &.is-focus {
-        border: none !important;
-        box-shadow: none !important;
-      }
-    }
-
-    .el-input__inner {
-      height: 100%;
-      border: none;
-      padding: 0;
-      font-size: inherit; // 继承父级字体大小
-      font-family: inherit; // 继承父级字体
-      line-height: 1;
-
-      &:hover,
-      &:focus {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-    }
+  &:focus {
+    outline: none;
   }
+}
 
-  // 下拉选择样式
-  :deep(.el-select) {
-    height: 100%;
-    width: 100%;
+input.dms-cell-native-control {
+  appearance: none;
+}
 
-    .el-select__wrapper {
-      // border: none !important;
-      box-shadow: none !important;
-      padding-top: 0;
-      padding-bottom: 0;
-      border-radius: 0;
-      min-height: 100%; // 确保高度充满
-    }
-  }
-
-  // 日期选择器样式
-  :deep(.el-date-editor) {
-    height: 100%;
-    width: 100%;
-
-    .el-input__wrapper {
-      height: 100%;
-      border: none;
-      box-shadow: none;
-      background: transparent;
-      border-radius: 0;
-      padding: 0 8px;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-
-      &:hover,
-      &:focus,
-      &.is-focus {
-        border: none !important;
-        box-shadow: none !important;
-      }
-    }
-
-    .el-input__inner {
-      height: 100%;
-      border: none;
-      padding: 0;
-      font-size: inherit;
-      font-family: inherit;
-      line-height: 1;
-
-      &:hover,
-      &:focus {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-    }
-
-    .el-input__prefix,
-    .el-input__suffix {
-      display: flex;
-      align-items: center;
-    }
-  }
+select.dms-cell-native-select {
+  cursor: pointer;
+  appearance: auto;
+  padding-right: 20px;
 }
 </style>

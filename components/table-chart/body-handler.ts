@@ -237,6 +237,41 @@ export const calculateColumnsInfo = () => {
  * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
  * @param {number} bodyFontSize - 字体大小
  */
+/**
+ * 为可编辑单元格绑定双击打开编辑器
+ */
+const bindEditableCell = (
+  cellRect: Konva.Rect,
+  rowIndex: number,
+  columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption
+) => {
+  if (!columnOption.editable) return
+
+  cellRect.on(
+    'dblclick',
+    bindCurrentTableContext((event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
+      const row = getProcessedRows().value[rowIndex]
+      cellEditorRef.value?.openEditor(
+        event,
+        columnOption.editType!,
+        row[columnOption.columnName] as string | number,
+        columnOption.editOptions,
+        {
+          align: columnOption.align ?? 'left',
+          fontSize: getTableParams().bodyFontSize,
+          fontFamily: getTableParams().bodyFontFamily,
+          padding: getTableParams().textPaddingHorizontal
+        },
+        {
+          row,
+          columnName: columnOption.columnName,
+          columnType: columnOption.columnType
+        }
+      )
+    })
+  )
+}
+
 const drawMergedCell = (
   pools: KonvaNodePools,
   bodyGroup: Konva.Group,
@@ -249,7 +284,7 @@ const drawMergedCell = (
 ) => {
   const row = getProcessedRows().value[rowIndex]
   // 绘制合并单元格背景
-  drawUnifiedRect({
+  const cellRect = drawUnifiedRect({
     pools,
     name: 'merged-cell-rect',
     x,
@@ -259,8 +294,10 @@ const drawMergedCell = (
     fill: rowIndex % 2 === 0 ? getTableParams().bodyBackgroundOdd : getTableParams().bodyBackgroundEven,
     stroke: getTableParams().borderColor,
     strokeWidth: 1,
+    listening: !!columnOption.editable,
     group: bodyGroup
   })
+  bindEditableCell(cellRect, rowIndex, columnOption)
 
   // 绘制合并单元格文本
   const value = getCellDisplayContent(columnOption, row, rowIndex)
@@ -324,32 +361,10 @@ const drawNormalCell = (
     fill: rowIndex % 2 === 0 ? getTableParams().bodyBackgroundOdd : getTableParams().bodyBackgroundEven,
     stroke: getTableParams().borderColor,
     strokeWidth: 1,
+    listening: !!columnOption.editable,
     group: bodyGroup
   })
-  if (columnOption.editable) {
-    cellRect.on(
-      'dblclick',
-      bindCurrentTableContext((event: KonvaEventObject<MouseEvent, Konva.Rect>) => {
-        cellEditorRef.value?.openEditor(
-          event,
-          columnOption.editType!,
-          row[columnOption.columnName] as string | number,
-          columnOption.editOptions,
-          {
-            align: columnOption.align ?? 'left',
-            fontSize: getTableParams().bodyFontSize,
-            fontFamily: getTableParams().bodyFontFamily,
-            padding: getTableParams().textPaddingHorizontal
-          },
-          {
-            row,
-            columnName: columnOption.columnName,
-            columnType: columnOption.columnType
-          }
-        )
-      })
-    )
-  }
+  bindEditableCell(cellRect, rowIndex, columnOption)
 
   // 绘制单元格文本
   const value = getCellDisplayContent(columnOption, row, rowIndex)
