@@ -64,6 +64,10 @@ const props = defineProps({
   chartHeight: {
     type: [Number, String],
     default: () => '100%'
+  },
+  privateChartConfig: {
+    type: Object as PropType<AnalyzeConfigVo.IntervalChartConfigItem | null>,
+    default: () => null
   }
 })
 
@@ -81,6 +85,7 @@ const chartConfigStore = useChartConfigStore()
 
 const chartConfig = computed(() => {
   return (
+    props.privateChartConfig ||
     chartConfigStore.privateChartConfig?.interval || {
       displayMode: 'levelDisplay',
       showPercentage: false,

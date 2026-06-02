@@ -289,7 +289,7 @@ const handleLogin = async () => {
     if (loginResult?.code === RequestCodeEnum.Success && loginResult.data) {
       userStore.setUserId(loginResult.data.userId)
       userStore.setUserName(loginResult.data.userName)
-      await navigateTo('/homepage')
+      await navigateTo('/analyze')
       return
     }
 

@@ -19,8 +19,8 @@ export const useAnalyzeHandler = () => {
    * @desc 获取图表配置
    */
   const getAnalyze = async () => {
-    const router = useRouter()
-    const id = router.currentRoute.value.query.id
+    const route = useRoute()
+    const id = route.params.id || route.query.id
     if (!id) {
       ElMessage.error('图表id不能为空')
       return

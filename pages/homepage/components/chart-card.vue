@@ -93,7 +93,7 @@ const permissionText = computed(() => {
  * @desc 点击卡片跳转到对应的分析页面
  */
 const handleClickCard = () => {
-  navigateTo(`/analyze?id=${props.id}`)
+  navigateTo(`/analyze/${props.id}`)
 }
 /**
  * @desc 编辑分析

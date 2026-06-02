@@ -64,6 +64,10 @@ const props = defineProps({
   chartHeight: {
     type: [Number, String],
     default: () => '100%'
+  },
+  privateChartConfig: {
+    type: Object as PropType<AnalyzeConfigVo.LineChartConfigItem | null>,
+    default: () => null
   }
 })
 
@@ -91,6 +95,7 @@ const chartConfigStore = useChartConfigStore()
 
 const chartConfig = computed(() => {
   return (
+    props.privateChartConfig ||
     chartConfigStore.privateChartConfig?.line || {
       showPoint: false,
       showLabel: false,

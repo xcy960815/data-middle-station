@@ -48,6 +48,10 @@ const props = defineProps({
   chartHeight: {
     type: [Number, String],
     default: () => '100%'
+  },
+  privateChartConfig: {
+    type: Object as PropType<AnalyzeConfigVo.PieChartConfigItem | null>,
+    default: () => null
   }
 })
 
@@ -64,6 +68,7 @@ const chartConfigStore = useChartConfigStore()
 
 const chartConfig = computed(() => {
   return (
+    props.privateChartConfig ||
     chartConfigStore.privateChartConfig?.pie || {
       showLabel: false,
       chartType: 'pie' as 'pie' | 'rose'

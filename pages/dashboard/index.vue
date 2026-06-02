@@ -1,13 +1,415 @@
 <template>
   <NuxtLayout :name="layoutName">
     <template #header>
-      <custom-header></custom-header>
+      <custom-header>
+        <template #header-right>
+          <div class="dashboard-header-actions">
+            <el-button type="primary" @click="handleOpenCreateDialog">新建看板</el-button>
+          </div>
+        </template>
+      </custom-header>
+    </template>
+
+    <template #content>
+      <div class="dashboard-list-page">
+        <div class="dashboard-toolbar">
+          <el-input
+            v-model="dashboardKeyword"
+            clearable
+            placeholder="搜索看板名称或描述"
+            class="dashboard-search"
+            @keyup.enter="getDashboards(1)"
+            @clear="getDashboards(1)"
+          />
+          <el-select v-model="dashboardSortField" class="dashboard-select" @change="getDashboards(1)">
+            <el-option label="最近更新" value="updateTime" />
+            <el-option label="创建时间" value="createTime" />
+            <el-option label="看板名称" value="dashboardName" />
+          </el-select>
+          <el-select v-model="dashboardSortOrder" class="dashboard-select" @change="getDashboards(1)">
+            <el-option label="降序" value="desc" />
+            <el-option label="升序" value="asc" />
+          </el-select>
+          <el-button type="primary" @click="getDashboards(1)">搜索</el-button>
+          <el-button @click="handleResetDashboardSearch">重置</el-button>
+        </div>
+
+        <div v-loading="dashboardListLoading" class="dashboard-list">
+          <div
+            v-for="dashboard in dashboards"
+            :key="dashboard.id"
+            class="dashboard-card relative h-[180px] w-[245px] cursor-pointer"
+            @click="handleOpenDashboard(dashboard.id)"
+            :title="`${dashboard.widgetCount} 个分析`"
+          >
+            <div class="dashboard-card__inset">
+              <div class="dashboard-card__title">{{ dashboard.dashboardName }}</div>
+              <div class="dashboard-card__desc">{{ dashboard.dashboardDesc || '暂无描述' }}</div>
+              <div class="dashboard-card__open-icon" @click.stop="handleOpenDashboard(dashboard.id)">
+                <icon-park type="PreviewOpen" size="14" fill="#333" />
+              </div>
+              <div class="dashboard-card__delete-icon" @click.stop="handleDeleteDashboard(dashboard)">
+                <icon-park type="DeleteOne" size="14" fill="#333" />
+              </div>
+              <span class="dashboard-card__badge">{{ dashboard.widgetCount }} 个分析</span>
+              <div class="dashboard-card__info">
+                <div class="dashboard-card__info-row">
+                  <span class="dashboard-card__creator">{{ dashboard.createdBy || '未知' }}</span>
+                  <span class="dashboard-card__time">{{
+                    formatDate(dashboard.updateTime || dashboard.createTime)
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <el-empty v-if="!dashboardListLoading && dashboards.length === 0" description="暂无看板" />
+        </div>
+
+        <div v-if="dashboardTotal > 0" class="dashboard-pagination">
+          <el-pagination
+            background
+            layout="prev, pager, next, total"
+            :current-page="dashboardPage"
+            :page-size="dashboardPageSize"
+            :total="dashboardTotal"
+            @current-change="getDashboards"
+          />
+        </div>
+      </div>
+
+      <el-dialog v-model="createDialogVisible" title="新建看板" width="420px">
+        <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="80px">
+          <el-form-item label="名称" prop="dashboardName">
+            <el-input v-model="createForm.dashboardName" placeholder="请输入看板名称" />
+          </el-form-item>
+          <el-form-item label="描述">
+            <el-input v-model="createForm.dashboardDesc" type="textarea" :rows="3" placeholder="请输入看板描述" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="createDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="creating" @click="handleCreateDashboard">确定</el-button>
+        </template>
+      </el-dialog>
     </template>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
+import { httpRequest } from '@/composables/useHttpRequest'
+import { IconPark } from '@icon-park/vue-next/es/all'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+
 const layoutName = 'dashboard'
+const router = useRouter()
+const GRID_COLUMNS = 12
+const ROW_HEIGHT = 120
+
+const dashboards = ref<DashboardVo.DashboardListItem[]>([])
+const dashboardListLoading = ref(false)
+const dashboardPage = ref(1)
+const dashboardPageSize = ref(12)
+const dashboardTotal = ref(0)
+const dashboardKeyword = ref('')
+const dashboardSortField = ref<DashboardDto.DashboardListSortField>('updateTime')
+const dashboardSortOrder = ref<DashboardDto.DashboardListSortOrder>('desc')
+
+const createDialogVisible = ref(false)
+const creating = ref(false)
+const createFormRef = ref<FormInstance>()
+const createForm = reactive({
+  dashboardName: '',
+  dashboardDesc: ''
+})
+const createRules: FormRules = {
+  dashboardName: [{ required: true, message: '请输入看板名称', trigger: 'blur' }]
+}
+
+const getDashboards = async (targetPage = dashboardPage.value) => {
+  dashboardListLoading.value = true
+  try {
+    const res = await httpRequest<ApiResponseI<DashboardVo.DashboardListResponse>>('/api/getDashboards', {
+      method: 'POST',
+      body: {
+        page: targetPage,
+        pageSize: dashboardPageSize.value,
+        keyword: dashboardKeyword.value.trim(),
+        sortField: dashboardSortField.value,
+        sortOrder: dashboardSortOrder.value
+      }
+    })
+    if (res.code === 200 && res.data) {
+      dashboards.value = res.data.list || []
+      dashboardPage.value = res.data.page
+      dashboardTotal.value = res.data.total
+    } else {
+      ElMessage.error(res.message || '获取看板列表失败')
+    }
+  } finally {
+    dashboardListLoading.value = false
+  }
+}
+
+const handleResetDashboardSearch = () => {
+  dashboardKeyword.value = ''
+  dashboardSortField.value = 'updateTime'
+  dashboardSortOrder.value = 'desc'
+  getDashboards(1)
+}
+
+const formatDate = (value: string) => {
+  return value ? value.split('T')[0].slice(0, 10) : ''
+}
+
+const handleOpenDashboard = (dashboardId: number) => {
+  router.push(`/dashboard/${dashboardId}`)
+}
+
+const handleOpenCreateDialog = () => {
+  createForm.dashboardName = ''
+  createForm.dashboardDesc = ''
+  createDialogVisible.value = true
+  nextTick(() => createFormRef.value?.clearValidate())
+}
+
+const handleCreateDashboard = async () => {
+  if (!createFormRef.value) return
+  const valid = await createFormRef.value.validate().catch(() => false)
+  if (!valid) return
+  creating.value = true
+  try {
+    const res = await httpRequest<ApiResponseI<DashboardVo.DashboardDetailResponse>>('/api/createDashboard', {
+      method: 'POST',
+      body: {
+        dashboardName: createForm.dashboardName,
+        dashboardDesc: createForm.dashboardDesc,
+        layoutConfig: {
+          columnCount: GRID_COLUMNS,
+          rowHeight: ROW_HEIGHT
+        }
+      }
+    })
+    if (res.code === 200 && res.data) {
+      createDialogVisible.value = false
+      ElMessage.success('看板已创建')
+      router.push(`/dashboard/${res.data.id}`)
+    } else {
+      ElMessage.error(res.message || '创建看板失败')
+    }
+  } finally {
+    creating.value = false
+  }
+}
+
+const handleDeleteDashboard = (dashboard: DashboardVo.DashboardListItem) => {
+  ElMessageBox.confirm(`确定删除【${dashboard.dashboardName}】吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消'
+  }).then(async () => {
+    const res = await httpRequest<ApiResponseI<boolean>>('/api/deleteDashboard', {
+      method: 'DELETE',
+      body: {
+        id: dashboard.id
+      }
+    })
+    if (res.code === 200) {
+      ElMessage.success('删除成功')
+      getDashboards()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  })
+}
+
+onMounted(() => {
+  getDashboards()
+})
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-list-page {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.dashboard-search {
+  max-width: 320px;
+}
+
+.dashboard-select {
+  width: 140px;
+}
+
+.dashboard-list {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: flex-start;
+  justify-content: flex-start;
+  column-gap: 1.25rem;
+  row-gap: 0.6rem;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+  background: #f5f7fa;
+}
+
+.dashboard-card {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f7f8fa;
+  box-shadow:
+    0 2px 12px 0 rgba(0, 0, 0, 0.08),
+    0 1.5px 6px 0 rgba(0, 0, 0, 0.04);
+  font-family: 'Microsoft YaHei';
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.18s;
+
+  &:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow:
+      0 6px 24px 0 rgba(0, 0, 0, 0.13),
+      0 2px 8px 0 rgba(0, 0, 0, 0.08);
+
+    .dashboard-card__open-icon,
+    .dashboard-card__delete-icon {
+      display: flex;
+    }
+  }
+}
+
+.dashboard-card__inset {
+  position: absolute;
+  inset: 2px;
+  z-index: 3;
+  display: flex;
+  height: calc(100% - 4px);
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: inherit;
+  background: #ffffff;
+}
+
+.dashboard-card__title {
+  margin-top: 24px;
+  padding: 0 16px;
+  color: #222222;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.dashboard-card__desc {
+  display: -webkit-box;
+  margin: 10px 16px 0;
+  overflow: hidden;
+  color: #606266;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.dashboard-card__open-icon,
+.dashboard-card__delete-icon {
+  position: absolute;
+  top: 10px;
+  z-index: 10;
+  display: none;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+  transition: background 0.2s;
+}
+
+.dashboard-card__open-icon {
+  right: 50px;
+
+  &:hover {
+    background: #eef6ff;
+  }
+}
+
+.dashboard-card__delete-icon {
+  right: 10px;
+
+  &:hover {
+    background: #ffeaea;
+  }
+}
+
+.dashboard-card__badge {
+  position: absolute;
+  right: 12px;
+  bottom: 40px;
+  z-index: 4;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: #2563eb;
+  background: #dbeafe;
+  font-size: 12px;
+}
+
+.dashboard-card__info {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 0 0 12px 12px;
+  background: rgba(245, 245, 245, 0.85);
+  color: #444444;
+  font-size: 13px;
+  backdrop-filter: blur(2px);
+}
+
+.dashboard-card__info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  line-height: 1.8;
+}
+
+.dashboard-card__creator {
+  color: #666666;
+}
+
+.dashboard-card__time {
+  color: #999999;
+  font-size: 12px;
+}
+
+.dashboard-pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid #ebeef5;
+}
+</style>

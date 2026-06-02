@@ -7,34 +7,34 @@
         :y-axis-fields="yAxisFields"
         :chart-width="chartWidth"
         :chart-height="chartHeight"
-        :highlight-cell-background="tableChartConfig?.highlightCellBackground"
-        :highlight-row-background="tableChartConfig?.highlightRowBackground"
-        :highlight-col-background="tableChartConfig?.highlightColBackground"
-        :header-row-height="tableChartConfig?.headerRowHeight"
-        :summary-row-height="tableChartConfig?.summaryRowHeight"
-        :enable-summary="tableChartConfig?.enableSummary"
-        :body-row-height="tableChartConfig?.bodyRowHeight"
-        :scrollbar-size="tableChartConfig?.scrollbarSize"
-        :header-background="tableChartConfig?.headerBackground"
-        :body-background-odd="tableChartConfig?.bodyBackgroundOdd"
-        :body-background-even="tableChartConfig?.bodyBackgroundEven"
-        :border-color="tableChartConfig?.borderColor"
-        :header-text-color="tableChartConfig?.headerTextColor"
-        :body-text-color="tableChartConfig?.bodyTextColor"
-        :header-font-family="tableChartConfig?.headerFontFamily"
-        :header-font-size="tableChartConfig?.headerFontSize"
-        :body-font-family="tableChartConfig?.bodyFontFamily"
-        :body-font-size="tableChartConfig?.bodyFontSize"
-        :summary-font-family="tableChartConfig?.summaryFontFamily"
-        :summary-font-size="tableChartConfig?.summaryFontSize"
-        :summary-background="tableChartConfig?.summaryBackground"
-        :summary-text-color="tableChartConfig?.summaryTextColor"
-        :scrollbar-background="tableChartConfig?.scrollbarBackground"
-        :scrollbar-thumb-background="tableChartConfig?.scrollbarThumbBackground"
-        :scrollbar-thumb-hover-background="tableChartConfig?.scrollbarThumbHoverBackground"
-        :buffer-rows="tableChartConfig?.bufferRows"
-        :min-auto-col-width="tableChartConfig?.minAutoColWidth"
-        :sort-active-color="tableChartConfig?.sortActiveColor"
+        :highlight-cell-background="resolvedTableChartConfig?.highlightCellBackground"
+        :highlight-row-background="resolvedTableChartConfig?.highlightRowBackground"
+        :highlight-col-background="resolvedTableChartConfig?.highlightColBackground"
+        :header-row-height="resolvedTableChartConfig?.headerRowHeight"
+        :summary-row-height="resolvedTableChartConfig?.summaryRowHeight"
+        :enable-summary="resolvedTableChartConfig?.enableSummary"
+        :body-row-height="resolvedTableChartConfig?.bodyRowHeight"
+        :scrollbar-size="resolvedTableChartConfig?.scrollbarSize"
+        :header-background="resolvedTableChartConfig?.headerBackground"
+        :body-background-odd="resolvedTableChartConfig?.bodyBackgroundOdd"
+        :body-background-even="resolvedTableChartConfig?.bodyBackgroundEven"
+        :border-color="resolvedTableChartConfig?.borderColor"
+        :header-text-color="resolvedTableChartConfig?.headerTextColor"
+        :body-text-color="resolvedTableChartConfig?.bodyTextColor"
+        :header-font-family="resolvedTableChartConfig?.headerFontFamily"
+        :header-font-size="resolvedTableChartConfig?.headerFontSize"
+        :body-font-family="resolvedTableChartConfig?.bodyFontFamily"
+        :body-font-size="resolvedTableChartConfig?.bodyFontSize"
+        :summary-font-family="resolvedTableChartConfig?.summaryFontFamily"
+        :summary-font-size="resolvedTableChartConfig?.summaryFontSize"
+        :summary-background="resolvedTableChartConfig?.summaryBackground"
+        :summary-text-color="resolvedTableChartConfig?.summaryTextColor"
+        :scrollbar-background="resolvedTableChartConfig?.scrollbarBackground"
+        :scrollbar-thumb-background="resolvedTableChartConfig?.scrollbarThumbBackground"
+        :scrollbar-thumb-hover-background="resolvedTableChartConfig?.scrollbarThumbHoverBackground"
+        :buffer-rows="resolvedTableChartConfig?.bufferRows"
+        :min-auto-col-width="resolvedTableChartConfig?.minAutoColWidth"
+        :sort-active-color="resolvedTableChartConfig?.sortActiveColor"
         @column-width-change="handleColumnWidthChange"
         @column-order-change="handleColumnOrderChange"
         @cell-value-change="handleCellValueChange"
@@ -59,7 +59,7 @@ const emit = defineEmits<{
   renderChartEnd: []
 }>()
 
-defineProps({
+const props = defineProps({
   data: {
     type: Array as PropType<Array<AnalyzeDataVo.AnalyzeData>>,
     default: () => []
@@ -79,14 +79,18 @@ defineProps({
   chartWidth: {
     type: [Number, String],
     default: () => '100%'
+  },
+  privateChartConfig: {
+    type: Object as PropType<AnalyzeConfigVo.TableChartConfigItem | null>,
+    default: () => null
   }
 })
 
 /**
  * 表格配置
  */
-const tableChartConfig = computed(() => {
-  return chartConfigStore.privateChartConfig?.table
+const resolvedTableChartConfig = computed(() => {
+  return props.privateChartConfig || chartConfigStore.privateChartConfig?.table
 })
 
 const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload) => {

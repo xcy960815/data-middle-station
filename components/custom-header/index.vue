@@ -25,7 +25,7 @@ const props = defineProps({
 })
 const router = useRouter()
 const handleClickAppName = () => {
-  router.push('/homepage')
+  router.push('/analyze')
 }
 </script>
 <style lang="scss" scoped>
