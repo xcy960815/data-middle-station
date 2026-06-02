@@ -148,6 +148,9 @@ export class DashboardListMapping implements DashboardVo.DashboardListItem, ICol
 
   @Column('widget_count')
   widgetCount!: number
+
+  @Column('dashboard_permission')
+  dashboardPermission!: PermissionVo.ResourcePermissionType
 }
 
 export class DashboardMapper extends BaseMapper {
@@ -195,9 +198,26 @@ export class DashboardMapper extends BaseMapper {
     return result?.[0]
   }
 
+  @Mapping(DashboardMapping)
+  public async getDashboardWithoutAccess<T extends DashboardDao.DashboardRecord = DashboardDao.DashboardRecord>(
+    id: number
+  ): Promise<T> {
+    const sql = `
+      select ${DASHBOARD_FIELDS.join(',\n        ')}
+      from ${DASHBOARD_TABLE_NAME} d
+      where d.id = ? and d.is_deleted = 0`
+    const result = await this.exe<Array<T>>(sql, [id])
+    return result?.[0]
+  }
+
   public async countDashboards(query: DashboardDao.GetDashboardListParams): Promise<number> {
     const { whereClause, params } = this.buildDashboardListQuery(query)
-    const sql = `select count(*) as total from ${DASHBOARD_TABLE_NAME} d ${whereClause}`
+    const sql = `
+      select count(distinct d.id) as total
+      from ${DASHBOARD_TABLE_NAME} d
+      left join resource_role_permission rrp on rrp.resource_type = 'dashboard' and rrp.resource_id = d.id
+      left join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
+      ${whereClause}`
     const result = await this.exe<Array<{ total: number }>>(sql, params)
     return Number(result?.[0]?.total || 0)
   }
@@ -206,7 +226,7 @@ export class DashboardMapper extends BaseMapper {
   public async getDashboardList<T extends DashboardVo.DashboardListItem = DashboardVo.DashboardListItem>(
     query: DashboardDao.GetDashboardListParams
   ): Promise<Array<T>> {
-    const { whereClause, params } = this.buildDashboardListQuery(query)
+    const { whereClause, params, permissionSelectSql } = this.buildDashboardListQuery(query)
     const sortField = DASHBOARD_LIST_SORT_FIELD_MAP[query.sortField] || DASHBOARD_LIST_SORT_FIELD_MAP.updateTime
     const sortOrder = query.sortOrder === 'asc' ? 'ASC' : 'DESC'
     const page = Math.max(1, Math.floor(query.page))
@@ -221,9 +241,12 @@ export class DashboardMapper extends BaseMapper {
         d.update_time,
         d.created_by,
         d.updated_by,
-        count(dw.id) as widget_count
+        count(distinct dw.id) as widget_count,
+        ${permissionSelectSql} as dashboard_permission
       from ${DASHBOARD_TABLE_NAME} d
       left join ${DASHBOARD_WIDGET_TABLE_NAME} dw on dw.dashboard_id = d.id and dw.is_deleted = 0
+      left join resource_role_permission rrp on rrp.resource_type = 'dashboard' and rrp.resource_id = d.id
+      left join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
       ${whereClause}
       group by d.id, d.dashboard_name, d.dashboard_desc, d.create_time, d.update_time, d.created_by, d.updated_by
       order by ${sortField} ${sortOrder}
@@ -317,8 +340,23 @@ export class DashboardMapper extends BaseMapper {
     const whereConditions = ['d.id = ?', 'd.is_deleted = 0']
     const params: Array<string | number> = [query.id]
     if (!query.roleCodes?.includes('admin')) {
-      whereConditions.push('d.created_by = ?')
-      params.push(query.currentUserName || '')
+      if (query.roleCodes?.length) {
+        whereConditions.push(`(
+          d.created_by = ?
+          or exists (
+            select 1
+            from resource_role_permission rrp
+            inner join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
+            where rrp.resource_type = 'dashboard'
+              and rrp.resource_id = d.id
+              and r.role_code in (${query.roleCodes.map(() => '?').join(',')})
+          )
+        )`)
+        params.push(query.currentUserName || '', ...query.roleCodes)
+      } else {
+        whereConditions.push('d.created_by = ?')
+        params.push(query.currentUserName || '')
+      }
     }
     return {
       whereClause: `where ${whereConditions.join(' and ')}`,
@@ -327,6 +365,8 @@ export class DashboardMapper extends BaseMapper {
   }
 
   private buildDashboardListQuery(query: DashboardDao.GetDashboardListParams) {
+    const roleCodes = query.roleCodes || []
+    const isAdmin = roleCodes.includes('admin')
     const whereConditions = ['d.is_deleted = 0']
     const params: string[] = []
 
@@ -336,14 +376,32 @@ export class DashboardMapper extends BaseMapper {
       params.push(normalizedKeyword, normalizedKeyword)
     }
 
-    if (!query.roleCodes?.includes('admin')) {
-      whereConditions.push('d.created_by = ?')
-      params.push(query.currentUserName || '')
+    if (!isAdmin) {
+      if (roleCodes.length > 0) {
+        whereConditions.push(`(d.created_by = ? or r.role_code in (${roleCodes.map(() => '?').join(',')}))`)
+        params.push(query.currentUserName || '', ...roleCodes)
+      } else {
+        whereConditions.push('d.created_by = ?')
+        params.push(query.currentUserName || '')
+      }
     }
 
     return {
       whereClause: `where ${whereConditions.join(' and ')}`,
-      params
+      params,
+      permissionSelectSql: isAdmin
+        ? `'manage'`
+        : `case
+            when d.created_by = ${this.escapeValue(query.currentUserName || '')} then 'manage'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 3 then 'manage'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 2 then 'edit'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 1 then 'view'
+            else 'none'
+          end`
     }
+  }
+
+  private escapeValue(value: string) {
+    return `'${value.replace(/'/g, "''")}'`
   }
 }

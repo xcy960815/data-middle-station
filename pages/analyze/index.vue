@@ -186,11 +186,12 @@ const listLoading = computed(() => homePageStore.getLoading)
 const permissionDialogVisible = ref(false)
 const permissionLoading = ref(false)
 const permissionSaving = ref(false)
-const permissionAnalyzeId = ref<number | null>(null)
-const permissionAnalyzeName = ref('')
+const permissionResourceType = ref<PermissionVo.ResourceType>('analyze')
+const permissionResourceId = ref<number | null>(null)
+const permissionResourceName = ref('')
 const permissionList = ref<PermissionVo.AnalyzeRolePermissionItem[]>([])
 const permissionDialogTitle = computed(
-  () => `分析授权${permissionAnalyzeName.value ? `：${permissionAnalyzeName.value}` : ''}`
+  () => `分析授权${permissionResourceName.value ? `：${permissionResourceName.value}` : ''}`
 )
 
 const getAnalyzes = async (targetPage = page.value) => {
@@ -264,18 +265,20 @@ const handleDeleteAnalyze = (id: number, analyzeName: string) => {
 }
 
 const handleOpenPermissionDialog = async (id: number, analyzeName: string) => {
-  permissionAnalyzeId.value = id
-  permissionAnalyzeName.value = analyzeName
+  permissionResourceType.value = 'analyze'
+  permissionResourceId.value = id
+  permissionResourceName.value = analyzeName
   permissionDialogVisible.value = true
   permissionLoading.value = true
   permissionList.value = []
   try {
-    const res = await httpRequest<ApiResponseI<PermissionVo.AnalyzeRolePermissionsResponse>>(
-      '/api/getAnalyzeRolePermissions',
+    const res = await httpRequest<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>(
+      '/api/getResourceRolePermissions',
       {
         method: 'POST',
         body: {
-          analyzeId: id
+          resourceType: permissionResourceType.value,
+          resourceId: id
         }
       }
     )
@@ -290,16 +293,17 @@ const handleOpenPermissionDialog = async (id: number, analyzeName: string) => {
 }
 
 const handleSavePermissions = async () => {
-  if (!permissionAnalyzeId.value) return
+  if (!permissionResourceId.value) return
 
   permissionSaving.value = true
   try {
-    const res = await httpRequest<ApiResponseI<PermissionVo.AnalyzeRolePermissionsResponse>>(
-      '/api/updateAnalyzeRolePermissions',
+    const res = await httpRequest<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>(
+      '/api/updateResourceRolePermissions',
       {
         method: 'POST',
         body: {
-          analyzeId: permissionAnalyzeId.value,
+          resourceType: permissionResourceType.value,
+          resourceId: permissionResourceId.value,
           permissions: permissionList.value.map((item) => ({
             roleId: item.id,
             permissionType: item.permissionType

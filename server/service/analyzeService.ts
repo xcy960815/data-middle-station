@@ -1,15 +1,7 @@
 import { AnalyzeMapper } from '@/server/mapper/analyzeMapper'
 import { BaseService } from '@/server/service/baseService'
 import { ChartConfigService } from '@/server/service/chartConfigService'
-
-type AnalyzePermissionLevel = 'view' | 'edit' | 'manage'
-
-const ANALYZE_PERMISSION_LEVEL_MAP: Record<PermissionVo.AnalyzePermissionType, number> = {
-  none: 0,
-  view: 1,
-  edit: 2,
-  manage: 3
-}
+import { ResourcePermissionService } from '@/server/service/resourcePermissionService'
 
 /**
  * @desc 分析服务
@@ -24,11 +16,13 @@ export class AnalyzeService extends BaseService {
    * 图表配置服务
    */
   private chartConfigService: ChartConfigService
+  private resourcePermissionService: ResourcePermissionService
 
   constructor() {
     super()
     this.analyzeMapper = new AnalyzeMapper()
     this.chartConfigService = new ChartConfigService()
+    this.resourcePermissionService = new ResourcePermissionService()
   }
 
   /**
@@ -50,20 +44,15 @@ export class AnalyzeService extends BaseService {
   /**
    * @desc 校验当前用户对分析的最低权限。
    */
-  private async assertAnalyzePermission(analyzeId: number, requiredPermission: AnalyzePermissionLevel): Promise<void> {
-    const currentUser = this.getCurrentUser()
-    if (!currentUser) {
-      return
-    }
-
-    const permission = await this.analyzeMapper.getAnalyzePermission(
-      analyzeId,
-      currentUser.userName,
-      currentUser.roleCodes || []
-    )
-    if (ANALYZE_PERMISSION_LEVEL_MAP[permission] < ANALYZE_PERMISSION_LEVEL_MAP[requiredPermission]) {
-      throw new Error('无权访问该分析')
-    }
+  private async assertAnalyzePermission(
+    analyzeId: number,
+    requiredPermission: Exclude<PermissionVo.ResourcePermissionType, 'none'>
+  ): Promise<void> {
+    await this.resourcePermissionService.assertResourcePermission({
+      resourceType: 'analyze',
+      resourceId: analyzeId,
+      requiredPermission
+    })
   }
 
   /**

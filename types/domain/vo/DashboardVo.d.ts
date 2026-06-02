@@ -8,6 +8,7 @@ declare namespace DashboardVo {
 
   type DashboardDetailResponse = DashboardDao.DashboardRecord & {
     widgets: DashboardWidgetItem[]
+    dashboardPermission?: PermissionVo.ResourcePermissionType
   }
 
   type DashboardListItem = Pick<
@@ -15,6 +16,7 @@ declare namespace DashboardVo {
     'id' | 'dashboardName' | 'dashboardDesc' | 'createTime' | 'updateTime' | 'createdBy' | 'updatedBy'
   > & {
     widgetCount: number
+    dashboardPermission?: PermissionVo.ResourcePermissionType
   }
 
   type DashboardListResponse = {

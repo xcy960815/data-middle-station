@@ -48,10 +48,27 @@
               <div class="dashboard-card__open-icon" @click.stop="handleOpenDashboard(dashboard.id)">
                 <icon-park type="PreviewOpen" size="14" fill="#333" />
               </div>
-              <div class="dashboard-card__delete-icon" @click.stop="handleDeleteDashboard(dashboard)">
+              <div
+                v-if="canManageDashboard(dashboard)"
+                class="dashboard-card__permission-icon"
+                @click.stop="handleOpenPermissionDialog(dashboard)"
+              >
+                <icon-park type="Permissions" size="14" fill="#333" />
+              </div>
+              <div
+                v-if="canManageDashboard(dashboard)"
+                class="dashboard-card__delete-icon"
+                @click.stop="handleDeleteDashboard(dashboard)"
+              >
                 <icon-park type="DeleteOne" size="14" fill="#333" />
               </div>
               <span class="dashboard-card__badge">{{ dashboard.widgetCount }} 个分析</span>
+              <span
+                class="dashboard-card__permission-badge"
+                :class="`dashboard-card__permission-badge--${dashboard.dashboardPermission || 'view'}`"
+              >
+                {{ getPermissionText(dashboard.dashboardPermission || 'view') }}
+              </span>
               <div class="dashboard-card__info">
                 <div class="dashboard-card__info-row">
                   <span class="dashboard-card__creator">{{ dashboard.createdBy || '未知' }}</span>
@@ -91,6 +108,27 @@
           <el-button type="primary" :loading="creating" @click="handleCreateDashboard">确定</el-button>
         </template>
       </el-dialog>
+
+      <el-dialog v-model="permissionDialogVisible" :title="permissionDialogTitle" width="520px">
+        <div v-loading="permissionLoading" class="permission-dialog">
+          <div v-for="item in permissionList" :key="item.id" class="permission-row">
+            <div class="permission-role">
+              <span class="permission-role__name">{{ item.roleName }}</span>
+              <span class="permission-role__code">{{ item.roleCode }}</span>
+            </div>
+            <el-select v-model="item.permissionType" class="permission-select">
+              <el-option label="无权限" value="none" />
+              <el-option label="仅查看" value="view" />
+              <el-option label="可编辑" value="edit" />
+              <el-option label="可管理" value="manage" />
+            </el-select>
+          </div>
+        </div>
+        <template #footer>
+          <el-button @click="permissionDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="permissionSaving" @click="handleSavePermissions">保存</el-button>
+        </template>
+      </el-dialog>
     </template>
   </NuxtLayout>
 </template>
@@ -123,6 +161,21 @@ const createForm = reactive({
 })
 const createRules: FormRules = {
   dashboardName: [{ required: true, message: '请输入看板名称', trigger: 'blur' }]
+}
+const permissionDialogVisible = ref(false)
+const permissionLoading = ref(false)
+const permissionSaving = ref(false)
+const permissionResourceId = ref<number | null>(null)
+const permissionResourceName = ref('')
+const permissionList = ref<PermissionVo.ResourceRolePermissionItem[]>([])
+const permissionDialogTitle = computed(
+  () => `看板授权${permissionResourceName.value ? `：${permissionResourceName.value}` : ''}`
+)
+const permissionLevelMap: Record<PermissionVo.ResourcePermissionType, number> = {
+  none: 0,
+  view: 1,
+  edit: 2,
+  manage: 3
 }
 
 const getDashboards = async (targetPage = dashboardPage.value) => {
@@ -163,6 +216,21 @@ const formatDate = (value: string) => {
 
 const handleOpenDashboard = (dashboardId: number) => {
   router.push(`/dashboard/${dashboardId}`)
+}
+
+const canManageDashboard = (dashboard: DashboardVo.DashboardListItem) => {
+  return permissionLevelMap[dashboard.dashboardPermission || 'none'] >= permissionLevelMap.manage
+}
+
+const getPermissionText = (permissionType: PermissionVo.ResourcePermissionType) => {
+  return (
+    {
+      none: '无权限',
+      view: '仅查看',
+      edit: '可编辑',
+      manage: '可管理'
+    }[permissionType] || '仅查看'
+  )
 }
 
 const handleOpenCreateDialog = () => {
@@ -219,6 +287,63 @@ const handleDeleteDashboard = (dashboard: DashboardVo.DashboardListItem) => {
       ElMessage.error(res.message || '删除失败')
     }
   })
+}
+
+const handleOpenPermissionDialog = async (dashboard: DashboardVo.DashboardListItem) => {
+  permissionResourceId.value = dashboard.id
+  permissionResourceName.value = dashboard.dashboardName
+  permissionDialogVisible.value = true
+  permissionLoading.value = true
+  permissionList.value = []
+  try {
+    const res = await httpRequest<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>(
+      '/api/getResourceRolePermissions',
+      {
+        method: 'POST',
+        body: {
+          resourceType: 'dashboard',
+          resourceId: dashboard.id
+        }
+      }
+    )
+    if (res.code === 200 && res.data) {
+      permissionList.value = res.data.list
+    } else {
+      ElMessage.error(res.message || '获取看板授权失败')
+    }
+  } finally {
+    permissionLoading.value = false
+  }
+}
+
+const handleSavePermissions = async () => {
+  if (!permissionResourceId.value) return
+  permissionSaving.value = true
+  try {
+    const res = await httpRequest<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>(
+      '/api/updateResourceRolePermissions',
+      {
+        method: 'POST',
+        body: {
+          resourceType: 'dashboard',
+          resourceId: permissionResourceId.value,
+          permissions: permissionList.value.map((item) => ({
+            roleId: item.id,
+            permissionType: item.permissionType
+          }))
+        }
+      }
+    )
+    if (res.code === 200) {
+      ElMessage.success('授权已保存')
+      permissionDialogVisible.value = false
+      getDashboards(dashboardPage.value)
+    } else {
+      ElMessage.error(res.message || '保存看板授权失败')
+    }
+  } finally {
+    permissionSaving.value = false
+  }
 }
 
 onMounted(() => {
@@ -295,6 +420,7 @@ onMounted(() => {
       0 2px 8px 0 rgba(0, 0, 0, 0.08);
 
     .dashboard-card__open-icon,
+    .dashboard-card__permission-icon,
     .dashboard-card__delete-icon {
       display: flex;
     }
@@ -335,6 +461,7 @@ onMounted(() => {
 }
 
 .dashboard-card__open-icon,
+.dashboard-card__permission-icon,
 .dashboard-card__delete-icon {
   position: absolute;
   top: 10px;
@@ -351,10 +478,18 @@ onMounted(() => {
 }
 
 .dashboard-card__open-icon {
-  right: 50px;
+  right: 90px;
 
   &:hover {
     background: #eef6ff;
+  }
+}
+
+.dashboard-card__permission-icon {
+  right: 50px;
+
+  &:hover {
+    background: #f0f9eb;
   }
 }
 
@@ -376,6 +511,36 @@ onMounted(() => {
   color: #2563eb;
   background: #dbeafe;
   font-size: 12px;
+}
+
+.dashboard-card__permission-badge {
+  position: absolute;
+  left: 12px;
+  bottom: 40px;
+  z-index: 4;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.dashboard-card__permission-badge--view {
+  color: #2563eb;
+  background: #dbeafe;
+}
+
+.dashboard-card__permission-badge--edit {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.dashboard-card__permission-badge--manage {
+  color: #9333ea;
+  background: #f3e8ff;
+}
+
+.dashboard-card__permission-badge--none {
+  color: #6b7280;
+  background: #f3f4f6;
 }
 
 .dashboard-card__info {
@@ -411,5 +576,41 @@ onMounted(() => {
   justify-content: flex-end;
   padding: 12px 16px;
   border-top: 1px solid #ebeef5;
+}
+
+.permission-dialog {
+  display: flex;
+  min-height: 160px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.permission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.permission-role {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+}
+
+.permission-role__name {
+  color: #303133;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.permission-role__code {
+  color: #909399;
+  font-size: 12px;
+}
+
+.permission-select {
+  width: 160px;
 }
 </style>

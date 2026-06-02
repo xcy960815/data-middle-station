@@ -1,6 +1,7 @@
 import { AnalyzeService } from '@/server/service/analyzeService'
 import { BaseService } from '@/server/service/baseService'
 import { DashboardMapper } from '@/server/mapper/dashboardMapper'
+import { ResourcePermissionService } from '@/server/service/resourcePermissionService'
 
 const DEFAULT_LAYOUT_CONFIG: DashboardDao.LayoutConfig = {
   columnCount: 12,
@@ -10,11 +11,13 @@ const DEFAULT_LAYOUT_CONFIG: DashboardDao.LayoutConfig = {
 export class DashboardService extends BaseService {
   private dashboardMapper: DashboardMapper
   private analyzeService: AnalyzeService
+  private resourcePermissionService: ResourcePermissionService
 
   constructor() {
     super()
     this.dashboardMapper = new DashboardMapper()
     this.analyzeService = new AnalyzeService()
+    this.resourcePermissionService = new ResourcePermissionService()
   }
 
   public async getDashboards(
@@ -51,6 +54,11 @@ export class DashboardService extends BaseService {
     queryRequest: DashboardDto.GetDashboardRequest
   ): Promise<DashboardVo.DashboardDetailResponse> {
     const currentUser = this.getCurrentUser()
+    await this.resourcePermissionService.assertResourcePermission({
+      resourceType: 'dashboard',
+      resourceId: queryRequest.id,
+      requiredPermission: 'view'
+    })
     const dashboardRecord = await this.dashboardMapper.getDashboard({
       id: queryRequest.id,
       currentUserName: currentUser?.userName,
@@ -80,6 +88,14 @@ export class DashboardService extends BaseService {
 
     return {
       ...dashboardRecord,
+      dashboardPermission: currentUser
+        ? await this.resourcePermissionService.getCurrentUserResourcePermission(
+            'dashboard',
+            dashboardRecord.id,
+            currentUser.userName,
+            currentUser.roleCodes || []
+          )
+        : 'manage',
       widgets: resolvedWidgets
     }
   }
@@ -115,6 +131,11 @@ export class DashboardService extends BaseService {
   public async updateDashboard(
     updateRequest: DashboardDto.UpdateDashboardRequest
   ): Promise<DashboardVo.DashboardDetailResponse> {
+    await this.resourcePermissionService.assertResourcePermission({
+      resourceType: 'dashboard',
+      resourceId: updateRequest.id,
+      requiredPermission: 'edit'
+    })
     const currentDashboard = await this.getDashboard({ id: updateRequest.id })
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
     const updateResult = await this.dashboardMapper.updateDashboard({
@@ -144,6 +165,11 @@ export class DashboardService extends BaseService {
   }
 
   public async deleteDashboard(deleteRequest: DashboardDto.DeleteDashboardRequest): Promise<boolean> {
+    await this.resourcePermissionService.assertResourcePermission({
+      resourceType: 'dashboard',
+      resourceId: deleteRequest.id,
+      requiredPermission: 'manage'
+    })
     await this.getDashboard({ id: deleteRequest.id })
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     return await this.dashboardMapper.deleteDashboard({

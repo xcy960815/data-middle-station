@@ -1,6 +1,14 @@
-export const ANALYZE_PERMISSION_TYPES = ['none', 'view', 'edit', 'manage'] as const
+export const RESOURCE_TYPES = ['analyze', 'dashboard', 'datasource', 'folder', 'scheduled_email'] as const
 
-export type AnalyzePermissionType = (typeof ANALYZE_PERMISSION_TYPES)[number]
+export type ResourceType = (typeof RESOURCE_TYPES)[number]
+
+export const RESOURCE_PERMISSION_TYPES = ['none', 'view', 'edit', 'manage'] as const
+
+export type ResourcePermissionType = (typeof RESOURCE_PERMISSION_TYPES)[number]
+
+export const ANALYZE_PERMISSION_TYPES = RESOURCE_PERMISSION_TYPES
+
+export type AnalyzePermissionType = ResourcePermissionType
 
 export const CHART_TYPE_MAP = {
   table: 'table',

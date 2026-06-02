@@ -311,14 +311,14 @@ export class AnalyzeMapper extends BaseMapper {
       select
         case
           when a.created_by = ? then 'manage'
-          when max(case when ${roleInSql} then case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 3 then 'manage'
-          when max(case when ${roleInSql} then case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 2 then 'edit'
-          when max(case when ${roleInSql} then case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 1 then 'view'
+          when max(case when ${roleInSql} then case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 3 then 'manage'
+          when max(case when ${roleInSql} then case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 2 then 'edit'
+          when max(case when ${roleInSql} then case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end else 0 end) = 1 then 'view'
           else 'none'
         end as permissionType
       from ${ANALYZE_TABLE_NAME} a
-      left join analyze_role_permission arp on arp.analyze_id = a.id
-      left join role r on r.id = arp.role_id and r.is_deleted = 0 and r.status = 1
+      left join resource_role_permission rrp on rrp.resource_type = 'analyze' and rrp.resource_id = a.id
+      left join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
       where a.id = ? and a.is_deleted = 0
       group by a.id, a.created_by`
     const result = await this.exe<Array<{ permissionType: PermissionVo.AnalyzePermissionType }>>(sql, [
@@ -374,8 +374,8 @@ export class AnalyzeMapper extends BaseMapper {
     const params: string[] = []
     const fromClause = `
       from ${ANALYZE_TABLE_NAME} a
-      left join analyze_role_permission arp on arp.analyze_id = a.id
-      left join role r on r.id = arp.role_id and r.is_deleted = 0 and r.status = 1`
+      left join resource_role_permission rrp on rrp.resource_type = 'analyze' and rrp.resource_id = a.id
+      left join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1`
 
     if (query.keyword?.trim()) {
       whereConditions.push('(a.analyze_name like ? or a.analyze_desc like ?)')
@@ -401,9 +401,9 @@ export class AnalyzeMapper extends BaseMapper {
         ? `'manage'`
         : `case
             when a.created_by = ${this.escapeValue(query.currentUserName || '')} then 'manage'
-            when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 3 then 'manage'
-            when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 2 then 'edit'
-            when max(case arp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 1 then 'view'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 3 then 'manage'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 2 then 'edit'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 1 then 'view'
             else 'none'
           end`
     }

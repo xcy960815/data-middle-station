@@ -25,7 +25,9 @@
         <template #header-right>
           <div class="dashboard-header-actions">
             <el-button @click="handleBackToList">返回列表</el-button>
-            <el-button v-if="!editorMode" type="primary" @click="handleEnterEditorMode">编辑看板</el-button>
+            <el-button v-if="!editorMode && canEditDashboard" type="primary" @click="handleEnterEditorMode"
+              >编辑看板</el-button
+            >
             <el-button v-if="editorMode" @click="handleCancelEditorMode">退出编辑</el-button>
             <el-button v-if="editorMode" type="primary" :loading="saving" @click="handleSaveDashboard"
               >保存看板</el-button
@@ -185,6 +187,15 @@ const analyzePageSize = ref(20)
 const analyzeTotal = ref(0)
 const analyzeKeyword = ref('')
 const draggingAnalyze = ref<AnalyzeVo.AnalyzeListItem | null>(null)
+const permissionLevelMap: Record<PermissionVo.ResourcePermissionType, number> = {
+  none: 0,
+  view: 1,
+  edit: 2,
+  manage: 3
+}
+const canEditDashboard = computed(() => {
+  return permissionLevelMap[activeDashboard.value?.dashboardPermission || 'none'] >= permissionLevelMap.edit
+})
 
 const columnWidth = computed(() => {
   const width = canvasWidth.value || 1

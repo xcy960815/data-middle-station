@@ -42,6 +42,23 @@ CREATE TABLE IF NOT EXISTS `dashboard_widget` (
   CONSTRAINT `fk_dashboard_widget_dashboard` FOREIGN KEY (`dashboard_id`) REFERENCES `dashboard` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='看板组件表';
 
+CREATE TABLE IF NOT EXISTS `resource_role_permission` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `resource_type` varchar(50) NOT NULL COMMENT '资源类型：analyze/dashboard/datasource/folder/scheduled_email',
+  `resource_id` bigint unsigned NOT NULL COMMENT '资源ID',
+  `role_id` bigint unsigned NOT NULL COMMENT '角色ID',
+  `permission_type` varchar(20) NOT NULL DEFAULT 'view' COMMENT '权限类型：view/edit/manage',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `created_by` varchar(100) DEFAULT NULL COMMENT '创建人',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `updated_by` varchar(100) DEFAULT NULL COMMENT '更新人',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_resource_role_permission` (`resource_type`, `resource_id`, `role_id`),
+  KEY `idx_resource` (`resource_type`, `resource_id`),
+  KEY `idx_role_id` (`role_id`),
+  KEY `idx_permission_type` (`permission_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='通用资源角色权限表';
+
 -- Demo data. These widgets reference the sample analyze records from sql/data_middle_station.sql.
 INSERT INTO `dashboard` (
   `id`,

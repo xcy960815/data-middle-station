@@ -1,5 +1,7 @@
 declare namespace PermissionVo {
-  type AnalyzePermissionType = import('@/shared/domainTypes').AnalyzePermissionType
+  type ResourceType = import('@/shared/domainTypes').ResourceType
+  type ResourcePermissionType = import('@/shared/domainTypes').ResourcePermissionType
+  type AnalyzePermissionType = ResourcePermissionType
 
   type RoleItem = {
     id: number
@@ -7,16 +9,23 @@ declare namespace PermissionVo {
     roleName: string
   }
 
-  type AnalyzeRolePermissionItem = RoleItem & {
-    permissionType: AnalyzePermissionType
+  type ResourceRolePermissionItem = RoleItem & {
+    permissionType: ResourcePermissionType
   }
+
+  type AnalyzeRolePermissionItem = ResourceRolePermissionItem
 
   type RoleListResponse = {
     list: RoleItem[]
   }
 
-  type AnalyzeRolePermissionsResponse = {
+  type ResourceRolePermissionsResponse = {
+    resourceType: ResourceType
+    resourceId: number
+    list: ResourceRolePermissionItem[]
+  }
+
+  type AnalyzeRolePermissionsResponse = ResourceRolePermissionsResponse & {
     analyzeId: number
-    list: AnalyzeRolePermissionItem[]
   }
 }
