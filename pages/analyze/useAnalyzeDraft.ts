@@ -10,6 +10,13 @@ export const useAnalyzeDraft = () => {
   const orderStore = useOrdersStore()
   const filterStore = useFiltersStore()
 
+  const removeRuntimeValidationFields = <T extends Record<string, any>>(items: T[]) => {
+    return items.map((item) => {
+      const { __invalid: _invalid, __invalidMessage: _invalidMessage, ...rest } = item
+      return rest
+    })
+  }
+
   const buildAnalyzeDraftPayload = (): AnalyzeDto.UpdateAnalyzeRequest => {
     return {
       id: analyzeStore.getAnalyzeId!,
@@ -18,13 +25,18 @@ export const useAnalyzeDraft = () => {
       currentConfigId: analyzeStore.getCurrentConfigId,
       chartConfig: {
         dataSource: columnStore.getDataSource,
-        columns: JSON.parse(JSON.stringify(columnStore.getColumns)),
-        dimensions: JSON.parse(JSON.stringify(dimensionStore.getDimensions)),
-        groups: JSON.parse(JSON.stringify(groupStore.getGroups)),
-        orders: JSON.parse(JSON.stringify(orderStore.getOrders)),
-        filters: JSON.parse(JSON.stringify(filterStore.getFilters)),
+        columns: removeRuntimeValidationFields(JSON.parse(JSON.stringify(columnStore.getColumns))),
+        dimensions: removeRuntimeValidationFields(JSON.parse(JSON.stringify(dimensionStore.getDimensions))),
+        groups: removeRuntimeValidationFields(JSON.parse(JSON.stringify(groupStore.getGroups))),
+        orders: removeRuntimeValidationFields(JSON.parse(JSON.stringify(orderStore.getOrders))),
+        filters: removeRuntimeValidationFields(JSON.parse(JSON.stringify(filterStore.getFilters))),
         chartType: analyzeStore.getChartType,
-        commonChartConfig: JSON.parse(JSON.stringify(chartConfigStore.getCommonChartConfig)),
+        commonChartConfig: {
+          ...JSON.parse(JSON.stringify(chartConfigStore.getCommonChartConfig)),
+          dataSourceMode: columnStore.getDataSourceMode,
+          datasetId: columnStore.getDatasetId,
+          datasetName: columnStore.getDatasetName
+        },
         privateChartConfig: JSON.parse(JSON.stringify(chartConfigStore.getPrivateChartConfig))
       }
     }

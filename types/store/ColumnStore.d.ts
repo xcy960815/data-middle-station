@@ -18,6 +18,11 @@ declare namespace ColumnsStore {
   type DataSourceOption = DatabaseVo.TableItem
 
   /**
+   * @desc 数据来源类型
+   */
+  type DataSourceMode = 'table' | 'dataset'
+
+  /**
    * @desc 列状态
    */
   type ColumnState = {
@@ -25,6 +30,18 @@ declare namespace ColumnsStore {
      * @desc 数据源
      */
     dataSource: string
+    /**
+     * @desc 数据来源类型
+     */
+    dataSourceMode: DataSourceMode
+    /**
+     * @desc 数据集ID
+     */
+    datasetId: number | null
+    /**
+     * @desc 数据集名称
+     */
+    datasetName: string
     /**
      * @desc 数据源选项
      */
@@ -51,6 +68,18 @@ declare namespace ColumnsStore {
      * @desc 设置数据源
      */
     setDataSource: (dataSource: string) => void
+    /**
+     * @desc 设置数据来源类型
+     */
+    setDataSourceMode: (dataSourceMode: DataSourceMode) => void
+    /**
+     * @desc 设置数据集ID
+     */
+    setDatasetId: (datasetId: number | null) => void
+    /**
+     * @desc 设置数据集名称
+     */
+    setDatasetName: (datasetName: string) => void
     /**
      * @desc 设置数据源选项
      */

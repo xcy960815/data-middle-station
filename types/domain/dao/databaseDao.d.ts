@@ -144,6 +144,14 @@ declare namespace DatabaseDao {
      */
     columnComment: string
     /**
+     * @desc 是否允许为空
+     */
+    nullable?: string
+    /**
+     * @desc 字段顺序
+     */
+    ordinalPosition?: number
+    /**
      * @desc 是否是自定义列
      */
     isCustom?: boolean

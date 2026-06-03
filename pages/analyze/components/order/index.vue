@@ -118,7 +118,7 @@ const dropHandler = (dragEvent: DragEvent) => {
     ...data.value,
     // 默认降序
     orderType: 'desc',
-    aggregationType: 'count'
+    aggregationType: data.value.datasetAggregationType || (data.value.datasetFieldType === 'metric' ? 'sum' : 'count')
   }
   const isSelected = orderStore.getOrders.find((item) => item.columnName === orderOption.columnName)
   if (isSelected) {

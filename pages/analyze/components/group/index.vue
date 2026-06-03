@@ -29,8 +29,8 @@
           :group="item"
           :column-name="item.columnName"
           :index="index"
-          :invalid="item.__invalid"
-          :invalidMessage="item.__invalidMessage"
+          :invalid="getGroupInvalid(item)"
+          :invalidMessage="getGroupInvalidMessage(item)"
         ></selector-group>
       </div>
     </div>
@@ -51,6 +51,33 @@ const groupStore = useGroupsStore()
 const groupList = computed(() => {
   return groupStore.getGroups
 })
+
+const groupColumnCountMap = computed(() => {
+  return groupList.value.reduce<Record<string, number>>((countMap, item) => {
+    if (!item.columnName) return countMap
+    countMap[item.columnName] = (countMap[item.columnName] || 0) + 1
+    return countMap
+  }, {})
+})
+
+const dimensionColumnSet = computed(() => {
+  return new Set(dimensionStore.getDimensions.map((item) => item.columnName).filter(Boolean))
+})
+
+const getGroupInvalid = (group: GroupStore.GroupOption) => {
+  return getGroupInvalidMessage(group) !== ''
+}
+
+const getGroupInvalidMessage = (group: GroupStore.GroupOption) => {
+  if (!group.columnName) return ''
+  if ((groupColumnCountMap.value[group.columnName] || 0) > 1) {
+    return '该分组已存在'
+  }
+  if (dimensionColumnSet.value.has(group.columnName)) {
+    return '该字段已在值中使用'
+  }
+  return ''
+}
 
 /**
  * @desc addGroup
@@ -125,25 +152,12 @@ const dropHandler = (dragEvent: DragEvent) => {
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const groupOption: GroupStore.GroupOption = {
     ...data.value,
-    __invalid: false,
-    __invalidMessage: '',
     fixed: null,
     align: null,
     width: null,
     showOverflowTooltip: false,
     filterable: false,
     sortable: false
-  }
-  const isSelected = groupStore.getGroups.find((item) => item.columnName === groupOption.columnName)
-  if (isSelected) {
-    groupOption.__invalid = true
-    groupOption.__invalidMessage = '该分组已存在'
-  }
-  const isInDimension = dimensionStore.getDimensions.find((item) => item.columnName === groupOption.columnName)
-  if (isInDimension) {
-    // TODO 提示用户已经选中了
-    groupOption.__invalid = true
-    groupOption.__invalidMessage = '该分组已存在'
   }
   const index = data.index
   switch (data.from) {

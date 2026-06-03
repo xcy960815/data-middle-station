@@ -10,7 +10,7 @@
     >
       <template #reference>
         <div class="select-trigger" :class="{ 'is-active': isPopoverVisible }">
-          <span class="selected-value">{{ dataSource || '请选择数据库表' }}</span>
+          <span class="selected-value">{{ selectedSourceLabel }}</span>
           <icon-park
             v-if="dataSource"
             class="clear-icon"
@@ -22,10 +22,14 @@
         </div>
       </template>
 
+      <div class="source-mode-row">
+        <el-segmented v-model="dataSourceMode" :options="sourceModeOptions" />
+      </div>
+
       <div class="search-row">
         <el-input
           v-model="searchKeyword"
-          placeholder="搜索表名/备注"
+          :placeholder="dataSourceMode === 'dataset' ? '搜索数据集名称/描述/物理表' : '搜索表名/备注'"
           clearable
           :prefix-icon="Search"
           style="margin-bottom: 8px; width: 220px"
@@ -36,6 +40,7 @@
       </div>
 
       <el-table
+        v-if="dataSourceMode === 'table'"
         ref="tableRef"
         :data="dataSourceOptions"
         border
@@ -49,6 +54,24 @@
         <el-table-column prop="tableName" label="表名" min-width="120" />
         <el-table-column prop="tableComment" label="备注" min-width="120" />
       </el-table>
+
+      <el-table
+        v-else
+        ref="datasetTableRef"
+        :data="datasetOptions"
+        border
+        :style="{ width: '100%' }"
+        @row-click="handleSelectedDataset"
+        highlight-current-row
+        max-height="300"
+        :row-class-name="datasetRowClassName"
+        empty-text="暂无数据集"
+      >
+        <el-table-column prop="datasetName" label="数据集" min-width="150" />
+        <el-table-column prop="dataSourceName" label="数据源" min-width="120" />
+        <el-table-column prop="baseTable" label="物理表" min-width="140" />
+        <el-table-column prop="fieldCount" label="字段数" width="90" />
+      </el-table>
     </el-popover>
   </client-only>
 </template>
@@ -57,15 +80,21 @@
 import { httpRequest } from '@/composables/useHttpRequest'
 import { Search } from '@element-plus/icons-vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
-import { ElButton, ElInput, ElMessage, ElPopover, ElTable, ElTableColumn } from 'element-plus'
+import { ElButton, ElInput, ElMessage, ElPopover, ElSegmented, ElTable, ElTableColumn } from 'element-plus'
 import { computed, nextTick, ref, watch } from 'vue'
 /**
  * @desc 列存储
  */
 const columnStore = useColumnsStore()
 
+const sourceModeOptions = [
+  { label: '数据集', value: 'dataset' },
+  { label: '物理表', value: 'table' }
+]
 const searchKeyword = ref('')
 const tableRef = ref<InstanceType<typeof ElTable>>()
+const datasetTableRef = ref<InstanceType<typeof ElTable>>()
+const datasetOptions = ref<DatasetVo.DatasetListItem[]>([])
 /**
  * @desc 是否显示弹窗
  * @returns {boolean}
@@ -75,7 +104,19 @@ const isPopoverVisible = ref(false)
  * @desc 事件
  * @returns {void}
  */
-const emit = defineEmits(['dataSource-change'])
+type DataSourceChangePayload =
+  | {
+      mode: 'table'
+      tableName: string
+    }
+  | {
+      mode: 'dataset'
+      dataset: DatasetVo.DatasetListItem
+    }
+
+const emit = defineEmits<{
+  'dataSource-change': [payload: DataSourceChangePayload]
+}>()
 /**
  * @desc 数据源
  * @returns {string}
@@ -89,6 +130,20 @@ const dataSource = computed({
   }
 })
 
+const selectedSourceLabel = computed(() => {
+  if (columnStore.getDataSourceMode === 'dataset' && columnStore.getDatasetName) {
+    return columnStore.getDatasetName
+  }
+  return dataSource.value || '请选择数据集或数据库表'
+})
+
+const dataSourceMode = computed({
+  get: () => columnStore.getDataSourceMode,
+  set: (val: ColumnsStore.DataSourceMode) => {
+    columnStore.setDataSourceMode(val)
+  }
+})
+
 /**
  * @desc 数据源选项
  * @returns {ColumnsStore.dataSourceOption[]}
@@ -99,7 +154,7 @@ const dataSourceOptions = computed(() => columnStore.getDataSourceOptions)
  * @desc 搜索按钮点击（目前只做UI，实际过滤仍为输入框实时过滤）
  */
 const handleSearchTable = () => {
-  handleGetDatabaseTables()
+  handleGetOptions()
 }
 
 /**
@@ -109,8 +164,20 @@ const handleSearchTable = () => {
  */
 const handleSelectedTable = (row: ColumnsStore.DataSourceOption) => {
   dataSource.value = row.tableName
+  columnStore.setDataSourceMode('table')
+  columnStore.setDatasetId(null)
+  columnStore.setDatasetName('')
   isPopoverVisible.value = false
-  if (row.tableName) emit('dataSource-change', row.tableName)
+  if (row.tableName) emit('dataSource-change', { mode: 'table', tableName: row.tableName })
+}
+
+const handleSelectedDataset = async (row: DatasetVo.DatasetListItem) => {
+  columnStore.setDataSourceMode('dataset')
+  columnStore.setDatasetId(row.id)
+  columnStore.setDatasetName(row.datasetName)
+  dataSource.value = row.baseTable
+  isPopoverVisible.value = false
+  emit('dataSource-change', { mode: 'dataset', dataset: row })
 }
 
 /**
@@ -120,6 +187,10 @@ const handleSelectedTable = (row: ColumnsStore.DataSourceOption) => {
  */
 const rowClassName = ({ row }: { row: DatabaseVo.GetDatabaseTablesOptions }) => {
   return row.tableName === dataSource.value ? 'is-selected' : ''
+}
+
+const datasetRowClassName = ({ row }: { row: DatasetVo.DatasetListItem }) => {
+  return row.id === columnStore.getDatasetId ? 'is-selected' : ''
 }
 
 /**
@@ -149,19 +220,66 @@ const handleGetDatabaseTables = async () => {
   }
 }
 
+const handleGetDatasets = async () => {
+  const result = await httpRequest<ApiResponseI<DatasetVo.DatasetListResponse>>('/api/getDatasets', {
+    method: 'POST',
+    body: {
+      page: 1,
+      pageSize: 100,
+      keyword: searchKeyword.value || '',
+      sortField: 'updateTime',
+      sortOrder: 'desc'
+    }
+  })
+  if (result.code === 200 && result.data) {
+    datasetOptions.value = result.data.list || []
+    nextTick(() => {
+      if (columnStore.getDatasetId && datasetTableRef.value) {
+        const currentRow = datasetOptions.value.find((item) => item.id === columnStore.getDatasetId)
+        if (currentRow) {
+          datasetTableRef.value.setCurrentRow(currentRow)
+        }
+      }
+    })
+  } else {
+    ElMessage.error(result.message || '获取数据集失败')
+    datasetOptions.value = []
+  }
+}
+
+const handleGetOptions = () => {
+  if (dataSourceMode.value === 'dataset') {
+    handleGetDatasets()
+    return
+  }
+  handleGetDatabaseTables()
+}
+
 /**
  * @desc 清空数据源
  * @returns {void}
  */
 const clearDataSource = () => {
   dataSource.value = ''
+  columnStore.setDataSourceMode('table')
+  columnStore.setDatasetId(null)
+  columnStore.setDatasetName('')
 }
 
 watch(
   () => isPopoverVisible.value,
   (visible) => {
     if (visible) {
-      handleGetDatabaseTables()
+      handleGetOptions()
+    }
+  }
+)
+
+watch(
+  () => dataSourceMode.value,
+  () => {
+    if (isPopoverVisible.value) {
+      handleGetOptions()
     }
   }
 )
@@ -213,6 +331,12 @@ watch(
   display: flex;
   align-items: center;
   margin-bottom: 4px;
+}
+
+.source-mode-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 :deep(.table-select-popover) {

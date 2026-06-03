@@ -1682,4 +1682,123 @@ INSERT INTO `user_role` (`id`, `user_id`, `role_id`, `create_time`, `created_by`
 INSERT INTO `user_role` (`id`, `user_id`, `role_id`, `create_time`, `created_by`) VALUES (3, 3, 3, '2026-05-26 18:03:16', 'system');
 COMMIT;
 
+-- ----------------------------
+-- Table structure for data_source
+-- ----------------------------
+DROP TABLE IF EXISTS `data_source`;
+CREATE TABLE `data_source` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `source_name` varchar(100) NOT NULL COMMENT '数据源名称',
+  `source_desc` varchar(500) DEFAULT NULL COMMENT '数据源描述',
+  `source_type` varchar(30) NOT NULL DEFAULT 'mysql' COMMENT '数据源类型',
+  `host` varchar(255) NOT NULL COMMENT '主机地址',
+  `port` int unsigned NOT NULL COMMENT '端口',
+  `database_name` varchar(100) NOT NULL COMMENT '数据库名称',
+  `username` varchar(100) NOT NULL COMMENT '用户名',
+  `status` varchar(20) NOT NULL DEFAULT 'enabled' COMMENT '状态：enabled/disabled',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `created_by` varchar(100) DEFAULT NULL COMMENT '创建人',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `updated_by` varchar(100) DEFAULT NULL COMMENT '更新人',
+  `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_data_source_name` (`source_name`),
+  KEY `idx_data_source_status` (`status`),
+  KEY `idx_data_source_update_time` (`update_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据源表';
+
+-- ----------------------------
+-- Records of data_source
+-- ----------------------------
+BEGIN;
+INSERT INTO `data_source` (`id`, `source_name`, `source_desc`, `source_type`, `host`, `port`, `database_name`, `username`, `status`, `create_time`, `created_by`, `update_time`, `updated_by`, `is_deleted`) VALUES (1, '业务数据源', '内置业务分析库，对应 kanban_data。', 'mysql', 'mysql-data', 3306, 'kanban_data', 'root', 'enabled', NOW(), 'system', NOW(), 'system', 0);
+COMMIT;
+
+-- ----------------------------
+-- Table structure for data_source_table
+-- ----------------------------
+DROP TABLE IF EXISTS `data_source_table`;
+CREATE TABLE `data_source_table` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `data_source_id` bigint unsigned NOT NULL COMMENT '数据源ID',
+  `table_name` varchar(128) NOT NULL COMMENT '表名',
+  `table_comment` varchar(500) DEFAULT NULL COMMENT '表备注',
+  `table_rows` bigint unsigned DEFAULT '0' COMMENT '表行数',
+  `last_sync_time` datetime DEFAULT NULL COMMENT '最近同步时间',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_data_source_table` (`data_source_id`,`table_name`),
+  KEY `idx_data_source_table_name` (`table_name`),
+  CONSTRAINT `fk_data_source_table_source_id` FOREIGN KEY (`data_source_id`) REFERENCES `data_source` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据源表元数据';
+
+-- ----------------------------
+-- Table structure for data_source_column
+-- ----------------------------
+DROP TABLE IF EXISTS `data_source_column`;
+CREATE TABLE `data_source_column` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `data_source_id` bigint unsigned NOT NULL COMMENT '数据源ID',
+  `table_name` varchar(128) NOT NULL COMMENT '表名',
+  `column_name` varchar(128) NOT NULL COMMENT '字段名',
+  `column_type` varchar(100) NOT NULL COMMENT '字段类型',
+  `column_comment` varchar(500) DEFAULT NULL COMMENT '字段备注',
+  `nullable` varchar(10) DEFAULT NULL COMMENT '是否允许为空',
+  `ordinal_position` int unsigned DEFAULT '0' COMMENT '字段顺序',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_data_source_column` (`data_source_id`,`table_name`,`column_name`),
+  KEY `idx_data_source_column_table` (`data_source_id`,`table_name`),
+  CONSTRAINT `fk_data_source_column_source_id` FOREIGN KEY (`data_source_id`) REFERENCES `data_source` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据源字段元数据';
+
+-- ----------------------------
+-- Table structure for dataset
+-- ----------------------------
+DROP TABLE IF EXISTS `dataset`;
+CREATE TABLE `dataset` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `dataset_name` varchar(100) NOT NULL COMMENT '数据集名称',
+  `dataset_desc` varchar(500) DEFAULT NULL COMMENT '数据集描述',
+  `data_source_id` bigint unsigned NOT NULL COMMENT '数据源ID',
+  `base_table` varchar(128) NOT NULL COMMENT '基础表名',
+  `status` varchar(20) NOT NULL DEFAULT 'enabled' COMMENT '状态：enabled/disabled',
+  `current_config_id` bigint unsigned DEFAULT NULL COMMENT '当前配置版本ID',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `created_by` varchar(100) DEFAULT NULL COMMENT '创建人',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `updated_by` varchar(100) DEFAULT NULL COMMENT '更新人',
+  `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_dataset_name` (`dataset_name`),
+  KEY `idx_dataset_data_source` (`data_source_id`),
+  KEY `idx_dataset_update_time` (`update_time`),
+  CONSTRAINT `fk_dataset_data_source_id` FOREIGN KEY (`data_source_id`) REFERENCES `data_source` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据集表';
+
+-- ----------------------------
+-- Table structure for dataset_config
+-- ----------------------------
+DROP TABLE IF EXISTS `dataset_config`;
+CREATE TABLE `dataset_config` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `dataset_id` bigint unsigned NOT NULL COMMENT '数据集ID',
+  `version_no` int unsigned NOT NULL COMMENT '版本号',
+  `fields_config` json DEFAULT NULL COMMENT '字段配置快照',
+  `change_note` varchar(255) DEFAULT NULL COMMENT '版本说明',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `created_by` varchar(100) DEFAULT NULL COMMENT '创建人',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_dataset_version` (`dataset_id`,`version_no`),
+  KEY `idx_dataset_config_dataset_id` (`dataset_id`),
+  KEY `idx_dataset_config_create_time` (`create_time`),
+  CONSTRAINT `fk_dataset_config_dataset_id` FOREIGN KEY (`dataset_id`) REFERENCES `dataset` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据集配置历史版本表';
+
 SET FOREIGN_KEY_CHECKS = 1;

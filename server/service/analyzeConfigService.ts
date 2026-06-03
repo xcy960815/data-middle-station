@@ -83,6 +83,46 @@ export class AnalyzeConfigService extends BaseService {
     })
   }
 
+  public async cleanRuntimeValidationFields(): Promise<AnalyzeConfigVo.CleanRuntimeValidationFieldsResponse> {
+    const configs = await this.analyzeConfigMapper.getAnalyzeConfigsWithRuntimeValidationFields()
+    let updatedCount = 0
+    let removedFieldCount = 0
+
+    for (const config of configs) {
+      const columnsResult = this.removeRuntimeValidationFields(config.columns || [])
+      const dimensionsResult = this.removeRuntimeValidationFields(config.dimensions || [])
+      const filtersResult = this.removeRuntimeValidationFields(config.filters || [])
+      const groupsResult = this.removeRuntimeValidationFields(config.groups || [])
+      const ordersResult = this.removeRuntimeValidationFields(config.orders || [])
+      const removedCount =
+        columnsResult.removedCount +
+        dimensionsResult.removedCount +
+        filtersResult.removedCount +
+        groupsResult.removedCount +
+        ordersResult.removedCount
+
+      if (!removedCount) continue
+
+      const updated = await this.analyzeConfigMapper.updateAnalyzeConfigRuntimeFields(config.id, {
+        columns: columnsResult.data as AnalyzeConfigDao.ColumnItem[],
+        dimensions: dimensionsResult.data as AnalyzeConfigDao.DimensionOption[],
+        filters: filtersResult.data as AnalyzeConfigDao.FilterOption[],
+        groups: groupsResult.data as AnalyzeConfigDao.GroupOption[],
+        orders: ordersResult.data as AnalyzeConfigDao.OrderOption[]
+      })
+      if (updated) {
+        updatedCount += 1
+        removedFieldCount += removedCount
+      }
+    }
+
+    return {
+      scannedCount: configs.length,
+      updatedCount,
+      removedFieldCount
+    }
+  }
+
   private normalizeConfigRecord(
     configRecord: AnalyzeConfigDao.AnalyzeConfigRecord
   ): AnalyzeConfigDao.AnalyzeConfigRecord {
@@ -93,6 +133,45 @@ export class AnalyzeConfigService extends BaseService {
       filters: configRecord.filters || [],
       groups: configRecord.groups || [],
       orders: configRecord.orders || []
+    }
+  }
+
+  private removeRuntimeValidationFields<T>(data: T): { data: T; removedCount: number } {
+    if (Array.isArray(data)) {
+      let removedCount = 0
+      const cleanedArray = data.map((item) => {
+        const result = this.removeRuntimeValidationFields(item)
+        removedCount += result.removedCount
+        return result.data
+      })
+      return {
+        data: cleanedArray as T,
+        removedCount
+      }
+    }
+
+    if (!data || typeof data !== 'object') {
+      return {
+        data,
+        removedCount: 0
+      }
+    }
+
+    let removedCount = 0
+    const cleanedObject: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      if (key === '__invalid' || key === '__invalidMessage') {
+        removedCount += 1
+        continue
+      }
+      const result = this.removeRuntimeValidationFields(value)
+      cleanedObject[key] = result.data
+      removedCount += result.removedCount
+    }
+
+    return {
+      data: cleanedObject as T,
+      removedCount
     }
   }
 }

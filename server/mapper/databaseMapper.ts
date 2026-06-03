@@ -79,6 +79,12 @@ export class TableColumnMapping implements DatabaseDao.TableColumnRecord, IColum
   @Column('COLUMN_COMMENT')
   columnComment!: string
 
+  @Column('IS_NULLABLE')
+  nullable!: string
+
+  @Column('ORDINAL_POSITION')
+  ordinalPosition!: number
+
   /**
    * @desc 列映射
    */
@@ -100,6 +106,10 @@ export class DatabaseMapper extends BaseMapper {
    * @desc 当前 mapper 使用的数据源名称（与 schema 同名）
    */
   public dataSourceName = tableSchema
+
+  public override async exe<T>(sql: string, params?: Array<any>): Promise<T> {
+    return await super.exe<T>(sql, params)
+  }
   /**
    * @desc 查询当前 schema 下的所有基础表
    * @param getTableRequest 表列表查询条件（支持按表名模糊搜索）
@@ -149,12 +159,15 @@ export class DatabaseMapper extends BaseMapper {
     const sql = `SELECT
         column_name,
         column_type,
-        column_comment
+        column_comment,
+        is_nullable,
+        ordinal_position
       FROM
         information_schema.columns
       WHERE
         table_name = ?
-        AND table_schema = ?;`
+        AND table_schema = ?
+      ORDER BY ordinal_position ASC;`
     const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsParams.tableName), tableSchema])
     return result
   }

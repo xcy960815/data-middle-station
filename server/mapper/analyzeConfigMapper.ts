@@ -155,4 +155,45 @@ export class AnalyzeConfigMapper extends BaseMapper {
     const result = await this.exe<ResultSetHeader>(sql, [deleteParams.updateTime, deleteParams.analyzeId])
     return result.affectedRows > 0
   }
+
+  public async getAnalyzeConfigsWithRuntimeValidationFields<
+    T extends AnalyzeConfigDao.AnalyzeConfigRecord = AnalyzeConfigDao.AnalyzeConfigRecord
+  >(): Promise<Array<T>> {
+    const sql = `
+      select ${batchFormatSqlKey(ANALYZE_CONFIG_FIELDS)}
+      from ${ANALYZE_CONFIG_TABLE_NAME}
+      where is_deleted = 0
+        and (
+          cast(columns as char) like '%__invalid%'
+          or cast(dimensions as char) like '%__invalid%'
+          or cast(filters as char) like '%__invalid%'
+          or cast(\`groups\` as char) like '%__invalid%'
+          or cast(\`orders\` as char) like '%__invalid%'
+        )`
+    return await this.exe<Array<T>>(sql)
+  }
+
+  public async updateAnalyzeConfigRuntimeFields(
+    configId: number,
+    updateParams: Pick<AnalyzeConfigDao.AnalyzeConfigRecord, 'columns' | 'dimensions' | 'filters' | 'groups' | 'orders'>
+  ): Promise<boolean> {
+    const sql = `
+      update ${ANALYZE_CONFIG_TABLE_NAME}
+      set columns = ?,
+          dimensions = ?,
+          filters = ?,
+          \`groups\` = ?,
+          \`orders\` = ?,
+          update_time = now()
+      where id = ? and is_deleted = 0`
+    const result = await this.exe<ResultSetHeader>(sql, [
+      JSON.stringify(updateParams.columns || []),
+      JSON.stringify(updateParams.dimensions || []),
+      JSON.stringify(updateParams.filters || []),
+      JSON.stringify(updateParams.groups || []),
+      JSON.stringify(updateParams.orders || []),
+      configId
+    ])
+    return result.affectedRows > 0
+  }
 }

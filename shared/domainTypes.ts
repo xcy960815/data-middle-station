@@ -1,4 +1,4 @@
-export const RESOURCE_TYPES = ['analyze', 'dashboard', 'datasource', 'folder', 'scheduled_email'] as const
+export const RESOURCE_TYPES = ['analyze', 'dashboard', 'datasource', 'dataset', 'folder', 'scheduled_email'] as const
 
 export type ResourceType = (typeof RESOURCE_TYPES)[number]
 

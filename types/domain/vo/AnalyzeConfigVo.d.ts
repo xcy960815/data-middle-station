@@ -101,6 +101,12 @@ declare namespace AnalyzeConfigVo {
 
   type ChartConfigResponse = AnalyzeConfigResponse
 
+  type CleanRuntimeValidationFieldsResponse = {
+    scannedCount: number
+    updatedCount: number
+    removedFieldCount: number
+  }
+
   /**
    * @desc 饼图配置
    */

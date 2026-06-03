@@ -10,7 +10,12 @@ declare namespace AnalyzeConfigDao {
   /**
    * 列配置
    */
-  type ColumnItem = DatabaseDao.TableColumnRecord & { displayName: string }
+  type ColumnItem = DatabaseDao.TableColumnRecord & {
+    displayName: string
+    datasetFieldName?: string
+    datasetFieldType?: DatasetDao.DatasetFieldType
+    datasetAggregationType?: import('@/shared/domainTypes').OrderAggregationType
+  }
 
   /**
    * 维度配置
@@ -95,6 +100,18 @@ declare namespace AnalyzeConfigDao {
    * @desc 图表公共配置
    */
   type CommonChartConfig = {
+    /**
+     * 数据来源类型
+     */
+    dataSourceMode?: 'table' | 'dataset'
+    /**
+     * 数据集ID
+     */
+    datasetId?: number | null
+    /**
+     * 数据集名称
+     */
+    datasetName?: string
     /**
      * 分析描述
      */

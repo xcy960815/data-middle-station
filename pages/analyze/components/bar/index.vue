@@ -236,6 +236,9 @@ const handleSwitchVersion = async (versionItem: AnalyzeConfigVo.AnalyzeConfigRes
     chartConfigStore.setCommonChartConfig(versionItem.commonChartConfig || chartConfigStore.$state.commonChartConfig)
     chartConfigStore.setPrivateChartConfig(versionItem.privateChartConfig || chartConfigStore.$state.privateChartConfig)
     columnStore.setDataSource(versionItem.dataSource || '')
+    columnStore.setDataSourceMode(versionItem.commonChartConfig?.dataSourceMode || 'table')
+    columnStore.setDatasetId(versionItem.commonChartConfig?.datasetId || null)
+    columnStore.setDatasetName(versionItem.commonChartConfig?.datasetName || '')
   } finally {
     analyzeStore.setEditorHydrating(false)
     versionSwitching.value = false

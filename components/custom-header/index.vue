@@ -21,6 +21,10 @@ const route = useRoute()
 const router = useRouter()
 
 const appNameTargetPath = computed(() => {
+  if (route.path.startsWith('/data-source') || route.path.startsWith('/dataset')) {
+    return '/dataset'
+  }
+
   if (route.path.startsWith('/dashboard')) {
     return '/dashboard'
   }

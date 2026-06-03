@@ -13,6 +13,9 @@ export const useColumnsStore = defineStore<
    */
   state: () => ({
     dataSource: '',
+    dataSourceMode: 'table' as ColumnsStore.DataSourceMode,
+    datasetId: null as number | null,
+    datasetName: '',
     dataSourceOptions: [],
     columns: []
   }),
@@ -33,6 +36,24 @@ export const useColumnsStore = defineStore<
      */
     getDataSource(state): string {
       return state.dataSource
+    },
+    /**
+     * @desc 返回数据来源类型
+     */
+    getDataSourceMode(state): ColumnsStore.DataSourceMode {
+      return state.dataSourceMode
+    },
+    /**
+     * @desc 返回数据集ID
+     */
+    getDatasetId(state): number | null {
+      return state.datasetId
+    },
+    /**
+     * @desc 返回数据集名称
+     */
+    getDatasetName(state): string {
+      return state.datasetName
     },
     /**
      * @desc 返回数据源选项
@@ -70,6 +91,24 @@ export const useColumnsStore = defineStore<
      */
     setDataSource(dataSource: string) {
       this.dataSource = dataSource
+    },
+    /**
+     * @desc 更新数据来源类型
+     */
+    setDataSourceMode(dataSourceMode: ColumnsStore.DataSourceMode) {
+      this.dataSourceMode = dataSourceMode
+    },
+    /**
+     * @desc 更新数据集ID
+     */
+    setDatasetId(datasetId: number | null) {
+      this.datasetId = datasetId
+    },
+    /**
+     * @desc 更新数据集名称
+     */
+    setDatasetName(datasetName: string) {
+      this.datasetName = datasetName
     },
     /**
      * @desc 删除数据源

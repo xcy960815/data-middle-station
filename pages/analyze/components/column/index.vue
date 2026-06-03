@@ -1,7 +1,7 @@
 <template>
   <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
     <!-- 数据源 -->
-    <DataSourceSelector @dataSource-change="queryTableColumn" />
+    <DataSourceSelector @dataSource-change="handleDataSourceChange" />
     <div class="column__title py-2">维度</div>
     <div class="column__content">
       <div
@@ -66,6 +66,16 @@ const STRING_ICON_NAME = 'text'
 const columnDisplayNames = (column: ColumnsStore.ColumnOptions) => {
   return column.displayName || column.columnName
 }
+
+type AnalyzeDataSourceChangePayload =
+  | {
+      mode: 'table'
+      tableName: string
+    }
+  | {
+      mode: 'dataset'
+      dataset: DatasetVo.DatasetListItem
+    }
 
 /**
  * @desc 列类名
@@ -332,6 +342,9 @@ watch(
       chartConfigStore.setPrivateChartConfig(null)
       // 如果数据源为空，清空图表配置条件
       columnStore.setColumns([])
+      columnStore.setDataSourceMode('table')
+      columnStore.setDatasetId(null)
+      columnStore.setDatasetName('')
     }
     // else {
     //   await queryTableColumn(newDataSource)
@@ -373,6 +386,68 @@ const queryTableColumn = async (tableName: string) => {
   } else {
     columnStore.setDataSourceOptions([])
   }
+}
+
+const clearAnalyzeSelections = () => {
+  analyzeStore.setAnalyzeData([])
+  filterStore.setFilters([])
+  orderStore.setOrders([])
+  groupStore.setGroups([])
+  dimensionStore.setDimensions([])
+}
+
+const mapDatasetFieldToColumn = (field: DatasetDao.DatasetFieldConfigItem): ColumnsStore.ColumnOptions => {
+  return {
+    columnName: field.sourceColumnName,
+    columnType: field.dataType,
+    columnComment: field.displayName || field.sourceColumnName,
+    displayName: field.displayName || field.sourceColumnName,
+    datasetFieldName: field.fieldName,
+    datasetFieldType: field.fieldType,
+    datasetAggregationType: field.aggregationType || undefined
+  } as ColumnsStore.ColumnOptions
+}
+
+const queryDatasetColumns = async (datasetId: number) => {
+  const result = await httpRequest<ApiResponseI<DatasetVo.DatasetDetailResponse>>('/api/getDataset', {
+    method: 'POST',
+    body: {
+      id: datasetId
+    }
+  })
+  if (result.code === 200 && result.data) {
+    const columns = (result.data.fieldsConfig || []).filter((field) => field.visible).map(mapDatasetFieldToColumn)
+    columnStore.setDataSource(result.data.baseTable || '')
+    columnStore.setDataSourceMode('dataset')
+    columnStore.setDatasetId(result.data.id)
+    columnStore.setDatasetName(result.data.datasetName)
+    columnStore.setColumns(columns)
+    return
+  }
+  columnStore.setColumns([])
+}
+
+const handleDataSourceChange = async (payload: string | AnalyzeDataSourceChangePayload) => {
+  if (typeof payload === 'string') {
+    clearAnalyzeSelections()
+    columnStore.setDataSourceMode('table')
+    columnStore.setDatasetId(null)
+    columnStore.setDatasetName('')
+    await queryTableColumn(payload)
+    return
+  }
+
+  if (payload.mode === 'dataset') {
+    clearAnalyzeSelections()
+    await queryDatasetColumns(payload.dataset.id)
+    return
+  }
+
+  clearAnalyzeSelections()
+  columnStore.setDataSourceMode('table')
+  columnStore.setDatasetId(null)
+  columnStore.setDatasetName('')
+  await queryTableColumn(payload.tableName)
 }
 </script>
 

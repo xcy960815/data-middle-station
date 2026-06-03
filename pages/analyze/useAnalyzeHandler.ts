@@ -33,6 +33,9 @@ export const useAnalyzeHandler = () => {
       chartConfig?.privateChartConfig || chartConfigStore.$state.privateChartConfig
     )
     columnStore.setDataSource(chartConfig?.dataSource || '')
+    columnStore.setDataSourceMode(chartConfig?.commonChartConfig?.dataSourceMode || 'table')
+    columnStore.setDatasetId(chartConfig?.commonChartConfig?.datasetId || null)
+    columnStore.setDatasetName(chartConfig?.commonChartConfig?.datasetName || '')
     analyzeStore.setLastSavedSnapshot(serializeAnalyzeDraft())
     analyzeStore.setEditorDirty(false)
     analyzeStore.setLastSavedAt(data.updateTime || '')

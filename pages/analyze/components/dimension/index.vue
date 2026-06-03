@@ -29,8 +29,8 @@
           :displayName="dimension.displayName"
           :dimension="dimension"
           :index="index"
-          :invalid="dimension.__invalid"
-          :invalidMessage="dimension.__invalidMessage"
+          :invalid="getDimensionInvalid(dimension)"
+          :invalidMessage="getDimensionInvalidMessage(dimension)"
         >
         </selector-dimension>
       </div>
@@ -122,6 +122,33 @@ const groupList = computed<GroupStore.GroupState['groups']>(() => {
   return groupStore.getGroups
 })
 
+const dimensionColumnCountMap = computed(() => {
+  return dimensions.value.reduce<Record<string, number>>((countMap, item) => {
+    if (!item.columnName) return countMap
+    countMap[item.columnName] = (countMap[item.columnName] || 0) + 1
+    return countMap
+  }, {})
+})
+
+const groupColumnSet = computed(() => {
+  return new Set(groupList.value.map((item) => item.columnName).filter(Boolean))
+})
+
+const getDimensionInvalid = (dimension: DimensionStore.DimensionOption) => {
+  return getDimensionInvalidMessage(dimension) !== ''
+}
+
+const getDimensionInvalidMessage = (dimension: DimensionStore.DimensionOption) => {
+  if (!dimension.columnName) return ''
+  if ((dimensionColumnCountMap.value[dimension.columnName] || 0) > 1) {
+    return '该值已存在'
+  }
+  if (groupColumnSet.value.has(dimension.columnName)) {
+    return '该字段已在分组中使用'
+  }
+  return ''
+}
+
 /**
  * @desc addDimension 添加维度
  * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
@@ -198,8 +225,6 @@ const dropHandler = (dragEvent: DragEvent) => {
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const dimensionOption: DimensionStore.DimensionOption = {
     ...data.value,
-    __invalid: false,
-    __invalidMessage: '',
     fixed: null,
     align: null,
     width: null,
@@ -208,17 +233,6 @@ const dropHandler = (dragEvent: DragEvent) => {
     sortable: false
   }
 
-  const isSelected = dimensionStore.getDimensions.find((item) => item.columnName === dimensionOption.columnName)
-  if (isSelected) {
-    dimensionOption.__invalid = true
-    dimensionOption.__invalidMessage = '该维度已存在'
-  }
-  // 判断是否跟groupList中的字段相同
-  const isInGroup = groupList.value.find((item) => item.columnName === dimensionOption.columnName)
-  if (isInGroup) {
-    dimensionOption.__invalid = true
-    dimensionOption.__invalidMessage = '该维度已存在'
-  }
   const index = data.index
   switch (data.from) {
     case 'dimensions': {
