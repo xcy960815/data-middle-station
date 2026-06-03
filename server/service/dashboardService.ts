@@ -4,9 +4,11 @@ import { DashboardMapper } from '@/server/mapper/dashboardMapper'
 import { ResourcePermissionService } from '@/server/service/resourcePermissionService'
 
 const DEFAULT_LAYOUT_CONFIG: DashboardDao.LayoutConfig = {
-  columnCount: 12,
-  rowHeight: 120
+  columnCount: 24,
+  rowHeight: 60
 }
+const MIN_WIDGET_WIDTH = 1
+const MIN_WIDGET_HEIGHT = 1
 
 export class DashboardService extends BaseService {
   private dashboardMapper: DashboardMapper
@@ -182,16 +184,20 @@ export class DashboardService extends BaseService {
   private normalizeWidgets(
     widgets: DashboardDto.DashboardWidgetPayload[]
   ): DashboardDao.ReplaceDashboardWidgetParams['widgets'] {
-    return widgets.map((widget) => ({
-      analyzeId: Number(widget.analyzeId),
-      widgetTitle: widget.widgetTitle || '',
-      x: Math.max(0, Math.floor(Number(widget.x || 0))),
-      y: Math.max(0, Math.floor(Number(widget.y || 0))),
-      w: Math.min(12, Math.max(1, Math.floor(Number(widget.w || 4)))),
-      h: Math.max(1, Math.floor(Number(widget.h || 3))),
-      chartType: widget.chartType || 'table',
-      refreshInterval: Math.max(0, Math.floor(Number(widget.refreshInterval || 0))),
-      widgetConfig: widget.widgetConfig || {}
-    }))
+    const columnCount = DEFAULT_LAYOUT_CONFIG.columnCount
+    return widgets.map((widget) => {
+      const w = Math.min(columnCount, Math.max(MIN_WIDGET_WIDTH, Math.floor(Number(widget.w || 4))))
+      return {
+        analyzeId: Number(widget.analyzeId),
+        widgetTitle: widget.widgetTitle || '',
+        x: Math.min(columnCount - w, Math.max(0, Math.floor(Number(widget.x || 0)))),
+        y: Math.max(0, Math.floor(Number(widget.y || 0))),
+        w,
+        h: Math.max(MIN_WIDGET_HEIGHT, Math.floor(Number(widget.h || 3))),
+        chartType: widget.chartType || 'table',
+        refreshInterval: Math.max(0, Math.floor(Number(widget.refreshInterval || 0))),
+        widgetConfig: widget.widgetConfig || {}
+      }
+    })
   }
 }

@@ -14,7 +14,6 @@
 | `DimensionStore.d.ts`   | 定义管理数据维度的类型。                                                       |
 | `FilterStore.d.ts`      | 定义数据过滤操作的类型。                                                       |
 | `GroupStore.d.ts`       | 定义数据分组操作的类型。                                                       |
-| `HomePageStore.d.ts`    | 定义与主页状态相关的类型。                                                     |
 | `OrderStore.d.ts`       | 定义数据排序和顺序的类型。                                                     |
 | `UserStore.d.ts`        | 定义用户 store 的类型，包括用户个人资料信息（ID、姓名、头像）。                |
 

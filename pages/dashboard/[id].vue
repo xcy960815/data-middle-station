@@ -97,6 +97,7 @@
             @dragover.prevent="handleCanvasDragOver"
             @drop="handleDropAnalyze"
           >
+            <div v-if="editorMode" class="dashboard-canvas-spacer" :style="getCanvasSpacerStyle()"></div>
             <div
               v-for="widget in widgets"
               :key="widget.localId"
@@ -107,9 +108,22 @@
                 <span class="dashboard-widget__title" @click.stop="handleOpenAnalyze(widget)">
                   {{ widget.widgetTitle }}
                 </span>
-                <div v-if="editorMode" class="dashboard-widget__actions">
-                  <el-button text size="small" @click.stop="handleRefreshWidget(widget)">刷新</el-button>
-                  <el-button text size="small" type="danger" @click.stop="handleRemoveWidget(widget)">删除</el-button>
+                <div class="dashboard-widget__actions">
+                  <el-tooltip content="打开分析" placement="top">
+                    <button
+                      class="dashboard-widget__icon-button"
+                      type="button"
+                      :disabled="!widget.analyzeId"
+                      @click.stop="handleOpenAnalyzeInNewTab(widget)"
+                      @pointerdown.stop
+                    >
+                      <icon-park type="PreviewOpen" size="14" fill="currentColor" />
+                    </button>
+                  </el-tooltip>
+                  <template v-if="editorMode">
+                    <el-button text size="small" @click.stop="handleRefreshWidget(widget)">刷新</el-button>
+                    <el-button text size="small" type="danger" @click.stop="handleRemoveWidget(widget)">删除</el-button>
+                  </template>
                 </div>
               </div>
               <div class="dashboard-widget__body">
@@ -124,11 +138,15 @@
                   :private-chart-config="widget.privateChartConfig"
                 />
               </div>
-              <div
-                v-if="editorMode"
-                class="dashboard-widget__resize"
-                @pointerdown="handleWidgetResizeStart($event, widget)"
-              ></div>
+              <template v-if="editorMode">
+                <div
+                  v-for="handle in resizeHandles"
+                  :key="handle"
+                  class="dashboard-widget__resize"
+                  :class="`dashboard-widget__resize--${handle}`"
+                  @pointerdown="handleWidgetResizeStart($event, widget, handle)"
+                ></div>
+              </template>
             </div>
             <el-empty
               v-if="widgets.length === 0"
@@ -144,6 +162,7 @@
 
 <script setup lang="ts">
 import { httpRequest } from '@/composables/useHttpRequest'
+import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import DashboardWidgetChart from './components/dashboard-widget-chart.vue'
 
@@ -158,12 +177,19 @@ type DashboardWidgetState = DashboardDto.DashboardWidgetPayload & {
   analyze: AnalyzeVo.AnalyzeDetailResponse | null
 }
 
+type ResizeHandle = 'n' | 'e' | 's' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+
 const layoutName = 'dashboard'
 const route = useRoute()
 const router = useRouter()
-const GRID_COLUMNS = 12
-const ROW_HEIGHT = 120
+const GRID_COLUMNS = 24
+const ROW_HEIGHT = 60
 const GRID_GAP = 12
+const CANVAS_BOTTOM_SPACE = 320
+const CANVAS_HORIZONTAL_PADDING = 28
+const MIN_WIDGET_WIDTH = 2
+const MIN_WIDGET_HEIGHT = 2
+const resizeHandles: ResizeHandle[] = ['n', 'e', 's', 'w', 'ne', 'nw', 'se', 'sw']
 
 const dashboardId = computed(() => Number(route.params.id))
 const activeDashboard = ref<DashboardVo.DashboardDetailResponse | null>(null)
@@ -193,13 +219,23 @@ const permissionLevelMap: Record<PermissionVo.ResourcePermissionType, number> = 
   edit: 2,
   manage: 3
 }
+const chartTypeSet = new Set<AnalyzeStore.ChartType>(['table', 'line', 'pie', 'interval'])
 const canEditDashboard = computed(() => {
   return permissionLevelMap[activeDashboard.value?.dashboardPermission || 'none'] >= permissionLevelMap.edit
 })
 
+const normalizeChartType = (chartType?: string | null): AnalyzeStore.ChartType => {
+  return chartTypeSet.has(chartType as AnalyzeStore.ChartType) ? (chartType as AnalyzeStore.ChartType) : 'table'
+}
+
 const columnWidth = computed(() => {
-  const width = canvasWidth.value || 1
+  const width = Math.max(1, (canvasWidth.value || 1) - CANVAS_HORIZONTAL_PADDING)
   return (width - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS
+})
+
+const canvasContentBottom = computed(() => {
+  const maxBottom = widgets.value.length ? Math.max(...widgets.value.map((widget) => widget.y + widget.h)) : 0
+  return maxBottom * (ROW_HEIGHT + GRID_GAP)
 })
 
 const loadDashboardDetail = async () => {
@@ -241,11 +277,11 @@ const createWidgetState = (widget: DashboardVo.DashboardWidgetItem): DashboardWi
     localId: `${widget.id || 'new'}-${widget.analyzeId}-${Date.now()}-${Math.random()}`,
     analyzeId: widget.analyzeId,
     widgetTitle: widget.widgetTitle || widget.analyze?.analyzeName || '未命名分析',
-    x: widget.x,
-    y: widget.y,
-    w: widget.w,
-    h: widget.h,
-    chartType: widget.chartType || chartConfig?.chartType || 'table',
+    x: Math.max(0, Math.round(widget.x)),
+    y: Math.max(0, Math.round(widget.y)),
+    w: Math.min(GRID_COLUMNS, Math.max(MIN_WIDGET_WIDTH, Math.round(widget.w))),
+    h: Math.max(MIN_WIDGET_HEIGHT, Math.round(widget.h)),
+    chartType: normalizeChartType(widget.chartType || chartConfig?.chartType),
     refreshInterval: widget.refreshInterval || 0,
     widgetConfig: widget.widgetConfig || {},
     analyze: widget.analyze,
@@ -371,9 +407,9 @@ const handleAddAnalyze = async (analyze: AnalyzeVo.AnalyzeListItem, position?: {
     widgetTitle: res.data.analyzeName,
     x: nextPosition.x,
     y: nextPosition.y,
-    w: 4,
-    h: 3,
-    chartType: res.data.chartConfig?.chartType || 'table',
+    w: 8,
+    h: 6,
+    chartType: normalizeChartType(res.data.chartConfig?.chartType),
     refreshInterval: 0,
     widgetConfig: {},
     createTime: '',
@@ -395,7 +431,7 @@ const getDropGridPosition = (event: DragEvent) => {
   const gridX = Math.round(pointerX / (columnWidth.value + GRID_GAP))
   const gridY = Math.round(pointerY / (ROW_HEIGHT + GRID_GAP))
   return {
-    x: Math.min(GRID_COLUMNS - 4, Math.max(0, gridX)),
+    x: Math.min(GRID_COLUMNS - 8, Math.max(0, gridX)),
     y: Math.max(0, gridY)
   }
 }
@@ -406,22 +442,34 @@ const getNextWidgetPosition = () => {
   return { x: 0, y: maxBottom }
 }
 
+const buildWidgetAnalyzeDataParams = (
+  chartConfig: AnalyzeConfigVo.ChartConfigResponse
+): AnalyzeDataDto.AnalyzeDataQuery => {
+  return {
+    dataSource: chartConfig.dataSource,
+    filters: (chartConfig.filters || []).filter(
+      (item) => item.aggregationType && (item.filterType || item.filterValue)
+    ),
+    orders: (chartConfig.orders || []).filter((item) => item.aggregationType || item.orderType),
+    groups: chartConfig.groups || [],
+    dimensions: chartConfig.dimensions || [],
+    commonChartConfig: chartConfig.commonChartConfig
+  }
+}
+
 const loadWidgetData = async (widget: DashboardWidgetState) => {
   const chartConfig = widget.analyze?.chartConfig
-  if (!chartConfig) return
+  if (!chartConfig) {
+    widget.data = []
+    widget.errorMessage = '分析配置不存在'
+    return
+  }
   widget.loading = true
   widget.errorMessage = ''
   try {
     const res = await httpRequest<ApiResponseI<AnalyzeDataVo.AnalyzeData[]>>('/api/getAnalyzeData', {
       method: 'POST',
-      body: {
-        dataSource: chartConfig.dataSource,
-        filters: chartConfig.filters || [],
-        orders: chartConfig.orders || [],
-        groups: chartConfig.groups || [],
-        dimensions: chartConfig.dimensions || [],
-        commonChartConfig: chartConfig.commonChartConfig
-      }
+      body: buildWidgetAnalyzeDataParams(chartConfig)
     })
     if (res.code === 200) {
       widget.data = res.data || []
@@ -429,6 +477,9 @@ const loadWidgetData = async (widget: DashboardWidgetState) => {
       widget.data = []
       widget.errorMessage = res.message || '查询失败'
     }
+  } catch (error) {
+    widget.data = []
+    widget.errorMessage = error instanceof Error ? error.message : '查询失败'
   } finally {
     widget.loading = false
   }
@@ -442,9 +493,15 @@ const handleRemoveWidget = (widget: DashboardWidgetState) => {
   widgets.value = widgets.value.filter((item) => item.localId !== widget.localId)
 }
 
-const handleOpenAnalyze = (widget: DashboardWidgetState) => {
-  if (editorMode.value || !widget.analyzeId) return
+const handleOpenAnalyze = (widget: DashboardWidgetState, force = false) => {
+  if ((!force && editorMode.value) || !widget.analyzeId) return
   router.push(`/analyze/${widget.analyzeId}`)
+}
+
+const handleOpenAnalyzeInNewTab = (widget: DashboardWidgetState) => {
+  if (!widget.analyzeId) return
+  const routeLocation = router.resolve(`/analyze/${widget.analyzeId}`)
+  window.open(routeLocation.href, '_blank', 'noopener,noreferrer')
 }
 
 const handleSaveDashboard = async () => {
@@ -506,6 +563,13 @@ const getWidgetStyle = (widget: DashboardWidgetState) => {
   }
 }
 
+const getCanvasSpacerStyle = () => {
+  return {
+    top: `${canvasContentBottom.value}px`,
+    height: `${CANVAS_BOTTOM_SPACE}px`
+  }
+}
+
 const handleWidgetMoveStart = (event: PointerEvent, widget: DashboardWidgetState) => {
   if (!editorMode.value) return
   event.preventDefault()
@@ -532,22 +596,49 @@ const handleWidgetMoveStart = (event: PointerEvent, widget: DashboardWidgetState
   window.addEventListener('pointerup', handleEnd)
 }
 
-const handleWidgetResizeStart = (event: PointerEvent, widget: DashboardWidgetState) => {
+const handleWidgetResizeStart = (event: PointerEvent, widget: DashboardWidgetState, handle: ResizeHandle) => {
   if (!editorMode.value) return
   event.preventDefault()
   event.stopPropagation()
   const startX = event.clientX
   const startY = event.clientY
+  const startGridX = widget.x
+  const startGridY = widget.y
   const startW = widget.w
   const startH = widget.h
+  const startRight = startGridX + startW
+  const startBottom = startGridY + startH
 
   const handleMove = (moveEvent: PointerEvent) => {
     const deltaX = moveEvent.clientX - startX
     const deltaY = moveEvent.clientY - startY
-    const nextW = startW + Math.round(deltaX / (columnWidth.value + GRID_GAP))
-    const nextH = startH + Math.round(deltaY / (ROW_HEIGHT + GRID_GAP))
-    widget.w = Math.min(GRID_COLUMNS - widget.x, Math.max(2, nextW))
-    widget.h = Math.max(2, nextH)
+    const deltaGridX = Math.round(deltaX / (columnWidth.value + GRID_GAP))
+    const deltaGridY = Math.round(deltaY / (ROW_HEIGHT + GRID_GAP))
+    let nextX = startGridX
+    let nextY = startGridY
+    let nextRight = startRight
+    let nextBottom = startBottom
+
+    if (handle.includes('e')) {
+      nextRight = Math.min(GRID_COLUMNS, Math.max(startGridX + MIN_WIDGET_WIDTH, startRight + deltaGridX))
+    }
+
+    if (handle.includes('w')) {
+      nextX = Math.min(startRight - MIN_WIDGET_WIDTH, Math.max(0, startGridX + deltaGridX))
+    }
+
+    if (handle.includes('s')) {
+      nextBottom = Math.max(startGridY + MIN_WIDGET_HEIGHT, startBottom + deltaGridY)
+    }
+
+    if (handle.includes('n')) {
+      nextY = Math.min(startBottom - MIN_WIDGET_HEIGHT, Math.max(0, startGridY + deltaGridY))
+    }
+
+    widget.x = nextX
+    widget.y = nextY
+    widget.w = nextRight - nextX
+    widget.h = nextBottom - nextY
   }
 
   const handleEnd = () => {
@@ -746,15 +837,23 @@ onUnmounted(() => {
   position: relative;
   flex: 1 1 0;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 8px;
   background: #f3f4f6;
 }
 
 .dashboard-canvas--editing {
-  padding: 12px;
+  padding: 12px 16px 12px 12px;
   background-image: linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
   background-size: 32px 32px;
+}
+
+.dashboard-canvas-spacer {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  pointer-events: none;
 }
 
 .dashboard-widget {
@@ -800,6 +899,35 @@ onUnmounted(() => {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
+  gap: 4px;
+}
+
+.dashboard-widget__icon-button {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  color: #606266;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+
+  &:hover {
+    color: #409eff;
+    background: #ecf5ff;
+  }
+
+  &:disabled {
+    color: #c0c4cc;
+    cursor: not-allowed;
+    background: transparent;
+  }
 }
 
 .dashboard-widget__body {
@@ -811,22 +939,82 @@ onUnmounted(() => {
 
 .dashboard-widget__resize {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 16px;
-  height: 16px;
-  cursor: nwse-resize;
+  z-index: 3;
+}
 
-  &::after {
-    position: absolute;
-    right: 4px;
-    bottom: 4px;
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid #a8abb2;
-    border-bottom: 2px solid #a8abb2;
-    content: '';
-  }
+.dashboard-widget__resize--n,
+.dashboard-widget__resize--s {
+  left: 12px;
+  width: calc(100% - 24px);
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.dashboard-widget__resize--n {
+  top: -4px;
+}
+
+.dashboard-widget__resize--s {
+  bottom: -4px;
+}
+
+.dashboard-widget__resize--e,
+.dashboard-widget__resize--w {
+  top: 12px;
+  width: 8px;
+  height: calc(100% - 24px);
+  cursor: ew-resize;
+}
+
+.dashboard-widget__resize--e {
+  right: -4px;
+}
+
+.dashboard-widget__resize--w {
+  left: -4px;
+}
+
+.dashboard-widget__resize--ne,
+.dashboard-widget__resize--nw,
+.dashboard-widget__resize--se,
+.dashboard-widget__resize--sw {
+  width: 14px;
+  height: 14px;
+}
+
+.dashboard-widget__resize--ne {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+
+.dashboard-widget__resize--nw {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+
+.dashboard-widget__resize--se {
+  right: -5px;
+  bottom: -5px;
+  cursor: nwse-resize;
+}
+
+.dashboard-widget__resize--sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+
+.dashboard-widget__resize--se::after {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #a8abb2;
+  border-bottom: 2px solid #a8abb2;
+  content: '';
 }
 
 .dashboard-canvas-empty {

@@ -88,9 +88,6 @@ export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginResponse>>>(
       roleCodes
     })
 
-    RedisStorage.setItem(`userId`, String(user.id), 60 * 60 * 24 * 7)
-    RedisStorage.setItem(`userName`, user.userName, 60 * 60 * 24 * 7)
-    RedisStorage.setItem(`token`, token, 60 * 60 * 24 * 7)
     setCookie(event, JwtUtils.TOKEN_NAME, token, {
       httpOnly: true,
       path: '/',

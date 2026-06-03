@@ -41,7 +41,7 @@ export class DashboardMapping implements DashboardDao.DashboardRecord, IColumnTa
 
   @Column('layout_config')
   layoutConfig(value: string | DashboardDao.LayoutConfig | null): DashboardDao.LayoutConfig {
-    if (!value) return { columnCount: 12, rowHeight: 120 }
+    if (!value) return { columnCount: 24, rowHeight: 60 }
     if (typeof value === 'string') return JSON.parse(value)
     return value
   }

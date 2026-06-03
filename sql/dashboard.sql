@@ -74,7 +74,7 @@ INSERT INTO `dashboard` (
   1,
   '经营数据总览看板',
   '示例看板：组合销售、降雨、气温和用户渠道分析，用于验证拖拽布局、宽高调整和多分析渲染。',
-  JSON_OBJECT('columnCount', 12, 'rowHeight', 120),
+  JSON_OBJECT('columnCount', 24, 'rowHeight', 60),
   NOW(),
   'admin',
   NOW(),

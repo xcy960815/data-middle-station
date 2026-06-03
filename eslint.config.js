@@ -79,7 +79,6 @@ const commonGlobals = {
   ChartConfigStore: 'readonly',
   AnalyzeConfigVo: 'readonly',
   UserStore: 'readonly',
-  HomePageStore: 'readonly',
   BaseStore: 'readonly',
   DatabaseVo: 'readonly',
   AnalyzeVo: 'readonly',
@@ -121,7 +120,6 @@ const commonGlobals = {
   useOrdersStore: 'readonly',
   useChartConfigStore: 'readonly',
   useUserStore: 'readonly',
-  useHomepageStore: 'readonly',
   // Chart.js
   Chart: 'readonly',
   // Lodash

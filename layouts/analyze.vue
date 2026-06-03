@@ -3,45 +3,52 @@
   <div class="layout-analyze-main h-full w-full !flex !flex-col flex-1 border-box">
     <slot name="header"></slot>
     <div class="layout-analyze-body !flex flex-1 overflow-hidden">
-      <div class="layout-analyze-cloumn relative text-[14px]" @mousedown.prevent="handleCloumnMouseDown">
-        <slot name="cloumn"></slot>
-      </div>
-
-      <div class="layout-analyze-handler !flex flex-col !w-[180px] text-[12px] m-[14px]">
-        <div
-          class="layout-filter relative h-[130px] !w-full bg-[#f5f5f5] rounded-[4px] p-[7px]"
-          @mousedown.prevent="handleFilterMouseDown"
-        >
-          <slot name="filter"></slot>
+      <template v-if="$slots.content">
+        <div class="w-full h-full overflow-hidden">
+          <slot name="content"></slot>
         </div>
-        <div
-          class="layout-order relative h-[130px] !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]"
-          @mousedown.prevent="handleOrderMouseDown"
-        >
-          <slot name="order"></slot>
-        </div>
-        <div class="layout-analyze-dimension flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]">
-          <slot name="dimension"></slot>
-        </div>
-      </div>
-
-      <div class="layout-analyze-content m-[14px] ml-0 !flex flex-1 flex-col overflow-hidden">
-        <div class="layout-analyze-bar">
-          <slot name="bar"></slot>
+      </template>
+      <template v-else>
+        <div class="layout-analyze-cloumn relative text-[14px]" @mousedown.prevent="handleCloumnMouseDown">
+          <slot name="cloumn"></slot>
         </div>
 
-        <div class="layout-analyze-chart flex-1 overflow-hidden">
-          <slot name="chart"></slot>
+        <div class="layout-analyze-handler !flex flex-col !w-[180px] text-[12px] m-[14px]">
+          <div
+            class="layout-filter relative h-[130px] !w-full bg-[#f5f5f5] rounded-[4px] p-[7px]"
+            @mousedown.prevent="handleFilterMouseDown"
+          >
+            <slot name="filter"></slot>
+          </div>
+          <div
+            class="layout-order relative h-[130px] !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]"
+            @mousedown.prevent="handleOrderMouseDown"
+          >
+            <slot name="order"></slot>
+          </div>
+          <div class="layout-analyze-dimension flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]">
+            <slot name="dimension"></slot>
+          </div>
         </div>
 
-        <div class="layout-analyze-group bg-[#f5f5f5] text-[12px] h-[40px] rounded-[4px] p-[7px]">
-          <slot name="group"></slot>
+        <div class="layout-analyze-content m-[14px] ml-0 !flex flex-1 flex-col overflow-hidden">
+          <div class="layout-analyze-bar">
+            <slot name="bar"></slot>
+          </div>
+
+          <div class="layout-analyze-chart flex-1 overflow-hidden">
+            <slot name="chart"></slot>
+          </div>
+
+          <div class="layout-analyze-group bg-[#f5f5f5] text-[12px] h-[40px] rounded-[4px] p-[7px]">
+            <slot name="group"></slot>
+          </div>
         </div>
-      </div>
-      <div class="layout-analyze-chart-type !w-[140px] bg-[#f5f5f5]">
-        <slot name="chart-type"></slot>
-      </div>
-      <slot name="chart-config"></slot>
+        <div class="layout-analyze-chart-type !w-[140px] bg-[#f5f5f5]">
+          <slot name="chart-type"></slot>
+        </div>
+        <slot name="chart-config"></slot>
+      </template>
     </div>
   </div>
 </template>

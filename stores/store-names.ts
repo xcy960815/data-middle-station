@@ -1,5 +1,4 @@
 export enum StoreNames {
-  HOMEPAGE = 'homepage',
   ANALYZE = 'analyze',
   CONFIG = 'config',
   DIMENSIONS = 'dimensions',

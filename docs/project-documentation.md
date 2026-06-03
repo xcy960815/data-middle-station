@@ -69,7 +69,6 @@ data-middle-station/
 ├── pages/                # 页面组件
 │   ├── analyze/          # 数据分析页面
 │   ├── dashboard/        # 仪表盘页面
-│   ├── homepage/         # 首页
 │   └── ...              # 其他功能页面
 ├── plugins/              # 插件
 ├── public/               # 公共静态资源

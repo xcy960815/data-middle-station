@@ -19,9 +19,9 @@ export class BaseService {
    */
   protected async getDefaultInfo() {
     const currentUser = this.getCurrentUser()
-    const fallbackUserName = (await RedisStorage.getItem<string>(`userName`)) || 'system'
-    const createdBy = currentUser?.userName || fallbackUserName
-    const updatedBy = currentUser?.userName || fallbackUserName
+    const operator = currentUser?.userName || 'system'
+    const createdBy = operator
+    const updatedBy = operator
     const createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const updateTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
     return { createdBy, updatedBy, createTime, updateTime }

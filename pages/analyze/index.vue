@@ -16,8 +16,8 @@
       </custom-header>
     </template>
     <template #content>
-      <div class="homepage-page flex h-full min-h-0 flex-col overflow-hidden">
-        <div class="homepage-toolbar flex items-center gap-3 px-4 py-3">
+      <div class="analyze-list-page flex h-full min-h-0 flex-col overflow-hidden">
+        <div class="analyze-list-toolbar flex items-center gap-3 px-4 py-3">
           <el-input
             v-model="keyword"
             clearable
@@ -39,8 +39,8 @@
           <el-button @click="handleReset">重置</el-button>
         </div>
 
-        <div class="homepage-container relative h-full" v-loading="listLoading">
-          <chart-card
+        <div class="analyze-list-container relative h-full" v-loading="listLoading">
+          <analyze-card
             ref="cards"
             class="card-chart"
             v-for="chart in analyzeList"
@@ -57,16 +57,16 @@
             @edit="handleEditAnalyze"
             @permission="handleOpenPermissionDialog"
           >
-          </chart-card>
+          </analyze-card>
 
           <el-empty
             v-if="!listLoading && analyzeList.length === 0"
-            class="homepage-empty"
+            class="analyze-list-empty"
             description="暂无符合条件的分析"
           />
         </div>
 
-        <div class="homepage-pagination px-4 py-3 flex justify-end" v-if="total > 0">
+        <div class="analyze-list-pagination px-4 py-3 flex justify-end" v-if="total > 0">
           <el-pagination
             background
             layout="prev, pager, next, total"
@@ -130,10 +130,12 @@
 import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import ChartCard from '@/pages/homepage/components/chart-card.vue'
+import AnalyzeCard from '@/pages/analyze/components/analyze-card.vue'
 
-const layoutName = 'homepage'
-const homePageStore = useHomepageStore()
+const layoutName = 'analyze'
+const analyzeList = ref<AnalyzeVo.AnalyzeListItem[]>([])
+const total = ref(0)
+const listLoading = ref(false)
 const page = ref(1)
 const pageSize = ref(12)
 const keyword = ref('')
@@ -180,9 +182,6 @@ const addOrEditAnalyzeFormRules: FormRules = {
   ]
 }
 
-const analyzeList = computed(() => homePageStore.getAnalyzes)
-const total = computed(() => homePageStore.getTotal)
-const listLoading = computed(() => homePageStore.getLoading)
 const permissionDialogVisible = ref(false)
 const permissionLoading = ref(false)
 const permissionSaving = ref(false)
@@ -195,7 +194,7 @@ const permissionDialogTitle = computed(
 )
 
 const getAnalyzes = async (targetPage = page.value) => {
-  homePageStore.setLoading(true)
+  listLoading.value = true
   const res = await httpRequest<ApiResponseI<AnalyzeVo.AnalyzeListResponse>>('/api/getAnalyzes', {
     method: 'POST',
     body: {
@@ -206,16 +205,16 @@ const getAnalyzes = async (targetPage = page.value) => {
       sortOrder: sortOrder.value
     }
   }).finally(() => {
-    homePageStore.setLoading(false)
+    listLoading.value = false
   })
   if (res.code === 200 && res.data) {
     page.value = res.data.page
     pageSize.value = res.data.pageSize
-    homePageStore.setAnalyzes(res.data.list || [])
-    homePageStore.setTotal(res.data.total || 0)
+    analyzeList.value = res.data.list || []
+    total.value = res.data.total || 0
   } else {
-    homePageStore.setAnalyzes([])
-    homePageStore.setTotal(0)
+    analyzeList.value = []
+    total.value = 0
     ElMessage.error(res.message || '获取分析列表失败')
   }
 }
@@ -399,7 +398,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 @use '~/assets/styles/theme-util.scss' as theme;
 
-.homepage-container {
+.analyze-list-container {
   @include theme.useTheme {
     background-color: theme.getVar('bgColor');
   }
@@ -421,7 +420,7 @@ onMounted(() => {
   row-gap: 0.6rem;
 }
 
-.homepage-toolbar {
+.analyze-list-toolbar {
   .toolbar-search {
     max-width: 320px;
   }
@@ -439,7 +438,7 @@ onMounted(() => {
   margin: 0;
 }
 
-.homepage-empty {
+.analyze-list-empty {
   position: absolute;
   top: 50%;
   left: 50%;

@@ -79,7 +79,11 @@
               </div>
             </div>
           </div>
-          <el-empty v-if="!dashboardListLoading && dashboards.length === 0" description="暂无看板" />
+          <el-empty
+            v-if="!dashboardListLoading && dashboards.length === 0"
+            class="dashboard-empty"
+            description="暂无看板"
+          />
         </div>
 
         <div v-if="dashboardTotal > 0" class="dashboard-pagination">
@@ -140,8 +144,8 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 
 const layoutName = 'dashboard'
 const router = useRouter()
-const GRID_COLUMNS = 12
-const ROW_HEIGHT = 120
+const GRID_COLUMNS = 24
+const ROW_HEIGHT = 60
 
 const dashboards = ref<DashboardVo.DashboardListItem[]>([])
 const dashboardListLoading = ref(false)
@@ -397,6 +401,14 @@ onMounted(() => {
   overflow: auto;
   padding: 10px;
   background: #f5f7fa;
+}
+
+.dashboard-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dashboard-card {

@@ -103,7 +103,7 @@
   获取分析详情时会直接执行访问次数自增，而编辑、创建后回读、删除前查询等非真实访问行为也会触发它。
 - 证据：
   - `server/mapper/analyzeMapper.ts`
-  - `pages/homepage/index.vue`
+  - `pages/analyze/index.vue`
   - `server/service/analyzeService.ts`
 - 风险说明：
   这会让首页展示的“访问次数”逐渐失真，越是高频维护和编辑的分析，越看不出真实使用热度。
@@ -118,8 +118,8 @@
 - 现象：
   当前首页主要以卡片平铺为主，缺少搜索、筛选、排序、最近访问、我创建的、收藏、标签、更新时间等高频能力。
 - 证据：
-  - `pages/homepage/index.vue`
-  - `pages/homepage/components/chart-card.vue`
+  - `pages/analyze/index.vue`
+  - `pages/analyze/components/analyze-card.vue`
 - 风险说明：
   分析数量一旦上来，首页会从“直观”快速退化为“难找”。这类问题在早期不明显，但会随着沉淀的数据量迅速变痛。
 - 建议动作：
@@ -137,7 +137,7 @@
 - 证据：
   - `server/service/analyzeService.ts`
   - `server/api/getAnalyzes.post.ts`
-  - `pages/homepage/index.vue`
+  - `pages/analyze/index.vue`
 - 风险说明：
   列表页加载了详情页才需要的字段，分析数量越多，首页越容易被不必要的数据拖慢。
 - 建议动作：
@@ -183,8 +183,8 @@
 - 现象：
   当前产物中 `icon-park`、`monaco-editor`、`echarts` 等 chunk 体积已经较大，其中 `IconPark` 在多个页面直接从 `@icon-park/vue-next/es/all` 整包引入。
 - 证据：
-  - `pages/homepage/index.vue`
-  - `pages/homepage/components/chart-card.vue`
+  - `pages/analyze/index.vue`
+  - `pages/analyze/components/analyze-card.vue`
   - `pages/analyze/components/dimension/index.vue`
   - `nuxt.config.ts`
 - 风险说明：
@@ -269,8 +269,8 @@
 - `server/mapper/baseMapper.ts`
 - `server/mapper/analyzeMapper.ts`
 - `server/service/analyzeService.ts`
-- `pages/homepage/index.vue`
-- `pages/homepage/components/chart-card.vue`
+- `pages/analyze/index.vue`
+- `pages/analyze/components/analyze-card.vue`
 - `pages/analyze/components/bar/index.vue`
 - `pages/analyze/components/chart-name/index.vue`
 - `pages/analyze/useAnalyzeDataHandler.ts`
