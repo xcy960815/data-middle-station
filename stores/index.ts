@@ -1,5 +1,5 @@
 // export { useAnalyzeStore } from './analyze'
-// export { useDimensionsStore } from './dimension'
+// export { useMeasuresStore } from './measures'
 // export { useGroupsStore } from './group'
 // export { useColumnsStore } from './column'
 // export { useFiltersStore } from './filter'

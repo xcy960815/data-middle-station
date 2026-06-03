@@ -6,7 +6,7 @@ import { createCanvasTableRuntimeState, type CanvasTableRuntimeState } from './r
  */
 const defaultFontFamily = 'Arial, sans-serif'
 
-type TableColumn = GroupStore.GroupOption | DimensionStore.DimensionOption
+type TableColumn = GroupStore.GroupOption | MeasureStore.MeasureOption
 
 export interface ColumnWidthChangePayload {
   columnName: string
@@ -15,7 +15,7 @@ export interface ColumnWidthChangePayload {
 
 export interface ColumnOrderChangePayload {
   xAxisFields: GroupStore.GroupOption[]
-  yAxisFields: DimensionStore.DimensionOption[]
+  yAxisFields: MeasureStore.MeasureOption[]
 }
 
 export interface CellValueChangePayload {
@@ -59,10 +59,10 @@ export const tableProps = {
   },
 
   /**
-   * 维度字段
+   * 值/度量字段
    */
   yAxisFields: {
-    type: Array as PropType<DimensionStore.DimensionOption[]>,
+    type: Array as PropType<MeasureStore.MeasureOption[]>,
     required: true,
     default: () => []
   },
@@ -84,7 +84,7 @@ export const tableProps = {
     type: Function as PropType<
       (config: {
         row: AnalyzeDataVo.AnalyzeData
-        column: GroupStore.GroupOption | DimensionStore.DimensionOption
+        column: GroupStore.GroupOption | MeasureStore.MeasureOption
         rowIndex: number
         colIndex: number
       }) => { rowspan: number; colspan: number } | [number, number] | null | undefined
@@ -246,13 +246,13 @@ export interface CanvasTableParams {
    */
   data: Array<AnalyzeDataVo.AnalyzeData>
   /**
-   * 维度字段
+   * 分组字段
    */
   xAxisFields: Array<GroupStore.GroupOption>
   /**
-   * 维度字段
+   * 值/度量字段
    */
-  yAxisFields: Array<DimensionStore.DimensionOption>
+  yAxisFields: Array<MeasureStore.MeasureOption>
   /**
    * 是否启用汇总
    */
@@ -544,13 +544,13 @@ export const updateTableColumnWidth = (columnName: string, width: number) => {
   const params = getTableParams()
   const applyWidth = (column: TableColumn) => (column.columnName === columnName ? { ...column, width } : column)
   params.xAxisFields = params.xAxisFields.map((column) => applyWidth(column) as GroupStore.GroupOption)
-  params.yAxisFields = params.yAxisFields.map((column) => applyWidth(column) as DimensionStore.DimensionOption)
+  params.yAxisFields = params.yAxisFields.map((column) => applyWidth(column) as MeasureStore.MeasureOption)
   getCurrentTableContext().runtimeHandlers.onColumnWidthChange?.({ columnName, width })
 }
 
 export const updateTableColumnOrder = (
   xAxisFields: GroupStore.GroupOption[],
-  yAxisFields: DimensionStore.DimensionOption[]
+  yAxisFields: MeasureStore.MeasureOption[]
 ) => {
   const params = getTableParams()
   params.xAxisFields = cloneColumns(xAxisFields)

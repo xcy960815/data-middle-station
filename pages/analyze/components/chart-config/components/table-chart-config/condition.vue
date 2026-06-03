@@ -84,15 +84,6 @@
  * @desc 条件格式dialog
  */
 // const conditionDialogVisible = ref(false)
-/**
- * @desc 维度store
- */
-const dimensionStore = useDimensionsStore()
-/**
- * @desc 分组store
- */
-const groupStore = useGroupsStore()
-
 // /**
 //  * @desc 条件符号映射
 //  */
@@ -168,10 +159,10 @@ const groupStore = useGroupsStore()
 // })
 // /**
 //  * @desc 可以选择的字段
-//  * @returns Array<Dimension | Group>
+//  * @returns Array<Measure | Group>
 //  */
 // const fields = computed(() => {
-//   const fields = dimensionStore.getDimensions.concat(groupStore.getGroups).filter((field) => {
+//   const fields = measureStore.getMeasures.concat(groupStore.getGroups).filter((field) => {
 //     return (
 //       field.columnType?.includes('int') || field.columnType?.includes('float') || field.columnType?.includes('double')
 //     )

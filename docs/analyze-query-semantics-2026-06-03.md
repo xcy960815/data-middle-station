@@ -8,7 +8,7 @@
 
 ### 1. 值字段被错误放入 `GROUP BY`
 
-页面中的“值”会作为图表的 Y 轴或指标字段，“分组”会作为 X 轴或分类字段。但当前服务端把 `dimensions` 和 `groups` 合并后同时放进 `SELECT`，又在存在分组时把值字段也放进 `GROUP BY`。
+页面中的“值”会作为图表的 Y 轴或指标字段，“分组”会作为 X 轴或分类字段。但当前服务端把 `measures` 和 `groups` 合并后同时放进 `SELECT`，又在存在分组时把值字段也放进 `GROUP BY`。
 
 这会把预期的：
 
@@ -92,7 +92,7 @@ where sales > ?
 
 ## 后续建议
 
-1. 将内部命名逐步从 `dimensions` 调整为更准确的 `measures` 或在类型层补充语义注释，避免“维度”实际表示“值”的长期混乱。
+1. 已完成：分析页“值/指标”内部命名已端到端调整为 `measures` / `MeasureOption` / `useMeasuresStore`，不再使用 `dimensions` 表示值字段。
 2. 已完成：在“值”区域提供聚合方式选择，并保存到 chart config，避免完全依赖默认推断。
 3. 已完成：区分表格图的“明细模式”和“聚合模式”。明细模式可以不分组、不聚合；聚合模式应复用本记录定义的查询语义。
 4. 已完成：已补 `pnpm test:analyze-query` 快照测试，覆盖 `WHERE/GROUP BY/HAVING/ORDER BY` 的组合场景。
@@ -103,6 +103,6 @@ where sales > ?
 推荐按下面顺序继续推进：
 
 1. 已完成：前端防护已抽公共 `validateAnalyzeChartConfig`，并接入分析页查询、看板组件和邮件渲染链路；柱状图、折线图 `render*` 也已补空 X 轴兜底，避免只在 `useAnalyzeDataHandler` 一处校验。
-2. 已完成：值聚合 UI 已在“值”区域提供聚合方式选择，保存字段为 `dimensions[].datasetAggregationType`，并和 `AnalyzeQueryBuilder` 已支持的字段配置对齐；无分组时隐藏聚合入口，避免明细表格场景误导。自定义列表达式默认按当前类型推断为计数，可在有分组时手动改聚合。
+2. 已完成：值聚合 UI 已在“值”区域提供聚合方式选择，保存字段为 `measures[].datasetAggregationType`，并和 `AnalyzeQueryBuilder` 已支持的字段配置对齐；无分组时隐藏聚合入口，避免明细表格场景误导。自定义列表达式默认按当前类型推断为计数，可在有分组时手动改聚合。
 3. 已完成：表格模式表达已用 `getTableQueryMode` 统一判断，无分组显示明细表格，有分组显示聚合表格。
-4. 已完成：命名清理已先补注释和 `getMeasures` 别名层，避免大范围 rename；后续再逐步把 `dimensions` 表示“值”的历史命名收口。
+4. 已完成：命名清理已从折中注释方案推进为硬改名，分析配置字段、DTO、store、组件目录和 SQL 初始化脚本统一使用 `measures`。

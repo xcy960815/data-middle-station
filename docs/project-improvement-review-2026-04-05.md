@@ -185,7 +185,7 @@
 - 证据：
   - `pages/analyze/index.vue`
   - `pages/analyze/components/analyze-card.vue`
-  - `pages/analyze/components/dimension/index.vue`
+  - `pages/analyze/components/measure/index.vue`
   - `nuxt.config.ts`
 - 风险说明：
   这类问题不会立刻阻塞开发，但会不断推高首页、分析页和构建流程的成本。

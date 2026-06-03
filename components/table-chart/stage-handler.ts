@@ -86,13 +86,13 @@ export const getStageSize = () => {
 const syncTablePerfSnapshot = () => {
   const { width, height } = getStageSize()
   const groupColumnCount = getTableParams().xAxisFields.length
-  const dimensionColumnCount = getTableParams().yAxisFields.length
+  const measureColumnCount = getTableParams().yAxisFields.length
   updateTablePerfSnapshot({
     stageWidth: width,
     stageHeight: height,
     groupColumnCount,
-    dimensionColumnCount,
-    columnCount: groupColumnCount + dimensionColumnCount,
+    measureColumnCount,
+    columnCount: groupColumnCount + measureColumnCount,
     visibleRows: Math.max(0, bodyVars.visibleRowEnd - bodyVars.visibleRowStart + 1),
     bufferRows: getTableParams().bufferRows,
     processedRows: getProcessedRows().value.length,

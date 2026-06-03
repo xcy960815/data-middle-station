@@ -6,7 +6,7 @@ declare namespace CanvasTable {
     verticalAlign: 'top' | 'middle' | 'bottom'
   }
 
-  type DimensionOption = DimensionStore.DimensionOption & {
+  type MeasureOption = MeasureStore.MeasureOption & {
     width: number
     colIndex: number
     align: 'left' | 'right' | 'center'

@@ -31,7 +31,7 @@ export const calculateTextWidth = {
    * 计算 Header 单元格的可用文本宽度
    * @param columnOption 列配置
    */
-  forHeaderCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
+  forHeaderCell: (columnOption: CanvasTable.GroupOption | CanvasTable.MeasureOption): number => {
     // 文本的最大宽度
     let maxTextWidth = columnOption.width - getTableParams().textPaddingHorizontal * 2
 
@@ -53,14 +53,14 @@ export const calculateTextWidth = {
   /**
    * 计算 Body 单元格的可用文本宽度
    */
-  forBodyCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
+  forBodyCell: (columnOption: CanvasTable.GroupOption | CanvasTable.MeasureOption): number => {
     return columnOption.width - getTableParams().textPaddingHorizontal
   },
 
   /**
    * 计算 Summary 单元格的可用文本宽度
    */
-  forSummaryCell: (columnOption: CanvasTable.GroupOption | CanvasTable.DimensionOption): number => {
+  forSummaryCell: (columnOption: CanvasTable.GroupOption | CanvasTable.MeasureOption): number => {
     return columnOption.width - getTableParams().textPaddingHorizontal
   }
 }
@@ -364,13 +364,13 @@ export const drawUnifiedRect = (config: DrawRectConfig): Konva.Rect => {
 
 /**
  * 获取单元格显示值
- * @param {GroupStore.GroupOption | DimensionStore.DimensionOption} columnOption - 列配置
+ * @param {GroupStore.GroupOption | MeasureStore.MeasureOption} columnOption - 列配置
  * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
  * @param {number} rowIndex - 行索引
  * @returns {string} 显示值
  */
 export const getCellDisplayContent = (
-  columnOption: GroupStore.GroupOption | DimensionStore.DimensionOption,
+  columnOption: GroupStore.GroupOption | MeasureStore.MeasureOption,
   row: AnalyzeDataVo.AnalyzeData,
   rowIndex: number
 ) => {

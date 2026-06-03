@@ -1,6 +1,6 @@
 <template>
-  <div class="dimension-selector" @contextmenu="contextmenuHandler">
-    <selector-template v-bind="$attrs" :dimension="dimension">
+  <div class="measure-selector" @contextmenu="contextmenuHandler">
+    <selector-template v-bind="$attrs" :measure="measure">
       <template #order-icon>
         <slot name="order-icon"></slot>
       </template>
@@ -48,31 +48,31 @@ const props = defineProps({
     type: Number,
     default: null
   },
-  dimension: {
-    type: Object as PropType<DimensionStore.DimensionOption>,
+  measure: {
+    type: Object as PropType<MeasureStore.MeasureOption>,
     required: true,
     default: () => ({})
   }
 })
-const dimensionStore = useDimensionsStore()
+const measureStore = useMeasuresStore()
 const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 
-const updateCurrentDimension = () => {
-  if (!currentDimension.value || props.index === null) return
-  dimensionStore.updateDimensionByIndex(props.index, currentDimension.value)
+const updateCurrentMeasure = () => {
+  if (!currentMeasure.value || props.index === null) return
+  measureStore.updateMeasureByIndex(props.index, currentMeasure.value)
 }
 
 /**
  * @desc 当前选中的列
  */
-const currentDimension = ref<DimensionStore.DimensionOption | null>(null)
+const currentMeasure = ref<MeasureStore.MeasureOption | null>(null)
 /**
  * @desc 右键点击事件
  */
 const contextmenuHandler = (event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
-  currentDimension.value = props.dimension
+  currentMeasure.value = props.measure
 
   // 直接显示右键菜单
   if (contextmenuRef.value) {
@@ -88,21 +88,21 @@ const handleSetAlias = () => {
     cancelButtonText: '取消',
     inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
     inputErrorMessage: '别名仅支持中英文、数字、下划线，且不能为空',
-    inputValue: currentDimension.value!.displayName || '',
+    inputValue: currentMeasure.value!.displayName || '',
     autofocus: true
   })
     .then(({ value }) => {
-      if (!currentDimension.value) return
-      currentDimension.value.displayName = value
-      updateCurrentDimension()
-      currentDimension.value = null
+      if (!currentMeasure.value) return
+      currentMeasure.value.displayName = value
+      updateCurrentMeasure()
+      currentMeasure.value = null
     })
     .catch(() => {
       ElMessage({
         type: 'info',
         message: '取消操作'
       })
-      currentDimension.value = null
+      currentMeasure.value = null
     })
 }
 
@@ -110,10 +110,10 @@ const handleSetAlias = () => {
  * @desc 设置列宽
  */
 const handleSetColumnWidth = () => {
-  if (!currentDimension.value) return
+  if (!currentMeasure.value) return
 
   // 获取列的显示名称（优先使用别名，否则使用原始名称）
-  const columnName = currentDimension.value.displayName || currentDimension.value.columnName || '未知列'
+  const columnName = currentMeasure.value.displayName || currentMeasure.value.columnName || '未知列'
 
   ElMessageBox.prompt(`请输入列"${columnName}"的宽度`, {
     title: `设置列宽 - ${columnName}`,
@@ -121,21 +121,21 @@ const handleSetColumnWidth = () => {
     cancelButtonText: '取消',
     inputPattern: /^[1-9]\d*$/,
     inputErrorMessage: '列宽仅支持正整数',
-    inputValue: String(currentDimension.value.width || ''),
+    inputValue: String(currentMeasure.value.width || ''),
     autofocus: true
   })
     .then(({ value }) => {
-      if (!currentDimension.value) return
-      currentDimension.value.width = Number(value)
-      updateCurrentDimension()
-      currentDimension.value = null
+      if (!currentMeasure.value) return
+      currentMeasure.value.width = Number(value)
+      updateCurrentMeasure()
+      currentMeasure.value = null
     })
     .catch(() => {
       ElMessage({
         type: 'info',
         message: '取消操作'
       })
-      currentDimension.value = null
+      currentMeasure.value = null
     })
 }
 
@@ -145,10 +145,10 @@ const handleSetColumnWidth = () => {
  * @returns {void}
  */
 const handleSetFixed = (fixed: 'left' | 'right' | null) => {
-  if (!currentDimension.value) return
-  currentDimension.value.fixed = fixed
-  updateCurrentDimension()
-  currentDimension.value = null
+  if (!currentMeasure.value) return
+  currentMeasure.value.fixed = fixed
+  updateCurrentMeasure()
+  currentMeasure.value = null
 }
 
 /**
@@ -157,10 +157,10 @@ const handleSetFixed = (fixed: 'left' | 'right' | null) => {
  * @returns {void}
  */
 const handleSetAlign = (align: 'left' | 'right' | 'center' | null) => {
-  if (!currentDimension.value) return
-  currentDimension.value.align = align
-  updateCurrentDimension()
-  currentDimension.value = null
+  if (!currentMeasure.value) return
+  currentMeasure.value.align = align
+  updateCurrentMeasure()
+  currentMeasure.value = null
 }
 
 /**
@@ -168,10 +168,10 @@ const handleSetAlign = (align: 'left' | 'right' | 'center' | null) => {
  * @returns {void}
  */
 const handleSetSortable = () => {
-  if (!currentDimension.value) return
-  currentDimension.value.sortable = !currentDimension.value.sortable
-  updateCurrentDimension()
-  currentDimension.value = null
+  if (!currentMeasure.value) return
+  currentMeasure.value.sortable = !currentMeasure.value.sortable
+  updateCurrentMeasure()
+  currentMeasure.value = null
 }
 
 /**
@@ -179,14 +179,14 @@ const handleSetSortable = () => {
  * @returns {void}
  */
 const handleSetFilterable = () => {
-  if (!currentDimension.value) return
-  currentDimension.value.filterable = !currentDimension.value.filterable
-  updateCurrentDimension()
-  currentDimension.value = null
+  if (!currentMeasure.value) return
+  currentMeasure.value.filterable = !currentMeasure.value.filterable
+  updateCurrentMeasure()
+  currentMeasure.value = null
 }
 </script>
 <style lang="scss" scoped>
-.dimension-selector {
+.measure-selector {
   cursor: context-menu;
 }
 </style>

@@ -232,7 +232,7 @@ type DashboardWidgetState = DashboardDto.DashboardWidgetPayload & {
   localId: string
   data: AnalyzeDataVo.AnalyzeData[]
   xAxisFields: GroupStore.GroupOption[]
-  yAxisFields: DimensionStore.DimensionOption[]
+  yAxisFields: MeasureStore.MeasureOption[]
   dataSource: string | null
   privateChartConfig: AnalyzeConfigVo.PrivateChartConfigItem | null
   loading: boolean
@@ -369,7 +369,7 @@ const createWidgetState = (widget: DashboardVo.DashboardWidgetItem): DashboardWi
     analyze: widget.analyze,
     data: [],
     xAxisFields: (chartConfig?.groups || []) as GroupStore.GroupOption[],
-    yAxisFields: (chartConfig?.dimensions || []) as DimensionStore.DimensionOption[],
+    yAxisFields: (chartConfig?.measures || []) as MeasureStore.MeasureOption[],
     dataSource: chartConfig?.dataSource ?? null,
     privateChartConfig: chartConfig?.privateChartConfig || null,
     loading: false,
@@ -543,7 +543,7 @@ const buildWidgetAnalyzeDataParams = (
   const validation = validateAnalyzeChartConfig({
     chartType: chartConfig.chartType,
     dataSource: chartConfig.dataSource,
-    dimensions: chartConfig.dimensions || [],
+    measures: chartConfig.measures || [],
     groups: chartConfig.groups || []
   })
   if (!validation.valid) throw new Error(validation.message)
@@ -555,7 +555,7 @@ const buildWidgetAnalyzeDataParams = (
     ),
     orders: (chartConfig.orders || []).filter((item) => item.aggregationType || item.orderType),
     groups: chartConfig.groups || [],
-    dimensions: chartConfig.dimensions || [],
+    measures: chartConfig.measures || [],
     commonChartConfig: chartConfig.commonChartConfig
   }
 }

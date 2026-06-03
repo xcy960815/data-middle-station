@@ -49,7 +49,7 @@ import { computed, ref, watch } from 'vue'
 import { useAnalyzeStore } from '~/stores/analyze'
 import { useChartConfigStore } from '~/stores/chart-config'
 import { useColumnsStore } from '~/stores/columns'
-import { useDimensionsStore } from '~/stores/dimensions'
+import { useMeasuresStore } from '~/stores/measures'
 import { useFiltersStore } from '~/stores/filters'
 import { useGroupsStore } from '~/stores/groups'
 import { useOrdersStore } from '~/stores/orders'
@@ -83,15 +83,15 @@ type AnalyzeDataSourceChangePayload =
  * @returns {string} 类名
  */
 const columnClasses = computed(() => (column: ColumnsStore.ColumnOptions) => {
-  const dimensionSelected = useDimensionsStore().getMeasures.find(
-    (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
+  const measureSelected = useMeasuresStore().getMeasures.find(
+    (measureOption: MeasureStore.MeasureOption) => measureOption.columnName === column.columnName
   )
   const groupSelected = useGroupsStore().getGroups.find(
     (groupOption: GroupStore.GroupOption) => groupOption.columnName === column.columnName
   )
   return {
     column__item: true, // 默认类名
-    column__item_dimension_selected: dimensionSelected, // 维度选中
+    column__item_measure_selected: measureSelected, // 值选中
     column__item_group_selected: groupSelected // 分组选中
   }
 })
@@ -134,7 +134,7 @@ const analyzeStore = useAnalyzeStore()
 const filterStore = useFiltersStore()
 const orderStore = useOrdersStore()
 const chartConfigStore = useChartConfigStore()
-const dimensionStore = useDimensionsStore()
+const measureStore = useMeasuresStore()
 const groupStore = useGroupsStore()
 
 /**
@@ -233,9 +233,9 @@ const dropHandler = (dragEvent: DragEvent) => {
   )
 
   switch (data.from) {
-    case 'dimensions': {
-      const dimensionStore = useDimensionsStore()
-      dimensionStore.removeDimension(data.index)
+    case 'measures': {
+      const measureStore = useMeasuresStore()
+      measureStore.removeMeasure(data.index)
       break
     }
     case 'filters': {
@@ -336,8 +336,8 @@ watch(
       orderStore.setOrders([])
       // 如果数据源为空，清空分组条件
       groupStore.setGroups([])
-      // 如果数据源为空，清空维度条件
-      dimensionStore.setDimensions([])
+      // 如果数据源为空，清空值字段
+      measureStore.setMeasures([])
       // 如果数据源为空，清空图表配置
       chartConfigStore.setPrivateChartConfig(null)
       // 如果数据源为空，清空图表配置条件
@@ -354,8 +354,8 @@ watch(
     //   hasOrder && orderStore.setOrders([])
     //   const hasGroup = groupStore.getGroups.length > 0
     //   hasGroup && groupStore.setGroups([])
-    //   const hasDimension = dimensionStore.getDimensions.length > 0
-    //   hasDimension && dimensionStore.setDimensions([])
+    //   const hasMeasure = measureStore.getMeasures.length > 0
+    //   hasMeasure && measureStore.setMeasures([])
     // }
   }
 )
@@ -393,7 +393,7 @@ const clearAnalyzeSelections = () => {
   filterStore.setFilters([])
   orderStore.setOrders([])
   groupStore.setGroups([])
-  dimensionStore.setDimensions([])
+  measureStore.setMeasures([])
 }
 
 const mapDatasetFieldToColumn = (field: DatasetDao.DatasetFieldConfigItem): ColumnsStore.ColumnOptions => {
@@ -475,7 +475,7 @@ const handleDataSourceChange = async (payload: string | AnalyzeDataSourceChangeP
       border-radius: 4px;
       margin-bottom: 5px;
 
-      &.column__item_dimension_selected::before {
+      &.column__item_measure_selected::before {
         position: absolute;
         left: 5px;
         top: 9px;

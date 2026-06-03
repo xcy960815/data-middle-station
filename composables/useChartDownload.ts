@@ -20,7 +20,7 @@ type ColumnWidthMap = Record<string, number>
  * 图表下载功能的 composable
  */
 export const useChartDownload = () => {
-  const dimensionStore = useDimensionsStore()
+  const measureStore = useMeasuresStore()
   const groupStore = useGroupsStore()
   const analyzeStore = useAnalyzeStore()
   const columnStore = useColumnsStore()
@@ -134,7 +134,7 @@ export const useChartDownload = () => {
    */
   const handleDownload = () => {
     // 获取所有的维度和分组
-    const fields = dimensionStore.getDimensions.concat(groupStore.getGroups)
+    const fields = measureStore.getMeasures.concat(groupStore.getGroups)
     if (fields.length === 0) {
       ElMessage.warning('请先选择维度或分组')
       return

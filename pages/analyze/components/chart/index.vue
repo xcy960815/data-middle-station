@@ -73,7 +73,7 @@ const analyzeStore = useAnalyzeStore()
 /**
  * @desc 维度 store
  */
-const dimensionStore = useDimensionsStore()
+const measureStore = useMeasuresStore()
 /**
  * @desc 分组 store
  */
@@ -121,11 +121,11 @@ const chartErrorAnalysis = computed(() => {
 
 /**
  * @desc Y轴字段，业务语义为“值/度量”
- * @type {Array<DimensionStore.DimensionState['dimensions']>}
+ * @type {Array<MeasureStore.MeasureState['measures']>}
  */
 const yAxisFields = computed(() => {
-  const dimensions = dimensionStore.getMeasures
-  return dimensions
+  const measures = measureStore.getMeasures
+  return measures
 })
 
 /**

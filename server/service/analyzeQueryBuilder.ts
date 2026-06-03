@@ -155,11 +155,11 @@ export class AnalyzeQueryBuilder {
       filters: analyzeDataQuery.filters || [],
       orders: analyzeDataQuery.orders || [],
       groups: analyzeDataQuery.groups || [],
-      dimensions: analyzeDataQuery.dimensions || []
+      measures: analyzeDataQuery.measures || []
     }
     const safeLimit = this.normalizeLimit(normalizedQuery.commonChartConfig?.limit)
     const hasGroupBy = normalizedQuery.groups.length > 0
-    const selectClause = this.buildSelectClause(normalizedQuery.dimensions, normalizedQuery.groups, context)
+    const selectClause = this.buildSelectClause(normalizedQuery.measures, normalizedQuery.groups, context)
     const filterClauses = this.buildFilterClauses(normalizedQuery.filters, hasGroupBy, normalizedQuery.groups, context)
     const groupByClause = this.buildGroupByClause(normalizedQuery.groups, context)
     const orderByClause = this.buildOrderByClause(normalizedQuery.orders, hasGroupBy, normalizedQuery.groups, context)
@@ -464,13 +464,13 @@ export class AnalyzeQueryBuilder {
 
   /**
    * @desc 构建select语句
-   * @param dimensions 维度
+   * @param measures 值/度量字段
    * @param groups 分组
    * @param context 查询上下文
    * @returns select语句
    */
   private buildSelectClause(
-    dimensions: AnalyzeDataDto.DimensionOption[],
+    measures: AnalyzeDataDto.MeasureOption[],
     groups: AnalyzeDataDto.GroupOption[],
     context: AnalyzeQueryContext
   ): SqlFragment {
@@ -482,7 +482,7 @@ export class AnalyzeQueryBuilder {
       selectExpressions.push(`${expression} AS ${this.quoteIdentifier(columnName)}`)
     })
 
-    dimensions.forEach((columnOption: AnalyzeDataDto.DimensionOption) => {
+    measures.forEach((columnOption: AnalyzeDataDto.MeasureOption) => {
       const columnName = this.normalizeIdentifier(columnOption.columnName, '字段')
       const columnExpression = this.resolveExpression(columnOption, context)
 

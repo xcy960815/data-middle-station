@@ -5,9 +5,9 @@ declare namespace AnalyzeDataDto {
   type CommonChartConfig = AnalyzeConfigDao.CommonChartConfig
 
   /**
-   * @desc 值/度量配置。历史命名沿用 DimensionOption。
+   * @desc 值/度量配置。
    */
-  type DimensionOption = AnalyzeConfigDao.DimensionOption
+  type MeasureOption = AnalyzeConfigDao.MeasureOption
 
   /**
    * @desc 分组配置
@@ -41,9 +41,9 @@ declare namespace AnalyzeDataDto {
      */
     groups: GroupOption[]
     /**
-     * @desc 值/度量配置。字段名沿用 dimensions 以兼容历史 API。
+     * @desc 值/度量配置。
      */
-    dimensions: DimensionOption[]
+    measures: MeasureOption[]
     /**
      * @desc 数据源
      */

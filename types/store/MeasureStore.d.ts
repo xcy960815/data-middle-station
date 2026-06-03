@@ -1,16 +1,16 @@
 /**
- * @desc 值/度量字段。历史命名沿用 dimensions，但业务语义是 measures。
+ * @desc 值/度量字段。
  */
 /// <reference path="./Common.d.ts" />
-declare namespace DimensionStore {
+declare namespace MeasureStore {
   /**
    * @desc 值/度量字段
-   * @interface DimensionOption
+   * @interface MeasureOption
    * @property {string} name 列名
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type DimensionOption = ColumnsStore.ColumnOptions & {
+  type MeasureOption = ColumnsStore.ColumnOptions & {
     /**
      * 值字段聚合方式。保存到 chart config 后由 AnalyzeQueryBuilder 生成聚合 SQL。
      */
@@ -80,39 +80,35 @@ declare namespace DimensionStore {
   }
 
   /**
-   * @desc 维度字段key
+   * @desc 值/度量字段 key
    */
-  type DimensionKey = 'dimensions'
+  type MeasureKey = 'measures'
 
   /**
-   * @desc 值/度量字段状态。dimensions 为历史字段名，表示分析页“值”区域。
+   * @desc 值/度量字段状态。
    */
-  type DimensionState = {
-    dimensions: Array<DimensionOption>
+  type MeasureState = {
+    measures: Array<MeasureOption>
   }
 
   /**
    * @desc getter
    */
-  type DimensionGetters = {
+  type MeasureGetters = {
     /**
-     * @desc 历史 getter，返回分析页“值”字段。
+     * @desc 返回分析页“值/度量”字段。
      */
-    getDimensions: (state: DimensionState) => DimensionOption[]
-    /**
-     * @desc 语义别名，返回分析页“值/度量”字段。新代码优先使用该 getter。
-     */
-    getMeasures: (state: DimensionState) => DimensionOption[]
+    getMeasures: (state: MeasureState) => MeasureOption[]
   }
 
   /**
-   * @desc 维度字段操作
+   * @desc 值/度量字段操作
    */
-  type DimensionActions = {
-    setDimensions: (dimensions: DimensionOption[]) => void
-    addDimensions: (dimensions: DimensionOption[]) => void
-    removeDimension: (index: number) => void
-    updateDimension: (dimension: DimensionOption) => void
-    updateDimensionByIndex: (index: number, dimension: DimensionOption) => void
+  type MeasureActions = {
+    setMeasures: (measures: MeasureOption[]) => void
+    addMeasures: (measures: MeasureOption[]) => void
+    removeMeasure: (index: number) => void
+    updateMeasure: (measure: MeasureOption) => void
+    updateMeasureByIndex: (index: number, measure: MeasureOption) => void
   }
 }

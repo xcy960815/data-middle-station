@@ -49,7 +49,7 @@
 2. `pages/analyze/useAnalyzeDataHandler.ts`
 3. `stores/analyze.ts`
 4. `stores/chart-config.ts`
-5. `stores/columns.ts`、`stores/dimensions.ts`、`stores/filters.ts`、`stores/groups.ts`、`stores/orders.ts`
+5. `stores/columns.ts`、`stores/measures.ts`、`stores/filters.ts`、`stores/groups.ts`、`stores/orders.ts`
 6. `server/api/getAnalyzeData.post.ts`
 7. `server/service/analyzeService.ts`
 8. `server/service/chartDataService.ts`

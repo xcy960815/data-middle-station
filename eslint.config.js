@@ -70,7 +70,7 @@ const commonGlobals = {
   // 项目自定义类型
   AnalyzeDataVo: 'readonly',
   GroupStore: 'readonly',
-  DimensionStore: 'readonly',
+  MeasureStore: 'readonly',
   ColumnsStore: 'readonly',
   CanvasTable: 'readonly',
   FilterStore: 'readonly',
@@ -114,7 +114,7 @@ const commonGlobals = {
   // Store 函数
   useAnalyzeStore: 'readonly',
   useColumnsStore: 'readonly',
-  useDimensionsStore: 'readonly',
+  useMeasuresStore: 'readonly',
   useFiltersStore: 'readonly',
   useGroupsStore: 'readonly',
   useOrdersStore: 'readonly',

@@ -2,7 +2,7 @@ import { httpRequest } from '@/composables/useHttpRequest'
 import { useAnalyzeStore } from '@/stores/analyze'
 import { useChartConfigStore } from '@/stores/chart-config'
 import { useColumnsStore } from '@/stores/columns'
-import { useDimensionsStore } from '@/stores/dimensions'
+import { useMeasuresStore } from '@/stores/measures'
 import { useFiltersStore } from '@/stores/filters'
 import { useGroupsStore } from '@/stores/groups'
 import { useOrdersStore } from '@/stores/orders'
@@ -16,7 +16,7 @@ import { computed, ref, watch } from 'vue'
  */
 export const useAnalyzeDataHandler = () => {
   const analyzeStore = useAnalyzeStore()
-  const dimensionStore = useDimensionsStore()
+  const measureStore = useMeasuresStore()
   const groupStore = useGroupsStore()
   const columnStore = useColumnsStore()
   const filterStore = useFiltersStore()
@@ -37,7 +37,7 @@ export const useAnalyzeDataHandler = () => {
       filters: filterStore.getFilters.filter((item) => item.aggregationType && (item.filterType || item.filterValue)),
       orders: orderStore.getOrders.filter((item) => item.aggregationType || item.orderType),
       groups: groupStore.getGroups,
-      dimensions: dimensionStore.getMeasures,
+      measures: measureStore.getMeasures,
       commonChartConfig: chartConfigStore.getCommonChartConfig
     }
   })
@@ -48,7 +48,7 @@ export const useAnalyzeDataHandler = () => {
     const validation = validateAnalyzeChartConfig({
       chartType,
       dataSource: columnStore.getDataSource,
-      dimensions: dimensionStore.getMeasures,
+      measures: measureStore.getMeasures,
       groups: groupStore.getGroups
     })
     analyzeStore.setChartErrorMessage(validation.message)

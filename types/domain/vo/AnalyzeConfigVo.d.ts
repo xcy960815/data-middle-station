@@ -8,9 +8,9 @@ declare namespace AnalyzeConfigVo {
   type ColumnItem = DatabaseVo.TableColumnItem
 
   /**
-   * 维度配置选项
+   * 值/度量配置选项
    */
-  type DimensionOption = DatabaseVo.TableColumnItem & {
+  type MeasureOption = DatabaseVo.TableColumnItem & {
     __invalid?: boolean
   }
 
@@ -90,10 +90,10 @@ declare namespace AnalyzeConfigVo {
    */
   type AnalyzeConfigResponse = Omit<
     AnalyzeConfigDao.AnalyzeConfigRecord,
-    'columns' | 'dimensions' | 'filters' | 'groups' | 'orders'
+    'columns' | 'measures' | 'filters' | 'groups' | 'orders'
   > & {
     columns: ColumnItem[]
-    dimensions: DimensionOption[]
+    measures: MeasureOption[]
     filters: FilterOption[]
     groups: GroupOption[]
     orders: OrderOption[]

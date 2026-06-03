@@ -95,7 +95,7 @@ export class ChartSnapshotService {
     const validation = validateAnalyzeChartConfig({
       chartType: chartConfig.chartType,
       dataSource: chartConfig.dataSource,
-      dimensions: chartConfig.dimensions || [],
+      measures: chartConfig.measures || [],
       groups: chartConfig.groups || []
     })
     if (!validation.valid) {
@@ -106,7 +106,7 @@ export class ChartSnapshotService {
       filters: chartConfig.filters || [],
       orders: chartConfig.orders || [],
       groups: chartConfig.groups || [],
-      dimensions: chartConfig.dimensions,
+      measures: chartConfig.measures,
       dataSource: chartConfig.dataSource,
       commonChartConfig: chartConfig.commonChartConfig
     })
@@ -115,7 +115,7 @@ export class ChartSnapshotService {
       title: analyzeVo.analyzeName,
       data: analyzeData,
       xAxisFields: chartConfig.groups || [],
-      yAxisFields: chartConfig.dimensions
+      yAxisFields: chartConfig.measures
     }
 
     const chartOption = this.buildChartOption(chartConfig.chartType, renderConfig, chartConfig.privateChartConfig)

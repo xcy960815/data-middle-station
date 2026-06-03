@@ -102,7 +102,7 @@
           <span>源数据 {{ perfSnapshot.sourceRows }} 行</span>
           <span>过滤后 {{ perfSnapshot.processedRows }} 行</span>
           <span>分组列 {{ perfSnapshot.groupColumnCount }}</span>
-          <span>维度列 {{ perfSnapshot.dimensionColumnCount }}</span>
+          <span>值列 {{ perfSnapshot.measureColumnCount }}</span>
           <span>可视行 {{ perfSnapshot.visibleRows }}</span>
           <span>缓冲 {{ perfSnapshot.bufferRows }}</span>
           <span>scrollX {{ perfSnapshot.scrollX }}</span>
@@ -369,7 +369,7 @@ const spanMethod = ({
   colIndex
 }: {
   row: AnalyzeDataVo.AnalyzeData
-  column: GroupStore.GroupOption | DimensionStore.DimensionOption
+  column: GroupStore.GroupOption | MeasureStore.MeasureOption
   rowIndex: number
   colIndex: number
 }): { rowspan: number; colspan: number } => {
@@ -446,7 +446,7 @@ const spanMethod = ({
 /**
  * 维度列
  */
-const yAxisFields = ref<DimensionStore.DimensionOption[]>([
+const yAxisFields = ref<MeasureStore.MeasureOption[]>([
   {
     columnName: '__index__',
     columnType: 'number',

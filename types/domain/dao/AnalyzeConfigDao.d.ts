@@ -18,9 +18,9 @@ declare namespace AnalyzeConfigDao {
   }
 
   /**
-   * 维度配置
+   * 值/度量配置
    */
-  type DimensionOption = ColumnItem
+  type MeasureOption = ColumnItem
 
   /**
    * 过滤聚合方式
@@ -415,9 +415,9 @@ declare namespace AnalyzeConfigDao {
      */
     columns: ColumnItem[]
     /**
-     * 维度配置
+     * 值/度量配置
      */
-    dimensions: DimensionOption[]
+    measures: MeasureOption[]
     /**
      * 过滤配置
      */

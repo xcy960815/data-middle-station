@@ -54,7 +54,7 @@ export function convertToSqlProperties<T extends Record<string, any>>(
   }
 }
 
-const KEYWORDCOLUMNS = ['groups', 'orders', 'columns', 'dimensions', 'filters']
+const KEYWORDCOLUMNS = ['groups', 'orders', 'columns', 'measures', 'filters']
 
 /**
  * @desc 格式化 SQL 字段名，必要时为关键字添加反引号。

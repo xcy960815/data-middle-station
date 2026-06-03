@@ -57,7 +57,7 @@ const props = defineProps({
   },
   // 通用参数
   cast: {
-    type: String as PropType<'dimension' | 'group' | 'order' | 'filter'>,
+    type: String as PropType<'measure' | 'group' | 'order' | 'filter'>,
     default: ''
   },
   // 通用参数
@@ -69,7 +69,7 @@ const props = defineProps({
 })
 const filterStore = useFiltersStore()
 const orderStore = useOrdersStore()
-const dimensionStore = useDimensionsStore()
+const measureStore = useMeasuresStore()
 const groupStore = useGroupsStore()
 const isPopoverEnabled = computed(() => {
   return ['order', 'filter'].includes(props.cast)
@@ -89,8 +89,8 @@ const invalidContent = computed(() => {
       return '无效的筛选条件'
     case 'order':
       return '无效的排序条件'
-    case 'dimension':
-      return '无效的维度'
+    case 'measure':
+      return '无效的值'
     case 'group':
       return '无效的分组'
     default:
@@ -112,8 +112,8 @@ const handleDeleteSelector = () => {
     filterStore.removeFilter(props.index)
   } else if (props.cast === 'order') {
     orderStore.removeOrder(props.index)
-  } else if (props.cast === 'dimension') {
-    dimensionStore.removeDimension(props.index)
+  } else if (props.cast === 'measure') {
+    measureStore.removeMeasure(props.index)
   } else if (props.cast === 'group') {
     groupStore.removeGroup(props.index)
   }

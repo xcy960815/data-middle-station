@@ -54,7 +54,7 @@ const props = defineProps({
     default: () => []
   },
   yAxisFields: {
-    type: Array as PropType<Array<DimensionStore.DimensionOption>>,
+    type: Array as PropType<Array<MeasureStore.MeasureOption>>,
     default: () => []
   },
   chartWidth: {

@@ -55,7 +55,7 @@ export interface TablePerfSnapshot {
   sourceRows: number
   processedRows: number
   groupColumnCount: number
-  dimensionColumnCount: number
+  measureColumnCount: number
   columnCount: number
   visibleRows: number
   bufferRows: number
@@ -113,7 +113,7 @@ const createSnapshot = (): TablePerfSnapshot => ({
   sourceRows: 0,
   processedRows: 0,
   groupColumnCount: 0,
-  dimensionColumnCount: 0,
+  measureColumnCount: 0,
   columnCount: 0,
   visibleRows: 0,
   bufferRows: 0,

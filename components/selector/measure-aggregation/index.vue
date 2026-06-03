@@ -2,7 +2,7 @@
   <el-popover placement="bottom-start" trigger="click" width="auto" ref="popoverRef">
     <template #reference>
       <el-tooltip content="值聚合方式" placement="top">
-        <button class="dimension-aggregation-trigger" type="button" @click.stop @mousedown.stop>
+        <button class="measure-aggregation-trigger" type="button" @click.stop @mousedown.stop>
           {{ activeAggregationLabel }}
         </button>
       </el-tooltip>
@@ -88,7 +88,7 @@ const handleChangeAggregation = (aggregationType: AnalyzeConfigDao.OrderAggregat
 </script>
 
 <style scoped lang="scss">
-.dimension-aggregation-trigger {
+.measure-aggregation-trigger {
   display: inline-flex;
   max-width: 48px;
   align-items: center;

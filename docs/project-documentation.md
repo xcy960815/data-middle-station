@@ -102,7 +102,7 @@ data-middle-station/
 
 - `Column`: 字段选择器
 - `Filter`: 过滤条件配置
-- `Dimension`: 维度配置
+- `Measure`: 值/指标配置
 - `Group`: 分组配置
 - `Order`: 排序配置
 - `Chart`: 图表渲染容器
@@ -128,7 +128,7 @@ data-middle-station/
 - `analyze`: 分析配置状态
 - `chart-config`: 图表配置
 - `columns`: 字段配置
-- `dimensions`: 维度配置
+- `measures`: 值/指标配置
 - `filters`: 过滤条件
 - `groups`: 分组配置
 - `orders`: 排序配置
@@ -215,7 +215,7 @@ CREATE TABLE `chart_config` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `data_source` varchar(100) DEFAULT NULL COMMENT '数据源表名',
   `columns` json DEFAULT NULL COMMENT '列配置(JSON格式)',
-  `dimensions` json DEFAULT NULL COMMENT '维度配置(JSON格式)',
+  `measures` json DEFAULT NULL COMMENT '值/指标配置(JSON格式)',
   `filters` json DEFAULT NULL COMMENT '过滤条件(JSON格式)',
   `groups` json DEFAULT NULL COMMENT '分组配置(JSON格式)',
   `orders` json DEFAULT NULL COMMENT '排序配置(JSON格式)',
@@ -571,7 +571,7 @@ Response:
     "chartConfig": {
       "chartType": "interval",
       "dataSource": "operationAnalysis",
-      "dimensions": [...],
+      "measures": [...],
       "groups": [...],
       "filters": [...]
     }
@@ -591,7 +591,7 @@ Content-Type: application/json
   "chartConfig": {
     "chartType": "table",
     "dataSource": "tableName",
-    "dimensions": [],
+    "measures": [],
     "groups": [],
     "filters": []
   }
@@ -608,7 +608,7 @@ Content-Type: application/json
 
 {
   "dataSource": "operationAnalysis",
-  "dimensions": [
+  "measures": [
     {
       "columnName": "new_users",
       "columnType": "number",

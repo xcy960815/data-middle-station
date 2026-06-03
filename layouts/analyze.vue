@@ -26,8 +26,8 @@
           >
             <slot name="order"></slot>
           </div>
-          <div class="layout-analyze-dimension flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]">
-            <slot name="dimension"></slot>
+          <div class="layout-analyze-measure flex-1 !w-full bg-[#f5f5f5] mt-[18px] rounded-[4px] p-[7px]">
+            <slot name="measure"></slot>
           </div>
         </div>
 

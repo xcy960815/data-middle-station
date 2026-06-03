@@ -16,8 +16,8 @@
     <template #order>
       <Order></Order>
     </template>
-    <template #dimension>
-      <DimensionOption></DimensionOption>
+    <template #measure>
+      <MeasureOption></MeasureOption>
     </template>
     <template #group>
       <GroupOption></GroupOption>
@@ -44,7 +44,7 @@ import AnalyzeName from './components/chart-name/index.vue'
 import ChartType from './components/chart-type/index.vue'
 import Chart from './components/chart/index.vue'
 import Column from './components/column/index.vue'
-import DimensionOption from './components/dimension/index.vue'
+import MeasureOption from './components/measure/index.vue'
 import Filter from './components/filter/index.vue'
 import GroupOption from './components/group/index.vue'
 import Order from './components/order/index.vue'

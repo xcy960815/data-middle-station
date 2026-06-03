@@ -6,13 +6,13 @@ import type { EChartsCoreOption } from 'echarts/core'
  * @property {string} title 图表标题
  * @property {Array<AnalyzeDataVo.AnalyzeData>} data 图表数据
  * @property {Array<AnalyzeConfigDao.GroupOption>} xAxisFields X轴字段
- * @property {Array<AnalyzeConfigDao.DimensionOption>} yAxisFields Y轴字段
+ * @property {Array<AnalyzeConfigDao.MeasureOption>} yAxisFields Y轴字段
  */
 export interface ChartRenderConfig {
   title: string
   data: Array<AnalyzeDataVo.AnalyzeData>
   xAxisFields: Array<AnalyzeConfigDao.GroupOption>
-  yAxisFields: Array<AnalyzeConfigDao.DimensionOption>
+  yAxisFields: Array<AnalyzeConfigDao.MeasureOption>
 }
 
 /**

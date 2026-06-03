@@ -11,7 +11,7 @@
 | `ChartConfigStore.d.ts` | 定义图表配置设置的类型。                                                       |
 | `ColumnStore.d.ts`      | 定义分析视图中管理数据列的类型。                                               |
 | `Common.d.ts`           | 包含多个 store 之间使用的通用共享类型定义。                                    |
-| `DimensionStore.d.ts`   | 定义管理数据维度的类型。                                                       |
+| `MeasureStore.d.ts`     | 定义分析页值/度量字段的类型。                                                  |
 | `FilterStore.d.ts`      | 定义数据过滤操作的类型。                                                       |
 | `GroupStore.d.ts`       | 定义数据分组操作的类型。                                                       |
 | `OrderStore.d.ts`       | 定义数据排序和顺序的类型。                                                     |

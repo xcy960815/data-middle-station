@@ -24,7 +24,7 @@ const createContext = (tableName, columns) => {
 const baseQuery = {
   dataSource: 'orderFacts',
   groups: [],
-  dimensions: [],
+  measures: [],
   filters: [],
   orders: [],
   commonChartConfig: {
@@ -41,7 +41,7 @@ assert.deepEqual(
     chartType: 'table',
     dataSource: 'orderFacts',
     groups: [],
-    dimensions: []
+    measures: []
   }),
   {
     valid: false,
@@ -61,7 +61,7 @@ assert.deepEqual(
         displayName: '区域'
       }
     ],
-    dimensions: []
+    measures: []
   }),
   {
     valid: false,
@@ -74,7 +74,7 @@ assert.deepEqual(
     chartType: 'table',
     dataSource: 'orderFacts',
     groups: [],
-    dimensions: [
+    measures: [
       {
         columnName: 'salesAmount',
         columnType: 'decimal',
@@ -101,7 +101,7 @@ assert.deepEqual(
         displayName: '区域'
       }
     ],
-    dimensions: [
+    measures: [
       {
         columnName: 'salesAmount',
         columnType: 'decimal',
@@ -127,7 +127,7 @@ const aggregateQuery = builder.buildAnalyzeDataQuery(
         displayName: '创建时间'
       }
     ],
-    dimensions: [
+    measures: [
       {
         columnName: 'salesAmount',
         columnType: 'decimal',
@@ -189,7 +189,7 @@ assert.deepEqual(aggregateQuery, {
 const detailQuery = builder.buildAnalyzeDataQuery(
   {
     ...baseQuery,
-    dimensions: [
+    measures: [
       {
         columnName: 'createdAt',
         columnType: 'datetime',
@@ -240,7 +240,7 @@ assert.deepEqual(detailQuery, {
 const tableDetailValueOnlyQuery = builder.buildAnalyzeDataQuery(
   {
     ...baseQuery,
-    dimensions: [
+    measures: [
       {
         columnName: 'salesAmount',
         columnType: 'decimal',
@@ -269,7 +269,7 @@ const tableAggregateGroupAndValueQuery = builder.buildAnalyzeDataQuery(
         displayName: '区域'
       }
     ],
-    dimensions: [
+    measures: [
       {
         columnName: 'salesAmount',
         columnType: 'decimal',
@@ -300,7 +300,7 @@ assert.throws(
             displayName: '区域'
           }
         ],
-        dimensions: [
+        measures: [
           {
             columnName: 'salesAmount',
             columnType: 'decimal',

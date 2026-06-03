@@ -26,8 +26,8 @@ class AnalyzeConfigMapping implements AnalyzeConfigDao.AnalyzeConfigRecord, ICol
   @Column('columns')
   columns: AnalyzeConfigDao.ColumnItem[] = []
 
-  @Column('dimensions')
-  dimensions: AnalyzeConfigDao.DimensionOption[] = []
+  @Column('measures')
+  measures: AnalyzeConfigDao.MeasureOption[] = []
 
   @Column('filters')
   filters: AnalyzeConfigDao.FilterOption[] = []
@@ -70,7 +70,7 @@ const ANALYZE_CONFIG_FIELDS = [
   'chart_type',
   'data_source',
   'columns',
-  'dimensions',
+  'measures',
   'filters',
   'groups',
   'orders',
@@ -96,7 +96,7 @@ export class AnalyzeConfigMapper extends BaseMapper {
 
     keys.forEach((key, index) => {
       if (ANALYZE_CONFIG_FIELDS.includes(key)) {
-        const formattedKey = ['groups', 'orders', 'columns', 'dimensions', 'filters'].includes(key) ? `\`${key}\`` : key
+        const formattedKey = ['groups', 'orders', 'columns', 'measures', 'filters'].includes(key) ? `\`${key}\`` : key
         whereClauses.push(`${formattedKey} = ?`)
         queryValues.push(values[index])
       }
@@ -165,7 +165,7 @@ export class AnalyzeConfigMapper extends BaseMapper {
       where is_deleted = 0
         and (
           cast(columns as char) like '%__invalid%'
-          or cast(dimensions as char) like '%__invalid%'
+          or cast(measures as char) like '%__invalid%'
           or cast(filters as char) like '%__invalid%'
           or cast(\`groups\` as char) like '%__invalid%'
           or cast(\`orders\` as char) like '%__invalid%'
@@ -175,12 +175,12 @@ export class AnalyzeConfigMapper extends BaseMapper {
 
   public async updateAnalyzeConfigRuntimeFields(
     configId: number,
-    updateParams: Pick<AnalyzeConfigDao.AnalyzeConfigRecord, 'columns' | 'dimensions' | 'filters' | 'groups' | 'orders'>
+    updateParams: Pick<AnalyzeConfigDao.AnalyzeConfigRecord, 'columns' | 'measures' | 'filters' | 'groups' | 'orders'>
   ): Promise<boolean> {
     const sql = `
       update ${ANALYZE_CONFIG_TABLE_NAME}
       set columns = ?,
-          dimensions = ?,
+          measures = ?,
           filters = ?,
           \`groups\` = ?,
           \`orders\` = ?,
@@ -188,7 +188,7 @@ export class AnalyzeConfigMapper extends BaseMapper {
       where id = ? and is_deleted = 0`
     const result = await this.exe<ResultSetHeader>(sql, [
       JSON.stringify(updateParams.columns || []),
-      JSON.stringify(updateParams.dimensions || []),
+      JSON.stringify(updateParams.measures || []),
       JSON.stringify(updateParams.filters || []),
       JSON.stringify(updateParams.groups || []),
       JSON.stringify(updateParams.orders || []),

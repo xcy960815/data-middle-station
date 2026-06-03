@@ -2,7 +2,7 @@ import { getTableQueryMode } from './tableQueryMode'
 
 type AnalyzeChartConfigValidationInput = {
   chartType?: AnalyzeStore.ChartType | string
-  dimensions?: DimensionStore.DimensionOption[] | AnalyzeConfigDao.DimensionOption[]
+  measures?: MeasureStore.MeasureOption[] | AnalyzeConfigDao.MeasureOption[]
   groups?: GroupStore.GroupOption[] | AnalyzeConfigDao.GroupOption[]
   dataSource?: string | null
 }
@@ -27,7 +27,7 @@ export const validateAnalyzeChartConfig = (
 ): AnalyzeChartConfigValidationResult => {
   const chartType = config.chartType || 'table'
   const chartName = CHART_TYPE_NAMES[chartType] || '图表'
-  const dimensions = config.dimensions || []
+  const measures = config.measures || []
   const groups = config.groups || []
 
   if (!config.dataSource?.trim()) {
@@ -39,23 +39,23 @@ export const validateAnalyzeChartConfig = (
 
   switch (chartType) {
     case 'table': {
-      const tableMode = getTableQueryMode(groups, dimensions)
+      const tableMode = getTableQueryMode(groups, measures)
       if (tableMode === 'detail') {
-        return dimensions.length > 0
+        return measures.length > 0
           ? { valid: true, message: '' }
           : { valid: false, message: `${chartName}明细模式至少需要一个值` }
       }
-      return dimensions.length > 0
+      return measures.length > 0
         ? { valid: true, message: '' }
         : { valid: false, message: `${chartName}聚合模式至少需要一个值` }
     }
     case 'interval':
     case 'line':
-      return dimensions.length > 0 && groups.length > 0
+      return measures.length > 0 && groups.length > 0
         ? { valid: true, message: '' }
         : { valid: false, message: `${chartName}至少需要一个值和一个分组` }
     case 'pie':
-      return dimensions.length > 0 && groups.length > 0
+      return measures.length > 0 && groups.length > 0
         ? { valid: true, message: '' }
         : { valid: false, message: `${chartName}需要一个值和一个分组` }
     default:

@@ -53,7 +53,7 @@ import type { CellValueChangePayload, ColumnOrderChangePayload, ColumnWidthChang
 const chartConfigStore = useChartConfigStore()
 const analyzeStore = useAnalyzeStore()
 const groupStore = useGroupsStore()
-const dimensionStore = useDimensionsStore()
+const measureStore = useMeasuresStore()
 const emit = defineEmits<{
   renderChartStart: []
   renderChartEnd: []
@@ -69,7 +69,7 @@ const props = defineProps({
     default: () => []
   },
   yAxisFields: {
-    type: Array as PropType<Array<DimensionStore.DimensionOption>>,
+    type: Array as PropType<Array<MeasureStore.MeasureOption>>,
     default: () => []
   },
   chartHeight: {
@@ -99,9 +99,9 @@ const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload
     groupStore.updateGroup({ ...group, width })
   }
 
-  const dimension = dimensionStore.getMeasures.find((item) => item.columnName === columnName)
-  if (dimension) {
-    dimensionStore.updateDimension({ ...dimension, width })
+  const measure = measureStore.getMeasures.find((item) => item.columnName === columnName)
+  if (measure) {
+    measureStore.updateMeasure({ ...measure, width })
   }
 
   analyzeStore.setEditorDirty(true)
@@ -109,7 +109,7 @@ const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload
 
 const handleColumnOrderChange = ({ xAxisFields, yAxisFields }: ColumnOrderChangePayload) => {
   groupStore.setGroups(xAxisFields)
-  dimensionStore.setDimensions(yAxisFields)
+  measureStore.setMeasures(yAxisFields)
   analyzeStore.setEditorDirty(true)
 }
 

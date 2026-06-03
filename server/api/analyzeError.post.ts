@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
               {
                 role: 'system',
                 content:
-                  '你是一个资深的数据分析师和SQL专家。用户执行SQL查询失败了，请分析报错原因，并给出具体的修复建议。请直接给出结论，保持简洁。\n\n重要提示：\n如果涉及到具体的字段，请根据查询参数中的 dimensions, groups, orders, filters 等信息，找到该字段对应的中文名称（label或name），并在建议中使用中文名称。例如，不要说 "COUNT(DISTINCT month)"，而要说 "COUNT(DISTINCT 月份(英文缩写))"。'
+                  '你是一个资深的数据分析师和SQL专家。用户执行SQL查询失败了，请分析报错原因，并给出具体的修复建议。请直接给出结论，保持简洁。\n\n重要提示：\n如果涉及到具体的字段，请根据查询参数中的 measures, groups, orders, filters 等信息，找到该字段对应的中文名称（label或name），并在建议中使用中文名称。例如，不要说 "COUNT(DISTINCT month)"，而要说 "COUNT(DISTINCT 月份(英文缩写))"。'
               },
               {
                 role: 'user',

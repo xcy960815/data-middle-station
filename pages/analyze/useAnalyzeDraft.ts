@@ -5,7 +5,7 @@ export const useAnalyzeDraft = () => {
   const chartConfigStore = useChartConfigStore()
   const analyzeStore = useAnalyzeStore()
   const columnStore = useColumnsStore()
-  const dimensionStore = useDimensionsStore()
+  const measureStore = useMeasuresStore()
   const groupStore = useGroupsStore()
   const orderStore = useOrdersStore()
   const filterStore = useFiltersStore()
@@ -26,7 +26,7 @@ export const useAnalyzeDraft = () => {
       chartConfig: {
         dataSource: columnStore.getDataSource,
         columns: removeRuntimeValidationFields(JSON.parse(JSON.stringify(columnStore.getColumns))),
-        dimensions: removeRuntimeValidationFields(JSON.parse(JSON.stringify(dimensionStore.getMeasures))),
+        measures: removeRuntimeValidationFields(JSON.parse(JSON.stringify(measureStore.getMeasures))),
         groups: removeRuntimeValidationFields(JSON.parse(JSON.stringify(groupStore.getGroups))),
         orders: removeRuntimeValidationFields(JSON.parse(JSON.stringify(orderStore.getOrders))),
         filters: removeRuntimeValidationFields(JSON.parse(JSON.stringify(filterStore.getFilters))),

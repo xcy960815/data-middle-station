@@ -1,46 +1,46 @@
 <template>
-  <div class="dimension relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
-    <div class="dimension__header flex items-center justify-between px-1">
-      <span class="dimension__title">值</span>
+  <div class="measure relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
+    <div class="measure__header flex items-center justify-between px-1">
+      <span class="measure__title">值</span>
       <icon-park
         class="cursor-pointer"
-        v-if="hasClearAll('dimensions')"
+        v-if="hasClearAll('measures')"
         type="clear"
         size="12"
         fill="#333"
-        @click="clearAll('dimensions')"
+        @click="clearAll('measures')"
       />
     </div>
-    <div class="dimension__content flex-1" @contextmenu.prevent="handleContextMenu">
+    <div class="measure__content flex-1" @contextmenu.prevent="handleContextMenu">
       <div
         data-action="drag"
-        class="dimension__item my-1"
-        v-for="(dimension, index) in dimensions"
+        class="measure__item my-1"
+        v-for="(measure, index) in measures"
         :key="index"
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
         @mousedown.stop
       >
-        <selector-dimension
-          class="dimension__item__name"
-          cast="dimension"
-          :columnName="dimension.columnName"
-          :displayName="dimension.displayName"
-          :dimension="dimension"
+        <selector-measure
+          class="measure__item__name"
+          cast="measure"
+          :columnName="measure.columnName"
+          :displayName="measure.displayName"
+          :measure="measure"
           :index="index"
-          :invalid="getDimensionInvalid(dimension)"
-          :invalidMessage="getDimensionInvalidMessage(dimension)"
+          :invalid="getMeasureInvalid(measure)"
+          :invalidMessage="getMeasureInvalidMessage(measure)"
         >
           <template #order-icon>
-            <selector-dimension-aggregation
-              v-if="isMeasureAggregationEnabled(dimension)"
-              :column-type="dimension.columnType"
-              :aggregation-type="resolveDimensionAggregationType(dimension)"
+            <selector-measure-aggregation
+              v-if="isMeasureAggregationEnabled(measure)"
+              :column-type="measure.columnType"
+              :aggregation-type="resolveMeasureAggregationType(measure)"
               @update:aggregation-type="handleChangeAggregationType(index, $event)"
             />
           </template>
-        </selector-dimension>
+        </selector-measure>
       </div>
     </div>
     <context-menu ref="contextmenuRef">
@@ -102,7 +102,7 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
 import { defineAsyncComponent } from 'vue'
 import ContextMenu from '../../../../components/context-menu/index.vue'
-import SelectorDimensionAggregation from '../../../../components/selector/dimension-aggregation/index.vue'
+import SelectorMeasureAggregation from '../../../../components/selector/measure-aggregation/index.vue'
 import { clearAllHandler } from '../clearAll'
 
 const MonacoEditor = defineAsyncComponent(() => import('../../../../components/monaco-editor/index.vue'))
@@ -111,17 +111,17 @@ const { clearAll, hasClearAll } = clearAllHandler()
 
 // 初始化数据
 const columnStore = useColumnsStore()
-const dimensionStore = useDimensionsStore()
+const measureStore = useMeasuresStore()
 const groupStore = useGroupsStore()
 
 const monacoEditorRef = ref<InstanceType<typeof MonacoEditor> | null>(null)
 
 /**
- * @desc 值/度量字段数据。历史字段名沿用 dimensions。
- * @returns {ComputedRef<DimensionStore.DimensionOption[]>}
+ * @desc 值/度量字段数据。历史字段名沿用 measures。
+ * @returns {ComputedRef<MeasureStore.MeasureOption[]>}
  */
-const dimensions = computed(() => {
-  return dimensionStore.getMeasures
+const measures = computed(() => {
+  return measureStore.getMeasures
 })
 
 /**
@@ -131,8 +131,8 @@ const groupList = computed<GroupStore.GroupState['groups']>(() => {
   return groupStore.getGroups
 })
 
-const dimensionColumnCountMap = computed(() => {
-  return dimensions.value.reduce<Record<string, number>>((countMap, item) => {
+const measureColumnCountMap = computed(() => {
+  return measures.value.reduce<Record<string, number>>((countMap, item) => {
     if (!item.columnName) return countMap
     countMap[item.columnName] = (countMap[item.columnName] || 0) + 1
     return countMap
@@ -143,48 +143,46 @@ const groupColumnSet = computed(() => {
   return new Set(groupList.value.map((item) => item.columnName).filter(Boolean))
 })
 
-const getDimensionInvalid = (dimension: DimensionStore.DimensionOption) => {
-  return getDimensionInvalidMessage(dimension) !== ''
+const getMeasureInvalid = (measure: MeasureStore.MeasureOption) => {
+  return getMeasureInvalidMessage(measure) !== ''
 }
 
-const getDimensionInvalidMessage = (dimension: DimensionStore.DimensionOption) => {
-  if (!dimension.columnName) return ''
-  if ((dimensionColumnCountMap.value[dimension.columnName] || 0) > 1) {
+const getMeasureInvalidMessage = (measure: MeasureStore.MeasureOption) => {
+  if (!measure.columnName) return ''
+  if ((measureColumnCountMap.value[measure.columnName] || 0) > 1) {
     return '该值已存在'
   }
-  if (groupColumnSet.value.has(dimension.columnName)) {
+  if (groupColumnSet.value.has(measure.columnName)) {
     return '该字段已在分组中使用'
   }
   return ''
 }
 
-const isMeasureAggregationEnabled = (dimension: DimensionStore.DimensionOption) => {
-  return !!dimension.columnName && groupList.value.length > 0
+const isMeasureAggregationEnabled = (measure: MeasureStore.MeasureOption) => {
+  return !!measure.columnName && groupList.value.length > 0
 }
 
-const resolveDimensionAggregationType = (
-  dimension: DimensionStore.DimensionOption
-): AnalyzeConfigDao.OrderAggregationsType => {
-  if (dimension.datasetAggregationType) return dimension.datasetAggregationType
-  return dimension.datasetFieldType === 'metric' ? 'sum' : 'count'
+const resolveMeasureAggregationType = (measure: MeasureStore.MeasureOption): AnalyzeConfigDao.OrderAggregationsType => {
+  if (measure.datasetAggregationType) return measure.datasetAggregationType
+  return measure.datasetFieldType === 'metric' ? 'sum' : 'count'
 }
 
 const handleChangeAggregationType = (index: number, aggregationType: AnalyzeConfigDao.OrderAggregationsType) => {
-  const dimension = dimensions.value[index]
-  if (!dimension) return
-  dimensionStore.updateDimensionByIndex(index, {
-    ...dimension,
+  const measure = measures.value[index]
+  if (!measure) return
+  measureStore.updateMeasureByIndex(index, {
+    ...measure,
     datasetAggregationType: aggregationType
   })
 }
 
 /**
- * @desc addDimension 添加维度
- * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
+ * @desc addMeasure 添加值/度量字段
+ * @param {MeasureStore.MeasureOption|Array<MeasureStore.MeasureOption>} measures
  */
-const addDimension = (dimension: DimensionStore.DimensionOption | Array<DimensionStore.DimensionOption>) => {
-  dimension = Array.isArray(dimension) ? dimension : [dimension]
-  dimensionStore.addDimensions(dimension)
+const addMeasure = (measure: MeasureStore.MeasureOption | Array<MeasureStore.MeasureOption>) => {
+  measure = Array.isArray(measure) ? measure : [measure]
+  measureStore.addMeasures(measure)
 }
 
 /**
@@ -196,7 +194,7 @@ const addDimension = (dimension: DimensionStore.DimensionOption | Array<Dimensio
 const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
   const dropY = dragEvent.clientY // 落点Y
   let ys = [].slice
-    .call(document.querySelectorAll('.dimension__content > [data-action="drag"]'))
+    .call(document.querySelectorAll('.measure__content > [data-action="drag"]'))
     .map(
       (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
     )
@@ -218,9 +216,9 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
-      from: 'dimensions',
+      from: 'measures',
       index,
-      value: dimensions.value[index]
+      value: measures.value[index]
     })
   )
 }
@@ -252,7 +250,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
-  const dimensionOption: DimensionStore.DimensionOption = {
+  const measureOption: MeasureStore.MeasureOption = {
     ...data.value,
     datasetAggregationType:
       data.value.datasetAggregationType || (data.value.datasetFieldType === 'metric' ? 'sum' : 'count'),
@@ -266,20 +264,20 @@ const dropHandler = (dragEvent: DragEvent) => {
 
   const index = data.index
   switch (data.from) {
-    case 'dimensions': {
+    case 'measures': {
       // 移动位置
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
-      const measures = JSON.parse(JSON.stringify(dimensionStore.getMeasures))
+      const measures = JSON.parse(JSON.stringify(measureStore.getMeasures))
       const target = measures.splice(data.index, 1)[0]
       measures.splice(targetIndex, 0, target)
-      dimensionStore.setDimensions(measures)
+      measureStore.setMeasures(measures)
       break
     }
     default:
       // 更新列名 主要是显示已经选中的标志
       columnStore.updateColumn({ column: data.value, index })
-      addDimension(dimensionOption)
+      addMeasure(measureOption)
       break
   }
 }
@@ -385,8 +383,8 @@ const handleConfirmCustomColumn = () => {
   currentColumns.push(newColumn)
   columnStore.setColumns(currentColumns)
 
-  // 自动添加到维度区域
-  addDimension({
+  // 自动添加到值区域
+  addMeasure({
     ...newColumn,
     __invalid: false,
     __invalidMessage: '',
@@ -431,12 +429,12 @@ const getColumnType = (col: ColumnsStore.ColumnOptions) => {
 </script>
 
 <style lang="scss" scoped>
-.dimension {
-  .dimension__content {
+.measure {
+  .measure__content {
     list-style: none;
     overflow: auto;
 
-    .dimension__item {
+    .measure__item {
       cursor: move;
       position: relative;
     }

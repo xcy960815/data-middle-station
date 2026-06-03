@@ -17,7 +17,7 @@ export class AnalyzeConfigService extends BaseService {
         ...item,
         displayName: item.displayName || item.columnComment
       })),
-      dimensions: normalizedData.dimensions.map((item: AnalyzeConfigDao.DimensionOption) => ({
+      measures: normalizedData.measures.map((item: AnalyzeConfigDao.MeasureOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
       })),
@@ -60,7 +60,7 @@ export class AnalyzeConfigService extends BaseService {
       ...createRequest,
       versionNo,
       columns: createRequest.columns || [],
-      dimensions: createRequest.dimensions || [],
+      measures: createRequest.measures || [],
       filters: createRequest.filters || [],
       groups: createRequest.groups || [],
       orders: createRequest.orders || [],
@@ -90,13 +90,13 @@ export class AnalyzeConfigService extends BaseService {
 
     for (const config of configs) {
       const columnsResult = this.removeRuntimeValidationFields(config.columns || [])
-      const dimensionsResult = this.removeRuntimeValidationFields(config.dimensions || [])
+      const measuresResult = this.removeRuntimeValidationFields(config.measures || [])
       const filtersResult = this.removeRuntimeValidationFields(config.filters || [])
       const groupsResult = this.removeRuntimeValidationFields(config.groups || [])
       const ordersResult = this.removeRuntimeValidationFields(config.orders || [])
       const removedCount =
         columnsResult.removedCount +
-        dimensionsResult.removedCount +
+        measuresResult.removedCount +
         filtersResult.removedCount +
         groupsResult.removedCount +
         ordersResult.removedCount
@@ -105,7 +105,7 @@ export class AnalyzeConfigService extends BaseService {
 
       const updated = await this.analyzeConfigMapper.updateAnalyzeConfigRuntimeFields(config.id, {
         columns: columnsResult.data as AnalyzeConfigDao.ColumnItem[],
-        dimensions: dimensionsResult.data as AnalyzeConfigDao.DimensionOption[],
+        measures: measuresResult.data as AnalyzeConfigDao.MeasureOption[],
         filters: filtersResult.data as AnalyzeConfigDao.FilterOption[],
         groups: groupsResult.data as AnalyzeConfigDao.GroupOption[],
         orders: ordersResult.data as AnalyzeConfigDao.OrderOption[]
@@ -129,7 +129,7 @@ export class AnalyzeConfigService extends BaseService {
     return {
       ...configRecord,
       columns: configRecord.columns || [],
-      dimensions: configRecord.dimensions || [],
+      measures: configRecord.measures || [],
       filters: configRecord.filters || [],
       groups: configRecord.groups || [],
       orders: configRecord.orders || []

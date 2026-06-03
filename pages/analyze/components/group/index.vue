@@ -43,7 +43,7 @@ import { clearAllHandler } from '../clearAll'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const columnStore = useColumnsStore()
-const dimensionStore = useDimensionsStore()
+const measureStore = useMeasuresStore()
 const groupStore = useGroupsStore()
 /**
  * @desc groupList
@@ -60,8 +60,8 @@ const groupColumnCountMap = computed(() => {
   }, {})
 })
 
-const dimensionColumnSet = computed(() => {
-  return new Set(dimensionStore.getMeasures.map((item) => item.columnName).filter(Boolean))
+const measureColumnSet = computed(() => {
+  return new Set(measureStore.getMeasures.map((item) => item.columnName).filter(Boolean))
 })
 
 const getGroupInvalid = (group: GroupStore.GroupOption) => {
@@ -73,7 +73,7 @@ const getGroupInvalidMessage = (group: GroupStore.GroupOption) => {
   if ((groupColumnCountMap.value[group.columnName] || 0) > 1) {
     return '该分组已存在'
   }
-  if (dimensionColumnSet.value.has(group.columnName)) {
+  if (measureColumnSet.value.has(group.columnName)) {
     return '该字段已在值中使用'
   }
   return ''
@@ -123,7 +123,7 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
       value: groupList.value[index]
     })
   )
-  // 不做任何自定义拖影，保持和dimension一致
+  // 不做任何自定义拖影，保持和值字段一致
 }
 /**
  * @desc dragHandler

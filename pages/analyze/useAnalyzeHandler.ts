@@ -8,7 +8,7 @@ import { useAnalyzeDraft } from './useAnalyzeDraft'
 export const useAnalyzeHandler = () => {
   const analyzeStore = useAnalyzeStore()
   const columnStore = useColumnsStore()
-  const dimensionStore = useDimensionsStore()
+  const measureStore = useMeasuresStore()
   const filterStore = useFiltersStore()
   const groupStore = useGroupsStore()
   const orderStore = useOrdersStore()
@@ -24,7 +24,7 @@ export const useAnalyzeHandler = () => {
     const chartConfig = data.chartConfig
     analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')
     columnStore.setColumns(chartConfig?.columns || [])
-    dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
+    measureStore.setMeasures((chartConfig?.measures as MeasureStore.MeasureOption[]) || [])
     filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
     groupStore.setGroups((chartConfig?.groups as GroupStore.GroupOption[]) || [])
     orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
