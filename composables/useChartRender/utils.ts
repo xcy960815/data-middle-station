@@ -67,20 +67,15 @@ export interface ChartDataProcessResult {
  * @returns {ChartDataProcessResult} 处理后的图表数据配置
  */
 export function processChartData(config: ChartRenderConfig): ChartDataProcessResult {
-  // 维度与度量：yAxisFields 最后一个为 X 轴，其余为度量
-  const xFieldName = config.yAxisFields[config.yAxisFields.length - 1].columnName
-  // 度量字段名称
-  const measureFields = config.yAxisFields
-    .slice(0, config.yAxisFields.length - 1)
-    .map((item) => item.columnName) as string[]
+  const xFieldOption = config.xAxisFields[0]
+  const xFieldName = xFieldOption?.columnName || ''
+  const measureFields = config.yAxisFields.map((item) => item.columnName).filter(Boolean) as string[]
 
-  // 可选分组（用于单度量或双层分组）
-  const groupFieldName = config.xAxisFields[0]?.columnName
+  const groupFieldName = config.xAxisFields[1]?.columnName
 
   const useFold = measureFields.length > 1
 
   // 轴标题（优先显示中文别名）
-  const xFieldOption = config.yAxisFields[config.yAxisFields.length - 1]
   const xAxisTitle = xFieldOption?.displayName || xFieldOption?.columnComment || xFieldOption?.columnName || ''
 
   let yAxisTitle = ''

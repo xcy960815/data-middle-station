@@ -29,6 +29,7 @@
     "format": "prettier --write \"**/*.{js,ts,vue,json,css,scss,less,html,md}\"",
     "format:check": "prettier --check \"**/*.{js,ts,vue,json,css,scss,less,html,md}\"",
     "lint": "eslint --config eslint.config.js .",
+    "test:analyze-query": "node scripts/test-analyze-query-builder.mjs",
     "lint:fix": "eslint --config eslint.config.js . --fix"
   },
   "overrides": {

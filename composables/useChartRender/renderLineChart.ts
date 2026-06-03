@@ -61,7 +61,7 @@ export function renderLineChart(
   }
 
   // 获取x轴字段的类型信息
-  const xFieldOption = config.yAxisFields[config.yAxisFields.length - 1]
+  const xFieldOption = config.xAxisFields[0]
   const columnType = xFieldOption?.columnType?.toLowerCase() || ''
 
   // 根据字段类型进行排序
