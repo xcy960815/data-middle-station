@@ -13,6 +13,10 @@ declare namespace DashboardDto {
 
   type GetDashboardRequest = Pick<DashboardDao.DashboardRecord, 'id'>
 
+  type GetDashboardConfigHistoryRequest = {
+    dashboardId: number
+  }
+
   type GetDashboardListRequest = {
     page?: number
     pageSize?: number

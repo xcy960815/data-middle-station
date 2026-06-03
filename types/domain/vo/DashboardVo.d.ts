@@ -19,6 +19,10 @@ declare namespace DashboardVo {
     dashboardPermission?: PermissionVo.ResourcePermissionType
   }
 
+  type DashboardConfigHistoryItem = DashboardDao.DashboardConfigRecord & {
+    widgetCount: number
+  }
+
   type DashboardListItem = Pick<
     DashboardDao.DashboardRecord,
     'id' | 'dashboardName' | 'dashboardDesc' | 'createTime' | 'updateTime' | 'createdBy' | 'updatedBy'

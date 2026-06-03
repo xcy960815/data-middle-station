@@ -24,6 +24,7 @@
         </template>
         <template #header-right>
           <div class="dashboard-header-actions">
+            <el-button v-if="editorMode" @click="handleOpenVersionDialog">历史版本</el-button>
             <el-button v-if="!editorMode && canEditDashboard" type="primary" @click="handleEnterEditorMode"
               >编辑看板</el-button
             >
@@ -157,6 +158,41 @@
       </div>
     </template>
   </NuxtLayout>
+
+  <el-dialog v-model="versionDialogVisible" title="历史版本" width="760px" :close-on-click-modal="false" append-to-body>
+    <div v-loading="versionListLoading">
+      <el-table :data="versionList" stripe border>
+        <el-table-column prop="versionNo" label="版本号" width="100" />
+        <el-table-column label="当前版本" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.id === activeDashboard?.currentConfigId" type="success">当前版本</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="widgetCount" label="组件数" width="100" align="center" />
+        <el-table-column prop="createdBy" label="创建人" min-width="120" />
+        <el-table-column prop="createTime" label="创建时间" min-width="180" />
+        <el-table-column label="操作" width="120" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              link
+              type="primary"
+              :disabled="row.id === activeDashboard?.currentConfigId || versionSwitching"
+              @click="handleSwitchVersion(row)"
+            >
+              {{ row.id === activeDashboard?.currentConfigId ? '当前版本' : '切换' }}
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="!versionListLoading && versionList.length === 0" description="暂无历史版本" />
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="versionDialogVisible = false">关闭</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -201,6 +237,11 @@ const dashboardForm = reactive({
 })
 const widgets = ref<DashboardWidgetState[]>([])
 const saving = ref(false)
+const versionDialogVisible = ref(false)
+const versionListLoading = ref(false)
+const versionSwitching = ref(false)
+const versionList = ref<DashboardVo.DashboardConfigHistoryItem[]>([])
+const lastSavedSnapshot = ref('')
 const canvasRef = ref<HTMLElement | null>(null)
 const canvasWidth = ref(0)
 const resizeObserver = ref<ResizeObserver>()
@@ -222,6 +263,27 @@ const chartTypeSet = new Set<AnalyzeStore.ChartType>(['table', 'line', 'pie', 'i
 const canEditDashboard = computed(() => {
   return permissionLevelMap[activeDashboard.value?.dashboardPermission || 'none'] >= permissionLevelMap.edit
 })
+const dashboardSnapshot = computed(() =>
+  JSON.stringify({
+    dashboardName: dashboardForm.dashboardName.trim(),
+    dashboardDesc: dashboardForm.dashboardDesc.trim(),
+    layoutConfig: {
+      columnCount: GRID_COLUMNS,
+      rowHeight: ROW_HEIGHT
+    },
+    widgets: widgets.value.map((widget) => ({
+      analyzeId: widget.analyzeId,
+      widgetTitle: widget.widgetTitle,
+      x: widget.x,
+      y: widget.y,
+      w: widget.w,
+      h: widget.h,
+      chartType: widget.chartType,
+      refreshInterval: widget.refreshInterval,
+      widgetConfig: widget.widgetConfig
+    }))
+  })
+)
 
 const normalizeChartType = (chartType?: string | null): AnalyzeStore.ChartType => {
   return chartTypeSet.has(chartType as AnalyzeStore.ChartType) ? (chartType as AnalyzeStore.ChartType) : 'table'
@@ -257,14 +319,7 @@ const loadDashboardDetail = async () => {
       return
     }
     editorMode.value = false
-    activeDashboard.value = res.data
-    dashboardForm.id = res.data.id
-    dashboardForm.dashboardName = res.data.dashboardName
-    dashboardForm.dashboardDesc = res.data.dashboardDesc
-    widgets.value = res.data.widgets.map((widget) => createWidgetState(widget))
-    await nextTick()
-    updateCanvasWidth()
-    widgets.value.forEach((widget) => loadWidgetData(widget))
+    await applyDashboardDetail(res.data)
   } finally {
     detailLoading.value = false
   }
@@ -291,6 +346,26 @@ const createWidgetState = (widget: DashboardVo.DashboardWidgetItem): DashboardWi
     loading: false,
     errorMessage: widget.analyze ? '' : '分析不存在或无权访问'
   }
+}
+
+const updateLastSavedSnapshot = () => {
+  lastSavedSnapshot.value = dashboardSnapshot.value
+}
+
+const hasUnsavedChanges = () => {
+  return dashboardSnapshot.value !== lastSavedSnapshot.value
+}
+
+const applyDashboardDetail = async (dashboardDetail: DashboardVo.DashboardDetailResponse) => {
+  activeDashboard.value = dashboardDetail
+  dashboardForm.id = dashboardDetail.id
+  dashboardForm.dashboardName = dashboardDetail.dashboardName
+  dashboardForm.dashboardDesc = dashboardDetail.dashboardDesc
+  widgets.value = dashboardDetail.widgets.map((widget) => createWidgetState(widget))
+  updateLastSavedSnapshot()
+  await nextTick()
+  updateCanvasWidth()
+  widgets.value.forEach((widget) => loadWidgetData(widget))
 }
 
 const getAnalyzes = async (targetPage = analyzePage.value) => {
@@ -327,11 +402,7 @@ const handleEnterEditorMode = () => {
 const handleCancelEditorMode = () => {
   if (!activeDashboard.value) return
   editorMode.value = false
-  dashboardForm.dashboardName = activeDashboard.value.dashboardName
-  dashboardForm.dashboardDesc = activeDashboard.value.dashboardDesc
-  widgets.value = activeDashboard.value.widgets.map((widget) => createWidgetState(widget))
-  widgets.value.forEach((widget) => loadWidgetData(widget))
-  nextTick(updateCanvasWidth)
+  void applyDashboardDetail(activeDashboard.value)
 }
 
 const handleUpdateDashboardName = () => {
@@ -537,17 +608,117 @@ const handleSaveDashboard = async () => {
     if (res.code === 200 && res.data) {
       ElMessage.success('看板已保存')
       editorMode.value = false
-      activeDashboard.value = res.data
-      dashboardForm.dashboardName = res.data.dashboardName
-      dashboardForm.dashboardDesc = res.data.dashboardDesc
-      widgets.value = res.data.widgets.map((widget) => createWidgetState(widget))
-      widgets.value.forEach((widget) => loadWidgetData(widget))
+      await applyDashboardDetail(res.data)
     } else {
       ElMessage.error(res.message || '保存看板失败')
     }
   } finally {
     saving.value = false
   }
+}
+
+const loadDashboardVersionList = async () => {
+  if (!dashboardForm.id) {
+    versionList.value = []
+    return
+  }
+
+  versionListLoading.value = true
+  const result = await httpRequest<ApiResponseI<DashboardVo.DashboardConfigHistoryItem[]>>(
+    '/api/getDashboardConfigHistory',
+    {
+      method: 'POST',
+      body: {
+        dashboardId: dashboardForm.id
+      }
+    }
+  ).finally(() => {
+    versionListLoading.value = false
+  })
+
+  if (result.code === 200 && result.data) {
+    versionList.value = result.data
+    return
+  }
+
+  versionList.value = []
+  ElMessage.error(result.message || '获取历史版本失败')
+}
+
+const handleOpenVersionDialog = async () => {
+  versionDialogVisible.value = true
+  await loadDashboardVersionList()
+}
+
+const handleSwitchVersion = async (versionItem: DashboardVo.DashboardConfigHistoryItem) => {
+  if (!dashboardForm.id || versionItem.id === activeDashboard.value?.currentConfigId) {
+    return
+  }
+
+  if (hasUnsavedChanges()) {
+    versionDialogVisible.value = false
+    try {
+      await ElMessageBox.confirm('当前看板有未保存的改动，切换版本会丢失这些改动，是否继续？', '未保存改动', {
+        type: 'warning',
+        confirmButtonText: '继续切换',
+        cancelButtonText: '继续编辑'
+      })
+    } catch (_error) {
+      versionDialogVisible.value = true
+      return
+    }
+  }
+
+  versionSwitching.value = true
+  try {
+    const widgetsWithAnalyze = await Promise.all(
+      (versionItem.widgetsConfig || []).map(async (widgetConfig, index) => {
+        const fallbackWidget: DashboardVo.DashboardWidgetItem = {
+          id: index + 1,
+          dashboardId: dashboardForm.id!,
+          ...widgetConfig,
+          createTime: versionItem.createTime,
+          updateTime: versionItem.updateTime,
+          createdBy: versionItem.createdBy,
+          updatedBy: activeDashboard.value?.updatedBy || '',
+          isDeleted: 0,
+          analyze: null
+        }
+
+        try {
+          const res = await httpRequest<ApiResponseI<AnalyzeVo.AnalyzeDetailResponse>>('/api/getAnalyze', {
+            method: 'POST',
+            body: {
+              id: widgetConfig.analyzeId
+            }
+          })
+          if (res.code === 200 && res.data) {
+            return {
+              ...fallbackWidget,
+              widgetTitle: widgetConfig.widgetTitle || res.data.analyzeName,
+              chartType: normalizeChartType(widgetConfig.chartType || res.data.chartConfig?.chartType),
+              analyze: res.data
+            }
+          }
+        } catch (_error) {
+          return fallbackWidget
+        }
+
+        return fallbackWidget
+      })
+    )
+
+    await applyDashboardDetail({
+      ...(activeDashboard.value as DashboardVo.DashboardDetailResponse),
+      currentConfigId: versionItem.id,
+      layoutConfig: versionItem.layoutConfig,
+      widgets: widgetsWithAnalyze
+    })
+  } finally {
+    versionSwitching.value = false
+  }
+
+  ElMessage.success('已切换到该历史版本，是否保存由你决定')
 }
 
 const getWidgetStyle = (widget: DashboardWidgetState) => {

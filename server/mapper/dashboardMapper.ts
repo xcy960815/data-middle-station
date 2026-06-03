@@ -155,6 +155,55 @@ export class DashboardListMapping implements DashboardVo.DashboardListItem, ICol
   dashboardPermission!: PermissionVo.ResourcePermissionType
 }
 
+class DashboardConfigHistoryMapping implements DashboardVo.DashboardConfigHistoryItem, IColumnTarget {
+  columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
+    return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
+  }
+
+  @Column('id')
+  id!: number
+
+  @Column('dashboard_id')
+  dashboardId!: number
+
+  @Column('version_no')
+  versionNo!: number
+
+  @Column('layout_config')
+  layoutConfig(value: string | DashboardDao.LayoutConfig | null): DashboardDao.LayoutConfig {
+    if (!value) return DEFAULT_LAYOUT_CONFIG
+    if (typeof value === 'string') return JSON.parse(value)
+    return value
+  }
+
+  @Column('widgets_config')
+  widgetsConfig(
+    value: string | DashboardDao.DashboardWidgetConfigItem[] | null
+  ): DashboardDao.DashboardWidgetConfigItem[] {
+    if (!value) return []
+    if (typeof value === 'string') return JSON.parse(value)
+    return value
+  }
+
+  @Column('change_note')
+  changeNote!: string | null
+
+  @Column('create_time')
+  createTime!: string
+
+  @Column('created_by')
+  createdBy!: string
+
+  @Column('update_time')
+  updateTime!: string
+
+  @Column('is_deleted')
+  isDeleted!: number | null
+
+  @Column('widget_count')
+  widgetCount!: number
+}
+
 export class DashboardMapper extends BaseMapper {
   public dataSourceName = DATA_SOURCE_NAME
 
@@ -257,6 +306,20 @@ export class DashboardMapper extends BaseMapper {
     const sql = `insert into ${DASHBOARD_CONFIG_TABLE_NAME} (${keys.join(',')}) values (${keys.map(() => '?').join(',')})`
     const result = await this.exe<ResultSetHeader>(sql, values)
     return result.insertId
+  }
+
+  @Mapping(DashboardConfigHistoryMapping)
+  public async getDashboardConfigHistory<
+    T extends DashboardVo.DashboardConfigHistoryItem = DashboardVo.DashboardConfigHistoryItem
+  >(dashboardId: number): Promise<Array<T>> {
+    const sql = `
+      select
+        ${DASHBOARD_CONFIG_FIELDS.join(',\n        ')},
+        json_length(coalesce(widgets_config, json_array())) as widget_count
+      from ${DASHBOARD_CONFIG_TABLE_NAME}
+      where dashboard_id = ? and is_deleted = 0
+      order by version_no desc, id desc`
+    return await this.exe<Array<T>>(sql, [dashboardId])
   }
 
   public async countDashboards(query: DashboardDao.GetDashboardListParams): Promise<number> {

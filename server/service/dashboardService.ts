@@ -129,6 +129,17 @@ export class DashboardService extends BaseService {
     }
   }
 
+  public async getDashboardConfigHistory(
+    queryRequest: DashboardDto.GetDashboardConfigHistoryRequest
+  ): Promise<DashboardVo.DashboardConfigHistoryItem[]> {
+    await this.resourcePermissionService.assertResourcePermission({
+      resourceType: 'dashboard',
+      resourceId: queryRequest.dashboardId,
+      requiredPermission: 'view'
+    })
+    return await this.dashboardMapper.getDashboardConfigHistory(queryRequest.dashboardId)
+  }
+
   public async createDashboard(
     createRequest: DashboardDto.CreateDashboardRequest
   ): Promise<DashboardVo.DashboardDetailResponse> {
