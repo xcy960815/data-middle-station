@@ -25,7 +25,7 @@ export const updateAnalyzeHandler = () => {
       analyzeStore.setEditorSaving(false)
     })
     if (result.code === 200 && result.data) {
-      analyzeStore.setChartConfigId(result.data.chartConfigId)
+      analyzeStore.setCurrentConfigId(result.data.currentConfigId)
       analyzeStore.setLastSavedSnapshot(serializeAnalyzeDraft())
       analyzeStore.setEditorDirty(false)
       analyzeStore.setLastSavedAt(result.data.updateTime || '')

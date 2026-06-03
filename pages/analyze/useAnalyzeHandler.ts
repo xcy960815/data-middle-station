@@ -15,6 +15,29 @@ export const useAnalyzeHandler = () => {
   const chartConfigStore = useChartConfigStore()
   const { serializeAnalyzeDraft } = useAnalyzeDraft()
 
+  const applyAnalyzeDetail = (data: AnalyzeVo.AnalyzeDetailResponse) => {
+    analyzeStore.setAnalyzeName(data.analyzeName)
+    analyzeStore.setAnalyzeDesc(data.analyzeDesc)
+    analyzeStore.setAnalyzeId(data.id)
+    analyzeStore.setCurrentConfigId(data.currentConfigId)
+
+    const chartConfig = data.chartConfig
+    analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')
+    columnStore.setColumns(chartConfig?.columns || [])
+    dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
+    filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
+    groupStore.setGroups((chartConfig?.groups as GroupStore.GroupOption[]) || [])
+    orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
+    chartConfigStore.setCommonChartConfig(chartConfig?.commonChartConfig || chartConfigStore.$state.commonChartConfig)
+    chartConfigStore.setPrivateChartConfig(
+      chartConfig?.privateChartConfig || chartConfigStore.$state.privateChartConfig
+    )
+    columnStore.setDataSource(chartConfig?.dataSource || '')
+    analyzeStore.setLastSavedSnapshot(serializeAnalyzeDraft())
+    analyzeStore.setEditorDirty(false)
+    analyzeStore.setLastSavedAt(data.updateTime || '')
+  }
+
   /**
    * @desc 获取图表配置
    */
@@ -37,33 +60,7 @@ export const useAnalyzeHandler = () => {
         }
       })
       if (result.code === 200) {
-        const data = result.data!
-        const analyzeName = data.analyzeName
-        analyzeStore.setAnalyzeName(analyzeName)
-        const analyzeDesc = data.analyzeDesc
-        analyzeStore.setAnalyzeDesc(analyzeDesc)
-        const id = data.id
-        analyzeStore.setAnalyzeId(id)
-        const chartConfigId = data.chartConfigId
-        analyzeStore.setChartConfigId(chartConfigId)
-        const chartConfig = data.chartConfig
-        analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')
-        columnStore.setColumns(chartConfig?.columns || [])
-        dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
-        filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
-        groupStore.setGroups((chartConfig?.groups as GroupStore.GroupOption[]) || [])
-        orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
-        // 设置公共配置与图表配置
-        chartConfigStore.setCommonChartConfig(
-          chartConfig?.commonChartConfig || chartConfigStore.$state.commonChartConfig
-        )
-        chartConfigStore.setPrivateChartConfig(
-          chartConfig?.privateChartConfig || chartConfigStore.$state.privateChartConfig
-        )
-        columnStore.setDataSource(chartConfig?.dataSource || '')
-        analyzeStore.setLastSavedSnapshot(serializeAnalyzeDraft())
-        analyzeStore.setEditorDirty(false)
-        analyzeStore.setLastSavedAt(data.updateTime || '')
+        applyAnalyzeDetail(result.data!)
       }
     } finally {
       analyzeStore.setEditorHydrating(false)
@@ -71,6 +68,7 @@ export const useAnalyzeHandler = () => {
   }
 
   return {
+    applyAnalyzeDetail,
     getAnalyze
   }
 }

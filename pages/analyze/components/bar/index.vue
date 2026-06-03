@@ -2,6 +2,7 @@
   <div class="bar relative flex">
     <el-button link @click="handleClickRefresh" class="mr-auto"> 刷新 </el-button>
     <el-button link @click="handleClickAlarm">报警</el-button>
+    <el-button link @click="handleOpenVersionDialog">历史版本</el-button>
     <el-button link @click="handleClickSetting">设置</el-button>
     <el-button link @click="handleClickFullScreen">全屏</el-button>
     <el-button link @click="handleDownload">下载</el-button>
@@ -23,11 +24,48 @@
 
   <!-- 邮件发送对话框 -->
   <SendEmailDtoDialog v-model:visible="emailDialogVisible" ref="emailDialogRef" />
+
+  <el-dialog v-model="versionDialogVisible" title="历史版本" width="760px" :close-on-click-modal="false" append-to-body>
+    <div v-loading="versionListLoading">
+      <el-table :data="versionList" stripe border>
+        <el-table-column prop="versionNo" label="版本号" width="100" />
+        <el-table-column label="当前版本" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.id === analyzeStore.getCurrentConfigId" type="success">当前版本</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="chartType" label="图表类型" min-width="120" />
+        <el-table-column prop="dataSource" label="数据源" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="createdBy" label="创建人" min-width="120" />
+        <el-table-column prop="createTime" label="创建时间" min-width="180" />
+        <el-table-column label="操作" width="120" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              link
+              type="primary"
+              :disabled="row.id === analyzeStore.getCurrentConfigId || versionSwitching"
+              @click="handleSwitchVersion(row)"
+            >
+              {{ row.id === analyzeStore.getCurrentConfigId ? '当前版本' : '切换' }}
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="!versionListLoading && versionList.length === 0" description="暂无历史版本" />
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="versionDialogVisible = false">关闭</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { useChartDownload } from '@/composables/useChartDownload'
-import { ElButton, ElMessage, ElMessageBox, ElTag } from 'element-plus'
+import { httpRequest } from '@/composables/useHttpRequest'
+import { ElButton, ElDialog, ElEmpty, ElMessage, ElMessageBox, ElTable, ElTableColumn, ElTag } from 'element-plus'
 import { onBeforeRouteLeave } from 'vue-router'
 import { updateAnalyzeHandler } from '../../updateAnalyze'
 import { useAnalyzeDataHandler } from '../../useAnalyzeDataHandler'
@@ -35,6 +73,11 @@ import SendEmailDtoDialog from './components/send-email-dialog.vue'
 const { handleUpdateAnalyze, serializeAnalyzeDraft } = updateAnalyzeHandler()
 const { getAnalyzeData } = useAnalyzeDataHandler()
 const analyzeStore = useAnalyzeStore()
+const columnStore = useColumnsStore()
+const dimensionStore = useDimensionsStore()
+const filterStore = useFiltersStore()
+const groupStore = useGroupsStore()
+const orderStore = useOrdersStore()
 const chartConfigStore = useChartConfigStore()
 const { handleDownload } = useChartDownload()
 const chartUpdateTime = computed(() => analyzeStore.getChartUpdateTime)
@@ -46,6 +89,10 @@ const draftSnapshot = computed(() => serializeAnalyzeDraft())
 
 // 发送邮件对话框相关状态
 const emailDialogVisible = ref(false)
+const versionDialogVisible = ref(false)
+const versionListLoading = ref(false)
+const versionSwitching = ref(false)
+const versionList = ref<AnalyzeConfigVo.AnalyzeConfigResponse[]>([])
 
 const emailDialogRef = ref<InstanceType<typeof SendEmailDtoDialog> | null>(null)
 
@@ -122,6 +169,80 @@ const handleClickRefresh = async () => {
  */
 const handleClickAlarm = () => {
   console.log('handleClickAlarm')
+}
+
+const loadAnalyzeVersionList = async () => {
+  if (!analyzeStore.getAnalyzeId) {
+    versionList.value = []
+    return
+  }
+
+  versionListLoading.value = true
+  const result = await httpRequest<ApiResponseI<AnalyzeConfigVo.AnalyzeConfigResponse[]>>(
+    '/api/getAnalyzeConfigHistory',
+    {
+      method: 'POST',
+      body: {
+        analyzeId: analyzeStore.getAnalyzeId
+      }
+    }
+  ).finally(() => {
+    versionListLoading.value = false
+  })
+
+  if (result.code === 200 && result.data) {
+    versionList.value = result.data
+    return
+  }
+
+  versionList.value = []
+  ElMessage.error(result.message || '获取历史版本失败')
+}
+
+const handleOpenVersionDialog = async () => {
+  versionDialogVisible.value = true
+  await loadAnalyzeVersionList()
+}
+
+const handleSwitchVersion = async (versionItem: AnalyzeConfigVo.AnalyzeConfigResponse) => {
+  if (versionItem.id === analyzeStore.getCurrentConfigId) {
+    return
+  }
+
+  if (analyzeStore.getEditorDirty) {
+    versionDialogVisible.value = false
+    try {
+      await ElMessageBox.confirm('当前分析有未保存的改动，切换版本会丢失这些改动，是否继续？', '未保存改动', {
+        type: 'warning',
+        confirmButtonText: '继续切换',
+        cancelButtonText: '继续编辑'
+      })
+    } catch (_error) {
+      versionDialogVisible.value = true
+      return
+    }
+  }
+
+  versionSwitching.value = true
+  analyzeStore.setEditorHydrating(true)
+  try {
+    analyzeStore.setCurrentConfigId(versionItem.id)
+    analyzeStore.setChartType((versionItem.chartType as AnalyzeStore.ChartType) || 'table')
+    columnStore.setColumns(versionItem.columns || [])
+    dimensionStore.setDimensions((versionItem.dimensions as DimensionStore.DimensionOption[]) || [])
+    filterStore.setFilters((versionItem.filters as FilterStore.FilterOption[]) || [])
+    groupStore.setGroups((versionItem.groups as GroupStore.GroupOption[]) || [])
+    orderStore.setOrders((versionItem.orders as OrderStore.OrderOption[]) || [])
+    chartConfigStore.setCommonChartConfig(versionItem.commonChartConfig || chartConfigStore.$state.commonChartConfig)
+    chartConfigStore.setPrivateChartConfig(versionItem.privateChartConfig || chartConfigStore.$state.privateChartConfig)
+    columnStore.setDataSource(versionItem.dataSource || '')
+  } finally {
+    analyzeStore.setEditorHydrating(false)
+    versionSwitching.value = false
+  }
+
+  analyzeStore.setEditorDirty(serializeAnalyzeDraft() !== analyzeStore.getLastSavedSnapshot)
+  ElMessage.success('已切换到该历史版本，是否保存由你决定')
 }
 /**
  * @desc 点设置按钮

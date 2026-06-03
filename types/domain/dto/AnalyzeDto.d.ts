@@ -28,8 +28,8 @@ declare namespace AnalyzeDto {
    * 更新分析请求参数
    */
   type UpdateAnalyzeRequest = Pick<AnalyzeDao.AnalyzeRecord, 'id'> &
-    Partial<Pick<AnalyzeDao.AnalyzeRecord, 'analyzeName' | 'analyzeDesc' | 'chartConfigId'>> & {
-      chartConfig?: AnalyzeConfigDto.ChartConfigPayload
+    Partial<Pick<AnalyzeDao.AnalyzeRecord, 'analyzeName' | 'analyzeDesc' | 'currentConfigId'>> & {
+      chartConfig?: AnalyzeConfigDto.AnalyzeConfigPayload
     }
 
   /**
@@ -41,8 +41,8 @@ declare namespace AnalyzeDto {
    * 创建分析请求参数
    */
   type CreateAnalyzeRequest = Pick<AnalyzeDao.AnalyzeRecord, 'analyzeName' | 'analyzeDesc'> & {
-    chartConfigId?: number | null
-    chartConfig?: AnalyzeConfigDto.ChartConfigPayload
+    currentConfigId?: number | null
+    chartConfig?: AnalyzeConfigDto.AnalyzeConfigPayload
   }
 
   /**

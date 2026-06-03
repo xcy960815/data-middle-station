@@ -4,14 +4,14 @@ import { convertToSqlProperties } from '@/server/utils/databaseHelper'
 import type { ResultSetHeader } from 'mysql2'
 
 const DASHBOARD_TABLE_NAME = '`dashboard`'
-const DASHBOARD_WIDGET_TABLE_NAME = '`dashboard_widget`'
+const DASHBOARD_CONFIG_TABLE_NAME = '`dashboard_config`'
 const DATA_SOURCE_NAME = 'data_middle_station'
 
 const DASHBOARD_FIELDS = [
   'id',
   'dashboard_name',
   'dashboard_desc',
-  'layout_config',
+  'current_config_id',
   'create_time',
   'update_time',
   'created_by',
@@ -19,10 +19,28 @@ const DASHBOARD_FIELDS = [
   'is_deleted'
 ]
 
+const DASHBOARD_CONFIG_FIELDS = [
+  'id',
+  'dashboard_id',
+  'version_no',
+  'layout_config',
+  'widgets_config',
+  'change_note',
+  'create_time',
+  'created_by',
+  'update_time',
+  'is_deleted'
+]
+
 const DASHBOARD_LIST_SORT_FIELD_MAP: Record<DashboardDao.DashboardListSortField, string> = {
   dashboardName: 'd.dashboard_name',
   createTime: 'd.create_time',
   updateTime: 'd.update_time'
+}
+
+const DEFAULT_LAYOUT_CONFIG: DashboardDao.LayoutConfig = {
+  columnCount: 24,
+  rowHeight: 60
 }
 
 export class DashboardMapping implements DashboardDao.DashboardRecord, IColumnTarget {
@@ -39,12 +57,8 @@ export class DashboardMapping implements DashboardDao.DashboardRecord, IColumnTa
   @Column('dashboard_desc')
   dashboardDesc!: string
 
-  @Column('layout_config')
-  layoutConfig(value: string | DashboardDao.LayoutConfig | null): DashboardDao.LayoutConfig {
-    if (!value) return { columnCount: 24, rowHeight: 60 }
-    if (typeof value === 'string') return JSON.parse(value)
-    return value
-  }
+  @Column('current_config_id')
+  currentConfigId!: number | null
 
   @Column('create_time')
   createTime!: string
@@ -62,7 +76,7 @@ export class DashboardMapping implements DashboardDao.DashboardRecord, IColumnTa
   isDeleted!: number | null
 }
 
-export class DashboardWidgetMapping implements DashboardDao.DashboardWidgetRecord, IColumnTarget {
+class DashboardConfigMapping implements DashboardDao.DashboardConfigRecord, IColumnTarget {
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -73,48 +87,36 @@ export class DashboardWidgetMapping implements DashboardDao.DashboardWidgetRecor
   @Column('dashboard_id')
   dashboardId!: number
 
-  @Column('analyze_id')
-  analyzeId!: number
+  @Column('version_no')
+  versionNo!: number
 
-  @Column('widget_title')
-  widgetTitle!: string
-
-  @Column('x')
-  x!: number
-
-  @Column('y')
-  y!: number
-
-  @Column('w')
-  w!: number
-
-  @Column('h')
-  h!: number
-
-  @Column('chart_type')
-  chartType!: AnalyzeStore.ChartType
-
-  @Column('refresh_interval')
-  refreshInterval!: number
-
-  @Column('widget_config')
-  widgetConfig(value: string | DashboardDao.WidgetConfig | null): DashboardDao.WidgetConfig {
-    if (!value) return {}
+  @Column('layout_config')
+  layoutConfig(value: string | DashboardDao.LayoutConfig | null): DashboardDao.LayoutConfig {
+    if (!value) return DEFAULT_LAYOUT_CONFIG
     if (typeof value === 'string') return JSON.parse(value)
     return value
   }
 
+  @Column('widgets_config')
+  widgetsConfig(
+    value: string | DashboardDao.DashboardWidgetConfigItem[] | null
+  ): DashboardDao.DashboardWidgetConfigItem[] {
+    if (!value) return []
+    if (typeof value === 'string') return JSON.parse(value)
+    return value
+  }
+
+  @Column('change_note')
+  changeNote!: string | null
+
   @Column('create_time')
   createTime!: string
-
-  @Column('update_time')
-  updateTime!: string
 
   @Column('created_by')
   createdBy!: string
 
-  @Column('updated_by')
-  updatedBy!: string
+  @Column('update_time')
+  updateTime!: string
 
   @Column('is_deleted')
   isDeleted!: number | null
@@ -210,11 +212,59 @@ export class DashboardMapper extends BaseMapper {
     return result?.[0]
   }
 
+  @Mapping(DashboardConfigMapping)
+  public async getDashboardConfig<T extends DashboardDao.DashboardConfigRecord = DashboardDao.DashboardConfigRecord>(
+    query: DashboardDao.GetDashboardConfigParams
+  ): Promise<T> {
+    const { keys, values } = convertToSqlProperties(query)
+    const whereClauses: string[] = []
+    const queryValues: any[] = []
+
+    keys.forEach((key, index) => {
+      if (DASHBOARD_CONFIG_FIELDS.includes(key)) {
+        whereClauses.push(`${key} = ?`)
+        queryValues.push(values[index])
+      }
+    })
+
+    if (!keys.includes('is_deleted')) {
+      whereClauses.push('is_deleted = 0')
+    }
+
+    const sql = `
+      select ${DASHBOARD_CONFIG_FIELDS.join(',\n        ')}
+      from ${DASHBOARD_CONFIG_TABLE_NAME}
+      where ${whereClauses.join(' and ')}`
+    const result = await this.exe<Array<T>>(sql, queryValues)
+    return result?.[0]
+  }
+
+  public async getNextVersionNo(dashboardId: number): Promise<number> {
+    const sql = `
+      select coalesce(max(version_no), 0) + 1 as nextVersionNo
+      from ${DASHBOARD_CONFIG_TABLE_NAME}
+      where dashboard_id = ?`
+    const result = await this.exe<Array<{ nextVersionNo: number }>>(sql, [dashboardId])
+    return Number(result?.[0]?.nextVersionNo || 1)
+  }
+
+  public async createDashboardConfig(createParams: DashboardDao.CreateDashboardConfigParams): Promise<number> {
+    const { keys, values } = convertToSqlProperties({
+      ...createParams,
+      layoutConfig: JSON.stringify(createParams.layoutConfig || DEFAULT_LAYOUT_CONFIG),
+      widgetsConfig: JSON.stringify(createParams.widgetsConfig || [])
+    })
+    const sql = `insert into ${DASHBOARD_CONFIG_TABLE_NAME} (${keys.join(',')}) values (${keys.map(() => '?').join(',')})`
+    const result = await this.exe<ResultSetHeader>(sql, values)
+    return result.insertId
+  }
+
   public async countDashboards(query: DashboardDao.GetDashboardListParams): Promise<number> {
     const { whereClause, params } = this.buildDashboardListQuery(query)
     const sql = `
       select count(distinct d.id) as total
       from ${DASHBOARD_TABLE_NAME} d
+      left join ${DASHBOARD_CONFIG_TABLE_NAME} dc on dc.id = d.current_config_id and dc.is_deleted = 0
       left join resource_role_permission rrp on rrp.resource_type = 'dashboard' and rrp.resource_id = d.id
       left join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
       ${whereClause}`
@@ -241,99 +291,17 @@ export class DashboardMapper extends BaseMapper {
         d.update_time,
         d.created_by,
         d.updated_by,
-        count(distinct dw.id) as widget_count,
+        json_length(coalesce(dc.widgets_config, json_array())) as widget_count,
         ${permissionSelectSql} as dashboard_permission
       from ${DASHBOARD_TABLE_NAME} d
-      left join ${DASHBOARD_WIDGET_TABLE_NAME} dw on dw.dashboard_id = d.id and dw.is_deleted = 0
+      left join ${DASHBOARD_CONFIG_TABLE_NAME} dc on dc.id = d.current_config_id and dc.is_deleted = 0
       left join resource_role_permission rrp on rrp.resource_type = 'dashboard' and rrp.resource_id = d.id
       left join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
       ${whereClause}
-      group by d.id, d.dashboard_name, d.dashboard_desc, d.create_time, d.update_time, d.created_by, d.updated_by
+      group by d.id, d.dashboard_name, d.dashboard_desc, d.create_time, d.update_time, d.created_by, d.updated_by, dc.widgets_config
       order by ${sortField} ${sortOrder}
       limit ? offset ?`
     return await this.exe<Array<T>>(sql, [...params, pageSize, offset])
-  }
-
-  @Mapping(DashboardWidgetMapping)
-  public async getDashboardWidgets<T extends DashboardDao.DashboardWidgetRecord = DashboardDao.DashboardWidgetRecord>(
-    dashboardId: number
-  ): Promise<Array<T>> {
-    const sql = `
-      select
-        id,
-        dashboard_id,
-        analyze_id,
-        widget_title,
-        x,
-        y,
-        w,
-        h,
-        chart_type,
-        refresh_interval,
-        widget_config,
-        create_time,
-        update_time,
-        created_by,
-        updated_by,
-        is_deleted
-      from ${DASHBOARD_WIDGET_TABLE_NAME}
-      where dashboard_id = ? and is_deleted = 0
-      order by y asc, x asc, id asc`
-    return await this.exe<Array<T>>(sql, [dashboardId])
-  }
-
-  public async replaceDashboardWidgets(replaceParams: DashboardDao.ReplaceDashboardWidgetParams): Promise<boolean> {
-    const softDeleteSql = `
-      update ${DASHBOARD_WIDGET_TABLE_NAME}
-      set is_deleted = 1, updated_by = ?, update_time = ?
-      where dashboard_id = ? and is_deleted = 0`
-    await this.exe<ResultSetHeader>(softDeleteSql, [
-      replaceParams.updatedBy,
-      replaceParams.updateTime,
-      replaceParams.dashboardId
-    ])
-
-    if (replaceParams.widgets.length === 0) {
-      return true
-    }
-
-    const insertSql = `
-      insert into ${DASHBOARD_WIDGET_TABLE_NAME}
-        (
-          dashboard_id,
-          analyze_id,
-          widget_title,
-          x,
-          y,
-          w,
-          h,
-          chart_type,
-          refresh_interval,
-          widget_config,
-          created_by,
-          updated_by,
-          create_time,
-          update_time
-        )
-      values ${replaceParams.widgets.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}`
-    const values = replaceParams.widgets.flatMap((widget) => [
-      replaceParams.dashboardId,
-      widget.analyzeId,
-      widget.widgetTitle,
-      widget.x,
-      widget.y,
-      widget.w,
-      widget.h,
-      widget.chartType,
-      widget.refreshInterval,
-      JSON.stringify(widget.widgetConfig || {}),
-      replaceParams.createdBy,
-      replaceParams.updatedBy,
-      replaceParams.createTime,
-      replaceParams.updateTime
-    ])
-    const result = await this.exe<ResultSetHeader>(insertSql, values)
-    return result.affectedRows > 0
   }
 
   private buildDashboardAccessQuery(query: DashboardDao.GetDashboardParams) {

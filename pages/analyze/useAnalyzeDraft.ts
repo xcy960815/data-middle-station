@@ -15,7 +15,7 @@ export const useAnalyzeDraft = () => {
       id: analyzeStore.getAnalyzeId!,
       analyzeName: analyzeStore.getAnalyzeName,
       analyzeDesc: analyzeStore.getAnalyzeDesc,
-      chartConfigId: analyzeStore.getChartConfigId,
+      currentConfigId: analyzeStore.getCurrentConfigId,
       chartConfig: {
         dataSource: columnStore.getDataSource,
         columns: JSON.parse(JSON.stringify(columnStore.getColumns)),

@@ -2,11 +2,19 @@
  * @desc 看板响应
  */
 declare namespace DashboardVo {
-  type DashboardWidgetItem = DashboardDao.DashboardWidgetRecord & {
+  type DashboardWidgetItem = DashboardDao.DashboardWidgetConfigItem & {
+    id: number
+    dashboardId: number
+    createTime: string
+    updateTime: string
+    createdBy: string
+    updatedBy: string
+    isDeleted: number | null
     analyze: AnalyzeVo.AnalyzeDetailResponse | null
   }
 
   type DashboardDetailResponse = DashboardDao.DashboardRecord & {
+    layoutConfig: DashboardDao.LayoutConfig
     widgets: DashboardWidgetItem[]
     dashboardPermission?: PermissionVo.ResourcePermissionType
   }

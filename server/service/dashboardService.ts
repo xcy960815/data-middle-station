@@ -22,6 +22,45 @@ export class DashboardService extends BaseService {
     this.resourcePermissionService = new ResourcePermissionService()
   }
 
+  private async resolveDashboardWidgets(
+    dashboardRecord: DashboardDao.DashboardRecord,
+    dashboardConfig: DashboardDao.DashboardConfigRecord | null
+  ): Promise<DashboardVo.DashboardWidgetItem[]> {
+    const widgetConfigs = dashboardConfig?.widgetsConfig || []
+    const resolvedWidgets = await Promise.all(
+      widgetConfigs.map(async (widgetConfig, index) => {
+        try {
+          const analyze = await this.analyzeService.getAnalyze({ id: widgetConfig.analyzeId })
+          return {
+            id: index + 1,
+            dashboardId: dashboardRecord.id,
+            ...widgetConfig,
+            createTime: dashboardConfig?.createTime || dashboardRecord.createTime,
+            updateTime: dashboardConfig?.updateTime || dashboardRecord.updateTime,
+            createdBy: dashboardConfig?.createdBy || dashboardRecord.createdBy,
+            updatedBy: dashboardRecord.updatedBy,
+            isDeleted: 0,
+            analyze
+          }
+        } catch (_error) {
+          return {
+            id: index + 1,
+            dashboardId: dashboardRecord.id,
+            ...widgetConfig,
+            createTime: dashboardConfig?.createTime || dashboardRecord.createTime,
+            updateTime: dashboardConfig?.updateTime || dashboardRecord.updateTime,
+            createdBy: dashboardConfig?.createdBy || dashboardRecord.createdBy,
+            updatedBy: dashboardRecord.updatedBy,
+            isDeleted: 0,
+            analyze: null
+          }
+        }
+      })
+    )
+
+    return resolvedWidgets
+  }
+
   public async getDashboards(
     queryRequest: DashboardDto.GetDashboardListRequest = {}
   ): Promise<DashboardVo.DashboardListResponse> {
@@ -70,26 +109,14 @@ export class DashboardService extends BaseService {
       throw new Error('看板不存在或无权访问')
     }
 
-    const widgets = await this.dashboardMapper.getDashboardWidgets(dashboardRecord.id)
-    const resolvedWidgets = await Promise.all(
-      widgets.map(async (widget) => {
-        try {
-          const analyze = await this.analyzeService.getAnalyze({ id: widget.analyzeId })
-          return {
-            ...widget,
-            analyze
-          }
-        } catch (_error) {
-          return {
-            ...widget,
-            analyze: null
-          }
-        }
-      })
-    )
+    const dashboardConfig = dashboardRecord.currentConfigId
+      ? await this.dashboardMapper.getDashboardConfig({ id: dashboardRecord.currentConfigId })
+      : null
+    const resolvedWidgets = await this.resolveDashboardWidgets(dashboardRecord, dashboardConfig)
 
     return {
       ...dashboardRecord,
+      layoutConfig: dashboardConfig?.layoutConfig || DEFAULT_LAYOUT_CONFIG,
       dashboardPermission: currentUser
         ? await this.resourcePermissionService.getCurrentUserResourcePermission(
             'dashboard',
@@ -109,23 +136,29 @@ export class DashboardService extends BaseService {
     const dashboardId = await this.dashboardMapper.createDashboard({
       dashboardName: createRequest.dashboardName,
       dashboardDesc: createRequest.dashboardDesc || '',
-      layoutConfig: createRequest.layoutConfig || DEFAULT_LAYOUT_CONFIG,
+      currentConfigId: null,
       createdBy,
       updatedBy,
       createTime,
       updateTime
     })
 
-    if (createRequest.widgets?.length) {
-      await this.dashboardMapper.replaceDashboardWidgets({
-        dashboardId,
-        widgets: this.normalizeWidgets(createRequest.widgets),
-        createdBy,
-        updatedBy,
-        createTime,
-        updateTime
-      })
-    }
+    const configId = await this.dashboardMapper.createDashboardConfig({
+      dashboardId,
+      versionNo: 1,
+      layoutConfig: createRequest.layoutConfig || DEFAULT_LAYOUT_CONFIG,
+      widgetsConfig: this.normalizeWidgets(createRequest.widgets || []),
+      changeNote: null,
+      createdBy,
+      createTime,
+      updateTime
+    })
+    await this.dashboardMapper.updateDashboard({
+      id: dashboardId,
+      currentConfigId: configId,
+      updatedBy,
+      updateTime
+    })
 
     return await this.getDashboard({ id: dashboardId })
   }
@@ -144,7 +177,6 @@ export class DashboardService extends BaseService {
       id: updateRequest.id,
       dashboardName: updateRequest.dashboardName,
       dashboardDesc: updateRequest.dashboardDesc,
-      layoutConfig: updateRequest.layoutConfig,
       updatedBy,
       updateTime
     })
@@ -152,16 +184,23 @@ export class DashboardService extends BaseService {
       throw new Error('保存看板失败')
     }
 
-    if (updateRequest.widgets) {
-      await this.dashboardMapper.replaceDashboardWidgets({
-        dashboardId: currentDashboard.id,
-        widgets: this.normalizeWidgets(updateRequest.widgets),
-        createdBy,
-        updatedBy,
-        createTime,
-        updateTime
-      })
-    }
+    const nextVersionNo = await this.dashboardMapper.getNextVersionNo(currentDashboard.id)
+    const configId = await this.dashboardMapper.createDashboardConfig({
+      dashboardId: currentDashboard.id,
+      versionNo: nextVersionNo,
+      layoutConfig: updateRequest.layoutConfig || currentDashboard.layoutConfig || DEFAULT_LAYOUT_CONFIG,
+      widgetsConfig: this.normalizeWidgets(updateRequest.widgets || currentDashboard.widgets || []),
+      changeNote: null,
+      createdBy,
+      createTime,
+      updateTime
+    })
+    await this.dashboardMapper.updateDashboard({
+      id: currentDashboard.id,
+      currentConfigId: configId,
+      updatedBy,
+      updateTime
+    })
 
     return await this.getDashboard({ id: updateRequest.id })
   }
@@ -181,9 +220,7 @@ export class DashboardService extends BaseService {
     })
   }
 
-  private normalizeWidgets(
-    widgets: DashboardDto.DashboardWidgetPayload[]
-  ): DashboardDao.ReplaceDashboardWidgetParams['widgets'] {
+  private normalizeWidgets(widgets: DashboardDto.DashboardWidgetPayload[]): DashboardDao.DashboardWidgetConfigItem[] {
     const columnCount = DEFAULT_LAYOUT_CONFIG.columnCount
     return widgets.map((widget) => {
       const w = Math.min(columnCount, Math.max(MIN_WIDGET_WIDTH, Math.floor(Number(widget.w || 4))))

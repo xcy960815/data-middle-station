@@ -16,21 +16,7 @@ declare namespace DashboardDao {
     showHeader?: boolean
   }
 
-  type DashboardRecord = {
-    id: number
-    dashboardName: string
-    dashboardDesc: string
-    layoutConfig: LayoutConfig
-    createTime: string
-    updateTime: string
-    createdBy: string
-    updatedBy: string
-    isDeleted: number | null
-  }
-
-  type DashboardWidgetRecord = {
-    id: number
-    dashboardId: number
+  type DashboardWidgetConfigItem = {
     analyzeId: number
     widgetTitle: string
     x: number
@@ -40,10 +26,30 @@ declare namespace DashboardDao {
     chartType: AnalyzeStore.ChartType
     refreshInterval: number
     widgetConfig: WidgetConfig
+  }
+
+  type DashboardRecord = {
+    id: number
+    dashboardName: string
+    dashboardDesc: string
+    currentConfigId: number | null
     createTime: string
     updateTime: string
     createdBy: string
     updatedBy: string
+    isDeleted: number | null
+  }
+
+  type DashboardConfigRecord = {
+    id: number
+    dashboardId: number
+    versionNo: number
+    layoutConfig: LayoutConfig
+    widgetsConfig: DashboardWidgetConfigItem[]
+    changeNote: string | null
+    createTime: string
+    createdBy: string
+    updateTime: string
     isDeleted: number | null
   }
 
@@ -64,22 +70,29 @@ declare namespace DashboardDao {
 
   type CreateDashboardParams = Pick<
     DashboardRecord,
-    'dashboardName' | 'dashboardDesc' | 'layoutConfig' | 'createdBy' | 'updatedBy' | 'createTime' | 'updateTime'
+    'dashboardName' | 'dashboardDesc' | 'currentConfigId' | 'createdBy' | 'updatedBy' | 'createTime' | 'updateTime'
   >
 
   type UpdateDashboardParams = Pick<DashboardRecord, 'id' | 'updatedBy' | 'updateTime'> &
-    Partial<Pick<DashboardRecord, 'dashboardName' | 'dashboardDesc' | 'layoutConfig'>>
+    Partial<Pick<DashboardRecord, 'dashboardName' | 'dashboardDesc' | 'currentConfigId'>>
 
   type DeleteDashboardParams = Pick<DashboardRecord, 'id' | 'updatedBy' | 'updateTime'>
 
-  type ReplaceDashboardWidgetParams = Pick<DashboardWidgetRecord, 'dashboardId' | 'updatedBy' | 'updateTime'> & {
-    widgets: Array<
-      Pick<
-        DashboardWidgetRecord,
-        'analyzeId' | 'widgetTitle' | 'x' | 'y' | 'w' | 'h' | 'chartType' | 'refreshInterval' | 'widgetConfig'
-      >
-    >
-    createdBy: string
-    createTime: string
+  type GetDashboardConfigParams = Partial<Pick<DashboardConfigRecord, 'id' | 'dashboardId' | 'versionNo' | 'isDeleted'>>
+
+  type CreateDashboardConfigParams = Pick<
+    DashboardConfigRecord,
+    | 'dashboardId'
+    | 'versionNo'
+    | 'layoutConfig'
+    | 'widgetsConfig'
+    | 'changeNote'
+    | 'createdBy'
+    | 'updateTime'
+    | 'createTime'
+  >
+
+  type DeleteDashboardConfigsParams = Pick<DashboardConfigRecord, 'dashboardId' | 'updateTime'> & {
+    updatedBy: string
   }
 }

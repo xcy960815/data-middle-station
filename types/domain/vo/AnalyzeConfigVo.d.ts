@@ -86,10 +86,10 @@ declare namespace AnalyzeConfigVo {
   type PrivateChartConfigItem = AnalyzeConfigDao.PrivateChartConfig
 
   /**
-   * 图表配置响应
+   * 分析配置响应
    */
-  type ChartConfigResponse = Omit<
-    AnalyzeConfigDao.ChartConfigRecord,
+  type AnalyzeConfigResponse = Omit<
+    AnalyzeConfigDao.AnalyzeConfigRecord,
     'columns' | 'dimensions' | 'filters' | 'groups' | 'orders'
   > & {
     columns: ColumnItem[]
@@ -98,6 +98,8 @@ declare namespace AnalyzeConfigVo {
     groups: GroupOption[]
     orders: OrderOption[]
   }
+
+  type ChartConfigResponse = AnalyzeConfigResponse
 
   /**
    * @desc 饼图配置

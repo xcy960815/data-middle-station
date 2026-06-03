@@ -379,13 +379,12 @@ declare namespace AnalyzeConfigDao {
   }
 
   /**
-   * 数据库图表配置
+   * 分析配置版本
    */
-  type ChartConfigRecord = {
-    /**
-     * 图表id
-     */
+  type AnalyzeConfigRecord = {
     id: number
+    analyzeId: number
+    versionNo: number
     /**
      * 数据源
      */
@@ -434,10 +433,7 @@ declare namespace AnalyzeConfigDao {
      * 创建人
      */
     createdBy: string
-    /**
-     * 更新人
-     */
-    updatedBy: string
+    changeNote?: string
     /**
      * 是否删除：0-未删除，1-已删除
      */
@@ -445,24 +441,22 @@ declare namespace AnalyzeConfigDao {
   }
 
   /**
-   * 获取图表配置请求参数
+   * 获取分析配置请求参数
    */
-  type GetChartConfigParams = Partial<ChartConfigRecord> & {
+  type GetAnalyzeConfigParams = Partial<AnalyzeConfigRecord> & {
     id: number
   }
 
   /**
-   * 创建图表配置请求参数
+   * 创建分析配置请求参数
    */
-  type CreateChartConfigParams = Omit<ChartConfigRecord, 'id' | 'isDeleted'>
+  type CreateAnalyzeConfigParams = Omit<AnalyzeConfigRecord, 'id' | 'isDeleted'>
 
   /**
-   * 更新图表配置请求参数
+   * 删除分析配置请求参数
    */
-  type UpdateChartConfigParams = Omit<ChartConfigRecord, 'createTime' | 'createdBy' | 'isDeleted'>
-
-  /**
-   * 删除图表配置请求参数
-   */
-  type DeleteChartConfigParams = Pick<ChartConfigRecord, 'id' | 'updatedBy' | 'updateTime'>
+  type DeleteAnalyzeConfigsParams = Pick<AnalyzeConfigRecord, 'analyzeId'> & {
+    updatedBy: string
+    updateTime: string
+  }
 }

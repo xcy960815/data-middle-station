@@ -24,7 +24,6 @@
         </template>
         <template #header-right>
           <div class="dashboard-header-actions">
-            <el-button @click="handleBackToList">返回列表</el-button>
             <el-button v-if="!editorMode && canEditDashboard" type="primary" @click="handleEnterEditorMode"
               >编辑看板</el-button
             >
@@ -319,10 +318,6 @@ const getAnalyzes = async (targetPage = analyzePage.value) => {
   }
 }
 
-const handleBackToList = () => {
-  router.push('/dashboard')
-}
-
 const handleEnterEditorMode = () => {
   editorMode.value = true
   getAnalyzes(1)
@@ -445,6 +440,10 @@ const getNextWidgetPosition = () => {
 const buildWidgetAnalyzeDataParams = (
   chartConfig: AnalyzeConfigVo.ChartConfigResponse
 ): AnalyzeDataDto.AnalyzeDataQuery => {
+  if (!chartConfig.dataSource) {
+    throw new Error('分析数据源不存在')
+  }
+
   return {
     dataSource: chartConfig.dataSource,
     filters: (chartConfig.filters || []).filter(

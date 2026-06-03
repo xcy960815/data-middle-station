@@ -2,30 +2,38 @@
  * 前端传入的图表配置
  */
 declare namespace AnalyzeConfigDto {
-  type ChartConfigPayload = Omit<
-    AnalyzeConfigDao.ChartConfigRecord,
-    'id' | 'createTime' | 'createdBy' | 'updateTime' | 'updatedBy' | 'isDeleted'
+  type AnalyzeConfigPayload = Omit<
+    AnalyzeConfigDao.AnalyzeConfigRecord,
+    'id' | 'analyzeId' | 'versionNo' | 'createTime' | 'createdBy' | 'updateTime' | 'isDeleted'
   >
 
   /**
-   * 获取图表配置请求参数
+   * 获取分析配置请求参数
    */
-  type GetChartConfigRequest = {
+  type GetAnalyzeConfigRequest = {
     id: number
   }
 
-  /**
-   * 图表配置更新请求参数
-   */
-  type UpdateChartConfigRequest = Pick<AnalyzeConfigDao.ChartConfigRecord, 'id'> & Partial<ChartConfigPayload>
+  type GetAnalyzeConfigHistoryRequest = {
+    analyzeId: number
+  }
+
+  type SwitchAnalyzeConfigVersionRequest = {
+    analyzeId: number
+    configId: number
+  }
 
   /**
-   * 图表配置删除请求参数
+   * 分析配置删除请求参数
    */
-  type DeleteChartConfigRequest = Pick<AnalyzeConfigDao.ChartConfigRecord, 'id'>
+  type DeleteAnalyzeConfigsRequest = {
+    analyzeId: number
+  }
 
   /**
-   * 创建图表配置请求参数
+   * 创建分析配置请求参数
    */
-  type CreateChartConfigRequest = ChartConfigPayload
+  type CreateAnalyzeConfigRequest = AnalyzeConfigPayload & {
+    analyzeId: number
+  }
 }

@@ -14,7 +14,7 @@ export const useAnalyzeStore = defineStore<
     chartUpdateTakesTime: '',
     chartErrorMessage: '',
     chartType: 'table',
-    chartConfigId: null,
+    currentConfigId: null,
     chartLoading: false,
     analyzeData: [],
     chartErrorAnalysis: '',
@@ -78,8 +78,8 @@ export const useAnalyzeStore = defineStore<
     /**
      * @desc 获取图表配置id
      */
-    getChartConfigId(state) {
-      return state.chartConfigId
+    getCurrentConfigId(state) {
+      return state.currentConfigId
     },
     /**
      * @desc 获取图表数据
@@ -183,11 +183,11 @@ export const useAnalyzeStore = defineStore<
     },
     /**
      * @desc 设置图表配置id
-     * @param chartConfigId {number | null}
+     * @param currentConfigId {number | null}
      * @returns {void}
      */
-    setChartConfigId(chartConfigId) {
-      this.chartConfigId = chartConfigId
+    setCurrentConfigId(currentConfigId) {
+      this.currentConfigId = currentConfigId
     },
     /**
      * @desc 设置图表错误信息

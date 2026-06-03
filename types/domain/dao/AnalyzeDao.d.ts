@@ -43,9 +43,9 @@ declare namespace AnalyzeDao {
      */
     updatedBy: string
     /**
-     * 分析配置id
+     * 当前生效的分析配置版本 ID
      */
-    chartConfigId: number | null
+    currentConfigId: number | null
     /**
      * 是否删除：0-未删除，1-已删除
      */
@@ -77,14 +77,14 @@ declare namespace AnalyzeDao {
     AnalyzeRecord,
     'analyzeName' | 'analyzeDesc' | 'createdBy' | 'updatedBy' | 'createTime' | 'updateTime'
   > & {
-    chartConfigId?: number | null
+    currentConfigId?: number | null
   }
 
   /**
    * 更新分析请求参数
    */
   type UpdateAnalyzeParams = Pick<AnalyzeRecord, 'id' | 'updatedBy' | 'updateTime'> &
-    Partial<Pick<AnalyzeRecord, 'analyzeName' | 'analyzeDesc' | 'chartConfigId'>>
+    Partial<Pick<AnalyzeRecord, 'analyzeName' | 'analyzeDesc' | 'currentConfigId'>>
 
   /**
    * 更新分析描述请求参数

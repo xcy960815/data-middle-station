@@ -7,7 +7,7 @@ declare namespace DashboardDto {
   type DashboardListSortOrder = DashboardDao.DashboardListSortOrder
 
   type DashboardWidgetPayload = Pick<
-    DashboardDao.DashboardWidgetRecord,
+    DashboardDao.DashboardWidgetConfigItem,
     'analyzeId' | 'widgetTitle' | 'x' | 'y' | 'w' | 'h' | 'chartType' | 'refreshInterval' | 'widgetConfig'
   >
 
@@ -27,7 +27,9 @@ declare namespace DashboardDto {
   }
 
   type UpdateDashboardRequest = Pick<DashboardDao.DashboardRecord, 'id'> &
-    Partial<Pick<DashboardDao.DashboardRecord, 'dashboardName' | 'dashboardDesc' | 'layoutConfig'>> & {
+    Partial<Pick<DashboardDao.DashboardRecord, 'dashboardName' | 'dashboardDesc'>> & {
+      currentConfigId?: number | null
+      layoutConfig?: DashboardDao.LayoutConfig
       widgets?: DashboardWidgetPayload[]
     }
 

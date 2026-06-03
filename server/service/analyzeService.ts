@@ -1,6 +1,6 @@
 import { AnalyzeMapper } from '@/server/mapper/analyzeMapper'
 import { BaseService } from '@/server/service/baseService'
-import { ChartConfigService } from '@/server/service/chartConfigService'
+import { AnalyzeConfigService } from '@/server/service/analyzeConfigService'
 import { ResourcePermissionService } from '@/server/service/resourcePermissionService'
 
 /**
@@ -13,27 +13,27 @@ export class AnalyzeService extends BaseService {
   private analyzeMapper: AnalyzeMapper
 
   /**
-   * 图表配置服务
+   * 分析配置服务
    */
-  private chartConfigService: ChartConfigService
+  private analyzeConfigService: AnalyzeConfigService
   private resourcePermissionService: ResourcePermissionService
 
   constructor() {
     super()
     this.analyzeMapper = new AnalyzeMapper()
-    this.chartConfigService = new ChartConfigService()
+    this.analyzeConfigService = new AnalyzeConfigService()
     this.resourcePermissionService = new ResourcePermissionService()
   }
 
   /**
    * @desc DAO 转 VO
    * @param analyzeRecord {AnalyzeDao.AnalyzeRecord} 分析记录
-   * @param resolvedChartConfig {AnalyzeConfigVo.ChartConfigResponse | null} 关联图表配置
+   * @param resolvedChartConfig {AnalyzeConfigVo.AnalyzeConfigResponse | null} 当前生效的分析配置
    * @returns {AnalyzeVo.AnalyzeDetailResponse}
    */
   private convertDaoToVo(
     analyzeRecord: AnalyzeDao.AnalyzeRecord,
-    resolvedChartConfig: AnalyzeConfigVo.ChartConfigResponse | null
+    resolvedChartConfig: AnalyzeConfigVo.AnalyzeConfigResponse | null
   ): AnalyzeVo.AnalyzeDetailResponse {
     return {
       ...analyzeRecord,
@@ -69,13 +69,7 @@ export class AnalyzeService extends BaseService {
       throw new Error('分析不存在')
     }
     await this.assertAnalyzePermission(deleteRequest.id, 'manage')
-    if (analyzeRecord.chartConfigId) {
-      const deleteChartConfigRequest: AnalyzeConfigDto.DeleteChartConfigRequest = {
-        id: analyzeRecord.chartConfigId
-      }
-      // 删除图表配置
-      await this.chartConfigService.deleteChartConfig(deleteChartConfigRequest)
-    }
+    await this.analyzeConfigService.deleteAnalyzeConfigs({ analyzeId: analyzeRecord.id })
     const { updatedBy, updateTime } = await super.getDefaultInfo()
     const deleteAnalyzeParams: AnalyzeDao.DeleteAnalyzeParams = {
       id: analyzeRecord.id,
@@ -103,12 +97,12 @@ export class AnalyzeService extends BaseService {
       analyzeRecord.viewCount += 1
     }
 
-    if (analyzeRecord.chartConfigId) {
-      const getChartConfigRequest: AnalyzeConfigDto.GetChartConfigRequest = {
-        id: analyzeRecord.chartConfigId
+    if (analyzeRecord.currentConfigId) {
+      const getAnalyzeConfigRequest: AnalyzeConfigDto.GetAnalyzeConfigRequest = {
+        id: analyzeRecord.currentConfigId
       }
-      const resolvedChartConfig = await this.chartConfigService.getChartConfig(getChartConfigRequest)
-      return this.convertDaoToVo(analyzeRecord, resolvedChartConfig)
+      const resolvedAnalyzeConfig = await this.analyzeConfigService.getAnalyzeConfig(getAnalyzeConfigRequest)
+      return this.convertDaoToVo(analyzeRecord, resolvedAnalyzeConfig)
     }
 
     return this.convertDaoToVo(analyzeRecord, null)
@@ -148,6 +142,34 @@ export class AnalyzeService extends BaseService {
     }
   }
 
+  public async getAnalyzeConfigHistory(
+    queryRequest: AnalyzeConfigDto.GetAnalyzeConfigHistoryRequest
+  ): Promise<AnalyzeConfigVo.AnalyzeConfigResponse[]> {
+    await this.assertAnalyzePermission(queryRequest.analyzeId, 'view')
+    return await this.analyzeConfigService.getAnalyzeConfigHistory(queryRequest.analyzeId)
+  }
+
+  public async switchAnalyzeConfigVersion(
+    switchRequest: AnalyzeConfigDto.SwitchAnalyzeConfigVersionRequest
+  ): Promise<AnalyzeVo.AnalyzeDetailResponse> {
+    await this.assertAnalyzePermission(switchRequest.analyzeId, 'edit')
+    const targetConfig = await this.analyzeConfigService.getAnalyzeConfig({ id: switchRequest.configId })
+    if (targetConfig.analyzeId !== switchRequest.analyzeId) {
+      throw new Error('分析配置版本不属于当前分析')
+    }
+    const { updatedBy, updateTime } = await this.getDefaultInfo()
+    const updateResult = await this.analyzeMapper.updateAnalyze({
+      id: switchRequest.analyzeId,
+      currentConfigId: targetConfig.id,
+      updatedBy,
+      updateTime
+    })
+    if (!updateResult) {
+      throw new Error('切换分析配置版本失败')
+    }
+    return await this.getAnalyze({ id: switchRequest.analyzeId })
+  }
+
   /**
    * @desc 更新分析
    * @param {AnalyzeDto.UpdateAnalyzeRequest} updateRequest
@@ -155,30 +177,23 @@ export class AnalyzeService extends BaseService {
    */
   public async updateAnalyze(updateRequest: AnalyzeDto.UpdateAnalyzeRequest): Promise<AnalyzeVo.AnalyzeDetailResponse> {
     await this.assertAnalyzePermission(updateRequest.id, 'edit')
-    // 拆出图表配置后，剩余字段为分析实体本身的更新载荷
+    // 拆出配置后，剩余字段为分析实体本身的更新载荷。
     const { chartConfig, ...analyzeUpdatePayload } = updateRequest
-    let chartConfigId = updateRequest.chartConfigId
+    let currentConfigId = updateRequest.currentConfigId
     if (chartConfig) {
-      if (!chartConfigId) {
-        // 如果图表配置不存在，则创建默认图表配置
-        const createChartConfigResponse = await this.chartConfigService.createChartConfig(chartConfig)
-        chartConfigId = createChartConfigResponse.id
-      } else {
-        // 如果图表配置存在，则更新图表配置
-        await this.chartConfigService.updateChartConfig({
-          ...chartConfig,
-          id: chartConfigId
-        })
-      }
+      const createAnalyzeConfigResponse = await this.analyzeConfigService.createAnalyzeConfigVersion({
+        ...chartConfig,
+        analyzeId: updateRequest.id
+      })
+      currentConfigId = createAnalyzeConfigResponse.id
     }
-    // 更新图表
     const { updatedBy, updateTime } = await super.getDefaultInfo()
 
     const updateParams: AnalyzeDao.UpdateAnalyzeParams = {
       ...analyzeUpdatePayload,
       updateTime,
       updatedBy,
-      chartConfigId
+      currentConfigId
     }
     const updateAnalyzeResponse = await this.analyzeMapper.updateAnalyze(updateParams)
     if (!updateAnalyzeResponse) {
@@ -196,21 +211,27 @@ export class AnalyzeService extends BaseService {
   public async createAnalyze(createRequest: AnalyzeDto.CreateAnalyzeRequest): Promise<AnalyzeVo.AnalyzeDetailResponse> {
     const { chartConfig, ...restAnalyzePayload } = createRequest
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
-    let chartConfigId = createRequest.chartConfigId || null
-    if (chartConfig) {
-      // 如果图表配置不存在，则创建默认图表配置
-      const createChartConfigResponse = await this.chartConfigService.createChartConfig(chartConfig)
-      chartConfigId = createChartConfigResponse.id
-    }
     const createAnalyzeParams = {
       ...restAnalyzePayload,
       createdBy,
       updatedBy,
       createTime,
       updateTime,
-      chartConfigId
+      currentConfigId: null
     }
     const analyzeId = await this.analyzeMapper.createAnalyze(createAnalyzeParams)
+    if (chartConfig) {
+      const createAnalyzeConfigResponse = await this.analyzeConfigService.createAnalyzeConfigVersion({
+        ...chartConfig,
+        analyzeId
+      })
+      await this.analyzeMapper.updateAnalyze({
+        id: analyzeId,
+        currentConfigId: createAnalyzeConfigResponse.id,
+        updatedBy,
+        updateTime
+      })
+    }
     return this.getAnalyze({ id: analyzeId })
   }
 

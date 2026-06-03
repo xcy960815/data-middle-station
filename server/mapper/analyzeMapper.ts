@@ -13,7 +13,7 @@ export const ANALYZE_BASE_FIELDS = [
   'view_count',
   'created_by',
   'updated_by',
-  'chart_config_id',
+  'current_config_id',
   'is_deleted'
 ]
 
@@ -68,9 +68,9 @@ export class AnalyzeMapping implements AnalyzeDao.AnalyzeRecord, IColumnTarget {
   @Column('updated_by')
   updatedBy!: string
 
-  // 图表配置ID
-  @Column('chart_config_id')
-  chartConfigId!: number | null
+  // 当前生效的分析配置版本 ID
+  @Column('current_config_id')
+  currentConfigId!: number | null
 
   // 是否删除
   @Column('is_deleted')

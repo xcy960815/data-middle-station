@@ -85,7 +85,7 @@ export class ChartSnapshotService {
       throw new Error(`未找到分析 ${analyzeId}`)
     }
 
-    if (!analyzeVo.chartConfig || !analyzeVo.chartConfigId) {
+    if (!analyzeVo.chartConfig || !analyzeVo.currentConfigId) {
       throw new Error(`分析 ${analyzeId} 缺少图表配置，无法生成图像`)
     }
 

@@ -50,9 +50,9 @@ declare namespace AnalyzeStore {
      */
     analyzeId: number | null
     /**
-     * 分析配置id
+     * 当前生效的分析配置版本 ID
      */
-    chartConfigId: number | null
+    currentConfigId: number | null
     /**
      * 表格数据
      */
