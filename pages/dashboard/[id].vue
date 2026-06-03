@@ -24,14 +24,31 @@
         </template>
         <template #header-right>
           <div class="dashboard-header-actions">
-            <el-button v-if="editorMode" @click="handleOpenVersionDialog">历史版本</el-button>
-            <el-button v-if="!editorMode && canEditDashboard" type="primary" @click="handleEnterEditorMode"
-              >编辑看板</el-button
-            >
-            <el-button v-if="editorMode" @click="handleCancelEditorMode">退出编辑</el-button>
-            <el-button v-if="editorMode" type="primary" :loading="saving" @click="handleSaveDashboard"
-              >保存看板</el-button
-            >
+            <el-tooltip v-if="editorMode" content="历史版本" placement="bottom">
+              <span @click="handleOpenVersionDialog" class="dashboard-header-action">
+                <icon-park type="HistoryQuery" size="24" fill="#333" />
+              </span>
+            </el-tooltip>
+            <el-tooltip v-if="!editorMode && canEditDashboard" content="编辑看板" placement="bottom">
+              <span @click="handleEnterEditorMode" class="dashboard-header-action">
+                <icon-park type="Edit" size="24" fill="#333" />
+              </span>
+            </el-tooltip>
+            <el-tooltip v-if="editorMode" content="退出编辑" placement="bottom">
+              <span @click="handleCancelEditorMode" class="dashboard-header-action">
+                <icon-park type="Close" size="30" fill="#333" />
+              </span>
+            </el-tooltip>
+            <el-tooltip v-if="editorMode" content="保存看板" placement="bottom">
+              <span
+                @click="!saving && handleSaveDashboard()"
+                class="dashboard-header-action"
+                :class="{ 'is-disabled': saving }"
+              >
+                <icon-park v-if="!saving" type="Save" size="30" fill="#333" />
+                <icon-park v-else type="Loading" size="30" fill="#333" class="is-spinning" />
+              </span>
+            </el-tooltip>
           </div>
         </template>
       </custom-header>
@@ -152,7 +169,15 @@
               v-if="widgets.length === 0"
               class="dashboard-canvas-empty"
               :description="editorMode ? '拖拽分析到这里创建看板组件' : '暂无看板组件'"
-            />
+            >
+              <template #image>
+                <div class="dashboard-canvas-empty__image" aria-hidden="true">
+                  <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--main"></span>
+                  <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--side"></span>
+                  <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--footer"></span>
+                </div>
+              </template>
+            </el-empty>
           </div>
         </main>
       </div>
@@ -860,6 +885,37 @@ onUnmounted(() => {
   gap: 8px;
 }
 
+.dashboard-header-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.6;
+  }
+}
+
+.dashboard-header-action.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.is-spinning {
+  animation: dashboard-icon-spin 1s linear infinite;
+}
+
+@keyframes dashboard-icon-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .dashboard-header-title {
   display: flex;
   min-width: 0;
@@ -1192,5 +1248,42 @@ onUnmounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.dashboard-canvas-empty__image {
+  position: relative;
+  width: 96px;
+  height: 72px;
+  margin: 0 auto;
+}
+
+.dashboard-canvas-empty__panel {
+  position: absolute;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgb(15 23 42 / 6%);
+}
+
+.dashboard-canvas-empty__panel--main {
+  top: 8px;
+  left: 8px;
+  width: 52px;
+  height: 38px;
+}
+
+.dashboard-canvas-empty__panel--side {
+  top: 16px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+}
+
+.dashboard-canvas-empty__panel--footer {
+  bottom: 8px;
+  left: 22px;
+  width: 54px;
+  height: 16px;
+  background: #f9fafb;
 }
 </style>
