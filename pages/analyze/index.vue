@@ -40,24 +40,51 @@
         </div>
 
         <div class="analyze-list-container relative h-full" v-loading="listLoading">
-          <analyze-card
-            ref="cards"
+          <ListCard
             class="card-chart"
             v-for="chart in analyzeList"
-            :create-time="chart.createTime"
-            :update-time="chart.updateTime"
-            :created-by="chart.createdBy"
-            :updated-by="chart.updatedBy"
-            :analyze-name="chart.analyzeName"
-            :id="chart.id"
             :key="chart.id"
-            :view-count="chart.viewCount"
-            :analyze-permission="chart.analyzePermission || 'view'"
-            @delete="handleDeleteAnalyze"
-            @edit="handleEditAnalyze"
-            @permission="handleOpenPermissionDialog"
+            :title="chart.analyzeName"
+            :title-attr="`访问次数${chart.viewCount}`"
+            :creator="chart.createdBy"
+            :time="formatDate(chart.createTime)"
+            @click="handleOpenAnalyze(chart.id)"
           >
-          </analyze-card>
+            <template #actions>
+              <button
+                v-if="canEditAnalyze(chart)"
+                class="analyze-list-card-action analyze-list-card-action--edit"
+                type="button"
+                @click.stop="handleEditAnalyze(chart.id)"
+              >
+                <icon-park type="Edit" size="14" fill="#333" />
+              </button>
+              <button
+                v-if="canManageAnalyze(chart)"
+                class="analyze-list-card-action analyze-list-card-action--permission"
+                type="button"
+                @click.stop="handleOpenPermissionDialog(chart.id, chart.analyzeName)"
+              >
+                <icon-park type="Permissions" size="14" fill="#333" />
+              </button>
+              <button
+                v-if="canManageAnalyze(chart)"
+                class="analyze-list-card-action analyze-list-card-action--delete"
+                type="button"
+                @click.stop="handleDeleteAnalyze(chart.id, chart.analyzeName)"
+              >
+                <icon-park type="DeleteOne" size="14" fill="#333" />
+              </button>
+            </template>
+            <template #right-badges>
+              <span
+                class="analyze-list-card__permission-badge"
+                :class="`analyze-list-card__permission-badge--${chart.analyzePermission || 'view'}`"
+              >
+                {{ getAnalyzePermissionText(chart.analyzePermission || 'view') }}
+              </span>
+            </template>
+          </ListCard>
 
           <el-empty
             v-if="!listLoading && analyzeList.length === 0"
@@ -130,7 +157,7 @@
 import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import AnalyzeCard from '@/pages/analyze/components/analyze-card.vue'
+import ListCard from '@/components/list-card/index.vue'
 
 const layoutName = 'analyze'
 const analyzeList = ref<AnalyzeVo.AnalyzeListItem[]>([])
@@ -192,6 +219,12 @@ const permissionList = ref<PermissionVo.AnalyzeRolePermissionItem[]>([])
 const permissionDialogTitle = computed(
   () => `分析授权${permissionResourceName.value ? `：${permissionResourceName.value}` : ''}`
 )
+const permissionLevelMap: Record<PermissionVo.AnalyzePermissionType, number> = {
+  none: 0,
+  view: 1,
+  edit: 2,
+  manage: 3
+}
 
 const getAnalyzes = async (targetPage = page.value) => {
   listLoading.value = true
@@ -241,6 +274,33 @@ const handlePageSizeChange = () => {
 
 const handlePageChange = (nextPage: number) => {
   getAnalyzes(nextPage)
+}
+
+const formatDate = (value: string) => {
+  return value ? value.split('T')[0].slice(0, 10) : ''
+}
+
+const handleOpenAnalyze = (id: number) => {
+  navigateTo(`/analyze/${id}`)
+}
+
+const canEditAnalyze = (analyze: AnalyzeVo.AnalyzeListItem) => {
+  return permissionLevelMap[analyze.analyzePermission || 'none'] >= permissionLevelMap.edit
+}
+
+const canManageAnalyze = (analyze: AnalyzeVo.AnalyzeListItem) => {
+  return permissionLevelMap[analyze.analyzePermission || 'none'] >= permissionLevelMap.manage
+}
+
+const getAnalyzePermissionText = (permissionType: PermissionVo.AnalyzePermissionType) => {
+  return (
+    {
+      none: '无权限',
+      view: '只读',
+      edit: '可编辑',
+      manage: '可管理'
+    }[permissionType] || '只读'
+  )
 }
 
 const handleDeleteAnalyze = (id: number, analyzeName: string) => {
@@ -436,6 +496,59 @@ onMounted(() => {
 
 .card-chart {
   margin: 0;
+}
+
+.analyze-list-card-action {
+  display: flex;
+  height: 28px;
+  width: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.analyze-list-card-action--edit:hover {
+  background: #f0f9ff;
+}
+
+.analyze-list-card-action--permission:hover {
+  background: #eef6ff;
+}
+
+.analyze-list-card-action--delete:hover {
+  background: #ffeaea;
+}
+
+.analyze-list-card__permission-badge {
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 12px;
+}
+
+.analyze-list-card__permission-badge--view {
+  color: #2563eb;
+  background: #dbeafe;
+}
+
+.analyze-list-card__permission-badge--edit {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.analyze-list-card__permission-badge--manage {
+  color: #7c3aed;
+  background: #ede9fe;
+}
+
+.analyze-list-card__permission-badge--none {
+  color: #6b7280;
+  background: #f3f4f6;
 }
 
 .analyze-list-empty {

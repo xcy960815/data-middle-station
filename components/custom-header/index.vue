@@ -17,15 +17,19 @@
 <script lang="ts" setup>
 import HeaderRight from './header-right/index.vue'
 const appName = useRuntimeConfig().public.appName
-const props = defineProps({
-  analyzeName: {
-    type: String,
-    default: ''
-  }
-})
+const route = useRoute()
 const router = useRouter()
+
+const appNameTargetPath = computed(() => {
+  if (route.path.startsWith('/dashboard')) {
+    return '/dashboard'
+  }
+
+  return '/analyze'
+})
+
 const handleClickAppName = () => {
-  router.push('/analyze')
+  router.push(appNameTargetPath.value)
 }
 </script>
 <style lang="scss" scoped>

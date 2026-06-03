@@ -4,7 +4,15 @@
       <custom-header>
         <template #header-right>
           <div class="dashboard-header-actions">
-            <el-button type="primary" @click="handleOpenCreateDialog">新建看板</el-button>
+            <el-tooltip effect="dark" content="创建看板" placement="bottom">
+              <icon-park
+                type="newlybuild"
+                size="30"
+                fill="#333"
+                class="cursor-pointer"
+                @click="handleOpenCreateDialog"
+              ></icon-park>
+            </el-tooltip>
           </div>
         </template>
       </custom-header>
@@ -35,50 +43,53 @@
         </div>
 
         <div v-loading="dashboardListLoading" class="dashboard-list">
-          <div
+          <ListCard
             v-for="dashboard in dashboards"
             :key="dashboard.id"
-            class="dashboard-card relative h-[180px] w-[245px] cursor-pointer"
+            :title="dashboard.dashboardName"
+            :description="dashboard.dashboardDesc || '暂无描述'"
+            :title-attr="`${dashboard.widgetCount} 个分析`"
+            :creator="dashboard.createdBy"
+            :time="formatDate(dashboard.updateTime || dashboard.createTime)"
             @click="handleOpenDashboard(dashboard.id)"
-            :title="`${dashboard.widgetCount} 个分析`"
           >
-            <div class="dashboard-card__inset">
-              <div class="dashboard-card__title">{{ dashboard.dashboardName }}</div>
-              <div class="dashboard-card__desc">{{ dashboard.dashboardDesc || '暂无描述' }}</div>
-              <div class="dashboard-card__open-icon" @click.stop="handleOpenDashboard(dashboard.id)">
+            <template #actions>
+              <button
+                class="dashboard-card-action dashboard-card-action--open"
+                type="button"
+                @click.stop="handleOpenDashboard(dashboard.id)"
+              >
                 <icon-park type="PreviewOpen" size="14" fill="#333" />
-              </div>
-              <div
+              </button>
+              <button
                 v-if="canManageDashboard(dashboard)"
-                class="dashboard-card__permission-icon"
+                class="dashboard-card-action dashboard-card-action--permission"
+                type="button"
                 @click.stop="handleOpenPermissionDialog(dashboard)"
               >
                 <icon-park type="Permissions" size="14" fill="#333" />
-              </div>
-              <div
+              </button>
+              <button
                 v-if="canManageDashboard(dashboard)"
-                class="dashboard-card__delete-icon"
+                class="dashboard-card-action dashboard-card-action--delete"
+                type="button"
                 @click.stop="handleDeleteDashboard(dashboard)"
               >
                 <icon-park type="DeleteOne" size="14" fill="#333" />
-              </div>
-              <span class="dashboard-card__badge">{{ dashboard.widgetCount }} 个分析</span>
+              </button>
+            </template>
+            <template #left-badges>
               <span
                 class="dashboard-card__permission-badge"
                 :class="`dashboard-card__permission-badge--${dashboard.dashboardPermission || 'view'}`"
               >
                 {{ getPermissionText(dashboard.dashboardPermission || 'view') }}
               </span>
-              <div class="dashboard-card__info">
-                <div class="dashboard-card__info-row">
-                  <span class="dashboard-card__creator">{{ dashboard.createdBy || '未知' }}</span>
-                  <span class="dashboard-card__time">{{
-                    formatDate(dashboard.updateTime || dashboard.createTime)
-                  }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            </template>
+            <template #right-badges>
+              <span class="dashboard-card__badge">{{ dashboard.widgetCount }} 个分析</span>
+            </template>
+          </ListCard>
           <el-empty
             v-if="!dashboardListLoading && dashboards.length === 0"
             class="dashboard-empty"
@@ -141,6 +152,7 @@
 import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import ListCard from '@/components/list-card/index.vue'
 
 const layoutName = 'dashboard'
 const router = useRouter()
@@ -411,113 +423,34 @@ onMounted(() => {
   justify-content: center;
 }
 
-.dashboard-card {
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #f7f8fa;
-  box-shadow:
-    0 2px 12px 0 rgba(0, 0, 0, 0.08),
-    0 1.5px 6px 0 rgba(0, 0, 0, 0.04);
-  font-family: 'Microsoft YaHei';
-  transition:
-    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.18s;
-
-  &:hover {
-    transform: translateY(-4px) scale(1.03);
-    box-shadow:
-      0 6px 24px 0 rgba(0, 0, 0, 0.13),
-      0 2px 8px 0 rgba(0, 0, 0, 0.08);
-
-    .dashboard-card__open-icon,
-    .dashboard-card__permission-icon,
-    .dashboard-card__delete-icon {
-      display: flex;
-    }
-  }
-}
-
-.dashboard-card__inset {
-  position: absolute;
-  inset: 2px;
-  z-index: 3;
+.dashboard-card-action {
   display: flex;
-  height: calc(100% - 4px);
-  flex-direction: column;
-  justify-content: space-between;
-  border-radius: inherit;
-  background: #ffffff;
-}
-
-.dashboard-card__title {
-  margin-top: 24px;
-  padding: 0 16px;
-  color: #222222;
-  font-size: 18px;
-  font-weight: bold;
-  line-height: 1.4;
-  word-break: break-all;
-}
-
-.dashboard-card__desc {
-  display: -webkit-box;
-  margin: 10px 16px 0;
-  overflow: hidden;
-  color: #606266;
-  font-size: 13px;
-  line-height: 1.5;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.dashboard-card__open-icon,
-.dashboard-card__permission-icon,
-.dashboard-card__delete-icon {
-  position: absolute;
-  top: 10px;
-  z-index: 10;
-  display: none;
-  width: 28px;
   height: 28px;
+  width: 28px;
   align-items: center;
   justify-content: center;
+  border: 0;
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  padding: 0;
   transition: background 0.2s;
 }
 
-.dashboard-card__open-icon {
-  right: 90px;
-
-  &:hover {
-    background: #eef6ff;
-  }
+.dashboard-card-action--open:hover {
+  background: #eef6ff;
 }
 
-.dashboard-card__permission-icon {
-  right: 50px;
-
-  &:hover {
-    background: #f0f9eb;
-  }
+.dashboard-card-action--permission:hover {
+  background: #f0f9eb;
 }
 
-.dashboard-card__delete-icon {
-  right: 10px;
-
-  &:hover {
-    background: #ffeaea;
-  }
+.dashboard-card-action--delete:hover {
+  background: #ffeaea;
 }
 
 .dashboard-card__badge {
-  position: absolute;
-  right: 12px;
-  bottom: 40px;
-  z-index: 4;
   padding: 2px 7px;
   border-radius: 999px;
   color: #2563eb;
@@ -526,10 +459,6 @@ onMounted(() => {
 }
 
 .dashboard-card__permission-badge {
-  position: absolute;
-  left: 12px;
-  bottom: 40px;
-  z-index: 4;
   padding: 2px 7px;
   border-radius: 999px;
   font-size: 12px;
@@ -553,34 +482,6 @@ onMounted(() => {
 .dashboard-card__permission-badge--none {
   color: #6b7280;
   background: #f3f4f6;
-}
-
-.dashboard-card__info {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  padding: 8px 16px;
-  border-radius: 0 0 12px 12px;
-  background: rgba(245, 245, 245, 0.85);
-  color: #444444;
-  font-size: 13px;
-  backdrop-filter: blur(2px);
-}
-
-.dashboard-card__info-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  line-height: 1.8;
-}
-
-.dashboard-card__creator {
-  color: #666666;
-}
-
-.dashboard-card__time {
-  color: #999999;
-  font-size: 12px;
 }
 
 .dashboard-pagination {
