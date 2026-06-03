@@ -1,6 +1,10 @@
 <template>
   <div class="dimension-selector" @contextmenu="contextmenuHandler">
-    <selector-template v-bind="$attrs" :dimension="dimension"></selector-template>
+    <selector-template v-bind="$attrs" :dimension="dimension">
+      <template #order-icon>
+        <slot name="order-icon"></slot>
+      </template>
+    </selector-template>
   </div>
   <!-- 字段的操作选项 -->
   <context-menu ref="contextmenuRef">
@@ -40,6 +44,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import ContextMenu from '../../context-menu/index.vue'
 
 const props = defineProps({
+  index: {
+    type: Number,
+    default: null
+  },
   dimension: {
     type: Object as PropType<DimensionStore.DimensionOption>,
     required: true,
@@ -48,6 +56,11 @@ const props = defineProps({
 })
 const dimensionStore = useDimensionsStore()
 const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+
+const updateCurrentDimension = () => {
+  if (!currentDimension.value || props.index === null) return
+  dimensionStore.updateDimensionByIndex(props.index, currentDimension.value)
+}
 
 /**
  * @desc 当前选中的列
@@ -81,7 +94,7 @@ const handleSetAlias = () => {
     .then(({ value }) => {
       if (!currentDimension.value) return
       currentDimension.value.displayName = value
-      dimensionStore.updateDimension(currentDimension.value)
+      updateCurrentDimension()
       currentDimension.value = null
     })
     .catch(() => {
@@ -114,7 +127,7 @@ const handleSetColumnWidth = () => {
     .then(({ value }) => {
       if (!currentDimension.value) return
       currentDimension.value.width = Number(value)
-      dimensionStore.updateDimension(currentDimension.value)
+      updateCurrentDimension()
       currentDimension.value = null
     })
     .catch(() => {
@@ -134,7 +147,7 @@ const handleSetColumnWidth = () => {
 const handleSetFixed = (fixed: 'left' | 'right' | null) => {
   if (!currentDimension.value) return
   currentDimension.value.fixed = fixed
-  dimensionStore.updateDimension(currentDimension.value)
+  updateCurrentDimension()
   currentDimension.value = null
 }
 
@@ -146,7 +159,7 @@ const handleSetFixed = (fixed: 'left' | 'right' | null) => {
 const handleSetAlign = (align: 'left' | 'right' | 'center' | null) => {
   if (!currentDimension.value) return
   currentDimension.value.align = align
-  dimensionStore.updateDimension(currentDimension.value)
+  updateCurrentDimension()
   currentDimension.value = null
 }
 
@@ -157,7 +170,7 @@ const handleSetAlign = (align: 'left' | 'right' | 'center' | null) => {
 const handleSetSortable = () => {
   if (!currentDimension.value) return
   currentDimension.value.sortable = !currentDimension.value.sortable
-  dimensionStore.updateDimension(currentDimension.value)
+  updateCurrentDimension()
   currentDimension.value = null
 }
 
@@ -168,7 +181,7 @@ const handleSetSortable = () => {
 const handleSetFilterable = () => {
   if (!currentDimension.value) return
   currentDimension.value.filterable = !currentDimension.value.filterable
-  dimensionStore.updateDimension(currentDimension.value)
+  updateCurrentDimension()
   currentDimension.value = null
 }
 </script>

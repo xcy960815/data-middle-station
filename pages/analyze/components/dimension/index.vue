@@ -32,6 +32,14 @@
           :invalid="getDimensionInvalid(dimension)"
           :invalidMessage="getDimensionInvalidMessage(dimension)"
         >
+          <template #order-icon>
+            <selector-dimension-aggregation
+              v-if="isMeasureAggregationEnabled(dimension)"
+              :column-type="dimension.columnType"
+              :aggregation-type="resolveDimensionAggregationType(dimension)"
+              @update:aggregation-type="handleChangeAggregationType(index, $event)"
+            />
+          </template>
         </selector-dimension>
       </div>
     </div>
@@ -94,6 +102,7 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
 import { defineAsyncComponent } from 'vue'
 import ContextMenu from '../../../../components/context-menu/index.vue'
+import SelectorDimensionAggregation from '../../../../components/selector/dimension-aggregation/index.vue'
 import { clearAllHandler } from '../clearAll'
 
 const MonacoEditor = defineAsyncComponent(() => import('../../../../components/monaco-editor/index.vue'))
@@ -108,11 +117,11 @@ const groupStore = useGroupsStore()
 const monacoEditorRef = ref<InstanceType<typeof MonacoEditor> | null>(null)
 
 /**
- * @desc dimensions 数据
+ * @desc 值/度量字段数据。历史字段名沿用 dimensions。
  * @returns {ComputedRef<DimensionStore.DimensionOption[]>}
  */
 const dimensions = computed(() => {
-  return dimensionStore.getDimensions
+  return dimensionStore.getMeasures
 })
 
 /**
@@ -147,6 +156,26 @@ const getDimensionInvalidMessage = (dimension: DimensionStore.DimensionOption) =
     return '该字段已在分组中使用'
   }
   return ''
+}
+
+const isMeasureAggregationEnabled = (dimension: DimensionStore.DimensionOption) => {
+  return !!dimension.columnName && groupList.value.length > 0
+}
+
+const resolveDimensionAggregationType = (
+  dimension: DimensionStore.DimensionOption
+): AnalyzeConfigDao.OrderAggregationsType => {
+  if (dimension.datasetAggregationType) return dimension.datasetAggregationType
+  return dimension.datasetFieldType === 'metric' ? 'sum' : 'count'
+}
+
+const handleChangeAggregationType = (index: number, aggregationType: AnalyzeConfigDao.OrderAggregationsType) => {
+  const dimension = dimensions.value[index]
+  if (!dimension) return
+  dimensionStore.updateDimensionByIndex(index, {
+    ...dimension,
+    datasetAggregationType: aggregationType
+  })
 }
 
 /**
@@ -225,6 +254,8 @@ const dropHandler = (dragEvent: DragEvent) => {
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
   const dimensionOption: DimensionStore.DimensionOption = {
     ...data.value,
+    datasetAggregationType:
+      data.value.datasetAggregationType || (data.value.datasetFieldType === 'metric' ? 'sum' : 'count'),
     fixed: null,
     align: null,
     width: null,
@@ -239,10 +270,10 @@ const dropHandler = (dragEvent: DragEvent) => {
       // 移动位置
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
-      const dimensions = JSON.parse(JSON.stringify(dimensionStore.dimensions))
-      const target = dimensions.splice(data.index, 1)[0]
-      dimensions.splice(targetIndex, 0, target)
-      dimensionStore.setDimensions(dimensions)
+      const measures = JSON.parse(JSON.stringify(dimensionStore.getMeasures))
+      const target = measures.splice(data.index, 1)[0]
+      measures.splice(targetIndex, 0, target)
+      dimensionStore.setDimensions(measures)
       break
     }
     default:

@@ -147,6 +147,7 @@
                 <DashboardWidgetChart
                   :title="widget.widgetTitle"
                   :chart-type="widget.chartType"
+                  :data-source="widget.dataSource"
                   :loading="widget.loading"
                   :error-message="widget.errorMessage"
                   :data="widget.data"
@@ -222,6 +223,7 @@
 
 <script setup lang="ts">
 import { httpRequest } from '@/composables/useHttpRequest'
+import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import DashboardWidgetChart from './components/dashboard-widget-chart.vue'
@@ -231,6 +233,7 @@ type DashboardWidgetState = DashboardDto.DashboardWidgetPayload & {
   data: AnalyzeDataVo.AnalyzeData[]
   xAxisFields: GroupStore.GroupOption[]
   yAxisFields: DimensionStore.DimensionOption[]
+  dataSource: string | null
   privateChartConfig: AnalyzeConfigVo.PrivateChartConfigItem | null
   loading: boolean
   errorMessage: string
@@ -367,6 +370,7 @@ const createWidgetState = (widget: DashboardVo.DashboardWidgetItem): DashboardWi
     data: [],
     xAxisFields: (chartConfig?.groups || []) as GroupStore.GroupOption[],
     yAxisFields: (chartConfig?.dimensions || []) as DimensionStore.DimensionOption[],
+    dataSource: chartConfig?.dataSource ?? null,
     privateChartConfig: chartConfig?.privateChartConfig || null,
     loading: false,
     errorMessage: widget.analyze ? '' : '分析不存在或无权访问'
@@ -536,9 +540,13 @@ const getNextWidgetPosition = () => {
 const buildWidgetAnalyzeDataParams = (
   chartConfig: AnalyzeConfigVo.ChartConfigResponse
 ): AnalyzeDataDto.AnalyzeDataQuery => {
-  if (!chartConfig.dataSource) {
-    throw new Error('分析数据源不存在')
-  }
+  const validation = validateAnalyzeChartConfig({
+    chartType: chartConfig.chartType,
+    dataSource: chartConfig.dataSource,
+    dimensions: chartConfig.dimensions || [],
+    groups: chartConfig.groups || []
+  })
+  if (!validation.valid) throw new Error(validation.message)
 
   return {
     dataSource: chartConfig.dataSource,

@@ -11,6 +11,7 @@ import { renderLineChart } from '~/composables/useChartRender/renderLineChart'
 import { renderPieChart } from '~/composables/useChartRender/renderPieChart'
 import type { ChartRenderConfig } from '~/composables/useChartRender/utils'
 import { defaultIntervalChartConfig, defaultLineChartConfig, defaultPieChartConfig } from '~/shared/chartDefaults'
+import { validateAnalyzeChartConfig } from '~/utils/validateAnalyzeChartConfig'
 
 echarts.use([
   BarChart,
@@ -91,12 +92,14 @@ export class ChartSnapshotService {
 
     const chartConfig = analyzeVo.chartConfig
 
-    if (!chartConfig.dataSource) {
-      throw new Error(`分析 ${analyzeId} 缺少数据源配置`)
-    }
-
-    if (!chartConfig.dimensions || chartConfig.dimensions.length === 0) {
-      throw new Error(`分析 ${analyzeId} 缺少维度配置`)
+    const validation = validateAnalyzeChartConfig({
+      chartType: chartConfig.chartType,
+      dataSource: chartConfig.dataSource,
+      dimensions: chartConfig.dimensions || [],
+      groups: chartConfig.groups || []
+    })
+    if (!validation.valid) {
+      throw new Error(`分析 ${analyzeId} ${validation.message}`)
     }
 
     const analyzeData = await this.chartDataService.getAnalyzeData({

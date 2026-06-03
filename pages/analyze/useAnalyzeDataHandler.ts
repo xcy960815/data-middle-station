@@ -7,6 +7,7 @@ import { useFiltersStore } from '@/stores/filters'
 import { useGroupsStore } from '@/stores/groups'
 import { useOrdersStore } from '@/stores/orders'
 import { debounce } from '@/utils/throttleDebounce'
+import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
 import dayjs from 'dayjs'
 import { computed, ref, watch } from 'vue'
 
@@ -28,29 +29,6 @@ export const useAnalyzeDataHandler = () => {
     return error instanceof Error && (error.name === 'AbortError' || /aborted|abort/i.test(error.message))
   }
 
-  // ---------- 图表推荐策略 ----------
-  const chartSuggestStrategies = (chartType: AnalyzeStore.ChartType) => {
-    const dimensions = dimensionStore.getDimensions
-    const groups = groupStore.getGroups
-    const chartNames = {
-      table: '表格',
-      interval: '柱状图',
-      line: '折线图',
-      pie: '饼图'
-    }
-    switch (chartType) {
-      case 'table':
-        return dimensions.length > 0 || groups.length > 0 ? '' : `${chartNames[chartType]}至少需要一个值或者一个分组`
-      case 'interval':
-      case 'line':
-        return dimensions.length > 0 && groups.length > 0 ? '' : `${chartNames[chartType]}至少需要一个值和一个分组`
-      case 'pie':
-        return dimensions.length > 0 && groups.length > 0 ? '' : `${chartNames[chartType]}只需要一个值和一个分组`
-      default:
-        return ''
-    }
-  }
-
   // ---------- 查询参数 ----------
   const queryAnalyzeDataParams = computed(() => {
     return {
@@ -59,7 +37,7 @@ export const useAnalyzeDataHandler = () => {
       filters: filterStore.getFilters.filter((item) => item.aggregationType && (item.filterType || item.filterValue)),
       orders: orderStore.getOrders.filter((item) => item.aggregationType || item.orderType),
       groups: groupStore.getGroups,
-      dimensions: dimensionStore.getDimensions,
+      dimensions: dimensionStore.getMeasures,
       commonChartConfig: chartConfigStore.getCommonChartConfig
     }
   })
@@ -67,10 +45,15 @@ export const useAnalyzeDataHandler = () => {
   // ---------- 实际请求 ----------
   const getAnalyzeData = async () => {
     const chartType = analyzeStore.getChartType
-    const errorMessage = chartSuggestStrategies(chartType)
-    analyzeStore.setChartErrorMessage(errorMessage)
+    const validation = validateAnalyzeChartConfig({
+      chartType,
+      dataSource: columnStore.getDataSource,
+      dimensions: dimensionStore.getMeasures,
+      groups: groupStore.getGroups
+    })
+    analyzeStore.setChartErrorMessage(validation.message)
     analyzeStore.setChartErrorAnalysis('')
-    if (errorMessage) return
+    if (!validation.valid) return
 
     const requestId = activeRequestId.value + 1
     activeRequestId.value = requestId

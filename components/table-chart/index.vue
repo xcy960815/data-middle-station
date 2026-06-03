@@ -99,7 +99,7 @@ const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload
     groupStore.updateGroup({ ...group, width })
   }
 
-  const dimension = dimensionStore.getDimensions.find((item) => item.columnName === columnName)
+  const dimension = dimensionStore.getMeasures.find((item) => item.columnName === columnName)
   if (dimension) {
     dimensionStore.updateDimension({ ...dimension, width })
   }

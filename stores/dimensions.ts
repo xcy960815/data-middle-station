@@ -1,6 +1,6 @@
 import { StoreNames } from './store-names'
 /**
- * @desc 维度 store
+ * @desc 值/度量 store。历史 store 名沿用 dimensions。
  */
 import { defineStore } from 'pinia'
 export const useDimensionsStore = defineStore<
@@ -14,6 +14,9 @@ export const useDimensionsStore = defineStore<
   }),
   getters: {
     getDimensions(state) {
+      return state.dimensions
+    },
+    getMeasures(state) {
       return state.dimensions
     }
   },
@@ -47,6 +50,11 @@ export const useDimensionsStore = defineStore<
         (item: DimensionStore.DimensionOption) => item.columnName === dimension.columnName
       )
       if (index !== -1) {
+        this.dimensions[index] = dimension
+      }
+    },
+    updateDimensionByIndex(index: number, dimension: DimensionStore.DimensionOption) {
+      if (index >= 0 && index < this.dimensions.length) {
         this.dimensions[index] = dimension
       }
     }

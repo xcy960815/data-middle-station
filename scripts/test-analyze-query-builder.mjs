@@ -8,6 +8,7 @@ const jiti = createJiti(process.cwd() + '/', {
 })
 
 const { AnalyzeQueryBuilder } = jiti('./server/service/analyzeQueryBuilder.ts')
+const { validateAnalyzeChartConfig } = jiti('./utils/validateAnalyzeChartConfig.ts')
 
 const builder = new AnalyzeQueryBuilder()
 
@@ -34,6 +35,86 @@ const baseQuery = {
 }
 
 const context = createContext('orderFacts', ['createdAt', 'region', 'salesAmount', 'customerId', 'status'])
+
+assert.deepEqual(
+  validateAnalyzeChartConfig({
+    chartType: 'table',
+    dataSource: 'orderFacts',
+    groups: [],
+    dimensions: []
+  }),
+  {
+    valid: false,
+    message: '表格明细模式至少需要一个值'
+  }
+)
+
+assert.deepEqual(
+  validateAnalyzeChartConfig({
+    chartType: 'table',
+    dataSource: 'orderFacts',
+    groups: [
+      {
+        columnName: 'region',
+        columnType: 'varchar',
+        columnComment: '区域',
+        displayName: '区域'
+      }
+    ],
+    dimensions: []
+  }),
+  {
+    valid: false,
+    message: '表格聚合模式至少需要一个值'
+  }
+)
+
+assert.deepEqual(
+  validateAnalyzeChartConfig({
+    chartType: 'table',
+    dataSource: 'orderFacts',
+    groups: [],
+    dimensions: [
+      {
+        columnName: 'salesAmount',
+        columnType: 'decimal',
+        columnComment: '销售额',
+        displayName: '销售额'
+      }
+    ]
+  }),
+  {
+    valid: true,
+    message: ''
+  }
+)
+
+assert.deepEqual(
+  validateAnalyzeChartConfig({
+    chartType: 'table',
+    dataSource: 'orderFacts',
+    groups: [
+      {
+        columnName: 'region',
+        columnType: 'varchar',
+        columnComment: '区域',
+        displayName: '区域'
+      }
+    ],
+    dimensions: [
+      {
+        columnName: 'salesAmount',
+        columnType: 'decimal',
+        columnComment: '销售额',
+        displayName: '销售额'
+      }
+    ]
+  }),
+  {
+    valid: true,
+    message: ''
+  }
+)
 
 const aggregateQuery = builder.buildAnalyzeDataQuery(
   {
@@ -154,6 +235,56 @@ const detailQuery = builder.buildAnalyzeDataQuery(
 assert.deepEqual(detailQuery, {
   sql: "select DATE_FORMAT(`created_at`, '%Y-%m-%d %H:%i:%s') AS `created_at`,`region` AS `region` from `order_facts` where `region` LIKE ? order by `created_at` DESC limit 5000",
   params: ['%East%']
+})
+
+const tableDetailValueOnlyQuery = builder.buildAnalyzeDataQuery(
+  {
+    ...baseQuery,
+    dimensions: [
+      {
+        columnName: 'salesAmount',
+        columnType: 'decimal',
+        columnComment: '销售额',
+        displayName: '销售额',
+        datasetAggregationType: 'sum'
+      }
+    ]
+  },
+  context
+)
+
+assert.deepEqual(tableDetailValueOnlyQuery, {
+  sql: 'select `sales_amount` AS `sales_amount` from `order_facts` limit 100',
+  params: []
+})
+
+const tableAggregateGroupAndValueQuery = builder.buildAnalyzeDataQuery(
+  {
+    ...baseQuery,
+    groups: [
+      {
+        columnName: 'region',
+        columnType: 'varchar',
+        columnComment: '区域',
+        displayName: '区域'
+      }
+    ],
+    dimensions: [
+      {
+        columnName: 'salesAmount',
+        columnType: 'decimal',
+        columnComment: '销售额',
+        displayName: '销售额',
+        datasetAggregationType: 'avg'
+      }
+    ]
+  },
+  context
+)
+
+assert.deepEqual(tableAggregateGroupAndValueQuery, {
+  sql: 'select `region` AS `region`,AVG(`sales_amount`) AS `sales_amount` from `order_facts` group by `region` limit 100',
+  params: []
 })
 
 assert.throws(

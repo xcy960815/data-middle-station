@@ -1,7 +1,10 @@
 <template>
   <div ref="widgetChartRef" class="dashboard-widget-chart">
-    <div v-if="errorMessage" class="dashboard-widget-chart__error">
-      {{ errorMessage }}
+    <div v-if="tableQueryModeLabel" class="dashboard-widget-chart__mode-label">
+      {{ tableQueryModeLabel }}
+    </div>
+    <div v-if="activeErrorMessage" class="dashboard-widget-chart__error">
+      {{ activeErrorMessage }}
     </div>
     <component
       v-else
@@ -23,10 +26,14 @@ import IntervalChart from '~/components/interval-chart/index.vue'
 import LineChart from '~/components/line-chart/index.vue'
 import PieChart from '~/components/pie-chart/index.vue'
 import TableChart from '~/components/table-chart/index.vue'
+import { getTableQueryMode, getTableQueryModeLabel } from '@/utils/tableQueryMode'
+import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
+import type { Component } from 'vue'
 
 const props = defineProps<{
   title: string
   chartType: AnalyzeStore.ChartType
+  dataSource: string | null
   loading: boolean
   errorMessage: string
   data: AnalyzeDataVo.AnalyzeData[]
@@ -40,7 +47,7 @@ const chartHeight = ref<string | number>('100%')
 const widgetChartRef = ref<HTMLElement | null>(null)
 const resizeObserver = ref<ResizeObserver>()
 
-const chartComponentMap = {
+const chartComponentMap: Record<AnalyzeStore.ChartType, Component> = {
   table: TableChart,
   line: LineChart,
   interval: IntervalChart,
@@ -48,6 +55,23 @@ const chartComponentMap = {
 }
 
 const chartComponent = computed(() => chartComponentMap[props.chartType] || TableChart)
+
+const tableQueryModeLabel = computed(() => {
+  if (props.chartType !== 'table') return ''
+  return getTableQueryModeLabel(getTableQueryMode(props.xAxisFields, props.yAxisFields))
+})
+
+const activeErrorMessage = computed(() => {
+  if (props.errorMessage) return props.errorMessage
+  const validation = validateAnalyzeChartConfig({
+    chartType: props.chartType,
+    dataSource: props.dataSource,
+    dimensions: props.yAxisFields,
+    groups: props.xAxisFields
+  })
+  if (!validation.valid) return validation.message
+  return ''
+})
 
 const activePrivateChartConfig = computed(() => {
   if (!props.privateChartConfig) return null
@@ -74,9 +98,24 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .dashboard-widget-chart {
+  position: relative;
   height: 100%;
   min-height: 0;
   width: 100%;
+}
+
+.dashboard-widget-chart__mode-label {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #606266;
+  font-size: 12px;
+  line-height: 20px;
+  padding: 0 8px;
 }
 
 .dashboard-widget-chart__error {

@@ -26,7 +26,7 @@ export const useAnalyzeDraft = () => {
       chartConfig: {
         dataSource: columnStore.getDataSource,
         columns: removeRuntimeValidationFields(JSON.parse(JSON.stringify(columnStore.getColumns))),
-        dimensions: removeRuntimeValidationFields(JSON.parse(JSON.stringify(dimensionStore.getDimensions))),
+        dimensions: removeRuntimeValidationFields(JSON.parse(JSON.stringify(dimensionStore.getMeasures))),
         groups: removeRuntimeValidationFields(JSON.parse(JSON.stringify(groupStore.getGroups))),
         orders: removeRuntimeValidationFields(JSON.parse(JSON.stringify(orderStore.getOrders))),
         filters: removeRuntimeValidationFields(JSON.parse(JSON.stringify(filterStore.getFilters))),

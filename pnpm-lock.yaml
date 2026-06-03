@@ -177,6 +177,9 @@ importers:
       husky:
         specifier: ^8.0.3
         version: 8.0.3
+      jiti:
+        specifier: ^2.6.1
+        version: 2.6.1
       konva:
         specifier: ^9.3.22
         version: 9.3.22

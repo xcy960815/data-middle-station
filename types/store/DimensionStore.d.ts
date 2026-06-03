@@ -1,16 +1,20 @@
 /**
- * @desc 维度字段
+ * @desc 值/度量字段。历史命名沿用 dimensions，但业务语义是 measures。
  */
 /// <reference path="./Common.d.ts" />
 declare namespace DimensionStore {
   /**
-   * @desc 维度字段
+   * @desc 值/度量字段
    * @interface DimensionOption
    * @property {string} name 列名
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
   type DimensionOption = ColumnsStore.ColumnOptions & {
+    /**
+     * 值字段聚合方式。保存到 chart config 后由 AnalyzeQueryBuilder 生成聚合 SQL。
+     */
+    datasetAggregationType?: AnalyzeConfigDao.OrderAggregationsType
     /**
      * 是否无效
      */
@@ -81,7 +85,7 @@ declare namespace DimensionStore {
   type DimensionKey = 'dimensions'
 
   /**
-   * @desc 维度字段状态
+   * @desc 值/度量字段状态。dimensions 为历史字段名，表示分析页“值”区域。
    */
   type DimensionState = {
     dimensions: Array<DimensionOption>
@@ -91,7 +95,14 @@ declare namespace DimensionStore {
    * @desc getter
    */
   type DimensionGetters = {
+    /**
+     * @desc 历史 getter，返回分析页“值”字段。
+     */
     getDimensions: (state: DimensionState) => DimensionOption[]
+    /**
+     * @desc 语义别名，返回分析页“值/度量”字段。新代码优先使用该 getter。
+     */
+    getMeasures: (state: DimensionState) => DimensionOption[]
   }
 
   /**
@@ -102,5 +113,6 @@ declare namespace DimensionStore {
     addDimensions: (dimensions: DimensionOption[]) => void
     removeDimension: (index: number) => void
     updateDimension: (dimension: DimensionOption) => void
+    updateDimensionByIndex: (index: number, dimension: DimensionOption) => void
   }
 }

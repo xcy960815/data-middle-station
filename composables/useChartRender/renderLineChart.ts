@@ -38,8 +38,7 @@ export function renderLineChart(
 
   const { xFieldName, measureFields, groupFieldName, useFold, xAxisTitle, yAxisTitle } = dataResult
 
-  // 检查 measureFields 是否为空
-  if (!measureFields || measureFields.length === 0) {
+  if (!xFieldName || !measureFields || measureFields.length === 0) {
     return null
   }
 

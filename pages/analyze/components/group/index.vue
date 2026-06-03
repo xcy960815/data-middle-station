@@ -61,7 +61,7 @@ const groupColumnCountMap = computed(() => {
 })
 
 const dimensionColumnSet = computed(() => {
-  return new Set(dimensionStore.getDimensions.map((item) => item.columnName).filter(Boolean))
+  return new Set(dimensionStore.getMeasures.map((item) => item.columnName).filter(Boolean))
 })
 
 const getGroupInvalid = (group: GroupStore.GroupOption) => {

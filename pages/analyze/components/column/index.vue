@@ -83,7 +83,7 @@ type AnalyzeDataSourceChangePayload =
  * @returns {string} 类名
  */
 const columnClasses = computed(() => (column: ColumnsStore.ColumnOptions) => {
-  const dimensionSelected = useDimensionsStore().getDimensions.find(
+  const dimensionSelected = useDimensionsStore().getMeasures.find(
     (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
   const groupSelected = useGroupsStore().getGroups.find(

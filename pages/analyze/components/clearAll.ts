@@ -46,7 +46,7 @@ export const clearAllHandler = () => {
       case 'groups':
         return groupStore.getGroups.length > 0
       case 'dimensions':
-        return dimensionStore.getDimensions.length > 0
+        return dimensionStore.getMeasures.length > 0
       default:
         return false
     }
