@@ -4,11 +4,11 @@
 
 分析页当前通过拖拽字段配置“值”“分组”“筛选”“排序”，再由 `/api/getAnalyzeData` 动态生成 SQL 查询看板数据源。静态审查发现，页面交互已经接近 BI 分析心智，但服务端 SQL 生成仍混用了明细查询和聚合查询语义，导致分组图表结果可能不正确。
 
-## 当前问题
+## 已修复问题
 
 ### 1. 值字段被错误放入 `GROUP BY`
 
-页面中的“值”会作为图表的 Y 轴或指标字段，“分组”会作为 X 轴或分类字段。但当前服务端把 `measures` 和 `groups` 合并后同时放进 `SELECT`，又在存在分组时把值字段也放进 `GROUP BY`。
+页面中的“值”会作为图表的 Y 轴或指标字段，“分组”会作为 X 轴或分类字段。历史实现曾把值字段和分组字段合并后同时放进 `GROUP BY`；当前已改为分组字段进入 `GROUP BY`，值字段在聚合模式下进入聚合 `SELECT`。
 
 这会把预期的：
 
@@ -30,7 +30,7 @@ group by region, sales
 
 ### 2. 筛选的聚合语义没有落到 SQL
 
-筛选 UI 已允许用户选择 `raw/count/countDistinct/sum/avg/max/min`，但服务端目前只生成普通 `WHERE` 条件。
+筛选 UI 允许用户选择 `raw/count/countDistinct/sum/avg/max/min`。当前服务端已按查询模式拆分 `WHERE` 和 `HAVING`。
 
 正确语义应拆分为：
 
@@ -52,19 +52,19 @@ where sales > ?
 
 ### 3. 排序在聚合查询下需要限制字段角色
 
-排序 UI 已支持聚合方式，服务端在有分组且排序聚合方式不是 `raw` 时会生成聚合排序表达式，这个方向是合理的。但聚合查询中的 `raw` 排序只能稳定用于分组字段；如果对未分组的指标字段做原始值排序，可能在 MySQL `only_full_group_by` 下报错，或得到不稳定结果。
+排序 UI 已支持聚合方式。当前服务端在有分组且排序聚合方式不是 `raw` 时生成聚合排序表达式；聚合查询中的 `raw` 排序只允许稳定用于分组字段。
 
 ### 4. 柱状图和折线图字段角色与页面传参不一致
 
-页面把“分组”传为 `xAxisFields`，把“值”传为 `yAxisFields`。饼图按这个语义使用字段，但柱状图和折线图的公共处理逻辑把 `yAxisFields` 最后一个字段当作 X 轴，其余字段当作指标，和页面交互心智不一致。
+页面把“分组”传为 `xAxisFields`，把“值”传为 `yAxisFields`。当前柱状图、折线图和饼图均按这个字段角色渲染。
 
 ### 5. 日期分组表达式需要统一
 
-日期字段分组时，`SELECT`、`GROUP BY`、`ORDER BY` 必须使用同一条 SQL 表达式。否则可能出现展示字段被格式化，但实际分组或排序仍按原始字段执行，导致 MySQL `only_full_group_by` 风险或结果顺序和展示粒度不一致。
+日期字段分组时，`SELECT`、`GROUP BY`、`ORDER BY` 复用同一条 SQL 表达式，避免展示粒度、分组粒度和排序粒度不一致。
 
-## 修复目标
+## 已落地规则
 
-本次先做最小一致性修复，不引入新的复杂 UI：
+当前查询语义规则：
 
 1. 分组字段进入 `GROUP BY`。
 2. 值字段进入聚合 `SELECT`，默认聚合规则：
@@ -90,7 +90,7 @@ where sales > ?
 
 校验规则：两种模式均至少需要 1 个值字段。表格模式只由分组字段决定，和当前选择了多少值字段无关。无分组时即使值字段保存了 `datasetAggregationType`，查询仍按明细表格输出行级数据，不使用聚合表达式。
 
-## 后续建议
+## 完成记录
 
 1. 已完成：分析页“值/指标”内部命名已端到端调整为 `measures` / `MeasureOption` / `useMeasuresStore`，不再使用 `dimensions` 表示值字段。
 2. 已完成：在“值”区域提供聚合方式选择，并保存到 chart config，避免完全依赖默认推断。
@@ -98,11 +98,12 @@ where sales > ?
 4. 已完成：已补 `pnpm test:analyze-query` 快照测试，覆盖 `WHERE/GROUP BY/HAVING/ORDER BY` 的组合场景。
 5. 已完成：为未配置分组字段但柱状图、折线图需要 X 轴的场景补充前端防护，避免空 X 轴配置进入渲染层。
 
-## 后续计划
-
-推荐按下面顺序继续推进：
+## 迁移记录
 
 1. 已完成：前端防护已抽公共 `validateAnalyzeChartConfig`，并接入分析页查询、看板组件和邮件渲染链路；柱状图、折线图 `render*` 也已补空 X 轴兜底，避免只在 `useAnalyzeDataHandler` 一处校验。
 2. 已完成：值聚合 UI 已在“值”区域提供聚合方式选择，保存字段为 `measures[].datasetAggregationType`，并和 `AnalyzeQueryBuilder` 已支持的字段配置对齐；无分组时隐藏聚合入口，避免明细表格场景误导。自定义列表达式默认按当前类型推断为计数，可在有分组时手动改聚合。
 3. 已完成：表格模式表达已用 `getTableQueryMode` 统一判断，无分组显示明细表格，有分组显示聚合表格。
 4. 已完成：命名清理已从折中注释方案推进为硬改名，分析配置字段、DTO、store、组件目录和 SQL 初始化脚本统一使用 `measures`。
+5. 已补迁移脚本：
+   - `sql/20260603_rename_analyze_config_dimensions_to_measures.sql`
+   - `sql/20260603_replace_dimension_path_values_to_measure.sql`

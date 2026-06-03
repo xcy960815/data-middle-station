@@ -93,9 +93,10 @@ data-middle-station/
 **主要功能:**
 
 - 数据源选择和字段配置
-- 多维度数据分析
+- 分组和值/指标数据分析
 - 图表类型切换（表格、柱状图、折线图、饼图）
 - 过滤条件和排序设置
+- 表格明细/聚合模式表达
 - 实时数据更新和刷新
 
 **核心组件:**
@@ -108,7 +109,24 @@ data-middle-station/
 - `Chart`: 图表渲染容器
 - `ChartType`: 图表类型选择器
 
-#### 2. 图表可视化组件
+#### 2. 看板模块 (`pages/dashboard/`)
+
+负责把多个分析组合成可保存、可查看的看板页面。
+
+**主要功能:**
+
+- 从分析列表拖拽分析到看板画布
+- 调整组件位置和宽高
+- 保存看板配置历史版本并支持切换
+- 加载分析图表配置并独立查询组件数据
+- 支持展示基于数据集创建的分析；看板自身不单独选择数据集，数据集来源跟随分析配置
+
+**核心组件:**
+
+- `DashboardWidgetChart`: 看板组件图表渲染容器
+- `dashboard/[id].vue`: 看板编辑、布局和组件数据加载页面
+
+#### 3. 图表可视化组件
 
 基于 ECharts 封装的图表组件库，支持多种图表类型。
 
@@ -119,7 +137,7 @@ data-middle-station/
 - **折线图** (`line-chart`): 支持平滑曲线、数据点显示、双轴
 - **饼图** (`pie-chart`): 支持标签显示、颜色配置
 
-#### 3. 状态管理 (`stores/`)
+#### 4. 状态管理 (`stores/`)
 
 使用 Pinia 进行全局状态管理，模块化设计。
 
@@ -134,7 +152,7 @@ data-middle-station/
 - `orders`: 排序配置
 - `user`: 用户信息
 
-#### 4. 服务端API (`server/api/`)
+#### 5. 服务端API (`server/api/`)
 
 提供完整的数据服务接口。
 
@@ -145,6 +163,11 @@ data-middle-station/
 - `createAnalyze`: 创建分析
 - `updateAnalyze`: 更新分析
 - `getAnalyzeData`: 获取图表数据
+- `getDashboards` / `getDashboard`: 获取看板列表和详情
+- `createDashboard` / `updateDashboard`: 创建和保存看板配置
+- `getDashboardConfigHistory`: 获取看板历史版本
+- `getDataSources` / `syncDataSourceSchema`: 管理数据源和同步表字段
+- `getDatasets` / `getDataset` / `previewDataset`: 管理和预览数据集
 - `sendEmail`: 发送邮件（即时发送，支持自动渲染图表附件）
 - `scheduledEmails`: 定时邮件管理
 
@@ -159,24 +182,31 @@ data-middle-station/
 
 ### 2. 数据分析
 
-- **多维度分析**: 支持多字段维度组合分析
+- **分组和值分析**: 支持多字段分组和值/指标组合分析
 - **动态过滤**: 实时过滤条件设置和数据筛选
 - **聚合计算**: 支持求和、计数、平均值等聚合函数
 - **排序功能**: 多字段自定义排序
+- **表格模式**: 无分组时为明细表格，有分组时为聚合表格
 
 ### 3. 数据源管理
 
-- **动态数据源**: 支持多表数据源切换
+- **动态数据源**: 支持数据集和物理表两种来源
 - **字段映射**: 自动识别数据库字段类型和注释
 - **实时查询**: 基于条件动态生成SQL查询
 
-### 4. 邮件报告系统
+### 4. 看板管理
+
+- **拖拽布局**: 支持把分析拖入看板并调整组件位置和尺寸
+- **历史版本**: 保存看板配置历史并支持切换
+- **数据集来源**: 支持展示基于数据集创建的分析，查询参数沿用分析配置中的物理表和数据集字段语义
+
+### 5. 邮件报告系统
 
 - **图表邮件**: 支持将图表作为附件或内容发送
 - **定时任务**: 支持定时和周期性邮件发送
 - **模板配置**: 可自定义邮件模板和内容
 
-### 5. 权限和安全
+### 6. 权限和安全
 
 - **JWT认证**: 基于Token的用户身份验证
 - **请求日志**: 完整的API请求日志记录
@@ -199,32 +229,41 @@ CREATE TABLE `analyze` (
   `created_by` varchar(100) DEFAULT NULL COMMENT '创建人',
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `updated_by` varchar(100) DEFAULT NULL COMMENT '更新人',
-  `chart_config_id` bigint DEFAULT NULL COMMENT '图表配置ID',
+  `current_config_id` bigint unsigned DEFAULT NULL COMMENT '当前生效的分析配置版本ID',
   `analyze_desc` varchar(255) DEFAULT NULL COMMENT '分析描述',
   `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='图表信息表';
 ```
 
-#### 2. chart_config (图表配置表)
+#### 2. analyze_config (分析配置历史版本表)
 
-存储图表的详细配置信息。
+存储分析图表的版本化配置。`analyze.current_config_id` 指向当前生效版本。数据来源模式不单独建列，保存在 `common_chart_config.dataSourceMode`、`common_chart_config.datasetId`、`common_chart_config.datasetName` 中；`data_source` 始终保存最终用于查询的物理表名。
 
 ```sql
-CREATE TABLE `chart_config` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+CREATE TABLE `analyze_config` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `analyze_id` bigint unsigned NOT NULL COMMENT '分析ID',
+  `version_no` int unsigned NOT NULL COMMENT '版本号',
   `data_source` varchar(100) DEFAULT NULL COMMENT '数据源表名',
   `columns` json DEFAULT NULL COMMENT '列配置(JSON格式)',
   `measures` json DEFAULT NULL COMMENT '值/指标配置(JSON格式)',
   `filters` json DEFAULT NULL COMMENT '过滤条件(JSON格式)',
   `groups` json DEFAULT NULL COMMENT '分组配置(JSON格式)',
   `orders` json DEFAULT NULL COMMENT '排序配置(JSON格式)',
+  `chart_type` varchar(50) DEFAULT NULL COMMENT '图表类型',
   `common_chart_config` json DEFAULT NULL COMMENT '公共图表配置(JSON格式)',
-  `private_chart_config` json DEFAULT NULL COMMENT '图表配置(JSON格式)',
-  `chart_type` varchar(50) DEFAULT NULL COMMENT '图标类型',
+  `private_chart_config` json DEFAULT NULL COMMENT '各图表类型配置(JSON格式)',
+  `change_note` varchar(255) DEFAULT NULL COMMENT '版本说明',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `created_by` varchar(100) DEFAULT NULL COMMENT '创建人',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB COMMENT='图表配置表';
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_analyze_version` (`analyze_id`,`version_no`),
+  KEY `idx_analyze_config_analyze_id` (`analyze_id`),
+  KEY `idx_analyze_config_create_time` (`create_time`)
+) ENGINE=InnoDB COMMENT='分析配置历史版本表';
 ```
 
 #### 3. scheduled_email_tasks (定时邮件任务表)
@@ -463,6 +502,13 @@ npm run docker:build:multi
    mysql -u root -p data_middle_station < sql/data_middle_station.sql
    ```
 
+   如果从旧库升级分析配置字段命名，先执行迁移脚本：
+
+   ```bash
+   mysql -u root -p data_middle_station < sql/20260603_rename_analyze_config_dimensions_to_measures.sql
+   mysql -u root -p data_middle_station < sql/20260603_replace_dimension_path_values_to_measure.sql
+   ```
+
 5. **启动开发服务器**
 
    ```bash
@@ -509,6 +555,16 @@ pnpm format
 # 修复 lint 问题
 pnpm lint:fix
 ```
+
+### 分析查询校验
+
+分析页查询语义的专项快照测试：
+
+```bash
+pnpm test:analyze-query
+```
+
+该测试覆盖 `WHERE / GROUP BY / HAVING / ORDER BY` 组合、表格明细/聚合模式，以及 `validateAnalyzeChartConfig` 的核心分支。
 
 ### 提交规范
 
@@ -570,7 +626,7 @@ Response:
     "analyzeName": "销售数据看板",
     "chartConfig": {
       "chartType": "interval",
-      "dataSource": "operationAnalysis",
+      "dataSource": "operation_analysis",
       "measures": [...],
       "groups": [...],
       "filters": [...]
@@ -590,10 +646,22 @@ Content-Type: application/json
   "analyzeDesc": "分析描述",
   "chartConfig": {
     "chartType": "table",
-    "dataSource": "tableName",
-    "measures": [],
+    "dataSource": "table_name",
+    "measures": [
+      {
+        "columnName": "id",
+        "columnType": "number",
+        "displayName": "主键ID"
+      }
+    ],
     "groups": [],
-    "filters": []
+    "filters": [],
+    "commonChartConfig": {
+      "dataSourceMode": "table",
+      "datasetId": null,
+      "datasetName": "",
+      "limit": 1000
+    }
   }
 }
 ```
@@ -607,7 +675,7 @@ POST /api/getAnalyzeData
 Content-Type: application/json
 
 {
-  "dataSource": "operationAnalysis",
+  "dataSource": "operation_analysis",
   "measures": [
     {
       "columnName": "new_users",
