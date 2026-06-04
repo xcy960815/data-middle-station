@@ -3,8 +3,8 @@ export type TableQueryMode = 'detail' | 'aggregate'
 /**
  * 表格模式只由分组字段决定：无分组为明细表格，有分组为聚合表格。
  */
-export const getTableQueryMode = (groups: unknown[] = [], _measures: unknown[] = []): TableQueryMode => {
-  return (groups?.length ?? 0) > 0 ? 'aggregate' : 'detail'
+export const getTableQueryMode = (dimensions: unknown[] = [], _measures: unknown[] = []): TableQueryMode => {
+  return (dimensions?.length ?? 0) > 0 ? 'aggregate' : 'detail'
 }
 
 export const getTableQueryModeLabel = (mode: TableQueryMode) => {

@@ -110,12 +110,12 @@ export const createHeaderClipGroup = (
 
 /**
  * 创建拖拽图标
- * @param {GroupStore.GroupOption | MeasureStore.MeasureOption} columnOption - 列配置
+ * @param {DimensionStore.DimensionOption | MeasureStore.MeasureOption} columnOption - 列配置
  * @param {number} x - 列的x坐标
  * @param {Konva.Group} headerGroup - 表头组
  */
 export const createDragIcon = (
-  columnOption: GroupStore.GroupOption | MeasureStore.MeasureOption,
+  columnOption: DimensionStore.DimensionOption | MeasureStore.MeasureOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
@@ -203,7 +203,7 @@ export const createDragIcon = (
 
 /**
  * 创建过滤图标
- * @param {CanvasTable.GroupOption | CanvasTable.MeasureOption} col - 列
+ * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} col - 列
  * @param {number} x - 列的x坐标
  * @param {number} y - 列的y坐标
  * @param {number} width - 列的宽度
@@ -211,7 +211,7 @@ export const createDragIcon = (
  * @param {Konva.Group} headerGroup - 表头组
  */
 const createFilterIcon = (
-  columnOption: CanvasTable.GroupOption | CanvasTable.MeasureOption,
+  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
@@ -290,12 +290,12 @@ const createFilterIcon = (
 
 /**
  * 创建列宽调整手柄
- * @param {CanvasTable.GroupOption | CanvasTable.MeasureOption} columnOption - 列配置
+ * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} columnOption - 列配置
  * @param {number} x - x坐标
  * @param {Konva.Group} headerGroup - 表头组
  */
 const createResizerIcon = (
-  columnOption: CanvasTable.GroupOption | CanvasTable.MeasureOption,
+  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
@@ -349,7 +349,7 @@ const createResizerIcon = (
 
 /**
  * 创建排序指示器 - 上下两个箭头
- * @param {CanvasTable.GroupOption | CanvasTable.MeasureOption} columnOption - 列
+ * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} columnOption - 列
  * @param {number} x - 列的x坐标
  * @param {number} y - 列的y坐标
  * @param {number} width - 列的宽度
@@ -358,7 +358,7 @@ const createResizerIcon = (
  * @returns {Konva.Path} 排序指示器
  */
 const createSortIcon = (
-  columnOption: CanvasTable.GroupOption | CanvasTable.MeasureOption,
+  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
@@ -454,10 +454,13 @@ const createSortIcon = (
 
 /**
  * 处理排序逻辑
- * @param {CanvasTable.GroupOption | CanvasTable.MeasureOption} columnOption - 列配置
+ * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} columnOption - 列配置
  * @param {'asc' | 'desc'} order - 排序方向
  */
-const handleSortAction = (columnOption: CanvasTable.GroupOption | CanvasTable.MeasureOption, order: 'asc' | 'desc') => {
+const handleSortAction = (
+  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption,
+  order: 'asc' | 'desc'
+) => {
   measureTablePerf('applySort', () => {
     handleMultiColumnSort(columnOption, order)
     handleTableData()
@@ -467,14 +470,14 @@ const handleSortAction = (columnOption: CanvasTable.GroupOption | CanvasTable.Me
 
 /**
  * 创建表头文本 - 添加排序支持
- * @param {CanvasTable.GroupOption | CanvasTable.MeasureOption} columnOption - 列
+ * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} columnOption - 列
  * @param {number} x - 列的x坐标
  * @param {number} width - 列的宽度
  * @param {number} height - 列的高度
  * @param {Konva.Group} headerGroup - 表头组
  */
 const createHeaderCellText = (
-  columnOption: CanvasTable.GroupOption | CanvasTable.MeasureOption,
+  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption,
   x: number,
   headerGroup: Konva.Group
 ) => {
@@ -511,11 +514,11 @@ const createHeaderCellText = (
 /**
  * 绘制表头部分
  * @param {Konva.Group | null} headerGroup - 表头组
- * @param {Array<CanvasTable.GroupOption | CanvasTable.MeasureOption>} headerCols - 表头列配置
+ * @param {Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>} headerCols - 表头列配置
  */
 export const drawHeaderPart = (
   headerGroup: Konva.Group | null,
-  headerCols: Array<CanvasTable.GroupOption | CanvasTable.MeasureOption>
+  headerCols: Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>
 ) => {
   if (!headerGroup || !stageVars.stage) return
 
@@ -794,14 +797,14 @@ export const handleColumnReorder = (mouseX: number) => {
 
   // 更新 getTableParams() 中的列配置
   // 需要重新分离 xAxisFields 和 yAxisFields
-  const newXAxisFields: GroupStore.GroupOption[] = []
+  const newXAxisFields: DimensionStore.DimensionOption[] = []
   const newYAxisFields: MeasureStore.MeasureOption[] = []
 
   allFields.forEach((field) => {
     // 根据原始类型判断是 xAxisFields 还是 yAxisFields
     const isXAxisField = getTableParams().xAxisFields.some((xField) => xField.columnName === field.columnName)
     if (isXAxisField) {
-      newXAxisFields.push(field as GroupStore.GroupOption)
+      newXAxisFields.push(field as DimensionStore.DimensionOption)
     } else {
       newYAxisFields.push(field as MeasureStore.MeasureOption)
     }

@@ -37,7 +37,7 @@ const props = defineProps<{
   loading: boolean
   errorMessage: string
   data: AnalyzeDataVo.AnalyzeData[]
-  xAxisFields: GroupStore.GroupOption[]
+  xAxisFields: DimensionStore.DimensionOption[]
   yAxisFields: MeasureStore.MeasureOption[]
   privateChartConfig: AnalyzeConfigVo.PrivateChartConfigItem | null
 }>()
@@ -67,7 +67,7 @@ const activeErrorMessage = computed(() => {
     chartType: props.chartType,
     dataSource: props.dataSource,
     measures: props.yAxisFields,
-    groups: props.xAxisFields
+    dimensions: props.xAxisFields
   })
   if (!validation.valid) return validation.message
   return ''

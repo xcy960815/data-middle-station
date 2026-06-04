@@ -12,6 +12,10 @@ declare namespace MeasureStore {
    */
   type MeasureOption = ColumnsStore.ColumnOptions & {
     /**
+     * 数据集字段语义类型。用于推断未显式选择时的默认聚合方式。
+     */
+    datasetFieldType?: DatasetDao.DatasetFieldType
+    /**
      * 值字段聚合方式。保存到 chart config 后由 AnalyzeQueryBuilder 生成聚合 SQL。
      */
     datasetAggregationType?: AnalyzeConfigDao.OrderAggregationsType

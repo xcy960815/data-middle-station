@@ -162,7 +162,7 @@
 //  * @returns Array<Measure | Group>
 //  */
 // const fields = computed(() => {
-//   const fields = measureStore.getMeasures.concat(groupStore.getGroups).filter((field) => {
+//   const fields = measureStore.getMeasures.concat(dimensionStore.getDimensions).filter((field) => {
 //     return (
 //       field.columnType?.includes('int') || field.columnType?.includes('float') || field.columnType?.includes('double')
 //     )

@@ -231,7 +231,7 @@ import DashboardWidgetChart from './components/dashboard-widget-chart.vue'
 type DashboardWidgetState = DashboardDto.DashboardWidgetPayload & {
   localId: string
   data: AnalyzeDataVo.AnalyzeData[]
-  xAxisFields: GroupStore.GroupOption[]
+  xAxisFields: DimensionStore.DimensionOption[]
   yAxisFields: MeasureStore.MeasureOption[]
   dataSource: string | null
   privateChartConfig: AnalyzeConfigVo.PrivateChartConfigItem | null
@@ -368,7 +368,7 @@ const createWidgetState = (widget: DashboardVo.DashboardWidgetItem): DashboardWi
     widgetConfig: widget.widgetConfig || {},
     analyze: widget.analyze,
     data: [],
-    xAxisFields: (chartConfig?.groups || []) as GroupStore.GroupOption[],
+    xAxisFields: (chartConfig?.dimensions || []) as DimensionStore.DimensionOption[],
     yAxisFields: (chartConfig?.measures || []) as MeasureStore.MeasureOption[],
     dataSource: chartConfig?.dataSource ?? null,
     privateChartConfig: chartConfig?.privateChartConfig || null,
@@ -544,7 +544,7 @@ const buildWidgetAnalyzeDataParams = (
     chartType: chartConfig.chartType,
     dataSource: chartConfig.dataSource,
     measures: chartConfig.measures || [],
-    groups: chartConfig.groups || []
+    dimensions: chartConfig.dimensions || []
   })
   if (!validation.valid) throw new Error(validation.message)
 
@@ -554,7 +554,7 @@ const buildWidgetAnalyzeDataParams = (
       (item) => item.aggregationType && (item.filterType || item.filterValue)
     ),
     orders: (chartConfig.orders || []).filter((item) => item.aggregationType || item.orderType),
-    groups: chartConfig.groups || [],
+    dimensions: chartConfig.dimensions || [],
     measures: chartConfig.measures || [],
     commonChartConfig: chartConfig.commonChartConfig
   }

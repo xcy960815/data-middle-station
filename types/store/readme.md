@@ -13,7 +13,7 @@
 | `Common.d.ts`           | 包含多个 store 之间使用的通用共享类型定义。                                    |
 | `MeasureStore.d.ts`     | 定义分析页值/度量字段的类型。                                                  |
 | `FilterStore.d.ts`      | 定义数据过滤操作的类型。                                                       |
-| `GroupStore.d.ts`       | 定义数据分组操作的类型。                                                       |
+| `DimensionStore.d.ts`   | 定义数据分组/维度操作的类型。                                                  |
 | `OrderStore.d.ts`       | 定义数据排序和顺序的类型。                                                     |
 | `UserStore.d.ts`        | 定义用户 store 的类型，包括用户个人资料信息（ID、姓名、头像）。                |
 

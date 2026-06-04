@@ -44,7 +44,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 分组配置选项
    */
-  type GroupOption = DatabaseVo.TableColumnItem & {
+  type DimensionOption = DatabaseVo.TableColumnItem & {
     __invalid?: boolean
   }
 
@@ -90,12 +90,12 @@ declare namespace AnalyzeConfigVo {
    */
   type AnalyzeConfigResponse = Omit<
     AnalyzeConfigDao.AnalyzeConfigRecord,
-    'columns' | 'measures' | 'filters' | 'groups' | 'orders'
+    'columns' | 'measures' | 'filters' | 'dimensions' | 'orders'
   > & {
     columns: ColumnItem[]
     measures: MeasureOption[]
     filters: FilterOption[]
-    groups: GroupOption[]
+    dimensions: DimensionOption[]
     orders: OrderOption[]
   }
 

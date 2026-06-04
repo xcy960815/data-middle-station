@@ -2,7 +2,7 @@ export enum StoreNames {
   ANALYZE = 'analyze',
   CONFIG = 'config',
   MEASURES = 'measures',
-  GROUPS = 'groups',
+  DIMENSIONS = 'dimensions',
   ORDERS = 'orders',
   FILTERS = 'filters',
   COLUMNS = 'columns',

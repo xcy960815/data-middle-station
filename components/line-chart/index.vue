@@ -50,7 +50,7 @@ const props = defineProps({
     default: () => []
   },
   xAxisFields: {
-    type: Array as PropType<Array<GroupStore.GroupOption>>,
+    type: Array as PropType<Array<DimensionStore.DimensionOption>>,
     default: () => []
   },
   yAxisFields: {

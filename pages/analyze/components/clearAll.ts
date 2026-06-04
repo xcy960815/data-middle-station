@@ -5,14 +5,14 @@
 export const clearAllHandler = () => {
   const orderStore = useOrdersStore()
   const filterStore = useFiltersStore()
-  const groupStore = useGroupsStore()
+  const dimensionStore = useDimensionsStore()
   const measureStore = useMeasuresStore()
 
   /**
    * @desc 清空所有
    * @param type 类型
    */
-  const clearAll = (type: 'orders' | 'filters' | 'groups' | 'measures') => {
+  const clearAll = (type: 'orders' | 'filters' | 'dimensions' | 'measures') => {
     switch (type) {
       case 'orders':
         orderStore.setOrders([])
@@ -20,8 +20,8 @@ export const clearAllHandler = () => {
       case 'filters':
         filterStore.setFilters([])
         break
-      case 'groups':
-        groupStore.setGroups([])
+      case 'dimensions':
+        dimensionStore.setDimensions([])
         break
       case 'measures':
         measureStore.setMeasures([])
@@ -37,14 +37,14 @@ export const clearAllHandler = () => {
    * @param type 类型
    * @returns 是否清空
    */
-  const hasClearAll = (type: 'orders' | 'filters' | 'groups' | 'measures') => {
+  const hasClearAll = (type: 'orders' | 'filters' | 'dimensions' | 'measures') => {
     switch (type) {
       case 'orders':
         return orderStore.getOrders.length > 0
       case 'filters':
         return filterStore.getFilters.length > 0
-      case 'groups':
-        return groupStore.getGroups.length > 0
+      case 'dimensions':
+        return dimensionStore.getDimensions.length > 0
       case 'measures':
         return measureStore.getMeasures.length > 0
       default:

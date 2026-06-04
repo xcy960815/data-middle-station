@@ -112,7 +112,7 @@ const { clearAll, hasClearAll } = clearAllHandler()
 // 初始化数据
 const columnStore = useColumnsStore()
 const measureStore = useMeasuresStore()
-const groupStore = useGroupsStore()
+const dimensionStore = useDimensionsStore()
 
 const monacoEditorRef = ref<InstanceType<typeof MonacoEditor> | null>(null)
 
@@ -125,10 +125,10 @@ const measures = computed(() => {
 })
 
 /**
- * @desc groupList 数据
+ * @desc dimensionList 数据
  */
-const groupList = computed<GroupStore.GroupState['groups']>(() => {
-  return groupStore.getGroups
+const dimensionList = computed<DimensionStore.DimensionState['dimensions']>(() => {
+  return dimensionStore.getDimensions
 })
 
 const measureColumnCountMap = computed(() => {
@@ -139,8 +139,8 @@ const measureColumnCountMap = computed(() => {
   }, {})
 })
 
-const groupColumnSet = computed(() => {
-  return new Set(groupList.value.map((item) => item.columnName).filter(Boolean))
+const dimensionColumnSet = computed(() => {
+  return new Set(dimensionList.value.map((item) => item.columnName).filter(Boolean))
 })
 
 const getMeasureInvalid = (measure: MeasureStore.MeasureOption) => {
@@ -152,14 +152,14 @@ const getMeasureInvalidMessage = (measure: MeasureStore.MeasureOption) => {
   if ((measureColumnCountMap.value[measure.columnName] || 0) > 1) {
     return '该值已存在'
   }
-  if (groupColumnSet.value.has(measure.columnName)) {
+  if (dimensionColumnSet.value.has(measure.columnName)) {
     return '该字段已在分组中使用'
   }
   return ''
 }
 
 const isMeasureAggregationEnabled = (measure: MeasureStore.MeasureOption) => {
-  return !!measure.columnName && groupList.value.length > 0
+  return !!measure.columnName && dimensionList.value.length > 0
 }
 
 const resolveMeasureAggregationType = (measure: MeasureStore.MeasureOption): AnalyzeConfigDao.OrderAggregationsType => {

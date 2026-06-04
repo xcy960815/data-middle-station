@@ -223,11 +223,11 @@ export const getColumnSortStatus = (columnName: string): 'asc' | 'desc' | null =
 
 /**
  * 处理多列排序
- * @param {GroupStore.GroupOption | MeasureStore.MeasureOption} columnOption - 列配置
+ * @param {DimensionStore.DimensionOption | MeasureStore.MeasureOption} columnOption - 列配置
  * @param {'asc' | 'desc'} order - 排序方向
  */
 export const handleMultiColumnSort = (
-  columnOption: GroupStore.GroupOption | MeasureStore.MeasureOption,
+  columnOption: DimensionStore.DimensionOption | MeasureStore.MeasureOption,
   order: 'asc' | 'desc'
 ) => {
   const columnName = columnOption.columnName

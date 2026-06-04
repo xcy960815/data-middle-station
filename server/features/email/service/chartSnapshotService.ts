@@ -96,7 +96,7 @@ export class ChartSnapshotService {
       chartType: chartConfig.chartType,
       dataSource: chartConfig.dataSource,
       measures: chartConfig.measures || [],
-      groups: chartConfig.groups || []
+      dimensions: chartConfig.dimensions || []
     })
     if (!validation.valid) {
       throw new Error(`分析 ${analyzeId} ${validation.message}`)
@@ -105,7 +105,7 @@ export class ChartSnapshotService {
     const analyzeData = await this.chartDataService.getAnalyzeData({
       filters: chartConfig.filters || [],
       orders: chartConfig.orders || [],
-      groups: chartConfig.groups || [],
+      dimensions: chartConfig.dimensions || [],
       measures: chartConfig.measures,
       dataSource: chartConfig.dataSource,
       commonChartConfig: chartConfig.commonChartConfig
@@ -114,7 +114,7 @@ export class ChartSnapshotService {
     const renderConfig: ChartRenderConfig = {
       title: analyzeVo.analyzeName,
       data: analyzeData,
-      xAxisFields: chartConfig.groups || [],
+      xAxisFields: chartConfig.dimensions || [],
       yAxisFields: chartConfig.measures
     }
 

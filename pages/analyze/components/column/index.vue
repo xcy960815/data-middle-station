@@ -51,7 +51,7 @@ import { useChartConfigStore } from '~/stores/chart-config'
 import { useColumnsStore } from '~/stores/columns'
 import { useMeasuresStore } from '~/stores/measures'
 import { useFiltersStore } from '~/stores/filters'
-import { useGroupsStore } from '~/stores/groups'
+import { useDimensionsStore } from '~/stores/dimensions'
 import { useOrdersStore } from '~/stores/orders'
 
 // 数字图标
@@ -86,8 +86,8 @@ const columnClasses = computed(() => (column: ColumnsStore.ColumnOptions) => {
   const measureSelected = useMeasuresStore().getMeasures.find(
     (measureOption: MeasureStore.MeasureOption) => measureOption.columnName === column.columnName
   )
-  const groupSelected = useGroupsStore().getGroups.find(
-    (groupOption: GroupStore.GroupOption) => groupOption.columnName === column.columnName
+  const groupSelected = useDimensionsStore().getDimensions.find(
+    (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
   return {
     column__item: true, // 默认类名
@@ -135,7 +135,7 @@ const filterStore = useFiltersStore()
 const orderStore = useOrdersStore()
 const chartConfigStore = useChartConfigStore()
 const measureStore = useMeasuresStore()
-const groupStore = useGroupsStore()
+const dimensionStore = useDimensionsStore()
 
 /**
  * @desc 列列表
@@ -248,9 +248,9 @@ const dropHandler = (dragEvent: DragEvent) => {
       orderStore.removeOrder(data.index)
       break
     }
-    case 'groups': {
-      const groupStore = useGroupsStore()
-      groupStore.removeGroup(data.index)
+    case 'dimensions': {
+      const dimensionStore = useDimensionsStore()
+      dimensionStore.removeDimension(data.index)
       columnStore.updateColumn({
         column: data.value,
         index: columnIndex
@@ -335,7 +335,7 @@ watch(
       // 如果数据源为空，清空排序条件
       orderStore.setOrders([])
       // 如果数据源为空，清空分组条件
-      groupStore.setGroups([])
+      dimensionStore.setDimensions([])
       // 如果数据源为空，清空值字段
       measureStore.setMeasures([])
       // 如果数据源为空，清空图表配置
@@ -352,8 +352,8 @@ watch(
     //   hasFilter && filterStore.setFilters([])
     //   const hasOrder = orderStore.getOrders.length > 0
     //   hasOrder && orderStore.setOrders([])
-    //   const hasGroup = groupStore.getGroups.length > 0
-    //   hasGroup && groupStore.setGroups([])
+    //   const hasGroup = dimensionStore.getDimensions.length > 0
+    //   hasGroup && dimensionStore.setDimensions([])
     //   const hasMeasure = measureStore.getMeasures.length > 0
     //   hasMeasure && measureStore.setMeasures([])
     // }
@@ -392,7 +392,7 @@ const clearAnalyzeSelections = () => {
   analyzeStore.setAnalyzeData([])
   filterStore.setFilters([])
   orderStore.setOrders([])
-  groupStore.setGroups([])
+  dimensionStore.setDimensions([])
   measureStore.setMeasures([])
 }
 
@@ -405,7 +405,7 @@ const mapDatasetFieldToColumn = (field: DatasetDao.DatasetFieldConfigItem): Colu
     datasetFieldName: field.fieldName,
     datasetFieldType: field.fieldType,
     datasetAggregationType: field.aggregationType || undefined
-  } as ColumnsStore.ColumnOptions
+  }
 }
 
 const queryDatasetColumns = async (datasetId: number) => {

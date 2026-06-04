@@ -32,8 +32,8 @@ class AnalyzeConfigMapping implements AnalyzeConfigDao.AnalyzeConfigRecord, ICol
   @Column('filters')
   filters: AnalyzeConfigDao.FilterOption[] = []
 
-  @Column('groups')
-  groups: AnalyzeConfigDao.GroupOption[] = []
+  @Column('dimensions')
+  dimensions: AnalyzeConfigDao.DimensionOption[] = []
 
   @Column('orders')
   orders: AnalyzeConfigDao.OrderOption[] = []
@@ -72,7 +72,7 @@ const ANALYZE_CONFIG_FIELDS = [
   'columns',
   'measures',
   'filters',
-  'groups',
+  'dimensions',
   'orders',
   'common_chart_config',
   'private_chart_config',
@@ -96,7 +96,9 @@ export class AnalyzeConfigMapper extends BaseMapper {
 
     keys.forEach((key, index) => {
       if (ANALYZE_CONFIG_FIELDS.includes(key)) {
-        const formattedKey = ['groups', 'orders', 'columns', 'measures', 'filters'].includes(key) ? `\`${key}\`` : key
+        const formattedKey = ['dimensions', 'orders', 'columns', 'measures', 'filters'].includes(key)
+          ? `\`${key}\``
+          : key
         whereClauses.push(`${formattedKey} = ?`)
         queryValues.push(values[index])
       }
@@ -167,7 +169,7 @@ export class AnalyzeConfigMapper extends BaseMapper {
           cast(columns as char) like '%__invalid%'
           or cast(measures as char) like '%__invalid%'
           or cast(filters as char) like '%__invalid%'
-          or cast(\`groups\` as char) like '%__invalid%'
+          or cast(\`dimensions\` as char) like '%__invalid%'
           or cast(\`orders\` as char) like '%__invalid%'
         )`
     return await this.exe<Array<T>>(sql)
@@ -175,14 +177,17 @@ export class AnalyzeConfigMapper extends BaseMapper {
 
   public async updateAnalyzeConfigRuntimeFields(
     configId: number,
-    updateParams: Pick<AnalyzeConfigDao.AnalyzeConfigRecord, 'columns' | 'measures' | 'filters' | 'groups' | 'orders'>
+    updateParams: Pick<
+      AnalyzeConfigDao.AnalyzeConfigRecord,
+      'columns' | 'measures' | 'filters' | 'dimensions' | 'orders'
+    >
   ): Promise<boolean> {
     const sql = `
       update ${ANALYZE_CONFIG_TABLE_NAME}
       set columns = ?,
           measures = ?,
           filters = ?,
-          \`groups\` = ?,
+          \`dimensions\` = ?,
           \`orders\` = ?,
           update_time = now()
       where id = ? and is_deleted = 0`
@@ -190,7 +195,7 @@ export class AnalyzeConfigMapper extends BaseMapper {
       JSON.stringify(updateParams.columns || []),
       JSON.stringify(updateParams.measures || []),
       JSON.stringify(updateParams.filters || []),
-      JSON.stringify(updateParams.groups || []),
+      JSON.stringify(updateParams.dimensions || []),
       JSON.stringify(updateParams.orders || []),
       configId
     ])

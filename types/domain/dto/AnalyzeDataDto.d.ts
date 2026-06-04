@@ -12,7 +12,7 @@ declare namespace AnalyzeDataDto {
   /**
    * @desc 分组配置
    */
-  type GroupOption = AnalyzeConfigDao.GroupOption
+  type DimensionOption = AnalyzeConfigDao.DimensionOption
 
   /**
    * @desc 过滤配置
@@ -39,7 +39,7 @@ declare namespace AnalyzeDataDto {
     /**
      * @desc 分组配置
      */
-    groups: GroupOption[]
+    dimensions: DimensionOption[]
     /**
      * @desc 值/度量配置。
      */

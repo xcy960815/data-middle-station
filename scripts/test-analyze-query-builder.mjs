@@ -23,7 +23,7 @@ const createContext = (tableName, columns) => {
 
 const baseQuery = {
   dataSource: 'orderFacts',
-  groups: [],
+  dimensions: [],
   measures: [],
   filters: [],
   orders: [],
@@ -40,7 +40,7 @@ assert.deepEqual(
   validateAnalyzeChartConfig({
     chartType: 'table',
     dataSource: 'orderFacts',
-    groups: [],
+    dimensions: [],
     measures: []
   }),
   {
@@ -53,7 +53,7 @@ assert.deepEqual(
   validateAnalyzeChartConfig({
     chartType: 'table',
     dataSource: 'orderFacts',
-    groups: [
+    dimensions: [
       {
         columnName: 'region',
         columnType: 'varchar',
@@ -73,7 +73,7 @@ assert.deepEqual(
   validateAnalyzeChartConfig({
     chartType: 'table',
     dataSource: 'orderFacts',
-    groups: [],
+    dimensions: [],
     measures: [
       {
         columnName: 'salesAmount',
@@ -93,7 +93,7 @@ assert.deepEqual(
   validateAnalyzeChartConfig({
     chartType: 'table',
     dataSource: 'orderFacts',
-    groups: [
+    dimensions: [
       {
         columnName: 'region',
         columnType: 'varchar',
@@ -119,7 +119,7 @@ assert.deepEqual(
 const aggregateQuery = builder.buildAnalyzeDataQuery(
   {
     ...baseQuery,
-    groups: [
+    dimensions: [
       {
         columnName: 'createdAt',
         columnType: 'datetime',
@@ -261,7 +261,7 @@ assert.deepEqual(tableDetailValueOnlyQuery, {
 const tableAggregateGroupAndValueQuery = builder.buildAnalyzeDataQuery(
   {
     ...baseQuery,
-    groups: [
+    dimensions: [
       {
         columnName: 'region',
         columnType: 'varchar',
@@ -292,7 +292,7 @@ assert.throws(
     builder.buildAnalyzeDataQuery(
       {
         ...baseQuery,
-        groups: [
+        dimensions: [
           {
             columnName: 'region',
             columnType: 'varchar',

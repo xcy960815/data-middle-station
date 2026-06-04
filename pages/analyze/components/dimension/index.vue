@@ -5,33 +5,33 @@
       <span class="group__title">分组</span>
       <icon-park
         class="cursor-pointer"
-        v-if="hasClearAll('groups')"
+        v-if="hasClearAll('dimensions')"
         type="clear"
         size="12"
         fill="#333"
-        @click="clearAll('groups')"
+        @click="clearAll('dimensions')"
       />
     </div>
     <div class="group__content flex items-center flex-1">
       <div
         data-action="drag"
         class="group__item mx-1"
-        v-for="(item, index) in groupList"
+        v-for="(item, index) in dimensionList"
         :key="index"
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
       >
-        <selector-group
+        <selector-dimension
           class="group__item__name"
-          cast="group"
+          cast="dimension"
           :displayName="item.displayName"
-          :group="item"
+          :dimension="item"
           :column-name="item.columnName"
           :index="index"
-          :invalid="getGroupInvalid(item)"
-          :invalidMessage="getGroupInvalidMessage(item)"
-        ></selector-group>
+          :invalid="getDimensionInvalid(item)"
+          :invalidMessage="getDimensionInvalidMessage(item)"
+        ></selector-dimension>
       </div>
     </div>
   </div>
@@ -44,16 +44,16 @@ const { clearAll, hasClearAll } = clearAllHandler()
 
 const columnStore = useColumnsStore()
 const measureStore = useMeasuresStore()
-const groupStore = useGroupsStore()
+const dimensionStore = useDimensionsStore()
 /**
- * @desc groupList
+ * @desc dimensionList
  */
-const groupList = computed(() => {
-  return groupStore.getGroups
+const dimensionList = computed(() => {
+  return dimensionStore.getDimensions
 })
 
-const groupColumnCountMap = computed(() => {
-  return groupList.value.reduce<Record<string, number>>((countMap, item) => {
+const dimensionColumnCountMap = computed(() => {
+  return dimensionList.value.reduce<Record<string, number>>((countMap, item) => {
     if (!item.columnName) return countMap
     countMap[item.columnName] = (countMap[item.columnName] || 0) + 1
     return countMap
@@ -64,28 +64,28 @@ const measureColumnSet = computed(() => {
   return new Set(measureStore.getMeasures.map((item) => item.columnName).filter(Boolean))
 })
 
-const getGroupInvalid = (group: GroupStore.GroupOption) => {
-  return getGroupInvalidMessage(group) !== ''
+const getDimensionInvalid = (dimension: DimensionStore.DimensionOption) => {
+  return getDimensionInvalidMessage(dimension) !== ''
 }
 
-const getGroupInvalidMessage = (group: GroupStore.GroupOption) => {
-  if (!group.columnName) return ''
-  if ((groupColumnCountMap.value[group.columnName] || 0) > 1) {
+const getDimensionInvalidMessage = (dimension: DimensionStore.DimensionOption) => {
+  if (!dimension.columnName) return ''
+  if ((dimensionColumnCountMap.value[dimension.columnName] || 0) > 1) {
     return '该分组已存在'
   }
-  if (measureColumnSet.value.has(group.columnName)) {
+  if (measureColumnSet.value.has(dimension.columnName)) {
     return '该字段已在值中使用'
   }
   return ''
 }
 
 /**
- * @desc addGroup
- * @param {GroupStore.GroupOption|Array<GroupStore.GroupOption>} groups
+ * @desc addDimension
+ * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
  */
-const addGroup = (group: GroupStore.GroupOption | Array<GroupStore.GroupOption>) => {
-  group = Array.isArray(group) ? group : [group]
-  groupStore.addGroups(group)
+const addDimension = (dimension: DimensionStore.DimensionOption | Array<DimensionStore.DimensionOption>) => {
+  dimension = Array.isArray(dimension) ? dimension : [dimension]
+  dimensionStore.addDimensions(dimension)
 }
 /**
  * @desc getTargetIndex
@@ -118,9 +118,9 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
     JSON.stringify({
-      from: 'groups',
+      from: 'dimensions',
       index,
-      value: groupList.value[index]
+      value: dimensionList.value[index]
     })
   )
   // 不做任何自定义拖影，保持和值字段一致
@@ -150,7 +150,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
-  const groupOption: GroupStore.GroupOption = {
+  const dimensionOption: DimensionStore.DimensionOption = {
     ...data.value,
     fixed: null,
     align: null,
@@ -161,20 +161,20 @@ const dropHandler = (dragEvent: DragEvent) => {
   }
   const index = data.index
   switch (data.from) {
-    case 'groups': {
+    case 'dimensions': {
       // relocate position by dragging
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
-      const groups = JSON.parse(JSON.stringify(groupStore.getGroups))
-      const target = groups.splice(data.index, 1)[0]
-      groups.splice(targetIndex, 0, target)
-      groupStore.setGroups(groups)
+      const dimensions = JSON.parse(JSON.stringify(dimensionStore.getDimensions))
+      const target = dimensions.splice(data.index, 1)[0]
+      dimensions.splice(targetIndex, 0, target)
+      dimensionStore.setDimensions(dimensions)
       break
     }
     default: {
       // 更新列名 主要是显示已经选中的标志
       columnStore.updateColumn({ column: data.value, index })
-      addGroup(groupOption)
+      addDimension(dimensionOption)
       break
     }
   }

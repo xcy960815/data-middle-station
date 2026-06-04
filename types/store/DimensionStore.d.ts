@@ -2,19 +2,19 @@
 /**
  * @desc 左侧列字段
  */
-declare namespace GroupStore {
+declare namespace DimensionStore {
   /**
    * @desc 分组key
    */
-  type GroupKey = 'groups'
+  type DimensionKey = 'dimensions'
   /**
    * @desc 左侧列字段
-   * @interface GroupOption
+   * @interface DimensionOption
    * @property {string} name 列名
    * @property {string} comment 列注释
    * @property {string} type 列类型
    */
-  type GroupOption = ColumnsStore.ColumnOptions & {
+  type DimensionOption = ColumnsStore.ColumnOptions & {
     /**
      * 是否无效
      */
@@ -82,41 +82,41 @@ declare namespace GroupStore {
   /**
    * @desc 分组状态
    */
-  type GroupState = {
-    groups: GroupOption[]
+  type DimensionState = {
+    dimensions: DimensionOption[]
   }
 
   /**
    * @desc getter
    */
-  type GroupGetters = {}
+  type DimensionGetters = {}
   /**
    * @desc action
    */
-  type GroupActions = {
+  type DimensionActions = {
     /**
      * @desc 添加分组
-     * @param groups {GroupOption[]}
+     * @param dimensions {DimensionOption[]}
      * @returns {void}
      */
-    addGroups: (groups: GroupOption[]) => void
+    addDimensions: (dimensions: DimensionOption[]) => void
     /**
      * @desc 设置分组
-     * @param groups {GroupOption[]}
+     * @param dimensions {DimensionOption[]}
      * @returns {void}
      */
-    setGroups: (groups: GroupOption[]) => void
+    setDimensions: (dimensions: DimensionOption[]) => void
     /**
      * @desc 删除分组
      * @param index {number}
      * @returns {void}
      */
-    removeGroup: (index: number) => void
+    removeDimension: (index: number) => void
     /**
      * @desc 更新分组
-     * @param group {GroupOption}
+     * @param dimension {DimensionOption}
      * @returns {void}
      */
-    updateGroup: (group: GroupOption) => void
+    updateDimension: (dimension: DimensionOption) => void
   }
 }

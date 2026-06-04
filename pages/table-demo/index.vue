@@ -306,7 +306,7 @@ const handleRunScrollStress = async () => {
   }
 }
 
-const createGroupColumns = (): GroupStore.GroupOption[] => [
+const createDimensionColumns = (): DimensionStore.DimensionOption[] => [
   {
     columnName: 'department',
     columnType: 'string',
@@ -322,19 +322,19 @@ const createGroupColumns = (): GroupStore.GroupOption[] => [
   }
 ]
 
-const groupColumns = ref<GroupStore.GroupOption[]>(createGroupColumns())
+const dimensionColumns = ref<DimensionStore.DimensionOption[]>(createDimensionColumns())
 
-const xAxisFields = computed(() => (enableGroupColumns.value ? groupColumns.value : []))
+const xAxisFields = computed(() => (enableGroupColumns.value ? dimensionColumns.value : []))
 
 watch(enableGroupColumns, (enabled) => {
-  if (enabled && groupColumns.value.length === 0) {
-    groupColumns.value = createGroupColumns()
+  if (enabled && dimensionColumns.value.length === 0) {
+    dimensionColumns.value = createDimensionColumns()
   }
 })
 
 const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload) => {
-  if (groupColumns.value.some((column) => column.columnName === columnName)) {
-    groupColumns.value = groupColumns.value.map((column) =>
+  if (dimensionColumns.value.some((column) => column.columnName === columnName)) {
+    dimensionColumns.value = dimensionColumns.value.map((column) =>
       column.columnName === columnName ? { ...column, width } : column
     )
     return
@@ -349,7 +349,7 @@ const handleColumnOrderChange = ({
   xAxisFields: nextXAxisFields,
   yAxisFields: nextYAxisFields
 }: ColumnOrderChangePayload) => {
-  groupColumns.value = nextXAxisFields.map((column) => ({ ...column }))
+  dimensionColumns.value = nextXAxisFields.map((column) => ({ ...column }))
   enableGroupColumns.value = nextXAxisFields.length > 0
   yAxisFields.value = nextYAxisFields.map((column) => ({ ...column }))
 }
@@ -369,7 +369,7 @@ const spanMethod = ({
   colIndex
 }: {
   row: AnalyzeDataVo.AnalyzeData
-  column: GroupStore.GroupOption | MeasureStore.MeasureOption
+  column: DimensionStore.DimensionOption | MeasureStore.MeasureOption
   rowIndex: number
   colIndex: number
 }): { rowspan: number; colspan: number } => {

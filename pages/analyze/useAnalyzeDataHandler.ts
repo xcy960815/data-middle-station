@@ -4,7 +4,7 @@ import { useChartConfigStore } from '@/stores/chart-config'
 import { useColumnsStore } from '@/stores/columns'
 import { useMeasuresStore } from '@/stores/measures'
 import { useFiltersStore } from '@/stores/filters'
-import { useGroupsStore } from '@/stores/groups'
+import { useDimensionsStore } from '@/stores/dimensions'
 import { useOrdersStore } from '@/stores/orders'
 import { debounce } from '@/utils/throttleDebounce'
 import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
@@ -17,7 +17,7 @@ import { computed, ref, watch } from 'vue'
 export const useAnalyzeDataHandler = () => {
   const analyzeStore = useAnalyzeStore()
   const measureStore = useMeasuresStore()
-  const groupStore = useGroupsStore()
+  const dimensionStore = useDimensionsStore()
   const columnStore = useColumnsStore()
   const filterStore = useFiltersStore()
   const orderStore = useOrdersStore()
@@ -36,7 +36,7 @@ export const useAnalyzeDataHandler = () => {
       // 过滤掉未完成的聚合条件
       filters: filterStore.getFilters.filter((item) => item.aggregationType && (item.filterType || item.filterValue)),
       orders: orderStore.getOrders.filter((item) => item.aggregationType || item.orderType),
-      groups: groupStore.getGroups,
+      dimensions: dimensionStore.getDimensions,
       measures: measureStore.getMeasures,
       commonChartConfig: chartConfigStore.getCommonChartConfig
     }
@@ -49,7 +49,7 @@ export const useAnalyzeDataHandler = () => {
       chartType,
       dataSource: columnStore.getDataSource,
       measures: measureStore.getMeasures,
-      groups: groupStore.getGroups
+      dimensions: dimensionStore.getDimensions
     })
     analyzeStore.setChartErrorMessage(validation.message)
     analyzeStore.setChartErrorAnalysis('')

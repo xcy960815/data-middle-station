@@ -77,7 +77,7 @@ const measureStore = useMeasuresStore()
 /**
  * @desc 分组 store
  */
-const groupStore = useGroupsStore()
+const dimensionStore = useDimensionsStore()
 
 /**
  * @desc 图表宽度
@@ -130,11 +130,11 @@ const yAxisFields = computed(() => {
 
 /**
  * @desc X轴字段
- * @type {Array<GroupStore.GroupState['groups']>}
+ * @type {Array<DimensionStore.DimensionState['dimensions']>}
  */
 const xAxisFields = computed(() => {
-  const groups = groupStore.getGroups
-  return groups
+  const dimensions = dimensionStore.getDimensions
+  return dimensions
 })
 
 /**

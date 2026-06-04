@@ -63,7 +63,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 分组配置
    */
-  type GroupOption = ColumnItem
+  type DimensionOption = ColumnItem
 
   /**
    * 排序类型
@@ -425,7 +425,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 分组配置
      */
-    groups: GroupOption[]
+    dimensions: DimensionOption[]
     /**
      * 排序配置
      */

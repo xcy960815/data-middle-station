@@ -148,7 +148,7 @@ data-middle-station/
 - `columns`: 字段配置
 - `measures`: 值/指标配置
 - `filters`: 过滤条件
-- `groups`: 分组配置
+- `dimensions`: 分组/维度配置
 - `orders`: 排序配置
 - `user`: 用户信息
 
@@ -249,7 +249,7 @@ CREATE TABLE `analyze_config` (
   `columns` json DEFAULT NULL COMMENT '列配置(JSON格式)',
   `measures` json DEFAULT NULL COMMENT '值/指标配置(JSON格式)',
   `filters` json DEFAULT NULL COMMENT '过滤条件(JSON格式)',
-  `groups` json DEFAULT NULL COMMENT '分组配置(JSON格式)',
+  `dimensions` json DEFAULT NULL COMMENT '分组/维度配置(JSON格式)',
   `orders` json DEFAULT NULL COMMENT '排序配置(JSON格式)',
   `chart_type` varchar(50) DEFAULT NULL COMMENT '图表类型',
   `common_chart_config` json DEFAULT NULL COMMENT '公共图表配置(JSON格式)',
@@ -628,7 +628,7 @@ Response:
       "chartType": "interval",
       "dataSource": "operation_analysis",
       "measures": [...],
-      "groups": [...],
+      "dimensions": [...],
       "filters": [...]
     }
   }
@@ -654,7 +654,7 @@ Content-Type: application/json
         "displayName": "主键ID"
       }
     ],
-    "groups": [],
+    "dimensions": [],
     "filters": [],
     "commonChartConfig": {
       "dataSourceMode": "table",
@@ -683,7 +683,7 @@ Content-Type: application/json
       "displayName": "新增用户数"
     }
   ],
-  "groups": [
+  "dimensions": [
     {
       "columnName": "region",
       "columnType": "string",

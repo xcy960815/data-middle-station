@@ -83,10 +83,10 @@ where sales > ?
 
 ## 表格模式规则
 
-| 模式     | 条件          | SQL                       | 值聚合 UI |
-| -------- | ------------- | ------------------------- | --------- |
-| 明细表格 | `groups` 为空 | 无 `GROUP BY`，值列不聚合 | 隐藏      |
-| 聚合表格 | `groups` 非空 | `GROUP BY` + 值列聚合     | 显示      |
+| 模式     | 条件              | SQL                       | 值聚合 UI |
+| -------- | ----------------- | ------------------------- | --------- |
+| 明细表格 | `dimensions` 为空 | 无 `GROUP BY`，值列不聚合 | 隐藏      |
+| 聚合表格 | `dimensions` 非空 | `GROUP BY` + 值列聚合     | 显示      |
 
 校验规则：两种模式均至少需要 1 个值字段。表格模式只由分组字段决定，和当前选择了多少值字段无关。无分组时即使值字段保存了 `datasetAggregationType`，查询仍按明细表格输出行级数据，不使用聚合表达式。
 
@@ -107,3 +107,40 @@ where sales > ?
 5. 已补迁移脚本：
    - `sql/20260603_rename_analyze_config_dimensions_to_measures.sql`
    - `sql/20260603_replace_dimension_path_values_to_measure.sql`
+
+## 字段命名改造完成记录：`groups` -> `dimensions`
+
+已完成“分组”链路从 `groups` 到 `dimensions` 的 BI 语义改造，当前字段角色命名为 `dimensions = 分组/维度`、`measures = 值/指标`。
+
+### 1. 改造目标
+
+- 页面中文仍叫“分组”，降低用户认知变化；代码和配置字段改为 `dimensions`。
+- `GroupStore` / `GroupOption` / `useGroupsStore` 已改为 `DimensionStore` / `DimensionOption` / `useDimensionsStore`，此处的 `Dimension` 表示分组维度，不再表示值字段。
+- `AnalyzeDataQuery.groups`、`chartConfig.groups`、`analyze_config.groups` 已改为 `dimensions`。
+- 数据集字段类型中的 `dimension` 保持不变，它和本次改名后的分析分组语义对齐。
+- 图表组件参数 `xAxisFields` / `yAxisFields` 可以暂时保留，避免同时重命名图表坐标轴 API。
+
+### 2. 落地记录
+
+1. 已完成：类型和 Store 改为 `types/store/DimensionStore.d.ts`、`stores/dimensions.ts`、`StoreNames.DIMENSIONS`，拖拽来源类型改为 `dimensions`。
+2. 已完成：DTO/DAO/VO 中的分组字段改为 `dimensions` / `DimensionOption`。
+3. 已完成：`AnalyzeQueryBuilder`、`validateAnalyzeChartConfig`、`getTableQueryMode` 等公共逻辑改为读取 `dimensions`。
+4. 已完成：分析页分组组件、字段拖拽、保存草稿、历史版本切换、图表渲染传参统一接入 `dimensions`。
+5. 已完成：看板 widget 数据加载、`DashboardWidgetChart` 校验、邮件快照渲染统一使用 `chartConfig.dimensions`。
+6. 已完成：`analyze_config.groups` 字段改名为 `dimensions`，补迁移脚本 `sql/20260604_rename_analyze_config_groups_to_dimensions.sql`。
+7. 已完成：更新 `pnpm test:analyze-query` 快照输入、README、AGENTS 和本记录。
+
+### 3. 需要重点避免的问题
+
+- 不要把已经完成的 `measures` 改回旧 `dimensions`；本轮 `dimensions` 只代表分组/维度。
+- 不要替换数据集字段类型枚举里的 `dimension`，它本来就是维度语义。
+- 不要全局替换自然语言里的 SQL `GROUP BY` 或页面中文“分组”；中文可继续保留。
+- 如果数据库不考虑兼容旧数据，也仍要保留迁移脚本，方便明确初始化脚本和旧库清洗步骤。
+
+### 4. 验证清单
+
+- 持续保留 `pnpm test:analyze-query` 作为分析查询语义回归入口。
+- 改完后重点验证：分析页拖分组、拖值、保存草稿、刷新、历史版本切换。
+- 验证看板：拖入带分组维度的分析、刷新组件、切换看板版本。
+- 验证邮件：至少一个柱状图或折线图快照能用 `dimensions + measures` 渲染。
+- 扫描旧命名：`groups`、`GroupStore`、`useGroupsStore`、`GroupOption` 只允许出现在迁移说明或必要兼容脚本中。

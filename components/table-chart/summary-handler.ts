@@ -120,11 +120,11 @@ export const resetSummaryState = () => {
 
 /**
  * 计算某列的汇总显示值
- * @param {CanvasTable.GroupOption | CanvasTable.MeasureOption} col - 列
+ * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} col - 列
  * @param {string} rule - 规则
  * @returns {string} 汇总显示值
  */
-const computeSummaryValueForColumn = (col: CanvasTable.GroupOption | CanvasTable.MeasureOption, rule: string) => {
+const computeSummaryValueForColumn = (col: CanvasTable.DimensionOption | CanvasTable.MeasureOption, rule: string) => {
   if (rule === 'nodisplay') return '不显示'
   const key = col.columnName
   const values = getProcessedRows().value.map((r) => r?.[key])
@@ -192,11 +192,11 @@ const getRuleLabel = (rule: string) => {
 /**
  * 绘制汇总部分（固定在底部，风格与表头一致，但使用 bodyTextColor）
  * @param {Konva.Group | null} summaryGroup - 分组
- * @param {Array<CanvasTable.GroupOption | CanvasTable.MeasureOption>} summaryCols - 列
+ * @param {Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>} summaryCols - 列
  */
 export const drawSummaryPart = (
   summaryGroup: Konva.Group | null,
-  summaryCols: Array<CanvasTable.GroupOption | CanvasTable.MeasureOption>
+  summaryCols: Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>
 ) => {
   if (!summaryGroup || !stageVars.stage) return
   const summaryRowHeight = getTableParams().summaryRowHeight

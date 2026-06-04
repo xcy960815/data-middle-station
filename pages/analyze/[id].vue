@@ -20,7 +20,7 @@
       <MeasureOption></MeasureOption>
     </template>
     <template #group>
-      <GroupOption></GroupOption>
+      <DimensionOption></DimensionOption>
     </template>
     <template #bar>
       <Bar />
@@ -46,7 +46,7 @@ import Chart from './components/chart/index.vue'
 import Column from './components/column/index.vue'
 import MeasureOption from './components/measure/index.vue'
 import Filter from './components/filter/index.vue'
-import GroupOption from './components/group/index.vue'
+import DimensionOption from './components/dimension/index.vue'
 import Order from './components/order/index.vue'
 import { useAnalyzeHandler } from './useAnalyzeHandler'
 

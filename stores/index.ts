@@ -1,6 +1,6 @@
 // export { useAnalyzeStore } from './analyze'
 // export { useMeasuresStore } from './measures'
-// export { useGroupsStore } from './group'
+// export { useDimensionsStore } from './dimensions'
 // export { useColumnsStore } from './column'
 // export { useFiltersStore } from './filter'
 // export { useOrdersStore } from './order'

@@ -21,7 +21,7 @@ type ColumnWidthMap = Record<string, number>
  */
 export const useChartDownload = () => {
   const measureStore = useMeasuresStore()
-  const groupStore = useGroupsStore()
+  const dimensionStore = useDimensionsStore()
   const analyzeStore = useAnalyzeStore()
   const columnStore = useColumnsStore()
 
@@ -134,7 +134,7 @@ export const useChartDownload = () => {
    */
   const handleDownload = () => {
     // 获取所有的维度和分组
-    const fields = measureStore.getMeasures.concat(groupStore.getGroups)
+    const fields = measureStore.getMeasures.concat(dimensionStore.getDimensions)
     if (fields.length === 0) {
       ElMessage.warning('请先选择维度或分组')
       return

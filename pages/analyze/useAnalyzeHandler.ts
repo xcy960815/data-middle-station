@@ -10,7 +10,7 @@ export const useAnalyzeHandler = () => {
   const columnStore = useColumnsStore()
   const measureStore = useMeasuresStore()
   const filterStore = useFiltersStore()
-  const groupStore = useGroupsStore()
+  const dimensionStore = useDimensionsStore()
   const orderStore = useOrdersStore()
   const chartConfigStore = useChartConfigStore()
   const { serializeAnalyzeDraft } = useAnalyzeDraft()
@@ -26,7 +26,7 @@ export const useAnalyzeHandler = () => {
     columnStore.setColumns(chartConfig?.columns || [])
     measureStore.setMeasures((chartConfig?.measures as MeasureStore.MeasureOption[]) || [])
     filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
-    groupStore.setGroups((chartConfig?.groups as GroupStore.GroupOption[]) || [])
+    dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
     orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
     chartConfigStore.setCommonChartConfig(chartConfig?.commonChartConfig || chartConfigStore.$state.commonChartConfig)
     chartConfigStore.setPrivateChartConfig(
