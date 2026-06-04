@@ -30,6 +30,29 @@ const logger = new Logger({
   folderName: 'database'
 })
 
+const RETRYABLE_MYSQL_ERROR_CODES = new Set([
+  'ECONNRESET',
+  'PROTOCOL_CONNECTION_LOST',
+  'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR',
+  'ETIMEDOUT'
+])
+
+const READONLY_SQL_PATTERN = /^\s*(select|show|describe|desc|explain)\b/i
+
+const isRetryableMysqlError = (error: unknown) => {
+  const mysqlError = error as { code?: string; errno?: number; fatal?: boolean } | null
+  return Boolean(
+    mysqlError &&
+      (RETRYABLE_MYSQL_ERROR_CODES.has(mysqlError.code || '') ||
+        mysqlError.errno === 1047 ||
+        mysqlError.errno === 1156 ||
+        mysqlError.errno === 2013 ||
+        mysqlError.fatal === true)
+  )
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 /* ========== 装饰器：字段映射 & 数据源绑定 ========== */
 export const entityColumnsMap = new WeakMap<Function, ColumnMapping>()
 
@@ -135,7 +158,18 @@ export abstract class BaseMapper {
       throw new Error(`数据源 ${this.dataSourceName} 未配置`)
     }
     logger.info(sql)
-    const [rows] = await pool.query(sql, params)
-    return rows as R
+    try {
+      const [rows] = await pool.query(sql, params)
+      return rows as R
+    } catch (error) {
+      if (!READONLY_SQL_PATTERN.test(sql) || !isRetryableMysqlError(error)) {
+        throw error
+      }
+
+      logger.warn(`MySQL 查询连接被重置，准备重试一次: ${(error as Error).message}`)
+      await delay(100)
+      const [rows] = await pool.query(sql, params)
+      return rows as R
+    }
   }
 }

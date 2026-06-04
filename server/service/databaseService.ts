@@ -25,7 +25,7 @@ export class DatabaseService {
     getDatabaseTablesRequest: DatabaseDto.GetDatabaseTablesRequest
   ): Promise<Array<DatabaseVo.TableItem>> {
     const tableParams: DatabaseDao.GetTablesParams = {
-      tableName: getDatabaseTablesRequest.tableName
+      tableName: getDatabaseTablesRequest.tableName?.trim()
     }
     const tableRecords = await this.databaseMapper.getDatabaseTables(tableParams)
     return tableRecords.map((tableRecord) => this.convertTableRecordToItem(tableRecord))
@@ -39,8 +39,13 @@ export class DatabaseService {
   public async getTableColumns(
     getTableColumnsRequest: DatabaseDto.GetTableColumnsRequest
   ): Promise<Array<DatabaseVo.TableColumnItem>> {
+    const tableName = getTableColumnsRequest.tableName?.trim()
+    if (!tableName) {
+      throw new Error('表名不能为空')
+    }
+
     const tableColumnParams: DatabaseDao.GetTableColumnsParams = {
-      tableName: getTableColumnsRequest.tableName
+      tableName
     }
     const columnRecords = await this.databaseMapper.getTableColumns(tableColumnParams)
     return columnRecords.map((columnRecord) => {
