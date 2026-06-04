@@ -644,43 +644,6 @@ const saveRecurringTask = async () => {
 }
 
 /**
- * 计算下次执行时间
- */
-const calculateNextExecutionTime = (recurringDays: number[], recurringTime: string): string => {
-  const now = new Date()
-  const today = now.getDay() // 0=周日, 1=周一, ..., 6=周六
-  const currentTime = now.getHours() * 60 + now.getMinutes()
-  const [targetHour, targetMinute] = recurringTime.split(':').map(Number)
-  const targetTime = targetHour * 60 + targetMinute
-
-  // 找到下一个执行时间
-  for (let i = 0; i < 7; i++) {
-    const checkDay = (today + i) % 7
-
-    if (recurringDays.includes(checkDay)) {
-      const checkDate = new Date(now)
-      checkDate.setDate(now.getDate() + i)
-      checkDate.setHours(targetHour, targetMinute, 0, 0)
-
-      // 如果是今天，需要检查时间是否已过
-      if (i === 0 && targetTime <= currentTime) {
-        continue
-      }
-
-      return checkDate.toISOString().slice(0, 19).replace('T', ' ')
-    }
-  }
-
-  // 如果没有找到，返回下周的第一个执行日
-  const firstDay = Math.min(...recurringDays)
-  const nextWeekDate = new Date(now)
-  nextWeekDate.setDate(now.getDate() + 7 + firstDay - today)
-  nextWeekDate.setHours(targetHour, targetMinute, 0, 0)
-
-  return nextWeekDate.toISOString().slice(0, 19).replace('T', ' ')
-}
-
-/**
  * @desc 取消发送邮件
  */
 const handleCancel = () => {

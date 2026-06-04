@@ -1,5 +1,5 @@
 <template>
-  <NuxtLayout :name="layoutName">
+  <NuxtLayout :name="layoutName" :editing="editorMode">
     <template #header>
       <custom-header>
         <template #title>
@@ -16,153 +16,130 @@
             title-required-message="看板名称不能为空"
           />
         </template>
-        <template #header-right>
-          <div class="dashboard-header-actions">
-            <el-tooltip v-if="editorMode" content="历史版本" placement="bottom">
-              <span @click="handleOpenVersionDialog" class="dashboard-header-action">
-                <icon-park type="HistoryQuery" size="24" fill="#333" />
-              </span>
-            </el-tooltip>
-            <el-tooltip v-if="!editorMode && canEditDashboard" content="编辑看板" placement="bottom">
-              <span @click="handleEnterEditorMode" class="dashboard-header-action">
-                <icon-park type="Edit" size="24" fill="#333" />
-              </span>
-            </el-tooltip>
-            <el-tooltip v-if="editorMode" content="退出编辑" placement="bottom">
-              <span @click="handleCancelEditorMode" class="dashboard-header-action">
-                <icon-park type="Close" size="30" fill="#333" />
-              </span>
-            </el-tooltip>
-            <el-tooltip v-if="editorMode" content="保存看板" placement="bottom">
-              <span
-                @click="!saving && handleSaveDashboard()"
-                class="dashboard-header-action"
-                :class="{ 'is-disabled': saving }"
-              >
-                <icon-park v-if="!saving" type="Save" size="30" fill="#333" />
-                <icon-park v-else type="Loading" size="30" fill="#333" class="is-spinning" />
-              </span>
-            </el-tooltip>
-          </div>
-        </template>
       </custom-header>
     </template>
+    <template #bar>
+      <DashboardBar
+        :editor-mode="editorMode"
+        :can-edit-dashboard="canEditDashboard"
+        :saving="saving"
+        :has-unsaved-changes="hasUnsavedChangesValue"
+        @refresh-dashboard="handleRefreshDashboard"
+        @enter-editor-mode="handleEnterEditorMode"
+        @cancel-editor-mode="handleCancelEditorMode"
+        @save-dashboard="handleSaveDashboard"
+        @open-version-dialog="handleOpenVersionDialog"
+      />
+    </template>
 
-    <template #content>
-      <div v-loading="detailLoading" class="dashboard-editor" :class="{ 'dashboard-editor--editing': editorMode }">
-        <aside v-if="editorMode" class="dashboard-sidebar">
-          <div class="dashboard-sidebar__section dashboard-sidebar__section--grow">
-            <div class="dashboard-sidebar__title">分析列表</div>
-            <el-input
-              v-model="analyzeKeyword"
-              clearable
-              placeholder="搜索分析"
-              @keyup.enter="getAnalyzes(1)"
-              @clear="getAnalyzes(1)"
-            />
-            <div v-loading="analyzeListLoading" class="analyze-source-list">
-              <div
-                v-for="analyze in analyzes"
-                :key="analyze.id"
-                class="analyze-source-item"
-                draggable="true"
-                @dragstart="handleAnalyzeDragStart(analyze)"
-                @dblclick="handleAddAnalyze(analyze)"
-              >
-                <div class="analyze-source-item__name">{{ analyze.analyzeName }}</div>
-                <div class="analyze-source-item__desc">{{ analyze.analyzeDesc || '暂无描述' }}</div>
-              </div>
-              <el-empty v-if="!analyzeListLoading && analyzes.length === 0" description="暂无分析" />
-            </div>
-            <el-pagination
-              small
-              layout="prev, pager, next"
-              :current-page="analyzePage"
-              :page-size="analyzePageSize"
-              :total="analyzeTotal"
-              @current-change="getAnalyzes"
-            />
-          </div>
-        </aside>
-
-        <main class="dashboard-canvas-wrap">
-          <div v-if="editorMode" class="dashboard-canvas-toolbar">
-            <div class="dashboard-editor-subtitle">拖拽左侧分析到画布，拖动标题栏调整位置，拖动右下角调整宽高。</div>
-          </div>
+    <template #sidebar>
+      <div class="dashboard-sidebar__section dashboard-sidebar__section--grow">
+        <div class="dashboard-sidebar__title">分析列表</div>
+        <el-input
+          v-model="analyzeKeyword"
+          clearable
+          placeholder="搜索分析"
+          @keyup.enter="getAnalyzes(1)"
+          @clear="getAnalyzes(1)"
+        />
+        <div v-loading="analyzeListLoading" class="analyze-source-list">
           <div
-            ref="canvasRef"
-            class="dashboard-canvas"
-            :class="{ 'dashboard-canvas--editing': editorMode }"
-            @dragover.prevent="handleCanvasDragOver"
-            @drop="handleDropAnalyze"
+            v-for="analyze in analyzes"
+            :key="analyze.id"
+            class="analyze-source-item"
+            draggable="true"
+            @dragstart="handleAnalyzeDragStart(analyze)"
+            @dblclick="handleAddAnalyze(analyze)"
           >
-            <div v-if="editorMode" class="dashboard-canvas-spacer" :style="getCanvasSpacerStyle()"></div>
-            <div
-              v-for="widget in widgets"
-              :key="widget.localId"
-              class="dashboard-widget"
-              :style="getWidgetStyle(widget)"
-            >
-              <div class="dashboard-widget__header" @pointerdown="handleWidgetMoveStart($event, widget)">
-                <span class="dashboard-widget__title" @click.stop="handleOpenAnalyze(widget)">
-                  {{ widget.widgetTitle }}
-                </span>
-                <div class="dashboard-widget__actions">
-                  <el-tooltip content="打开分析" placement="top">
-                    <button
-                      class="dashboard-widget__icon-button"
-                      type="button"
-                      :disabled="!widget.analyzeId"
-                      @click.stop="handleOpenAnalyzeInNewTab(widget)"
-                      @pointerdown.stop
-                    >
-                      <icon-park type="PreviewOpen" size="14" fill="currentColor" />
-                    </button>
-                  </el-tooltip>
-                  <template v-if="editorMode">
-                    <el-button text size="small" @click.stop="handleRefreshWidget(widget)">刷新</el-button>
-                    <el-button text size="small" type="danger" @click.stop="handleRemoveWidget(widget)">删除</el-button>
-                  </template>
-                </div>
-              </div>
-              <div class="dashboard-widget__body">
-                <DashboardWidgetChart
-                  :title="widget.widgetTitle"
-                  :chart-type="widget.chartType"
-                  :data-source="widget.dataSource"
-                  :loading="widget.loading"
-                  :error-message="widget.errorMessage"
-                  :data="widget.data"
-                  :x-axis-fields="widget.xAxisFields"
-                  :y-axis-fields="widget.yAxisFields"
-                  :private-chart-config="widget.privateChartConfig"
-                />
-              </div>
-              <template v-if="editorMode">
-                <div
-                  v-for="handle in resizeHandles"
-                  :key="handle"
-                  class="dashboard-widget__resize"
-                  :class="`dashboard-widget__resize--${handle}`"
-                  @pointerdown="handleWidgetResizeStart($event, widget, handle)"
-                ></div>
-              </template>
-            </div>
-            <el-empty
-              v-if="widgets.length === 0"
-              class="dashboard-canvas-empty"
-              :description="editorMode ? '拖拽分析到这里创建看板组件' : '暂无看板组件'"
-            >
-              <template #image>
-                <div class="dashboard-canvas-empty__image" aria-hidden="true">
-                  <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--main"></span>
-                  <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--side"></span>
-                  <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--footer"></span>
-                </div>
-              </template>
-            </el-empty>
+            <div class="analyze-source-item__name">{{ analyze.analyzeName }}</div>
+            <div class="analyze-source-item__desc">{{ analyze.analyzeDesc || '暂无描述' }}</div>
           </div>
-        </main>
+          <el-empty v-if="!analyzeListLoading && analyzes.length === 0" description="暂无分析" />
+        </div>
+        <el-pagination
+          small
+          layout="prev, pager, next"
+          :current-page="analyzePage"
+          :page-size="analyzePageSize"
+          :total="analyzeTotal"
+          @current-change="getAnalyzes"
+        />
+      </div>
+    </template>
+
+    <template #canvas-toolbar>
+      <div class="dashboard-editor-subtitle">拖拽左侧分析到画布，拖动标题栏调整位置，拖动右下角调整宽高。</div>
+    </template>
+
+    <template #canvas>
+      <div v-loading="detailLoading" class="dashboard-canvas-loading">
+        <div
+          ref="canvasRef"
+          class="dashboard-canvas"
+          @dragover.prevent="handleCanvasDragOver"
+          @drop="handleDropAnalyze"
+        >
+          <div v-if="editorMode" class="dashboard-canvas-spacer" :style="getCanvasSpacerStyle()"></div>
+          <div v-for="widget in widgets" :key="widget.localId" class="dashboard-widget" :style="getWidgetStyle(widget)">
+            <div class="dashboard-widget__header" @pointerdown="handleWidgetMoveStart($event, widget)">
+              <span class="dashboard-widget__title" @click.stop="handleOpenAnalyze(widget)">
+                {{ widget.widgetTitle }}
+              </span>
+              <div class="dashboard-widget__actions">
+                <el-tooltip content="打开分析" placement="top">
+                  <button
+                    class="dashboard-widget__icon-button"
+                    type="button"
+                    :disabled="!widget.analyzeId"
+                    @click.stop="handleOpenAnalyzeInNewTab(widget)"
+                    @pointerdown.stop
+                  >
+                    <icon-park type="PreviewOpen" size="14" fill="currentColor" />
+                  </button>
+                </el-tooltip>
+                <template v-if="editorMode">
+                  <el-button text size="small" @click.stop="handleRefreshWidget(widget)">刷新</el-button>
+                  <el-button text size="small" type="danger" @click.stop="handleRemoveWidget(widget)">删除</el-button>
+                </template>
+              </div>
+            </div>
+            <div class="dashboard-widget__body">
+              <DashboardWidgetChart
+                :title="widget.widgetTitle"
+                :chart-type="widget.chartType"
+                :data-source="widget.dataSource"
+                :loading="widget.loading"
+                :error-message="widget.errorMessage"
+                :data="widget.data"
+                :x-axis-fields="widget.xAxisFields"
+                :y-axis-fields="widget.yAxisFields"
+                :private-chart-config="widget.privateChartConfig"
+              />
+            </div>
+            <template v-if="editorMode">
+              <div
+                v-for="handle in resizeHandles"
+                :key="handle"
+                class="dashboard-widget__resize"
+                :class="`dashboard-widget__resize--${handle}`"
+                @pointerdown="handleWidgetResizeStart($event, widget, handle)"
+              ></div>
+            </template>
+          </div>
+          <el-empty
+            v-if="widgets.length === 0"
+            class="dashboard-canvas-empty"
+            :description="editorMode ? '拖拽分析到这里创建看板组件' : '暂无看板组件'"
+          >
+            <template #image>
+              <div class="dashboard-canvas-empty__image" aria-hidden="true">
+                <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--main"></span>
+                <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--side"></span>
+                <span class="dashboard-canvas-empty__panel dashboard-canvas-empty__panel--footer"></span>
+              </div>
+            </template>
+          </el-empty>
+        </div>
       </div>
     </template>
   </NuxtLayout>
@@ -209,6 +186,7 @@ import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import HeaderTitle from '@/components/header-title/index.vue'
+import DashboardBar from './components/bar/index.vue'
 import DashboardWidgetChart from './components/dashboard-widget-chart.vue'
 
 type DashboardWidgetState = DashboardDto.DashboardWidgetPayload & {
@@ -295,6 +273,7 @@ const dashboardSnapshot = computed(() =>
     }))
   })
 )
+const hasUnsavedChangesValue = computed(() => dashboardSnapshot.value !== lastSavedSnapshot.value)
 
 const normalizeChartType = (chartType?: string | null): AnalyzeStore.ChartType => {
   return chartTypeSet.has(chartType as AnalyzeStore.ChartType) ? (chartType as AnalyzeStore.ChartType) : 'table'
@@ -365,7 +344,7 @@ const updateLastSavedSnapshot = () => {
 }
 
 const hasUnsavedChanges = () => {
-  return dashboardSnapshot.value !== lastSavedSnapshot.value
+  return hasUnsavedChangesValue.value
 }
 
 const applyDashboardDetail = async (dashboardDetail: DashboardVo.DashboardDetailResponse) => {
@@ -542,6 +521,10 @@ const loadWidgetData = async (widget: DashboardWidgetState) => {
 
 const handleRefreshWidget = (widget: DashboardWidgetState) => {
   loadWidgetData(widget)
+}
+
+const handleRefreshDashboard = () => {
+  widgets.value.forEach((widget) => loadWidgetData(widget))
 }
 
 const handleRemoveWidget = (widget: DashboardWidgetState) => {
@@ -839,64 +822,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.dashboard-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dashboard-header-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: opacity 0.15s;
-
-  &:hover {
-    opacity: 0.6;
-  }
-}
-
-.dashboard-header-action.is-disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.is-spinning {
-  animation: dashboard-icon-spin 1s linear infinite;
-}
-
-@keyframes dashboard-icon-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.dashboard-editor {
-  display: flex;
-  height: 100%;
-  min-height: 0;
-  width: 100%;
-  overflow: hidden;
-  background: #f3f4f6;
-}
-
-.dashboard-sidebar {
-  display: flex;
-  width: 320px;
-  min-width: 320px;
-  flex-direction: column;
-  gap: 16px;
-  overflow: hidden;
-  padding: 16px;
-  border-right: 1px solid #dcdfe6;
-  background: #ffffff;
-}
-
 .dashboard-sidebar__section {
   display: flex;
   flex-direction: column;
@@ -943,43 +868,16 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-.dashboard-canvas-wrap {
-  display: flex;
-  flex: 1 1 0;
-  min-width: 0;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.dashboard-canvas-toolbar {
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid #dcdfe6;
-  background: #ffffff;
-}
-
 .dashboard-editor-subtitle {
   color: #909399;
   font-size: 12px;
 }
 
+.dashboard-canvas-loading,
 .dashboard-canvas {
   position: relative;
-  flex: 1 1 0;
+  height: 100%;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 8px;
-  background: #f3f4f6;
-}
-
-.dashboard-canvas--editing {
-  padding: 12px 16px 12px 12px;
-  background-image: linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
-  background-size: 32px 32px;
 }
 
 .dashboard-canvas-spacer {

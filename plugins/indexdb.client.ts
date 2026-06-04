@@ -713,6 +713,8 @@ class IndexDBManager {
   }
 }
 
+export type IndexDBManagerInstance = IndexDBManager
+
 export default defineNuxtPlugin(() => {
   // 创建单例实例
   const indexDBManager = new IndexDBManager()

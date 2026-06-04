@@ -131,7 +131,7 @@ interface SearchQuery {
 }
 
 // 响应式数据
-const { $indexdb } = useNuxtApp()
+const { $indexDB } = useNuxtApp()
 const database = ref<IDBDatabase | null>(null)
 const dbName = 'DemoDatabase'
 const dbVersion = 1
@@ -173,7 +173,6 @@ const sortOrder = ref<'asc' | 'desc'>('desc')
 
 const isAdding = ref(false)
 const isUpdating = ref(false)
-const isClearing = ref(false)
 const editDialogVisible = ref(false)
 
 // 生命周期
@@ -188,7 +187,7 @@ onBeforeUnmount(() => {
 })
 
 const initDatabase = async () => {
-  database.value = await $indexdb.openDatabase(dbName, dbVersion)
+  database.value = await $indexDB.openDatabase(dbName, dbVersion)
   if (database.value) {
     await refreshData()
   } else {
@@ -200,7 +199,7 @@ const refreshData = async () => {
   if (!database.value) {
     return
   }
-  const allUsers = await $indexdb.getAllData(database.value, tableName)
+  const allUsers = await $indexDB.getAllData(database.value, tableName)
   users.value = allUsers as unknown as User[]
   totalUsers.value = users.value.length
   handleSearch() // 应用当前搜索条件
@@ -224,7 +223,7 @@ const addUser = async () => {
       createTime: new Date().toISOString()
     }
 
-    await $indexdb.addDataAsync(database.value, tableName, [userData as any])
+    await $indexDB.addDataAsync(database.value, tableName, [userData as any])
 
     // 重置表单
     newUser.value = {
@@ -236,7 +235,7 @@ const addUser = async () => {
 
     await refreshData()
     ElMessage.success('用户添加成功')
-  } catch (error: any) {
+  } catch {
     ElMessage.error('用户添加失败')
   } finally {
     isAdding.value = false
@@ -270,10 +269,10 @@ const generateRandomUsers = async () => {
   }
 
   try {
-    await $indexdb.addDataAsync(database.value, tableName, testUsers as any[])
+    await $indexDB.addDataAsync(database.value, tableName, testUsers as any[])
     await refreshData()
     ElMessage.success('测试数据生成成功')
-  } catch (error: any) {
+  } catch {
     ElMessage.error('生成测试数据失败')
   }
 }
@@ -290,11 +289,11 @@ const updateUser = async () => {
 
   isUpdating.value = true
   try {
-    await $indexdb.updateData(database.value, tableName, [editingUser.value as any])
+    await $indexDB.updateData(database.value, tableName, [editingUser.value as any])
     editDialogVisible.value = false
     await refreshData()
     ElMessage.success('用户更新成功')
-  } catch (error: any) {
+  } catch {
     ElMessage.error('用户更新失败')
   } finally {
     isUpdating.value = false
@@ -311,62 +310,12 @@ const deleteUser = async (userId: string) => {
       type: 'warning'
     })
 
-    await $indexdb.deleteDataByCondition(database.value, tableName, 'id', userId)
+    await $indexDB.deleteDataByCondition(database.value, tableName, 'id', userId)
     await refreshData()
     ElMessage.success('用户删除成功')
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error('用户删除失败')
-    }
-  }
-}
-
-const clearAllData = async () => {
-  if (!database.value) {
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm('确定要清空所有数据吗？此操作不可恢复！', '确认清空', {
-      type: 'warning'
-    })
-
-    isClearing.value = true
-    await $indexdb.clearData(database.value, tableName)
-    await refreshData()
-    ElMessage.success('数据清空成功')
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error('清空数据失败')
-    }
-  } finally {
-    isClearing.value = false
-  }
-}
-
-const deleteDatabase = async () => {
-  try {
-    await ElMessageBox.confirm('确定要删除整个数据库吗？此操作不可恢复！', '确认删除', {
-      type: 'warning'
-    })
-
-    if (database.value) {
-      database.value.close()
-      database.value = null
-    }
-
-    const success = await $indexdb.deleteDatabase(dbName)
-    if (success) {
-      users.value = []
-      displayUsers.value = []
-      totalUsers.value = 0
-      ElMessage.success('数据库删除成功')
-    } else {
-      throw new Error('删除失败')
-    }
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除数据库失败')
     }
   }
 }

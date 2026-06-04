@@ -80,7 +80,6 @@ const params = {
 
 // Hand Tracking State
 let handDistance = 0
-let isHandDetected = false
 let handX = 0.5 // Normalized 0-1
 let handY = 0.5 // Normalized 0-1
 
@@ -458,7 +457,6 @@ function onHandsResults(results: any) {
 
   // Update hand tracking state
   if (dataToProcess.detected) {
-    isHandDetected = true
     sensorData.detected = true
 
     handDistance = dataToProcess.distance
@@ -480,7 +478,6 @@ function onHandsResults(results: any) {
     params.rotationY += (targetRotY - params.rotationY) * 0.1
     params.rotationX += (targetRotX - params.rotationX) * 0.1
   } else {
-    isHandDetected = false
     sensorData.detected = false
     sensorData.distance = 0
     // Slowly return to neutral scale, keep rotation drifting
@@ -489,8 +486,6 @@ function onHandsResults(results: any) {
 }
 
 // Animation Loop
-const clock = new THREE.Clock()
-
 function animate() {
   animationId = requestAnimationFrame(animate)
 
