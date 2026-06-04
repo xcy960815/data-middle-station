@@ -197,10 +197,10 @@ data-middle-station/
 ## 更多文档
 
 - `docs/project-documentation.md` - 项目技术文档
-- `docs/project-improvement-review-2026-04-05.md` - 项目改进评审记录
-- `docs/analyze-query-semantics-2026-06-03.md` - 分析页查询语义、表格模式和值/指标命名记录
-- `docs/data-source-dataset-design-2026-06-03.md` - 数据源管理与数据集设计记录
 - `docs/data-middle-station-roadmap-2026-06-03.md` - 数据中台功能演进规划
+- `docs/analyze-drill-rollup-requirement-2026-06-04.md` - 分析上卷 / 下卷需求记录
+- `docs/high-frequency-scheduler.md` - 高频调度任务使用说明
+- `docs/istoreos-mail-troubleshooting.md` - istoreOS 容器 SMTP 排障记录
 
 ## 版本管理
 

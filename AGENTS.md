@@ -38,7 +38,7 @@
    - `server/utils/`
 6. 相关专项文档：
    - `docs/project-documentation.md` — 总体架构说明
-   - `docs/project-improvement-review-2026-04-05.md` — 已知设计问题与后续方向
+   - `docs/data-middle-station-roadmap-2026-06-03.md` — 功能演进规划
    - `docs/high-frequency-scheduler.md` — 高频调度任务规则
    - `docs/istoreos-mail-troubleshooting.md` — 容器发信问题排障经验
 7. 涉及数据库时，再读 `sql/` 下对应脚本和相关 mapper/service。
