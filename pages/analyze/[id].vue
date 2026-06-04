@@ -31,7 +31,7 @@
     <template #measure>
       <MeasureOption></MeasureOption>
     </template>
-    <template #group>
+    <template #dimension>
       <DimensionOption></DimensionOption>
     </template>
     <template #bar>

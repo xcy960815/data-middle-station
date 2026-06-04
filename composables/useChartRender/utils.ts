@@ -44,9 +44,9 @@ export interface ChartDataProcessResult {
    */
   measureFields: string[]
   /**
-   * 分组字段名称
+   * 系列维度字段名称
    */
-  groupFieldName?: string
+  seriesDimensionFieldName?: string
   /**
    * 是否使用折叠
    */
@@ -71,7 +71,7 @@ export function processChartData(config: ChartRenderConfig): ChartDataProcessRes
   const xFieldName = xFieldOption?.columnName || ''
   const measureFields = config.yAxisFields.map((item) => item.columnName).filter(Boolean) as string[]
 
-  const groupFieldName = config.xAxisFields[1]?.columnName
+  const seriesDimensionFieldName = config.xAxisFields[1]?.columnName
 
   const useFold = measureFields.length > 1
 
@@ -88,7 +88,7 @@ export function processChartData(config: ChartRenderConfig): ChartDataProcessRes
   return {
     xFieldName,
     measureFields,
-    groupFieldName,
+    seriesDimensionFieldName,
     useFold,
     xAxisTitle,
     yAxisTitle
@@ -126,7 +126,7 @@ export function formatValue(value: number, showPercentage: boolean): string {
  * @param {Array<AnalyzeDataVo.AnalyzeData>} data 原始数据
  * @param {string[]} measureFields 度量字段
  * @param {string} xFieldName X轴字段
- * @param {string} groupFieldName 分组字段
+ * @param {string} seriesDimensionFieldName 系列维度字段
  * @returns {Array<AnalyzeDataVo.AnalyzeData & { key: string; value: number }>} 折叠后的数据
  */
 export function foldData(

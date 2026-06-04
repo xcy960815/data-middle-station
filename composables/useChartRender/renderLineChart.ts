@@ -36,7 +36,7 @@ export function renderLineChart(
   // 处理公共数据
   const dataResult = processChartData(config)
 
-  const { xFieldName, measureFields, groupFieldName, useFold, xAxisTitle, yAxisTitle } = dataResult
+  const { xFieldName, measureFields, seriesDimensionFieldName, useFold, xAxisTitle, yAxisTitle } = dataResult
 
   if (!xFieldName || !measureFields || measureFields.length === 0) {
     return null
@@ -72,14 +72,14 @@ export function renderLineChart(
 
   // 确定系列名称的生成逻辑
   const getSeriesName = (item: AnalyzeDataVo.AnalyzeData): string => {
-    if (useFold && groupFieldName) {
-      const groupValue = String(item[groupFieldName] || '')
+    if (useFold && seriesDimensionFieldName) {
+      const seriesDimensionValue = String(item[seriesDimensionFieldName] || '')
       const keyValue = String(item['key'] || '')
-      return `${groupValue}-${keyValue}`
+      return `${seriesDimensionValue}-${keyValue}`
     } else if (useFold) {
       return String(item['key'] || '')
-    } else if (groupFieldName) {
-      return String(item[groupFieldName] || '')
+    } else if (seriesDimensionFieldName) {
+      return String(item[seriesDimensionFieldName] || '')
     } else {
       return measureFields[0] || 'value'
     }

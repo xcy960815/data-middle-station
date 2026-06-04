@@ -1,5 +1,5 @@
 <template>
-  <div class="group-selector" @contextmenu="contextmenuHandler">
+  <div class="dimension-selector" @contextmenu="contextmenuHandler">
     <selector-template v-bind="$attrs" :index="props.index"></selector-template>
   </div>
   <!-- 字段的操作选项 -->
@@ -158,7 +158,7 @@ const handleSetFilterable = () => {
 }
 </script>
 <style lang="scss" scoped>
-.group-selector {
+.dimension-selector {
   cursor: context-menu;
 }
 </style>

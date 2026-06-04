@@ -40,8 +40,8 @@
             <slot name="chart"></slot>
           </div>
 
-          <div class="layout-analyze-group bg-[#f5f5f5] text-[12px] h-[40px] rounded-[4px] p-[7px]">
-            <slot name="group"></slot>
+          <div class="layout-analyze-dimension bg-[#f5f5f5] text-[12px] h-[40px] rounded-[4px] p-[7px]">
+            <slot name="dimension"></slot>
           </div>
         </div>
         <div class="layout-analyze-chart-type !w-[140px] bg-[#f5f5f5]">

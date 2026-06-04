@@ -86,13 +86,13 @@ const columnClasses = computed(() => (column: ColumnsStore.ColumnOptions) => {
   const measureSelected = useMeasuresStore().getMeasures.find(
     (measureOption: MeasureStore.MeasureOption) => measureOption.columnName === column.columnName
   )
-  const groupSelected = useDimensionsStore().getDimensions.find(
+  const dimensionSelected = useDimensionsStore().getDimensions.find(
     (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
   return {
     column__item: true, // 默认类名
     column__item_measure_selected: measureSelected, // 值选中
-    column__item_group_selected: groupSelected // 分组选中
+    column__item_dimension_selected: dimensionSelected // 分组选中
   }
 })
 
@@ -486,7 +486,7 @@ const handleDataSourceChange = async (payload: string | AnalyzeDataSourceChangeP
         background-color: #54c32a;
       }
 
-      &.column__item_group_selected::after {
+      &.column__item_dimension_selected::after {
         position: absolute;
         left: 5px;
         top: 9px;
