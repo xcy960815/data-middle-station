@@ -1,12 +1,23 @@
 .@{vc-prefix}-enter-active {
-  transition: opacity 0.3s ease-out;
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .@{vc-prefix}-leave-active {
-  transition: opacity 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+  transition:
+    opacity 0.1s ease-in,
+    transform 0.1s ease-in;
 }
 
 .@{vc-prefix}-enter-from,
 .@{vc-prefix}-leave-to {
   opacity: 0;
+  transform: translateY(-2px) scale(0.98);
+}
+
+.@{vc-prefix}-enter-to,
+.@{vc-prefix}-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }

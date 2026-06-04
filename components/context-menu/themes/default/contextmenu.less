@@ -2,8 +2,10 @@
   position: absolute;
   background-color: @vc-background-color;
   border: 1px solid @vc-border-color;
-  border-radius: 4px;
-  box-shadow: 2px 2px 8px 0px @vc-shadow-color;
+  border-radius: 6px;
+  box-shadow:
+    0 8px 24px 0 @vc-shadow-color,
+    0 2px 8px 0 rgba(0, 0, 0, 0.06);
   font-size: @vc-font-size;
   font-family: @vc-font-family;
   white-space: nowrap;
@@ -11,19 +13,31 @@
   z-index: @vc-z-index;
   -webkit-tap-highlight-color: transparent;
   min-width: 100px;
+  padding: 4px;
+  transform-origin: top left;
+  will-change: opacity, transform;
 
   &-inner {
     margin: 0;
+    padding: 0;
     list-style: none;
+  }
+
+  &--measuring {
+    visibility: hidden;
+    pointer-events: none;
   }
 
   &-item {
     padding: @vc-item-padding-vertical @vc-item-padding-horizontal;
-    line-height: 1;
+    line-height: 1.2;
     color: @vc-text-color;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 5px;
     user-select: none;
+    transition:
+      color 0.12s ease,
+      background-color 0.12s ease;
 
     &--hover {
       color: @vc-hover-text-color;

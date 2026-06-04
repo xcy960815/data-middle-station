@@ -1,15 +1,27 @@
 <template>
   <Teleport :to="teleport" v-if="teleport">
-    <Transition @before-enter="handleBeforeEnter" @enter="handleEnter" @after-enter="handleAfterEnter">
-      <div class="contextmenu" ref="contextmenuElement" v-show="visible" :style="contextMenuPositionStyle">
+    <Transition name="contextmenu">
+      <div
+        class="contextmenu"
+        ref="contextmenuElement"
+        v-show="visible"
+        :class="{ 'contextmenu--measuring': measuring }"
+        :style="contextMenuPositionStyle"
+      >
         <ul class="contextmenu-inner">
           <slot></slot>
         </ul>
       </div>
     </Transition>
   </Teleport>
-  <Transition v-else @before-enter="handleBeforeEnter" @enter="handleEnter" @after-enter="handleAfterEnter">
-    <div class="contextmenu" ref="contextmenuElement" v-show="visible" :style="contextMenuPositionStyle">
+  <Transition v-else name="contextmenu">
+    <div
+      class="contextmenu"
+      ref="contextmenuElement"
+      v-show="visible"
+      :class="{ 'contextmenu--measuring': measuring }"
+      :style="contextMenuPositionStyle"
+    >
       <ul class="contextmenu-inner">
         <slot></slot>
       </ul>
@@ -17,9 +29,6 @@
   </Transition>
 </template>
 <script setup lang="ts">
-// 动画过渡时间常量
-const TRANSITION_DURATION = '0.5s'
-
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -40,6 +49,7 @@ const emits = defineEmits(['show', 'hide', 'update:modelValue'])
 const contextmenuElement = ref<HTMLDivElement | null>(null)
 // 右键菜单是否显示
 const visible = ref(props.modelValue)
+const measuring = ref(false)
 /**
  * @desc 更新右键菜单的显示状态
  * @param {boolean} value
@@ -100,10 +110,12 @@ const showContextMenu = (evt: MouseEvent) => {
   }
   // 先把菜单放到鼠标处，先显示再测量尺寸，避免获取到 0 宽高
   contextMenuPosition.value = initialPosition
+  measuring.value = true
   updateModelValue(true)
   nextTick(() => {
     const contextmenuNode = contextmenuElement.value
     if (!contextmenuNode) {
+      measuring.value = false
       emits('show')
       return
     }
@@ -112,8 +124,11 @@ const showContextMenu = (evt: MouseEvent) => {
     const menuHeight = Math.max(contextmenuNode.scrollHeight, contextmenuNode.offsetHeight)
 
     contextMenuPosition.value = calculateMenuPosition(initialPosition.top, initialPosition.left, menuWidth, menuHeight)
-    // 保持原有行为，触发展示事件
-    emits('show')
+    requestAnimationFrame(() => {
+      measuring.value = false
+      // 保持原有行为，触发展示事件
+      emits('show')
+    })
   })
 }
 /**
@@ -123,33 +138,6 @@ const hideContextMenu = () => {
   updateModelValue(false)
   // TODO: 添加回掉参数
   emits('hide')
-}
-/**
- * @desc 当dom元素进入到页面之前
- * @param {Element} el
- */
-const handleBeforeEnter = (el: Element) => {
-  ;(el as HTMLDivElement).style.height = '0'
-}
-/**
- * @desc 当dom元素进入到页面之后
- * @param {Element} el
- */
-const handleEnter = (el: Element) => {
-  ;(el as HTMLDivElement).style.height = 'auto'
-  const realHeight = window.getComputedStyle(el).height
-  ;(el as HTMLDivElement).style.height = '0'
-  requestAnimationFrame(() => {
-    ;(el as HTMLDivElement).style.height = realHeight
-    ;(el as HTMLDivElement).style.transition = `height ${TRANSITION_DURATION}`
-  })
-}
-/**
- * @desc 当dom元素进入到页面之后
- * @param {Element} el
- */
-const handleAfterEnter = (el: Element) => {
-  ;(el as HTMLDivElement).style.transition = 'none'
 }
 /**
  * @desc 触发元素的配置
