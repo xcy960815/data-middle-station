@@ -1,102 +1,92 @@
 <template>
   <NuxtLayout :name="layoutName">
     <template #header>
-      <custom-header>
-        <template #header-right>
-          <el-tooltip effect="dark" content="新增数据源" placement="bottom">
-            <icon-park
-              type="newlybuild"
-              size="30"
-              fill="#333"
-              class="cursor-pointer"
-              @click="handleOpenCreateDialog"
-            ></icon-park>
-          </el-tooltip>
-        </template>
-      </custom-header>
+      <custom-header />
     </template>
 
-    <template #content>
-      <div class="data-source-page">
-        <div class="data-source-toolbar">
-          <el-input
-            v-model="keyword"
-            clearable
-            placeholder="搜索数据源名称、描述或数据库"
-            class="data-source-search"
-            @keyup.enter="getDataSources(1)"
-            @clear="getDataSources(1)"
-          />
-          <el-select v-model="sortField" class="data-source-select" @change="getDataSources(1)">
-            <el-option label="最近更新" value="updateTime" />
-            <el-option label="创建时间" value="createTime" />
-            <el-option label="数据源名称" value="sourceName" />
-          </el-select>
-          <el-select v-model="sortOrder" class="data-source-select" @change="getDataSources(1)">
-            <el-option label="降序" value="desc" />
-            <el-option label="升序" value="asc" />
-          </el-select>
-          <el-button type="primary" @click="getDataSources(1)">搜索</el-button>
-          <el-button @click="handleResetSearch">重置</el-button>
-        </div>
+    <template #bar>
+      <el-button link @click="router.push('/dataset')">数据集管理</el-button>
+      <el-button link @click="handleOpenCreateDialog">新增数据源</el-button>
+    </template>
 
-        <div v-loading="listLoading" class="data-source-list">
-          <ListCard
-            v-for="item in dataSources"
-            :key="item.id"
-            :title="item.sourceName"
-            :description="item.sourceDesc || item.databaseName"
-            :title-attr="item.databaseName"
-            :creator="item.createdBy"
-            :time="formatDate(item.updateTime || item.createTime)"
-            @click="handleOpenTables(item)"
-          >
-            <template #actions>
-              <button class="data-source-card-action" type="button" @click.stop="handleOpenTables(item)">
-                <icon-park type="TableReport" size="14" fill="#333" />
-              </button>
-              <button class="data-source-card-action" type="button" @click.stop="handleSyncSchema(item)">
-                <icon-park type="Refresh" size="14" fill="#333" />
-              </button>
-              <button class="data-source-card-action" type="button" @click.stop="handleEditDataSource(item)">
-                <icon-park type="Edit" size="14" fill="#333" />
-              </button>
-              <button
-                class="data-source-card-action data-source-card-action--delete"
-                type="button"
-                @click.stop="handleDeleteDataSource(item)"
-              >
-                <icon-park type="DeleteOne" size="14" fill="#333" />
-              </button>
-            </template>
-            <template #left-badges>
-              <span class="data-source-badge" :class="`data-source-badge--${item.status}`">
-                {{ item.status === 'enabled' ? '启用' : '禁用' }}
-              </span>
-            </template>
-            <template #right-badges>
-              <span class="data-source-count">{{ item.tableCount }} 张表</span>
-            </template>
-          </ListCard>
-          <el-empty
-            v-if="!listLoading && dataSources.length === 0"
-            class="data-source-empty"
-            description="暂无数据源"
-          />
-        </div>
+    <template #toolbar>
+      <el-input
+        v-model="keyword"
+        clearable
+        placeholder="搜索数据源名称、描述或数据库"
+        class="data-source-search"
+        @keyup.enter="getDataSources(1)"
+        @clear="getDataSources(1)"
+      />
+      <el-select v-model="sortField" class="data-source-select" @change="getDataSources(1)">
+        <el-option label="最近更新" value="updateTime" />
+        <el-option label="创建时间" value="createTime" />
+        <el-option label="数据源名称" value="sourceName" />
+      </el-select>
+      <el-select v-model="sortOrder" class="data-source-select" @change="getDataSources(1)">
+        <el-option label="降序" value="desc" />
+        <el-option label="升序" value="asc" />
+      </el-select>
+      <el-button type="primary" @click="getDataSources(1)">搜索</el-button>
+      <el-button @click="handleResetSearch">重置</el-button>
+    </template>
 
-        <div v-if="total > 0" class="data-source-pagination">
-          <el-pagination
-            background
-            layout="prev, pager, next, total"
-            :current-page="page"
-            :page-size="pageSize"
-            :total="total"
-            @current-change="getDataSources"
-          />
-        </div>
+    <template #list>
+      <div v-loading="listLoading" class="data-source-list-loading">
+        <ListCard
+          v-for="item in dataSources"
+          :key="item.id"
+          :title="item.sourceName"
+          :description="item.sourceDesc || item.databaseName"
+          :title-attr="item.databaseName"
+          :creator="item.createdBy"
+          :time="formatDate(item.updateTime || item.createTime)"
+          @click="handleOpenTables(item)"
+        >
+          <template #actions>
+            <button class="data-source-card-action" type="button" @click.stop="handleOpenTables(item)">
+              <icon-park type="TableReport" size="14" fill="#333" />
+            </button>
+            <button class="data-source-card-action" type="button" @click.stop="handleSyncSchema(item)">
+              <icon-park type="Refresh" size="14" fill="#333" />
+            </button>
+            <button class="data-source-card-action" type="button" @click.stop="handleEditDataSource(item)">
+              <icon-park type="Edit" size="14" fill="#333" />
+            </button>
+            <button
+              class="data-source-card-action data-source-card-action--delete"
+              type="button"
+              @click.stop="handleDeleteDataSource(item)"
+            >
+              <icon-park type="DeleteOne" size="14" fill="#333" />
+            </button>
+          </template>
+          <template #left-badges>
+            <span class="data-source-badge" :class="`data-source-badge--${item.status}`">
+              {{ item.status === 'enabled' ? '启用' : '禁用' }}
+            </span>
+          </template>
+          <template #right-badges>
+            <span class="data-source-count">{{ item.tableCount }} 张表</span>
+          </template>
+        </ListCard>
+        <el-empty v-if="!listLoading && dataSources.length === 0" class="data-source-empty" description="暂无数据源" />
       </div>
+    </template>
 
+    <template #pagination>
+      <el-pagination
+        v-if="total > 0"
+        background
+        layout="prev, pager, next, total"
+        :current-page="page"
+        :page-size="pageSize"
+        :total="total"
+        @current-change="getDataSources"
+      />
+    </template>
+
+    <template #dialogs>
       <el-dialog v-model="formDialogVisible" :title="formTitle" width="520px">
         <el-form ref="formRef" :model="form" :rules="formRules" label-width="92px">
           <el-form-item label="名称" prop="sourceName">
@@ -180,7 +170,8 @@ import ListCard from '@/components/list-card/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 
-const layoutName = 'dashboard'
+const layoutName = 'dataset'
+const router = useRouter()
 
 const dataSources = ref<DataSourceVo.DataSourceListItem[]>([])
 const listLoading = ref(false)
@@ -409,21 +400,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.data-source-page {
-  display: flex;
-  height: 100%;
-  min-height: 0;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.data-source-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-}
-
 .data-source-search {
   max-width: 320px;
 }
@@ -432,22 +408,14 @@ onMounted(() => {
   width: 140px;
 }
 
-.data-source-list {
-  position: relative;
+.data-source-list-loading {
   display: flex;
-  flex: 1 1 0;
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 10px 20px;
+  width: 100%;
+  height: 100%;
   min-height: 0;
-  overflow: auto;
-  padding: 10px;
-}
-
-.data-source-pagination {
-  display: flex;
-  justify-content: flex-end;
-  padding: 12px 16px;
 }
 
 .data-source-card-action {

@@ -1,109 +1,92 @@
 <template>
   <NuxtLayout :name="layoutName">
     <template #header>
-      <custom-header>
-        <template #header-right>
-          <div class="dataset-header-actions">
-            <el-tooltip effect="dark" content="数据源管理" placement="bottom">
-              <icon-park
-                type="TableReport"
-                size="28"
-                fill="#333"
-                class="cursor-pointer"
-                @click="router.push('/data-source')"
-              ></icon-park>
-            </el-tooltip>
-            <el-tooltip effect="dark" content="新增数据集" placement="bottom">
-              <icon-park
-                type="newlybuild"
-                size="30"
-                fill="#333"
-                class="cursor-pointer"
-                @click="handleOpenCreateDialog"
-              ></icon-park>
-            </el-tooltip>
-          </div>
-        </template>
-      </custom-header>
+      <custom-header />
     </template>
 
-    <template #content>
-      <div class="dataset-page">
-        <div class="dataset-toolbar">
-          <el-input
-            v-model="keyword"
-            clearable
-            placeholder="搜索数据集名称、描述或物理表"
-            class="dataset-search"
-            @keyup.enter="getDatasets(1)"
-            @clear="getDatasets(1)"
-          />
-          <el-select v-model="sortField" class="dataset-select" @change="getDatasets(1)">
-            <el-option label="最近更新" value="updateTime" />
-            <el-option label="创建时间" value="createTime" />
-            <el-option label="数据集名称" value="datasetName" />
-          </el-select>
-          <el-select v-model="sortOrder" class="dataset-select" @change="getDatasets(1)">
-            <el-option label="降序" value="desc" />
-            <el-option label="升序" value="asc" />
-          </el-select>
-          <el-button type="primary" @click="getDatasets(1)">搜索</el-button>
-          <el-button @click="handleResetSearch">重置</el-button>
-        </div>
+    <template #bar>
+      <el-button link @click="router.push('/data-source')">数据源管理</el-button>
+      <el-button link @click="handleOpenCreateDialog">新增数据集</el-button>
+    </template>
 
-        <div v-loading="listLoading" class="dataset-list">
-          <ListCard
-            v-for="item in datasets"
-            :key="item.id"
-            :title="item.datasetName"
-            :description="item.datasetDesc || item.baseTable"
-            :title-attr="item.baseTable"
-            :creator="item.createdBy"
-            :time="formatDate(item.updateTime || item.createTime)"
-            @click="handleOpenPreview(item)"
-          >
-            <template #actions>
-              <button class="dataset-card-action" type="button" @click.stop="handleOpenPreview(item)">
-                <icon-park type="PreviewOpen" size="14" fill="#333" />
-              </button>
-              <button class="dataset-card-action" type="button" @click.stop="handleOpenFieldsDialog(item)">
-                <icon-park type="Edit" size="14" fill="#333" />
-              </button>
-              <button class="dataset-card-action" type="button" @click.stop="handleEditDataset(item)">
-                <icon-park type="SettingTwo" size="14" fill="#333" />
-              </button>
-              <button
-                class="dataset-card-action dataset-card-action--delete"
-                type="button"
-                @click.stop="handleDeleteDataset(item)"
-              >
-                <icon-park type="DeleteOne" size="14" fill="#333" />
-              </button>
-            </template>
-            <template #left-badges>
-              <span class="dataset-badge" :class="`dataset-badge--${item.status}`">
-                {{ item.status === 'enabled' ? '启用' : '禁用' }}
-              </span>
-            </template>
-            <template #right-badges>
-              <span class="dataset-count">{{ item.fieldCount || 0 }} 个字段</span>
-            </template>
-          </ListCard>
-          <el-empty v-if="!listLoading && datasets.length === 0" class="dataset-empty" description="暂无数据集" />
-        </div>
+    <template #toolbar>
+      <el-input
+        v-model="keyword"
+        clearable
+        placeholder="搜索数据集名称、描述或物理表"
+        class="dataset-search"
+        @keyup.enter="getDatasets(1)"
+        @clear="getDatasets(1)"
+      />
+      <el-select v-model="sortField" class="dataset-select" @change="getDatasets(1)">
+        <el-option label="最近更新" value="updateTime" />
+        <el-option label="创建时间" value="createTime" />
+        <el-option label="数据集名称" value="datasetName" />
+      </el-select>
+      <el-select v-model="sortOrder" class="dataset-select" @change="getDatasets(1)">
+        <el-option label="降序" value="desc" />
+        <el-option label="升序" value="asc" />
+      </el-select>
+      <el-button type="primary" @click="getDatasets(1)">搜索</el-button>
+      <el-button @click="handleResetSearch">重置</el-button>
+    </template>
 
-        <div v-if="total > 0" class="dataset-pagination">
-          <el-pagination
-            background
-            layout="prev, pager, next, total"
-            :current-page="page"
-            :page-size="pageSize"
-            :total="total"
-            @current-change="getDatasets"
-          />
-        </div>
+    <template #list>
+      <div v-loading="listLoading" class="dataset-list-loading">
+        <ListCard
+          v-for="item in datasets"
+          :key="item.id"
+          :title="item.datasetName"
+          :description="item.datasetDesc || item.baseTable"
+          :title-attr="item.baseTable"
+          :creator="item.createdBy"
+          :time="formatDate(item.updateTime || item.createTime)"
+          @click="handleOpenPreview(item)"
+        >
+          <template #actions>
+            <button class="dataset-card-action" type="button" @click.stop="handleOpenPreview(item)">
+              <icon-park type="PreviewOpen" size="14" fill="#333" />
+            </button>
+            <button class="dataset-card-action" type="button" @click.stop="handleOpenFieldsDialog(item)">
+              <icon-park type="Edit" size="14" fill="#333" />
+            </button>
+            <button class="dataset-card-action" type="button" @click.stop="handleEditDataset(item)">
+              <icon-park type="SettingTwo" size="14" fill="#333" />
+            </button>
+            <button
+              class="dataset-card-action dataset-card-action--delete"
+              type="button"
+              @click.stop="handleDeleteDataset(item)"
+            >
+              <icon-park type="DeleteOne" size="14" fill="#333" />
+            </button>
+          </template>
+          <template #left-badges>
+            <span class="dataset-badge" :class="`dataset-badge--${item.status}`">
+              {{ item.status === 'enabled' ? '启用' : '禁用' }}
+            </span>
+          </template>
+          <template #right-badges>
+            <span class="dataset-count">{{ item.fieldCount || 0 }} 个字段</span>
+          </template>
+        </ListCard>
+        <el-empty v-if="!listLoading && datasets.length === 0" class="dataset-empty" description="暂无数据集" />
       </div>
+    </template>
 
+    <template #pagination>
+      <el-pagination
+        v-if="total > 0"
+        background
+        layout="prev, pager, next, total"
+        :current-page="page"
+        :page-size="pageSize"
+        :total="total"
+        @current-change="getDatasets"
+      />
+    </template>
+
+    <template #dialogs>
       <el-dialog v-model="formDialogVisible" :title="formTitle" width="560px">
         <el-form ref="formRef" :model="form" :rules="formRules" label-width="96px">
           <el-form-item label="名称" prop="datasetName">
@@ -238,7 +221,7 @@ import ListCard from '@/components/list-card/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 
-const layoutName = 'dashboard'
+const layoutName = 'dataset'
 const router = useRouter()
 
 const datasets = ref<DatasetVo.DatasetListItem[]>([])
@@ -562,28 +545,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.dataset-page {
-  display: flex;
-  height: 100%;
-  min-height: 0;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.dataset-header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
-}
-
-.dataset-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-}
-
 .dataset-search {
   max-width: 340px;
 }
@@ -592,22 +553,14 @@ onMounted(() => {
   width: 140px;
 }
 
-.dataset-list {
-  position: relative;
+.dataset-list-loading {
   display: flex;
-  flex: 1 1 0;
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 10px 20px;
+  width: 100%;
+  height: 100%;
   min-height: 0;
-  overflow: auto;
-  padding: 10px;
-}
-
-.dataset-pagination {
-  display: flex;
-  justify-content: flex-end;
-  padding: 12px 16px;
 }
 
 .dataset-card-action {
