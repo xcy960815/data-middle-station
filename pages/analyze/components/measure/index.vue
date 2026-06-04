@@ -104,6 +104,7 @@ import { defineAsyncComponent } from 'vue'
 import ContextMenu from '../../../../components/context-menu/index.vue'
 import SelectorMeasureAggregation from '../../../../components/selector/measure-aggregation/index.vue'
 import { clearAllHandler } from '../clearAll'
+import { moveFieldToMeasures, resolveDefaultMeasureAggregationType } from '../fieldTransfer'
 
 const MonacoEditor = defineAsyncComponent(() => import('../../../../components/monaco-editor/index.vue'))
 
@@ -164,7 +165,7 @@ const isMeasureAggregationEnabled = (measure: MeasureStore.MeasureOption) => {
 
 const resolveMeasureAggregationType = (measure: MeasureStore.MeasureOption): AnalyzeConfigDao.OrderAggregationsType => {
   if (measure.datasetAggregationType) return measure.datasetAggregationType
-  return measure.datasetFieldType === 'metric' ? 'sum' : 'count'
+  return resolveDefaultMeasureAggregationType(measure)
 }
 
 const handleChangeAggregationType = (index: number, aggregationType: AnalyzeConfigDao.OrderAggregationsType) => {
@@ -250,17 +251,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
-  const measureOption: MeasureStore.MeasureOption = {
-    ...data.value,
-    datasetAggregationType:
-      data.value.datasetAggregationType || (data.value.datasetFieldType === 'metric' ? 'sum' : 'count'),
-    fixed: null,
-    align: null,
-    width: null,
-    showOverflowTooltip: false,
-    filterable: false,
-    sortable: false
-  }
+  if (!data.value) return
 
   const index = data.index
   switch (data.from) {
@@ -274,10 +265,13 @@ const dropHandler = (dragEvent: DragEvent) => {
       measureStore.setMeasures(measures)
       break
     }
+    case 'dimensions':
+      moveFieldToMeasures(data.value, { from: data.from, index })
+      break
     default:
       // 更新列名 主要是显示已经选中的标志
       columnStore.updateColumn({ column: data.value, index })
-      addMeasure(measureOption)
+      moveFieldToMeasures(data.value, { from: 'columns', index })
       break
   }
 }
@@ -386,6 +380,7 @@ const handleConfirmCustomColumn = () => {
   // 自动添加到值区域
   addMeasure({
     ...newColumn,
+    datasetAggregationType: resolveDefaultMeasureAggregationType(newColumn),
     fixed: null,
     align: null,
     width: null,

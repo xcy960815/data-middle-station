@@ -96,7 +96,7 @@ data-middle-station/
 - 分组和值/指标数据分析
 - 图表类型切换（表格、柱状图、折线图、饼图）
 - 过滤条件和排序设置
-- 表格明细/聚合模式表达
+- 表格明细/聚合查询语义
 - 实时数据更新和刷新
 
 **核心组件:**
@@ -186,7 +186,7 @@ data-middle-station/
 - **动态过滤**: 实时过滤条件设置和数据筛选
 - **聚合计算**: 支持求和、计数、平均值等聚合函数
 - **排序功能**: 多字段自定义排序
-- **表格模式**: 无分组时为明细表格，有分组时为聚合表格
+- **表格查询语义**: 无分组时按明细查询，有分组时按聚合查询
 
 ### 3. 数据源管理
 
@@ -559,7 +559,7 @@ pnpm lint:fix
 pnpm test:analyze-query
 ```
 
-该测试覆盖 `WHERE / GROUP BY / HAVING / ORDER BY` 组合、表格明细/聚合模式，以及 `validateAnalyzeChartConfig` 的核心分支。
+该测试覆盖 `WHERE / GROUP BY / HAVING / ORDER BY` 组合、表格明细/聚合查询语义，以及 `validateAnalyzeChartConfig` 的核心分支。
 
 ### 提交规范
 

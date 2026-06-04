@@ -1,6 +1,6 @@
 <template>
   <div class="measure-selector" @contextmenu="contextmenuHandler">
-    <selector-template v-bind="$attrs" :measure="measure">
+    <selector-template v-bind="$attrs" :index="props.index" :measure="measure">
       <template #order-icon>
         <slot name="order-icon"></slot>
       </template>

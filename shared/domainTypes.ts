@@ -56,6 +56,7 @@ export type OrderType = (typeof ORDER_TYPE_MAP)[keyof typeof ORDER_TYPE_MAP]
 export const ORDER_AGGREGATION_MAP = {
   原始值: 'raw',
   计数: 'count',
+  计数去重: 'countDistinct',
   总计: 'sum',
   平均: 'avg',
   最大值: 'max',

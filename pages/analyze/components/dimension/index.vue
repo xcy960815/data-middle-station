@@ -40,6 +40,7 @@
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
+import { moveFieldToDimensions } from '../fieldTransfer'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const columnStore = useColumnsStore()
@@ -80,30 +81,22 @@ const getDimensionInvalidMessage = (dimension: DimensionStore.DimensionOption) =
 }
 
 /**
- * @desc addDimension
- * @param {DimensionStore.DimensionOption|Array<DimensionStore.DimensionOption>} dimensions
- */
-const addDimension = (dimension: DimensionStore.DimensionOption | Array<DimensionStore.DimensionOption>) => {
-  dimension = Array.isArray(dimension) ? dimension : [dimension]
-  dimensionStore.addDimensions(dimension)
-}
-/**
  * @desc getTargetIndex
  * @param {number} index
  * @param {DragEvent} dragEvent
  * @returns {number}
  */
 const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
-  const dropY = dragEvent.clientY // 落点Y
-  let ys = [].slice
+  const dropX = dragEvent.clientX
+  let xs = [].slice
     .call(document.querySelectorAll('.group__content > [data-action="drag"]'))
     .map(
-      (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
+      (element: HTMLDivElement) => (element.getBoundingClientRect().left + element.getBoundingClientRect().right) / 2
     )
-  ys.splice(index, 1)
-  let targetIndex = ys.findIndex((e) => dropY < e)
+  xs.splice(index, 1)
+  let targetIndex = xs.findIndex((middleX) => dropX < middleX)
   if (targetIndex === -1) {
-    targetIndex = ys.length
+    targetIndex = xs.length
   }
   return targetIndex
 }
@@ -150,15 +143,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
-  const dimensionOption: DimensionStore.DimensionOption = {
-    ...data.value,
-    fixed: null,
-    align: null,
-    width: null,
-    showOverflowTooltip: false,
-    filterable: false,
-    sortable: false
-  }
+  if (!data.value) return
   const index = data.index
   switch (data.from) {
     case 'dimensions': {
@@ -171,10 +156,13 @@ const dropHandler = (dragEvent: DragEvent) => {
       dimensionStore.setDimensions(dimensions)
       break
     }
+    case 'measures':
+      moveFieldToDimensions(data.value, { from: data.from, index })
+      break
     default: {
       // 更新列名 主要是显示已经选中的标志
       columnStore.updateColumn({ column: data.value, index })
-      addDimension(dimensionOption)
+      moveFieldToDimensions(data.value, { from: 'columns', index })
       break
     }
   }

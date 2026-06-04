@@ -8,7 +8,7 @@
 
 ### 1. 值字段被错误放入 `GROUP BY`
 
-页面中的“值”会作为图表的 Y 轴或指标字段，“分组”会作为 X 轴或分类字段。历史实现曾把值字段和分组字段合并后同时放进 `GROUP BY`；当前已改为分组字段进入 `GROUP BY`，值字段在聚合模式下进入聚合 `SELECT`。
+页面中的“值”会作为图表的 Y 轴或指标字段，“分组”会作为 X 轴或分类字段。历史实现曾把值字段和分组字段合并后同时放进 `GROUP BY`；当前已改为分组字段进入 `GROUP BY`，值字段在聚合查询中进入聚合 `SELECT`。
 
 这会把预期的：
 
@@ -79,22 +79,22 @@ where sales > ?
 6. 日期分组字段在 `SELECT`、`GROUP BY`、`ORDER BY` 中复用统一表达式。
 7. 未显式配置聚合方式的指标筛选，复用值字段默认聚合推断，避免 `HAVING` 与指标默认聚合不一致。
 8. 柱状图和折线图按 `xAxisFields = 分组`、`yAxisFields = 值` 渲染。
-9. 表格图按分组是否存在区分查询模式：无分组为明细表格，有分组为聚合表格。前端通过 `getTableQueryMode` 统一校验文案和模式标签。
+9. 表格图按分组是否存在区分查询模式：无分组为明细查询，有分组为聚合查询；页面不再展示“明细表格/聚合表格”模式标签。
 
 ## 表格模式规则
 
-| 模式     | 条件              | SQL                       | 值聚合 UI |
+| 查询语义 | 条件              | SQL                       | 值聚合 UI |
 | -------- | ----------------- | ------------------------- | --------- |
-| 明细表格 | `dimensions` 为空 | 无 `GROUP BY`，值列不聚合 | 隐藏      |
-| 聚合表格 | `dimensions` 非空 | `GROUP BY` + 值列聚合     | 显示      |
+| 明细查询 | `dimensions` 为空 | 无 `GROUP BY`，值列不聚合 | 隐藏      |
+| 聚合查询 | `dimensions` 非空 | `GROUP BY` + 值列聚合     | 显示      |
 
-校验规则：两种模式均至少需要 1 个值字段。表格模式只由分组字段决定，和当前选择了多少值字段无关。无分组时即使值字段保存了 `datasetAggregationType`，查询仍按明细表格输出行级数据，不使用聚合表达式。
+校验规则：表格图至少需要 1 个值字段。查询语义只由分组字段决定，和当前选择了多少值字段无关。无分组时即使值字段保存了 `datasetAggregationType`，查询仍按明细查询输出行级数据，不使用聚合表达式。
 
 ## 完成记录
 
 1. 已完成：分析页“值/指标”内部命名已端到端调整为 `measures` / `MeasureOption` / `useMeasuresStore`，不再使用 `dimensions` 表示值字段。
 2. 已完成：在“值”区域提供聚合方式选择，并保存到 chart config，避免完全依赖默认推断。
-3. 已完成：区分表格图的“明细模式”和“聚合模式”。明细模式可以不分组、不聚合；聚合模式应复用本记录定义的查询语义。
+3. 已完成：区分表格图的明细查询和聚合查询。明细查询可以不分组、不聚合；聚合查询应复用本记录定义的查询语义。
 4. 已完成：已补 `pnpm test:analyze-query` 快照测试，覆盖 `WHERE/GROUP BY/HAVING/ORDER BY` 的组合场景。
 5. 已完成：为未配置分组字段但柱状图、折线图需要 X 轴的场景补充前端防护，避免空 X 轴配置进入渲染层。
 
@@ -102,7 +102,7 @@ where sales > ?
 
 1. 已完成：前端防护已抽公共 `validateAnalyzeChartConfig`，并接入分析页查询、看板组件和邮件渲染链路；柱状图、折线图 `render*` 也已补空 X 轴兜底，避免只在 `useAnalyzeDataHandler` 一处校验。
 2. 已完成：值聚合 UI 已在“值”区域提供聚合方式选择，保存字段为 `measures[].datasetAggregationType`，并和 `AnalyzeQueryBuilder` 已支持的字段配置对齐；无分组时隐藏聚合入口，避免明细表格场景误导。自定义列表达式默认按当前类型推断为计数，可在有分组时手动改聚合。
-3. 已完成：表格模式表达已用 `getTableQueryMode` 统一判断，无分组显示明细表格，有分组显示聚合表格。
+3. 已完成：表格图查询语义已由 `AnalyzeQueryBuilder` 按是否存在分组统一处理；前端已移除“明细表格/聚合表格”模式标签。
 4. 已完成：命名清理已从折中注释方案推进为硬改名，分析配置字段、DTO、store、组件目录和 SQL 初始化脚本统一使用 `measures`。
 5. 已补迁移脚本：
    - `sql/20260603_rename_analyze_config_dimensions_to_measures.sql`
@@ -124,7 +124,7 @@ where sales > ?
 
 1. 已完成：类型和 Store 改为 `types/store/DimensionStore.d.ts`、`stores/dimensions.ts`、`StoreNames.DIMENSIONS`，拖拽来源类型改为 `dimensions`。
 2. 已完成：DTO/DAO/VO 中的分组字段改为 `dimensions` / `DimensionOption`。
-3. 已完成：`AnalyzeQueryBuilder`、`validateAnalyzeChartConfig`、`getTableQueryMode` 等公共逻辑改为读取 `dimensions`。
+3. 已完成：`AnalyzeQueryBuilder`、`validateAnalyzeChartConfig` 等公共逻辑改为读取 `dimensions`。
 4. 已完成：分析页分组组件、字段拖拽、保存草稿、历史版本切换、图表渲染传参统一接入 `dimensions`。
 5. 已完成：看板 widget 数据加载、`DashboardWidgetChart` 校验、邮件快照渲染统一使用 `chartConfig.dimensions`。
 6. 已完成：`analyze_config.groups` 字段改名为 `dimensions`，补迁移脚本 `sql/20260604_rename_analyze_config_groups_to_dimensions.sql`。

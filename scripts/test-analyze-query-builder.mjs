@@ -45,7 +45,7 @@ assert.deepEqual(
   }),
   {
     valid: false,
-    message: '表格明细模式至少需要一个值'
+    message: '表格至少需要一个值'
   }
 )
 
@@ -65,7 +65,7 @@ assert.deepEqual(
   }),
   {
     valid: false,
-    message: '表格聚合模式至少需要一个值'
+    message: '表格至少需要一个值'
   }
 )
 

@@ -1,6 +1,6 @@
 <template>
   <div class="group-selector" @contextmenu="contextmenuHandler">
-    <selector-template v-bind="$attrs" :dimension="dimension"></selector-template>
+    <selector-template v-bind="$attrs" :index="props.index"></selector-template>
   </div>
   <!-- 字段的操作选项 -->
   <context-menu ref="contextmenuRef">
@@ -31,6 +31,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import ContextMenu from '../../context-menu/index.vue'
 
 const props = defineProps({
+  index: {
+    type: Number,
+    default: null
+  },
   dimension: {
     type: Object as PropType<DimensionStore.DimensionOption>,
     required: true,

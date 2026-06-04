@@ -1,8 +1,5 @@
 <template>
   <div class="chart relative h-full w-full overflow-hidden">
-    <div v-if="tableQueryModeLabel" class="chart__mode-label">
-      {{ tableQueryModeLabel }}
-    </div>
     <template v-if="chartErrorMessage">
       <div class="absolute inset-0 flex flex-col justify-center items-center p-4 overflow-auto">
         <div class="text-red-500 text-[14px] mb-4 font-bold">
@@ -64,7 +61,6 @@ import LineChart from '~/components/line-chart/index.vue'
  * 表格
  */
 import TableChart from '~/components/table-chart/index.vue'
-import { getTableQueryMode, getTableQueryModeLabel } from '@/utils/tableQueryMode'
 
 /**
  * @desc 分析器 store
@@ -163,11 +159,6 @@ const chartComponentMap = {
  */
 const chartComponent = computed(() => chartComponentMap[analyzeStore.getChartType] || TableChart)
 
-const tableQueryModeLabel = computed(() => {
-  if (analyzeStore.getChartType !== 'table') return ''
-  return getTableQueryModeLabel(getTableQueryMode(xAxisFields.value, yAxisFields.value))
-})
-
 /**
  * @desc 图表开始渲染
  * @returns {void}
@@ -209,18 +200,4 @@ onUnmounted(() => {
 })
 </script>
 
-<style lang="scss" scoped>
-.chart__mode-label {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 2;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #606266;
-  font-size: 12px;
-  line-height: 20px;
-  padding: 0 8px;
-}
-</style>
+<style lang="scss" scoped></style>

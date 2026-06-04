@@ -101,5 +101,6 @@ const handleChangeAggregation = (aggregationType: AnalyzeConfigDao.OrderAggregat
   line-height: 1;
   padding: 0;
   white-space: nowrap;
+  margin-right: 10px;
 }
 </style>

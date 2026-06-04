@@ -1,5 +1,3 @@
-import { getTableQueryMode } from './tableQueryMode'
-
 type AnalyzeChartConfigValidationInput = {
   chartType?: AnalyzeStore.ChartType | string
   measures?: MeasureStore.MeasureOption[] | AnalyzeConfigDao.MeasureOption[]
@@ -38,17 +36,10 @@ export const validateAnalyzeChartConfig = (
   }
 
   switch (chartType) {
-    case 'table': {
-      const tableMode = getTableQueryMode(dimensions, measures)
-      if (tableMode === 'detail') {
-        return measures.length > 0
-          ? { valid: true, message: '' }
-          : { valid: false, message: `${chartName}明细模式至少需要一个值` }
-      }
+    case 'table':
       return measures.length > 0
         ? { valid: true, message: '' }
-        : { valid: false, message: `${chartName}聚合模式至少需要一个值` }
-    }
+        : { valid: false, message: `${chartName}至少需要一个值` }
     case 'interval':
     case 'line':
       return measures.length > 0 && dimensions.length > 0
