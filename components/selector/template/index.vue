@@ -28,7 +28,7 @@
       </template>
       <!-- 下拉内容 -->
       <div class="chart-selector-options">
-        <slot></slot>
+        <slot :close-popover="closePopover"></slot>
       </div>
     </el-popover>
   </client-only>
@@ -72,7 +72,7 @@ const orderStore = useOrdersStore()
 const measureStore = useMeasuresStore()
 const dimensionStore = useDimensionsStore()
 const isPopoverEnabled = computed(() => {
-  return ['order', 'filter'].includes(props.cast)
+  return ['measure', 'order', 'filter'].includes(props.cast)
 })
 /**
  * @desc 无效样式

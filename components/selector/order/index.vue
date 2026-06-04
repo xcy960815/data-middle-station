@@ -28,27 +28,22 @@
       />
     </template>
     <template #default>
-      <div
-        class="aggregation-option flex items-center cursor-pointer hover:bg-gray-100 py-1 justify-between px-2"
-        @click="handleClickOrderAggregation(orderAggregation.value as OrderStore.OrderAggregationsType)"
-        v-for="orderAggregation in filteredOrderAggregations"
-      >
-        <span class="text-xs">{{ orderAggregation.label }}</span>
-        <!-- 复现用户选择的聚合条件 -->
-        <icon-park
-          class="aggregation-mark text-xs"
-          type="correct"
-          size="14"
-          fill="#333"
-          v-if="orderAggregation.value === aggregationType"
-        />
-      </div>
+      <selector-aggregation
+        inline
+        :include-raw="true"
+        :column-type="order.columnType"
+        :aggregation-type="aggregationType"
+        tooltip="排序聚合方式"
+        empty-label="选择聚合"
+        @update:aggregation-type="handleClickOrderAggregation"
+      />
     </template>
   </selector-template>
 </template>
 
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
+import SelectorAggregation from '../aggregation/index.vue'
 const props = defineProps({
   name: {
     type: String,
@@ -87,74 +82,15 @@ const props = defineProps({
 
 const emits = defineEmits(['update:orderType', 'update:aggregationType', 'update:displayName'])
 
-// 排序方式
-const orderAggregations = ref([
-  {
-    label: '原始值',
-    value: 'raw'
-  },
-  {
-    label: '计数',
-    value: 'count'
-  },
-  {
-    label: '计数(去重)',
-    value: 'countDistinct'
-  },
-  {
-    label: '总计',
-    value: 'sum'
-  },
-  {
-    label: '平均',
-    value: 'avg'
-  },
-  {
-    label: '最大值',
-    value: 'max'
-  },
-  {
-    label: '最小值',
-    value: 'min'
-  }
-])
-
-/**
- * @desc 根据字段类型过滤聚合方式
- */
-const filteredOrderAggregations = computed(() => {
-  const type = props.order?.columnType?.toLowerCase() || ''
-
-  // 基础选项：原始值, 计数, 计数(去重)
-  const baseOptions = ['raw', 'count', 'countDistinct']
-
-  // 数值类型
-  const numericTypes = [
-    'int',
-    'integer',
-    'float',
-    'double',
-    'decimal',
-    'numeric',
-    'real',
-    'tinyint',
-    'smallint',
-    'bigint',
-    'number'
-  ]
-  if (numericTypes.some((t) => type.includes(t))) {
-    return orderAggregations.value
-  }
-
-  // 时间类型
-  const dateTypes = ['date', 'time', 'year']
-  if (dateTypes.some((t) => type.includes(t))) {
-    return orderAggregations.value.filter((item) => [...baseOptions, 'max', 'min'].includes(item.value))
-  }
-
-  // 其他类型（如字符串）仅展示基础选项
-  return orderAggregations.value.filter((item) => baseOptions.includes(item.value))
-})
+const aggregationLabelMap: Record<OrderStore.OrderAggregationsType, string> = {
+  raw: '原始值',
+  count: '计数',
+  countDistinct: '计数(去重)',
+  sum: '总计',
+  avg: '平均',
+  max: '最大值',
+  min: '最小值'
+}
 
 /**
  * @desc 点击排序的升降序
@@ -178,7 +114,7 @@ const handleClickOrderAggregation = (orderAggregationValue: OrderStore.OrderAggr
     emits('update:orderType', 'desc')
   }
   // 重新计算displayName
-  const currentDisplayName = orderAggregations.value.find((item) => item.value === orderAggregationValue)?.label
+  const currentDisplayName = aggregationLabelMap[orderAggregationValue]
   emits('update:displayName', `${currentDisplayName}(${props.name})`)
   selectorTemplateRef.value?.closePopover()
 }

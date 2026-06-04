@@ -33,11 +33,22 @@
           :invalidMessage="getMeasureInvalidMessage(measure)"
         >
           <template #order-icon>
-            <selector-measure-aggregation
+            <button
               v-if="isMeasureAggregationEnabled(measure)"
+              class="measure-aggregation-label mr-1"
+              type="button"
+              @mousedown.stop
+            >
+              {{ resolveMeasureAggregationLabel(measure) }}
+            </button>
+          </template>
+          <template #default="{ closePopover }">
+            <selector-aggregation
+              v-if="isMeasureAggregationEnabled(measure)"
+              inline
               :column-type="measure.columnType"
               :aggregation-type="resolveMeasureAggregationType(measure)"
-              @update:aggregation-type="handleChangeAggregationType(index, $event)"
+              @update:aggregation-type="handleChangeAggregationType(index, $event, closePopover)"
             />
           </template>
         </selector-measure>
@@ -102,7 +113,7 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
 import { defineAsyncComponent } from 'vue'
 import ContextMenu from '../../../../components/context-menu/index.vue'
-import SelectorMeasureAggregation from '../../../../components/selector/measure-aggregation/index.vue'
+import SelectorAggregation from '../../../../components/selector/aggregation/index.vue'
 import { clearAllHandler } from '../clearAll'
 import { moveFieldToMeasures, resolveDefaultMeasureAggregationType } from '../fieldTransfer'
 
@@ -168,13 +179,32 @@ const resolveMeasureAggregationType = (measure: MeasureStore.MeasureOption): Ana
   return resolveDefaultMeasureAggregationType(measure)
 }
 
-const handleChangeAggregationType = (index: number, aggregationType: AnalyzeConfigDao.OrderAggregationsType) => {
+const aggregationLabelMap: Record<AnalyzeConfigDao.OrderAggregationsType, string> = {
+  raw: '原始值',
+  count: '计数',
+  countDistinct: '计数(去重)',
+  sum: '总计',
+  avg: '平均',
+  max: '最大值',
+  min: '最小值'
+}
+
+const resolveMeasureAggregationLabel = (measure: MeasureStore.MeasureOption) => {
+  return aggregationLabelMap[resolveMeasureAggregationType(measure)] || '默认'
+}
+
+const handleChangeAggregationType = (
+  index: number,
+  aggregationType: AnalyzeConfigDao.OrderAggregationsType,
+  closePopover?: () => void
+) => {
   const measure = measures.value[index]
   if (!measure) return
   measureStore.updateMeasureByIndex(index, {
     ...measure,
     datasetAggregationType: aggregationType
   })
+  closePopover?.()
 }
 
 /**
@@ -422,6 +452,18 @@ const getColumnType = (col: ColumnsStore.ColumnOptions) => {
 </script>
 
 <style lang="scss" scoped>
+.measure-aggregation-label {
+  max-width: 48px;
+  border: 0;
+  background: transparent;
+  color: #606266;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
+  white-space: nowrap;
+}
+
 .measure {
   .measure__content {
     list-style: none;

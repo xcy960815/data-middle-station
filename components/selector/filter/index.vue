@@ -3,15 +3,15 @@
     <template #default>
       <!-- Step 1: 聚合方式列表 -->
       <template v-if="!aggregationType">
-        <div
-          class="aggregation-option flex items-center cursor-pointer hover:bg-gray-100 py-1 px-1 justify-between transition-colors"
-          @click="handleChangeAggregation(filterAggregation.value)"
-          v-for="filterAggregation in filterAggregations"
-          :key="filterAggregation.value"
-        >
-          <span class="text-xs">{{ filterAggregation.label }}</span>
-          <icon-park class="aggregation-mark text-xs" type="right" size="12" theme="outline" />
-        </div>
+        <selector-aggregation
+          inline
+          :include-raw="true"
+          :column-type="columnType"
+          :aggregation-type="aggregationType"
+          tooltip="筛选聚合方式"
+          empty-label="选择聚合"
+          @update:aggregation-type="handleChangeAggregation"
+        />
       </template>
 
       <!-- Step 2: 过滤条件设置 -->
@@ -54,6 +54,7 @@
 
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
+import SelectorAggregation from '../aggregation/index.vue'
 
 const props = defineProps({
   /**
@@ -101,44 +102,15 @@ const props = defineProps({
 })
 const emits = defineEmits(['update:filterType', 'update:filterValue', 'update:displayName', 'update:aggregationType'])
 
-/**
- * @desc 聚合方式
- */
-const filterAggregations = ref<
-  Array<{
-    label: string
-    value: FilterStore.FilterAggregationType
-  }>
->([
-  {
-    label: '原始值',
-    value: 'raw'
-  },
-  {
-    label: '计数',
-    value: 'count'
-  },
-  {
-    label: '计数(去重)',
-    value: 'countDistinct'
-  },
-  {
-    label: '总计',
-    value: 'sum'
-  },
-  {
-    label: '平均',
-    value: 'avg'
-  },
-  {
-    label: '最大值',
-    value: 'max'
-  },
-  {
-    label: '最小值',
-    value: 'min'
-  }
-])
+const aggregationLabelMap: Record<FilterStore.FilterAggregationType, string> = {
+  raw: '原始值',
+  count: '计数',
+  countDistinct: '计数(去重)',
+  sum: '总计',
+  avg: '平均',
+  max: '最大值',
+  min: '最小值'
+}
 
 /**
  * @desc 是否存在过滤值
@@ -166,7 +138,7 @@ const handleBackToStep1 = () => {
  * @desc 当前聚合方式的显示名称
  */
 const currentAggregationLabel = computed(() => {
-  return filterAggregations.value.find((item) => item.value === props.aggregationType)?.label || '选择聚合'
+  return aggregationLabelMap[props.aggregationType as FilterStore.FilterAggregationType] || '选择聚合'
 })
 
 /**

@@ -4,6 +4,9 @@
       <template #order-icon>
         <slot name="order-icon"></slot>
       </template>
+      <template #default="{ closePopover }">
+        <slot :close-popover="closePopover"></slot>
+      </template>
     </selector-template>
   </div>
   <!-- 字段的操作选项 -->
