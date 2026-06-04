@@ -2,25 +2,19 @@
   <NuxtLayout :name="layoutName">
     <template #header>
       <custom-header>
-        <template #chart-name>
-          <div class="dashboard-header-title">
-            <h4
-              class="dashboard-header-title__name"
-              :class="{ 'is-editable': editorMode }"
-              @click="handleUpdateDashboardName"
-            >
-              {{ dashboardForm.dashboardName || '未命名看板' }}
-              <span v-if="editorMode" class="dashboard-header-title__edit"><i class="icon-park-outline-edit"></i></span>
-            </h4>
-            <p
-              class="dashboard-header-title__desc"
-              :class="{ 'is-editable': editorMode }"
-              @click="handleUpdateDashboardDesc"
-            >
-              {{ dashboardForm.dashboardDesc || '暂无描述' }}
-              <span v-if="editorMode" class="dashboard-header-title__edit"><i class="icon-park-outline-edit"></i></span>
-            </p>
-          </div>
+        <template #title>
+          <HeaderTitle
+            v-model:title="dashboardForm.dashboardName"
+            v-model:desc="dashboardForm.dashboardDesc"
+            :editable="canEditDashboard"
+            title-prompt-title="编辑看板名称"
+            title-prompt-message="请输入看板名称"
+            desc-prompt-title="编辑看板描述"
+            desc-prompt-message="请输入看板描述"
+            title-fallback="未命名看板"
+            desc-fallback="暂无描述"
+            title-required-message="看板名称不能为空"
+          />
         </template>
         <template #header-right>
           <div class="dashboard-header-actions">
@@ -57,18 +51,6 @@
     <template #content>
       <div v-loading="detailLoading" class="dashboard-editor" :class="{ 'dashboard-editor--editing': editorMode }">
         <aside v-if="editorMode" class="dashboard-sidebar">
-          <div class="dashboard-sidebar__section">
-            <div class="dashboard-sidebar__title">看板信息</div>
-            <el-input v-model="dashboardForm.dashboardName" placeholder="看板名称" />
-            <el-input
-              v-model="dashboardForm.dashboardDesc"
-              class="dashboard-sidebar__desc"
-              type="textarea"
-              :rows="3"
-              placeholder="看板描述"
-            />
-          </div>
-
           <div class="dashboard-sidebar__section dashboard-sidebar__section--grow">
             <div class="dashboard-sidebar__title">分析列表</div>
             <el-input
@@ -226,6 +208,7 @@ import { httpRequest } from '@/composables/useHttpRequest'
 import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import HeaderTitle from '@/components/header-title/index.vue'
 import DashboardWidgetChart from './components/dashboard-widget-chart.vue'
 
 type DashboardWidgetState = DashboardDto.DashboardWidgetPayload & {
@@ -434,39 +417,6 @@ const handleCancelEditorMode = () => {
   void applyDashboardDetail(activeDashboard.value)
 }
 
-const handleUpdateDashboardName = () => {
-  if (!editorMode.value) return
-  ElMessageBox.prompt('请输入看板名称', '编辑看板名称', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{1,30}$/,
-    inputErrorMessage: '看板名称仅支持中英文、数字、下划线，且不能为空',
-    inputValue: dashboardForm.dashboardName || '未命名看板',
-    autofocus: true
-  }).then(({ value }) => {
-    const normalizedValue = value.trim()
-    if (!normalizedValue) {
-      ElMessage.error('看板名称不能为空')
-      return
-    }
-    dashboardForm.dashboardName = normalizedValue
-  })
-}
-
-const handleUpdateDashboardDesc = () => {
-  if (!editorMode.value) return
-  ElMessageBox.prompt('请输入看板描述', '编辑看板描述', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /^[\u4e00-\u9fa5_a-zA-Z0-9\s]{0,100}$/,
-    inputErrorMessage: '描述仅支持中英文、数字、下划线',
-    inputValue: dashboardForm.dashboardDesc || '',
-    autofocus: true
-  }).then(({ value }) => {
-    dashboardForm.dashboardDesc = value.trim()
-  })
-}
-
 const handleAnalyzeDragStart = (analyze: AnalyzeVo.AnalyzeListItem) => {
   draggingAnalyze.value = analyze
 }
@@ -540,16 +490,18 @@ const getNextWidgetPosition = () => {
 const buildWidgetAnalyzeDataParams = (
   chartConfig: AnalyzeConfigVo.ChartConfigResponse
 ): AnalyzeDataDto.AnalyzeDataQuery => {
+  const dataSource = chartConfig.dataSource
   const validation = validateAnalyzeChartConfig({
     chartType: chartConfig.chartType,
-    dataSource: chartConfig.dataSource,
+    dataSource,
     measures: chartConfig.measures || [],
     dimensions: chartConfig.dimensions || []
   })
   if (!validation.valid) throw new Error(validation.message)
+  if (!dataSource) throw new Error('分析数据源不存在')
 
   return {
-    dataSource: chartConfig.dataSource,
+    dataSource,
     filters: (chartConfig.filters || []).filter(
       (item) => item.aggregationType && (item.filterType || item.filterValue)
     ),
@@ -924,55 +876,6 @@ onUnmounted(() => {
   }
 }
 
-.dashboard-header-title {
-  display: flex;
-  min-width: 0;
-  max-width: 520px;
-  flex-direction: column;
-  align-items: center;
-  padding: 2px 0;
-}
-
-.dashboard-header-title__name {
-  display: flex;
-  max-width: 100%;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  overflow: hidden;
-  color: #303133;
-  font-size: 17px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  &.is-editable {
-    cursor: pointer;
-  }
-}
-
-.dashboard-header-title__desc {
-  display: flex;
-  max-width: 100%;
-  align-items: center;
-  gap: 6px;
-  margin: 2px 0 0;
-  overflow: hidden;
-  color: #606266;
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  &.is-editable {
-    cursor: pointer;
-  }
-}
-
-.dashboard-header-title__edit {
-  color: #909399;
-  font-size: 13px;
-}
-
 .dashboard-editor {
   display: flex;
   height: 100%;
@@ -1009,10 +912,6 @@ onUnmounted(() => {
   color: #303133;
   font-size: 14px;
   font-weight: 700;
-}
-
-.dashboard-sidebar__desc {
-  width: 100%;
 }
 
 .analyze-source-list {

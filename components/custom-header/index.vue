@@ -4,7 +4,7 @@
       <h4 class="app-name">{{ appName }}</h4>
     </div>
     <div class="flex-1 flex items-center justify-center">
-      <slot name="chart-name"></slot>
+      <slot name="title"></slot>
     </div>
     <header-right class="header-right w-[190px] flex items-center justify-between">
       <template #header-right>
@@ -63,41 +63,6 @@ const handleClickAppName = () => {
         }
         transition: color 0.3s ease;
       }
-    }
-  }
-
-  .chart-name {
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    position: relative;
-    padding: 0 4px;
-
-    @include theme.useTheme {
-      color: theme.getVar('textColor');
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, theme.getVar('primaryColor'), transparent);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    &:hover::after {
-      opacity: 1;
-    }
-
-    &:hover {
-      @include theme.useTheme {
-        color: theme.getVar('primaryColor');
-      }
-      transition: color 0.3s ease;
     }
   }
 

@@ -145,7 +145,7 @@
   图表配置保存需要额外确认弹窗，甚至 `Ctrl/Cmd+S` 也会弹确认；但分析名称和描述又是即时保存。
 - 证据：
   - `pages/analyze/components/bar/index.vue`
-  - `pages/analyze/components/chart-name/index.vue`
+  - `components/header-title/index.vue`
 - 风险说明：
   对重度用户而言，这会形成混乱的心智模型：哪些改动是本地态，哪些会立刻生效，哪些需要确认，并不清晰。
 - 建议动作：
@@ -260,7 +260,7 @@
 - `pages/analyze/index.vue`
 - `pages/analyze/components/analyze-card.vue`
 - `pages/analyze/components/bar/index.vue`
-- `pages/analyze/components/chart-name/index.vue`
+- `components/header-title/index.vue`
 - `pages/analyze/useAnalyzeDataHandler.ts`
 - `nuxt.config.ts`
 - `utils/markdown.ts`
