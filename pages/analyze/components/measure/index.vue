@@ -386,8 +386,6 @@ const handleConfirmCustomColumn = () => {
   // 自动添加到值区域
   addMeasure({
     ...newColumn,
-    __invalid: false,
-    __invalidMessage: '',
     fixed: null,
     align: null,
     width: null,

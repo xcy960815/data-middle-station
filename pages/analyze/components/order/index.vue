@@ -24,8 +24,8 @@
           :index="index"
           v-model:aggregationType="orderOptions.aggregationType"
           :order="orderOptions"
-          :invalid="orderOptions.__invalid"
-          :invalidMessage="orderOptions.__invalidMessage"
+          :invalid="getOrderInvalid(orderOptions)"
+          :invalidMessage="getOrderInvalidMessage(orderOptions)"
         ></selector-order>
       </div>
     </div>
@@ -41,6 +41,26 @@ const orderStore = useOrdersStore()
  * @desc orderList
  */
 const orderList = computed<OrderStore.OrderOption[]>(() => orderStore.getOrders)
+
+const orderColumnCountMap = computed(() => {
+  return orderList.value.reduce<Record<string, number>>((countMap, item) => {
+    if (!item.columnName) return countMap
+    countMap[item.columnName] = (countMap[item.columnName] || 0) + 1
+    return countMap
+  }, {})
+})
+
+const getOrderInvalid = (order: OrderStore.OrderOption) => {
+  return getOrderInvalidMessage(order) !== ''
+}
+
+const getOrderInvalidMessage = (order: OrderStore.OrderOption) => {
+  if (!order.columnName) return ''
+  if ((orderColumnCountMap.value[order.columnName] || 0) > 1) {
+    return '该排序已存在'
+  }
+  return ''
+}
 
 /**
  * @desc addOrder
@@ -119,12 +139,6 @@ const dropHandler = (dragEvent: DragEvent) => {
     // 默认降序
     orderType: 'desc',
     aggregationType: data.value.datasetAggregationType || (data.value.datasetFieldType === 'metric' ? 'sum' : 'count')
-  }
-  const isSelected = orderStore.getOrders.find((item) => item.columnName === orderOption.columnName)
-  if (isSelected) {
-    // TODO 提示用户已经选中了
-    orderOption.__invalid = true
-    orderOption.__invalidMessage = '该排序已存在'
   }
   switch (data.from) {
     case 'orders': {

@@ -10,9 +10,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 值/度量配置选项
    */
-  type MeasureOption = DatabaseVo.TableColumnItem & {
-    __invalid?: boolean
-  }
+  type MeasureOption = DatabaseVo.TableColumnItem
 
   /**
    * 过滤聚合方式枚举
@@ -44,9 +42,7 @@ declare namespace AnalyzeConfigVo {
   /**
    * 分组配置选项
    */
-  type DimensionOption = DatabaseVo.TableColumnItem & {
-    __invalid?: boolean
-  }
+  type DimensionOption = DatabaseVo.TableColumnItem
 
   /**
    * 排序类型枚举

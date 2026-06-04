@@ -33,8 +33,6 @@ declare namespace OrderStore {
   type OrderOption = ColumnsStore.ColumnOptions & {
     orderType: OrderType
     aggregationType?: OrderAggregationsType
-    __invalid?: boolean | null
-    __invalidMessage?: string | null
   }
 
   /**
