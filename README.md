@@ -227,8 +227,8 @@ pnpm run version:major
 
 ## 许可证
 
-[添加许可证信息]
+MIT License. 详见仓库根目录 `LICENSE` 文件。
 
 ## 联系方式
 
-[添加联系方式]
+如有问题或建议，请通过 GitHub Issues 提交，或发送邮件至：xuchongyu668@gmail.com。
