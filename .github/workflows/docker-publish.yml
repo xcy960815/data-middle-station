@@ -17,16 +17,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          # 降低多架构并发 push 时 Docker Hub 出现 blob unknown 的概率
-          buildkitd-config-inline: |
-            [worker.oci]
-              max-parallelism = 1
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -50,7 +42,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          # 生产宿主机为 x86 小主机，默认只发布 amd64，避免 arm64 QEMU 构建拖慢 tag 发布。
+          platforms: linux/amd64
           # 避免 attestations 额外 manifest 导致部分 registry 推送异常
           provenance: false
           sbom: false

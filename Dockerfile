@@ -63,5 +63,5 @@ CMD ["pm2-runtime", "start", "ecosystem.config.js", "--env", "prod"]
 
 # 1. 构建镜像
 # docker build -t xcy960815/data-middle-station:1.0 .
-# 2. 构建多平台
-# docker buildx build --platform linux/amd64,linux/arm64 -t xcy960815/data-middle-station:1.1 --push .
+# 2. 构建并推送当前生产宿主机使用的 amd64 镜像
+# docker buildx build --platform linux/amd64 -t xcy960815/data-middle-station:1.1 --push .

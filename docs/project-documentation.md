@@ -367,9 +367,13 @@ module.exports = {
 - `env/.env.pre.example`
 - `env/.env.prod.example`
 
-### 多平台构建 (Multi-Platform Build)
+### Docker 镜像发布架构
 
-项目支持构建多平台 Docker 镜像 (linux/amd64, linux/arm64)。
+当前生产宿主机是 x86 小主机，GitHub Actions 默认只发布 `linux/amd64` 镜像。
+
+这样可以避免在 `ubuntu-latest` x86 Runner 上通过 QEMU 模拟构建 `linux/arm64`，也不再需要为规避 Docker Hub 多架构 push 的 `blob unknown` 问题强制串行 BuildKit。tag 发布的墙钟时间主要回到单次 amd64 Docker 构建、Nuxt SSR 生产构建、缓存写入和 Docker Hub 推送。
+
+如果后续确实需要支持 ARM 设备，应优先使用 amd64 与 arm64 分 job 构建，再合并 manifest；不要直接恢复单 job 的 QEMU 双架构串行构建，除非可以接受明显更长的发布时间。
 
 **前提条件:**
 
@@ -379,17 +383,8 @@ module.exports = {
 **使用方法:**
 
 ```bash
-# 使用 npm script (推荐)
-npm run docker:build:multi
-
-# 或者直接运行脚本
-./build-multi-arch.sh
-
-# 构建并推送到仓库
-./build-multi-arch.sh --push
-
-# 指定标签和平台
-./build-multi-arch.sh -t 1.0.0 -p linux/amd64
+# 构建并推送 amd64 镜像
+docker buildx build --platform linux/amd64 -t xcy960815/data-middle-station:1.0.0 --push .
 ```
 
 ## 开发指南
