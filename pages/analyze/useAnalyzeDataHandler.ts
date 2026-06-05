@@ -43,7 +43,7 @@ export const useAnalyzeDataHandler = () => {
   // ---------- 查询参数 ----------
   const queryAnalyzeDataParams = computed(() => {
     const baseFilters = filterStore.getFilters.filter(
-      (item) => item.aggregationType && (item.filterType || item.filterValue)
+      (item) => item.condition.aggregation && (item.condition.operator || item.condition.operand)
     )
     const dimensions = currentDrillDimension.value ? [currentDrillDimension.value] : []
     const activeOrderColumnNames = new Set([

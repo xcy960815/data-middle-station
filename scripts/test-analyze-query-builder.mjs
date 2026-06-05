@@ -147,17 +147,21 @@ const aggregateQuery = builder.buildAnalyzeDataQuery(
         columnType: 'varchar',
         columnComment: '状态',
         displayName: '状态',
-        aggregationType: 'raw',
-        filterType: 'eq',
-        filterValue: 'paid'
+        condition: {
+          aggregation: 'raw',
+          operator: 'eq',
+          operand: 'paid'
+        }
       },
       {
         columnName: 'salesAmount',
         columnType: 'decimal',
         columnComment: '销售额',
         displayName: '销售额',
-        filterType: 'gt',
-        filterValue: '1000'
+        condition: {
+          operator: 'gt',
+          operand: '1000'
+        }
       }
     ],
     orders: [
@@ -214,9 +218,11 @@ const detailQuery = builder.buildAnalyzeDataQuery(
         columnType: 'varchar',
         columnComment: '区域',
         displayName: '区域',
-        aggregationType: 'raw',
-        filterType: 'like',
-        filterValue: 'East'
+        condition: {
+          aggregation: 'raw',
+          operator: 'like',
+          operand: 'East'
+        }
       }
     ],
     orders: [
@@ -276,18 +282,22 @@ const drillRollupQuery = builder.buildAnalyzeDataQuery(
         columnType: 'datetime',
         columnComment: '创建时间',
         displayName: '创建时间',
-        aggregationType: 'raw',
-        filterType: 'eq',
-        filterValue: '2026-06-04 00:00:00'
+        condition: {
+          aggregation: 'raw',
+          operator: 'eq',
+          operand: '2026-06-04 00:00:00'
+        }
       },
       {
         columnName: 'status',
         columnType: 'varchar',
         columnComment: '状态',
         displayName: '状态',
-        aggregationType: 'raw',
-        filterType: 'eq',
-        filterValue: 'paid'
+        condition: {
+          aggregation: 'raw',
+          operator: 'eq',
+          operand: 'paid'
+        }
       }
     ]
   },

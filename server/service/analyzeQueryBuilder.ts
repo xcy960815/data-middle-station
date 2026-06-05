@@ -556,17 +556,18 @@ export class AnalyzeQueryBuilder {
     )
 
     filterOptions.forEach((filterOption) => {
-      if (!filterOption.filterType) return
+      const { condition } = filterOption
+      if (!condition.operator) return
 
-      const normalizedFilterType = String(filterOption.filterType).trim().toLowerCase()
+      const normalizedFilterType = String(condition.operator).trim().toLowerCase()
       const operator = FILTER_OPERATOR_MAP[normalizedFilterType]
       if (!operator) {
-        throw new Error(`不支持的筛选操作: ${filterOption.filterType}`)
+        throw new Error(`不支持的筛选操作: ${condition.operator}`)
       }
 
       const columnName = this.normalizeIdentifier(filterOption.columnName, '字段')
       const columnExpression = this.resolveExpression(filterOption, context)
-      const configuredAggregationType = String(filterOption.aggregationType || '').toLowerCase()
+      const configuredAggregationType = String(condition.aggregation || '').toLowerCase()
       const aggregationType =
         configuredAggregationType ||
         (hasGroupBy && !dimensionColumnSet.has(columnName) ? this.resolveMeasureAggregationType(filterOption) : 'raw')
@@ -588,18 +589,18 @@ export class AnalyzeQueryBuilder {
         return
       }
 
-      if (typeof filterOption.filterValue === 'undefined' || filterOption.filterValue === '') {
+      if (typeof condition.operand === 'undefined' || condition.operand === '') {
         return
       }
 
       if (operator === 'LIKE' || operator === 'NOT LIKE') {
         targetClauseParts.push(`${filterExpression} ${operator} ?`)
-        targetParams.push(`%${filterOption.filterValue}%`)
+        targetParams.push(`%${condition.operand}%`)
         return
       }
 
       targetClauseParts.push(`${filterExpression} ${operator} ?`)
-      targetParams.push(filterOption.filterValue)
+      targetParams.push(condition.operand)
     })
 
     return {

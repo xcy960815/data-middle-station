@@ -26,9 +26,11 @@ export const useAnalyzeDrill = () => {
   const drillFilters = computed<FilterStore.FilterOption[]>(() => {
     return drillPath.value.map((item) => ({
       ...JSON.parse(JSON.stringify(item.dimension)),
-      aggregationType: 'raw',
-      filterType: 'eq',
-      filterValue: item.value == null ? '' : String(item.value),
+      condition: {
+        aggregation: 'raw',
+        operator: 'eq',
+        operand: item.value == null ? '' : String(item.value)
+      },
       displayName: item.dimension.displayName || item.dimension.columnComment || item.dimension.columnName || '钻取路径'
     }))
   })

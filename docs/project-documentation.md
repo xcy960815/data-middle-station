@@ -265,6 +265,34 @@ CREATE TABLE `analyze_config` (
 ) ENGINE=InnoDB COMMENT='分析配置历史版本表';
 ```
 
+`filters` 和 `orders` 的每个条目都保留字段元信息，并把行为规则收进专门对象：
+
+```json
+{
+  "filters": [
+    {
+      "columnName": "status",
+      "displayName": "状态",
+      "condition": {
+        "operator": "eq",
+        "operand": "paid",
+        "aggregation": "raw"
+      }
+    }
+  ],
+  "orders": [
+    {
+      "columnName": "sales_amount",
+      "displayName": "销售额",
+      "sort": {
+        "direction": "desc",
+        "aggregation": "sum"
+      }
+    }
+  ]
+}
+```
+
 #### 3. scheduled_email_tasks (定时邮件任务表)
 
 管理定时邮件发送任务。

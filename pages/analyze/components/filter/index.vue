@@ -44,14 +44,14 @@
               @click="handleSelectAggregation(item, option.value)"
             >
               {{ option.label }}
-              <span v-if="item.aggregationType === option.value" class="filter-panel__checked">✓</span>
+              <span v-if="item.condition.aggregation === option.value" class="filter-panel__checked">✓</span>
             </context-menu-item>
           </template>
           <template #where-panel="{ closePopover }">
             <div class="filter-panel w-[220px]">
               <el-form label-position="top" size="small" class="filter-panel__form">
                 <el-form-item label="条件">
-                  <el-select v-model="item.filterType" placeholder="请选择条件" class="w-full">
+                  <el-select v-model="item.condition.operator" placeholder="请选择条件" class="w-full">
                     <el-option
                       v-for="option in getFilterOptions(item.columnType)"
                       :key="option.value"
@@ -63,7 +63,7 @@
                 <el-form-item v-if="hasFilterValue(item)" label="值">
                   <el-date-picker
                     v-if="isDateColumn(item)"
-                    v-model="item.filterValue"
+                    v-model="item.condition.operand"
                     type="datetime"
                     placeholder="请选择日期时间"
                     class="w-full"
@@ -72,7 +72,7 @@
                   />
                   <el-input
                     v-else
-                    v-model="item.filterValue"
+                    v-model="item.condition.operand"
                     :placeholder="isNumberColumn(item) ? '请输入数值' : '请输入值'"
                     clearable
                   />
@@ -91,6 +91,7 @@
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
 import { FILTER_TYPE_MAP } from '@/shared/domainTypes'
+import { createDefaultFilterCondition } from '@/shared/filterCondition'
 import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
 import { clearAllHandler } from '../clearAll'
 
@@ -137,7 +138,7 @@ const resolveFilterDisplayName = (item: FilterStore.FilterOption) => {
 }
 
 const resolveFilterAggregationLabel = (item: FilterStore.FilterOption) => {
-  return getOrderAggregationLabel(item.aggregationType)
+  return getOrderAggregationLabel(item.condition.aggregation)
 }
 
 const syncFilterDisplayName = (item: FilterStore.FilterOption) => {
@@ -209,17 +210,19 @@ const getFilterOptions = (columnType = ''): FilterOptionItem[] => {
 }
 
 const hasFilterValue = (item: FilterStore.FilterOption) => {
-  const currentFilterOption = getFilterOptions(item.columnType).find((option) => option.value === item.filterType)
+  const currentFilterOption = getFilterOptions(item.columnType).find(
+    (option) => option.value === item.condition.operator
+  )
   if (!currentFilterOption) return false
   return !['为空', '不为空'].includes(currentFilterOption.label)
 }
 
 const handlePrepareWherePanel = (item: FilterStore.FilterOption) => {
-  if (!item.aggregationType) {
-    item.aggregationType = 'raw'
+  if (!item.condition.aggregation) {
+    item.condition.aggregation = 'raw'
   }
-  if (!item.filterType) {
-    item.filterType = getFilterOptions(item.columnType)[0]?.value
+  if (!item.condition.operator) {
+    item.condition.operator = getFilterOptions(item.columnType)[0]?.value
   }
 }
 
@@ -227,16 +230,16 @@ const handleSelectAggregation = (
   item: FilterStore.FilterOption,
   aggregationType: FilterStore.FilterAggregationType
 ) => {
-  item.aggregationType = aggregationType
+  item.condition.aggregation = aggregationType
   syncFilterDisplayName(item)
 }
 
 const handleConfirm = (item: FilterStore.FilterOption, closePopover?: () => void) => {
-  if (!item.filterType) {
+  if (!item.condition.operator) {
     ElMessage.warning('请选择筛选条件')
     return
   }
-  if (hasFilterValue(item) && !String(item.filterValue || '').trim()) {
+  if (hasFilterValue(item) && !String(item.condition.operand || '').trim()) {
     ElMessage.warning('请输入筛选值')
     return
   }
@@ -301,8 +304,7 @@ const dropHandler = (dragEvent: DragEvent) => {
     default: {
       const filterOption: FilterStore.FilterOption = {
         ...filter,
-        aggregationType: 'raw',
-        filterValue: filter.filterValue || ''
+        condition: createDefaultFilterCondition()
       }
       syncFilterDisplayName(filterOption)
       addFilter(filterOption)

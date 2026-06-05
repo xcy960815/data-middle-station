@@ -47,17 +47,9 @@ declare namespace AnalyzeConfigDao {
    */
   type FilterOption = ColumnItem & {
     /**
-     * 过滤类型
+     * 过滤条件：操作符 + 操作数 + 聚合方式
      */
-    filterType?: FilterType
-    /**
-     * 过滤值
-     */
-    filterValue?: string
-    /**
-     * 聚合方式
-     */
-    aggregationType: FilterAggregationsType
+    condition: import('@/shared/filterCondition').FilterConditionRule
   }
 
   /**

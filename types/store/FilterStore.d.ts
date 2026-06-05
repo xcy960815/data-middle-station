@@ -31,13 +31,11 @@ declare namespace FilterStore {
    * @desc 过滤器选项
    */
   type FilterOption = ColumnsStore.ColumnOptions & {
-    filterType?: FilterType
-    filterValue?: string
     displayName?: string
     /**
-     * 聚合方式
+     * 过滤条件：操作符 + 操作数 + 聚合方式
      */
-    aggregationType: FilterAggregationType
+    condition: import('@/shared/filterCondition').FilterConditionRule
   }
 
   /**
