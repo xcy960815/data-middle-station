@@ -484,7 +484,7 @@ const buildWidgetAnalyzeDataParams = (
     filters: (chartConfig.filters || []).filter(
       (item) => item.aggregationType && (item.filterType || item.filterValue)
     ),
-    orders: (chartConfig.orders || []).filter((item) => item.aggregationType || item.orderType),
+    orders: (chartConfig.orders || []).filter((item) => item.sort.direction),
     dimensions: chartConfig.dimensions || [],
     measures: chartConfig.measures || [],
     commonChartConfig: chartConfig.commonChartConfig

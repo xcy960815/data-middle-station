@@ -238,7 +238,7 @@ CREATE TABLE `analyze` (
 
 #### 2. analyze_config (分析配置历史版本表)
 
-存储分析图表的版本化配置。`analyze.current_config_id` 指向当前生效版本。数据来源模式不单独建列，保存在 `common_chart_config.dataSourceMode`、`common_chart_config.datasetId`、`common_chart_config.datasetName` 中；`data_source` 始终保存最终用于查询的物理表名。
+存储分析图表的版本化配置。`analyze.current_config_id` 指向当前生效版本。数据来源模式不单独建列，保存在 `common_chart_config.dataSourceMode`、`common_chart_config.datasetId`、`common_chart_config.datasetName` 中；`data_source` 始终保存最终用于查询的物理表名。左侧候选字段 `columns` 只作为分析编辑器运行态，不写入分析配置历史。
 
 ```sql
 CREATE TABLE `analyze_config` (
@@ -246,7 +246,6 @@ CREATE TABLE `analyze_config` (
   `analyze_id` bigint unsigned NOT NULL COMMENT '分析ID',
   `version_no` int unsigned NOT NULL COMMENT '版本号',
   `data_source` varchar(100) DEFAULT NULL COMMENT '数据源表名',
-  `columns` json DEFAULT NULL COMMENT '列配置(JSON格式)',
   `measures` json DEFAULT NULL COMMENT '值/指标配置(JSON格式)',
   `filters` json DEFAULT NULL COMMENT '过滤条件(JSON格式)',
   `dimensions` json DEFAULT NULL COMMENT '分组/维度配置(JSON格式)',

@@ -87,13 +87,9 @@ declare namespace AnalyzeConfigDao {
    */
   type OrderOption = ColumnItem & {
     /**
-     * 排序类型
+     * 排序规则：方向 + 聚合方式
      */
-    orderType: OrderType
-    /**
-     * 聚合方式；未显式选择时由查询构建器按字段类型推断
-     */
-    aggregationType?: OrderAggregationsType
+    sort: import('@/shared/orderSort').OrderSortRule
   }
 
   /**

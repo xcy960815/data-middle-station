@@ -56,7 +56,7 @@ export const useAnalyzeDataHandler = () => {
       // 过滤掉未完成的聚合条件
       filters: [...baseFilters, ...drillFilters.value],
       orders: orderStore.getOrders.filter(
-        (item) => (item.aggregationType || item.orderType) && activeOrderColumnNames.has(item.columnName)
+        (item) => item.sort?.direction && activeOrderColumnNames.has(item.columnName)
       ),
       dimensions,
       measures: measureStore.getMeasures,

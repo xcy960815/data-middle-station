@@ -640,14 +640,15 @@ export class AnalyzeQueryBuilder {
     )
     const orderClause = orderOptions
       .map((orderOption) => {
-        const direction = ORDER_TYPE_MAP[String(orderOption.orderType || '').toLowerCase()]
+        const sort = orderOption.sort
+        const direction = ORDER_TYPE_MAP[String(sort.direction || '').toLowerCase()]
         if (!direction) {
-          throw new Error(`不支持的排序方向: ${orderOption.orderType}`)
+          throw new Error(`不支持的排序方向: ${sort.direction}`)
         }
 
         const columnName = this.normalizeIdentifier(orderOption.columnName, '字段')
         const columnExpression = this.resolveExpression(orderOption, context)
-        const configuredAggregationType = String(orderOption.aggregationType || '').toLowerCase()
+        const configuredAggregationType = String(sort.aggregation || '').toLowerCase()
 
         if (!hasGroupBy) {
           return `${columnExpression} ${direction}`

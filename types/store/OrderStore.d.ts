@@ -31,8 +31,7 @@ declare namespace OrderStore {
    * @property {string} type 列类型
    */
   type OrderOption = ColumnsStore.ColumnOptions & {
-    orderType: OrderType
-    aggregationType?: OrderAggregationsType
+    sort: import('@/shared/orderSort').OrderSortRule
   }
 
   /**

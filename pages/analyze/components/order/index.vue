@@ -31,7 +31,7 @@
           <template #order-direction>
             <icon-park
               class="chart-selector-direction-icon"
-              v-if="orderOptions.orderType === 'asc'"
+              v-if="orderOptions.sort.direction === 'asc'"
               type="arrow-circle-down"
               size="14"
               fill="#333"
@@ -55,7 +55,7 @@
               @click="handleSelectAggregation(orderOptions, option.value)"
             >
               {{ option.label }}
-              <span v-if="orderOptions.aggregationType === option.value" class="order-panel__checked">✓</span>
+              <span v-if="orderOptions.sort.aggregation === option.value" class="order-panel__checked">✓</span>
             </context-menu-item>
           </template>
         </selector-order>
@@ -67,6 +67,7 @@
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
+import { createDefaultOrderSort } from '@/shared/orderSort'
 
 const { clearAll, hasClearAll } = clearAllHandler()
 
@@ -87,7 +88,7 @@ const resolveOrderDisplayName = (order: OrderStore.OrderOption) => {
 }
 
 const resolveOrderAggregationLabel = (order: OrderStore.OrderOption) => {
-  return getOrderAggregationLabel(order.aggregationType)
+  return getOrderAggregationLabel(order.sort.aggregation)
 }
 
 const syncOrderDisplayName = (order: OrderStore.OrderOption) => {
@@ -107,15 +108,15 @@ const getOrderInvalidMessage = (order: OrderStore.OrderOption) => {
 }
 
 const handleToggleDirection = (order: OrderStore.OrderOption) => {
-  order.orderType = order.orderType === 'desc' ? 'asc' : 'desc'
-  order.aggregationType = 'raw'
+  order.sort.direction = order.sort.direction === 'desc' ? 'asc' : 'desc'
+  order.sort.aggregation = 'raw'
   syncOrderDisplayName(order)
 }
 
 const handleSelectAggregation = (order: OrderStore.OrderOption, aggregationType: OrderStore.OrderAggregationsType) => {
-  order.aggregationType = aggregationType
-  if (!order.orderType) {
-    order.orderType = 'desc'
+  order.sort.aggregation = aggregationType
+  if (!order.sort.direction) {
+    order.sort.direction = 'desc'
   }
   syncOrderDisplayName(order)
 }
@@ -165,8 +166,7 @@ const dropHandler = (dragEvent: DragEvent) => {
 
   const orderOption: OrderStore.OrderOption = {
     ...data.value,
-    orderType: 'desc',
-    aggregationType: 'raw'
+    sort: createDefaultOrderSort()
   }
   syncOrderDisplayName(orderOption)
 

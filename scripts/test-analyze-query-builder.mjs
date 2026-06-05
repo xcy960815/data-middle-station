@@ -166,15 +166,20 @@ const aggregateQuery = builder.buildAnalyzeDataQuery(
         columnType: 'datetime',
         columnComment: '创建时间',
         displayName: '创建时间',
-        orderType: 'asc',
-        aggregationType: 'raw'
+        sort: {
+          direction: 'asc',
+          aggregation: 'raw'
+        }
       },
       {
         columnName: 'salesAmount',
         columnType: 'decimal',
         columnComment: '销售额',
         displayName: '销售额',
-        orderType: 'desc'
+        sort: {
+          direction: 'desc',
+          aggregation: 'sum'
+        }
       }
     ]
   },
@@ -220,7 +225,10 @@ const detailQuery = builder.buildAnalyzeDataQuery(
         columnType: 'datetime',
         columnComment: '创建时间',
         displayName: '创建时间',
-        orderType: 'desc'
+        sort: {
+          direction: 'desc',
+          aggregation: 'raw'
+        }
       }
     ],
     commonChartConfig: {
@@ -368,8 +376,10 @@ assert.throws(
             columnType: 'decimal',
             columnComment: '销售额',
             displayName: '销售额',
-            orderType: 'desc',
-            aggregationType: 'raw'
+            sort: {
+              direction: 'desc',
+              aggregation: 'raw'
+            }
           }
         ]
       },
