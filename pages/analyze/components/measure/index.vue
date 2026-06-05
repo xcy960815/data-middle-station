@@ -25,8 +25,6 @@
       >
         <selector-measure
           class="measure__item__name"
-          cast="measure"
-          :columnName="measure.columnName"
           :displayName="measure.displayName"
           :measure="measure"
           :index="index"

@@ -30,8 +30,6 @@
               'dimension__item__name--path': drillEnabled && getDrillLevelState(index) === 'path'
             }
           ]"
-          cast="dimension"
-          :columnName="item.columnName"
           :displayName="getDimensionDisplayName(item, index)"
           :dimension="item"
           :index="index"

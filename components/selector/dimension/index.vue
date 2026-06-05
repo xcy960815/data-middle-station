@@ -1,6 +1,12 @@
 <template>
-  <div class="dimension-selector" @contextmenu="contextmenuHandler">
-    <selector-template v-bind="$attrs" :index="props.index">
+  <div class="dimension-selector" :class="$attrs.class" @contextmenu="contextmenuHandler">
+    <selector-template
+      :index="props.index"
+      cast="dimension"
+      :display-name="props.displayName"
+      :invalid="props.invalid"
+      :invalid-message="props.invalidMessage"
+    >
       <template #prefix-icon>
         <slot name="prefix-icon"></slot>
       </template>
@@ -83,6 +89,18 @@ const props = defineProps({
   index: {
     type: Number,
     default: null
+  },
+  displayName: {
+    type: String,
+    default: ''
+  },
+  invalid: {
+    type: Boolean,
+    default: false
+  },
+  invalidMessage: {
+    type: String,
+    default: ''
   },
   dimension: {
     type: Object as PropType<DimensionStore.DimensionOption>,

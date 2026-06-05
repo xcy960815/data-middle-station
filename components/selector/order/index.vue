@@ -1,6 +1,12 @@
 <template>
-  <div class="order-selector">
-    <selector-template v-bind="$attrs" :index="props.index">
+  <div class="order-selector" :class="$attrs.class">
+    <selector-template
+      :index="props.index"
+      cast="order"
+      :display-name="props.displayName"
+      :invalid="props.invalid"
+      :invalid-message="props.invalidMessage"
+    >
       <template #order-aggregation>
         <span class="chart-selector-aggregation-trigger" @contextmenu="contextmenuHandler">
           <slot name="order-aggregation"></slot>
@@ -27,6 +33,18 @@ const props = defineProps({
   index: {
     type: Number,
     default: null
+  },
+  displayName: {
+    type: String,
+    default: ''
+  },
+  invalid: {
+    type: Boolean,
+    default: false
+  },
+  invalidMessage: {
+    type: String,
+    default: ''
   },
   order: {
     type: Object as PropType<OrderStore.OrderOption>,

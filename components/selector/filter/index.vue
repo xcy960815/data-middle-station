@@ -1,6 +1,6 @@
 <template>
-  <div class="filter-selector">
-    <selector-template v-bind="$attrs" :index="props.index">
+  <div class="filter-selector" :class="$attrs.class">
+    <selector-template :index="props.index" cast="filter" :display-name="props.displayName">
       <template #filter-aggregation>
         <span class="chart-selector-aggregation-trigger" @contextmenu="aggregationContextmenuHandler">
           <slot name="filter-aggregation"></slot>
@@ -45,6 +45,10 @@ const props = defineProps({
   index: {
     type: Number,
     default: null
+  },
+  displayName: {
+    type: String,
+    default: ''
   },
   filter: {
     type: Object as PropType<FilterStore.FilterOption>,

@@ -24,8 +24,6 @@
       >
         <selector-filter
           class="filter__item__name"
-          cast="filter"
-          :columnName="item.columnName"
           :displayName="resolveFilterDisplayName(item)"
           :filter="item"
           :index="index"

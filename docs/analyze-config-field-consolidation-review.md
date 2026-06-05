@@ -103,6 +103,7 @@ type OrderOption = ColumnItem & {
 - Store action、组件事件、service 入参是否有重复中转。
 - 类型声明是否可以直接引用 shared 类型，而不是在 dao / vo / store 多处重复定义同名结构。
 - 已删除 `scripts/` 后，package、docs、CI 是否还有失效命令或说明。
+- 追求最优实现时也要保持代码清晰明了；不要为了“更通用”引入难读的抽象、隐式约定或过深的调用链。
 
 ### 4. 是否破坏功能
 
@@ -157,14 +158,28 @@ type OrderOption = ColumnItem & {
 - 如果一个文件只为绕开循环依赖或路径引用而存在，应重新评估是不是抽象过度。
 - 文件名要体现业务对象，例如 `orderSort.ts`、`filterCondition.ts`、`measureConfig.ts`、`dimensionGrouping.ts`，避免 `common.ts`、`helper.ts` 这种含义过宽的名字继续膨胀。
 
+### 11. Selector Template 交互是否一致
+
+- `selector-template` 应只负责通用外观、字段名称、无效态、删除按钮和基础弹层承载，不要直接理解排序、过滤、值、分组的业务细节。
+- `selector-measure / selector-dimension / selector-filter / selector-order` 应作为各领域 wrapper，负责各自右键菜单、弹层和业务事件。
+- 四个 wrapper 使用 `selector-template` 时要保持一致：`displayName / cast / invalid / invalidMessage / index` 必须通过显式 props 和显式传参进入 template，不要藏在 `$attrs` 里。
+- wrapper 组件应设置 `inheritAttrs: false`；`$attrs` 只用于处理 `class` 这类非业务属性，不要用 `v-bind="$attrs"` 宽泛转发核心参数。
+- `cast` 当前用于删除逻辑和默认无效提示；如果后续 wrapper 自己承担删除，应评估是否还能移除 template 对 store 的直接依赖。
+- 插槽命名要能表达位置和用途：`measure-suffix / order-aggregation / order-direction / filter-action / prefix-icon`，避免同一个插槽在不同领域承担不同含义。
+- 交互入口要一致：点击用于打开普通选择弹层，右键用于上下文菜单；如果某个标签只能右键操作，应考虑 cursor 和 tooltip 是否能让用户理解。
+- 删除、无效提示、聚合标签、方向图标、过滤图标都应保持固定尺寸，避免字段名过长时挤压或换行。
+- `chart-selector-container` 的高度、间距、ellipsis 和 trailing 区域要覆盖四种区域，不应让某个区域单独写一套外观。
+- 弹层关闭职责要清楚：template 只暴露 `closePopover`，具体选择成功后由调用方决定是否关闭。
+
 ## 建议的 Review 路径
 
 1. 从类型开始看：`types/domain/dao`、`types/domain/vo`、`types/store`、`shared/*`。
 2. 再看字段创建入口：`pages/analyze/components/fieldTransfer.ts`。
 3. 再看 4 个配置组件：`measure / dimension / filter / order`。
-4. 再看请求组装：`pages/analyze/useAnalyzeDataHandler.ts`、看板相关配置读取。
-5. 最后看服务端查询：`server/service/analyzeQueryBuilder.ts`。
-6. 对照 `sql/data_middle_station.sql` 和 `docs/project-documentation.md`，确认数据结构一致。
+4. 再看 selector 交互：`components/selector/template` 和 `components/selector/{measure,dimension,filter,order}`。
+5. 再看请求组装：`pages/analyze/useAnalyzeDataHandler.ts`、看板相关配置读取。
+6. 最后看服务端查询：`server/service/analyzeQueryBuilder.ts`。
+7. 对照 `sql/data_middle_station.sql` 和 `docs/project-documentation.md`，确认数据结构一致。
 
 ## 当前已知取舍
 

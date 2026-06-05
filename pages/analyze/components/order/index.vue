@@ -17,8 +17,6 @@
       >
         <selector-order
           class="order__item__name"
-          cast="order"
-          :columnName="orderOptions.columnName"
           :displayName="resolveOrderDisplayName(orderOptions)"
           :order="orderOptions"
           :index="index"

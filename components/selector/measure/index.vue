@@ -1,6 +1,12 @@
 <template>
-  <div class="measure-selector" @contextmenu="contextmenuHandler">
-    <selector-template v-bind="$attrs" :index="props.index" :measure="measure">
+  <div class="measure-selector" :class="$attrs.class" @contextmenu="contextmenuHandler">
+    <selector-template
+      :index="props.index"
+      cast="measure"
+      :display-name="props.displayName"
+      :invalid="props.invalid"
+      :invalid-message="props.invalidMessage"
+    >
       <template #measure-suffix>
         <slot name="measure-suffix"></slot>
       </template>
@@ -46,10 +52,26 @@
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ContextMenu from '../../context-menu/index.vue'
 
+defineOptions({
+  inheritAttrs: false
+})
+
 const props = defineProps({
   index: {
     type: Number,
     default: null
+  },
+  displayName: {
+    type: String,
+    default: ''
+  },
+  invalid: {
+    type: Boolean,
+    default: false
+  },
+  invalidMessage: {
+    type: String,
+    default: ''
   },
   measure: {
     type: Object as PropType<MeasureStore.MeasureOption>,
