@@ -33,10 +33,10 @@
           :invalid="getMeasureInvalid(measure)"
           :invalidMessage="getMeasureInvalidMessage(measure)"
         >
-          <template #suffix-icon>
+          <template #measure-suffix>
             <button
               v-if="isMeasureAggregationEnabled(measure)"
-              class="chart-selector-suffix-icon measure-aggregation-label mr-1"
+              class="chart-selector-meta-label"
               type="button"
               @mousedown.stop
             >
@@ -453,18 +453,6 @@ const getColumnType = (col: ColumnsStore.ColumnOptions) => {
 </script>
 
 <style lang="scss" scoped>
-.measure-aggregation-label {
-  max-width: 48px;
-  border: 0;
-  background: transparent;
-  color: #606266;
-  cursor: pointer;
-  font-size: 11px;
-  line-height: 1;
-  padding: 0;
-  white-space: nowrap;
-}
-
 .measure {
   .measure__content {
     list-style: none;

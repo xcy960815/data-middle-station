@@ -60,7 +60,6 @@ CREATE TABLE `analyze_config` (
   `analyze_id` bigint unsigned NOT NULL COMMENT '分析ID',
   `version_no` int unsigned NOT NULL COMMENT '版本号',
   `data_source` varchar(100) DEFAULT NULL COMMENT '数据源表名',
-  `columns` json DEFAULT NULL COMMENT '列配置(JSON格式)',
   `measures` json DEFAULT NULL COMMENT '值/指标配置(JSON格式)',
   `filters` json DEFAULT NULL COMMENT '过滤条件(JSON格式)',
   `dimensions` json DEFAULT NULL COMMENT '分组/维度配置(JSON格式)',

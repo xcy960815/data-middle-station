@@ -4,6 +4,9 @@
       <template #prefix-icon>
         <slot name="prefix-icon"></slot>
       </template>
+      <template #dimension-suffix>
+        <slot name="dimension-suffix"></slot>
+      </template>
     </selector-template>
   </div>
   <!-- 字段的操作选项 -->

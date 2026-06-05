@@ -12,12 +12,10 @@ export const useAnalyzeDraft = () => {
   const orderStore = useOrdersStore()
   const filterStore = useFiltersStore()
 
-  const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
-
   const buildAnalyzeDraftPayload = (): AnalyzeDto.UpdateAnalyzeRequest => {
     const commonChartConfig: AnalyzeConfigDao.CommonChartConfig = {
       ...defaultCommonChartConfig,
-      ...clone(chartConfigStore.getCommonChartConfig || {}),
+      ...(chartConfigStore.getCommonChartConfig || {}),
       dataSourceMode: columnStore.getDataSourceMode,
       datasetId: columnStore.getDatasetId,
       datasetName: columnStore.getDatasetName
@@ -30,14 +28,13 @@ export const useAnalyzeDraft = () => {
       currentConfigId: analyzeStore.getCurrentConfigId,
       chartConfig: {
         dataSource: columnStore.getDataSource,
-        columns: clone(columnStore.getColumns) as AnalyzeConfigDao.ColumnItem[],
-        measures: clone(measureStore.getMeasures) as AnalyzeConfigDao.MeasureOption[],
-        dimensions: clone(dimensionStore.getDimensions) as AnalyzeConfigDao.DimensionOption[],
-        orders: clone(orderStore.getOrders) as AnalyzeConfigDao.OrderOption[],
-        filters: clone(filterStore.getFilters) as AnalyzeConfigDao.FilterOption[],
+        measures: measureStore.getMeasures,
+        dimensions: dimensionStore.getDimensions,
+        orders: orderStore.getOrders,
+        filters: filterStore.getFilters,
         chartType: analyzeStore.getChartType,
         commonChartConfig,
-        privateChartConfig: clone(chartConfigStore.getPrivateChartConfig || undefined)
+        privateChartConfig: chartConfigStore.getPrivateChartConfig || undefined
       }
     }
   }

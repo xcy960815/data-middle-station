@@ -86,9 +86,8 @@ declare namespace AnalyzeConfigVo {
    */
   type AnalyzeConfigResponse = Omit<
     AnalyzeConfigDao.AnalyzeConfigRecord,
-    'columns' | 'measures' | 'filters' | 'dimensions' | 'orders'
+    'measures' | 'filters' | 'dimensions' | 'orders'
   > & {
-    columns: ColumnItem[]
     measures: MeasureOption[]
     filters: FilterOption[]
     dimensions: DimensionOption[]

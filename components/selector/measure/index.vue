@@ -1,8 +1,8 @@
 <template>
   <div class="measure-selector" @contextmenu="contextmenuHandler">
     <selector-template v-bind="$attrs" :index="props.index" :measure="measure">
-      <template #suffix-icon>
-        <slot name="suffix-icon"></slot>
+      <template #measure-suffix>
+        <slot name="measure-suffix"></slot>
       </template>
       <template #default="{ closePopover }">
         <slot :close-popover="closePopover"></slot>

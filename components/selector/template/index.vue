@@ -4,30 +4,35 @@
       <template #reference>
         <div class="chart-selector-container px-1" :class="invalidClass">
           <slot name="prefix-icon"></slot>
-          <span class="chart-selector-name mr-1">{{ displayName }}</span>
-          <slot class="chart-selector-suffix-icon" name="suffix-icon"></slot>
-          <!-- 无效排序图标 -->
-          <el-tooltip
-            class="box-item"
-            effect="dark"
-            :content="invalidMessage || invalidContent"
-            placement="top"
-            v-if="hasInvalidIcon()"
-          >
-            <icon-park class="chart-selector-invalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
-          </el-tooltip>
-          <!-- 删除图标 -->
-          <icon-park
-            class="chart-selector-delete"
-            type="DeleteTwo"
-            size="14"
-            fill="#333"
-            @click.stop="handleDeleteSelector"
-            @contextmenu.stop
-          />
+          <slot name="selector-name">
+            <span class="chart-selector-name mr-1">{{ displayName }}</span>
+          </slot>
+          <div class="chart-selector-trailing">
+            <slot name="measure-suffix"></slot>
+            <slot name="order-aggregation"></slot>
+            <slot name="order-direction"></slot>
+            <slot name="dimension-suffix"></slot>
+            <slot name="filter-suffix"></slot>
+            <el-tooltip
+              class="box-item"
+              effect="dark"
+              :content="invalidMessage || invalidContent"
+              placement="top"
+              v-if="hasInvalidIcon()"
+            >
+              <icon-park class="chart-selector-invalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
+            </el-tooltip>
+            <icon-park
+              class="chart-selector-delete"
+              type="DeleteTwo"
+              size="14"
+              fill="#333"
+              @click.stop="handleDeleteSelector"
+              @contextmenu.stop
+            />
+          </div>
         </div>
       </template>
-      <!-- 下拉内容 -->
       <div class="chart-selector-options">
         <slot :close-popover="closePopover"></slot>
       </div>
@@ -39,29 +44,22 @@
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElPopover } from 'element-plus'
 const props = defineProps({
-  // 通用参数
   invalid: {
     type: Boolean,
     default: false
   },
-  /**
-   * @desc 无效信息 默认使用无效内容
-   */
   invalidMessage: {
     type: String,
     default: ''
   },
-  // 通用参数
   displayName: {
     type: String,
     default: ''
   },
-  // 通用参数
   cast: {
     type: String as PropType<'measure' | 'dimension' | 'order' | 'filter'>,
     default: ''
   },
-  // 通用参数
   index: {
     type: Number,
     default: null,
@@ -73,17 +71,11 @@ const orderStore = useOrdersStore()
 const measureStore = useMeasuresStore()
 const dimensionStore = useDimensionsStore()
 const isPopoverEnabled = computed(() => {
-  return ['measure', 'order', 'filter'].includes(props.cast)
+  return ['measure', 'filter'].includes(props.cast)
 })
-/**
- * @desc 无效样式
- */
 const invalidClass = computed(() => {
   return props.invalid ? 'invalid-selector' : ''
 })
-/**
- * @desc 无效内容
- */
 const invalidContent = computed(() => {
   switch (props.cast) {
     case 'filter':
@@ -98,16 +90,10 @@ const invalidContent = computed(() => {
       return ''
   }
 })
-/**
- * @desc 是否显示无效图标
- */
 const hasInvalidIcon = computed(() => () => {
   return props.invalid
 })
 
-/**
- * @desc 删除标签
- */
 const handleDeleteSelector = () => {
   if (props.cast === 'filter') {
     filterStore.removeFilter(props.index)
@@ -120,20 +106,19 @@ const handleDeleteSelector = () => {
   }
 }
 
-/**
- * @desc popover ref
- */
 const popoverRef = ref<InstanceType<typeof ElPopover>>()
 
-/**
- * @desc 关闭 popover
- */
 const closePopover = () => {
   popoverRef.value?.hide()
 }
 
+const openPopover = () => {
+  popoverRef.value?.show?.()
+}
+
 defineExpose({
-  closePopover
+  closePopover,
+  openPopover
 })
 </script>
 <style lang="scss" scoped>
@@ -148,35 +133,59 @@ defineExpose({
   display: flex;
   align-items: center;
 
-  // 无效字段样式
   &.invalid-selector {
     border-color: #ff4d4f;
   }
 
   .chart-selector-name {
-    flex-grow: 1;
-    // 超出部分隐藏 并且显示省略号
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .chart-selector-delete,
-  :deep(.chart-selector-suffix-icon) {
-    cursor: pointer;
+  .chart-selector-trailing {
+    display: inline-flex;
+    align-items: center;
     flex-shrink: 0;
     margin-left: auto;
+    gap: 6px;
   }
 
-  .chart-selector-suffix-icon {
-    margin-right: 6px;
-    font-size: 14px;
+  .chart-selector-delete {
+    cursor: pointer;
+    flex-shrink: 0;
   }
 
   .chart-selector-invalid-icon {
     color: #ff4d4f;
-    margin-right: 6px;
     cursor: help;
+    flex-shrink: 0;
+  }
+
+  :deep(.chart-selector-meta-label) {
+    max-width: 48px;
+    color: #606266;
+    font-size: 11px;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  :deep(button.chart-selector-meta-label) {
+    cursor: pointer;
+  }
+
+  :deep(.chart-selector-direction-icon) {
+    flex-shrink: 0;
+    font-size: 14px;
+    cursor: pointer;
   }
 }
 </style>

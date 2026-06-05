@@ -373,6 +373,15 @@ const handleRefreshColumns = async () => {
   await queryTableColumn(tableName)
 }
 
+watch(
+  () => analyzeStore.getEditorHydrating,
+  async (hydrating, wasHydrating) => {
+    if (!wasHydrating || hydrating) return
+    if (!columnStore.getDataSource || columnStore.getColumns.length > 0) return
+    await handleRefreshColumns()
+  }
+)
+
 const handleDataSourceChange = async (payload: string | AnalyzeDataSourceChangePayload) => {
   if (typeof payload === 'string') {
     clearAnalyzeSelections()

@@ -23,9 +23,6 @@ class AnalyzeConfigMapping implements AnalyzeConfigDao.AnalyzeConfigRecord, ICol
   @Column('chart_type')
   chartType!: string
 
-  @Column('columns')
-  columns: AnalyzeConfigDao.ColumnItem[] = []
-
   @Column('measures')
   measures: AnalyzeConfigDao.MeasureOption[] = []
 
@@ -69,7 +66,6 @@ const ANALYZE_CONFIG_FIELDS = [
   'version_no',
   'chart_type',
   'data_source',
-  'columns',
   'measures',
   'filters',
   'dimensions',
@@ -96,9 +92,7 @@ export class AnalyzeConfigMapper extends BaseMapper {
 
     keys.forEach((key, index) => {
       if (ANALYZE_CONFIG_FIELDS.includes(key)) {
-        const formattedKey = ['dimensions', 'orders', 'columns', 'measures', 'filters'].includes(key)
-          ? `\`${key}\``
-          : key
+        const formattedKey = ['dimensions', 'orders', 'measures', 'filters'].includes(key) ? `\`${key}\`` : key
         whereClauses.push(`${formattedKey} = ?`)
         queryValues.push(values[index])
       }
@@ -166,8 +160,7 @@ export class AnalyzeConfigMapper extends BaseMapper {
       from ${ANALYZE_CONFIG_TABLE_NAME}
       where is_deleted = 0
         and (
-          cast(columns as char) like '%__invalid%'
-          or cast(measures as char) like '%__invalid%'
+          cast(measures as char) like '%__invalid%'
           or cast(filters as char) like '%__invalid%'
           or cast(\`dimensions\` as char) like '%__invalid%'
           or cast(\`orders\` as char) like '%__invalid%'
@@ -177,22 +170,17 @@ export class AnalyzeConfigMapper extends BaseMapper {
 
   public async updateAnalyzeConfigRuntimeFields(
     configId: number,
-    updateParams: Pick<
-      AnalyzeConfigDao.AnalyzeConfigRecord,
-      'columns' | 'measures' | 'filters' | 'dimensions' | 'orders'
-    >
+    updateParams: Pick<AnalyzeConfigDao.AnalyzeConfigRecord, 'measures' | 'filters' | 'dimensions' | 'orders'>
   ): Promise<boolean> {
     const sql = `
       update ${ANALYZE_CONFIG_TABLE_NAME}
-      set columns = ?,
-          measures = ?,
+      set measures = ?,
           filters = ?,
           \`dimensions\` = ?,
           \`orders\` = ?,
           update_time = now()
       where id = ? and is_deleted = 0`
     const result = await this.exe<ResultSetHeader>(sql, [
-      JSON.stringify(updateParams.columns || []),
       JSON.stringify(updateParams.measures || []),
       JSON.stringify(updateParams.filters || []),
       JSON.stringify(updateParams.dimensions || []),

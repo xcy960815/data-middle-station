@@ -1,6 +1,9 @@
 <template>
   <div class="filter-selector">
     <selector-template v-bind="$attrs" :display-name="displayName" ref="selectorTemplateRef">
+      <template #filter-suffix>
+        <slot name="filter-suffix"></slot>
+      </template>
       <template #default>
         <!-- Step 1: 聚合方式列表 -->
         <template v-if="!aggregationType">

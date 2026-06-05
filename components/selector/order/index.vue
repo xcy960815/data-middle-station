@@ -1,80 +1,76 @@
 <template>
   <div class="order-selector">
-    <selector-template
-      v-bind="$attrs"
-      :display-name="displayName"
-      :cast="cast"
-      :index="index"
-      :order="order"
-      ref="selectorTemplateRef"
-    >
-      <template #suffix-icon>
-        <!-- 降序 -->
+    <selector-template v-bind="$attrs" :display-name="fieldLabel" :cast="cast" :index="index" :order="order">
+      <template #selector-name>
+        <span class="chart-selector-name mr-1 order-selector__name" @contextmenu="handleContextMenu">
+          {{ fieldLabel }}
+        </span>
+      </template>
+      <template #order-aggregation>
+        <span class="chart-selector-meta-label order-selector__aggregation" @contextmenu="handleContextMenu">
+          {{ aggregationLabel }}
+        </span>
+      </template>
+      <template #order-direction>
         <icon-park
-          class="chart-selector-suffix-icon chart-selector-order-icon mr-1"
+          class="chart-selector-direction-icon"
           v-if="orderType === 'asc'"
           type="arrow-circle-down"
           size="14"
           fill="#333"
-          @click="handleClickOrder"
+          @click.stop="handleToggleDirection"
+          @contextmenu.stop
         />
-        <!-- 升序 -->
         <icon-park
-          class="chart-selector-suffix-icon chart-selector-order-icon mr-1"
-          v-if="orderType === 'desc'"
+          class="chart-selector-direction-icon"
+          v-else
           type="arrow-circle-up"
           size="14"
           fill="#333"
-          @click="handleClickOrder"
-        />
-      </template>
-      <template #default>
-        <selector-aggregation
-          inline
-          :include-raw="true"
-          :column-type="order.columnType"
-          :aggregation-type="aggregationType"
-          tooltip="排序聚合方式"
-          empty-label="选择聚合"
-          @update:aggregation-type="handleClickOrderAggregation"
+          @click.stop="handleToggleDirection"
+          @contextmenu.stop
         />
       </template>
     </selector-template>
   </div>
+  <context-menu ref="contextmenuRef">
+    <context-menu-item
+      v-for="option in aggregationOptions"
+      :key="option.value"
+      @click="handleSelectAggregation(option.value)"
+    >
+      {{ option.label }}
+      <span v-if="aggregationType === option.value" class="order-selector__checked">✓</span>
+    </context-menu-item>
+  </context-menu>
 </template>
 
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
-import SelectorAggregation from '../aggregation/index.vue'
+import ContextMenu from '../../context-menu/index.vue'
+import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
+
 const props = defineProps({
-  name: {
-    type: String,
-    default: ''
-  },
-  // 通用参数
   displayName: {
     type: String,
     default: ''
   },
-  // 通用参数
   cast: {
     type: String as PropType<'measure' | 'dimension' | 'order' | 'filter'>,
     default: ''
   },
   orderType: {
     type: String as PropType<OrderStore.OrderType>,
-    default: ''
+    default: 'desc'
   },
-  // 通用参数
   index: {
     type: Number,
     default: null,
     required: true
   },
-  // 聚合方式
   aggregationType: {
     type: String as PropType<OrderStore.OrderAggregationsType>,
-    default: ''
+    default: 'raw'
   },
   order: {
     type: Object as PropType<OrderStore.OrderOption>,
@@ -84,50 +80,49 @@ const props = defineProps({
 
 const emits = defineEmits(['update:orderType', 'update:aggregationType', 'update:displayName'])
 
-const aggregationLabelMap: Record<OrderStore.OrderAggregationsType, string> = {
-  raw: '原始值',
-  count: '计数',
-  countDistinct: '计数(去重)',
-  sum: '总计',
-  avg: '平均',
-  max: '最大值',
-  min: '最小值'
+const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+
+const fieldLabel = computed(() => props.order.columnComment || props.order.columnName)
+
+const aggregationOptions = computed(() => getOrderAggregationOptions(props.order.columnType, true))
+
+const aggregationLabel = computed(() => getOrderAggregationLabel(props.aggregationType))
+
+const syncDisplayName = () => {
+  emits('update:displayName', fieldLabel.value)
 }
 
-/**
- * @desc 点击排序的升降序
- * @param e {Event}
- */
-const handleClickOrder = (e: Event) => {
-  // 阻止冒泡
-  e.stopPropagation()
+const handleToggleDirection = () => {
   emits('update:orderType', props.orderType === 'desc' ? 'asc' : 'desc')
+  emits('update:aggregationType', 'raw')
+  syncDisplayName()
 }
 
-/**
- * @desc 点击排序的聚合类型
- * @param orderAggregationValue {OrderStore.OrderAggregationsType}
- * @returns void
- */
-const handleClickOrderAggregation = (orderAggregationValue: OrderStore.OrderAggregationsType) => {
-  emits('update:aggregationType', orderAggregationValue)
-  // 如果当前没有排序类型，才默认降序；否则保持用户当前的排序选择（连续性）
+const handleContextMenu = (event: MouseEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+  contextmenuRef.value?.show(event)
+}
+
+const handleSelectAggregation = (aggregationType: OrderStore.OrderAggregationsType) => {
+  emits('update:aggregationType', aggregationType)
   if (!props.orderType) {
     emits('update:orderType', 'desc')
   }
-  // 重新计算displayName
-  const currentDisplayName = aggregationLabelMap[orderAggregationValue]
-  emits('update:displayName', `${currentDisplayName}(${props.name})`)
-  selectorTemplateRef.value?.closePopover()
+  syncDisplayName()
 }
 
-/**
- * @desc selector-template ref
- */
-const selectorTemplateRef = ref()
+watch(fieldLabel, syncDisplayName, { immediate: true })
 </script>
+
 <style lang="scss" scoped>
-.order-selector {
-  position: relative;
+.order-selector__name,
+.order-selector__aggregation {
+  cursor: context-menu;
+}
+
+.order-selector__checked {
+  margin-left: 8px;
+  color: #409eff;
 }
 </style>

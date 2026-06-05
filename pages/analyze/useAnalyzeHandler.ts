@@ -24,7 +24,6 @@ export const useAnalyzeHandler = () => {
 
     const chartConfig = data.chartConfig
     analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')
-    columnStore.setColumns(chartConfig?.columns || [])
     measureStore.setMeasures((chartConfig?.measures as MeasureStore.MeasureOption[]) || [])
     filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
     dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
@@ -33,6 +32,7 @@ export const useAnalyzeHandler = () => {
     chartConfigStore.setPrivateChartConfig(
       chartConfig?.privateChartConfig || chartConfigStore.$state.privateChartConfig
     )
+    columnStore.setColumns([])
     columnStore.setDataSource(chartConfig?.dataSource || '')
     columnStore.setDataSourceMode(chartConfig?.commonChartConfig?.dataSourceMode || 'table')
     columnStore.setDatasetId(chartConfig?.commonChartConfig?.datasetId || null)

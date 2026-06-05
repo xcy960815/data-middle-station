@@ -13,10 +13,6 @@ export class AnalyzeConfigService extends BaseService {
     const normalizedData = this.normalizeConfigRecord(configRecord)
     return {
       ...normalizedData,
-      columns: normalizedData.columns.map((item: AnalyzeConfigDao.ColumnItem) => ({
-        ...item,
-        displayName: item.displayName || item.columnComment
-      })),
       measures: normalizedData.measures.map((item: AnalyzeConfigDao.MeasureOption) => ({
         ...item,
         displayName: item.displayName || item.columnComment
@@ -59,7 +55,6 @@ export class AnalyzeConfigService extends BaseService {
     const createParams: AnalyzeConfigDao.CreateAnalyzeConfigParams = {
       ...createRequest,
       versionNo,
-      columns: createRequest.columns || [],
       measures: createRequest.measures || [],
       filters: createRequest.filters || [],
       dimensions: createRequest.dimensions || [],
@@ -89,13 +84,11 @@ export class AnalyzeConfigService extends BaseService {
     let removedFieldCount = 0
 
     for (const config of configs) {
-      const columnsResult = this.removeRuntimeValidationFields(config.columns || [])
       const measuresResult = this.removeRuntimeValidationFields(config.measures || [])
       const filtersResult = this.removeRuntimeValidationFields(config.filters || [])
       const dimensionsResult = this.removeRuntimeValidationFields(config.dimensions || [])
       const ordersResult = this.removeRuntimeValidationFields(config.orders || [])
       const removedCount =
-        columnsResult.removedCount +
         measuresResult.removedCount +
         filtersResult.removedCount +
         dimensionsResult.removedCount +
@@ -104,7 +97,6 @@ export class AnalyzeConfigService extends BaseService {
       if (!removedCount) continue
 
       const updated = await this.analyzeConfigMapper.updateAnalyzeConfigRuntimeFields(config.id, {
-        columns: columnsResult.data as AnalyzeConfigDao.ColumnItem[],
         measures: measuresResult.data as AnalyzeConfigDao.MeasureOption[],
         filters: filtersResult.data as AnalyzeConfigDao.FilterOption[],
         dimensions: dimensionsResult.data as AnalyzeConfigDao.DimensionOption[],
@@ -128,7 +120,6 @@ export class AnalyzeConfigService extends BaseService {
   ): AnalyzeConfigDao.AnalyzeConfigRecord {
     return {
       ...configRecord,
-      columns: configRecord.columns || [],
       measures: configRecord.measures || [],
       filters: configRecord.filters || [],
       dimensions: configRecord.dimensions || [],

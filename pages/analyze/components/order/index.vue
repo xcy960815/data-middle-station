@@ -18,14 +18,13 @@
         <selector-order
           class="order__item__name"
           cast="order"
-          :display-name="orderOptions.displayName"
-          v-model:orderType="orderOptions.orderType"
-          :column-name="orderOptions.columnName"
+          v-model:display-name="orderOptions.displayName"
+          v-model:order-type="orderOptions.orderType"
+          v-model:aggregation-type="orderOptions.aggregationType"
           :index="index"
-          v-model:aggregationType="orderOptions.aggregationType"
           :order="orderOptions"
           :invalid="getOrderInvalid(orderOptions)"
-          :invalidMessage="getOrderInvalidMessage(orderOptions)"
+          :invalid-message="getOrderInvalidMessage(orderOptions)"
         ></selector-order>
       </div>
     </div>
@@ -136,9 +135,8 @@ const dropHandler = (dragEvent: DragEvent) => {
 
   const orderOption: OrderStore.OrderOption = {
     ...data.value,
-    // 默认降序
     orderType: 'desc',
-    aggregationType: data.value.datasetAggregationType || (data.value.datasetFieldType === 'metric' ? 'sum' : 'count')
+    aggregationType: 'raw'
   }
   switch (data.from) {
     case 'orders': {

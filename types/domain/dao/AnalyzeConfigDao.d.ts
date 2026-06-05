@@ -91,9 +91,9 @@ declare namespace AnalyzeConfigDao {
      */
     orderType: OrderType
     /**
-     * 聚合方式
+     * 聚合方式；未显式选择时由查询构建器按字段类型推断
      */
-    aggregationType: OrderAggregationsType
+    aggregationType?: OrderAggregationsType
   }
 
   /**
@@ -410,10 +410,6 @@ declare namespace AnalyzeConfigDao {
      * 图表类型
      */
     chartType: string
-    /**
-     * 列配置
-     */
-    columns: ColumnItem[]
     /**
      * 值/度量配置
      */
