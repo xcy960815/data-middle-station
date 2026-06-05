@@ -21,6 +21,7 @@
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
+        @mousedown.stop
       >
         <selector-dimension
           :class="[
@@ -30,9 +31,9 @@
             }
           ]"
           cast="dimension"
+          :columnName="item.columnName"
           :displayName="getDimensionDisplayName(item, index)"
           :dimension="item"
-          :column-name="item.columnName"
           :index="index"
           :invalid="getDimensionInvalid(item)"
           :invalidMessage="getDimensionInvalidMessage(item)"

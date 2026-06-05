@@ -75,6 +75,10 @@
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ContextMenu from '../../context-menu/index.vue'
 
+defineOptions({
+  inheritAttrs: false
+})
+
 const props = defineProps({
   index: {
     type: Number,
