@@ -197,10 +197,7 @@ data-middle-station/
 ## 更多文档
 
 - `docs/project-documentation.md` - 项目技术文档
-- `docs/data-middle-station-roadmap-2026-06-03.md` - 数据中台功能演进规划
-- `docs/analyze-drill-rollup-requirement-2026-06-04.md` - 分析上卷 / 下卷需求记录
-- `docs/high-frequency-scheduler.md` - 高频调度任务使用说明
-- `docs/istoreos-mail-troubleshooting.md` - istoreOS 容器 SMTP 排障记录
+- `docs/analyze-config-field-consolidation-review.md` - 分析配置字段收拢复盘与 Review 清单
 
 ## 版本管理
 
