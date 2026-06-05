@@ -265,7 +265,7 @@ CREATE TABLE `analyze_config` (
 ) ENGINE=InnoDB COMMENT='分析配置历史版本表';
 ```
 
-`measures`、`filters` 和 `orders` 的每个条目都保留字段元信息，并把行为规则收进专门对象：
+`measures`、`dimensions`、`filters` 和 `orders` 的每个条目都保留字段元信息，并把行为规则收进专门对象：
 
 ```json
 {
@@ -276,6 +276,13 @@ CREATE TABLE `analyze_config` (
       "measure": {
         "aggregation": "sum"
       }
+    }
+  ],
+  "dimensions": [
+    {
+      "columnName": "province",
+      "displayName": "省份",
+      "grouping": {}
     }
   ],
   "filters": [
@@ -586,16 +593,6 @@ pnpm format
 # 修复 lint 问题
 pnpm lint:fix
 ```
-
-### 分析查询校验
-
-分析页查询语义的专项快照测试：
-
-```bash
-pnpm test:analyze-query
-```
-
-该测试覆盖 `WHERE / GROUP BY / HAVING / ORDER BY` 组合、表格明细/聚合查询语义，以及 `validateAnalyzeChartConfig` 的核心分支。
 
 ### 提交规范
 

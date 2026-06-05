@@ -70,7 +70,12 @@ declare namespace AnalyzeConfigDao {
   /**
    * 分组配置
    */
-  type DimensionOption = ColumnItem
+  type DimensionOption = ColumnItem & {
+    /**
+     * 分组规则：日期粒度、层级等分组行为配置
+     */
+    grouping: import('@/shared/dimensionGrouping').DimensionGroupingRule
+  }
 
   /**
    * 排序类型

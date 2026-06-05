@@ -10,7 +10,7 @@
         <el-popover
           v-model:visible="wherePopoverVisible"
           placement="bottom-start"
-          trigger="manual"
+          trigger="click"
           width="auto"
           :teleported="true"
         >

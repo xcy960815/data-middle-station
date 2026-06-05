@@ -25,7 +25,7 @@ declare namespace DatasetDao {
     displayName: string
     fieldType: DatasetFieldType
     dataType: string
-    aggregationType?: AnalyzeConfigDao.OrderAggregationsType | null
+    aggregationType?: AnalyzeConfigDao.MeasureAggregationType | null
     expression?: string
     visible: boolean
     sortOrder: number

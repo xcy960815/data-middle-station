@@ -54,7 +54,9 @@ declare namespace AnalyzeConfigVo {
   /**
    * 分组配置选项
    */
-  type DimensionOption = DatabaseVo.TableColumnItem
+  type DimensionOption = AnalyzeConfigDao.DimensionOption & {
+    displayName: string
+  }
 
   /**
    * 排序类型枚举

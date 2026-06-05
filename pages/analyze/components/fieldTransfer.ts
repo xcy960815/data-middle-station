@@ -1,3 +1,5 @@
+import { createDefaultDimensionGrouping } from '@/shared/dimensionGrouping'
+
 type AnalyzeFieldRole = 'measures' | 'dimensions'
 
 type AnalyzeFieldTransferSource = {
@@ -56,6 +58,7 @@ export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureS
 export const createDimensionOption = (field: ColumnsStore.ColumnOptions): DimensionStore.DimensionOption => {
   return {
     ...createAnalyzeColumnOption(field),
+    grouping: createDefaultDimensionGrouping(),
     fixed: null,
     align: null,
     width: null,

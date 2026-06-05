@@ -16,6 +16,10 @@ declare namespace DimensionStore {
    */
   type DimensionOption = ColumnsStore.ColumnOptions & {
     /**
+     * 分组规则：日期粒度、层级等分组行为配置
+     */
+    grouping: import('@/shared/dimensionGrouping').DimensionGroupingRule
+    /**
      * 固定列
      */
     fixed: 'left' | 'right' | null

@@ -196,7 +196,7 @@ const resolveMeasureAggregationLabel = (measure: MeasureStore.MeasureOption) => 
 
 const handleChangeAggregationType = (
   index: number,
-  aggregationType: AnalyzeConfigDao.OrderAggregationsType,
+  aggregationType: MeasureAggregationType,
   closePopover?: () => void
 ) => {
   if (aggregationType === 'raw') return

@@ -47,8 +47,9 @@
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElPopover } from 'element-plus'
+import type { MeasureAggregationType } from '@/shared/domainTypes'
 
-type AggregationType = AnalyzeConfigDao.OrderAggregationsType
+type AggregationType = MeasureAggregationType
 
 type AggregationOption = {
   label: string
