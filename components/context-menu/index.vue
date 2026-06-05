@@ -28,6 +28,9 @@
     </div>
   </Transition>
 </template>
+<script lang="ts">
+let activeContextMenu: (() => void) | null = null
+</script>
 <script setup lang="ts">
 const props = defineProps({
   modelValue: {
@@ -45,6 +48,7 @@ const props = defineProps({
 })
 
 const emits = defineEmits(['show', 'hide', 'update:modelValue'])
+
 // 右键菜单的元素
 const contextmenuElement = ref<HTMLDivElement | null>(null)
 // 右键菜单是否显示
@@ -104,6 +108,10 @@ const calculateMenuPosition = (
 const showContextMenu = (evt: MouseEvent) => {
   evt.preventDefault()
   evt.stopPropagation()
+  if (activeContextMenu && activeContextMenu !== hideContextMenu) {
+    activeContextMenu()
+  }
+  activeContextMenu = hideContextMenu
   const initialPosition = {
     top: evt.pageY,
     left: evt.pageX
@@ -136,6 +144,9 @@ const showContextMenu = (evt: MouseEvent) => {
  */
 const hideContextMenu = () => {
   updateModelValue(false)
+  if (activeContextMenu === hideContextMenu) {
+    activeContextMenu = null
+  }
   // TODO: 添加回掉参数
   emits('hide')
 }
@@ -247,6 +258,9 @@ watch(visible, (value) => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickBody)
   document.removeEventListener('keydown', handleEscKey)
+  if (activeContextMenu === hideContextMenu) {
+    activeContextMenu = null
+  }
 })
 
 provide('visible', visible)
