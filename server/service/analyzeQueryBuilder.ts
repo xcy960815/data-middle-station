@@ -577,7 +577,9 @@ export class AnalyzeQueryBuilder {
 
       const filterExpression = isAggregateFilter
         ? this.buildAggregationExpression(aggregationType, columnExpression)
-        : columnExpression
+        : this.isDateTimeColumnName(columnName)
+          ? `DATE_FORMAT(${columnExpression}, '%Y-%m-%d %H:%i:%s')`
+          : columnExpression
       const targetClauseParts = isAggregateFilter ? havingClauseParts : whereClauseParts
       const targetParams = isAggregateFilter ? havingParams : whereParams
 

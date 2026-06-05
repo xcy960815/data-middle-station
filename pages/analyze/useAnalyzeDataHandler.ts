@@ -6,10 +6,10 @@ import { useMeasuresStore } from '@/stores/measures'
 import { useFiltersStore } from '@/stores/filters'
 import { useDimensionsStore } from '@/stores/dimensions'
 import { useOrdersStore } from '@/stores/orders'
-import { debounce } from '@/utils/throttleDebounce'
 import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
 import dayjs from 'dayjs'
 import { computed, ref, watch } from 'vue'
+import { useAnalyzeDrill } from './useAnalyzeDrill'
 
 /**
  * @desc 分析数据处理逻辑（作为 composable 使用，确保在 Pinia 激活后再获取 store）
@@ -22,8 +22,13 @@ export const useAnalyzeDataHandler = () => {
   const filterStore = useFiltersStore()
   const orderStore = useOrdersStore()
   const chartConfigStore = useChartConfigStore()
+  const { currentDrillDimension, drillFilters } = useAnalyzeDrill()
   const activeRequestId = ref(0)
   const activeRequestController = ref<AbortController | null>(null)
+  const lastDataSourceKey = ref('')
+  const pendingQueryTimer = ref<ReturnType<typeof setTimeout> | null>(null)
+  const activeDrillQueryKey = ref('')
+  const skipParamQueryForDrill = ref(false)
 
   const isAbortError = (error: unknown) => {
     return error instanceof Error && (error.name === 'AbortError' || /aborted|abort/i.test(error.message))
@@ -31,12 +36,23 @@ export const useAnalyzeDataHandler = () => {
 
   // ---------- 查询参数 ----------
   const queryAnalyzeDataParams = computed(() => {
+    const baseFilters = filterStore.getFilters.filter(
+      (item) => item.aggregationType && (item.filterType || item.filterValue)
+    )
+    const dimensions = currentDrillDimension.value ? [currentDrillDimension.value] : []
+    const activeOrderColumnNames = new Set([
+      ...dimensions.map((item) => item.columnName),
+      ...measureStore.getMeasures.map((item) => item.columnName)
+    ])
+
     return {
       dataSource: columnStore.getDataSource,
       // 过滤掉未完成的聚合条件
-      filters: filterStore.getFilters.filter((item) => item.aggregationType && (item.filterType || item.filterValue)),
-      orders: orderStore.getOrders.filter((item) => item.aggregationType || item.orderType),
-      dimensions: dimensionStore.getDimensions,
+      filters: [...baseFilters, ...drillFilters.value],
+      orders: orderStore.getOrders.filter(
+        (item) => (item.aggregationType || item.orderType) && activeOrderColumnNames.has(item.columnName)
+      ),
+      dimensions,
       measures: measureStore.getMeasures,
       commonChartConfig: chartConfigStore.getCommonChartConfig
     }
@@ -49,7 +65,7 @@ export const useAnalyzeDataHandler = () => {
       chartType,
       dataSource: columnStore.getDataSource,
       measures: measureStore.getMeasures,
-      dimensions: dimensionStore.getDimensions
+      dimensions: currentDrillDimension.value ? [currentDrillDimension.value] : dimensionStore.getDimensions
     })
     analyzeStore.setChartErrorMessage(validation.message)
     analyzeStore.setChartErrorAnalysis('')
@@ -162,16 +178,92 @@ export const useAnalyzeDataHandler = () => {
     analyzeStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`)
   }
 
-  // 使用防抖避免频繁请求
-  const debouncedQueryAnalyzeData = debounce(getAnalyzeData, 1000)
+  const getDrillQueryKey = () => {
+    return JSON.stringify({
+      level: dimensionStore.getDrillCurrentLevel,
+      path: dimensionStore.getDrillPath.map((item) => ({
+        columnName: item.dimension.columnName,
+        value: item.value
+      }))
+    })
+  }
+
+  const scheduleAnalyzeDataQuery = (delay = 1000) => {
+    if (pendingQueryTimer.value) {
+      clearTimeout(pendingQueryTimer.value)
+      pendingQueryTimer.value = null
+    }
+    pendingQueryTimer.value = setTimeout(() => {
+      pendingQueryTimer.value = null
+      getAnalyzeData()
+    }, delay)
+  }
+  activeDrillQueryKey.value = getDrillQueryKey()
 
   // 监听参数变化并触发防抖请求
   watch(
     () => queryAnalyzeDataParams.value,
     () => {
-      debouncedQueryAnalyzeData()
+      if (activeDrillQueryKey.value !== getDrillQueryKey()) {
+        return
+      }
+      if (skipParamQueryForDrill.value) {
+        skipParamQueryForDrill.value = false
+        return
+      }
+      scheduleAnalyzeDataQuery()
     },
     { deep: true }
+  )
+
+  watch(
+    () => getDrillQueryKey(),
+    (drillQueryKey) => {
+      activeDrillQueryKey.value = drillQueryKey
+      skipParamQueryForDrill.value = true
+      scheduleAnalyzeDataQuery(300)
+      setTimeout(() => {
+        skipParamQueryForDrill.value = false
+      }, 0)
+    }
+  )
+
+  watch(
+    () => dimensionStore.getDimensions.map((item) => item.columnName),
+    (dimensionNames) => {
+      const path = dimensionStore.getDrillPath
+      if (dimensionNames.length === 0 || path.length === 0) {
+        dimensionStore.resetDrill()
+        return
+      }
+
+      const validPathLength = path.findIndex((item, index) => item.dimension.columnName !== dimensionNames[index])
+      if (validPathLength === -1) {
+        if (dimensionStore.getDrillCurrentLevel > Math.max(dimensionNames.length - 1, 0)) {
+          dimensionStore.rollUpTo(Math.max(dimensionNames.length - 1, 0))
+        }
+        return
+      }
+
+      dimensionStore.rollUpTo(validPathLength)
+    },
+    { deep: true }
+  )
+
+  watch(
+    () => [columnStore.getDataSourceMode, columnStore.getDataSource, columnStore.getDatasetId],
+    ([dataSourceMode, dataSource, datasetId]) => {
+      const nextDataSourceKey = `${dataSourceMode}:${dataSource}:${datasetId || ''}`
+      if (!lastDataSourceKey.value) {
+        lastDataSourceKey.value = nextDataSourceKey
+        return
+      }
+      if (nextDataSourceKey !== lastDataSourceKey.value) {
+        lastDataSourceKey.value = nextDataSourceKey
+        dimensionStore.resetDrill()
+      }
+    },
+    { immediate: true }
   )
 
   return {

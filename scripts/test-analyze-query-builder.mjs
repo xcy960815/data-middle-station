@@ -237,6 +237,60 @@ assert.deepEqual(detailQuery, {
   params: ['%East%']
 })
 
+const drillRollupQuery = builder.buildAnalyzeDataQuery(
+  {
+    ...baseQuery,
+    dimensions: [
+      {
+        columnName: 'region',
+        columnType: 'varchar',
+        columnComment: '区域',
+        displayName: '区域'
+      }
+    ],
+    measures: [
+      {
+        columnName: 'salesAmount',
+        columnType: 'decimal',
+        columnComment: '销售额',
+        displayName: '销售额'
+      },
+      {
+        columnName: 'customerId',
+        columnType: 'varchar',
+        columnComment: '客户',
+        displayName: '客户'
+      }
+    ],
+    filters: [
+      {
+        columnName: 'createdAt',
+        columnType: 'datetime',
+        columnComment: '创建时间',
+        displayName: '创建时间',
+        aggregationType: 'raw',
+        filterType: 'eq',
+        filterValue: '2026-06-04 00:00:00'
+      },
+      {
+        columnName: 'status',
+        columnType: 'varchar',
+        columnComment: '状态',
+        displayName: '状态',
+        aggregationType: 'raw',
+        filterType: 'eq',
+        filterValue: 'paid'
+      }
+    ]
+  },
+  context
+)
+
+assert.deepEqual(drillRollupQuery, {
+  sql: "select `region` AS `region`,SUM(`sales_amount`) AS `sales_amount`,COUNT(`customer_id`) AS `customer_id` from `order_facts` where DATE_FORMAT(`created_at`, '%Y-%m-%d %H:%i:%s') = ? and `status` = ? group by `region` limit 100",
+  params: ['2026-06-04 00:00:00', 'paid']
+})
+
 const tableDetailValueOnlyQuery = builder.buildAnalyzeDataQuery(
   {
     ...baseQuery,

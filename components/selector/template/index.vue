@@ -3,6 +3,7 @@
     <el-popover placement="bottom-start" trigger="click" width="auto" :disabled="!isPopoverEnabled" ref="popoverRef">
       <template #reference>
         <div class="chart-selector-container px-1" :class="invalidClass">
+          <slot name="prefix-icon"></slot>
           <span class="chart-selector-name mr-1">{{ displayName }}</span>
           <slot class="chart-selector-order-icon" name="order-icon"></slot>
           <!-- 无效排序图标 -->

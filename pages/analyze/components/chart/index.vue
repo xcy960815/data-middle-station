@@ -1,5 +1,5 @@
 <template>
-  <div class="chart relative h-full w-full overflow-hidden">
+  <div class="chart relative flex h-full w-full flex-col overflow-hidden">
     <template v-if="chartErrorMessage">
       <div class="absolute inset-0 flex flex-col justify-center items-center p-4 overflow-auto">
         <div class="text-red-500 text-[14px] mb-4 font-bold">
@@ -15,6 +15,7 @@
     <template v-else>
       <component
         ref="currentChartRef"
+        class="min-h-0 flex-1"
         v-loading="chartLoading"
         element-loading-text="数据加载中..."
         :element-loading-spinner="svg"
@@ -61,6 +62,7 @@ import LineChart from '~/components/line-chart/index.vue'
  * 表格
  */
 import TableChart from '~/components/table-chart/index.vue'
+import { useAnalyzeDrill } from '../../useAnalyzeDrill'
 
 /**
  * @desc 分析器 store
@@ -70,10 +72,7 @@ const analyzeStore = useAnalyzeStore()
  * @desc 维度 store
  */
 const measureStore = useMeasuresStore()
-/**
- * @desc 分组 store
- */
-const dimensionStore = useDimensionsStore()
+const { currentDrillDimension } = useAnalyzeDrill()
 
 /**
  * @desc 图表宽度
@@ -129,8 +128,7 @@ const yAxisFields = computed(() => {
  * @type {Array<DimensionStore.DimensionState['dimensions']>}
  */
 const xAxisFields = computed(() => {
-  const dimensions = dimensionStore.getDimensions
-  return dimensions
+  return currentDrillDimension.value ? [currentDrillDimension.value] : []
 })
 
 /**

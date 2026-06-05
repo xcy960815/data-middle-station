@@ -70,11 +70,19 @@ declare namespace DimensionStore {
     colIndex?: number
   }
 
+  type DrillPathItem = {
+    dimension: DimensionOption
+    value: string | number | boolean | null
+  }
+
   /**
    * @desc 分组状态
    */
   type DimensionState = {
     dimensions: DimensionOption[]
+    drillCurrentLevel: number
+    drillPath: DrillPathItem[]
+    selectedDrillValue: DrillPathItem['value']
   }
 
   /**
@@ -109,5 +117,9 @@ declare namespace DimensionStore {
      * @returns {void}
      */
     updateDimension: (dimension: DimensionOption) => void
+    resetDrill: () => void
+    setSelectedDrillValue: (value: DrillPathItem['value']) => void
+    drillDown: (item: DrillPathItem) => void
+    rollUpTo: (level: number) => void
   }
 }

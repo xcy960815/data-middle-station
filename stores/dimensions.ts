@@ -10,11 +10,23 @@ export const useDimensionsStore = defineStore<
   BaseStore.Actions<DimensionStore.DimensionState, DimensionStore.DimensionActions>
 >(StoreNames.DIMENSIONS, {
   state: () => ({
-    dimensions: []
+    dimensions: [],
+    drillCurrentLevel: 0,
+    drillPath: [],
+    selectedDrillValue: null
   }),
   getters: {
     getDimensions(state) {
       return state.dimensions
+    },
+    getDrillCurrentLevel(state) {
+      return state.drillCurrentLevel
+    },
+    getDrillPath(state) {
+      return state.drillPath
+    },
+    getSelectedDrillValue(state) {
+      return state.selectedDrillValue
     }
   },
   actions: {
@@ -54,6 +66,25 @@ export const useDimensionsStore = defineStore<
       if (index !== -1) {
         this.dimensions[index] = dimension
       }
+    },
+    resetDrill() {
+      this.drillCurrentLevel = 0
+      this.drillPath = []
+      this.selectedDrillValue = null
+    },
+    setSelectedDrillValue(value: DimensionStore.DrillPathItem['value']) {
+      this.selectedDrillValue = value
+    },
+    drillDown(item: DimensionStore.DrillPathItem) {
+      this.drillPath = this.drillPath.slice(0, this.drillCurrentLevel).concat([JSON.parse(JSON.stringify(item))])
+      this.drillCurrentLevel = this.drillPath.length
+      this.selectedDrillValue = null
+    },
+    rollUpTo(level: number) {
+      const normalizedLevel = Math.max(0, Math.floor(Number(level) || 0))
+      this.drillPath = this.drillPath.slice(0, normalizedLevel)
+      this.drillCurrentLevel = this.drillPath.length
+      this.selectedDrillValue = null
     }
   }
 })

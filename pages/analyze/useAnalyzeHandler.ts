@@ -20,6 +20,7 @@ export const useAnalyzeHandler = () => {
     analyzeStore.setAnalyzeDesc(data.analyzeDesc)
     analyzeStore.setAnalyzeId(data.id)
     analyzeStore.setCurrentConfigId(data.currentConfigId)
+    dimensionStore.resetDrill()
 
     const chartConfig = data.chartConfig
     analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')

@@ -1,37 +1,66 @@
 <template>
   <!-- 分析页面下方分组 -->
-  <div class="group relative h-full flex items-center" @dragover="dragoverHandler" @drop="dropHandler">
-    <div class="group__header flex items-center justify-between">
-      <span class="group__title">分组</span>
-      <icon-park
-        class="cursor-pointer"
-        v-if="hasClearAll('dimensions')"
-        type="clear"
-        size="12"
-        fill="#333"
-        @click="clearAll('dimensions')"
-      />
+  <div class="dimension relative h-full flex items-center" @dragover="dragoverHandler" @drop="dropHandler">
+    <div class="dimension__header flex items-center justify-between">
+      <span class="dimension__title">分组</span>
+      <div class="dimension__actions flex items-center gap-1">
+        <icon-park
+          class="cursor-pointer"
+          v-if="hasClearAll('dimensions')"
+          type="clear"
+          size="12"
+          fill="#333"
+          @click="clearAll('dimensions')"
+        />
+      </div>
     </div>
-    <div class="group__content flex items-center flex-1">
+    <div class="dimension__content flex items-center flex-1">
       <div
         data-action="drag"
-        class="group__item mx-1"
+        class="dimension__item mx-1"
         v-for="(item, index) in dimensionList"
-        :key="index"
+        :key="`${item.columnName || 'dimension'}-${index}`"
         draggable="true"
         @dragstart.native="dragstartHandler(index, $event)"
         @drag.native="dragHandler(index, $event)"
       >
         <selector-dimension
-          class="group__item__name"
+          :class="[
+            'dimension__item__name',
+            {
+              'dimension__item__name--path': drillEnabled && getDrillLevelState(index) === 'path'
+            }
+          ]"
           cast="dimension"
-          :displayName="item.displayName"
+          :displayName="getDimensionDisplayName(item, index)"
           :dimension="item"
           :column-name="item.columnName"
           :index="index"
           :invalid="getDimensionInvalid(item)"
           :invalidMessage="getDimensionInvalidMessage(item)"
-        ></selector-dimension>
+          :drill-enabled="drillEnabled"
+          :drill-level-state="getDrillLevelState(index)"
+          :drill-path-value="dimensionStore.getDrillPath[index]?.value"
+          :current-level-label="currentDrillDimension ? getDimensionLabel(currentDrillDimension) : ''"
+          :next-level-label="nextDrillDimension ? getDimensionLabel(nextDrillDimension) : ''"
+          :can-drill-down="canDrillDown"
+          :available-drill-values="availableDrillValues"
+          @roll-up="handleRollUpFromMenu(index)"
+          @drill-down="handleDrillDownFromMenu"
+          @select-drill-value="handleSelectDrillValue"
+          @reset-drill="dimensionStore.resetDrill()"
+        >
+          <template v-if="drillEnabled && index < effectiveDrillLevel" #prefix-icon>
+            <el-tooltip content="钻取路径：右键可上卷" placement="top">
+              <icon-park class="dimension__path-icon" type="filter" size="12" fill="#909399" />
+            </el-tooltip>
+          </template>
+          <template v-else-if="drillEnabled && index === effectiveDrillLevel" #prefix-icon>
+            <el-tooltip content="当前粒度：按此维度分组并查询" placement="top">
+              <icon-park class="dimension__current-icon" type="focus" size="13" fill="#337ecc" />
+            </el-tooltip>
+          </template>
+        </selector-dimension>
       </div>
     </div>
   </div>
@@ -39,6 +68,8 @@
 
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { ElMessage } from 'element-plus'
+import { useAnalyzeDrill } from '../../useAnalyzeDrill'
 import { clearAllHandler } from '../clearAll'
 import { moveFieldToDimensions } from '../fieldTransfer'
 const { clearAll, hasClearAll } = clearAllHandler()
@@ -46,6 +77,8 @@ const { clearAll, hasClearAll } = clearAllHandler()
 const columnStore = useColumnsStore()
 const measureStore = useMeasuresStore()
 const dimensionStore = useDimensionsStore()
+const analyzeStore = useAnalyzeStore()
+const { effectiveDrillLevel, currentDrillDimension, nextDrillDimension, getDimensionLabel } = useAnalyzeDrill()
 /**
  * @desc dimensionList
  */
@@ -64,6 +97,69 @@ const dimensionColumnCountMap = computed(() => {
 const measureColumnSet = computed(() => {
   return new Set(measureStore.getMeasures.map((item) => item.columnName).filter(Boolean))
 })
+
+const drillEnabled = computed(() => dimensionList.value.length > 1)
+const canDrillDown = computed(() => {
+  return (
+    drillEnabled.value &&
+    effectiveDrillLevel.value < dimensionList.value.length - 1 &&
+    dimensionStore.getSelectedDrillValue !== null &&
+    typeof dimensionStore.getSelectedDrillValue !== 'undefined' &&
+    dimensionStore.getSelectedDrillValue !== ''
+  )
+})
+
+const availableDrillValues = computed(() => {
+  const dimension = currentDrillDimension.value
+  if (!dimension?.columnName) return []
+  const valueSet = new Set<string>()
+  analyzeStore.getAnalyzeData.forEach((row) => {
+    const value = row[dimension.columnName]
+    if (value === null || typeof value === 'undefined' || value === '') return
+    valueSet.add(String(value))
+  })
+  return Array.from(valueSet).map((value) => ({
+    label: value,
+    value
+  }))
+})
+
+const getDrillLevelState = (index: number): 'path' | 'current' | 'next' | 'future' => {
+  if (index < effectiveDrillLevel.value) return 'path'
+  if (index === effectiveDrillLevel.value) return 'current'
+  if (index === effectiveDrillLevel.value + 1) return 'next'
+  return 'future'
+}
+
+const getDimensionDisplayName = (dimension: DimensionStore.DimensionOption, index: number) => {
+  const label = getDimensionLabel(dimension)
+  if (index < effectiveDrillLevel.value) {
+    const value = dimensionStore.getDrillPath[index]?.value
+    return `${label}=${value ?? ''}`
+  }
+  return label
+}
+
+const handleRollUpFromMenu = (index: number) => {
+  dimensionStore.rollUpTo(index)
+}
+
+const handleSelectDrillValue = (value: DimensionStore.DrillPathItem['value']) => {
+  dimensionStore.setSelectedDrillValue(value)
+}
+
+const handleDrillDownFromMenu = (overrideValue?: DimensionStore.DrillPathItem['value']) => {
+  if (!currentDrillDimension.value || !nextDrillDimension.value) return
+  const value = overrideValue ?? dimensionStore.getSelectedDrillValue
+  if (value === null || typeof value === 'undefined' || value === '') {
+    ElMessage.warning(`请先通过右键菜单选择「${getDimensionLabel(currentDrillDimension.value)}」值`)
+    return
+  }
+  dimensionStore.drillDown({
+    dimension: currentDrillDimension.value,
+    value
+  })
+}
 
 const getDimensionInvalid = (dimension: DimensionStore.DimensionOption) => {
   return getDimensionInvalidMessage(dimension) !== ''
@@ -89,7 +185,7 @@ const getDimensionInvalidMessage = (dimension: DimensionStore.DimensionOption) =
 const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
   const dropX = dragEvent.clientX
   let xs = [].slice
-    .call(document.querySelectorAll('.group__content > [data-action="drag"]'))
+    .call(document.querySelectorAll('.dimension__content > [data-action="drag"]'))
     .map(
       (element: HTMLDivElement) => (element.getBoundingClientRect().left + element.getBoundingClientRect().right) / 2
     )
@@ -170,14 +266,32 @@ const dropHandler = (dragEvent: DragEvent) => {
 </script>
 
 <style lang="scss" scoped>
-.group {
-  .group__content {
+.dimension {
+  .dimension__actions {
+    min-width: 0;
+  }
+
+  .dimension__content {
     list-style: none;
     overflow: auto;
 
-    .group__item {
+    .dimension__item {
       cursor: move;
       position: relative;
+    }
+  }
+
+  .dimension__current-icon,
+  .dimension__path-icon {
+    flex: 0 0 auto;
+    margin-right: 4px;
+  }
+
+  .dimension__item__name--path {
+    :deep(.chart-selector-container) {
+      background-color: #f7f8fa;
+      border-color: #dcdfe6;
+      color: #606266;
     }
   }
 }

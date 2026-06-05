@@ -22,6 +22,7 @@ export const clearAllHandler = () => {
         break
       case 'dimensions':
         dimensionStore.setDimensions([])
+        dimensionStore.resetDrill()
         break
       case 'measures':
         measureStore.setMeasures([])
