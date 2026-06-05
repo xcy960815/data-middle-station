@@ -1,44 +1,46 @@
 <template>
-  <selector-template
-    v-bind="$attrs"
-    :display-name="displayName"
-    :cast="cast"
-    :index="index"
-    :order="order"
-    ref="selectorTemplateRef"
-  >
-    <template #order-icon>
-      <!-- 降序 -->
-      <icon-park
-        class="chart-selector-order-icon mr-1"
-        v-if="orderType === 'asc'"
-        type="arrow-circle-down"
-        size="14"
-        fill="#333"
-        @click="handleClickOrder"
-      />
-      <!-- 升序 -->
-      <icon-park
-        class="chart-selector-order-icon mr-1"
-        v-if="orderType === 'desc'"
-        type="arrow-circle-up"
-        size="14"
-        fill="#333"
-        @click="handleClickOrder"
-      />
-    </template>
-    <template #default>
-      <selector-aggregation
-        inline
-        :include-raw="true"
-        :column-type="order.columnType"
-        :aggregation-type="aggregationType"
-        tooltip="排序聚合方式"
-        empty-label="选择聚合"
-        @update:aggregation-type="handleClickOrderAggregation"
-      />
-    </template>
-  </selector-template>
+  <div class="order-selector">
+    <selector-template
+      v-bind="$attrs"
+      :display-name="displayName"
+      :cast="cast"
+      :index="index"
+      :order="order"
+      ref="selectorTemplateRef"
+    >
+      <template #suffix-icon>
+        <!-- 降序 -->
+        <icon-park
+          class="chart-selector-suffix-icon chart-selector-order-icon mr-1"
+          v-if="orderType === 'asc'"
+          type="arrow-circle-down"
+          size="14"
+          fill="#333"
+          @click="handleClickOrder"
+        />
+        <!-- 升序 -->
+        <icon-park
+          class="chart-selector-suffix-icon chart-selector-order-icon mr-1"
+          v-if="orderType === 'desc'"
+          type="arrow-circle-up"
+          size="14"
+          fill="#333"
+          @click="handleClickOrder"
+        />
+      </template>
+      <template #default>
+        <selector-aggregation
+          inline
+          :include-raw="true"
+          :column-type="order.columnType"
+          :aggregation-type="aggregationType"
+          tooltip="排序聚合方式"
+          empty-label="选择聚合"
+          @update:aggregation-type="handleClickOrderAggregation"
+        />
+      </template>
+    </selector-template>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -75,7 +77,7 @@ const props = defineProps({
     default: ''
   },
   order: {
-    type: Object as PropType<OrderStore.OrderOptions>,
+    type: Object as PropType<OrderStore.OrderOption>,
     default: () => ({})
   }
 })
@@ -124,4 +126,8 @@ const handleClickOrderAggregation = (orderAggregationValue: OrderStore.OrderAggr
  */
 const selectorTemplateRef = ref()
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.order-selector {
+  position: relative;
+}
+</style>

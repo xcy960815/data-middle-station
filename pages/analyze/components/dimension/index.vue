@@ -3,16 +3,14 @@
   <div class="dimension relative h-full flex items-center" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="dimension__header flex items-center justify-between">
       <span class="dimension__title">分组</span>
-      <div class="dimension__actions flex items-center gap-1">
-        <icon-park
-          class="cursor-pointer"
-          v-if="hasClearAll('dimensions')"
-          type="clear"
-          size="12"
-          fill="#333"
-          @click="clearAll('dimensions')"
-        />
-      </div>
+      <icon-park
+        class="cursor-pointer"
+        v-if="hasClearAll('dimensions')"
+        type="clear"
+        size="12"
+        fill="#333"
+        @click="clearAll('dimensions')"
+      />
     </div>
     <div class="dimension__content flex items-center flex-1">
       <div
@@ -267,10 +265,6 @@ const dropHandler = (dragEvent: DragEvent) => {
 
 <style lang="scss" scoped>
 .dimension {
-  .dimension__actions {
-    min-width: 0;
-  }
-
   .dimension__content {
     list-style: none;
     overflow: auto;

@@ -11,6 +11,10 @@ import dayjs from 'dayjs'
 import { computed, ref, watch } from 'vue'
 import { useAnalyzeDrill } from './useAnalyzeDrill'
 
+type GetAnalyzeDataOptions = {
+  force?: boolean
+}
+
 /**
  * @desc 分析数据处理逻辑（作为 composable 使用，确保在 Pinia 激活后再获取 store）
  */
@@ -27,8 +31,10 @@ export const useAnalyzeDataHandler = () => {
   const activeRequestController = ref<AbortController | null>(null)
   const lastDataSourceKey = ref('')
   const pendingQueryTimer = ref<ReturnType<typeof setTimeout> | null>(null)
+  const pendingQueryForce = ref(false)
   const activeDrillQueryKey = ref('')
   const skipParamQueryForDrill = ref(false)
+  const lastQueryKey = ref('')
 
   const isAbortError = (error: unknown) => {
     return error instanceof Error && (error.name === 'AbortError' || /aborted|abort/i.test(error.message))
@@ -59,7 +65,7 @@ export const useAnalyzeDataHandler = () => {
   })
 
   // ---------- 实际请求 ----------
-  const getAnalyzeData = async () => {
+  const getAnalyzeData = async (options: GetAnalyzeDataOptions = {}) => {
     const chartType = analyzeStore.getChartType
     const validation = validateAnalyzeChartConfig({
       chartType,
@@ -70,6 +76,10 @@ export const useAnalyzeDataHandler = () => {
     analyzeStore.setChartErrorMessage(validation.message)
     analyzeStore.setChartErrorAnalysis('')
     if (!validation.valid) return
+
+    const queryKey = JSON.stringify(queryAnalyzeDataParams.value)
+    if (!options.force && queryKey === lastQueryKey.value) return
+    lastQueryKey.value = queryKey
 
     const requestId = activeRequestId.value + 1
     activeRequestId.value = requestId
@@ -188,14 +198,20 @@ export const useAnalyzeDataHandler = () => {
     })
   }
 
-  const scheduleAnalyzeDataQuery = (delay = 1000) => {
+  const isEditorHydrating = () => analyzeStore.getEditorHydrating
+
+  const scheduleAnalyzeDataQuery = (delay = 1000, options: GetAnalyzeDataOptions = {}) => {
+    if (isEditorHydrating()) return
     if (pendingQueryTimer.value) {
       clearTimeout(pendingQueryTimer.value)
       pendingQueryTimer.value = null
     }
+    pendingQueryForce.value = options.force || pendingQueryForce.value
     pendingQueryTimer.value = setTimeout(() => {
       pendingQueryTimer.value = null
-      getAnalyzeData()
+      const force = pendingQueryForce.value
+      pendingQueryForce.value = false
+      getAnalyzeData({ force })
     }, delay)
   }
   activeDrillQueryKey.value = getDrillQueryKey()
@@ -204,6 +220,7 @@ export const useAnalyzeDataHandler = () => {
   watch(
     () => queryAnalyzeDataParams.value,
     () => {
+      if (isEditorHydrating()) return
       if (activeDrillQueryKey.value !== getDrillQueryKey()) {
         return
       }
@@ -219,6 +236,10 @@ export const useAnalyzeDataHandler = () => {
   watch(
     () => getDrillQueryKey(),
     (drillQueryKey) => {
+      if (isEditorHydrating()) {
+        activeDrillQueryKey.value = drillQueryKey
+        return
+      }
       activeDrillQueryKey.value = drillQueryKey
       skipParamQueryForDrill.value = true
       scheduleAnalyzeDataQuery(300)
@@ -231,6 +252,7 @@ export const useAnalyzeDataHandler = () => {
   watch(
     () => dimensionStore.getDimensions.map((item) => item.columnName),
     (dimensionNames) => {
+      if (isEditorHydrating()) return
       const path = dimensionStore.getDrillPath
       if (dimensionNames.length === 0 || path.length === 0) {
         dimensionStore.resetDrill()
@@ -254,6 +276,10 @@ export const useAnalyzeDataHandler = () => {
     () => [columnStore.getDataSourceMode, columnStore.getDataSource, columnStore.getDatasetId],
     ([dataSourceMode, dataSource, datasetId]) => {
       const nextDataSourceKey = `${dataSourceMode}:${dataSource}:${datasetId || ''}`
+      if (isEditorHydrating()) {
+        lastDataSourceKey.value = nextDataSourceKey
+        return
+      }
       if (!lastDataSourceKey.value) {
         lastDataSourceKey.value = nextDataSourceKey
         return
@@ -264,6 +290,16 @@ export const useAnalyzeDataHandler = () => {
       }
     },
     { immediate: true }
+  )
+
+  watch(
+    () => analyzeStore.getEditorHydrating,
+    (hydrating, wasHydrating) => {
+      if (wasHydrating && !hydrating) {
+        activeDrillQueryKey.value = getDrillQueryKey()
+        scheduleAnalyzeDataQuery(0, { force: true })
+      }
+    }
   )
 
   return {

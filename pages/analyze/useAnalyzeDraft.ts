@@ -1,6 +1,8 @@
 /**
  * @desc 提供分析草稿的读取、保存和清理能力。
  */
+import { defaultCommonChartConfig } from '@/shared/chartDefaults'
+
 export const useAnalyzeDraft = () => {
   const chartConfigStore = useChartConfigStore()
   const analyzeStore = useAnalyzeStore()
@@ -10,14 +12,17 @@ export const useAnalyzeDraft = () => {
   const orderStore = useOrdersStore()
   const filterStore = useFiltersStore()
 
-  const removeRuntimeValidationFields = <T extends Record<string, any>>(items: T[]) => {
-    return items.map((item) => {
-      const { __invalid: _invalid, __invalidMessage: _invalidMessage, ...rest } = item
-      return rest
-    })
-  }
+  const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
 
   const buildAnalyzeDraftPayload = (): AnalyzeDto.UpdateAnalyzeRequest => {
+    const commonChartConfig: AnalyzeConfigDao.CommonChartConfig = {
+      ...defaultCommonChartConfig,
+      ...clone(chartConfigStore.getCommonChartConfig || {}),
+      dataSourceMode: columnStore.getDataSourceMode,
+      datasetId: columnStore.getDatasetId,
+      datasetName: columnStore.getDatasetName
+    }
+
     return {
       id: analyzeStore.getAnalyzeId!,
       analyzeName: analyzeStore.getAnalyzeName,
@@ -25,19 +30,14 @@ export const useAnalyzeDraft = () => {
       currentConfigId: analyzeStore.getCurrentConfigId,
       chartConfig: {
         dataSource: columnStore.getDataSource,
-        columns: removeRuntimeValidationFields(JSON.parse(JSON.stringify(columnStore.getColumns))),
-        measures: removeRuntimeValidationFields(JSON.parse(JSON.stringify(measureStore.getMeasures))),
-        dimensions: removeRuntimeValidationFields(JSON.parse(JSON.stringify(dimensionStore.getDimensions))),
-        orders: removeRuntimeValidationFields(JSON.parse(JSON.stringify(orderStore.getOrders))),
-        filters: removeRuntimeValidationFields(JSON.parse(JSON.stringify(filterStore.getFilters))),
+        columns: clone(columnStore.getColumns) as AnalyzeConfigDao.ColumnItem[],
+        measures: clone(measureStore.getMeasures) as AnalyzeConfigDao.MeasureOption[],
+        dimensions: clone(dimensionStore.getDimensions) as AnalyzeConfigDao.DimensionOption[],
+        orders: clone(orderStore.getOrders) as AnalyzeConfigDao.OrderOption[],
+        filters: clone(filterStore.getFilters) as AnalyzeConfigDao.FilterOption[],
         chartType: analyzeStore.getChartType,
-        commonChartConfig: {
-          ...JSON.parse(JSON.stringify(chartConfigStore.getCommonChartConfig)),
-          dataSourceMode: columnStore.getDataSourceMode,
-          datasetId: columnStore.getDatasetId,
-          datasetName: columnStore.getDatasetName
-        },
-        privateChartConfig: JSON.parse(JSON.stringify(chartConfigStore.getPrivateChartConfig))
+        commonChartConfig,
+        privateChartConfig: clone(chartConfigStore.getPrivateChartConfig || undefined)
       }
     }
   }

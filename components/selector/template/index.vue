@@ -5,7 +5,7 @@
         <div class="chart-selector-container px-1" :class="invalidClass">
           <slot name="prefix-icon"></slot>
           <span class="chart-selector-name mr-1">{{ displayName }}</span>
-          <slot class="chart-selector-order-icon" name="order-icon"></slot>
+          <slot class="chart-selector-suffix-icon" name="suffix-icon"></slot>
           <!-- 无效排序图标 -->
           <el-tooltip
             class="box-item"
@@ -162,13 +162,13 @@ defineExpose({
   }
 
   .chart-selector-delete,
-  :deep(.chart-selector-order-icon) {
+  :deep(.chart-selector-suffix-icon) {
     cursor: pointer;
     flex-shrink: 0;
     margin-left: auto;
   }
 
-  .chart-selector-order-icon {
+  .chart-selector-suffix-icon {
     margin-right: 6px;
     font-size: 14px;
   }

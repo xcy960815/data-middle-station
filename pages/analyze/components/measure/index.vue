@@ -2,6 +2,7 @@
   <div class="measure relative h-full flex flex-col" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="measure__header flex items-center justify-between px-1">
       <span class="measure__title">值</span>
+      <!-- 清空所有的 icon -->
       <icon-park
         class="cursor-pointer"
         v-if="hasClearAll('measures')"
@@ -32,10 +33,10 @@
           :invalid="getMeasureInvalid(measure)"
           :invalidMessage="getMeasureInvalidMessage(measure)"
         >
-          <template #order-icon>
+          <template #suffix-icon>
             <button
               v-if="isMeasureAggregationEnabled(measure)"
-              class="measure-aggregation-label mr-1"
+              class="chart-selector-suffix-icon measure-aggregation-label mr-1"
               type="button"
               @mousedown.stop
             >

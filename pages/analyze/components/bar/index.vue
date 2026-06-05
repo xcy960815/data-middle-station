@@ -161,7 +161,7 @@ onBeforeRouteLeave(async () => {
  * @returns void
  */
 const handleClickRefresh = async () => {
-  getAnalyzeData()
+  getAnalyzeData({ force: true })
 }
 /**
  * @desc 点报警按钮

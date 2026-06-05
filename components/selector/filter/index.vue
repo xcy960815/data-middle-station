@@ -1,55 +1,57 @@
 <template>
-  <selector-template v-bind="$attrs" :display-name="displayName" ref="selectorTemplateRef">
-    <template #default>
-      <!-- Step 1: 聚合方式列表 -->
-      <template v-if="!aggregationType">
-        <selector-aggregation
-          inline
-          :include-raw="true"
-          :column-type="columnType"
-          :aggregation-type="aggregationType"
-          tooltip="筛选聚合方式"
-          empty-label="选择聚合"
-          @update:aggregation-type="handleChangeAggregation"
-        />
-      </template>
+  <div class="filter-selector">
+    <selector-template v-bind="$attrs" :display-name="displayName" ref="selectorTemplateRef">
+      <template #default>
+        <!-- Step 1: 聚合方式列表 -->
+        <template v-if="!aggregationType">
+          <selector-aggregation
+            inline
+            :include-raw="true"
+            :column-type="columnType"
+            :aggregation-type="aggregationType"
+            tooltip="筛选聚合方式"
+            empty-label="选择聚合"
+            @update:aggregation-type="handleChangeAggregation"
+          />
+        </template>
 
-      <!-- Step 2: 过滤条件设置 -->
-      <template v-else>
-        <div class="filter-selector w-[200px]">
-          <!-- 头部：返回按钮 + 当前聚合方式 -->
-          <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
-            <div
-              class="flex items-center cursor-pointer text-gray-600 hover:text-blue-600 transition-colors group"
-              @click="handleBackToStep1"
-            >
-              <icon-park type="left" size="12" class="mr-1" />
-              <span class="text-xs font-medium">{{ currentAggregationLabel }}</span>
+        <!-- Step 2: 过滤条件设置 -->
+        <template v-else>
+          <div class="filter-selector__panel w-[200px]">
+            <!-- 头部：返回按钮 + 当前聚合方式 -->
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+              <div
+                class="flex items-center cursor-pointer text-gray-600 hover:text-blue-600 transition-colors group"
+                @click="handleBackToStep1"
+              >
+                <icon-park type="left" size="12" class="mr-1" />
+                <span class="text-xs font-medium">{{ currentAggregationLabel }}</span>
+              </div>
+            </div>
+
+            <!-- 表单区域 -->
+            <div class="space-y-3">
+              <el-select v-model="localFilterType" placeholder="请选择条件" class="w-full" size="small">
+                <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+
+              <el-input
+                v-if="hasFilterValue()"
+                v-model="localFilterValue"
+                placeholder="请输入值"
+                size="small"
+                clearable
+              />
+
+              <div class="flex justify-end pt-1">
+                <el-button type="primary" size="small" @click="handleConfirm" class="w-full">确定</el-button>
+              </div>
             </div>
           </div>
-
-          <!-- 表单区域 -->
-          <div class="space-y-3">
-            <el-select v-model="localFilterType" placeholder="请选择条件" class="w-full" size="small">
-              <el-option v-for="item in filterOptions" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
-
-            <el-input
-              v-if="hasFilterValue()"
-              v-model="localFilterValue"
-              placeholder="请输入值"
-              size="small"
-              clearable
-            />
-
-            <div class="flex justify-end pt-1">
-              <el-button type="primary" size="small" @click="handleConfirm" class="w-full">确定</el-button>
-            </div>
-          </div>
-        </div>
+        </template>
       </template>
-    </template>
-  </selector-template>
+    </selector-template>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -251,7 +253,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .filter-selector {
-  position: reactive;
+  position: relative;
 
   .handle-box {
     text-align: right;
