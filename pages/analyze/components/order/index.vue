@@ -4,7 +4,7 @@
       <span class="order__title">排序</span>
       <icon-park v-if="hasClearAll('orders')" type="clear" size="12" fill="#333" @click="clearAll('orders')" />
     </div>
-    <div class="order__content flex-auto">
+    <div class="order__content flex-1">
       <div
         data-action="drag"
         class="order__item my-1"
@@ -18,14 +18,47 @@
         <selector-order
           class="order__item__name"
           cast="order"
-          v-model:display-name="orderOptions.displayName"
-          v-model:order-type="orderOptions.orderType"
-          v-model:aggregation-type="orderOptions.aggregationType"
-          :index="index"
+          :columnName="orderOptions.columnName"
+          :displayName="resolveOrderDisplayName(orderOptions)"
           :order="orderOptions"
+          :index="index"
           :invalid="getOrderInvalid(orderOptions)"
-          :invalid-message="getOrderInvalidMessage(orderOptions)"
-        ></selector-order>
+          :invalidMessage="getOrderInvalidMessage(orderOptions)"
+        >
+          <template #order-aggregation>
+            <span class="chart-selector-meta-label">{{ resolveOrderAggregationLabel(orderOptions) }}</span>
+          </template>
+          <template #order-direction>
+            <icon-park
+              class="chart-selector-direction-icon"
+              v-if="orderOptions.orderType === 'asc'"
+              type="arrow-circle-down"
+              size="14"
+              fill="#333"
+              @click.stop="handleToggleDirection(orderOptions)"
+              @contextmenu.stop
+            />
+            <icon-park
+              class="chart-selector-direction-icon"
+              v-else
+              type="arrow-circle-up"
+              size="14"
+              fill="#333"
+              @click.stop="handleToggleDirection(orderOptions)"
+              @contextmenu.stop
+            />
+          </template>
+          <template #context-menu>
+            <context-menu-item
+              v-for="option in getOrderAggregationOptions(orderOptions.columnType, true)"
+              :key="option.value"
+              @click="handleSelectAggregation(orderOptions, option.value)"
+            >
+              {{ option.label }}
+              <span v-if="orderOptions.aggregationType === option.value" class="order-panel__checked">✓</span>
+            </context-menu-item>
+          </template>
+        </selector-order>
       </div>
     </div>
   </div>
@@ -33,12 +66,12 @@
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
+import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
+
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const orderStore = useOrdersStore()
-/**
- * @desc orderList
- */
+
 const orderList = computed<OrderStore.OrderOption[]>(() => orderStore.getOrders)
 
 const orderColumnCountMap = computed(() => {
@@ -48,6 +81,18 @@ const orderColumnCountMap = computed(() => {
     return countMap
   }, {})
 })
+
+const resolveOrderDisplayName = (order: OrderStore.OrderOption) => {
+  return order.displayName || order.columnComment || order.columnName || ''
+}
+
+const resolveOrderAggregationLabel = (order: OrderStore.OrderOption) => {
+  return getOrderAggregationLabel(order.aggregationType)
+}
+
+const syncOrderDisplayName = (order: OrderStore.OrderOption) => {
+  order.displayName = order.columnComment || order.columnName || ''
+}
 
 const getOrderInvalid = (order: OrderStore.OrderOption) => {
   return getOrderInvalidMessage(order) !== ''
@@ -61,24 +106,29 @@ const getOrderInvalidMessage = (order: OrderStore.OrderOption) => {
   return ''
 }
 
-/**
- * @desc addOrder
- * @param {OrderStore.OrderOption|Array<OrderStore.OrderOption>} orders
- */
+const handleToggleDirection = (order: OrderStore.OrderOption) => {
+  order.orderType = order.orderType === 'desc' ? 'asc' : 'desc'
+  order.aggregationType = 'raw'
+  syncOrderDisplayName(order)
+}
+
+const handleSelectAggregation = (order: OrderStore.OrderOption, aggregationType: OrderStore.OrderAggregationsType) => {
+  order.aggregationType = aggregationType
+  if (!order.orderType) {
+    order.orderType = 'desc'
+  }
+  syncOrderDisplayName(order)
+}
+
 const addOrder = (order: OrderStore.OrderOption | Array<OrderStore.OrderOption>) => {
   order = Array.isArray(order) ? order : [order]
   orderStore.addOrders(order)
 }
-/**
- * @desc getTargetIndex
- * @param {number} index
- * @param {DragEvent} dragEvent
- * @returns {number}
- */
+
 const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
-  const dropY = dragEvent.clientY // 落点Y
-  let ys = [].slice
-    .call(document.querySelectorAll('.sort__content > [data-action="drag"]'))
+  const dropY = dragEvent.clientY
+  const ys = [].slice
+    .call(document.querySelectorAll('.order__content > [data-action="drag"]'))
     .map(
       (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
     )
@@ -90,12 +140,6 @@ const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
   return targetIndex
 }
 
-/**
- * @desc dragstartHandler
- * @param {number} index 当前拖拽的index
- * @param {DragEvent} dragEvent 拖拽事件
- * @returns {void}
- */
 const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.dataTransfer?.setData(
     'text',
@@ -106,29 +150,15 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
     })
   )
 }
-/**
- * @desc dragHandler 拖拽事件
- * @param {number} index 当前拖拽的index
- * @param {DragEvent} dragEvent 拖拽事件
- * @returns {void}
- */
+
 const dragHandler = (index: number, dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
-/**
- * @desc dragoverHandler 拖拽事件
- * @param {DragEvent} dragEvent 拖拽事件
- * @returns {void}
- */
+
 const dragoverHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  // dragEvent.dataTransfer.dropEffect = 'move';
 }
-/**
- * @desc dropHandler 拖拽事件
- * @param {DragEvent} dragEvent 拖拽事件
- * @returns {void}
- */
+
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
@@ -138,9 +168,10 @@ const dropHandler = (dragEvent: DragEvent) => {
     orderType: 'desc',
     aggregationType: 'raw'
   }
+  syncOrderDisplayName(orderOption)
+
   switch (data.from) {
     case 'orders': {
-      // 调整顺序
       const targetIndex = getTargetIndex(data.index, dragEvent)
       if (targetIndex === data.index) return
       const orders = JSON.parse(JSON.stringify(orderStore.orders))
@@ -155,22 +186,31 @@ const dropHandler = (dragEvent: DragEvent) => {
     }
   }
 }
+
+watch(
+  orderList,
+  (orders) => {
+    orders.forEach((order) => syncOrderDisplayName(order))
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <style lang="scss" scoped>
 .order {
-  pointer-events: initial;
-
   .order__content {
     list-style: none;
     overflow: auto;
 
     .order__item {
       cursor: move;
-      height: 30px;
-      line-height: 30px;
       position: relative;
     }
   }
+}
+
+.order-panel__checked {
+  margin-left: 8px;
+  color: #409eff;
 }
 </style>

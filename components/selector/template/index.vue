@@ -22,6 +22,7 @@
             >
               <icon-park class="chart-selector-invalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
             </el-tooltip>
+            <!-- 删除 icon -->
             <icon-park
               class="chart-selector-delete"
               type="DeleteTwo"
