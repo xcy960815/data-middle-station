@@ -145,6 +145,14 @@ const syncFilterDisplayName = (item: FilterStore.FilterOption) => {
   item.displayName = item.columnComment || item.columnName || ''
 }
 
+const createFilterOption = (field: FilterStore.FilterOption): FilterStore.FilterOption => {
+  const { datasetAggregationType: _datasetAggregationType, ...columnOption } = field
+  return {
+    ...columnOption,
+    condition: createDefaultFilterCondition()
+  }
+}
+
 const getFilterAggregationOptions = (columnType: string, includeRaw = true) => {
   return getOrderAggregationOptions(columnType, includeRaw)
 }
@@ -302,10 +310,7 @@ const dropHandler = (dragEvent: DragEvent) => {
       break
     }
     default: {
-      const filterOption: FilterStore.FilterOption = {
-        ...filter,
-        condition: createDefaultFilterCondition()
-      }
+      const filterOption = createFilterOption(filter)
       syncFilterDisplayName(filterOption)
       addFilter(filterOption)
       break

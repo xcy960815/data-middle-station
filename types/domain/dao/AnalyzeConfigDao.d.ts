@@ -6,6 +6,7 @@ declare namespace AnalyzeConfigDao {
   type FilterAggregationMap = typeof import('@/shared/domainTypes').FILTER_AGGREGATION_MAP
   type OrderTypeMap = typeof import('@/shared/domainTypes').ORDER_TYPE_MAP
   type OrderAggregationMap = typeof import('@/shared/domainTypes').ORDER_AGGREGATION_MAP
+  type MeasureAggregationMap = typeof import('@/shared/domainTypes').MEASURE_AGGREGATION_MAP
 
   /**
    * 列配置
@@ -14,13 +15,27 @@ declare namespace AnalyzeConfigDao {
     displayName: string
     datasetFieldName?: string
     datasetFieldType?: DatasetDao.DatasetFieldType
-    datasetAggregationType?: import('@/shared/domainTypes').OrderAggregationType
   }
 
   /**
    * 值/度量配置
    */
-  type MeasureOption = ColumnItem
+  type MeasureOption = ColumnItem & {
+    /**
+     * 值字段规则：聚合方式等度量行为配置
+     */
+    measure: import('@/shared/measureConfig').MeasureRule
+  }
+
+  /**
+   * 值/度量聚合方式
+   */
+  type MeasureAggregationsEnum = MeasureAggregationMap
+
+  /**
+   * 值/度量聚合方式
+   */
+  type MeasureAggregationType = import('@/shared/domainTypes').MeasureAggregationType
 
   /**
    * 过滤聚合方式

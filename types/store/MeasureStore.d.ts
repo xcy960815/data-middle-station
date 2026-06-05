@@ -18,7 +18,7 @@ declare namespace MeasureStore {
     /**
      * 值字段聚合方式。保存到 chart config 后由 AnalyzeQueryBuilder 生成聚合 SQL。
      */
-    datasetAggregationType?: AnalyzeConfigDao.OrderAggregationsType
+    measure: import('@/shared/measureConfig').MeasureRule
     /**
      * 固定列
      */

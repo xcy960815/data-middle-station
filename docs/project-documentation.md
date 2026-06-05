@@ -265,10 +265,19 @@ CREATE TABLE `analyze_config` (
 ) ENGINE=InnoDB COMMENT='分析配置历史版本表';
 ```
 
-`filters` 和 `orders` 的每个条目都保留字段元信息，并把行为规则收进专门对象：
+`measures`、`filters` 和 `orders` 的每个条目都保留字段元信息，并把行为规则收进专门对象：
 
 ```json
 {
+  "measures": [
+    {
+      "columnName": "sales_amount",
+      "displayName": "销售额",
+      "measure": {
+        "aggregation": "sum"
+      }
+    }
+  ],
   "filters": [
     {
       "columnName": "status",

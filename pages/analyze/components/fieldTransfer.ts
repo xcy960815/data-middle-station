@@ -7,6 +7,11 @@ type AnalyzeFieldTransferSource = {
 
 const getColumnName = (field: ColumnsStore.ColumnOptions) => field.columnName || field.datasetFieldName || ''
 
+const createAnalyzeColumnOption = (field: ColumnsStore.ColumnOptions) => {
+  const { datasetAggregationType: _datasetAggregationType, ...columnOption } = field
+  return columnOption
+}
+
 export const isNumericColumnType = (columnType?: string) => {
   const normalizedColumnType = columnType?.toLowerCase() || ''
   return [
@@ -26,7 +31,7 @@ export const isNumericColumnType = (columnType?: string) => {
 
 export const resolveDefaultMeasureAggregationType = (
   field: Pick<ColumnsStore.ColumnOptions, 'columnType' | 'datasetFieldType'>
-): AnalyzeConfigDao.OrderAggregationsType => {
+): AnalyzeConfigDao.MeasureAggregationType => {
   if (field.datasetFieldType === 'metric' || isNumericColumnType(field.columnType)) {
     return 'sum'
   }
@@ -35,8 +40,10 @@ export const resolveDefaultMeasureAggregationType = (
 
 export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureStore.MeasureOption => {
   return {
-    ...field,
-    datasetAggregationType: field.datasetAggregationType || resolveDefaultMeasureAggregationType(field),
+    ...createAnalyzeColumnOption(field),
+    measure: {
+      aggregation: field.datasetAggregationType || resolveDefaultMeasureAggregationType(field)
+    },
     fixed: null,
     align: null,
     width: null,
@@ -48,7 +55,7 @@ export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureS
 
 export const createDimensionOption = (field: ColumnsStore.ColumnOptions): DimensionStore.DimensionOption => {
   return {
-    ...field,
+    ...createAnalyzeColumnOption(field),
     fixed: null,
     align: null,
     width: null,

@@ -53,6 +53,17 @@ export const ORDER_TYPE_MAP = {
 
 export type OrderType = (typeof ORDER_TYPE_MAP)[keyof typeof ORDER_TYPE_MAP]
 
+export const MEASURE_AGGREGATION_MAP = {
+  计数: 'count',
+  计数去重: 'countDistinct',
+  总计: 'sum',
+  平均: 'avg',
+  最大值: 'max',
+  最小值: 'min'
+} as const
+
+export type MeasureAggregationType = (typeof MEASURE_AGGREGATION_MAP)[keyof typeof MEASURE_AGGREGATION_MAP]
+
 export const ORDER_AGGREGATION_MAP = {
   原始值: 'raw',
   计数: 'count',

@@ -10,7 +10,19 @@ declare namespace AnalyzeConfigVo {
   /**
    * 值/度量配置选项
    */
-  type MeasureOption = DatabaseVo.TableColumnItem
+  type MeasureOption = AnalyzeConfigDao.MeasureOption & {
+    displayName: string
+  }
+
+  /**
+   * 值/度量聚合方式枚举
+   */
+  type MeasureAggregationsEnum = AnalyzeConfigDao.MeasureAggregationsEnum
+
+  /**
+   * 值/度量聚合方式
+   */
+  type MeasureAggregationType = AnalyzeConfigDao.MeasureAggregationType
 
   /**
    * 过滤聚合方式枚举

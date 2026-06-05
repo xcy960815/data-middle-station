@@ -95,6 +95,14 @@ const syncOrderDisplayName = (order: OrderStore.OrderOption) => {
   order.displayName = order.columnComment || order.columnName || ''
 }
 
+const createOrderOption = (field: ColumnsStore.ColumnOptions): OrderStore.OrderOption => {
+  const { datasetAggregationType: _datasetAggregationType, ...columnOption } = field
+  return {
+    ...columnOption,
+    sort: createDefaultOrderSort()
+  }
+}
+
 const getOrderInvalid = (order: OrderStore.OrderOption) => {
   return getOrderInvalidMessage(order) !== ''
 }
@@ -164,10 +172,7 @@ const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
 
-  const orderOption: OrderStore.OrderOption = {
-    ...data.value,
-    sort: createDefaultOrderSort()
-  }
+  const orderOption = createOrderOption(data.value)
   syncOrderDisplayName(orderOption)
 
   switch (data.from) {

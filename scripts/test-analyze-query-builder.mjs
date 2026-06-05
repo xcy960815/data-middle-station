@@ -318,7 +318,9 @@ const tableDetailValueOnlyQuery = builder.buildAnalyzeDataQuery(
         columnType: 'decimal',
         columnComment: '销售额',
         displayName: '销售额',
-        datasetAggregationType: 'sum'
+        measure: {
+          aggregation: 'sum'
+        }
       }
     ]
   },
@@ -347,7 +349,9 @@ const tableAggregateGroupAndValueQuery = builder.buildAnalyzeDataQuery(
         columnType: 'decimal',
         columnComment: '销售额',
         displayName: '销售额',
-        datasetAggregationType: 'avg'
+        measure: {
+          aggregation: 'avg'
+        }
       }
     ]
   },

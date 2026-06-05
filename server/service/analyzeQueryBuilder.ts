@@ -430,10 +430,11 @@ export class AnalyzeQueryBuilder {
    */
   private resolveMeasureAggregationType(option: {
     columnType?: string
-    datasetAggregationType?: string
-    aggregationType?: string
+    measure?: {
+      aggregation?: string
+    }
   }): string {
-    const configuredAggregation = option.datasetAggregationType || option.aggregationType
+    const configuredAggregation = option.measure?.aggregation
     if (configuredAggregation && String(configuredAggregation).toLowerCase() !== 'raw') {
       return configuredAggregation
     }

@@ -115,6 +115,7 @@ import { ElMessage } from 'element-plus'
 import { defineAsyncComponent } from 'vue'
 import ContextMenu from '../../../../components/context-menu/index.vue'
 import SelectorAggregation from '../../../../components/selector/aggregation/index.vue'
+import type { MeasureAggregationType } from '@/shared/domainTypes'
 import { clearAllHandler } from '../clearAll'
 import { moveFieldToMeasures, resolveDefaultMeasureAggregationType } from '../fieldTransfer'
 
@@ -175,13 +176,12 @@ const isMeasureAggregationEnabled = (measure: MeasureStore.MeasureOption) => {
   return !!measure.columnName && dimensionList.value.length > 0
 }
 
-const resolveMeasureAggregationType = (measure: MeasureStore.MeasureOption): AnalyzeConfigDao.OrderAggregationsType => {
-  if (measure.datasetAggregationType) return measure.datasetAggregationType
+const resolveMeasureAggregationType = (measure: MeasureStore.MeasureOption): MeasureAggregationType => {
+  if (measure.measure.aggregation) return measure.measure.aggregation
   return resolveDefaultMeasureAggregationType(measure)
 }
 
-const aggregationLabelMap: Record<AnalyzeConfigDao.OrderAggregationsType, string> = {
-  raw: '原始值',
+const aggregationLabelMap: Record<MeasureAggregationType, string> = {
   count: '计数',
   countDistinct: '计数(去重)',
   sum: '总计',
@@ -199,11 +199,14 @@ const handleChangeAggregationType = (
   aggregationType: AnalyzeConfigDao.OrderAggregationsType,
   closePopover?: () => void
 ) => {
+  if (aggregationType === 'raw') return
   const measure = measures.value[index]
   if (!measure) return
   measureStore.updateMeasureByIndex(index, {
     ...measure,
-    datasetAggregationType: aggregationType
+    measure: {
+      aggregation: aggregationType
+    }
   })
   closePopover?.()
 }
@@ -411,7 +414,9 @@ const handleConfirmCustomColumn = () => {
   // 自动添加到值区域
   addMeasure({
     ...newColumn,
-    datasetAggregationType: resolveDefaultMeasureAggregationType(newColumn),
+    measure: {
+      aggregation: resolveDefaultMeasureAggregationType(newColumn)
+    },
     fixed: null,
     align: null,
     width: null,
