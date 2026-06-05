@@ -182,10 +182,10 @@ const handleSelectedDataset = async (row: DatasetVo.DatasetListItem) => {
 
 /**
  * @desc 高亮当前选中行
- * @param {DatabaseVo.GetDatabaseTablesOptions} row 表数据
+ * @param {ColumnsStore.DataSourceOption} row 表数据
  * @returns {string}
  */
-const rowClassName = ({ row }: { row: DatabaseVo.GetDatabaseTablesOptions }) => {
+const rowClassName = ({ row }: { row: ColumnsStore.DataSourceOption }) => {
   return row.tableName === dataSource.value ? 'is-selected' : ''
 }
 

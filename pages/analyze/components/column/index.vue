@@ -2,49 +2,39 @@
   <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
     <!-- 数据源 -->
     <DataSourceSelector @dataSource-change="handleDataSourceChange" />
-    <div class="column__title py-2">维度</div>
+    <div class="column__header flex items-center justify-between py-2">
+      <span class="column__title">维度</span>
+      <icon-park
+        class="cursor-pointer"
+        type="Refresh"
+        size="14"
+        fill="#333"
+        title="刷新维度"
+        @click="handleRefreshColumns"
+      />
+    </div>
     <div class="column__content">
-      <div
-        @contextmenu="contextmenuHandler(column, $event)"
-        class="flex items-center"
-        :class="columnClasses(column)"
+      <column-option
         v-for="(column, index) in columnList"
         :key="index"
-        draggable="true"
+        :column="column"
+        :display-name="columnDisplayNames(column)"
+        :icon-name="columnIconName(column)"
+        :classes="columnClasses(column)"
+        :draggable="true"
         @dragstart="dragstartHandler(column, index, $event)"
         @dragend="dragendHandler"
-        @mousedown.stop
-      >
-        <icon-park
-          :title="column.columnType"
-          class="mx-1"
-          v-if="columnIconName(column)"
-          :type="columnIconName(column)"
-          size="14"
-          fill="#333"
-        ></icon-park>
-        <span class="column__item__name text-ellipsis text-nowrap overflow-hidden">{{
-          columnDisplayNames(column)
-        }}</span>
-      </div>
+      />
     </div>
-    <!-- 字段的操作选项 -->
-    <context-menu ref="contextmenu">
-      <context-menu-item @click="setDataModel('测试')"> 测试菜单项 </context-menu-item>
-      <context-menu-divider></context-menu-divider>
-      <context-menu-submenu title="时间">
-        <context-menu-item @click="setDataModel('时间')">时间</context-menu-item>
-        <context-menu-item @click="setDataModel('日期')">日期</context-menu-item>
-      </context-menu-submenu>
-    </context-menu>
   </div>
 </template>
 
 <script setup lang="ts">
-import ContextMenu from '@/components/context-menu/index.vue'
+import ColumnOption from '@/components/column-option/index.vue'
 import DataSourceSelector from '@/components/selector/dataSource/index.vue'
 import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
+import { ElMessage } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 import { useAnalyzeStore } from '~/stores/analyze'
 import { useChartConfigStore } from '~/stores/chart-config'
@@ -91,8 +81,8 @@ const columnClasses = computed(() => (column: ColumnsStore.ColumnOptions) => {
   )
   return {
     column__item: true, // 默认类名
-    column__item_measure_selected: measureSelected, // 值选中
-    column__item_dimension_selected: dimensionSelected // 分组选中
+    column__item_measure_selected: Boolean(measureSelected), // 值选中
+    column__item_dimension_selected: Boolean(dimensionSelected) // 分组选中
   }
 })
 
@@ -145,13 +135,6 @@ const columnList = computed(() => {
 })
 
 /**
- * @desc 当前选中的列
- */
-const currentColumn = ref<ColumnsStore.ColumnOptions>()
-
-const contextmenu = ref<InstanceType<typeof ContextMenu> | null>(null)
-
-/**
  * @desc 拖拽开始事件
  * @param column {ColumnsStore.ColumnOptions} 列选项
  * @param index {number} 列索引
@@ -168,10 +151,10 @@ const dragstartHandler = (column: ColumnsStore.ColumnOptions, index: number, eve
       value: column
     })
   )
-  // 克隆.flex.items-center父级容器，保证拖影和原节点样式完全一致
+  // 克隆字段项节点，保证拖影和原节点样式完全一致
   const target = event.target as HTMLElement
   if (target) {
-    const parent = target.closest('.flex.items-center') as HTMLElement
+    const parent = target.closest('.column-option') as HTMLElement
     if (parent) {
       const dragNode = parent.cloneNode(true) as HTMLElement
       // 复制所有 data-v-xxx 属性
@@ -262,62 +245,6 @@ const dropHandler = (dragEvent: DragEvent) => {
     default:
       console.error('未知拖拽类型', data.from)
       break
-  }
-}
-
-/**
- * @desc 右键点击事件
- * @param column {ColumnsStore.ColumnOptions} 列选项
- * @param event {MouseEvent} 鼠标事件
- * @returns {void}
- */
-const contextmenuHandler = (column: ColumnsStore.ColumnOptions, event: MouseEvent) => {
-  event.preventDefault()
-  event.stopPropagation()
-  currentColumn.value = column
-
-  // 显示右键菜单
-  if (contextmenu.value) {
-    contextmenu.value.show(event)
-  }
-}
-
-/**
- * @desc 设置数据模型
- */
-const setDataModel = (dataType: string) => {
-  if (!currentColumn.value) return
-
-  // 这里可以根据不同的数据类型进行相应的处理
-  // 例如：更新列的数据模型类型、保存到store等
-  switch (dataType) {
-    case '商家ID':
-    case '买家ID':
-    case '商品ID':
-    case '作者ID':
-    case '动态ID':
-    case '视频ID':
-      // 处理ID类型
-      console.log(`设置 ${currentColumn.value.columnName} 为ID类型: ${dataType}`)
-      break
-    case '图片Url':
-      // 处理URL类型
-      console.log(`设置 ${currentColumn.value.columnName} 为URL类型: ${dataType}`)
-      break
-    case '时间':
-    case '日期':
-      // 处理时间类型
-      console.log(`设置 ${currentColumn.value.columnName} 为时间类型: ${dataType}`)
-      break
-    case '经度':
-    case '纬度':
-    case '位置':
-    case '关联值':
-      // 处理地理类型
-      console.log(`设置 ${currentColumn.value.columnName} 为地理类型: ${dataType}`)
-      break
-    default:
-      console.log(`设置 ${currentColumn.value.columnName} 为未知类型: ${dataType}`)
   }
 }
 
@@ -427,6 +354,25 @@ const queryDatasetColumns = async (datasetId: number) => {
   columnStore.setColumns([])
 }
 
+const handleRefreshColumns = async () => {
+  if (columnStore.getDataSourceMode === 'dataset') {
+    const datasetId = columnStore.getDatasetId
+    if (!datasetId) {
+      ElMessage.warning('请先选择数据集')
+      return
+    }
+    await queryDatasetColumns(datasetId)
+    return
+  }
+
+  const tableName = columnStore.getDataSource
+  if (!tableName) {
+    ElMessage.warning('请先选择数据表')
+    return
+  }
+  await queryTableColumn(tableName)
+}
+
 const handleDataSourceChange = async (payload: string | AnalyzeDataSourceChangePayload) => {
   if (typeof payload === 'string') {
     clearAnalyzeSelections()
@@ -463,40 +409,6 @@ const handleDataSourceChange = async (payload: string | AnalyzeDataSourceChangeP
     overflow-y: auto;
     list-style: none;
     // overflow: auto;
-
-    .column__item {
-      padding: 0 10px;
-      font-size: 12px;
-      cursor: move;
-      height: 24px;
-      line-height: 24px;
-      position: relative;
-      background-color: #f0f0f0;
-      border-radius: 4px;
-      margin-bottom: 5px;
-
-      &.column__item_measure_selected::before {
-        position: absolute;
-        left: 5px;
-        top: 9px;
-        content: '';
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background-color: #54c32a;
-      }
-
-      &.column__item_dimension_selected::after {
-        position: absolute;
-        left: 5px;
-        top: 9px;
-        content: '';
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background-color: #1292f7;
-      }
-    }
   }
 }
 </style>
