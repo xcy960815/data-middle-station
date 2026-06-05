@@ -1,6 +1,12 @@
 <template>
   <client-only>
-    <el-popover placement="bottom-start" trigger="click" width="auto" :disabled="!isPopoverEnabled" ref="popoverRef">
+    <el-popover
+      placement="bottom-start"
+      :trigger="popoverTrigger"
+      width="auto"
+      :disabled="!isPopoverEnabled"
+      ref="popoverRef"
+    >
       <template #reference>
         <div class="chart-selector-container px-1" :class="invalidClass">
           <slot name="prefix-icon"></slot>
@@ -12,6 +18,8 @@
             <slot name="order-aggregation"></slot>
             <slot name="order-direction"></slot>
             <slot name="dimension-suffix"></slot>
+            <slot name="filter-aggregation"></slot>
+            <slot name="filter-action"></slot>
             <slot name="filter-suffix"></slot>
             <el-tooltip
               class="box-item"
@@ -72,7 +80,10 @@ const orderStore = useOrdersStore()
 const measureStore = useMeasuresStore()
 const dimensionStore = useDimensionsStore()
 const isPopoverEnabled = computed(() => {
-  return ['measure', 'filter'].includes(props.cast)
+  return props.cast === 'measure'
+})
+const popoverTrigger = computed(() => {
+  return 'click'
 })
 const invalidClass = computed(() => {
   return props.invalid ? 'invalid-selector' : ''
@@ -184,6 +195,12 @@ defineExpose({
   }
 
   :deep(.chart-selector-direction-icon) {
+    flex-shrink: 0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  :deep(.chart-selector-filter-icon) {
     flex-shrink: 0;
     font-size: 14px;
     cursor: pointer;

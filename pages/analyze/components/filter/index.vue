@@ -29,37 +29,29 @@
           :displayName="resolveFilterDisplayName(item)"
           :filter="item"
           :index="index"
+          @before-open-where="handlePrepareWherePanel(item)"
         >
-          <template #filter-suffix>
-            <button v-if="item.aggregationType" class="chart-selector-meta-label" type="button" @mousedown.stop>
-              {{ resolveFilterAggregationLabel(item) }}
-            </button>
+          <template #filter-aggregation>
+            <span class="chart-selector-meta-label">{{ resolveFilterAggregationLabel(item) }}</span>
           </template>
-          <template #default="{ closePopover }">
-            <template v-if="!item.aggregationType">
-              <selector-aggregation
-                inline
-                :include-raw="true"
-                :column-type="item.columnType"
-                :aggregation-type="item.aggregationType"
-                tooltip="筛选聚合方式"
-                empty-label="选择聚合"
-                @update:aggregation-type="handleChangeAggregation(item, $event)"
-              />
-            </template>
-            <template v-else>
-              <div class="filter-panel w-[200px]">
-                <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
-                  <div
-                    class="flex items-center cursor-pointer text-gray-600 hover:text-blue-600 transition-colors group"
-                    @click="handleBackToStep1(item)"
-                  >
-                    <icon-park type="left" size="12" class="mr-1" />
-                    <span class="text-xs font-medium">{{ resolveFilterAggregationLabel(item) }}</span>
-                  </div>
-                </div>
-                <div class="space-y-3">
-                  <el-select v-model="item.filterType" placeholder="请选择条件" class="w-full" size="small">
+          <template #filter-action>
+            <icon-park class="chart-selector-filter-icon" type="filter-one" size="14" fill="#333" />
+          </template>
+          <template #context-menu>
+            <context-menu-item
+              v-for="option in getFilterAggregationOptions(item.columnType, true)"
+              :key="option.value"
+              @click="handleSelectAggregation(item, option.value)"
+            >
+              {{ option.label }}
+              <span v-if="item.aggregationType === option.value" class="filter-panel__checked">✓</span>
+            </context-menu-item>
+          </template>
+          <template #where-panel="{ closePopover }">
+            <div class="filter-panel w-[220px]">
+              <el-form label-position="top" size="small" class="filter-panel__form">
+                <el-form-item label="条件">
+                  <el-select v-model="item.filterType" placeholder="请选择条件" class="w-full">
                     <el-option
                       v-for="option in getFilterOptions(item.columnType)"
                       :key="option.value"
@@ -67,21 +59,27 @@
                       :value="option.value"
                     />
                   </el-select>
-                  <el-input
-                    v-if="hasFilterValue(item)"
+                </el-form-item>
+                <el-form-item v-if="hasFilterValue(item)" label="值">
+                  <el-date-picker
+                    v-if="isDateColumn(item)"
                     v-model="item.filterValue"
-                    placeholder="请输入值"
-                    size="small"
+                    type="datetime"
+                    placeholder="请选择日期时间"
+                    class="w-full"
+                    value-format="YYYY-MM-DD HH:mm:ss"
                     clearable
                   />
-                  <div class="flex justify-end pt-1">
-                    <el-button type="primary" size="small" class="w-full" @click="handleConfirm(item, closePopover)">
-                      确定
-                    </el-button>
-                  </div>
-                </div>
-              </div>
-            </template>
+                  <el-input
+                    v-else
+                    v-model="item.filterValue"
+                    :placeholder="isNumberColumn(item) ? '请输入数值' : '请输入值'"
+                    clearable
+                  />
+                </el-form-item>
+                <el-button type="primary" class="w-full" @click="handleConfirm(item, closePopover)">确定</el-button>
+              </el-form>
+            </div>
           </template>
         </selector-filter>
       </div>
@@ -91,15 +89,43 @@
 
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
-import SelectorAggregation from '@/components/selector/aggregation/index.vue'
+import { ElMessage } from 'element-plus'
 import { FILTER_TYPE_MAP } from '@/shared/domainTypes'
-import { getOrderAggregationLabel } from '@/shared/orderAggregationOptions'
+import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
 import { clearAllHandler } from '../clearAll'
 
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const filterStore = useFiltersStore()
 const filterList = computed(() => filterStore.getFilters)
+
+const DATE_COLUMN_TYPES = [
+  'date',
+  'datetime',
+  'timestamp',
+  'time',
+  'year',
+  'datetime2',
+  'datetimeoffset',
+  'smalldatetime'
+]
+const NUMBER_COLUMN_TYPES = [
+  'tinyint',
+  'smallint',
+  'mediumint',
+  'int',
+  'integer',
+  'bigint',
+  'decimal',
+  'float',
+  'double',
+  'real',
+  'bit',
+  'boolean',
+  'serial',
+  'number',
+  'numeric'
+]
 
 type FilterOptionItem = {
   label: string
@@ -114,12 +140,59 @@ const resolveFilterAggregationLabel = (item: FilterStore.FilterOption) => {
   return getOrderAggregationLabel(item.aggregationType)
 }
 
+const syncFilterDisplayName = (item: FilterStore.FilterOption) => {
+  item.displayName = item.columnComment || item.columnName || ''
+}
+
+const getFilterAggregationOptions = (columnType: string, includeRaw = true) => {
+  return getOrderAggregationOptions(columnType, includeRaw)
+}
+
+const isDateColumnType = (columnType = '') => {
+  const normalized = columnType.toLowerCase()
+  return DATE_COLUMN_TYPES.some((type) => normalized.includes(type))
+}
+
+const isNumberColumnType = (columnType = '') => {
+  const normalized = columnType.toLowerCase()
+  return NUMBER_COLUMN_TYPES.some((type) => normalized.includes(type))
+}
+
+const isDateColumn = (item: FilterStore.FilterOption) => isDateColumnType(item.columnType)
+
+const isNumberColumn = (item: FilterStore.FilterOption) => isNumberColumnType(item.columnType)
+
 const getFilterOptions = (columnType = ''): FilterOptionItem[] => {
-  if (columnType === 'string') {
+  const normalizedColumnType = columnType.toLowerCase()
+  if (
+    normalizedColumnType === 'string' ||
+    normalizedColumnType.includes('char') ||
+    normalizedColumnType.includes('text')
+  ) {
     return [{ label: '包含', value: FILTER_TYPE_MAP.包含 }]
   }
-  if (columnType === 'number' || columnType === 'date') {
-    return [{ label: '等于', value: FILTER_TYPE_MAP.等于 }]
+  if (isDateColumnType(columnType)) {
+    return [
+      { label: '等于', value: FILTER_TYPE_MAP.等于 },
+      { label: '大于', value: FILTER_TYPE_MAP.大于 },
+      { label: '大于等于', value: FILTER_TYPE_MAP.大于等于 },
+      { label: '小于', value: FILTER_TYPE_MAP.小于 },
+      { label: '小于等于', value: FILTER_TYPE_MAP.小于等于 },
+      { label: '为空', value: FILTER_TYPE_MAP.为空 },
+      { label: '不为空', value: FILTER_TYPE_MAP.不为空 }
+    ]
+  }
+  if (isNumberColumnType(columnType)) {
+    return [
+      { label: '等于', value: FILTER_TYPE_MAP.等于 },
+      { label: '不等于', value: FILTER_TYPE_MAP.不等于 },
+      { label: '大于', value: FILTER_TYPE_MAP.大于 },
+      { label: '大于等于', value: FILTER_TYPE_MAP.大于等于 },
+      { label: '小于', value: FILTER_TYPE_MAP.小于 },
+      { label: '小于等于', value: FILTER_TYPE_MAP.小于等于 },
+      { label: '为空', value: FILTER_TYPE_MAP.为空 },
+      { label: '不为空', value: FILTER_TYPE_MAP.不为空 }
+    ]
   }
   return [
     { label: '等于', value: FILTER_TYPE_MAP.等于 },
@@ -141,20 +214,33 @@ const hasFilterValue = (item: FilterStore.FilterOption) => {
   return !['为空', '不为空'].includes(currentFilterOption.label)
 }
 
-const handleChangeAggregation = (
+const handlePrepareWherePanel = (item: FilterStore.FilterOption) => {
+  if (!item.aggregationType) {
+    item.aggregationType = 'raw'
+  }
+  if (!item.filterType) {
+    item.filterType = getFilterOptions(item.columnType)[0]?.value
+  }
+}
+
+const handleSelectAggregation = (
   item: FilterStore.FilterOption,
   aggregationType: FilterStore.FilterAggregationType
 ) => {
   item.aggregationType = aggregationType
-}
-
-const handleBackToStep1 = (item: FilterStore.FilterOption) => {
-  item.aggregationType = '' as FilterStore.FilterAggregationType
+  syncFilterDisplayName(item)
 }
 
 const handleConfirm = (item: FilterStore.FilterOption, closePopover?: () => void) => {
-  const currentFilterOption = getFilterOptions(item.columnType).find((option) => option.value === item.filterType)
-  item.displayName = `${item.columnName} ${currentFilterOption?.label || ''} ${item.filterValue || ''}`.trim()
+  if (!item.filterType) {
+    ElMessage.warning('请选择筛选条件')
+    return
+  }
+  if (hasFilterValue(item) && !String(item.filterValue || '').trim()) {
+    ElMessage.warning('请输入筛选值')
+    return
+  }
+  syncFilterDisplayName(item)
   closePopover?.()
 }
 
@@ -213,15 +299,25 @@ const dropHandler = (dragEvent: DragEvent) => {
       break
     }
     default: {
-      addFilter({
+      const filterOption: FilterStore.FilterOption = {
         ...filter,
-        aggregationType: filter.aggregationType || ('' as FilterStore.FilterAggregationType),
+        aggregationType: 'raw',
         filterValue: filter.filterValue || ''
-      })
+      }
+      syncFilterDisplayName(filterOption)
+      addFilter(filterOption)
       break
     }
   }
 }
+
+watch(
+  filterList,
+  (filters) => {
+    filters.forEach((item) => syncFilterDisplayName(item))
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <style lang="scss" scoped>
@@ -235,5 +331,23 @@ const dropHandler = (dragEvent: DragEvent) => {
       position: relative;
     }
   }
+}
+
+.filter-panel__form {
+  :deep(.el-form-item) {
+    margin-bottom: 12px;
+  }
+
+  :deep(.el-form-item__label) {
+    margin-bottom: 4px;
+    padding: 0;
+    line-height: 1.2;
+    font-size: 12px;
+  }
+}
+
+.filter-panel__checked {
+  margin-left: 8px;
+  color: #409eff;
 }
 </style>

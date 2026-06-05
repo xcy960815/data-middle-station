@@ -1,8 +1,10 @@
 <template>
-  <div class="order-selector" @contextmenu="contextmenuHandler">
+  <div class="order-selector">
     <selector-template v-bind="$attrs" :index="props.index">
       <template #order-aggregation>
-        <slot name="order-aggregation"></slot>
+        <span class="chart-selector-aggregation-trigger" @contextmenu="contextmenuHandler">
+          <slot name="order-aggregation"></slot>
+        </span>
       </template>
       <template #order-direction>
         <slot name="order-direction"></slot>
@@ -44,7 +46,12 @@ const contextmenuHandler = (event: MouseEvent) => {
 
 <style lang="scss" scoped>
 .order-selector {
-  cursor: context-menu;
   width: 100%;
+}
+
+.chart-selector-aggregation-trigger {
+  display: inline-flex;
+  align-items: center;
+  cursor: context-menu;
 }
 </style>
