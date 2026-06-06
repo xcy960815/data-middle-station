@@ -35,7 +35,7 @@ import DataSourceSelector from '@/components/selector/dataSource/index.vue'
 import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useAnalyzeStore } from '~/stores/analyze'
 import { useChartConfigStore } from '~/stores/chart-config'
 import { useColumnsStore } from '~/stores/columns'
@@ -329,9 +329,7 @@ const mapDatasetFieldToColumn = (field: DatasetDao.DatasetFieldConfigItem): Colu
     columnType: field.dataType,
     columnComment: field.displayName || field.sourceColumnName,
     displayName: field.displayName || field.sourceColumnName,
-    datasetFieldName: field.fieldName,
-    datasetFieldType: field.fieldType,
-    datasetAggregationType: field.aggregationType || undefined
+    fieldRole: field.fieldType
   }
 }
 

@@ -12,8 +12,6 @@ declare namespace DatabaseVo {
    */
   type TableColumnItem = DatabaseDao.TableColumnRecord & {
     displayName: string
-    datasetFieldName?: string
-    datasetFieldType?: DatasetDao.DatasetFieldType
-    datasetAggregationType?: import('@/shared/domainTypes').MeasureAggregationType
+    fieldRole?: DatasetDao.DatasetFieldType
   }
 }

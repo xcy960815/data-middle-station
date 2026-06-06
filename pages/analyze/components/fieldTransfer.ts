@@ -14,21 +14,11 @@ type DisplayNameField = {
 }
 
 /**
- * 解析分析字段的稳定列名，优先使用物理列名，其次使用数据集字段名。
+ * 解析分析字段的稳定列名。
  * @param {ColumnsStore.ColumnOptions} field 待解析的候选字段或分析字段。
  * @returns {string} 可用于跨区域去重和互斥判断的字段名。
  */
-const getColumnName = (field: ColumnsStore.ColumnOptions) => field.columnName || field.datasetFieldName || ''
-
-/**
- * 从候选字段中剥离只属于数据集推荐配置的运行时字段，生成可进入分析配置的基础字段。
- * @param {ColumnsStore.ColumnOptions} field 左侧候选字段。
- * @returns {Omit<ColumnsStore.ColumnOptions, 'datasetAggregationType'>} 分析配置字段基础对象。
- */
-const createAnalyzeColumnOption = (field: ColumnsStore.ColumnOptions) => {
-  const { datasetAggregationType: _datasetAggregationType, ...columnOption } = field
-  return columnOption
-}
+const getColumnName = (field: ColumnsStore.ColumnOptions) => field.columnName || ''
 
 /**
  * 同步分析字段展示名，优先使用字段注释，其次使用字段名。
@@ -86,7 +76,7 @@ export const getAnalyzeFieldDropTargetIndex = (
  */
 export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureStore.MeasureOption => {
   return {
-    ...createAnalyzeColumnOption(field),
+    ...field,
     measureRule: createDefaultMeasureRule(field),
     fixed: null,
     align: null,
@@ -104,7 +94,7 @@ export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureS
  */
 export const createDimensionOption = (field: ColumnsStore.ColumnOptions): DimensionStore.DimensionOption => {
   return {
-    ...createAnalyzeColumnOption(field),
+    ...field,
     dimensionRule: createDefaultDimensionRule(),
     fixed: null,
     align: null,
@@ -122,7 +112,7 @@ export const createDimensionOption = (field: ColumnsStore.ColumnOptions): Dimens
  */
 export const createFilterOption = (field: ColumnsStore.ColumnOptions): FilterStore.FilterOption => {
   const filterOption = {
-    ...createAnalyzeColumnOption(field),
+    ...field,
     filterRule: createDefaultFilterRule()
   }
   syncAnalyzeFieldDisplayName(filterOption)
@@ -136,7 +126,7 @@ export const createFilterOption = (field: ColumnsStore.ColumnOptions): FilterSto
  */
 export const createOrderOption = (field: ColumnsStore.ColumnOptions): OrderStore.OrderOption => {
   const orderOption = {
-    ...createAnalyzeColumnOption(field),
+    ...field,
     orderRule: createDefaultOrderRule()
   }
   syncAnalyzeFieldDisplayName(orderOption)

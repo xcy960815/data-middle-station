@@ -48,8 +48,7 @@ export type OrderRule = {
  */
 type MeasureRuleSource = {
   columnType?: string
-  datasetFieldType?: 'dimension' | 'metric'
-  datasetAggregationType?: MeasureAggregationType
+  fieldRole?: 'dimension' | 'metric'
 }
 
 /**
@@ -88,14 +87,12 @@ export const setMeasureRuleAggregation = (rule: MeasureRule, aggregation: Measur
 /**
  * 创建默认值字段规则。
  *
- * 数据集有推荐聚合方式时优先使用；否则 metric 或数值字段默认求和，非数值字段默认计数。
+ * metric 或数值字段默认求和，非数值字段默认计数。
  * @param {MeasureRuleSource} field 用于判断默认聚合方式的字段信息。
  * @returns {MeasureRule} 默认值字段规则。
  */
 export const createDefaultMeasureRule = (field: MeasureRuleSource): MeasureRule => ({
-  aggregation:
-    field.datasetAggregationType ||
-    (field.datasetFieldType === 'metric' || isNumericColumnType(field.columnType) ? 'sum' : 'count')
+  aggregation: field.fieldRole === 'metric' || isNumericColumnType(field.columnType) ? 'sum' : 'count'
 })
 
 /**

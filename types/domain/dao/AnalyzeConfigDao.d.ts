@@ -13,8 +13,7 @@ declare namespace AnalyzeConfigDao {
    */
   type ColumnItem = DatabaseDao.TableColumnRecord & {
     displayName: string
-    datasetFieldName?: string
-    datasetFieldType?: DatasetDao.DatasetFieldType
+    fieldRole?: DatasetDao.DatasetFieldType
   }
 
   /**
