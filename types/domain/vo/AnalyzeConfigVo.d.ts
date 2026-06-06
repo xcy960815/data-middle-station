@@ -116,6 +116,13 @@ declare namespace AnalyzeConfigVo {
     removedFieldCount: number
   }
 
+  type CleanFieldRulesResponse = {
+    scannedCount: number
+    updatedCount: number
+    normalizedFieldCount: number
+    removedFieldCount: number
+  }
+
   /**
    * @desc 饼图配置
    */

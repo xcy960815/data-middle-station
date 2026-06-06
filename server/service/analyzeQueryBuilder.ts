@@ -12,6 +12,12 @@ type FilterClauseFragments = {
   having: SqlFragment
 }
 
+type QueryFieldOption = {
+  columnName: string
+  isCustom?: boolean
+  expression?: string
+}
+
 export type AnalyzeQueryContext = {
   tableName: string
   quotedTableName: string
@@ -365,10 +371,7 @@ export class AnalyzeQueryBuilder {
    * @param context 查询上下文
    * @returns SQL 表达式
    */
-  private resolveExpression(
-    option: { columnName: string; isCustom?: boolean; expression?: string },
-    context: AnalyzeQueryContext
-  ): string {
+  private resolveExpression(option: QueryFieldOption, context: AnalyzeQueryContext): string {
     if (option.isCustom && option.expression) {
       return this.sanitizeCustomExpression(option.expression, context)
     }
@@ -430,12 +433,12 @@ export class AnalyzeQueryBuilder {
 
   /**
    * @desc 构建分组字段表达式，确保 SELECT/GROUP BY/ORDER BY 使用同一表达式
-   * @param columnOption 分组字段配置
+   * @param columnOption 查询字段配置
    * @param context 查询上下文
    * @returns 分组字段名与表达式
    */
   private buildGroupFieldExpression(
-    columnOption: AnalyzeDataDto.DimensionOption,
+    columnOption: QueryFieldOption,
     context: AnalyzeQueryContext
   ): { columnName: string; expression: string } {
     const columnName = this.normalizeIdentifier(columnOption.columnName, '字段')

@@ -20,7 +20,8 @@ const WHITE_LIST: readonly string[] = [
   '/api/health',
   '/api/public',
   '/api/seedBigData',
-  '/api/cleanAnalyzeConfigRuntimeFields'
+  '/api/cleanAnalyzeConfigRuntimeFields',
+  '/api/cleanAnalyzeConfigFieldRules'
 ]
 
 /**

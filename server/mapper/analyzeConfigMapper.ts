@@ -168,6 +168,17 @@ export class AnalyzeConfigMapper extends BaseMapper {
     return await this.exe<Array<T>>(sql)
   }
 
+  @Mapping(AnalyzeConfigMapping)
+  public async getAnalyzeConfigsForFieldRuleCleaning<
+    T extends AnalyzeConfigDao.AnalyzeConfigRecord = AnalyzeConfigDao.AnalyzeConfigRecord
+  >(): Promise<Array<T>> {
+    const sql = `
+      select ${batchFormatSqlKey(ANALYZE_CONFIG_FIELDS)}
+      from ${ANALYZE_CONFIG_TABLE_NAME}
+      where is_deleted = 0`
+    return await this.exe<Array<T>>(sql)
+  }
+
   public async updateAnalyzeConfigRuntimeFields(
     configId: number,
     updateParams: Pick<AnalyzeConfigDao.AnalyzeConfigRecord, 'measures' | 'filters' | 'dimensions' | 'orders'>
