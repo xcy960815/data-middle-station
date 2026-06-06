@@ -14,6 +14,6 @@ declare namespace DatabaseVo {
     displayName: string
     datasetFieldName?: string
     datasetFieldType?: DatasetDao.DatasetFieldType
-    datasetAggregationType?: import('@/shared/domainTypes').OrderAggregationType
+    datasetAggregationType?: import('@/shared/domainTypes').MeasureAggregationType
   }
 }

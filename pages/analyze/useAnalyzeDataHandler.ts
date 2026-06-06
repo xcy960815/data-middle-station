@@ -43,7 +43,7 @@ export const useAnalyzeDataHandler = () => {
   // ---------- 查询参数 ----------
   const queryAnalyzeDataParams = computed(() => {
     const baseFilters = filterStore.getFilters.filter(
-      (item) => item.condition.aggregation && (item.condition.operator || item.condition.operand)
+      (item) => item.filterRule.aggregation && (item.filterRule.operator || item.filterRule.operand)
     )
     const dimensions = currentDrillDimension.value ? [currentDrillDimension.value] : []
     const activeOrderColumnNames = new Set([
@@ -56,7 +56,7 @@ export const useAnalyzeDataHandler = () => {
       // 过滤掉未完成的聚合条件
       filters: [...baseFilters, ...drillFilters.value],
       orders: orderStore.getOrders.filter(
-        (item) => item.sort?.direction && activeOrderColumnNames.has(item.columnName)
+        (item) => item.orderRule?.direction && activeOrderColumnNames.has(item.columnName)
       ),
       dimensions,
       measures: measureStore.getMeasures,

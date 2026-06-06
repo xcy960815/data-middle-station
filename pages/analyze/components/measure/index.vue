@@ -46,7 +46,7 @@
               v-if="isMeasureAggregationEnabled(measure)"
               inline
               :column-type="measure.columnType"
-              :aggregation-type="resolveMeasureAggregationType(measure)"
+              :aggregation-type="measure.measureRule.aggregation"
               @update:aggregation-type="handleChangeAggregationType(index, $event, closePopover)"
             />
           </template>
@@ -108,14 +108,15 @@
 </template>
 
 <script setup lang="ts">
+import { createDefaultMeasureRule, setMeasureRuleAggregation } from '@/shared/analyzeFieldRules'
+import type { MeasureAggregationType } from '@/shared/domainTypes'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
 import { defineAsyncComponent } from 'vue'
 import ContextMenu from '../../../../components/context-menu/index.vue'
 import SelectorAggregation from '../../../../components/selector/aggregation/index.vue'
-import type { MeasureAggregationType } from '@/shared/domainTypes'
 import { clearAllHandler } from '../clearAll'
-import { moveFieldToMeasures, resolveDefaultMeasureAggregationType } from '../fieldTransfer'
+import { getAnalyzeFieldDropTargetIndex, moveFieldToMeasures, reorderMeasures } from '../fieldTransfer'
 
 const MonacoEditor = defineAsyncComponent(() => import('../../../../components/monaco-editor/index.vue'))
 
@@ -137,7 +138,7 @@ const measures = computed(() => {
 })
 
 /**
- * @desc dimensionList 数据
+ * 分组 数据
  */
 const dimensionList = computed<DimensionStore.DimensionState['dimensions']>(() => {
   return dimensionStore.getDimensions
@@ -155,10 +156,18 @@ const dimensionColumnSet = computed(() => {
   return new Set(dimensionList.value.map((item) => item.columnName).filter(Boolean))
 })
 
+/**
+ *  获取当前值字段是否无效
+ * @param {MeasureStore.MeasureOption} measure
+ */
 const getMeasureInvalid = (measure: MeasureStore.MeasureOption) => {
   return getMeasureInvalidMessage(measure) !== ''
 }
 
+/**
+ * 获取当前值字段的无效信息
+ * @param {MeasureStore.MeasureOption} measure
+ */
 const getMeasureInvalidMessage = (measure: MeasureStore.MeasureOption) => {
   if (!measure.columnName) return ''
   if ((measureColumnCountMap.value[measure.columnName] || 0) > 1) {
@@ -174,11 +183,6 @@ const isMeasureAggregationEnabled = (measure: MeasureStore.MeasureOption) => {
   return !!measure.columnName && dimensionList.value.length > 0
 }
 
-const resolveMeasureAggregationType = (measure: MeasureStore.MeasureOption): MeasureAggregationType => {
-  if (measure.measure.aggregation) return measure.measure.aggregation
-  return resolveDefaultMeasureAggregationType(measure)
-}
-
 const aggregationLabelMap: Record<MeasureAggregationType, string> = {
   count: '计数',
   countDistinct: '计数(去重)',
@@ -189,7 +193,7 @@ const aggregationLabelMap: Record<MeasureAggregationType, string> = {
 }
 
 const resolveMeasureAggregationLabel = (measure: MeasureStore.MeasureOption) => {
-  return aggregationLabelMap[resolveMeasureAggregationType(measure)] || '默认'
+  return measure.measureRule.aggregation ? aggregationLabelMap[measure.measureRule.aggregation] : '请选择'
 }
 
 const handleChangeAggregationType = (
@@ -197,14 +201,11 @@ const handleChangeAggregationType = (
   aggregationType: MeasureAggregationType,
   closePopover?: () => void
 ) => {
-  if (aggregationType === 'raw') return
   const measure = measures.value[index]
   if (!measure) return
   measureStore.updateMeasureByIndex(index, {
     ...measure,
-    measure: {
-      aggregation: aggregationType
-    }
+    measureRule: setMeasureRuleAggregation(measure.measureRule, aggregationType)
   })
   closePopover?.()
 }
@@ -216,27 +217,6 @@ const handleChangeAggregationType = (
 const addMeasure = (measure: MeasureStore.MeasureOption | Array<MeasureStore.MeasureOption>) => {
   measure = Array.isArray(measure) ? measure : [measure]
   measureStore.addMeasures(measure)
-}
-
-/**
- * @desc getTargetIndex 获取目标索引
- * @param {number} index 源索引
- * @param {DragEvent} dragEvent 拖拽事件
- * @returns {number} 目标索引
- */
-const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
-  const dropY = dragEvent.clientY // 落点Y
-  let ys = [].slice
-    .call(document.querySelectorAll('.measure__content > [data-action="drag"]'))
-    .map(
-      (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
-    )
-  ys.splice(index, 1)
-  let targetIndex = ys.findIndex((e) => dropY < e)
-  if (targetIndex === -1) {
-    targetIndex = ys.length
-  }
-  return targetIndex
 }
 
 /**
@@ -262,7 +242,7 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
  * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
-const dragHandler = (index: number, dragEvent: DragEvent) => {
+const dragHandler = (_index: number, dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
 
@@ -276,7 +256,7 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 }
 
 /**
- * @desc 拖拽结束
+ * @desc 拖拽结束 向值里面添加字段
  * @param {DragEvent} dragEvent 拖拽事件
  * @returns {void}
  */
@@ -288,19 +268,22 @@ const dropHandler = (dragEvent: DragEvent) => {
   const index = data.index
   switch (data.from) {
     case 'measures': {
-      // 移动位置
-      const targetIndex = getTargetIndex(data.index, dragEvent)
+      // 从维度中拖过来
+      const targetIndex = getAnalyzeFieldDropTargetIndex(
+        '.measure__content > [data-action="drag"]',
+        data.index,
+        dragEvent
+      )
       if (targetIndex === data.index) return
-      const measures = JSON.parse(JSON.stringify(measureStore.getMeasures))
-      const target = measures.splice(data.index, 1)[0]
-      measures.splice(targetIndex, 0, target)
-      measureStore.setMeasures(measures)
+      reorderMeasures(data.index, targetIndex)
       break
     }
     case 'dimensions':
+      // 从分组中拖过来
       moveFieldToMeasures(data.value, { from: data.from, index })
       break
     default:
+      // 从列中拖过来
       // 更新列名 主要是显示已经选中的标志
       columnStore.updateColumn({ column: data.value, index })
       moveFieldToMeasures(data.value, { from: 'columns', index })
@@ -412,9 +395,7 @@ const handleConfirmCustomColumn = () => {
   // 自动添加到值区域
   addMeasure({
     ...newColumn,
-    measure: {
-      aggregation: resolveDefaultMeasureAggregationType(newColumn)
-    },
+    measureRule: createDefaultMeasureRule(newColumn),
     fixed: null,
     align: null,
     width: null,

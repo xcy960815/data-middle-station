@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import { createFilterRule } from '@/shared/analyzeFieldRules'
 
 export const useAnalyzeDrill = () => {
   const dimensionStore = useDimensionsStore()
@@ -26,11 +27,11 @@ export const useAnalyzeDrill = () => {
   const drillFilters = computed<FilterStore.FilterOption[]>(() => {
     return drillPath.value.map((item) => ({
       ...JSON.parse(JSON.stringify(item.dimension)),
-      condition: {
+      filterRule: createFilterRule({
         aggregation: 'raw',
         operator: 'eq',
         operand: item.value == null ? '' : String(item.value)
-      },
+      }),
       displayName: item.dimension.displayName || item.dimension.columnComment || item.dimension.columnName || '钻取路径'
     }))
   })

@@ -1,10 +1,16 @@
-import { createDefaultDimensionGrouping } from '@/shared/dimensionGrouping'
+import {
+  createDefaultDimensionRule,
+  createDefaultFilterRule,
+  createDefaultMeasureRule,
+  createDefaultOrderRule
+} from '@/shared/analyzeFieldRules'
 
-type AnalyzeFieldRole = 'measures' | 'dimensions'
+type AnalyzeFieldTransferSource = Pick<DragData, 'from' | 'index'>
 
-type AnalyzeFieldTransferSource = {
-  from: AnalyzeFieldRole | 'columns'
-  index: number
+type DisplayNameField = {
+  displayName?: string
+  columnComment?: string
+  columnName?: string
 }
 
 const getColumnName = (field: ColumnsStore.ColumnOptions) => field.columnName || field.datasetFieldName || ''
@@ -14,38 +20,38 @@ const createAnalyzeColumnOption = (field: ColumnsStore.ColumnOptions) => {
   return columnOption
 }
 
-export const isNumericColumnType = (columnType?: string) => {
-  const normalizedColumnType = columnType?.toLowerCase() || ''
-  return [
-    'int',
-    'integer',
-    'float',
-    'double',
-    'decimal',
-    'numeric',
-    'real',
-    'tinyint',
-    'smallint',
-    'bigint',
-    'number'
-  ].some((type) => normalizedColumnType.includes(type))
+const syncAnalyzeFieldDisplayName = (field: DisplayNameField) => {
+  field.displayName = field.columnComment || field.columnName || ''
 }
 
-export const resolveDefaultMeasureAggregationType = (
-  field: Pick<ColumnsStore.ColumnOptions, 'columnType' | 'datasetFieldType'>
-): AnalyzeConfigDao.MeasureAggregationType => {
-  if (field.datasetFieldType === 'metric' || isNumericColumnType(field.columnType)) {
-    return 'sum'
-  }
-  return 'count'
+const reorderFields = <T>(fields: T[], sourceIndex: number, targetIndex: number): T[] => {
+  if (targetIndex === sourceIndex) return fields
+  const nextFields = JSON.parse(JSON.stringify(fields)) as T[]
+  const target = nextFields.splice(sourceIndex, 1)[0]
+  nextFields.splice(targetIndex, 0, target)
+  return nextFields
+}
+
+export const getAnalyzeFieldDropTargetIndex = (
+  selector: string,
+  sourceIndex: number,
+  dragEvent: DragEvent,
+  axis: 'x' | 'y' = 'y'
+): number => {
+  const dropCoordinate = axis === 'x' ? dragEvent.clientX : dragEvent.clientY
+  const middleCoordinates = Array.from(document.querySelectorAll(selector)).map((element) => {
+    const rect = element.getBoundingClientRect()
+    return axis === 'x' ? (rect.left + rect.right) / 2 : (rect.top + rect.bottom) / 2
+  })
+  middleCoordinates.splice(sourceIndex, 1)
+  const targetIndex = middleCoordinates.findIndex((coordinate) => dropCoordinate < coordinate)
+  return targetIndex === -1 ? middleCoordinates.length : targetIndex
 }
 
 export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureStore.MeasureOption => {
   return {
     ...createAnalyzeColumnOption(field),
-    measure: {
-      aggregation: field.datasetAggregationType || resolveDefaultMeasureAggregationType(field)
-    },
+    measureRule: createDefaultMeasureRule(field),
     fixed: null,
     align: null,
     width: null,
@@ -58,7 +64,7 @@ export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureS
 export const createDimensionOption = (field: ColumnsStore.ColumnOptions): DimensionStore.DimensionOption => {
   return {
     ...createAnalyzeColumnOption(field),
-    grouping: createDefaultDimensionGrouping(),
+    dimensionRule: createDefaultDimensionRule(),
     fixed: null,
     align: null,
     width: null,
@@ -68,6 +74,31 @@ export const createDimensionOption = (field: ColumnsStore.ColumnOptions): Dimens
   }
 }
 
+export const createFilterOption = (field: ColumnsStore.ColumnOptions): FilterStore.FilterOption => {
+  const filterOption = {
+    ...createAnalyzeColumnOption(field),
+    filterRule: createDefaultFilterRule()
+  }
+  syncAnalyzeFieldDisplayName(filterOption)
+  return filterOption
+}
+
+export const createOrderOption = (field: ColumnsStore.ColumnOptions): OrderStore.OrderOption => {
+  const orderOption = {
+    ...createAnalyzeColumnOption(field),
+    orderRule: createDefaultOrderRule()
+  }
+  syncAnalyzeFieldDisplayName(orderOption)
+  return orderOption
+}
+
+export const syncFilterOptionDisplayName = syncAnalyzeFieldDisplayName
+
+export const syncOrderOptionDisplayName = syncAnalyzeFieldDisplayName
+
+/**
+ * 值和分组是查询主角色，同一个字段只能落在其中一个主角色里。
+ */
 export const moveFieldToMeasures = (field: ColumnsStore.ColumnOptions, source: AnalyzeFieldTransferSource) => {
   const measureStore = useMeasuresStore()
   const dimensionStore = useDimensionsStore()
@@ -90,6 +121,9 @@ export const moveFieldToMeasures = (field: ColumnsStore.ColumnOptions, source: A
   measureStore.addMeasures([createMeasureOption(field)])
 }
 
+/**
+ * 值和分组是查询主角色，同一个字段只能落在其中一个主角色里。
+ */
 export const moveFieldToDimensions = (field: ColumnsStore.ColumnOptions, source: AnalyzeFieldTransferSource) => {
   const measureStore = useMeasuresStore()
   const dimensionStore = useDimensionsStore()
@@ -110,4 +144,34 @@ export const moveFieldToDimensions = (field: ColumnsStore.ColumnOptions, source:
   )
 
   dimensionStore.addDimensions([createDimensionOption(field)])
+}
+
+export const addFieldToFilters = (field: ColumnsStore.ColumnOptions) => {
+  const filterStore = useFiltersStore()
+  filterStore.addFilters([createFilterOption(field)])
+}
+
+export const addFieldToOrders = (field: ColumnsStore.ColumnOptions) => {
+  const orderStore = useOrdersStore()
+  orderStore.addOrders([createOrderOption(field)])
+}
+
+export const reorderMeasures = (sourceIndex: number, targetIndex: number) => {
+  const measureStore = useMeasuresStore()
+  measureStore.setMeasures(reorderFields(measureStore.getMeasures, sourceIndex, targetIndex))
+}
+
+export const reorderDimensions = (sourceIndex: number, targetIndex: number) => {
+  const dimensionStore = useDimensionsStore()
+  dimensionStore.setDimensions(reorderFields(dimensionStore.getDimensions, sourceIndex, targetIndex))
+}
+
+export const reorderFilters = (sourceIndex: number, targetIndex: number) => {
+  const filterStore = useFiltersStore()
+  filterStore.setFilters(reorderFields(filterStore.getFilters, sourceIndex, targetIndex))
+}
+
+export const reorderOrders = (sourceIndex: number, targetIndex: number) => {
+  const orderStore = useOrdersStore()
+  orderStore.setOrders(reorderFields(orderStore.getOrders, sourceIndex, targetIndex))
 }

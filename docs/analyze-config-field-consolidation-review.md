@@ -8,17 +8,17 @@
 
 ```ts
 type MeasureOption = ColumnItem & {
-  measure: {
+  measureRule: {
     aggregation?: MeasureAggregationType
   }
 }
 
 type DimensionOption = ColumnItem & {
-  grouping: {}
+  dimensionRule: {}
 }
 
 type FilterOption = ColumnItem & {
-  condition: {
+  filterRule: {
     operator: FilterType
     operand?: string
     aggregation?: FilterAggregationType
@@ -26,7 +26,7 @@ type FilterOption = ColumnItem & {
 }
 
 type OrderOption = ColumnItem & {
-  sort: {
+  orderRule: {
     direction: OrderType
     aggregation?: OrderAggregationType
   }
@@ -37,36 +37,36 @@ type OrderOption = ColumnItem & {
 
 ### Order
 
-排序从平铺字段收拢为 `sort` 对象：
+排序从平铺字段收拢为 `orderRule` 对象：
 
-- `orderType` -> `sort.direction`
-- `aggregationType` -> `sort.aggregation`
+- `orderType` -> `orderRule.direction`
+- `aggregationType` -> `orderRule.aggregation`
 
-这样排序字段的方向和排序时使用的聚合口径都归在 `sort` 下，避免和过滤、值字段的聚合概念混在一起。
+这样排序字段的方向和排序时使用的聚合口径都归在 `orderRule` 下，避免和过滤、值字段的聚合概念混在一起。
 
 ### Filter
 
-过滤从平铺字段收拢为 `condition` 对象：
+过滤从平铺字段收拢为 `filterRule` 对象：
 
-- `filterType` -> `condition.operator`
-- `filterValue` -> `condition.operand`
-- `aggregationType` -> `condition.aggregation`
+- `filterType` -> `filterRule.operator`
+- `filterValue` -> `filterRule.operand`
+- `aggregationType` -> `filterRule.aggregation`
 
-`condition` 表达的是过滤条件本身，`operator / operand / aggregation` 比 `type / value` 更明确：`operator` 是操作符，`operand` 是右侧操作数，`aggregation` 是过滤作用于原始字段还是聚合表达式。
+`filterRule` 表达过滤字段的行为规则，`operator / operand / aggregation` 比 `type / value` 更明确：`operator` 是操作符，`operand` 是右侧操作数，`aggregation` 是过滤作用于原始字段还是聚合表达式。
 
 ### Measure
 
-值字段从单独聚合字段收拢为 `measure` 对象：
+值字段从单独聚合字段收拢为 `measureRule` 对象：
 
-- `aggregationType` -> `measure.aggregation`
+- `aggregationType` -> `measureRule.aggregation`
 
-`measure` 后续可以继续承载值字段自己的行为配置，例如展示口径、格式化规则、计算方式等。类型上也从排序聚合类型改回 `MeasureAggregationType`，避免 `raw` 这种排序/过滤可用但值字段不应使用的类型混进来。
+`measureRule` 后续可以继续承载值字段自己的行为配置，例如展示口径、格式化规则、计算方式等。类型上也从排序聚合类型改回 `MeasureAggregationType`，避免 `raw` 这种排序/过滤可用但值字段不应使用的类型混进来。
 
 ### Dimension
 
-分组字段新增 `grouping` 对象：
+分组字段新增 `dimensionRule` 对象：
 
-- 当前先保存为 `grouping: {}`
+- 当前先保存为 `dimensionRule: {}`
 - 查询逻辑暂不消费该字段
 
 这是为后续日期粒度、层级、分组桶等能力预留结构。当前不引入兼容转换，也不做左手倒右手的运行时 normalize。
@@ -85,7 +85,7 @@ type OrderOption = ColumnItem & {
 
 ### 1. 命名是否合理
 
-- 行为对象名是否贴近业务语义：`sort / condition / measure / grouping`。
+- 行为对象名是否贴近业务语义：`orderRule / filterRule / measureRule / dimensionRule`。
 - 对象内部字段是否比旧字段更清楚：`direction / aggregation / operator / operand`。
 - 是否还有过于泛化的名字，例如无上下文的 `type / value / config / option`。
 - 类型名是否归属正确领域，例如值字段只能依赖 `MeasureAggregationType`，不要复用 `OrderAggregationType`。
@@ -156,7 +156,8 @@ type OrderOption = ColumnItem & {
 - 查询语义和 SQL 规则应留在 `server/service/analyzeQueryBuilder.ts`，不要放进 shared 或组件。
 - Store 类型放 `types/store`，接口持久化结构放 `types/domain/dao`、返回给前端的结构放 `types/domain/vo`。
 - 如果一个文件只为绕开循环依赖或路径引用而存在，应重新评估是不是抽象过度。
-- 文件名要体现业务对象，例如 `orderSort.ts`、`filterCondition.ts`、`measureConfig.ts`、`dimensionGrouping.ts`，避免 `common.ts`、`helper.ts` 这种含义过宽的名字继续膨胀。
+- 字段规则类型集中放在 `shared/analyzeFieldRules.ts`，避免为几行规则拆出过多模块；如果后续某类规则明显膨胀，再按领域拆分。
+- 字段规则的默认创建和规则字段变更也集中放在 `shared/analyzeFieldRules.ts`，组件不要直接手写 rule 对象或到处修改 `xxxRule.xxx`。
 
 ### 11. Selector Template 交互是否一致
 
@@ -184,6 +185,6 @@ type OrderOption = ColumnItem & {
 ## 当前已知取舍
 
 - 不保留旧字段兼容逻辑，旧数据通过 SQL 清洗。
-- `grouping` 当前只是结构占位，不改变查询行为。
+- `dimensionRule` 当前只是结构占位，不改变查询行为。
 - 删除分析查询快照脚本后，SQL 拼装缺少专项自动回归测试；后续如果要补测试，建议放到正式测试目录和 package test 体系里，不再放 `scripts/`。
 - 当前 lint 仍有一个既有 warning：`pages/analyze/components/column/index.vue` 中 `ref` 未使用。

@@ -31,7 +31,7 @@ declare namespace OrderStore {
    * @property {string} type 列类型
    */
   type OrderOption = ColumnsStore.ColumnOptions & {
-    sort: import('@/shared/orderSort').OrderSortRule
+    orderRule: import('@/shared/analyzeFieldRules').OrderRule
   }
 
   /**
@@ -43,14 +43,16 @@ declare namespace OrderStore {
   /**
    * @desc getter
    */
-  type OrderGetters = {}
+  type OrderGetters = {
+    getOrders: (state: OrderState) => OrderOption[]
+  }
 
   /**
    * @desc 排序操作
    */
   type OrderActions = {
+    setOrders: (orders: OrderOption[]) => void
     updateOrder: (params: { order: OrderOption; index: number }) => void
-  } & {
     addOrders: (orders: OrderOption[]) => void
     removeOrder: (index: number) => void
   }

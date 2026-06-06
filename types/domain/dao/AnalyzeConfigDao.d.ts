@@ -24,7 +24,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 值字段规则：聚合方式等度量行为配置
      */
-    measure: import('@/shared/measureConfig').MeasureRule
+    measureRule: import('@/shared/analyzeFieldRules').MeasureRule
   }
 
   /**
@@ -64,7 +64,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 过滤条件：操作符 + 操作数 + 聚合方式
      */
-    condition: import('@/shared/filterCondition').FilterConditionRule
+    filterRule: import('@/shared/analyzeFieldRules').FilterRule
   }
 
   /**
@@ -74,7 +74,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 分组规则：日期粒度、层级等分组行为配置
      */
-    grouping: import('@/shared/dimensionGrouping').DimensionGroupingRule
+    dimensionRule: import('@/shared/analyzeFieldRules').DimensionRule
   }
 
   /**
@@ -101,7 +101,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 排序规则：方向 + 聚合方式
      */
-    sort: import('@/shared/orderSort').OrderSortRule
+    orderRule: import('@/shared/analyzeFieldRules').OrderRule
   }
 
   /**
@@ -413,7 +413,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 数据源
      */
-    dataSource: string | null
+    dataSource: string
     /**
      * 图表类型
      */

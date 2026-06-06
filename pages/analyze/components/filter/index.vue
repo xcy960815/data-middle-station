@@ -42,14 +42,14 @@
               @click="handleSelectAggregation(item, option.value)"
             >
               {{ option.label }}
-              <span v-if="item.condition.aggregation === option.value" class="filter-panel__checked">✓</span>
+              <span v-if="item.filterRule.aggregation === option.value" class="filter-panel__checked">✓</span>
             </context-menu-item>
           </template>
           <template #where-panel="{ closePopover }">
             <div class="filter-panel w-[220px]">
               <el-form label-position="top" size="small" class="filter-panel__form">
                 <el-form-item label="条件">
-                  <el-select v-model="item.condition.operator" placeholder="请选择条件" class="w-full">
+                  <el-select v-model="item.filterRule.operator" placeholder="请选择条件" class="w-full">
                     <el-option
                       v-for="option in getFilterOptions(item.columnType)"
                       :key="option.value"
@@ -61,7 +61,7 @@
                 <el-form-item v-if="hasFilterValue(item)" label="值">
                   <el-date-picker
                     v-if="isDateColumn(item)"
-                    v-model="item.condition.operand"
+                    v-model="item.filterRule.operand"
                     type="datetime"
                     placeholder="请选择日期时间"
                     class="w-full"
@@ -70,7 +70,7 @@
                   />
                   <el-input
                     v-else
-                    v-model="item.condition.operand"
+                    v-model="item.filterRule.operand"
                     :placeholder="isNumberColumn(item) ? '请输入数值' : '请输入值'"
                     clearable
                   />
@@ -89,9 +89,15 @@
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
 import { FILTER_TYPE_MAP } from '@/shared/domainTypes'
-import { createDefaultFilterCondition } from '@/shared/filterCondition'
+import { prepareFilterRule, setFilterRuleAggregation } from '@/shared/analyzeFieldRules'
 import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
 import { clearAllHandler } from '../clearAll'
+import {
+  addFieldToFilters,
+  getAnalyzeFieldDropTargetIndex,
+  reorderFilters,
+  syncFilterOptionDisplayName
+} from '../fieldTransfer'
 
 const { clearAll, hasClearAll } = clearAllHandler()
 
@@ -136,19 +142,7 @@ const resolveFilterDisplayName = (item: FilterStore.FilterOption) => {
 }
 
 const resolveFilterAggregationLabel = (item: FilterStore.FilterOption) => {
-  return getOrderAggregationLabel(item.condition.aggregation)
-}
-
-const syncFilterDisplayName = (item: FilterStore.FilterOption) => {
-  item.displayName = item.columnComment || item.columnName || ''
-}
-
-const createFilterOption = (field: FilterStore.FilterOption): FilterStore.FilterOption => {
-  const { datasetAggregationType: _datasetAggregationType, ...columnOption } = field
-  return {
-    ...columnOption,
-    condition: createDefaultFilterCondition()
-  }
+  return getOrderAggregationLabel(item.filterRule.aggregation)
 }
 
 const getFilterAggregationOptions = (columnType: string, includeRaw = true) => {
@@ -217,60 +211,35 @@ const getFilterOptions = (columnType = ''): FilterOptionItem[] => {
 
 const hasFilterValue = (item: FilterStore.FilterOption) => {
   const currentFilterOption = getFilterOptions(item.columnType).find(
-    (option) => option.value === item.condition.operator
+    (option) => option.value === item.filterRule.operator
   )
   if (!currentFilterOption) return false
   return !['为空', '不为空'].includes(currentFilterOption.label)
 }
 
 const handlePrepareWherePanel = (item: FilterStore.FilterOption) => {
-  if (!item.condition.aggregation) {
-    item.condition.aggregation = 'raw'
-  }
-  if (!item.condition.operator) {
-    item.condition.operator = getFilterOptions(item.columnType)[0]?.value
-  }
+  item.filterRule = prepareFilterRule(item.filterRule, getFilterOptions(item.columnType)[0]?.value)
 }
 
 const handleSelectAggregation = (
   item: FilterStore.FilterOption,
   aggregationType: FilterStore.FilterAggregationType
 ) => {
-  item.condition.aggregation = aggregationType
-  syncFilterDisplayName(item)
+  item.filterRule = setFilterRuleAggregation(item.filterRule, aggregationType)
+  syncFilterOptionDisplayName(item)
 }
 
 const handleConfirm = (item: FilterStore.FilterOption, closePopover?: () => void) => {
-  if (!item.condition.operator) {
+  if (!item.filterRule.operator) {
     ElMessage.warning('请选择筛选条件')
     return
   }
-  if (hasFilterValue(item) && !String(item.condition.operand || '').trim()) {
+  if (hasFilterValue(item) && !String(item.filterRule.operand || '').trim()) {
     ElMessage.warning('请输入筛选值')
     return
   }
-  syncFilterDisplayName(item)
+  syncFilterOptionDisplayName(item)
   closePopover?.()
-}
-
-const addFilter = (filter: FilterStore.FilterOption | Array<FilterStore.FilterOption>) => {
-  filter = Array.isArray(filter) ? filter : [filter]
-  filterStore.addFilters(filter)
-}
-
-const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
-  const dropY = dragEvent.clientY
-  const ys = [].slice
-    .call(document.querySelectorAll('.filter__content > [data-action="drag"]'))
-    .map(
-      (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
-    )
-  ys.splice(index, 1)
-  let targetIndex = ys.findIndex((e) => dropY < e)
-  if (targetIndex === -1) {
-    targetIndex = ys.length
-  }
-  return targetIndex
 }
 
 const dragstartHandler = (index: number, dragEvent: DragEvent) => {
@@ -294,23 +263,22 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<FilterStore.FilterOption> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
-  const filter = data.value
+  const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  if (!data.value) return
 
   switch (data.from) {
     case 'filters': {
-      const targetIndex = getTargetIndex(data.index, dragEvent)
+      const targetIndex = getAnalyzeFieldDropTargetIndex(
+        '.filter__content > [data-action="drag"]',
+        data.index,
+        dragEvent
+      )
       if (targetIndex === data.index) return
-      const filters = JSON.parse(JSON.stringify(filterStore.filters))
-      const target = filters.splice(data.index, 1)[0]
-      filters.splice(targetIndex, 0, target)
-      filterStore.setFilters(filters)
+      reorderFilters(data.index, targetIndex)
       break
     }
     default: {
-      const filterOption = createFilterOption(filter)
-      syncFilterDisplayName(filterOption)
-      addFilter(filterOption)
+      addFieldToFilters(data.value)
       break
     }
   }
@@ -319,7 +287,7 @@ const dropHandler = (dragEvent: DragEvent) => {
 watch(
   filterList,
   (filters) => {
-    filters.forEach((item) => syncFilterDisplayName(item))
+    filters.forEach((item) => syncFilterOptionDisplayName(item))
   },
   { immediate: true, deep: true }
 )

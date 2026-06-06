@@ -29,7 +29,7 @@
           <template #order-direction>
             <icon-park
               class="chart-selector-direction-icon"
-              v-if="orderOptions.sort.direction === 'asc'"
+              v-if="orderOptions.orderRule.direction === 'asc'"
               type="arrow-circle-down"
               size="14"
               fill="#333"
@@ -53,7 +53,7 @@
               @click="handleSelectAggregation(orderOptions, option.value)"
             >
               {{ option.label }}
-              <span v-if="orderOptions.sort.aggregation === option.value" class="order-panel__checked">✓</span>
+              <span v-if="orderOptions.orderRule.aggregation === option.value" class="order-panel__checked">✓</span>
             </context-menu-item>
           </template>
         </selector-order>
@@ -65,7 +65,13 @@
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
 import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
-import { createDefaultOrderSort } from '@/shared/orderSort'
+import { setOrderRuleAggregation, toggleOrderRuleDirection } from '@/shared/analyzeFieldRules'
+import {
+  addFieldToOrders,
+  getAnalyzeFieldDropTargetIndex,
+  reorderOrders,
+  syncOrderOptionDisplayName
+} from '../fieldTransfer'
 
 const { clearAll, hasClearAll } = clearAllHandler()
 
@@ -86,19 +92,7 @@ const resolveOrderDisplayName = (order: OrderStore.OrderOption) => {
 }
 
 const resolveOrderAggregationLabel = (order: OrderStore.OrderOption) => {
-  return getOrderAggregationLabel(order.sort.aggregation)
-}
-
-const syncOrderDisplayName = (order: OrderStore.OrderOption) => {
-  order.displayName = order.columnComment || order.columnName || ''
-}
-
-const createOrderOption = (field: ColumnsStore.ColumnOptions): OrderStore.OrderOption => {
-  const { datasetAggregationType: _datasetAggregationType, ...columnOption } = field
-  return {
-    ...columnOption,
-    sort: createDefaultOrderSort()
-  }
+  return getOrderAggregationLabel(order.orderRule.aggregation)
 }
 
 const getOrderInvalid = (order: OrderStore.OrderOption) => {
@@ -114,37 +108,13 @@ const getOrderInvalidMessage = (order: OrderStore.OrderOption) => {
 }
 
 const handleToggleDirection = (order: OrderStore.OrderOption) => {
-  order.sort.direction = order.sort.direction === 'desc' ? 'asc' : 'desc'
-  order.sort.aggregation = 'raw'
-  syncOrderDisplayName(order)
+  order.orderRule = toggleOrderRuleDirection(order.orderRule)
+  syncOrderOptionDisplayName(order)
 }
 
 const handleSelectAggregation = (order: OrderStore.OrderOption, aggregationType: OrderStore.OrderAggregationsType) => {
-  order.sort.aggregation = aggregationType
-  if (!order.sort.direction) {
-    order.sort.direction = 'desc'
-  }
-  syncOrderDisplayName(order)
-}
-
-const addOrder = (order: OrderStore.OrderOption | Array<OrderStore.OrderOption>) => {
-  order = Array.isArray(order) ? order : [order]
-  orderStore.addOrders(order)
-}
-
-const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
-  const dropY = dragEvent.clientY
-  const ys = [].slice
-    .call(document.querySelectorAll('.order__content > [data-action="drag"]'))
-    .map(
-      (element: HTMLDivElement) => (element.getBoundingClientRect().top + element.getBoundingClientRect().bottom) / 2
-    )
-  ys.splice(index, 1)
-  let targetIndex = ys.findIndex((e) => dropY < e)
-  if (targetIndex === -1) {
-    targetIndex = ys.length
-  }
-  return targetIndex
+  order.orderRule = setOrderRuleAggregation(order.orderRule, aggregationType)
+  syncOrderOptionDisplayName(order)
 }
 
 const dragstartHandler = (index: number, dragEvent: DragEvent) => {
@@ -158,7 +128,7 @@ const dragstartHandler = (index: number, dragEvent: DragEvent) => {
   )
 }
 
-const dragHandler = (index: number, dragEvent: DragEvent) => {
+const dragHandler = (_index: number, dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
 
@@ -168,23 +138,22 @@ const dragoverHandler = (dragEvent: DragEvent) => {
 
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
-  const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
-
-  const orderOption = createOrderOption(data.value)
-  syncOrderDisplayName(orderOption)
+  const data: DragData = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
+  if (!data.value) return
 
   switch (data.from) {
     case 'orders': {
-      const targetIndex = getTargetIndex(data.index, dragEvent)
+      const targetIndex = getAnalyzeFieldDropTargetIndex(
+        '.order__content > [data-action="drag"]',
+        data.index,
+        dragEvent
+      )
       if (targetIndex === data.index) return
-      const orders = JSON.parse(JSON.stringify(orderStore.orders))
-      const target = orders.splice(data.index, 1)[0]
-      orders.splice(targetIndex, 0, target)
-      orderStore.setOrders(orders)
+      reorderOrders(data.index, targetIndex)
       break
     }
     default: {
-      addOrder(orderOption)
+      addFieldToOrders(data.value)
       break
     }
   }
@@ -193,7 +162,7 @@ const dropHandler = (dragEvent: DragEvent) => {
 watch(
   orderList,
   (orders) => {
-    orders.forEach((order) => syncOrderDisplayName(order))
+    orders.forEach((order) => syncOrderOptionDisplayName(order))
   },
   { immediate: true, deep: true }
 )

@@ -35,7 +35,7 @@ declare namespace FilterStore {
     /**
      * 过滤条件：操作符 + 操作数 + 聚合方式
      */
-    condition: import('@/shared/filterCondition').FilterConditionRule
+    filterRule: import('@/shared/analyzeFieldRules').FilterRule
   }
 
   /**
@@ -47,12 +47,15 @@ declare namespace FilterStore {
   /**
    * @desc getter
    */
-  type FilterGetters = {}
+  type FilterGetters = {
+    getFilters: (state: FilterState) => FilterOption[]
+  }
 
   /**
    * @desc 过滤器操作
    */
   type FilterActions = {
+    setFilters: (filters: FilterOption[]) => void
     addFilters: (filters: FilterOption[]) => void
     removeFilter: (index: number) => void
   }

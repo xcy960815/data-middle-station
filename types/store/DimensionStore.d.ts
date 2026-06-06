@@ -18,7 +18,7 @@ declare namespace DimensionStore {
     /**
      * 分组规则：日期粒度、层级等分组行为配置
      */
-    grouping: import('@/shared/dimensionGrouping').DimensionGroupingRule
+    dimensionRule: import('@/shared/analyzeFieldRules').DimensionRule
     /**
      * 固定列
      */
@@ -92,7 +92,12 @@ declare namespace DimensionStore {
   /**
    * @desc getter
    */
-  type DimensionGetters = {}
+  type DimensionGetters = {
+    getDimensions: (state: DimensionState) => DimensionOption[]
+    getDrillCurrentLevel: (state: DimensionState) => number
+    getDrillPath: (state: DimensionState) => DrillPathItem[]
+    getSelectedDrillValue: (state: DimensionState) => DrillPathItem['value']
+  }
   /**
    * @desc action
    */

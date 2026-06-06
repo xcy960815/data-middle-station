@@ -68,7 +68,7 @@ import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
 import { useAnalyzeDrill } from '../../useAnalyzeDrill'
 import { clearAllHandler } from '../clearAll'
-import { moveFieldToDimensions } from '../fieldTransfer'
+import { getAnalyzeFieldDropTargetIndex, moveFieldToDimensions, reorderDimensions } from '../fieldTransfer'
 const { clearAll, hasClearAll } = clearAllHandler()
 
 const columnStore = useColumnsStore()
@@ -174,27 +174,6 @@ const getDimensionInvalidMessage = (dimension: DimensionStore.DimensionOption) =
 }
 
 /**
- * @desc getTargetIndex
- * @param {number} index
- * @param {DragEvent} dragEvent
- * @returns {number}
- */
-const getTargetIndex = (index: number, dragEvent: DragEvent): number => {
-  const dropX = dragEvent.clientX
-  let xs = [].slice
-    .call(document.querySelectorAll('.dimension__content > [data-action="drag"]'))
-    .map(
-      (element: HTMLDivElement) => (element.getBoundingClientRect().left + element.getBoundingClientRect().right) / 2
-    )
-  xs.splice(index, 1)
-  let targetIndex = xs.findIndex((middleX) => dropX < middleX)
-  if (targetIndex === -1) {
-    targetIndex = xs.length
-  }
-  return targetIndex
-}
-
-/**
  * @desc dragstartHandler
  * @param {number} index
  * @param {DragEvent} dragEvent
@@ -241,12 +220,14 @@ const dropHandler = (dragEvent: DragEvent) => {
   switch (data.from) {
     case 'dimensions': {
       // relocate position by dragging
-      const targetIndex = getTargetIndex(data.index, dragEvent)
+      const targetIndex = getAnalyzeFieldDropTargetIndex(
+        '.dimension__content > [data-action="drag"]',
+        data.index,
+        dragEvent,
+        'x'
+      )
       if (targetIndex === data.index) return
-      const dimensions = JSON.parse(JSON.stringify(dimensionStore.getDimensions))
-      const target = dimensions.splice(data.index, 1)[0]
-      dimensions.splice(targetIndex, 0, target)
-      dimensionStore.setDimensions(dimensions)
+      reorderDimensions(data.index, targetIndex)
       break
     }
     case 'measures':

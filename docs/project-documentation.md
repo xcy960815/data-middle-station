@@ -273,7 +273,7 @@ CREATE TABLE `analyze_config` (
     {
       "columnName": "sales_amount",
       "displayName": "销售额",
-      "measure": {
+      "measureRule": {
         "aggregation": "sum"
       }
     }
@@ -282,14 +282,14 @@ CREATE TABLE `analyze_config` (
     {
       "columnName": "province",
       "displayName": "省份",
-      "grouping": {}
+      "dimensionRule": {}
     }
   ],
   "filters": [
     {
       "columnName": "status",
       "displayName": "状态",
-      "condition": {
+      "filterRule": {
         "operator": "eq",
         "operand": "paid",
         "aggregation": "raw"
@@ -300,7 +300,7 @@ CREATE TABLE `analyze_config` (
     {
       "columnName": "sales_amount",
       "displayName": "销售额",
-      "sort": {
+      "orderRule": {
         "direction": "desc",
         "aggregation": "sum"
       }
@@ -679,7 +679,10 @@ Content-Type: application/json
       {
         "columnName": "id",
         "columnType": "number",
-        "displayName": "主键ID"
+        "displayName": "主键ID",
+        "measureRule": {
+          "aggregation": "sum"
+        }
       }
     ],
     "dimensions": [],
@@ -705,18 +708,22 @@ Content-Type: application/json
 {
   "dataSource": "operation_analysis",
   "measures": [
-    {
-      "columnName": "new_users",
-      "columnType": "number",
-      "displayName": "新增用户数"
-    }
+      {
+        "columnName": "new_users",
+        "columnType": "number",
+        "displayName": "新增用户数",
+        "measureRule": {
+          "aggregation": "sum"
+        }
+      }
   ],
   "dimensions": [
-    {
-      "columnName": "region",
-      "columnType": "string",
-      "displayName": "地区"
-    }
+      {
+        "columnName": "region",
+        "columnType": "string",
+        "displayName": "地区",
+        "dimensionRule": {}
+      }
   ],
   "filters": [],
   "orders": [],

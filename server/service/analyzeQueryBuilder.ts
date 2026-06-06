@@ -402,44 +402,21 @@ export class AnalyzeQueryBuilder {
   }
 
   /**
-   * @desc 判断字段是否是数值类型
-   * @param option 字段配置
-   * @returns 是否数值字段
-   */
-  private isNumericColumn(option: { columnType?: string }): boolean {
-    const columnType = String(option.columnType || '').toLowerCase()
-    return [
-      'tinyint',
-      'smallint',
-      'mediumint',
-      'int',
-      'bigint',
-      'decimal',
-      'float',
-      'double',
-      'real',
-      'numeric',
-      'number'
-    ].some((type) => columnType.includes(type))
-  }
-
-  /**
-   * @desc 获取值字段默认聚合方式
+   * @desc 获取值字段聚合方式
    * @param option 字段配置
    * @returns 聚合方式
    */
   private resolveMeasureAggregationType(option: {
-    columnType?: string
-    measure?: {
+    measureRule?: {
       aggregation?: string
     }
   }): string {
-    const configuredAggregation = option.measure?.aggregation
+    const configuredAggregation = option.measureRule?.aggregation
     if (configuredAggregation && String(configuredAggregation).toLowerCase() !== 'raw') {
       return configuredAggregation
     }
 
-    return this.isNumericColumn(option) ? 'sum' : 'count'
+    throw new Error('聚合查询中，值字段需要选择总计、计数、平均等聚合方式')
   }
 
   /**
@@ -552,26 +529,19 @@ export class AnalyzeQueryBuilder {
     const havingClauseParts: string[] = []
     const whereParams: SqlPrimitive[] = []
     const havingParams: SqlPrimitive[] = []
-    const dimensionColumnSet = new Set(
-      dimensionOptions.map((dimensionOption) => this.normalizeIdentifier(dimensionOption.columnName, '字段'))
-    )
-
     filterOptions.forEach((filterOption) => {
-      const { condition } = filterOption
-      if (!condition.operator) return
+      const { filterRule } = filterOption
+      if (!filterRule.operator) return
 
-      const normalizedFilterType = String(condition.operator).trim().toLowerCase()
+      const normalizedFilterType = String(filterRule.operator).trim().toLowerCase()
       const operator = FILTER_OPERATOR_MAP[normalizedFilterType]
       if (!operator) {
-        throw new Error(`不支持的筛选操作: ${condition.operator}`)
+        throw new Error(`不支持的筛选操作: ${filterRule.operator}`)
       }
 
       const columnName = this.normalizeIdentifier(filterOption.columnName, '字段')
       const columnExpression = this.resolveExpression(filterOption, context)
-      const configuredAggregationType = String(condition.aggregation || '').toLowerCase()
-      const aggregationType =
-        configuredAggregationType ||
-        (hasGroupBy && !dimensionColumnSet.has(columnName) ? this.resolveMeasureAggregationType(filterOption) : 'raw')
+      const aggregationType = String(filterRule.aggregation || 'raw').toLowerCase()
       const isAggregateFilter = aggregationType !== 'raw'
       if (isAggregateFilter && !hasGroupBy) {
         throw new Error('聚合筛选需要先配置分组字段')
@@ -590,18 +560,18 @@ export class AnalyzeQueryBuilder {
         return
       }
 
-      if (typeof condition.operand === 'undefined' || condition.operand === '') {
+      if (typeof filterRule.operand === 'undefined' || filterRule.operand === '') {
         return
       }
 
       if (operator === 'LIKE' || operator === 'NOT LIKE') {
         targetClauseParts.push(`${filterExpression} ${operator} ?`)
-        targetParams.push(`%${condition.operand}%`)
+        targetParams.push(`%${filterRule.operand}%`)
         return
       }
 
       targetClauseParts.push(`${filterExpression} ${operator} ?`)
-      targetParams.push(condition.operand)
+      targetParams.push(filterRule.operand)
     })
 
     return {
@@ -642,23 +612,21 @@ export class AnalyzeQueryBuilder {
     )
     const orderClause = orderOptions
       .map((orderOption) => {
-        const sort = orderOption.sort
-        const direction = ORDER_TYPE_MAP[String(sort.direction || '').toLowerCase()]
+        const orderRule = orderOption.orderRule
+        const direction = ORDER_TYPE_MAP[String(orderRule.direction || '').toLowerCase()]
         if (!direction) {
-          throw new Error(`不支持的排序方向: ${sort.direction}`)
+          throw new Error(`不支持的排序方向: ${orderRule.direction}`)
         }
 
         const columnName = this.normalizeIdentifier(orderOption.columnName, '字段')
         const columnExpression = this.resolveExpression(orderOption, context)
-        const configuredAggregationType = String(sort.aggregation || '').toLowerCase()
+        const configuredAggregationType = String(orderRule.aggregation || '').toLowerCase()
 
         if (!hasGroupBy) {
           return `${columnExpression} ${direction}`
         }
 
-        const aggregationType =
-          configuredAggregationType ||
-          (dimensionColumnSet.has(columnName) ? 'raw' : this.resolveMeasureAggregationType(orderOption))
+        const aggregationType = configuredAggregationType || 'raw'
 
         if (aggregationType === 'raw') {
           if (!dimensionColumnSet.has(columnName)) {

@@ -27,11 +27,19 @@ export const validateAnalyzeChartConfig = (
   const chartName = CHART_TYPE_NAMES[chartType] || '图表'
   const measures = config.measures || []
   const dimensions = config.dimensions || []
+  const hasGroupBy = dimensions.length > 0
 
   if (!config.dataSource?.trim()) {
     return {
       valid: false,
       message: '分析数据源不存在'
+    }
+  }
+
+  if (hasGroupBy && measures.some((measure) => !measure.measureRule?.aggregation)) {
+    return {
+      valid: false,
+      message: '聚合查询中，值字段需要选择聚合方式'
     }
   }
 

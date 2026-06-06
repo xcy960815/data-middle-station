@@ -45,9 +45,9 @@
 </template>
 
 <script setup lang="ts">
+import type { MeasureAggregationType } from '@/shared/domainTypes'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElPopover } from 'element-plus'
-import type { MeasureAggregationType } from '@/shared/domainTypes'
 
 type AggregationType = MeasureAggregationType
 
@@ -60,7 +60,6 @@ const props = withDefaults(
   defineProps<{
     columnType?: string
     aggregationType?: AggregationType
-    includeRaw?: boolean
     inline?: boolean
     tooltip?: string
     emptyLabel?: string
@@ -68,10 +67,9 @@ const props = withDefaults(
   {
     columnType: '',
     aggregationType: undefined,
-    includeRaw: false,
     inline: false,
     tooltip: '聚合方式',
-    emptyLabel: '默认'
+    emptyLabel: '请选择'
   }
 )
 
@@ -81,8 +79,10 @@ const emit = defineEmits<{
 
 const popoverRef = ref<InstanceType<typeof ElPopover>>()
 
+/**
+ * 聚合选项
+ */
 const aggregationOptions: AggregationOption[] = [
-  { label: '原始值', value: 'raw' },
   { label: '计数', value: 'count' },
   { label: '计数(去重)', value: 'countDistinct' },
   { label: '总计', value: 'sum' },
@@ -109,12 +109,10 @@ const dateTypes = ['date', 'time', 'year']
 
 const filteredAggregations = computed(() => {
   const columnType = props.columnType?.toLowerCase() || ''
-  const baseValues: AggregationType[] = props.includeRaw
-    ? ['raw', 'count', 'countDistinct']
-    : ['count', 'countDistinct']
+  const baseValues: AggregationType[] = ['count', 'countDistinct']
 
   if (numericTypes.some((type) => columnType.includes(type))) {
-    return aggregationOptions.filter((item) => props.includeRaw || item.value !== 'raw')
+    return aggregationOptions
   }
 
   if (dateTypes.some((type) => columnType.includes(type))) {
