@@ -6,18 +6,25 @@ export const useAnalyzeDrill = () => {
 
   const dimensions = computed(() => dimensionStore.getDimensions)
 
+  const isDrillEnabledDimension = (dimension: DimensionStore.DimensionOption) => {
+    const drillRule = dimension.dimensionRule?.drill
+    return drillRule?.enabled !== false && (!drillRule?.role || drillRule.role === 'level')
+  }
+
+  const drillDimensions = computed(() => dimensions.value.filter(isDrillEnabledDimension))
+
   const effectiveDrillLevel = computed(() => {
-    const dimensionCount = dimensions.value.length
+    const dimensionCount = drillDimensions.value.length
     if (dimensionCount === 0) return 0
     return Math.min(dimensionStore.getDrillCurrentLevel, dimensionCount - 1)
   })
 
   const currentDrillDimension = computed(() => {
-    return dimensions.value[effectiveDrillLevel.value]
+    return drillDimensions.value[effectiveDrillLevel.value]
   })
 
   const nextDrillDimension = computed(() => {
-    return dimensions.value[effectiveDrillLevel.value + 1]
+    return drillDimensions.value[effectiveDrillLevel.value + 1]
   })
 
   const drillPath = computed(() => {
@@ -42,6 +49,8 @@ export const useAnalyzeDrill = () => {
 
   return {
     dimensions,
+    drillDimensions,
+    isDrillEnabledDimension,
     effectiveDrillLevel,
     currentDrillDimension,
     nextDrillDimension,

@@ -206,6 +206,45 @@ export class AnalyzeConfigService extends BaseService {
     }
   }
 
+  public async cleanDimensionRules(cleanParams: {
+    analyzeId?: number
+    configId?: number
+    defaultEnabled?: boolean
+    enabledAnalyzeIds?: number[]
+  }): Promise<AnalyzeConfigVo.CleanDimensionRulesResponse> {
+    const configs = await this.analyzeConfigMapper.getAnalyzeConfigsForDimensionRuleCleaning(cleanParams)
+    let updatedCount = 0
+    let normalizedDimensionCount = 0
+    const enabledAnalyzeIdSet = new Set(cleanParams.enabledAnalyzeIds || [])
+
+    for (const config of configs) {
+      const drillEnabled = enabledAnalyzeIdSet.has(config.analyzeId) ? true : cleanParams.defaultEnabled
+      const dimensionsResult = this.cleanDimensionFields((config.dimensions || []) as LegacyDimensionOption[], {
+        drillEnabled
+      })
+
+      if (!dimensionsResult.changed) continue
+
+      const updated = await this.analyzeConfigMapper.updateAnalyzeConfigRuntimeFields(config.id, {
+        measures: config.measures || [],
+        filters: config.filters || [],
+        dimensions: dimensionsResult.data,
+        orders: config.orders || []
+      })
+
+      if (updated) {
+        updatedCount += 1
+        normalizedDimensionCount += dimensionsResult.normalizedFieldCount
+      }
+    }
+
+    return {
+      scannedCount: configs.length,
+      updatedCount,
+      normalizedDimensionCount
+    }
+  }
+
   private normalizeConfigRecord(
     configRecord: AnalyzeConfigDao.AnalyzeConfigRecord
   ): AnalyzeConfigDao.AnalyzeConfigRecord {
@@ -298,15 +337,35 @@ export class AnalyzeConfigService extends BaseService {
   }
 
   private cleanDimensionFields(
-    fields: LegacyDimensionOption[]
+    fields: LegacyDimensionOption[],
+    options: { drillEnabled?: boolean } = {}
   ): CleanFieldRuleResult<AnalyzeConfigDao.DimensionOption[]> {
-    return this.cleanFields(fields, (field) => ({
-      field: {
-        ...field,
-        dimensionRule: field.dimensionRule || createDefaultDimensionRule()
-      },
-      normalizedCount: field.dimensionRule ? 0 : 1
-    }))
+    return this.cleanFields(fields, (field) => {
+      const defaultDimensionRule = createDefaultDimensionRule()
+      const drillEnabled = typeof options.drillEnabled === 'boolean' ? options.drillEnabled : undefined
+      const dimensionRule = {
+        ...defaultDimensionRule,
+        ...(field.dimensionRule || {}),
+        drill: {
+          ...defaultDimensionRule.drill,
+          ...(field.dimensionRule?.drill || {}),
+          ...(typeof drillEnabled === 'boolean' ? { enabled: drillEnabled } : {})
+        }
+      }
+      const normalized =
+        !field.dimensionRule ||
+        !field.dimensionRule.drill ||
+        typeof field.dimensionRule.drill.enabled === 'undefined' ||
+        typeof field.dimensionRule.drill.role === 'undefined' ||
+        (typeof drillEnabled === 'boolean' && field.dimensionRule.drill.enabled !== drillEnabled)
+      return {
+        field: {
+          ...field,
+          dimensionRule
+        },
+        normalizedCount: normalized ? 1 : 0
+      }
+    })
   }
 
   private cleanOrderFields(fields: LegacyOrderOption[]): CleanFieldRuleResult<AnalyzeConfigDao.OrderOption[]> {

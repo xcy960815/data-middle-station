@@ -10,13 +10,27 @@ type DimensionOption = ColumnItem & {
 }
 ```
 
-但当前 `dimensionRule` 默认仍是空对象：
+当前 `dimensionRule` 已开始承接上卷下钻的稳定配置：
 
 ```ts
-type DimensionRule = {}
+type DimensionRule = {
+  drill?: {
+    enabled?: boolean
+    role?: 'level'
+  }
+}
 ```
 
-它目前只是为后续分组行为扩展预留结构，查询逻辑暂不消费该字段。
+默认分组字段参与层级上卷下钻：
+
+```ts
+{
+  drill: {
+    enabled: true,
+    role: 'level'
+  }
+}
+```
 
 ## 设计原则
 
@@ -41,19 +55,22 @@ type DimensionRule = {}
 
 ## 上卷下钻
 
-当前下钻能力主要依赖 `dimensions` 数组顺序和运行态：
+当前下钻能力由 `dimensionRule.drill`、有效分组顺序和运行态共同决定：
 
-- `dimensions` 顺序决定下钻层级顺序
+- `dimensionRule.drill.enabled !== false` 的分组参与下钻
+- `dimensionRule.drill.role === 'level'` 表示该字段是层级钻取字段
+- 参与下钻的分组顺序决定下钻层级顺序
 - `drillCurrentLevel` 表示当前查询层级
 - `drillPath` 保存已经选择的路径值
 - `selectedDrillValue` 保存当前待下钻的值
 
-未来可以把“是否参与下钻”这类稳定配置放入 `dimensionRule`：
+上卷下钻的稳定配置放入 `dimensionRule`：
 
 ```ts
 type DimensionRule = {
   drill?: {
     enabled?: boolean
+    role?: 'level'
   }
 }
 ```
@@ -65,7 +82,8 @@ type DimensionRule = {
   "columnName": "province",
   "dimensionRule": {
     "drill": {
-      "enabled": true
+      "enabled": true,
+      "role": "level"
     }
   }
 }
@@ -90,7 +108,22 @@ type DimensionRule = {
 
 原因是这类字段描述的是用户当前交互过程，不是分析配置本身。保存到配置后会造成历史配置、看板复用和邮件渲染时语义混乱。
 
-如果后续支持“某些分组不参与下钻”，可以由查询层根据 `dimensionRule.drill.enabled` 过滤有效下钻链路。若所有分组默认都参与下钻，则可以继续保持 `dimensionRule: {}`，不必为了配置而配置。
+如果某个分组不参与下钻，应设置：
+
+```json
+{
+  "dimensionRule": {
+    "drill": {
+      "enabled": false,
+      "role": "level"
+    }
+  }
+}
+```
+
+查询层和页面交互通过有效下钻分组链路解释上卷、下钻和路径过滤。`dimensionRule` 只保存能力配置，不保存当前路径。
+
+历史数据清洗时不要简单把所有分组都设置为 `enabled: true`。如果只有部分分析支持上卷下钻，应使用清洗接口的 `defaultEnabled: false`，再通过 `enabledAnalyzeIds` 指定需要开启的分析。
 
 ## 日期粒度分组
 
@@ -202,8 +235,7 @@ type DimensionRule = {
 
 ## 后续落地建议
 
-1. 先保持 `dimensionRule` 为空对象，不为当前没有消费的能力提前写入配置。
-2. 当产品明确需要“某些分组不参与下钻”时，优先增加 `dimensionRule.drill.enabled`。
+1. `dimensionRule.drill` 只保存稳定配置，不保存当前交互状态。
+2. `drillPath`、`drillCurrentLevel`、`selectedDrillValue` 仍作为运行态保留，不写入持久化配置。
 3. 日期粒度、数值分桶、层级维度应分别配套 UI、查询构造、返回字段命名和保存结构，不应只改类型。
-4. `drillPath`、`drillCurrentLevel`、`selectedDrillValue` 仍作为运行态保留，不写入持久化配置。
-5. 如果未来同时支持多种分组规则，查询构造器应集中解释 `dimensionRule`，不要把 SQL 语义散落在组件中。
+4. 如果未来同时支持多种分组规则，查询构造器应集中解释 `dimensionRule`，不要把 SQL 语义散落在组件中。

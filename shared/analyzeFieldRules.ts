@@ -18,9 +18,14 @@ export type MeasureRule = {
 /**
  * 分组字段规则。
  *
- * 当前暂为空对象，预留给日期粒度、分桶、层级维度、下钻能力开关等分组行为配置。
+ * `drill` 表示该分组字段在上卷下钻链路中的稳定配置。
  */
-export type DimensionRule = {}
+export type DimensionRule = {
+  drill?: {
+    enabled?: boolean
+    role?: 'level'
+  }
+}
 
 /**
  * 筛选字段规则。
@@ -98,10 +103,15 @@ export const createDefaultMeasureRule = (field: MeasureRuleSource): MeasureRule 
 /**
  * 创建默认分组字段规则。
  *
- * 当前分组规则为空对象，仅作为后续分组行为配置的结构预留。
+ * 默认分组字段参与层级上卷下钻。
  * @returns {DimensionRule} 默认分组字段规则。
  */
-export const createDefaultDimensionRule = (): DimensionRule => ({})
+export const createDefaultDimensionRule = (): DimensionRule => ({
+  drill: {
+    enabled: true,
+    role: 'level'
+  }
+})
 
 /**
  * 创建默认筛选字段规则。

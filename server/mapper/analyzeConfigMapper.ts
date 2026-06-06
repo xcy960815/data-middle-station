@@ -179,6 +179,30 @@ export class AnalyzeConfigMapper extends BaseMapper {
     return await this.exe<Array<T>>(sql)
   }
 
+  @Mapping(AnalyzeConfigMapping)
+  public async getAnalyzeConfigsForDimensionRuleCleaning<
+    T extends AnalyzeConfigDao.AnalyzeConfigRecord = AnalyzeConfigDao.AnalyzeConfigRecord
+  >(cleanParams: { analyzeId?: number; configId?: number } = {}): Promise<Array<T>> {
+    const whereClauses = ['is_deleted = 0']
+    const queryValues: any[] = []
+
+    if (cleanParams.analyzeId) {
+      whereClauses.push('analyze_id = ?')
+      queryValues.push(cleanParams.analyzeId)
+    }
+
+    if (cleanParams.configId) {
+      whereClauses.push('id = ?')
+      queryValues.push(cleanParams.configId)
+    }
+
+    const sql = `
+      select ${batchFormatSqlKey(ANALYZE_CONFIG_FIELDS)}
+      from ${ANALYZE_CONFIG_TABLE_NAME}
+      where ${whereClauses.join(' and ')}`
+    return await this.exe<Array<T>>(sql, queryValues)
+  }
+
   public async updateAnalyzeConfigRuntimeFields(
     configId: number,
     updateParams: Pick<AnalyzeConfigDao.AnalyzeConfigRecord, 'measures' | 'filters' | 'dimensions' | 'orders'>

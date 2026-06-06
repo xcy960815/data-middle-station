@@ -14,7 +14,12 @@ type MeasureOption = ColumnItem & {
 }
 
 type DimensionOption = ColumnItem & {
-  dimensionRule: {}
+  dimensionRule: {
+    drill?: {
+      enabled?: boolean
+      role?: 'level'
+    }
+  }
 }
 
 type FilterOption = ColumnItem & {
@@ -66,10 +71,11 @@ type OrderOption = ColumnItem & {
 
 分组字段新增 `dimensionRule` 对象：
 
-- 当前先保存为 `dimensionRule: {}`
-- 查询逻辑暂不消费该字段
+- 当前保存上卷下钻的稳定配置：`dimensionRule.drill`
+- `enabled` 控制字段是否参与下钻链路
+- `role: 'level'` 表示字段作为层级钻取字段
 
-这是为后续日期粒度、层级、分组桶等能力预留结构。当前不引入兼容转换，也不做左手倒右手的运行时 normalize。
+`dimensionRule` 只保存字段自身的稳定行为配置，不保存 `drillPath`、`drillCurrentLevel`、`selectedDrillValue` 这类用户当前交互运行态。
 
 ### Columns
 

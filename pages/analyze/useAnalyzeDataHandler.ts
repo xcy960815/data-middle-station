@@ -26,7 +26,7 @@ export const useAnalyzeDataHandler = () => {
   const filterStore = useFiltersStore()
   const orderStore = useOrdersStore()
   const chartConfigStore = useChartConfigStore()
-  const { currentDrillDimension, drillFilters } = useAnalyzeDrill()
+  const { drillDimensions, currentDrillDimension, drillFilters } = useAnalyzeDrill()
   const activeRequestId = ref(0)
   const activeRequestController = ref<AbortController | null>(null)
   const lastDataSourceKey = ref('')
@@ -251,7 +251,7 @@ export const useAnalyzeDataHandler = () => {
   )
 
   watch(
-    () => dimensionStore.getDimensions.map((item) => item.columnName),
+    () => drillDimensions.value.map((item) => item.columnName),
     (dimensionNames) => {
       if (isEditorHydrating()) return
       const path = dimensionStore.getDrillPath

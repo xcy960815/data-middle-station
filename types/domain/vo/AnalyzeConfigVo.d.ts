@@ -123,6 +123,12 @@ declare namespace AnalyzeConfigVo {
     removedFieldCount: number
   }
 
+  type CleanDimensionRulesResponse = {
+    scannedCount: number
+    updatedCount: number
+    normalizedDimensionCount: number
+  }
+
   /**
    * @desc 饼图配置
    */

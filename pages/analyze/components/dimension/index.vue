@@ -30,14 +30,14 @@
               'dimension__item__name--path': drillEnabled && getDrillLevelState(index) === 'path'
             }
           ]"
-          :displayName="getDimensionDisplayName(item, index)"
+          :displayName="getDimensionDisplayName(item)"
           :dimension="item"
           :index="index"
           :invalid="getDimensionInvalid(item)"
           :invalidMessage="getDimensionInvalidMessage(item)"
-          :drill-enabled="drillEnabled"
+          :drill-enabled="isDimensionDrillMenuEnabled(item)"
           :drill-level-state="getDrillLevelState(index)"
-          :drill-path-value="dimensionStore.getDrillPath[index]?.value"
+          :drill-path-value="getDrillPathValue(item)"
           :current-level-label="currentDrillDimension ? getDimensionLabel(currentDrillDimension) : ''"
           :next-level-label="nextDrillDimension ? getDimensionLabel(nextDrillDimension) : ''"
           :can-drill-down="canDrillDown"
@@ -47,12 +47,12 @@
           @select-drill-value="handleSelectDrillValue"
           @reset-drill="dimensionStore.resetDrill()"
         >
-          <template v-if="drillEnabled && index < effectiveDrillLevel" #prefix-icon>
+          <template v-if="isDimensionDrillMenuEnabled(item) && isDrillPathLevel(item)" #prefix-icon>
             <el-tooltip content="钻取路径：右键可上卷" placement="top">
               <icon-park class="dimension__path-icon" type="filter" size="12" fill="#909399" />
             </el-tooltip>
           </template>
-          <template v-else-if="drillEnabled && index === effectiveDrillLevel" #prefix-icon>
+          <template v-else-if="isDimensionDrillMenuEnabled(item) && isCurrentDrillLevel(item)" #prefix-icon>
             <el-tooltip content="当前粒度：按此维度分组并查询" placement="top">
               <icon-park class="dimension__current-icon" type="focus" size="13" fill="#337ecc" />
             </el-tooltip>
@@ -75,7 +75,8 @@ const columnStore = useColumnsStore()
 const measureStore = useMeasuresStore()
 const dimensionStore = useDimensionsStore()
 const analyzeStore = useAnalyzeStore()
-const { effectiveDrillLevel, currentDrillDimension, nextDrillDimension, getDimensionLabel } = useAnalyzeDrill()
+const { drillDimensions, effectiveDrillLevel, currentDrillDimension, nextDrillDimension, getDimensionLabel } =
+  useAnalyzeDrill()
 /**
  * @desc dimensionList
  */
@@ -95,11 +96,11 @@ const measureColumnSet = computed(() => {
   return new Set(measureStore.getMeasures.map((item) => item.columnName).filter(Boolean))
 })
 
-const drillEnabled = computed(() => dimensionList.value.length > 1)
+const drillEnabled = computed(() => drillDimensions.value.length > 1)
 const canDrillDown = computed(() => {
   return (
     drillEnabled.value &&
-    effectiveDrillLevel.value < dimensionList.value.length - 1 &&
+    effectiveDrillLevel.value < drillDimensions.value.length - 1 &&
     dimensionStore.getSelectedDrillValue !== null &&
     typeof dimensionStore.getSelectedDrillValue !== 'undefined' &&
     dimensionStore.getSelectedDrillValue !== ''
@@ -121,24 +122,52 @@ const availableDrillValues = computed(() => {
   }))
 })
 
+const getDrillDimensionIndex = (dimension: DimensionStore.DimensionOption) => {
+  return drillDimensions.value.findIndex((item) => item.columnName === dimension.columnName)
+}
+
 const getDrillLevelState = (index: number): 'path' | 'current' | 'next' | 'future' => {
-  if (index < effectiveDrillLevel.value) return 'path'
-  if (index === effectiveDrillLevel.value) return 'current'
-  if (index === effectiveDrillLevel.value + 1) return 'next'
+  const drillIndex = getDrillDimensionIndex(dimensionList.value[index])
+  if (drillIndex === -1) return 'future'
+  if (drillIndex < effectiveDrillLevel.value) return 'path'
+  if (drillIndex === effectiveDrillLevel.value) return 'current'
+  if (drillIndex === effectiveDrillLevel.value + 1) return 'next'
   return 'future'
 }
 
-const getDimensionDisplayName = (dimension: DimensionStore.DimensionOption, index: number) => {
+const getDrillPathValue = (dimension: DimensionStore.DimensionOption) => {
+  const drillIndex = getDrillDimensionIndex(dimension)
+  if (drillIndex === -1) return null
+  return dimensionStore.getDrillPath[drillIndex]?.value
+}
+
+const isDrillPathLevel = (dimension: DimensionStore.DimensionOption) => {
+  const drillIndex = getDrillDimensionIndex(dimension)
+  return drillIndex !== -1 && drillIndex < effectiveDrillLevel.value
+}
+
+const isCurrentDrillLevel = (dimension: DimensionStore.DimensionOption) => {
+  return getDrillDimensionIndex(dimension) === effectiveDrillLevel.value
+}
+
+const isDimensionDrillMenuEnabled = (dimension: DimensionStore.DimensionOption) => {
+  return drillEnabled.value && getDrillDimensionIndex(dimension) !== -1
+}
+
+const getDimensionDisplayName = (dimension: DimensionStore.DimensionOption) => {
   const label = getDimensionLabel(dimension)
-  if (index < effectiveDrillLevel.value) {
-    const value = dimensionStore.getDrillPath[index]?.value
+  const drillIndex = getDrillDimensionIndex(dimension)
+  if (drillIndex !== -1 && drillIndex < effectiveDrillLevel.value) {
+    const value = dimensionStore.getDrillPath[drillIndex]?.value
     return `${label}=${value ?? ''}`
   }
   return label
 }
 
 const handleRollUpFromMenu = (index: number) => {
-  dimensionStore.rollUpTo(index)
+  const drillIndex = getDrillDimensionIndex(dimensionList.value[index])
+  if (drillIndex === -1) return
+  dimensionStore.rollUpTo(drillIndex)
 }
 
 const handleSelectDrillValue = (value: DimensionStore.DrillPathItem['value']) => {
