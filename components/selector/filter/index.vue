@@ -21,14 +21,15 @@
       </template>
       <template #filter-action>
         <el-popover
-          v-model:visible="wherePopoverVisible"
+          :visible="wherePopoverVisible"
           placement="bottom-start"
-          trigger="click"
+          trigger="manual"
           width="auto"
           :teleported="true"
         >
           <template #reference>
             <span
+              ref="whereTriggerRef"
               class="chart-selector-filter-trigger"
               @click.stop="openWherePopover"
               @contextmenu.prevent="openWherePopover"
@@ -36,7 +37,9 @@
               <slot name="filter-action"></slot>
             </span>
           </template>
-          <slot name="where-panel" :close-popover="closeWherePopover"></slot>
+          <div ref="wherePanelRef" class="filter-where-popover-panel">
+            <slot name="where-panel" :close-popover="closeWherePopover"></slot>
+          </div>
         </el-popover>
       </template>
     </selector-template>
@@ -73,6 +76,8 @@ const emit = defineEmits<{
 const wherePopoverVisible = ref(false)
 const slots = useSlots()
 const aggregationPopoverRef = ref<InstanceType<typeof ElPopover> | null>(null)
+const whereTriggerRef = ref<HTMLElement | null>(null)
+const wherePanelRef = ref<HTMLElement | null>(null)
 const hasAggregationSlot = computed(() => !!slots['aggregation-panel'])
 
 const openWherePopover = () => {
@@ -87,6 +92,32 @@ const closeWherePopover = () => {
 const closeAggregationPopover = () => {
   aggregationPopoverRef.value?.hide()
 }
+
+const isElementFormPopper = (target: HTMLElement) => {
+  return !!target.closest('.el-select-dropdown, .el-picker-panel, .el-time-panel')
+}
+
+const handleDocumentMouseDown = (event: MouseEvent) => {
+  if (!wherePopoverVisible.value) return
+  const target = event.target as HTMLElement | null
+  if (!target) return
+  if (whereTriggerRef.value?.contains(target)) return
+  if (wherePanelRef.value?.contains(target)) return
+  if (isElementFormPopper(target)) return
+  closeWherePopover()
+}
+
+watch(wherePopoverVisible, (visible) => {
+  if (visible) {
+    document.addEventListener('mousedown', handleDocumentMouseDown)
+  } else {
+    document.removeEventListener('mousedown', handleDocumentMouseDown)
+  }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', handleDocumentMouseDown)
+})
 
 defineExpose({
   openWherePopover,

@@ -58,7 +58,7 @@
             <div class="filter-panel w-[220px]">
               <el-form label-position="top" size="small" class="filter-panel__form">
                 <el-form-item label="条件">
-                  <el-select v-model="item.filterRule.operator" placeholder="请选择条件" class="w-full">
+                  <el-select v-model="getEditingFilterRule(item).operator" placeholder="请选择条件" class="w-full">
                     <el-option
                       v-for="option in getFilterOptions(item.columnType)"
                       :key="option.value"
@@ -70,7 +70,7 @@
                 <el-form-item v-if="hasFilterValue(item)" label="值">
                   <el-date-picker
                     v-if="isDateColumn(item)"
-                    v-model="item.filterRule.operand"
+                    v-model="getEditingFilterRule(item).operand"
                     type="datetime"
                     placeholder="请选择日期时间"
                     class="w-full"
@@ -79,7 +79,7 @@
                   />
                   <el-input
                     v-else
-                    v-model="item.filterRule.operand"
+                    v-model="getEditingFilterRule(item).operand"
                     :placeholder="isNumberColumn(item) ? '请输入数值' : '请输入值'"
                     clearable
                   />
@@ -112,6 +112,7 @@ const { clearAll, hasClearAll } = clearAllHandler()
 
 const filterStore = useFiltersStore()
 const filterList = computed(() => filterStore.getFilters)
+const editingFilterRuleMap = reactive<Record<number, FilterStore.FilterOption['filterRule']>>({})
 
 const DATE_COLUMN_TYPES = [
   'date',
@@ -220,14 +221,25 @@ const getFilterOptions = (columnType = ''): FilterOptionItem[] => {
 
 const hasFilterValue = (item: FilterStore.FilterOption) => {
   const currentFilterOption = getFilterOptions(item.columnType).find(
-    (option) => option.value === item.filterRule.operator
+    (option) => option.value === getEditingFilterRule(item).operator
   )
   if (!currentFilterOption) return false
   return !['为空', '不为空'].includes(currentFilterOption.label)
 }
 
+const getFilterEditKey = (item: FilterStore.FilterOption) => filterList.value.indexOf(item)
+
+const getEditingFilterRule = (item: FilterStore.FilterOption) => {
+  const index = getFilterEditKey(item)
+  if (!editingFilterRuleMap[index]) {
+    editingFilterRuleMap[index] = prepareFilterRule(item.filterRule, getFilterOptions(item.columnType)[0]?.value)
+  }
+  return editingFilterRuleMap[index]
+}
+
 const handlePrepareWherePanel = (item: FilterStore.FilterOption) => {
-  item.filterRule = prepareFilterRule(item.filterRule, getFilterOptions(item.columnType)[0]?.value)
+  const index = getFilterEditKey(item)
+  editingFilterRuleMap[index] = prepareFilterRule(item.filterRule, getFilterOptions(item.columnType)[0]?.value)
 }
 
 const handleSelectAggregation = (
@@ -241,14 +253,16 @@ const handleSelectAggregation = (
 }
 
 const handleConfirm = (item: FilterStore.FilterOption, closePopover?: () => void) => {
-  if (!item.filterRule.operator) {
+  const editingFilterRule = getEditingFilterRule(item)
+  if (!editingFilterRule.operator) {
     ElMessage.warning('请选择筛选条件')
     return
   }
-  if (hasFilterValue(item) && !String(item.filterRule.operand || '').trim()) {
+  if (hasFilterValue(item) && !String(editingFilterRule.operand || '').trim()) {
     ElMessage.warning('请输入筛选值')
     return
   }
+  item.filterRule = { ...editingFilterRule }
   syncFilterOptionDisplayName(item)
   closePopover?.()
 }
