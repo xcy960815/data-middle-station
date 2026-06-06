@@ -30,20 +30,29 @@
           @before-open-where="handlePrepareWherePanel(item)"
         >
           <template #filter-aggregation>
-            <span class="chart-selector-meta-label">{{ resolveFilterAggregationLabel(item) }}</span>
+            <el-tooltip effect="dark" :content="resolveFilterAggregationLabel(item)" placement="top">
+              <span class="chart-selector-meta-label">{{ resolveFilterAggregationLabel(item) }}</span>
+            </el-tooltip>
           </template>
           <template #filter-action>
             <icon-park class="chart-selector-filter-icon" type="filter-one" size="14" fill="#333" />
           </template>
-          <template #context-menu>
-            <context-menu-item
+          <template #aggregation-panel="{ closePopover }">
+            <div
               v-for="option in getFilterAggregationOptions(item.columnType, true)"
               :key="option.value"
-              @click="handleSelectAggregation(item, option.value)"
+              class="aggregation-option flex items-center cursor-pointer hover:bg-gray-100 py-1 justify-between px-2"
+              @click="handleSelectAggregation(item, option.value, closePopover)"
             >
-              {{ option.label }}
-              <span v-if="item.filterRule.aggregation === option.value" class="filter-panel__checked">✓</span>
-            </context-menu-item>
+              <span class="text-xs">{{ option.label }}</span>
+              <icon-park
+                v-if="item.filterRule.aggregation === option.value"
+                class="aggregation-mark text-xs"
+                type="correct"
+                size="14"
+                fill="#333"
+              />
+            </div>
           </template>
           <template #where-panel="{ closePopover }">
             <div class="filter-panel w-[220px]">
@@ -223,10 +232,12 @@ const handlePrepareWherePanel = (item: FilterStore.FilterOption) => {
 
 const handleSelectAggregation = (
   item: FilterStore.FilterOption,
-  aggregationType: FilterStore.FilterAggregationType
+  aggregationType: FilterStore.FilterAggregationType,
+  closePopover?: () => void
 ) => {
   item.filterRule = setFilterRuleAggregation(item.filterRule, aggregationType)
   syncFilterOptionDisplayName(item)
+  closePopover?.()
 }
 
 const handleConfirm = (item: FilterStore.FilterOption, closePopover?: () => void) => {
@@ -317,10 +328,5 @@ watch(
     line-height: 1.2;
     font-size: 12px;
   }
-}
-
-.filter-panel__checked {
-  margin-left: 8px;
-  color: #409eff;
 }
 </style>

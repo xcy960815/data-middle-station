@@ -31,15 +31,17 @@
           :invalid="getMeasureInvalid(measure)"
           :invalidMessage="getMeasureInvalidMessage(measure)"
         >
-          <template #measure-suffix>
-            <button
+          <template #measure-aggregation>
+            <el-tooltip
               v-if="isMeasureAggregationEnabled(measure)"
-              class="chart-selector-meta-label"
-              type="button"
-              @mousedown.stop
+              effect="dark"
+              :content="resolveMeasureAggregationLabel(measure)"
+              placement="top"
             >
-              {{ resolveMeasureAggregationLabel(measure) }}
-            </button>
+              <button class="chart-selector-meta-label" type="button" @mousedown.stop>
+                {{ resolveMeasureAggregationLabel(measure) }}
+              </button>
+            </el-tooltip>
           </template>
           <template #default="{ closePopover }">
             <selector-aggregation

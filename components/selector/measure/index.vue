@@ -7,11 +7,23 @@
       :invalid="props.invalid"
       :invalid-message="props.invalidMessage"
     >
-      <template #measure-suffix>
-        <slot name="measure-suffix"></slot>
-      </template>
-      <template #default="{ closePopover }">
-        <slot :close-popover="closePopover"></slot>
+      <template #measure-aggregation>
+        <el-popover
+          ref="aggregationPopoverRef"
+          placement="bottom-start"
+          trigger="click"
+          width="auto"
+          :disabled="!hasAggregationSlot"
+        >
+          <template #reference>
+            <span class="measure-aggregation-trigger" @click.stop @mousedown.stop @contextmenu.stop>
+              <slot name="measure-aggregation"></slot>
+            </span>
+          </template>
+          <div class="measure-aggregation-options">
+            <slot :close-popover="closeAggregationPopover"></slot>
+          </div>
+        </el-popover>
       </template>
     </selector-template>
   </div>
@@ -49,7 +61,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElPopover } from 'element-plus'
 import ContextMenu from '../../context-menu/index.vue'
 
 defineOptions({
@@ -81,6 +93,13 @@ const props = defineProps({
 })
 const measureStore = useMeasuresStore()
 const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+const slots = useSlots()
+const aggregationPopoverRef = ref<InstanceType<typeof ElPopover> | null>(null)
+const hasAggregationSlot = computed(() => !!slots['measure-aggregation'])
+
+const closeAggregationPopover = () => {
+  aggregationPopoverRef.value?.hide()
+}
 
 const updateCurrentMeasure = () => {
   if (!currentMeasure.value || props.index === null) return
@@ -213,5 +232,12 @@ const handleSetFilterable = () => {
 <style lang="scss" scoped>
 .measure-selector {
   cursor: context-menu;
+}
+
+.measure-aggregation-trigger {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 </style>

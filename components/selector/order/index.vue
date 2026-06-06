@@ -8,22 +8,32 @@
       :invalid-message="props.invalidMessage"
     >
       <template #order-aggregation>
-        <span class="chart-selector-aggregation-trigger" @contextmenu="contextmenuHandler">
-          <slot name="order-aggregation"></slot>
-        </span>
+        <el-popover
+          ref="aggregationPopoverRef"
+          placement="bottom-start"
+          trigger="click"
+          width="auto"
+          :disabled="!hasAggregationSlot"
+        >
+          <template #reference>
+            <span class="chart-selector-aggregation-trigger" @click.stop @mousedown.stop @contextmenu.stop>
+              <slot name="order-aggregation"></slot>
+            </span>
+          </template>
+          <div class="order-aggregation-options">
+            <slot name="aggregation-panel" :close-popover="closeAggregationPopover"></slot>
+          </div>
+        </el-popover>
       </template>
       <template #order-direction>
         <slot name="order-direction"></slot>
       </template>
     </selector-template>
   </div>
-  <context-menu ref="contextmenuRef">
-    <slot name="context-menu"></slot>
-  </context-menu>
 </template>
 
 <script lang="ts" setup>
-import ContextMenu from '../../context-menu/index.vue'
+import { ElPopover } from 'element-plus'
 
 defineOptions({
   inheritAttrs: false
@@ -53,12 +63,12 @@ const props = defineProps({
   }
 })
 
-const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+const slots = useSlots()
+const aggregationPopoverRef = ref<InstanceType<typeof ElPopover> | null>(null)
+const hasAggregationSlot = computed(() => !!slots['aggregation-panel'])
 
-const contextmenuHandler = (event: MouseEvent) => {
-  event.preventDefault()
-  event.stopPropagation()
-  contextmenuRef.value?.show(event)
+const closeAggregationPopover = () => {
+  aggregationPopoverRef.value?.hide()
 }
 </script>
 

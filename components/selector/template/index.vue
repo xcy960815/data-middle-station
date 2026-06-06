@@ -1,57 +1,43 @@
 <template>
-  <client-only>
-    <el-popover
-      placement="bottom-start"
-      :trigger="popoverTrigger"
-      width="auto"
-      :disabled="!isPopoverEnabled"
-      ref="popoverRef"
-    >
-      <template #reference>
-        <div class="chart-selector-container px-1" :class="invalidClass">
-          <slot name="prefix-icon"></slot>
-          <slot name="selector-name">
-            <span class="chart-selector-name mr-1">{{ displayName }}</span>
-          </slot>
-          <div class="chart-selector-trailing">
-            <slot name="measure-suffix"></slot>
-            <slot name="order-aggregation"></slot>
-            <slot name="order-direction"></slot>
-            <slot name="dimension-suffix"></slot>
-            <slot name="filter-aggregation"></slot>
-            <slot name="filter-action"></slot>
-            <slot name="filter-suffix"></slot>
-            <el-tooltip
-              class="box-item"
-              effect="dark"
-              :content="invalidMessage || invalidContent"
-              placement="top"
-              v-if="hasInvalidIcon()"
-            >
-              <icon-park class="chart-selector-invalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
-            </el-tooltip>
-            <!-- 删除 icon -->
-            <icon-park
-              class="chart-selector-delete"
-              type="DeleteTwo"
-              size="14"
-              fill="#333"
-              @click.stop="handleDeleteSelector"
-              @contextmenu.stop
-            />
-          </div>
-        </div>
-      </template>
-      <div class="chart-selector-options">
-        <slot :close-popover="closePopover"></slot>
-      </div>
-    </el-popover>
-  </client-only>
+  <div class="chart-selector-container px-1" :class="invalidClass">
+    <slot name="prefix-icon"></slot>
+    <slot name="selector-name">
+      <span class="chart-selector-name mr-1">{{ displayName }}</span>
+    </slot>
+    <div class="chart-selector-trailing">
+      <slot name="measure-aggregation"></slot>
+      <!-- 排序聚合 -->
+      <slot name="order-aggregation"></slot>
+      <!-- 排序顺序 -->
+      <slot name="order-direction"></slot>
+      <slot name="dimension-suffix"></slot>
+      <slot name="filter-aggregation"></slot>
+      <slot name="filter-action"></slot>
+      <slot name="filter-suffix"></slot>
+      <el-tooltip
+        class="box-item"
+        effect="dark"
+        :content="invalidMessage || invalidContent"
+        placement="top"
+        v-if="hasInvalidIcon()"
+      >
+        <icon-park class="chart-selector-invalid-icon" type="error" size="12" fill="#ff4d4f" @contextmenu.stop />
+      </el-tooltip>
+      <!-- 删除 icon -->
+      <icon-park
+        class="chart-selector-delete"
+        type="DeleteTwo"
+        size="14"
+        fill="#333"
+        @click.stop="handleDeleteSelector"
+        @contextmenu.stop
+      />
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { IconPark } from '@icon-park/vue-next/es/all'
-import { ElPopover } from 'element-plus'
 const props = defineProps({
   invalid: {
     type: Boolean,
@@ -79,15 +65,15 @@ const filterStore = useFiltersStore()
 const orderStore = useOrdersStore()
 const measureStore = useMeasuresStore()
 const dimensionStore = useDimensionsStore()
-const isPopoverEnabled = computed(() => {
-  return props.cast === 'measure'
-})
-const popoverTrigger = computed(() => {
-  return 'click'
-})
+/**
+ * 无效标志的 class
+ */
 const invalidClass = computed(() => {
   return props.invalid ? 'invalid-selector' : ''
 })
+/**
+ * 无效标志的错误信息
+ */
 const invalidContent = computed(() => {
   switch (props.cast) {
     case 'filter':
@@ -105,7 +91,9 @@ const invalidContent = computed(() => {
 const hasInvalidIcon = computed(() => () => {
   return props.invalid
 })
-
+/**
+ * 删除选择器
+ */
 const handleDeleteSelector = () => {
   if (props.cast === 'filter') {
     filterStore.removeFilter(props.index)
@@ -117,21 +105,6 @@ const handleDeleteSelector = () => {
     dimensionStore.removeDimension(props.index)
   }
 }
-
-const popoverRef = ref<InstanceType<typeof ElPopover>>()
-
-const closePopover = () => {
-  popoverRef.value?.hide()
-}
-
-const openPopover = () => {
-  popoverRef.value?.show?.()
-}
-
-defineExpose({
-  closePopover,
-  openPopover
-})
 </script>
 <style lang="scss" scoped>
 .chart-selector-container {

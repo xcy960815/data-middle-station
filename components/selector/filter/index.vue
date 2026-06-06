@@ -2,9 +2,22 @@
   <div class="filter-selector" :class="$attrs.class">
     <selector-template :index="props.index" cast="filter" :display-name="props.displayName">
       <template #filter-aggregation>
-        <span class="chart-selector-aggregation-trigger" @contextmenu="aggregationContextmenuHandler">
-          <slot name="filter-aggregation"></slot>
-        </span>
+        <el-popover
+          ref="aggregationPopoverRef"
+          placement="bottom-start"
+          trigger="click"
+          width="auto"
+          :disabled="!hasAggregationSlot"
+        >
+          <template #reference>
+            <span class="chart-selector-aggregation-trigger" @click.stop @mousedown.stop @contextmenu.stop>
+              <slot name="filter-aggregation"></slot>
+            </span>
+          </template>
+          <div class="filter-aggregation-options">
+            <slot name="aggregation-panel" :close-popover="closeAggregationPopover"></slot>
+          </div>
+        </el-popover>
       </template>
       <template #filter-action>
         <el-popover
@@ -28,14 +41,10 @@
       </template>
     </selector-template>
   </div>
-  <context-menu ref="aggregationContextmenuRef">
-    <slot name="context-menu"></slot>
-  </context-menu>
 </template>
 
 <script lang="ts" setup>
 import { ElPopover } from 'element-plus'
-import ContextMenu from '../../context-menu/index.vue'
 
 defineOptions({
   inheritAttrs: false
@@ -62,7 +71,9 @@ const emit = defineEmits<{
 }>()
 
 const wherePopoverVisible = ref(false)
-const aggregationContextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+const slots = useSlots()
+const aggregationPopoverRef = ref<InstanceType<typeof ElPopover> | null>(null)
+const hasAggregationSlot = computed(() => !!slots['aggregation-panel'])
 
 const openWherePopover = () => {
   emit('beforeOpenWhere')
@@ -73,10 +84,8 @@ const closeWherePopover = () => {
   wherePopoverVisible.value = false
 }
 
-const aggregationContextmenuHandler = (event: MouseEvent) => {
-  event.preventDefault()
-  event.stopPropagation()
-  aggregationContextmenuRef.value?.show(event)
+const closeAggregationPopover = () => {
+  aggregationPopoverRef.value?.hide()
 }
 
 defineExpose({

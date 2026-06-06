@@ -166,7 +166,7 @@ type OrderOption = ColumnItem & {
 - 四个 wrapper 使用 `selector-template` 时要保持一致：`displayName / cast / invalid / invalidMessage / index` 必须通过显式 props 和显式传参进入 template，不要藏在 `$attrs` 里。
 - wrapper 组件应设置 `inheritAttrs: false`；`$attrs` 只用于处理 `class` 这类非业务属性，不要用 `v-bind="$attrs"` 宽泛转发核心参数。
 - `cast` 当前用于删除逻辑和默认无效提示；如果后续 wrapper 自己承担删除，应评估是否还能移除 template 对 store 的直接依赖。
-- 插槽命名要能表达位置和用途：`measure-suffix / order-aggregation / order-direction / filter-action / prefix-icon`，避免同一个插槽在不同领域承担不同含义。
+- 插槽命名要能表达位置和用途：`measure-aggregation / order-aggregation / order-direction / filter-action / prefix-icon`，避免同一个插槽在不同领域承担不同含义。
 - 交互入口要一致：点击用于打开普通选择弹层，右键用于上下文菜单；如果某个标签只能右键操作，应考虑 cursor 和 tooltip 是否能让用户理解。
 - 删除、无效提示、聚合标签、方向图标、过滤图标都应保持固定尺寸，避免字段名过长时挤压或换行。
 - `chart-selector-container` 的高度、间距、ellipsis 和 trailing 区域要覆盖四种区域，不应让某个区域单独写一套外观。

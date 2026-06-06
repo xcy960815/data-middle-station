@@ -24,7 +24,9 @@
           :invalidMessage="getOrderInvalidMessage(orderOptions)"
         >
           <template #order-aggregation>
-            <span class="chart-selector-meta-label">{{ resolveOrderAggregationLabel(orderOptions) }}</span>
+            <el-tooltip effect="dark" :content="resolveOrderAggregationLabel(orderOptions)" placement="top">
+              <span class="chart-selector-meta-label">{{ resolveOrderAggregationLabel(orderOptions) }}</span>
+            </el-tooltip>
           </template>
           <template #order-direction>
             <icon-park
@@ -46,15 +48,22 @@
               @contextmenu.stop
             />
           </template>
-          <template #context-menu>
-            <context-menu-item
+          <template #aggregation-panel="{ closePopover }">
+            <div
               v-for="option in getOrderAggregationOptions(orderOptions.columnType, true)"
               :key="option.value"
-              @click="handleSelectAggregation(orderOptions, option.value)"
+              class="aggregation-option flex items-center cursor-pointer hover:bg-gray-100 py-1 justify-between px-2"
+              @click="handleSelectAggregation(orderOptions, option.value, closePopover)"
             >
-              {{ option.label }}
-              <span v-if="orderOptions.orderRule.aggregation === option.value" class="order-panel__checked">✓</span>
-            </context-menu-item>
+              <span class="text-xs">{{ option.label }}</span>
+              <icon-park
+                v-if="orderOptions.orderRule.aggregation === option.value"
+                class="aggregation-mark text-xs"
+                type="correct"
+                size="14"
+                fill="#333"
+              />
+            </div>
           </template>
         </selector-order>
       </div>
@@ -112,9 +121,14 @@ const handleToggleDirection = (order: OrderStore.OrderOption) => {
   syncOrderOptionDisplayName(order)
 }
 
-const handleSelectAggregation = (order: OrderStore.OrderOption, aggregationType: OrderStore.OrderAggregationsType) => {
+const handleSelectAggregation = (
+  order: OrderStore.OrderOption,
+  aggregationType: OrderStore.OrderAggregationsType,
+  closePopover?: () => void
+) => {
   order.orderRule = setOrderRuleAggregation(order.orderRule, aggregationType)
   syncOrderOptionDisplayName(order)
+  closePopover?.()
 }
 
 const dragstartHandler = (index: number, dragEvent: DragEvent) => {
@@ -179,10 +193,5 @@ watch(
       position: relative;
     }
   }
-}
-
-.order-panel__checked {
-  margin-left: 8px;
-  color: #409eff;
 }
 </style>

@@ -46,18 +46,12 @@ export const useAnalyzeDataHandler = () => {
       (item) => item.filterRule.aggregation && (item.filterRule.operator || item.filterRule.operand)
     )
     const dimensions = currentDrillDimension.value ? [currentDrillDimension.value] : []
-    const activeOrderColumnNames = new Set([
-      ...dimensions.map((item) => item.columnName),
-      ...measureStore.getMeasures.map((item) => item.columnName)
-    ])
 
     return {
       dataSource: columnStore.getDataSource,
       // 过滤掉未完成的聚合条件
       filters: [...baseFilters, ...drillFilters.value],
-      orders: orderStore.getOrders.filter(
-        (item) => item.orderRule?.direction && activeOrderColumnNames.has(item.columnName)
-      ),
+      orders: orderStore.getOrders.filter((item) => item.orderRule?.direction),
       dimensions,
       measures: measureStore.getMeasures,
       commonChartConfig: chartConfigStore.getCommonChartConfig
@@ -77,7 +71,14 @@ export const useAnalyzeDataHandler = () => {
     analyzeStore.setChartErrorAnalysis('')
     if (!validation.valid) return
 
-    const queryKey = JSON.stringify(queryAnalyzeDataParams.value)
+    const queryKey = JSON.stringify({
+      ...queryAnalyzeDataParams.value,
+      orderState: orderStore.getOrders.map((item) => ({
+        columnName: item.columnName,
+        direction: item.orderRule?.direction,
+        aggregation: item.orderRule?.aggregation
+      }))
+    })
     if (!options.force && queryKey === lastQueryKey.value) return
     lastQueryKey.value = queryKey
 
