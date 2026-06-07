@@ -46,6 +46,14 @@ export const useDimensionsStore = defineStore<
     setDimensions(dimensions) {
       this.dimensions = dimensions
     },
+    setDrillCurrentLevel(level: number) {
+      this.drillCurrentLevel = Math.max(0, Math.floor(Number(level) || 0))
+    },
+    setDrillPath(path: DimensionStore.DrillPathItem[]) {
+      this.drillPath = JSON.parse(JSON.stringify(path || []))
+      this.drillCurrentLevel = this.drillPath.length
+      this.selectedDrillValue = null
+    },
     /**
      * @desc 删除分组
      * @param index {number}

@@ -12,10 +12,20 @@ type FilterClauseFragments = {
   having: SqlFragment
 }
 
-type QueryFieldOption = {
+type AnalyzeFieldOption = {
   columnName: string
   isCustom?: boolean
   expression?: string
+}
+
+type DimensionFieldExpression = {
+  columnName: string
+  expression: string
+}
+
+type DimensionFieldExpressions = {
+  dimensions: DimensionFieldExpression[]
+  expressionByColumnName: Map<string, string>
 }
 
 export type AnalyzeQueryContext = {
@@ -31,11 +41,14 @@ export type AnalyzeSqlQuery = {
 
 const MAX_QUERY_LIMIT = 5000
 
-const ORDER_TYPE_MAP: Record<string, 'ASC' | 'DESC'> = {
+const ORDER_DIRECTION_MAP: Record<string, 'ASC' | 'DESC'> = {
   asc: 'ASC',
   desc: 'DESC'
 }
 
+/**
+ * @desc 过滤操作符映射
+ */
 const FILTER_OPERATOR_MAP: Record<string, string> = {
   eq: '=',
   '=': '=',
@@ -57,6 +70,9 @@ const FILTER_OPERATOR_MAP: Record<string, string> = {
   isnotnull: 'IS NOT NULL'
 }
 
+/**
+ * @desc 聚合函数映射
+ */
 const AGGREGATION_MAP: Record<string, string> = {
   count: 'COUNT',
   countdistinct: 'COUNT(DISTINCT %s)',
@@ -67,6 +83,9 @@ const AGGREGATION_MAP: Record<string, string> = {
   raw: 'RAW'
 }
 
+/**
+ * @desc 允许的表达式函数
+ */
 const ALLOWED_EXPRESSION_FUNCTIONS = new Set([
   'abs',
   'avg',
@@ -103,6 +122,9 @@ const ALLOWED_EXPRESSION_FUNCTIONS = new Set([
   'year'
 ])
 
+/**
+ * @desc 危险的表达式模式
+ */
 const DANGEROUS_EXPRESSION_PATTERN =
   /(;|--|#|\/\*|\*\/|\b(select|from|where|union|join|insert|update|delete|drop|alter|truncate|grant|revoke|create|into|outfile|load_file|benchmark|sleep|handler)\b)/i
 
@@ -156,27 +178,28 @@ export class AnalyzeQueryBuilder {
     analyzeDataQuery: AnalyzeDataDto.AnalyzeDataQuery,
     context: AnalyzeQueryContext
   ): AnalyzeSqlQuery {
-    const normalizedQuery: AnalyzeDataDto.AnalyzeDataQuery = {
+    const resolvedQuery: AnalyzeDataDto.AnalyzeDataQuery = {
       ...analyzeDataQuery,
       filters: analyzeDataQuery.filters || [],
       orders: analyzeDataQuery.orders || [],
       dimensions: analyzeDataQuery.dimensions || [],
       measures: analyzeDataQuery.measures || []
     }
-    const safeLimit = this.normalizeLimit(normalizedQuery.commonChartConfig?.limit)
-    const hasGroupBy = normalizedQuery.dimensions.length > 0
-    const selectClause = this.buildSelectClause(normalizedQuery.measures, normalizedQuery.dimensions, context)
-    const filterClauses = this.buildFilterClauses(
-      normalizedQuery.filters,
-      hasGroupBy,
-      normalizedQuery.dimensions,
+    const safeLimit = this.normalizeLimit(resolvedQuery.commonChartConfig?.limit)
+    const hasDimensions = resolvedQuery.dimensions.length > 0
+    const dimensionFieldExpressions = this.buildDimensionFieldExpressions(resolvedQuery.dimensions, context)
+    const selectClause = this.buildSelectClause(
+      resolvedQuery.measures,
+      dimensionFieldExpressions,
+      hasDimensions,
       context
     )
-    const groupByClause = this.buildGroupByClause(normalizedQuery.dimensions, context)
+    const filterClauses = this.buildFilterClauses(resolvedQuery.filters, hasDimensions, context)
+    const groupByClause = this.buildGroupByClause(dimensionFieldExpressions)
     const orderByClause = this.buildOrderByClause(
-      normalizedQuery.orders,
-      hasGroupBy,
-      normalizedQuery.dimensions,
+      resolvedQuery.orders,
+      hasDimensions,
+      dimensionFieldExpressions,
       context
     )
 
@@ -371,7 +394,7 @@ export class AnalyzeQueryBuilder {
    * @param context 查询上下文
    * @returns SQL 表达式
    */
-  private resolveExpression(option: QueryFieldOption, context: AnalyzeQueryContext): string {
+  private resolveExpression(option: AnalyzeFieldOption, context: AnalyzeQueryContext): string {
     if (option.isCustom && option.expression) {
       return this.sanitizeCustomExpression(option.expression, context)
     }
@@ -432,17 +455,17 @@ export class AnalyzeQueryBuilder {
   }
 
   /**
-   * @desc 构建分组字段表达式，确保 SELECT/GROUP BY/ORDER BY 使用同一表达式
-   * @param columnOption 查询字段配置
+   * @desc 构建维度字段表达式，确保 SELECT/GROUP BY/ORDER BY 使用同一表达式
+   * @param fieldOption 维度字段配置
    * @param context 查询上下文
-   * @returns 分组字段名与表达式
+   * @returns 维度字段名与表达式
    */
-  private buildGroupFieldExpression(
-    columnOption: QueryFieldOption,
+  private buildDimensionFieldExpression(
+    fieldOption: AnalyzeFieldOption,
     context: AnalyzeQueryContext
-  ): { columnName: string; expression: string } {
-    const columnName = this.normalizeIdentifier(columnOption.columnName, '字段')
-    const columnExpression = this.resolveExpression(columnOption, context)
+  ): DimensionFieldExpression {
+    const columnName = this.normalizeIdentifier(fieldOption.columnName, '字段')
+    const columnExpression = this.resolveExpression(fieldOption, context)
     const expression = this.isDateTimeColumnName(columnName)
       ? `DATE_FORMAT(${columnExpression}, '%Y-%m-%d %H:%i:%s')`
       : columnExpression
@@ -454,30 +477,50 @@ export class AnalyzeQueryBuilder {
   }
 
   /**
-   * @desc 构建select语句
-   * @param measures 值/度量字段
-   * @param dimensions 分组
+   * @desc 预计算维度字段表达式，供 SELECT/GROUP BY/ORDER BY 共用
+   * @param dimensionOptions 维度字段配置
    * @param context 查询上下文
-   * @returns select语句
+   * @returns 有序维度表达式及按列名索引
+   */
+  private buildDimensionFieldExpressions(
+    dimensionOptions: AnalyzeDataDto.DimensionOption[],
+    context: AnalyzeQueryContext
+  ): DimensionFieldExpressions {
+    const dimensions = dimensionOptions.map((dimensionOption) =>
+      this.buildDimensionFieldExpression(dimensionOption, context)
+    )
+
+    return {
+      dimensions,
+      expressionByColumnName: new Map(dimensions.map((dimension) => [dimension.columnName, dimension.expression]))
+    }
+  }
+
+  /**
+   * @desc 构建 SELECT 语句
+   * @param measures 值/度量字段
+   * @param dimensionFieldExpressions 预计算的维度字段表达式
+   * @param hasDimensions 是否配置了维度字段
+   * @param context 查询上下文
+   * @returns SELECT 片段
    */
   private buildSelectClause(
     measures: AnalyzeDataDto.MeasureOption[],
-    dimensions: AnalyzeDataDto.DimensionOption[],
+    dimensionFieldExpressions: DimensionFieldExpressions,
+    hasDimensions: boolean,
     context: AnalyzeQueryContext
   ): SqlFragment {
     const selectExpressions: string[] = []
-    const hasGroupBy = dimensions.length > 0
 
-    dimensions.forEach((columnOption: AnalyzeDataDto.DimensionOption) => {
-      const { columnName, expression } = this.buildGroupFieldExpression(columnOption, context)
+    dimensionFieldExpressions.dimensions.forEach(({ columnName, expression }) => {
       selectExpressions.push(`${expression} AS ${this.quoteIdentifier(columnName)}`)
     })
 
-    measures.forEach((columnOption: AnalyzeDataDto.MeasureOption) => {
-      const columnName = this.normalizeIdentifier(columnOption.columnName, '字段')
-      const columnExpression = this.resolveExpression(columnOption, context)
+    measures.forEach((measureOption: AnalyzeDataDto.MeasureOption) => {
+      const columnName = this.normalizeIdentifier(measureOption.columnName, '字段')
+      const columnExpression = this.resolveExpression(measureOption, context)
 
-      if (!hasGroupBy) {
+      if (!hasDimensions) {
         const fieldExpression = this.isDateTimeColumnName(columnName)
           ? `DATE_FORMAT(${columnExpression}, '%Y-%m-%d %H:%i:%s')`
           : columnExpression
@@ -485,14 +528,14 @@ export class AnalyzeQueryBuilder {
         return
       }
 
-      const aggregationType = this.resolveMeasureAggregationType(columnOption)
+      const aggregationType = this.resolveMeasureAggregationType(measureOption)
       selectExpressions.push(
         `${this.buildAggregationExpression(aggregationType, columnExpression)} AS ${this.quoteIdentifier(columnName)}`
       )
     })
 
     if (selectExpressions.length === 0) {
-      throw new Error('至少需要选择一个值或分组字段')
+      throw new Error('至少需要选择一个值或维度字段')
     }
 
     return {
@@ -502,17 +545,15 @@ export class AnalyzeQueryBuilder {
   }
 
   /**
-   * @desc 构建where/having语句
+   * @desc 构建 WHERE/HAVING 语句
    * @param filterOptions 过滤条件
-   * @param hasGroupBy 是否有分组
-   * @param dimensionOptions 分组条件
+   * @param hasDimensions 是否配置了维度字段
    * @param context 查询上下文
-   * @returns where/having 片段
+   * @returns WHERE/HAVING 片段
    */
   private buildFilterClauses(
     filterOptions: AnalyzeDataDto.FilterOption[],
-    hasGroupBy: boolean,
-    dimensionOptions: AnalyzeDataDto.DimensionOption[],
+    hasDimensions: boolean,
     context: AnalyzeQueryContext
   ): FilterClauseFragments {
     if (filterOptions.length === 0) {
@@ -536,8 +577,8 @@ export class AnalyzeQueryBuilder {
       const { filterRule } = filterOption
       if (!filterRule.operator) return
 
-      const normalizedFilterType = String(filterRule.operator).trim().toLowerCase()
-      const operator = FILTER_OPERATOR_MAP[normalizedFilterType]
+      const normalizedOperator = String(filterRule.operator).trim().toLowerCase()
+      const operator = FILTER_OPERATOR_MAP[normalizedOperator]
       if (!operator) {
         throw new Error(`不支持的筛选操作: ${filterRule.operator}`)
       }
@@ -546,8 +587,8 @@ export class AnalyzeQueryBuilder {
       const columnExpression = this.resolveExpression(filterOption, context)
       const aggregationType = String(filterRule.aggregation || 'raw').toLowerCase()
       const isAggregateFilter = aggregationType !== 'raw'
-      if (isAggregateFilter && !hasGroupBy) {
-        throw new Error('聚合筛选需要先配置分组字段')
+      if (isAggregateFilter && !hasDimensions) {
+        throw new Error('聚合筛选需要先配置维度字段')
       }
 
       const filterExpression = isAggregateFilter
@@ -590,17 +631,17 @@ export class AnalyzeQueryBuilder {
   }
 
   /**
-   * @desc 构建orderBy语句
+   * @desc 构建 ORDER BY 语句
    * @param orderOptions 排序条件
-   * @param hasGroupBy 是否有分组
-   * @param dimensionOptions 分组条件
+   * @param hasDimensions 是否配置了维度字段
+   * @param dimensionFieldExpressions 预计算的维度字段表达式
    * @param context 查询上下文
-   * @returns order by 片段
+   * @returns ORDER BY 片段
    */
   private buildOrderByClause(
     orderOptions: AnalyzeDataDto.OrderOption[],
-    hasGroupBy: boolean,
-    dimensionOptions: AnalyzeDataDto.DimensionOption[],
+    hasDimensions: boolean,
+    dimensionFieldExpressions: DimensionFieldExpressions,
     context: AnalyzeQueryContext
   ): SqlFragment {
     if (orderOptions.length === 0) {
@@ -610,13 +651,10 @@ export class AnalyzeQueryBuilder {
       }
     }
 
-    const dimensionColumnSet = new Set(
-      dimensionOptions.map((dimensionOption) => this.normalizeIdentifier(dimensionOption.columnName, '字段'))
-    )
     const orderClause = orderOptions
       .map((orderOption) => {
         const orderRule = orderOption.orderRule
-        const direction = ORDER_TYPE_MAP[String(orderRule.direction || '').toLowerCase()]
+        const direction = ORDER_DIRECTION_MAP[String(orderRule.direction || '').toLowerCase()]
         if (!direction) {
           throw new Error(`不支持的排序方向: ${orderRule.direction}`)
         }
@@ -625,17 +663,18 @@ export class AnalyzeQueryBuilder {
         const columnExpression = this.resolveExpression(orderOption, context)
         const configuredAggregationType = String(orderRule.aggregation || '').toLowerCase()
 
-        if (!hasGroupBy) {
+        if (!hasDimensions) {
           return `${columnExpression} ${direction}`
         }
 
         const aggregationType = configuredAggregationType || 'raw'
 
         if (aggregationType === 'raw') {
-          if (!dimensionColumnSet.has(columnName)) {
+          const dimensionExpression = dimensionFieldExpressions.expressionByColumnName.get(columnName)
+          if (!dimensionExpression) {
             throw new Error('聚合查询中，值字段排序需要选择总计、计数、平均等聚合方式')
           }
-          return `${this.buildGroupFieldExpression(orderOption, context).expression} ${direction}`
+          return `${dimensionExpression} ${direction}`
         }
 
         return `${this.buildAggregationExpression(aggregationType, columnExpression)} ${direction}`
@@ -650,26 +689,20 @@ export class AnalyzeQueryBuilder {
   }
 
   /**
-   * @desc 构建groupBy语句
-   * @param dimensionOptions 分组条件
-   * @param context 查询上下文
-   * @returns group by 片段
+   * @desc 构建 GROUP BY 语句
+   * @param dimensionFieldExpressions 预计算的维度字段表达式
+   * @returns GROUP BY 片段
    */
-  private buildGroupByClause(
-    dimensionOptions: AnalyzeDataDto.DimensionOption[],
-    context: AnalyzeQueryContext
-  ): SqlFragment {
-    if (dimensionOptions.length === 0) {
+  private buildGroupByClause(dimensionFieldExpressions: DimensionFieldExpressions): SqlFragment {
+    if (dimensionFieldExpressions.dimensions.length === 0) {
       return {
         sql: '',
         params: []
       }
     }
-    const allGroupColumns = dimensionOptions.map(
-      (dimensionOption) => this.buildGroupFieldExpression(dimensionOption, context).expression
-    )
+
     return {
-      sql: ` group by ${allGroupColumns.join(',')}`,
+      sql: ` group by ${dimensionFieldExpressions.dimensions.map((dimension) => dimension.expression).join(',')}`,
       params: []
     }
   }

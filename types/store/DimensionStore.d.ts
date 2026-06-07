@@ -128,6 +128,8 @@ declare namespace DimensionStore {
     updateDimension: (dimension: DimensionOption) => void
     resetDrill: () => void
     setSelectedDrillValue: (value: DrillPathItem['value']) => void
+    setDrillCurrentLevel: (level: number) => void
+    setDrillPath: (path: DrillPathItem[]) => void
     drillDown: (item: DrillPathItem) => void
     rollUpTo: (level: number) => void
   }
