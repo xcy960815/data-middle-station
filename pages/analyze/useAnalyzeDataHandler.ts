@@ -40,17 +40,22 @@ export const useAnalyzeDataHandler = () => {
     return error instanceof Error && (error.name === 'AbortError' || /aborted|abort/i.test(error.message))
   }
 
+  const isDrillQueryEnabled = computed(() => drillDimensions.value.length > 1)
+
   // ---------- 查询参数 ----------
   const queryAnalyzeDataParams = computed(() => {
     const baseFilters = filterStore.getFilters.filter(
       (item) => item.filterRule.aggregation && (item.filterRule.operator || item.filterRule.operand)
     )
-    const dimensions = currentDrillDimension.value ? [currentDrillDimension.value] : []
+    const dimensions =
+      isDrillQueryEnabled.value && currentDrillDimension.value
+        ? [currentDrillDimension.value]
+        : dimensionStore.getDimensions
 
     return {
       dataSource: columnStore.getDataSource,
       // 过滤掉未完成的聚合条件
-      filters: [...baseFilters, ...drillFilters.value],
+      filters: [...baseFilters, ...(isDrillQueryEnabled.value ? drillFilters.value : [])],
       orders: orderStore.getOrders.filter((item) => item.orderRule?.direction),
       dimensions,
       measures: measureStore.getMeasures,
@@ -65,7 +70,10 @@ export const useAnalyzeDataHandler = () => {
       chartType,
       dataSource: columnStore.getDataSource,
       measures: measureStore.getMeasures,
-      dimensions: currentDrillDimension.value ? [currentDrillDimension.value] : dimensionStore.getDimensions
+      dimensions:
+        isDrillQueryEnabled.value && currentDrillDimension.value
+          ? [currentDrillDimension.value]
+          : dimensionStore.getDimensions
     })
     analyzeStore.setChartErrorMessage(validation.message)
     analyzeStore.setChartErrorAnalysis('')

@@ -1,4 +1,11 @@
+import type { FilterType, MeasureAggregationType, OrderType } from '@/shared/domainTypes'
 import { toLine } from '@/server/utils/databaseHelper'
+
+// ---------------------------------------------------------------------------
+// 类型
+// ---------------------------------------------------------------------------
+
+type AnalyzeAggregationType = 'raw' | 'count' | 'countDistinct' | 'sum' | 'avg' | 'max' | 'min'
 
 export type SqlPrimitive = string | number | boolean | null
 
@@ -10,12 +17,6 @@ type SqlFragment = {
 type FilterClauseFragments = {
   where: SqlFragment
   having: SqlFragment
-}
-
-type AnalyzeFieldOption = {
-  columnName: string
-  isCustom?: boolean
-  expression?: string
 }
 
 type DimensionFieldExpression = {
@@ -39,53 +40,56 @@ export type AnalyzeSqlQuery = {
   params: SqlPrimitive[]
 }
 
-const MAX_QUERY_LIMIT = 5000
+// ---------------------------------------------------------------------------
+// SQL 映射
+// ---------------------------------------------------------------------------
 
-const ORDER_DIRECTION_MAP: Record<string, 'ASC' | 'DESC'> = {
+const FILTER_TYPE_TO_SQL_OPERATOR: Record<FilterType, string> = {
+  eq: '=',
+  neq: '!=',
+  gt: '>',
+  gte: '>=',
+  lt: '<',
+  lte: '<=',
+  like: 'LIKE',
+  notLike: 'NOT LIKE',
+  isNull: 'IS NULL',
+  isNotNull: 'IS NOT NULL'
+}
+
+const ANALYZE_AGGREGATION_SQL_MAP: Record<AnalyzeAggregationType, 'RAW' | string> = {
+  raw: 'RAW',
+  count: 'COUNT',
+  countDistinct: 'COUNT(DISTINCT %s)',
+  sum: 'SUM',
+  avg: 'AVG',
+  max: 'MAX',
+  min: 'MIN'
+}
+
+const ORDER_DIRECTION_TO_SQL: Record<OrderType, 'ASC' | 'DESC'> = {
   asc: 'ASC',
   desc: 'DESC'
 }
 
-/**
- * @desc 过滤操作符映射
- */
-const FILTER_OPERATOR_MAP: Record<string, string> = {
-  eq: '=',
-  '=': '=',
-  neq: '!=',
-  '!=': '!=',
-  gt: '>',
-  '>': '>',
-  gte: '>=',
-  '>=': '>=',
-  lt: '<',
-  '<': '<',
-  lte: '<=',
-  '<=': '<=',
-  like: 'LIKE',
-  notlike: 'NOT LIKE',
-  'is null': 'IS NULL',
-  isnull: 'IS NULL',
-  'is not null': 'IS NOT NULL',
-  isnotnull: 'IS NOT NULL'
+const MAX_QUERY_LIMIT = 5000
+const ANALYZE_DATETIME_SQL_FORMAT = '%Y-%m-%d %H:%i:%s'
+const EMPTY_FILTER_CLAUSES: FilterClauseFragments = {
+  where: { sql: '', params: [] },
+  having: { sql: '', params: [] }
 }
 
-/**
- * @desc 聚合函数映射
- */
-const AGGREGATION_MAP: Record<string, string> = {
-  count: 'COUNT',
-  countdistinct: 'COUNT(DISTINCT %s)',
-  sum: 'SUM',
-  avg: 'AVG',
-  max: 'MAX',
-  min: 'MIN',
-  raw: 'RAW'
+const isDateTimeColumnType = (columnType?: string) => {
+  const normalizedColumnType = columnType?.toLowerCase() || ''
+  return ['date', 'datetime', 'timestamp', 'time', 'year', 'datetime2', 'datetimeoffset', 'smalldatetime'].some(
+    (type) => normalizedColumnType.includes(type)
+  )
 }
 
-/**
- * @desc 允许的表达式函数
- */
+// ---------------------------------------------------------------------------
+// 自定义表达式安全
+// ---------------------------------------------------------------------------
+
 const ALLOWED_EXPRESSION_FUNCTIONS = new Set([
   'abs',
   'avg',
@@ -122,22 +126,17 @@ const ALLOWED_EXPRESSION_FUNCTIONS = new Set([
   'year'
 ])
 
-/**
- * @desc 危险的表达式模式
- */
 const DANGEROUS_EXPRESSION_PATTERN =
   /(;|--|#|\/\*|\*\/|\b(select|from|where|union|join|insert|update|delete|drop|alter|truncate|grant|revoke|create|into|outfile|load_file|benchmark|sleep|handler)\b)/i
 
 /**
- * @desc 分析页 SQL 构建器。保持纯函数式依赖，便于快照测试。
+ * @desc 分析页 SQL 构建器
  */
 export class AnalyzeQueryBuilder {
-  /**
-   * @desc 规范化标识符
-   * @param identifier 原始标识符
-   * @param label 错误提示标签
-   * @returns 规范化后的标识符
-   */
+  // -------------------------------------------------------------------------
+  // 对外 API
+  // -------------------------------------------------------------------------
+
   public normalizeIdentifier(identifier: string, label: string): string {
     const normalizedIdentifier = toLine(String(identifier || '').trim())
     if (!normalizedIdentifier || !/^[a-z0-9_]+$/i.test(normalizedIdentifier)) {
@@ -146,20 +145,10 @@ export class AnalyzeQueryBuilder {
     return normalizedIdentifier
   }
 
-  /**
-   * @desc 给标识符加安全引号
-   * @param identifier 标识符
-   * @returns 安全的 SQL 标识符
-   */
   public quoteIdentifier(identifier: string): string {
     return `\`${identifier}\``
   }
 
-  /**
-   * @desc 规范化 limit
-   * @param limit 原始 limit
-   * @returns 安全 limit
-   */
   public normalizeLimit(limit?: number): number {
     const numericLimit = Number(limit)
     if (!Number.isFinite(numericLimit)) {
@@ -168,132 +157,294 @@ export class AnalyzeQueryBuilder {
     return Math.min(Math.max(Math.floor(numericLimit), 1), MAX_QUERY_LIMIT)
   }
 
-  /**
-   * @desc 构建完整分析 SQL
-   * @param analyzeDataQuery 查询参数
-   * @param context 查询上下文
-   * @returns SQL 和参数
-   */
   public buildAnalyzeDataQuery(
     analyzeDataQuery: AnalyzeDataDto.AnalyzeDataQuery,
     context: AnalyzeQueryContext
   ): AnalyzeSqlQuery {
-    const resolvedQuery: AnalyzeDataDto.AnalyzeDataQuery = {
-      ...analyzeDataQuery,
-      filters: analyzeDataQuery.filters || [],
-      orders: analyzeDataQuery.orders || [],
-      dimensions: analyzeDataQuery.dimensions || [],
-      measures: analyzeDataQuery.measures || []
+    const filters = analyzeDataQuery.filters || []
+    const orders = analyzeDataQuery.orders || []
+    const dimensions = analyzeDataQuery.dimensions || []
+    const measures = analyzeDataQuery.measures || []
+    const safeLimit = this.normalizeLimit(analyzeDataQuery.commonChartConfig?.limit)
+    const hasDimensions = dimensions.length > 0
+    const dimensionFieldExpressions = this.buildDimensionFieldExpressions(dimensions, context)
+    const selectSql = this.buildSelectClause(measures, dimensionFieldExpressions, hasDimensions, context)
+    const filterClauses = this.buildFilterClauses(filters, hasDimensions, context)
+    const groupBySql =
+      dimensionFieldExpressions.dimensions.length > 0
+        ? ` group by ${dimensionFieldExpressions.dimensions.map((dimension) => dimension.expression).join(',')}`
+        : ''
+    const orderBySql = this.buildOrderByClause(orders, hasDimensions, dimensionFieldExpressions, context)
+
+    return {
+      sql: `${selectSql} from ${context.quotedTableName}${filterClauses.where.sql}${groupBySql}${filterClauses.having.sql}${orderBySql} limit ${safeLimit}`,
+      params: [...filterClauses.where.params, ...filterClauses.having.params]
     }
-    const safeLimit = this.normalizeLimit(resolvedQuery.commonChartConfig?.limit)
-    const hasDimensions = resolvedQuery.dimensions.length > 0
-    const dimensionFieldExpressions = this.buildDimensionFieldExpressions(resolvedQuery.dimensions, context)
-    const selectClause = this.buildSelectClause(
-      resolvedQuery.measures,
-      dimensionFieldExpressions,
-      hasDimensions,
-      context
-    )
-    const filterClauses = this.buildFilterClauses(resolvedQuery.filters, hasDimensions, context)
-    const groupByClause = this.buildGroupByClause(dimensionFieldExpressions)
-    const orderByClause = this.buildOrderByClause(
-      resolvedQuery.orders,
-      hasDimensions,
-      dimensionFieldExpressions,
-      context
+  }
+
+  // -------------------------------------------------------------------------
+  // SQL 子句：SELECT / WHERE / HAVING / ORDER BY
+  // -------------------------------------------------------------------------
+
+  private buildSelectClause(
+    measures: AnalyzeDataDto.MeasureOption[],
+    dimensionFieldExpressions: DimensionFieldExpressions,
+    hasDimensions: boolean,
+    context: AnalyzeQueryContext
+  ): string {
+    const selectExpressions: string[] = []
+
+    dimensionFieldExpressions.dimensions.forEach(({ columnName, expression }) => {
+      selectExpressions.push(this.formatSelectAlias(expression, columnName))
+    })
+
+    measures.forEach((measureOption) => {
+      const { columnName, expression: columnExpression } = this.resolveFieldExpression(measureOption, context)
+
+      if (!hasDimensions) {
+        selectExpressions.push(
+          this.formatSelectAlias(this.formatDateTimeExpression(measureOption.columnType, columnExpression), columnName)
+        )
+        return
+      }
+
+      const aggregationType = this.resolveMeasureAggregationType(measureOption)
+      selectExpressions.push(
+        this.formatSelectAlias(this.buildAggregationExpression(aggregationType, columnExpression), columnName)
+      )
+    })
+
+    if (selectExpressions.length === 0) {
+      throw new Error('至少需要选择一个值或维度字段')
+    }
+
+    return `select ${selectExpressions.join(',')}`
+  }
+
+  private buildFilterClauses(
+    filterOptions: AnalyzeDataDto.FilterOption[],
+    hasDimensions: boolean,
+    context: AnalyzeQueryContext
+  ): FilterClauseFragments {
+    if (filterOptions.length === 0) {
+      return EMPTY_FILTER_CLAUSES
+    }
+
+    const whereClauseParts: string[] = []
+    const havingClauseParts: string[] = []
+    const whereParams: SqlPrimitive[] = []
+    const havingParams: SqlPrimitive[] = []
+
+    filterOptions.forEach((filterOption) => {
+      const { filterRule } = filterOption
+      if (!filterRule.operator) return
+
+      const operator = FILTER_TYPE_TO_SQL_OPERATOR[filterRule.operator]
+      const columnExpression = this.resolveExpression(filterOption, context)
+      const aggregationType = this.resolveRuleAggregationType(filterRule.aggregation)
+      const isAggregateFilter = aggregationType !== 'raw'
+
+      if (isAggregateFilter && !hasDimensions) {
+        throw new Error('聚合筛选需要先配置维度字段')
+      }
+
+      const filterExpression = isAggregateFilter
+        ? this.buildAggregationExpression(aggregationType, columnExpression)
+        : this.formatDateTimeExpression(filterOption.columnType, columnExpression)
+      const targetClauseParts = isAggregateFilter ? havingClauseParts : whereClauseParts
+      const targetParams = isAggregateFilter ? havingParams : whereParams
+
+      if (operator === 'IS NULL' || operator === 'IS NOT NULL') {
+        targetClauseParts.push(`${filterExpression} ${operator}`)
+        return
+      }
+
+      if (typeof filterRule.operand === 'undefined' || filterRule.operand === '') {
+        return
+      }
+
+      if (operator === 'LIKE' || operator === 'NOT LIKE') {
+        targetClauseParts.push(`${filterExpression} ${operator} ?`)
+        targetParams.push(`%${filterRule.operand}%`)
+        return
+      }
+
+      targetClauseParts.push(`${filterExpression} ${operator} ?`)
+      targetParams.push(filterRule.operand)
+    })
+
+    return {
+      where: {
+        sql: whereClauseParts.length ? ` where ${whereClauseParts.join(' and ')}` : '',
+        params: whereParams
+      },
+      having: {
+        sql: havingClauseParts.length ? ` having ${havingClauseParts.join(' and ')}` : '',
+        params: havingParams
+      }
+    }
+  }
+
+  private buildOrderByClause(
+    orderOptions: AnalyzeDataDto.OrderOption[],
+    hasDimensions: boolean,
+    dimensionFieldExpressions: DimensionFieldExpressions,
+    context: AnalyzeQueryContext
+  ): string {
+    if (orderOptions.length === 0) {
+      return ''
+    }
+
+    const orderClause = orderOptions
+      .map((orderOption) => {
+        const orderRule = orderOption.orderRule
+        const direction = ORDER_DIRECTION_TO_SQL[orderRule.direction]
+        if (!direction) {
+          throw new Error(`不支持的排序方向: ${orderRule.direction}`)
+        }
+
+        const { columnName, expression: columnExpression } = this.resolveFieldExpression(orderOption, context)
+
+        if (!hasDimensions) {
+          return `${this.formatDateTimeExpression(orderOption.columnType, columnExpression)} ${direction}`
+        }
+
+        const aggregationType = this.resolveRuleAggregationType(orderRule.aggregation)
+
+        if (aggregationType === 'raw') {
+          const dimensionExpression = dimensionFieldExpressions.expressionByColumnName.get(columnName)
+          if (!dimensionExpression) {
+            throw new Error('聚合查询中，值字段排序需要选择总计、计数、平均等聚合方式')
+          }
+          return `${dimensionExpression} ${direction}`
+        }
+
+        return `${this.buildAggregationExpression(aggregationType, columnExpression)} ${direction}`
+      })
+      .filter(Boolean)
+      .join(',')
+
+    return orderClause ? ` order by ${orderClause}` : ''
+  }
+
+  // -------------------------------------------------------------------------
+  // 维度表达式
+  // -------------------------------------------------------------------------
+
+  private buildDimensionFieldExpressions(
+    dimensionOptions: AnalyzeDataDto.DimensionOption[],
+    context: AnalyzeQueryContext
+  ): DimensionFieldExpressions {
+    const dimensions = dimensionOptions.map((dimensionOption) =>
+      this.buildDimensionFieldExpression(dimensionOption, context)
     )
 
     return {
-      sql: `${selectClause.sql} from ${context.quotedTableName}${filterClauses.where.sql}${groupByClause.sql}${filterClauses.having.sql}${orderByClause.sql} limit ${safeLimit}`,
-      params: [
-        ...selectClause.params,
-        ...filterClauses.where.params,
-        ...groupByClause.params,
-        ...filterClauses.having.params,
-        ...orderByClause.params
-      ]
+      dimensions,
+      expressionByColumnName: new Map(dimensions.map((dimension) => [dimension.columnName, dimension.expression]))
     }
   }
 
-  /**
-   * @desc 解析普通列名
-   * @param columnName 字段名
-   * @param context 查询上下文
-   * @returns SQL 字段表达式
-   */
-  private resolveColumnName(columnName: string, context: AnalyzeQueryContext): string {
-    const normalizedColumnName = this.normalizeIdentifier(columnName, '字段')
-    if (!context.allowedColumns.has(normalizedColumnName)) {
-      throw new Error(`字段不存在或不允许查询: ${columnName}`)
+  private buildDimensionFieldExpression(
+    dimensionOption: AnalyzeDataDto.DimensionOption,
+    context: AnalyzeQueryContext
+  ): DimensionFieldExpression {
+    const { columnName, expression: columnExpression } = this.resolveFieldExpression(dimensionOption, context)
+
+    return {
+      columnName,
+      expression: this.formatDateTimeExpression(dimensionOption.columnType, columnExpression)
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // 聚合与日期格式化
+  // -------------------------------------------------------------------------
+
+  private buildAggregationExpression(aggregationType: AnalyzeAggregationType, expression: string): string {
+    const aggregationTemplate = ANALYZE_AGGREGATION_SQL_MAP[aggregationType]
+
+    if (aggregationTemplate === 'RAW') {
+      return expression
+    }
+
+    if (aggregationTemplate.includes('%s')) {
+      return aggregationTemplate.replace('%s', expression)
+    }
+
+    return `${aggregationTemplate}(${expression})`
+  }
+
+  private resolveMeasureAggregationType(option: {
+    measureRule?: {
+      aggregation?: MeasureAggregationType
+    }
+  }): MeasureAggregationType {
+    const configuredAggregation = option.measureRule?.aggregation
+    if (configuredAggregation) {
+      return configuredAggregation
+    }
+
+    throw new Error('聚合查询中，值字段需要选择总计、计数、平均等聚合方式')
+  }
+
+  private resolveRuleAggregationType(aggregation?: string): AnalyzeAggregationType {
+    const configuredAggregation = (aggregation || 'raw') as AnalyzeAggregationType
+    if (!(configuredAggregation in ANALYZE_AGGREGATION_SQL_MAP)) {
+      throw new Error(`不支持的聚合类型: ${aggregation}`)
+    }
+
+    return configuredAggregation
+  }
+
+  private formatDateTimeExpression(columnType: string | undefined, expression: string): string {
+    return isDateTimeColumnType(columnType)
+      ? `DATE_FORMAT(${expression}, '${ANALYZE_DATETIME_SQL_FORMAT}')`
+      : expression
+  }
+
+  private formatSelectAlias(expression: string, columnName: string): string {
+    return `${expression} AS ${this.quoteIdentifier(columnName)}`
+  }
+
+  // -------------------------------------------------------------------------
+  // 字段解析
+  // -------------------------------------------------------------------------
+
+  private resolveFieldExpression(
+    option: AnalyzeConfigDao.ColumnItem,
+    context: AnalyzeQueryContext
+  ): { columnName: string; expression: string } {
+    const columnName = this.normalizeIdentifier(option.columnName, '字段')
+    this.assertAllowedColumn(columnName, option.columnName, context)
+    const expression =
+      option.isCustom && option.expression
+        ? this.sanitizeCustomExpression(option.expression, context)
+        : this.quoteIdentifier(columnName)
+
+    return { columnName, expression }
+  }
+
+  private resolveExpression(option: AnalyzeConfigDao.ColumnItem, context: AnalyzeQueryContext): string {
+    return this.resolveFieldExpression(option, context).expression
+  }
+
+  private quoteAllowedColumn(columnName: string, context: AnalyzeQueryContext): string {
+    const normalizedColumnName = this.normalizeIdentifier(columnName, '字段')
+    this.assertAllowedColumn(normalizedColumnName, columnName, context)
     return this.quoteIdentifier(normalizedColumnName)
   }
 
-  /**
-   * @desc 解析表达式中的字符串字面量
-   * @param expression 原始表达式
-   * @returns 字符串字面量占位后的表达式和原字面量
-   */
-  private stripStringLiterals(expression: string): { sanitizedExpression: string; literals: string[] } {
-    let sanitizedExpression = ''
-    const literals: string[] = []
-
-    for (let index = 0; index < expression.length; index++) {
-      const currentChar = expression[index]
-      if (currentChar !== "'" && currentChar !== '"') {
-        sanitizedExpression += currentChar
-        continue
-      }
-
-      const quote = currentChar
-      let literal = quote
-      index++
-
-      while (index < expression.length) {
-        const nextChar = expression[index]
-        literal += nextChar
-        if (nextChar === '\\') {
-          index++
-          if (index < expression.length) {
-            literal += expression[index]
-          }
-          index++
-          continue
-        }
-        if (nextChar === quote) {
-          break
-        }
-        index++
-      }
-
-      if (!literal.endsWith(quote)) {
-        throw new Error('自定义表达式中的字符串未正确闭合')
-      }
-
-      const token = `__LITERAL_${literals.length}__`
-      literals.push(literal)
-      sanitizedExpression += token
+  private assertAllowedColumn(normalizedColumnName: string, columnName: string, context: AnalyzeQueryContext): void {
+    if (!context.allowedColumns.has(normalizedColumnName)) {
+      throw new Error(`字段不存在或不允许查询: ${columnName}`)
     }
-
-    return { sanitizedExpression, literals }
   }
 
-  /**
-   * @desc 还原表达式中的字符串字面量
-   * @param expression 已转换表达式
-   * @param literals 原始字符串字面量
-   * @returns 最终表达式
-   */
-  private restoreStringLiterals(expression: string, literals: string[]): string {
-    return expression.replace(/__LITERAL_(\d+)__/g, (_full, indexText: string) => literals[Number(indexText)] || '')
-  }
+  // -------------------------------------------------------------------------
+  // 自定义表达式消毒
+  // -------------------------------------------------------------------------
 
-  /**
-   * @desc 校验并转换自定义表达式
-   * @param expression 原始表达式
-   * @param context 查询上下文
-   * @returns 安全表达式
-   */
   private sanitizeCustomExpression(expression: string, context: AnalyzeQueryContext): string {
     const trimmedExpression = String(expression || '').trim()
     if (!trimmedExpression) {
@@ -348,7 +499,7 @@ export class AnalyzeQueryBuilder {
           }
           safeExpression += normalizedToken.toUpperCase()
         } else {
-          safeExpression += this.resolveColumnName(token, context)
+          safeExpression += this.quoteAllowedColumn(token, context)
         }
 
         index = endIndex
@@ -388,322 +539,51 @@ export class AnalyzeQueryBuilder {
     return this.restoreStringLiterals(safeExpression, literals)
   }
 
-  /**
-   * @desc 解析字段或自定义表达式
-   * @param option 字段配置
-   * @param context 查询上下文
-   * @returns SQL 表达式
-   */
-  private resolveExpression(option: AnalyzeFieldOption, context: AnalyzeQueryContext): string {
-    if (option.isCustom && option.expression) {
-      return this.sanitizeCustomExpression(option.expression, context)
-    }
+  private stripStringLiterals(expression: string): { sanitizedExpression: string; literals: string[] } {
+    let sanitizedExpression = ''
+    const literals: string[] = []
 
-    return this.resolveColumnName(option.columnName, context)
-  }
-
-  /**
-   * @desc 构建聚合表达式
-   * @param aggregationType 聚合类型
-   * @param expression 字段表达式
-   * @returns 聚合后的 SQL 表达式
-   */
-  private buildAggregationExpression(aggregationType: string, expression: string): string {
-    const normalizedAggregation = String(aggregationType || '').toLowerCase()
-    const aggregationTemplate = AGGREGATION_MAP[normalizedAggregation]
-
-    if (!aggregationTemplate) {
-      throw new Error(`不支持的聚合类型: ${aggregationType}`)
-    }
-
-    if (aggregationTemplate === 'RAW') {
-      return expression
-    }
-
-    if (aggregationTemplate.includes('%s')) {
-      return aggregationTemplate.replace('%s', expression)
-    }
-
-    return `${aggregationTemplate}(${expression})`
-  }
-
-  /**
-   * @desc 获取值字段聚合方式
-   * @param option 字段配置
-   * @returns 聚合方式
-   */
-  private resolveMeasureAggregationType(option: {
-    measureRule?: {
-      aggregation?: string
-    }
-  }): string {
-    const configuredAggregation = option.measureRule?.aggregation
-    if (configuredAggregation && String(configuredAggregation).toLowerCase() !== 'raw') {
-      return configuredAggregation
-    }
-
-    throw new Error('聚合查询中，值字段需要选择总计、计数、平均等聚合方式')
-  }
-
-  /**
-   * @desc 判断字段是否应按日期时间格式分组展示
-   * @param columnName 字段名
-   * @returns 是否日期时间字段
-   */
-  private isDateTimeColumnName(columnName: string): boolean {
-    return /date|time|created_at|updated_at/i.test(columnName)
-  }
-
-  /**
-   * @desc 构建维度字段表达式，确保 SELECT/GROUP BY/ORDER BY 使用同一表达式
-   * @param fieldOption 维度字段配置
-   * @param context 查询上下文
-   * @returns 维度字段名与表达式
-   */
-  private buildDimensionFieldExpression(
-    fieldOption: AnalyzeFieldOption,
-    context: AnalyzeQueryContext
-  ): DimensionFieldExpression {
-    const columnName = this.normalizeIdentifier(fieldOption.columnName, '字段')
-    const columnExpression = this.resolveExpression(fieldOption, context)
-    const expression = this.isDateTimeColumnName(columnName)
-      ? `DATE_FORMAT(${columnExpression}, '%Y-%m-%d %H:%i:%s')`
-      : columnExpression
-
-    return {
-      columnName,
-      expression
-    }
-  }
-
-  /**
-   * @desc 预计算维度字段表达式，供 SELECT/GROUP BY/ORDER BY 共用
-   * @param dimensionOptions 维度字段配置
-   * @param context 查询上下文
-   * @returns 有序维度表达式及按列名索引
-   */
-  private buildDimensionFieldExpressions(
-    dimensionOptions: AnalyzeDataDto.DimensionOption[],
-    context: AnalyzeQueryContext
-  ): DimensionFieldExpressions {
-    const dimensions = dimensionOptions.map((dimensionOption) =>
-      this.buildDimensionFieldExpression(dimensionOption, context)
-    )
-
-    return {
-      dimensions,
-      expressionByColumnName: new Map(dimensions.map((dimension) => [dimension.columnName, dimension.expression]))
-    }
-  }
-
-  /**
-   * @desc 构建 SELECT 语句
-   * @param measures 值/度量字段
-   * @param dimensionFieldExpressions 预计算的维度字段表达式
-   * @param hasDimensions 是否配置了维度字段
-   * @param context 查询上下文
-   * @returns SELECT 片段
-   */
-  private buildSelectClause(
-    measures: AnalyzeDataDto.MeasureOption[],
-    dimensionFieldExpressions: DimensionFieldExpressions,
-    hasDimensions: boolean,
-    context: AnalyzeQueryContext
-  ): SqlFragment {
-    const selectExpressions: string[] = []
-
-    dimensionFieldExpressions.dimensions.forEach(({ columnName, expression }) => {
-      selectExpressions.push(`${expression} AS ${this.quoteIdentifier(columnName)}`)
-    })
-
-    measures.forEach((measureOption: AnalyzeDataDto.MeasureOption) => {
-      const columnName = this.normalizeIdentifier(measureOption.columnName, '字段')
-      const columnExpression = this.resolveExpression(measureOption, context)
-
-      if (!hasDimensions) {
-        const fieldExpression = this.isDateTimeColumnName(columnName)
-          ? `DATE_FORMAT(${columnExpression}, '%Y-%m-%d %H:%i:%s')`
-          : columnExpression
-        selectExpressions.push(`${fieldExpression} AS ${this.quoteIdentifier(columnName)}`)
-        return
+    for (let index = 0; index < expression.length; index++) {
+      const currentChar = expression[index]
+      if (currentChar !== "'" && currentChar !== '"') {
+        sanitizedExpression += currentChar
+        continue
       }
 
-      const aggregationType = this.resolveMeasureAggregationType(measureOption)
-      selectExpressions.push(
-        `${this.buildAggregationExpression(aggregationType, columnExpression)} AS ${this.quoteIdentifier(columnName)}`
-      )
-    })
+      const quote = currentChar
+      let literal = quote
+      index++
 
-    if (selectExpressions.length === 0) {
-      throw new Error('至少需要选择一个值或维度字段')
-    }
-
-    return {
-      sql: `select ${selectExpressions.join(',')}`,
-      params: []
-    }
-  }
-
-  /**
-   * @desc 构建 WHERE/HAVING 语句
-   * @param filterOptions 过滤条件
-   * @param hasDimensions 是否配置了维度字段
-   * @param context 查询上下文
-   * @returns WHERE/HAVING 片段
-   */
-  private buildFilterClauses(
-    filterOptions: AnalyzeDataDto.FilterOption[],
-    hasDimensions: boolean,
-    context: AnalyzeQueryContext
-  ): FilterClauseFragments {
-    if (filterOptions.length === 0) {
-      return {
-        where: {
-          sql: '',
-          params: []
-        },
-        having: {
-          sql: '',
-          params: []
-        }
-      }
-    }
-
-    const whereClauseParts: string[] = []
-    const havingClauseParts: string[] = []
-    const whereParams: SqlPrimitive[] = []
-    const havingParams: SqlPrimitive[] = []
-    filterOptions.forEach((filterOption) => {
-      const { filterRule } = filterOption
-      if (!filterRule.operator) return
-
-      const normalizedOperator = String(filterRule.operator).trim().toLowerCase()
-      const operator = FILTER_OPERATOR_MAP[normalizedOperator]
-      if (!operator) {
-        throw new Error(`不支持的筛选操作: ${filterRule.operator}`)
-      }
-
-      const columnName = this.normalizeIdentifier(filterOption.columnName, '字段')
-      const columnExpression = this.resolveExpression(filterOption, context)
-      const aggregationType = String(filterRule.aggregation || 'raw').toLowerCase()
-      const isAggregateFilter = aggregationType !== 'raw'
-      if (isAggregateFilter && !hasDimensions) {
-        throw new Error('聚合筛选需要先配置维度字段')
-      }
-
-      const filterExpression = isAggregateFilter
-        ? this.buildAggregationExpression(aggregationType, columnExpression)
-        : this.isDateTimeColumnName(columnName)
-          ? `DATE_FORMAT(${columnExpression}, '%Y-%m-%d %H:%i:%s')`
-          : columnExpression
-      const targetClauseParts = isAggregateFilter ? havingClauseParts : whereClauseParts
-      const targetParams = isAggregateFilter ? havingParams : whereParams
-
-      if (operator === 'IS NULL' || operator === 'IS NOT NULL') {
-        targetClauseParts.push(`${filterExpression} ${operator}`)
-        return
-      }
-
-      if (typeof filterRule.operand === 'undefined' || filterRule.operand === '') {
-        return
-      }
-
-      if (operator === 'LIKE' || operator === 'NOT LIKE') {
-        targetClauseParts.push(`${filterExpression} ${operator} ?`)
-        targetParams.push(`%${filterRule.operand}%`)
-        return
-      }
-
-      targetClauseParts.push(`${filterExpression} ${operator} ?`)
-      targetParams.push(filterRule.operand)
-    })
-
-    return {
-      where: {
-        sql: whereClauseParts.length ? ` where ${whereClauseParts.join(' and ')}` : '',
-        params: whereParams
-      },
-      having: {
-        sql: havingClauseParts.length ? ` having ${havingClauseParts.join(' and ')}` : '',
-        params: havingParams
-      }
-    }
-  }
-
-  /**
-   * @desc 构建 ORDER BY 语句
-   * @param orderOptions 排序条件
-   * @param hasDimensions 是否配置了维度字段
-   * @param dimensionFieldExpressions 预计算的维度字段表达式
-   * @param context 查询上下文
-   * @returns ORDER BY 片段
-   */
-  private buildOrderByClause(
-    orderOptions: AnalyzeDataDto.OrderOption[],
-    hasDimensions: boolean,
-    dimensionFieldExpressions: DimensionFieldExpressions,
-    context: AnalyzeQueryContext
-  ): SqlFragment {
-    if (orderOptions.length === 0) {
-      return {
-        sql: '',
-        params: []
-      }
-    }
-
-    const orderClause = orderOptions
-      .map((orderOption) => {
-        const orderRule = orderOption.orderRule
-        const direction = ORDER_DIRECTION_MAP[String(orderRule.direction || '').toLowerCase()]
-        if (!direction) {
-          throw new Error(`不支持的排序方向: ${orderRule.direction}`)
-        }
-
-        const columnName = this.normalizeIdentifier(orderOption.columnName, '字段')
-        const columnExpression = this.resolveExpression(orderOption, context)
-        const configuredAggregationType = String(orderRule.aggregation || '').toLowerCase()
-
-        if (!hasDimensions) {
-          return `${columnExpression} ${direction}`
-        }
-
-        const aggregationType = configuredAggregationType || 'raw'
-
-        if (aggregationType === 'raw') {
-          const dimensionExpression = dimensionFieldExpressions.expressionByColumnName.get(columnName)
-          if (!dimensionExpression) {
-            throw new Error('聚合查询中，值字段排序需要选择总计、计数、平均等聚合方式')
+      while (index < expression.length) {
+        const nextChar = expression[index]
+        literal += nextChar
+        if (nextChar === '\\') {
+          index++
+          if (index < expression.length) {
+            literal += expression[index]
           }
-          return `${dimensionExpression} ${direction}`
+          index++
+          continue
         }
+        if (nextChar === quote) {
+          break
+        }
+        index++
+      }
 
-        return `${this.buildAggregationExpression(aggregationType, columnExpression)} ${direction}`
-      })
-      .filter(Boolean)
-      .join(',')
+      if (!literal.endsWith(quote)) {
+        throw new Error('自定义表达式中的字符串未正确闭合')
+      }
 
-    return {
-      sql: orderClause ? ` order by ${orderClause}` : '',
-      params: []
+      const token = `__LITERAL_${literals.length}__`
+      literals.push(literal)
+      sanitizedExpression += token
     }
+
+    return { sanitizedExpression, literals }
   }
 
-  /**
-   * @desc 构建 GROUP BY 语句
-   * @param dimensionFieldExpressions 预计算的维度字段表达式
-   * @returns GROUP BY 片段
-   */
-  private buildGroupByClause(dimensionFieldExpressions: DimensionFieldExpressions): SqlFragment {
-    if (dimensionFieldExpressions.dimensions.length === 0) {
-      return {
-        sql: '',
-        params: []
-      }
-    }
-
-    return {
-      sql: ` group by ${dimensionFieldExpressions.dimensions.map((dimension) => dimension.expression).join(',')}`,
-      params: []
-    }
+  private restoreStringLiterals(expression: string, literals: string[]): string {
+    return expression.replace(/__LITERAL_(\d+)__/g, (_full, indexText: string) => literals[Number(indexText)] || '')
   }
 }

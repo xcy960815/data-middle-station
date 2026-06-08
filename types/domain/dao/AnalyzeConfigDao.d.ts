@@ -234,6 +234,11 @@ declare namespace AnalyzeConfigDao {
   }
 
   /**
+   * @desc 表格列 UI 配置（与 measures/dimensions 查询字段分离）
+   */
+  type TableColumnSetting = import('@/shared/tableColumnConfig').TableColumnSetting
+
+  /**
    * @desc 表格配置
    */
   type TableChartConfig = {
@@ -378,6 +383,10 @@ declare namespace AnalyzeConfigDao {
      * 缓冲行数
      */
     bufferRows: number
+    /**
+     * 表格列 UI 配置（列宽、对齐、固定列等）
+     */
+    columns?: TableColumnSetting[]
   }
 
   /**

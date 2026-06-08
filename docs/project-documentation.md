@@ -282,7 +282,12 @@ CREATE TABLE `analyze_config` (
     {
       "columnName": "province",
       "displayName": "省份",
-      "dimensionRule": {}
+      "dimensionRule": {
+        "drill": {
+          "enabled": true,
+          "role": "level"
+        }
+      }
     }
   ],
   "filters": [
@@ -722,7 +727,12 @@ Content-Type: application/json
         "columnName": "region",
         "columnType": "string",
         "displayName": "地区",
-        "dimensionRule": {}
+        "dimensionRule": {
+          "drill": {
+            "enabled": true,
+            "role": "level"
+          }
+        }
       }
   ],
   "filters": [],

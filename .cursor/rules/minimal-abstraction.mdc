@@ -1,0 +1,39 @@
+---
+description: 优化时精简优先，禁止为单点逻辑滥建 shared 模块
+alwaysApply: true
+---
+
+# 精简优先，禁止滥建 shared
+
+优化目标是**减少重复、降低复杂度**，不是拆出更多文件或制造「看起来很通用」的抽象。
+
+## 新增文件前必须先确认
+
+1. 至少 **2 个以上真实调用方** 会长期使用，才考虑抽到 `shared/`、`composables/` 或 `server/utils/`。
+2. 只有 **1 个文件使用** 的逻辑，必须**留在该文件内**（如 `server/service/analyzeQueryBuilder.ts` 的 SQL 映射、日期类型判断）。
+3. 新增 `shared/` 文件前，用 grep 确认没有可扩展的**现有模块**；不要为了绕依赖再建一层。
+
+## 职责归属
+
+- `shared/analyzeFieldRules.ts`：字段规则对象的创建与修改（`measureRule` / `filterRule` 等），不是 SQL 构建细节。
+- `server/service/analyzeQueryBuilder.ts`：分析查询语义与 SQL 拼装；只服务查询构建的常量/判断放这里。
+- 不要为了「单一来源」建 shared，结果只有一处 import 且另一处仍保留重复实现。
+
+## 反例
+
+```typescript
+// ❌ 只有 analyzeQueryBuilder 用，却新建 shared/analyzeSqlMappings.ts
+export const FILTER_TYPE_TO_SQL_OPERATOR = { ... }
+
+// ❌ 把 SQL 专用判断塞进 analyzeFieldRules
+export const isDateTimeColumnType = () => { ... }
+
+// ✅ 留在唯一消费方文件顶部
+const isDateTimeColumnType = (columnType?: string) => { ... }
+```
+
+## 优化时的默认动作
+
+- 先内联合并，再考虑抽取。
+- 抽取时优先扩展现有文件，而不是新建平行模块。
+- 用户要的是**精简**，不是「架构更完整」。

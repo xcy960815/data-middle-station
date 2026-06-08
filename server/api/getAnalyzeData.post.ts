@@ -1,4 +1,5 @@
 import { ChartDataService } from '@/server/service/chartDataService'
+
 const chartDataService = new ChartDataService()
 
 /**
@@ -19,6 +20,6 @@ export default defineEventHandler<Promise<ApiResponseI<AnalyzeDataVo.AnalyzeData
     return ApiResponse.success(data)
   } catch (error: any) {
     console.error(error)
-    return ApiResponse.error(error.message, error.sql, analyzeDataQuery)
+    return ApiResponse.error(error.message, error.sql, analyzeDataQuery ?? undefined)
   }
 })
