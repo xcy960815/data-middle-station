@@ -64,6 +64,85 @@ export const useAnalyzeDataHandler = () => {
   })
 
   // ---------- 实际请求 ----------
+
+  /**
+   * 通过 SSE 流式接口请求 AI 对查询错误的分析，逐步更新分析文本。
+   * @param {object} params 错误上下文。
+   * @param {string} params.sql 触发错误的 SQL 语句。
+   * @param {string} params.errorMessage 后端返回的错误信息。
+   * @param {AbortSignal} params.signal 请求中断信号。
+   * @param {number} params.requestId 当前请求标识，用于判断是否已被新请求取代。
+   * @returns {Promise<void>}
+   */
+  const streamAnalyzeErrorAnalysis = async (params: {
+    sql: string
+    errorMessage: string
+    signal: AbortSignal
+    requestId: number
+  }): Promise<void> => {
+    let analysisMessage = '🤖 正在进行 AI 智能分析...\n'
+    analyzeStore.setChartErrorAnalysis(analysisMessage)
+
+    try {
+      const response = await fetch('/api/analyzeError', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: params.signal,
+        body: JSON.stringify({
+          sql: params.sql,
+          errorMessage: params.errorMessage,
+          queryParams: queryAnalyzeDataParams.value
+        })
+      })
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          const chunk = decoder.decode(value, { stream: true })
+          const lines = chunk.split('\n')
+          for (const line of lines) {
+            if (!line.trim()) continue
+            try {
+              const json = JSON.parse(line)
+              if (params.requestId !== activeRequestId.value || params.signal.aborted) {
+                return
+              }
+              if (json.type === 'ai_chunk') {
+                analysisMessage += json.content
+                analyzeStore.setChartErrorAnalysis(analysisMessage)
+              }
+            } catch (_error) {
+              // 忽略非 JSON 的流式分片，继续消费后续 AI 输出
+            }
+          }
+        }
+      }
+    } catch (error) {
+      if (params.requestId !== activeRequestId.value || isAbortError(error)) {
+        return
+      }
+      analysisMessage += '\n(AI 分析服务暂时不可用)'
+      analyzeStore.setChartErrorAnalysis(analysisMessage)
+    }
+  }
+
+  /**
+   * 更新查询耗时和完成时间到 store。
+   * @param {number} startTime 查询开始的时间戳（毫秒）。
+   * @returns {void}
+   */
+  const updateQueryTimingInfo = (startTime: number): void => {
+    analyzeStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
+    const duration = dayjs().valueOf() - startTime
+    const minutes = Math.floor(duration / 60000)
+    const seconds = Math.floor((duration % 60000) / 1000)
+    analyzeStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`)
+  }
+
   const getAnalyzeData = async (options: GetAnalyzeDataOptions = {}) => {
     const chartType = analyzeStore.getChartType
     const validation = validateAnalyzeChartConfig({
@@ -122,7 +201,6 @@ export const useAnalyzeDataHandler = () => {
         activeRequestController.value = null
       }
     }
-    const endTime = dayjs().valueOf()
     if (!result || requestId !== activeRequestId.value || requestController.signal.aborted) {
       return
     }
@@ -133,68 +211,19 @@ export const useAnalyzeDataHandler = () => {
       analyzeStore.setChartErrorAnalysis('')
     } else {
       analyzeStore.setAnalyzeData([])
-      let errorMessage = `查询失败: ${result.message}`
-      analyzeStore.setChartErrorMessage(errorMessage)
+      analyzeStore.setChartErrorMessage(`查询失败: ${result.message}`)
 
-      // 如果有 SQL，触发 AI 分析
       if (result.sql) {
-        let analysisMessage = '🤖 正在进行 AI 智能分析...\n'
-        analyzeStore.setChartErrorAnalysis(analysisMessage)
-
-        try {
-          const response = await fetch('/api/analyzeError', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            signal: requestController.signal,
-            body: JSON.stringify({
-              sql: result.sql,
-              errorMessage: result.message,
-              queryParams: queryAnalyzeDataParams.value
-            })
-          })
-
-          const reader = response.body?.getReader()
-          const decoder = new TextDecoder()
-
-          if (reader) {
-            while (true) {
-              const { done, value } = await reader.read()
-              if (done) break
-              const chunk = decoder.decode(value, { stream: true })
-              const lines = chunk.split('\n')
-              for (const line of lines) {
-                if (!line.trim()) continue
-                try {
-                  const json = JSON.parse(line)
-                  if (requestId !== activeRequestId.value || requestController.signal.aborted) {
-                    return
-                  }
-                  if (json.type === 'ai_chunk') {
-                    analysisMessage += json.content
-                    analyzeStore.setChartErrorAnalysis(analysisMessage)
-                  }
-                } catch (_error) {
-                  // 忽略非 JSON 的流式分片，继续消费后续 AI 输出
-                }
-              }
-            }
-          }
-        } catch (e) {
-          if (requestId !== activeRequestId.value || isAbortError(e)) {
-            return
-          }
-          analysisMessage += '\n(AI 分析服务暂时不可用)'
-          analyzeStore.setChartErrorAnalysis(analysisMessage)
-        }
+        await streamAnalyzeErrorAnalysis({
+          sql: result.sql,
+          errorMessage: result.message,
+          signal: requestController.signal,
+          requestId
+        })
       }
     }
 
-    // 更新计时信息
-    analyzeStore.setChartUpdateTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
-    const duration = endTime - startTime
-    const minutes = Math.floor(duration / 60000)
-    const seconds = Math.floor((duration % 60000) / 1000)
-    analyzeStore.setChartUpdateTakesTime(minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`)
+    updateQueryTimingInfo(startTime)
   }
 
   const getDrillQueryKey = () => {

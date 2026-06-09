@@ -1,22 +1,9 @@
 import { AnalyzeConfigMapper } from '@/server/mapper/analyzeConfigMapper'
 import { BaseService } from '@/server/service/baseService'
-import {
-  migrateAnalyzeTableColumnUiFromFields,
-  ANALYZE_TABLE_COLUMN_UI_KEYS,
-  type AnalyzeTableColumnUiKey
-} from '@/shared/analyzeTableColumnConfig'
 
-type TableColumnUiMigrationResult = {
-  measures: AnalyzeConfigDao.MeasureOption[]
-  dimensions: AnalyzeConfigDao.DimensionOption[]
-  privateChartConfig: AnalyzeConfigDao.PrivateChartConfig | undefined
-  removedFieldCount: number
-  migratedColumnCount: number
-  changed: boolean
-}
-
-type AnalyzeConfigField = Record<string, any>
-
+/**
+ * @desc 分析配置服务，负责分析配置的 CRUD 业务编排。
+ */
 export class AnalyzeConfigService extends BaseService {
   private analyzeConfigMapper: AnalyzeConfigMapper
 
@@ -25,6 +12,11 @@ export class AnalyzeConfigService extends BaseService {
     this.analyzeConfigMapper = new AnalyzeConfigMapper()
   }
 
+  /**
+   * 将 DAO 记录转换为 VO 响应结构，同步展示名。
+   * @param {AnalyzeConfigDao.AnalyzeConfigRecord} configRecord 数据库配置记录。
+   * @returns {AnalyzeConfigVo.AnalyzeConfigResponse} 前端可用的分析配置响应。
+   */
   private convertDaoToVo(configRecord: AnalyzeConfigDao.AnalyzeConfigRecord): AnalyzeConfigVo.AnalyzeConfigResponse {
     const normalizedData = this.normalizeConfigRecord(configRecord)
     return {
@@ -48,6 +40,11 @@ export class AnalyzeConfigService extends BaseService {
     }
   }
 
+  /**
+   * 根据查询条件获取单条分析配置。
+   * @param {AnalyzeConfigDto.GetAnalyzeConfigRequest} queryRequest 查询参数（按 id 或 analyzeId）。
+   * @returns {Promise<AnalyzeConfigVo.AnalyzeConfigResponse>} 分析配置响应。
+   */
   public async getAnalyzeConfig(
     queryRequest: AnalyzeConfigDto.GetAnalyzeConfigRequest
   ): Promise<AnalyzeConfigVo.AnalyzeConfigResponse> {
@@ -58,31 +55,33 @@ export class AnalyzeConfigService extends BaseService {
     return this.convertDaoToVo(configRecord)
   }
 
+  /**
+   * 获取指定分析的全部历史配置版本。
+   * @param {number} analyzeId 分析 ID。
+   * @returns {Promise<AnalyzeConfigVo.AnalyzeConfigResponse[]>} 配置版本列表。
+   */
   public async getAnalyzeConfigHistory(analyzeId: number): Promise<AnalyzeConfigVo.AnalyzeConfigResponse[]> {
     const configs = await this.analyzeConfigMapper.getAnalyzeConfigHistory(analyzeId)
     return configs.map((config) => this.convertDaoToVo(config))
   }
 
+  /**
+   * 创建新的分析配置版本，数据直接透传入库，不做任何迁移。
+   * @param {AnalyzeConfigDto.CreateAnalyzeConfigRequest} createRequest 创建请求参数。
+   * @returns {Promise<AnalyzeConfigVo.AnalyzeConfigResponse>} 新建的配置响应。
+   */
   public async createAnalyzeConfigVersion(
     createRequest: AnalyzeConfigDto.CreateAnalyzeConfigRequest
   ): Promise<AnalyzeConfigVo.AnalyzeConfigResponse> {
     const { createdBy, createTime, updateTime } = await this.getDefaultInfo()
     const versionNo = await this.analyzeConfigMapper.getNextVersionNo(createRequest.analyzeId)
-    const tableColumnUiMigration = this.migrateTableColumnUiConfig({
-      chartType: createRequest.chartType,
-      measures: createRequest.measures || [],
-      dimensions: createRequest.dimensions || [],
-      privateChartConfig: createRequest.privateChartConfig
-    })
     const createParams: AnalyzeConfigDao.CreateAnalyzeConfigParams = {
       ...createRequest,
       versionNo,
-      measures: tableColumnUiMigration.measures,
+      measures: createRequest.measures || [],
       filters: createRequest.filters || [],
-      dimensions: tableColumnUiMigration.dimensions,
+      dimensions: createRequest.dimensions || [],
       orders: createRequest.orders || [],
-      commonChartConfig: createRequest.commonChartConfig,
-      privateChartConfig: tableColumnUiMigration.privateChartConfig,
       createdBy,
       createTime,
       updateTime
@@ -91,6 +90,11 @@ export class AnalyzeConfigService extends BaseService {
     return this.getAnalyzeConfig({ id: configId })
   }
 
+  /**
+   * 软删除指定分析的全部配置版本。
+   * @param {AnalyzeConfigDto.DeleteAnalyzeConfigsRequest} deleteRequest 删除请求参数。
+   * @returns {Promise<boolean>} 是否删除成功。
+   */
   public async deleteAnalyzeConfigs(deleteRequest: AnalyzeConfigDto.DeleteAnalyzeConfigsRequest): Promise<boolean> {
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     return await this.analyzeConfigMapper.deleteAnalyzeConfigs({
@@ -100,6 +104,11 @@ export class AnalyzeConfigService extends BaseService {
     })
   }
 
+  /**
+   * 将配置记录中的可选数组字段兜底为空数组，避免下游空指针。
+   * @param {AnalyzeConfigDao.AnalyzeConfigRecord} configRecord 原始数据库记录。
+   * @returns {AnalyzeConfigDao.AnalyzeConfigRecord} 数组字段已兜底的记录。
+   */
   private normalizeConfigRecord(
     configRecord: AnalyzeConfigDao.AnalyzeConfigRecord
   ): AnalyzeConfigDao.AnalyzeConfigRecord {
@@ -110,86 +119,5 @@ export class AnalyzeConfigService extends BaseService {
       dimensions: configRecord.dimensions || [],
       orders: configRecord.orders || []
     }
-  }
-
-  private migrateTableColumnUiConfig(config: {
-    chartType?: string | null
-    measures: AnalyzeConfigDao.MeasureOption[]
-    dimensions: AnalyzeConfigDao.DimensionOption[]
-    privateChartConfig?: AnalyzeConfigDao.PrivateChartConfig
-  }): TableColumnUiMigrationResult {
-    const removedFieldCount = this.countTableColumnUiFields([...config.dimensions, ...config.measures])
-    const fields = [...config.dimensions, ...config.measures]
-    const legacyColumnCount = this.countFieldsWithTableColumnUi(fields)
-    const shouldCreateTableColumns =
-      config.chartType === 'table' && fields.length > 0 && !config.privateChartConfig?.table?.columns?.length
-    const migratedColumnCount = shouldCreateTableColumns ? fields.length : legacyColumnCount
-    const migrated = migrateAnalyzeTableColumnUiFromFields(
-      config.dimensions as Array<{ columnName: string } & Record<string, unknown>>,
-      config.measures as Array<{ columnName: string } & Record<string, unknown>>,
-      config.privateChartConfig,
-      { forceColumns: shouldCreateTableColumns }
-    )
-    const measures = migrated.measures as AnalyzeConfigDao.MeasureOption[]
-    const dimensions = migrated.dimensions as AnalyzeConfigDao.DimensionOption[]
-    const privateChartConfig = migrated.privateChartConfig
-    const previousTableColumns = config.privateChartConfig?.table?.columns || []
-    const nextTableColumns = privateChartConfig?.table?.columns || []
-    const tableColumnsChanged = !this.isJsonEquivalent(previousTableColumns, nextTableColumns)
-    const changed =
-      removedFieldCount > 0 ||
-      !this.isJsonEquivalent(measures, config.measures) ||
-      !this.isJsonEquivalent(dimensions, config.dimensions) ||
-      tableColumnsChanged
-
-    return {
-      measures,
-      dimensions,
-      privateChartConfig,
-      removedFieldCount,
-      migratedColumnCount,
-      changed
-    }
-  }
-
-  private countTableColumnUiFields(fields: AnalyzeConfigField[]): number {
-    return fields.reduce((count, field) => {
-      if (!field || typeof field !== 'object') return count
-      return (
-        count + ANALYZE_TABLE_COLUMN_UI_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(field, key)).length
-      )
-    }, 0)
-  }
-
-  private countFieldsWithTableColumnUi(fields: AnalyzeConfigField[]): number {
-    return fields.filter((field) => this.hasTableColumnUiField(field)).length
-  }
-
-  private hasTableColumnUiField(field: AnalyzeConfigField): boolean {
-    if (!field || typeof field !== 'object') return false
-    return ANALYZE_TABLE_COLUMN_UI_KEYS.some((key: AnalyzeTableColumnUiKey) =>
-      Object.prototype.hasOwnProperty.call(field, key)
-    )
-  }
-
-  private isJsonEquivalent(left: unknown, right: unknown): boolean {
-    return JSON.stringify(this.normalizeJsonValue(left)) === JSON.stringify(this.normalizeJsonValue(right))
-  }
-
-  private normalizeJsonValue(value: unknown): unknown {
-    if (Array.isArray(value)) {
-      return value.map((item) => this.normalizeJsonValue(item))
-    }
-
-    if (!value || typeof value !== 'object') {
-      return value
-    }
-
-    return Object.keys(value as Record<string, unknown>)
-      .sort()
-      .reduce<Record<string, unknown>>((result, key) => {
-        result[key] = this.normalizeJsonValue((value as Record<string, unknown>)[key])
-        return result
-      }, {})
   }
 }

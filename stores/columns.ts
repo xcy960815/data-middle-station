@@ -73,12 +73,6 @@ export const useColumnsStore = defineStore<
       this.columns = columns
     },
     /**
-     * @desc 删除列名
-     */
-    removeColumns(columns) {
-      this.columns = this.columns.filter((column: ColumnsStore.ColumnOptions) => !columns.includes(column))
-    },
-    /**
      * @desc 更新列名
      * @param params {{ column: ColumnOptions, index: number }}
      */
@@ -111,27 +105,11 @@ export const useColumnsStore = defineStore<
       this.datasetName = datasetName
     },
     /**
-     * @desc 删除数据源
-     * @param dataSource {string}
-     */
-    removeDataSource(dataSource) {
-      this.dataSource = dataSource
-    },
-
-    /**
      * @desc 更新所有的表
      * @param dataSourceOptions {DataSourceOption[]}
      * @returns {void}
      */
     setDataSourceOptions(dataSourceOptions) {
-      this.dataSourceOptions = dataSourceOptions
-    },
-    /**
-     * @desc 删除所有的表
-     * @param dataSourceOptions {DataSourceOption[]}
-     * @returns {void}
-     */
-    removeDataSourceOptions(dataSourceOptions) {
       this.dataSourceOptions = dataSourceOptions
     }
   }

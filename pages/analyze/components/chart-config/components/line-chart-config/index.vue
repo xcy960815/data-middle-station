@@ -40,9 +40,11 @@
 </template>
 
 <script setup lang="ts">
+import { defaultAnalyzeLineChartConfig } from '~/shared/analyzeChartConfigDefaults'
+
 const chartConfigStore = useChartConfigStore()
-const lineChartsConfigData = computed(() => {
-  return chartConfigStore.privateChartConfig.line
+const lineChartsConfigData = computed<ChartConfigStore.LineChartConfig>(() => {
+  return chartConfigStore.privateChartConfig?.line ?? defaultAnalyzeLineChartConfig
 })
 </script>
 

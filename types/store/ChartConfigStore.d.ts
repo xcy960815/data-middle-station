@@ -57,12 +57,7 @@ declare namespace ChartConfigStore {
   /**
    * @desc getter
    */
-  type ChartConfigGetters = {
-    /**
-     * @desc 获取表格图配置
-     */
-    getTableChartConfig: (state: ChartConfigState) => TableChartConfig | null
-  }
+  type ChartConfigGetters = {}
 
   /**
    * @desc action

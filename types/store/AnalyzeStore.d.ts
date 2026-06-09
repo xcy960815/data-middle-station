@@ -5,17 +5,12 @@ declare namespace AnalyzeStore {
   /**
    * @desc 图表类型
    */
-  type ChartTypesEnums = typeof import('@/shared/analyzeConfigTypes').ANALYZE_CHART_TYPE_MAP
+  type ChartType = 'table' | 'line' | 'pie' | 'interval'
 
   /**
    * @desc 图表key
    */
   type AnalyzeKey = 'chart'
-
-  /**
-   * @desc 图表类型
-   */
-  type ChartType = import('@/shared/analyzeConfigTypes').AnalyzeChartType
 
   /**
    * @desc 图表状态

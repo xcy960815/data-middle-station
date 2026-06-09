@@ -2,9 +2,9 @@
  * @desc 表格列 UI 配置：与查询字段（measure/dimension）分离，保存在 privateChartConfig.table.columns
  */
 
-export type AnalyzeTableColumnRole = 'dimension' | 'measure'
+type AnalyzeTableColumnRole = 'dimension' | 'measure'
 
-export const ANALYZE_TABLE_COLUMN_UI_KEYS = [
+const ANALYZE_TABLE_COLUMN_UI_KEYS = [
   'fixed',
   'align',
   'verticalAlign',
@@ -19,8 +19,6 @@ export const ANALYZE_TABLE_COLUMN_UI_KEYS = [
   'draggable',
   'colIndex'
 ] as const
-
-export type AnalyzeTableColumnUiKey = (typeof ANALYZE_TABLE_COLUMN_UI_KEYS)[number]
 
 const buildAnalyzeTableColumnSettingKey = (role: AnalyzeTableColumnRole, columnName: string) => `${role}:${columnName}`
 
@@ -95,8 +93,8 @@ export type AnalyzeTableColumnSetting = {
 }
 
 /**
- * 默认的表格样式配置
- * @returns
+ * 创建表格列 UI 默认值（不含 columnName 和 role）。
+ * @returns {Omit<AnalyzeTableColumnSetting, 'columnName' | 'role'>} 所有 UI 属性的默认值。
  */
 export const createDefaultAnalyzeTableColumnUi = (): Omit<AnalyzeTableColumnSetting, 'columnName' | 'role'> => ({
   fixed: null,
@@ -116,6 +114,11 @@ const pickAnalyzeTableColumnUiFromField = (field: Record<string, unknown>): Part
   return picked
 }
 
+/**
+ * 从字段对象中剥离所有表格列 UI 属性，返回纯查询语义字段。
+ * @param {T} field 可能混入 UI 属性的字段对象。
+ * @returns {T} 剥离 UI 属性后的字段副本。
+ */
 export const stripAnalyzeTableColumnUiFromField = <T extends Record<string, unknown>>(field: T): T => {
   const cleaned = { ...field }
   for (const key of ANALYZE_TABLE_COLUMN_UI_KEYS) {
@@ -124,14 +127,11 @@ export const stripAnalyzeTableColumnUiFromField = <T extends Record<string, unkn
   return cleaned as T
 }
 
-const hasLegacyAnalyzeTableColumnUi = (field: Record<string, unknown>) =>
-  ANALYZE_TABLE_COLUMN_UI_KEYS.some((key) => key in field)
-
 /**
- * 构建 canvas table 所需要的列配置
- * @param field
- * @param columns
- * @returns
+ * 将查询字段与已保存的表格列 UI 配置合并，生成 canvas table 所需的列配置。
+ * @param {T} field 查询字段（含 columnName 和可选的 measureRule/dimensionRule）。
+ * @param {AnalyzeTableColumnSetting[] | undefined} columns 已保存的表格列 UI 配置列表。
+ * @returns {T & Partial<AnalyzeTableColumnSetting>} 合并后的字段对象，UI 属性来自列配置或默认值。
  */
 export const mergeAnalyzeFieldWithTableColumn = <T extends { columnName: string }>(
   field: T,
@@ -150,6 +150,13 @@ export const mergeAnalyzeFieldWithTableColumn = <T extends { columnName: string 
   }
 }
 
+/**
+ * 根据分组字段和值字段构建表格列 UI 配置列表。
+ * @param {Array<{ columnName: string } & Record<string, unknown>>} dimensions 分组字段列表。
+ * @param {Array<{ columnName: string } & Record<string, unknown>>} measures 值字段列表。
+ * @param {AnalyzeTableColumnSetting[]} existing 已保存的列配置，优先级最高。
+ * @returns {AnalyzeTableColumnSetting[]} 按字段顺序和角色对齐的表格列配置列表。
+ */
 export const buildAnalyzeTableColumnsFromFields = (
   dimensions: Array<{ columnName: string } & Record<string, unknown>>,
   measures: Array<{ columnName: string } & Record<string, unknown>>,
@@ -189,39 +196,4 @@ export const buildAnalyzeTableColumnsFromFields = (
   }
 
   return columns
-}
-
-export const migrateAnalyzeTableColumnUiFromFields = <
-  TPrivateChartConfig extends { table?: AnalyzeConfigDao.TableChartConfig }
->(
-  dimensions: Array<{ columnName: string } & Record<string, unknown>>,
-  measures: Array<{ columnName: string } & Record<string, unknown>>,
-  privateChartConfig?: TPrivateChartConfig | null,
-  options: { forceColumns?: boolean } = {}
-): {
-  dimensions: Array<Record<string, unknown>>
-  measures: Array<Record<string, unknown>>
-  privateChartConfig?: TPrivateChartConfig
-} => {
-  const hasLegacyUi = [...dimensions, ...measures].some(hasLegacyAnalyzeTableColumnUi)
-  const table = privateChartConfig?.table
-  const hasExistingColumns = Boolean(table?.columns?.length)
-  const shouldWriteColumns = hasLegacyUi || hasExistingColumns || options.forceColumns
-  const columns = buildAnalyzeTableColumnsFromFields(dimensions, measures, table?.columns || [])
-  const nextPrivateChartConfig =
-    privateChartConfig || hasLegacyUi || options.forceColumns
-      ? {
-          ...(privateChartConfig || ({} as TPrivateChartConfig)),
-          table: {
-            ...(table || ({ conditions: [] } as unknown as AnalyzeConfigDao.TableChartConfig)),
-            ...(shouldWriteColumns ? { columns } : {})
-          }
-        }
-      : privateChartConfig || undefined
-
-  return {
-    dimensions: dimensions.map(stripAnalyzeTableColumnUiFromField),
-    measures: measures.map(stripAnalyzeTableColumnUiFromField),
-    privateChartConfig: nextPrivateChartConfig
-  }
 }

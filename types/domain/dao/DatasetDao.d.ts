@@ -2,7 +2,7 @@ declare namespace DatasetDao {
   type DatasetStatus = 'enabled' | 'disabled'
   type DatasetListSortField = 'datasetName' | 'createTime' | 'updateTime'
   type DatasetListSortOrder = 'asc' | 'desc'
-  type DatasetFieldType = 'dimension' | 'metric'
+  type DatasetFieldType = 'dimension' | 'measure'
 
   type DatasetRecord = {
     id: number

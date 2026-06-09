@@ -56,11 +56,7 @@ export const useChartConfigStore = defineStore<
   getters: {
     getChartConfigDrawer: (state) => state.chartConfigDrawer,
     getPrivateChartConfig: (state) => state.privateChartConfig,
-    getCommonChartConfig: (state) => state.commonChartConfig,
-    /**
-     * @desc 获取表格图配置
-     */
-    getTableChartConfig: (state) => state.privateChartConfig?.table || null
+    getCommonChartConfig: (state) => state.commonChartConfig
   },
   actions: {
     /**

@@ -204,7 +204,7 @@ export class DatasetService extends BaseService {
         sourceColumnName: column.columnName,
         fieldName: column.columnName,
         displayName: column.columnComment || column.columnName,
-        fieldType: isMetric ? 'metric' : 'dimension',
+        fieldType: isMetric ? 'measure' : 'dimension',
         dataType: column.columnType,
         aggregationType: isMetric ? 'sum' : null,
         expression: '',

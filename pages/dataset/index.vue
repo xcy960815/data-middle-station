@@ -164,7 +164,7 @@
               <template #default="{ row }">
                 <el-select v-model="row.fieldType" size="small">
                   <el-option label="维度" value="dimension" />
-                  <el-option label="指标" value="metric" />
+                  <el-option label="指标" value="measure" />
                 </el-select>
               </template>
             </el-table-column>

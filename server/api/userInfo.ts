@@ -1,4 +1,4 @@
-import { AVATAR } from '@/server/api/login.post'
+import { DEFAULT_USER_AVATAR } from '@/server/service/authService'
 /**
  * @desc 获取用户信息
  */
@@ -9,6 +9,6 @@ export default defineEventHandler<Promise<ApiResponseI<UserInfoVo.UserInfoRespon
   return ApiResponse.success({
     userId: userId,
     userName: userName,
-    avatar: AVATAR
+    avatar: DEFAULT_USER_AVATAR
   })
 })
