@@ -25,6 +25,7 @@ export type AnalyzeDimensionFieldRule = {
   drill?: {
     enabled?: boolean
     role?: 'level'
+    value?: string | number | boolean | null
   }
 }
 

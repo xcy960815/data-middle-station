@@ -15,6 +15,7 @@ import {
   defaultAnalyzeLineChartConfig,
   defaultAnalyzePieChartConfig
 } from '~/shared/analyzeChartConfigDefaults'
+import { resolveAnalyzeDrillQueryFields } from '~/shared/analyzeDrillState'
 import { validateAnalyzeChartConfig } from '~/utils/validateAnalyzeChartConfig'
 
 echarts.use([
@@ -95,21 +96,25 @@ export class ChartSnapshotService {
     }
 
     const chartConfig = analyzeVo.chartConfig
+    const drillQueryFields = resolveAnalyzeDrillQueryFields({
+      dimensions: chartConfig.dimensions || [],
+      filters: chartConfig.filters || []
+    })
 
     const validation = validateAnalyzeChartConfig({
       chartType: chartConfig.chartType,
       dataSource: chartConfig.dataSource,
       measures: chartConfig.measures || [],
-      dimensions: chartConfig.dimensions || []
+      dimensions: drillQueryFields.dimensions
     })
     if (!validation.valid) {
       throw new Error(`分析 ${analyzeId} ${validation.message}`)
     }
 
     const analyzeData = await this.chartDataService.getAnalyzeData({
-      filters: chartConfig.filters || [],
+      filters: drillQueryFields.filters,
       orders: chartConfig.orders || [],
-      dimensions: chartConfig.dimensions || [],
+      dimensions: drillQueryFields.dimensions,
       measures: chartConfig.measures,
       dataSource: chartConfig.dataSource,
       commonChartConfig: chartConfig.commonChartConfig
@@ -118,7 +123,7 @@ export class ChartSnapshotService {
     const renderConfig: ChartRenderConfig = {
       title: analyzeVo.analyzeName,
       data: analyzeData,
-      xAxisFields: chartConfig.dimensions || [],
+      xAxisFields: drillQueryFields.dimensions,
       yAxisFields: chartConfig.measures
     }
 

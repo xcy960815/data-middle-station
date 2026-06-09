@@ -225,7 +225,6 @@ const handleSwitchVersion = async (versionItem: AnalyzeConfigVo.AnalyzeConfigRes
   analyzeStore.setEditorHydrating(true)
   try {
     analyzeStore.setCurrentConfigId(versionItem.id)
-    dimensionStore.resetDrill()
     analyzeStore.setChartType((versionItem.chartType as AnalyzeStore.ChartType) || 'table')
     measureStore.setMeasures((versionItem.measures as MeasureStore.MeasureOption[]) || [])
     filterStore.setFilters((versionItem.filters as FilterStore.FilterOption[]) || [])

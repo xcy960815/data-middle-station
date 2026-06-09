@@ -28,8 +28,6 @@ export const useAnalyzeHandler = () => {
     analyzeStore.setAnalyzeId(data.id)
     // 分析配置 id
     analyzeStore.setCurrentConfigId(data.currentConfigId)
-    // 重置上卷下钻
-    dimensionStore.resetDrill()
 
     const chartConfig = data.chartConfig
     analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')

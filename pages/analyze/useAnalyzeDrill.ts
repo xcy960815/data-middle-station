@@ -1,47 +1,26 @@
 import { computed } from 'vue'
-import { cloneAnalyzeFilterFieldRule } from '@/shared/analyzeConfigFieldRules'
+import { buildAnalyzeDrillFilters, deriveAnalyzeDrillState, isAnalyzeDrillDimension } from '@/shared/analyzeDrillState'
 
 export const useAnalyzeDrill = () => {
   const dimensionStore = useDimensionsStore()
 
   const dimensions = computed(() => dimensionStore.getDimensions)
 
-  const isDrillEnabledDimension = (dimension: DimensionStore.DimensionOption) => {
-    const drillRule = dimension.dimensionRule?.drill
-    return drillRule?.enabled !== false && (!drillRule?.role || drillRule.role === 'level')
-  }
+  const isDrillEnabledDimension = (dimension: DimensionStore.DimensionOption) => isAnalyzeDrillDimension(dimension)
 
-  const drillDimensions = computed(() => dimensions.value.filter(isDrillEnabledDimension))
+  const drillState = computed(() => deriveAnalyzeDrillState(dimensions.value, { preNormalized: true }))
 
-  const effectiveDrillLevel = computed(() => {
-    const dimensionCount = drillDimensions.value.length
-    if (dimensionCount === 0) return 0
-    return Math.min(dimensionStore.getDrillCurrentLevel, dimensionCount - 1)
-  })
+  const drillDimensions = computed(() => drillState.value.drillDimensions)
 
-  const currentDrillDimension = computed(() => {
-    return drillDimensions.value[effectiveDrillLevel.value]
-  })
+  const effectiveDrillLevel = computed(() => drillState.value.effectiveDrillLevel)
 
-  const nextDrillDimension = computed(() => {
-    return drillDimensions.value[effectiveDrillLevel.value + 1]
-  })
+  const currentDrillDimension = computed(() => drillState.value.currentDrillDimension)
 
-  const drillPath = computed(() => {
-    return dimensionStore.getDrillPath.slice(0, effectiveDrillLevel.value)
-  })
+  const nextDrillDimension = computed(() => drillState.value.nextDrillDimension)
 
-  const drillFilters = computed<FilterStore.FilterOption[]>(() => {
-    return drillPath.value.map((item) => ({
-      ...JSON.parse(JSON.stringify(item.dimension)),
-      filterRule: cloneAnalyzeFilterFieldRule({
-        aggregation: 'raw',
-        operator: 'eq',
-        operand: item.value == null ? '' : String(item.value)
-      }),
-      displayName: item.dimension.displayName || item.dimension.columnComment || item.dimension.columnName || '钻取路径'
-    }))
-  })
+  const drillPath = computed(() => drillState.value.drillPath)
+
+  const drillFilters = computed<FilterStore.FilterOption[]>(() => buildAnalyzeDrillFilters(drillPath.value))
 
   const getDimensionLabel = (dimension?: DimensionStore.DimensionOption) => {
     return dimension?.displayName || dimension?.columnComment || dimension?.columnName || ''

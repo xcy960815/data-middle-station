@@ -1,4 +1,5 @@
 import { httpRequest } from '@/composables/useHttpRequest'
+import { resolveAnalyzeDrillQueryFields } from '@/shared/analyzeDrillState'
 import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -110,6 +111,15 @@ export function useDashboard() {
     return chartTypeSet.has(chartType as AnalyzeStore.ChartType) ? (chartType as AnalyzeStore.ChartType) : 'table'
   }
 
+  const resolveWidgetAnalyzeQueryFields = (
+    chartConfig: Pick<AnalyzeConfigVo.ChartConfigResponse, 'dimensions' | 'filters'>
+  ) => {
+    return resolveAnalyzeDrillQueryFields({
+      dimensions: chartConfig.dimensions || [],
+      filters: chartConfig.filters || []
+    })
+  }
+
   const loadDashboardDetail = async () => {
     if (!dashboardId.value) {
       ElMessage.error('看板 ID 无效')
@@ -138,6 +148,7 @@ export function useDashboard() {
 
   const createWidgetState = (widget: DashboardVo.DashboardWidgetItem): DashboardWidgetState => {
     const chartConfig = widget.analyze?.chartConfig
+    const drillQueryFields = chartConfig ? resolveWidgetAnalyzeQueryFields(chartConfig) : null
     return {
       localId: `${widget.id || 'new'}-${widget.analyzeId}-${Date.now()}-${Math.random()}`,
       analyzeId: widget.analyzeId,
@@ -151,7 +162,7 @@ export function useDashboard() {
       widgetConfig: widget.widgetConfig || {},
       analyze: widget.analyze,
       data: [],
-      xAxisFields: (chartConfig?.dimensions || []) as DimensionStore.DimensionOption[],
+      xAxisFields: (drillQueryFields?.dimensions || []) as DimensionStore.DimensionOption[],
       yAxisFields: (chartConfig?.measures || []) as MeasureStore.MeasureOption[],
       dataSource: chartConfig?.dataSource ?? null,
       privateChartConfig: chartConfig?.privateChartConfig || null,
@@ -278,22 +289,21 @@ export function useDashboard() {
     chartConfig: AnalyzeConfigVo.ChartConfigResponse
   ): AnalyzeDataDto.AnalyzeDataQuery => {
     const dataSource = chartConfig.dataSource
+    const drillQueryFields = resolveWidgetAnalyzeQueryFields(chartConfig)
     const validation = validateAnalyzeChartConfig({
       chartType: chartConfig.chartType,
       dataSource,
       measures: chartConfig.measures || [],
-      dimensions: chartConfig.dimensions || []
+      dimensions: drillQueryFields.dimensions
     })
     if (!validation.valid) throw new Error(validation.message)
     if (!dataSource) throw new Error('分析数据源不存在')
 
     return {
       dataSource,
-      filters: (chartConfig.filters || []).filter(
-        (item) => item.filterRule.aggregation && (item.filterRule.operator || item.filterRule.operand)
-      ),
+      filters: drillQueryFields.filters,
       orders: (chartConfig.orders || []).filter((item) => item.orderRule.direction),
-      dimensions: chartConfig.dimensions || [],
+      dimensions: drillQueryFields.dimensions,
       measures: chartConfig.measures || [],
       commonChartConfig: chartConfig.commonChartConfig
     }
@@ -309,9 +319,11 @@ export function useDashboard() {
     widget.loading = true
     widget.errorMessage = ''
     try {
+      const analyzeDataParams = buildWidgetAnalyzeDataParams(chartConfig)
+      widget.xAxisFields = analyzeDataParams.dimensions as DimensionStore.DimensionOption[]
       const res = await httpRequest<ApiResponseI<AnalyzeDataVo.AnalyzeData[]>>('/api/getAnalyzeData', {
         method: 'POST',
-        body: buildWidgetAnalyzeDataParams(chartConfig)
+        body: analyzeDataParams
       })
       if (res.code === 200) {
         widget.data = res.data || []

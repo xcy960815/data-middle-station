@@ -26,14 +26,12 @@ export const useAnalyzeDataHandler = () => {
   const filterStore = useFiltersStore()
   const orderStore = useOrdersStore()
   const chartConfigStore = useChartConfigStore()
-  const { drillDimensions, currentDrillDimension, drillFilters } = useAnalyzeDrill()
+  const { drillDimensions, currentDrillDimension, drillPath, drillFilters } = useAnalyzeDrill()
   const activeRequestId = ref(0)
   const activeRequestController = ref<AbortController | null>(null)
   const lastDataSourceKey = ref('')
   const pendingQueryTimer = ref<ReturnType<typeof setTimeout> | null>(null)
   const pendingQueryForce = ref(false)
-  const activeDrillQueryKey = ref('')
-  const skipParamQueryForDrill = ref(false)
   const lastQueryKey = ref('')
 
   const isAbortError = (error: unknown) => {
@@ -226,16 +224,6 @@ export const useAnalyzeDataHandler = () => {
     updateQueryTimingInfo(startTime)
   }
 
-  const getDrillQueryKey = () => {
-    return JSON.stringify({
-      level: dimensionStore.getDrillCurrentLevel,
-      path: dimensionStore.getDrillPath.map((item) => ({
-        columnName: item.dimension.columnName,
-        value: item.value
-      }))
-    })
-  }
-
   const isEditorHydrating = () => analyzeStore.getEditorHydrating
 
   const scheduleAnalyzeDataQuery = (delay = 1000, options: GetAnalyzeDataOptions = {}) => {
@@ -252,62 +240,34 @@ export const useAnalyzeDataHandler = () => {
       getAnalyzeData({ force })
     }, delay)
   }
-  activeDrillQueryKey.value = getDrillQueryKey()
-
   // 监听参数变化并触发防抖请求
   watch(
     () => queryAnalyzeDataParams.value,
     () => {
       if (isEditorHydrating()) return
-      if (activeDrillQueryKey.value !== getDrillQueryKey()) {
-        return
-      }
-      if (skipParamQueryForDrill.value) {
-        skipParamQueryForDrill.value = false
-        return
-      }
       scheduleAnalyzeDataQuery()
     },
     { deep: true }
   )
 
   watch(
-    () => getDrillQueryKey(),
-    (drillQueryKey) => {
-      if (isEditorHydrating()) {
-        activeDrillQueryKey.value = drillQueryKey
-        return
-      }
-      activeDrillQueryKey.value = drillQueryKey
-      skipParamQueryForDrill.value = true
-      scheduleAnalyzeDataQuery(300)
-      setTimeout(() => {
-        skipParamQueryForDrill.value = false
-      }, 0)
-    }
-  )
-
-  watch(
     () => drillDimensions.value.map((item) => item.columnName),
-    (dimensionNames) => {
+    (dimensionNames, previousDimensionNames) => {
       if (isEditorHydrating()) return
-      const path = dimensionStore.getDrillPath
-      if (dimensionNames.length === 0 || path.length === 0) {
-        dimensionStore.resetDrill()
+      if (dimensionNames.length === 0 || drillPath.value.length === 0) return
+
+      const changedIndex = dimensionNames.findIndex((columnName, index) => columnName !== previousDimensionNames[index])
+      if (changedIndex !== -1) {
+        dimensionStore.rollUpTo(changedIndex)
         return
       }
 
-      const validPathLength = path.findIndex((item, index) => item.dimension.columnName !== dimensionNames[index])
-      if (validPathLength === -1) {
-        if (dimensionStore.getDrillCurrentLevel > Math.max(dimensionNames.length - 1, 0)) {
-          dimensionStore.rollUpTo(Math.max(dimensionNames.length - 1, 0))
-        }
-        return
+      const maxEffectiveLevel = Math.max(dimensionNames.length - 1, 0)
+      if (drillPath.value.length > maxEffectiveLevel) {
+        dimensionStore.rollUpTo(maxEffectiveLevel)
       }
-
-      dimensionStore.rollUpTo(validPathLength)
     },
-    { deep: true }
+    { deep: true, flush: 'sync' }
   )
 
   watch(
@@ -327,14 +287,13 @@ export const useAnalyzeDataHandler = () => {
         dimensionStore.resetDrill()
       }
     },
-    { immediate: true }
+    { immediate: true, flush: 'sync' }
   )
 
   watch(
     () => analyzeStore.getEditorHydrating,
     (hydrating, wasHydrating) => {
       if (wasHydrating && !hydrating) {
-        activeDrillQueryKey.value = getDrillQueryKey()
         scheduleAnalyzeDataQuery(0, { force: true })
       }
     }

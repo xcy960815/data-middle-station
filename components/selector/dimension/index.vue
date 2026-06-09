@@ -98,7 +98,7 @@ const props = defineProps({
     default: 'current'
   },
   drillPathValue: {
-    type: [String, Number, Boolean, null] as PropType<DimensionStore.DrillPathItem['value']>,
+    type: [String, Number, Boolean] as PropType<DimensionStore.DrillPathItem['value']>,
     default: null
   },
   currentLevelLabel: {

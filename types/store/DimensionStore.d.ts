@@ -31,8 +31,6 @@ declare namespace DimensionStore {
    */
   type DimensionState = {
     dimensions: DimensionOption[]
-    drillCurrentLevel: number
-    drillPath: DrillPathItem[]
     selectedDrillValue: DrillPathItem['value']
   }
 
@@ -41,8 +39,6 @@ declare namespace DimensionStore {
    */
   type DimensionGetters = {
     getDimensions: (state: DimensionState) => DimensionOption[]
-    getDrillCurrentLevel: (state: DimensionState) => number
-    getDrillPath: (state: DimensionState) => DrillPathItem[]
     getSelectedDrillValue: (state: DimensionState) => DrillPathItem['value']
   }
   /**
@@ -75,9 +71,7 @@ declare namespace DimensionStore {
     updateDimension: (dimension: DimensionOption) => void
     resetDrill: () => void
     setSelectedDrillValue: (value: DrillPathItem['value']) => void
-    setDrillCurrentLevel: (level: number) => void
-    setDrillPath: (path: DrillPathItem[]) => void
-    drillDown: (item: DrillPathItem) => void
+    drillDown: (level: number, value: DrillPathItem['value']) => void
     rollUpTo: (level: number) => void
   }
 }

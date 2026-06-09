@@ -1,6 +1,6 @@
 <template>
   <!-- 分析页面下方分组 -->
-  <div class="dimension relative h-full flex items-center" @dragover="dragoverHandler" @drop="dropHandler">
+  <div class="dimension relative h-full w-full flex items-center" @dragover="dragoverHandler" @drop="dropHandler">
     <div class="dimension__header flex items-center justify-between">
       <span class="dimension__title">分组</span>
       <icon-park
@@ -12,7 +12,7 @@
         @click="clearAll('dimensions')"
       />
     </div>
-    <div class="dimension__content flex items-center flex-1">
+    <div class="dimension__content flex items-center flex-1 w-full">
       <div
         data-action="drag"
         class="dimension__item mx-1"
@@ -75,8 +75,14 @@ const columnStore = useColumnsStore()
 const measureStore = useMeasuresStore()
 const dimensionStore = useDimensionsStore()
 const analyzeStore = useAnalyzeStore()
-const { drillDimensions, effectiveDrillLevel, currentDrillDimension, nextDrillDimension, getDimensionLabel } =
-  useAnalyzeDrill()
+const {
+  drillDimensions,
+  effectiveDrillLevel,
+  currentDrillDimension,
+  nextDrillDimension,
+  drillPath,
+  getDimensionLabel
+} = useAnalyzeDrill()
 /**
  * @desc dimensionList
  */
@@ -122,7 +128,8 @@ const availableDrillValues = computed(() => {
   }))
 })
 
-const getDrillDimensionIndex = (dimension: DimensionStore.DimensionOption) => {
+const getDrillDimensionIndex = (dimension?: DimensionStore.DimensionOption) => {
+  if (!dimension?.columnName) return -1
   return drillDimensions.value.findIndex((item) => item.columnName === dimension.columnName)
 }
 
@@ -135,30 +142,30 @@ const getDrillLevelState = (index: number): 'path' | 'current' | 'next' | 'futur
   return 'future'
 }
 
-const getDrillPathValue = (dimension: DimensionStore.DimensionOption) => {
+const getDrillPathValue = (dimension?: DimensionStore.DimensionOption) => {
   const drillIndex = getDrillDimensionIndex(dimension)
   if (drillIndex === -1) return null
-  return dimensionStore.getDrillPath[drillIndex]?.value
+  return drillPath.value[drillIndex]?.value
 }
 
-const isDrillPathLevel = (dimension: DimensionStore.DimensionOption) => {
+const isDrillPathLevel = (dimension?: DimensionStore.DimensionOption) => {
   const drillIndex = getDrillDimensionIndex(dimension)
   return drillIndex !== -1 && drillIndex < effectiveDrillLevel.value
 }
 
-const isCurrentDrillLevel = (dimension: DimensionStore.DimensionOption) => {
+const isCurrentDrillLevel = (dimension?: DimensionStore.DimensionOption) => {
   return getDrillDimensionIndex(dimension) === effectiveDrillLevel.value
 }
 
-const isDimensionDrillMenuEnabled = (dimension: DimensionStore.DimensionOption) => {
+const isDimensionDrillMenuEnabled = (dimension?: DimensionStore.DimensionOption) => {
   return drillEnabled.value && getDrillDimensionIndex(dimension) !== -1
 }
 
-const getDimensionDisplayName = (dimension: DimensionStore.DimensionOption) => {
+const getDimensionDisplayName = (dimension?: DimensionStore.DimensionOption) => {
   const label = getDimensionLabel(dimension)
   const drillIndex = getDrillDimensionIndex(dimension)
   if (drillIndex !== -1 && drillIndex < effectiveDrillLevel.value) {
-    const value = dimensionStore.getDrillPath[drillIndex]?.value
+    const value = drillPath.value[drillIndex]?.value
     return `${label}=${value ?? ''}`
   }
   return label
@@ -181,10 +188,7 @@ const handleDrillDownFromMenu = (overrideValue?: DimensionStore.DrillPathItem['v
     ElMessage.warning(`请先通过右键菜单选择「${getDimensionLabel(currentDrillDimension.value)}」值`)
     return
   }
-  dimensionStore.drillDown({
-    dimension: currentDrillDimension.value,
-    value
-  })
+  dimensionStore.drillDown(effectiveDrillLevel.value, value)
 }
 
 const getDimensionInvalid = (dimension: DimensionStore.DimensionOption) => {
@@ -274,13 +278,34 @@ const dropHandler = (dragEvent: DragEvent) => {
 
 <style lang="scss" scoped>
 .dimension {
+  min-width: 0;
+
+  .dimension__header {
+    flex: 0 0 auto;
+    margin-right: 8px;
+  }
+
   .dimension__content {
+    min-width: 0;
     list-style: none;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
 
     .dimension__item {
+      flex: 0 0 auto;
       cursor: move;
       position: relative;
+    }
+  }
+
+  .dimension__item__name {
+    display: block;
+    min-width: 96px;
+    max-width: 180px;
+
+    :deep(.chart-selector-container) {
+      min-width: 96px;
+      max-width: 180px;
     }
   }
 
