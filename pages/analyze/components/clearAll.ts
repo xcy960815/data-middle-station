@@ -15,17 +15,16 @@ export const clearAllHandler = () => {
   const clearAll = (type: 'orders' | 'filters' | 'dimensions' | 'measures') => {
     switch (type) {
       case 'orders':
-        orderStore.setOrders([])
+        orderStore.resetOrders()
         break
       case 'filters':
-        filterStore.setFilters([])
+        filterStore.resetFilters()
         break
       case 'dimensions':
-        dimensionStore.setDimensions([])
-        dimensionStore.resetDrill()
+        dimensionStore.resetDimensions()
         break
       case 'measures':
-        measureStore.setMeasures([])
+        measureStore.resetMeasures()
         break
       default:
         break

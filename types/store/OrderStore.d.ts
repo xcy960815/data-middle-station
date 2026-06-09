@@ -50,7 +50,7 @@ declare namespace OrderStore {
   /**
    * @desc 排序操作
    */
-  type OrderActions = {
+  type OrderActions = BaseStore.ResetActions<Pick<OrderState, 'orders'>> & {
     setOrders: (orders: OrderOption[]) => void
     updateOrder: (params: { order: OrderOption; index: number }) => void
     addOrders: (orders: OrderOption[]) => void

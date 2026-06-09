@@ -258,13 +258,13 @@ watch(
       // 如果数据源为空，清空图表数据
       analyzeStore.setAnalyzeData([])
       // 如果数据源为空，清空筛选条件
-      filterStore.setFilters([])
+      filterStore.resetFilters()
       // 如果数据源为空，清空排序条件
-      orderStore.setOrders([])
+      orderStore.resetOrders()
       // 如果数据源为空，清空分组条件
-      dimensionStore.setDimensions([])
+      dimensionStore.resetDimensions()
       // 如果数据源为空，清空值字段
-      measureStore.setMeasures([])
+      measureStore.resetMeasures()
       // 如果数据源为空，清空图表配置
       chartConfigStore.setPrivateChartConfig(null)
       // 如果数据源为空，清空图表配置条件
@@ -276,13 +276,13 @@ watch(
     // else {
     //   await queryTableColumn(newDataSource)
     //   const hasFilter = filterStore.getFilters.length > 0
-    //   hasFilter && filterStore.setFilters([])
+    //   hasFilter && filterStore.resetFilters()
     //   const hasOrder = orderStore.getOrders.length > 0
-    //   hasOrder && orderStore.setOrders([])
+    //   hasOrder && orderStore.resetOrders()
     //   const hasGroup = dimensionStore.getDimensions.length > 0
-    //   hasGroup && dimensionStore.setDimensions([])
+    //   hasGroup && dimensionStore.resetDimensions()
     //   const hasMeasure = measureStore.getMeasures.length > 0
-    //   hasMeasure && measureStore.setMeasures([])
+    //   hasMeasure && measureStore.resetMeasures()
     // }
   }
 )
@@ -317,10 +317,10 @@ const queryTableColumn = async (tableName: string) => {
 
 const clearAnalyzeSelections = () => {
   analyzeStore.setAnalyzeData([])
-  filterStore.setFilters([])
-  orderStore.setOrders([])
-  dimensionStore.setDimensions([])
-  measureStore.setMeasures([])
+  filterStore.resetFilters()
+  orderStore.resetOrders()
+  dimensionStore.resetDimensions()
+  measureStore.resetMeasures()
 }
 
 const mapDatasetFieldToColumn = (field: DatasetDao.DatasetFieldConfigItem): ColumnsStore.ColumnOptions => {

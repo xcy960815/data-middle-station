@@ -42,7 +42,7 @@ declare namespace MeasureStore {
   /**
    * @desc 值/度量字段操作
    */
-  type MeasureActions = {
+  type MeasureActions = BaseStore.ResetActions<Pick<MeasureState, 'measures'>> & {
     setMeasures: (measures: MeasureOption[]) => void
     addMeasures: (measures: MeasureOption[]) => void
     removeMeasure: (index: number) => void

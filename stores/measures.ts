@@ -27,6 +27,13 @@ export const useMeasuresStore = defineStore<
       this.measures = measures
     },
     /**
+     * @desc 重置值/度量字段
+     * @returns {void}
+     */
+    resetMeasures() {
+      this.measures = []
+    },
+    /**
      * @desc 添加值/度量字段
      * @param measures {MeasureStore.MeasureOption[]}
      * @returns {void}

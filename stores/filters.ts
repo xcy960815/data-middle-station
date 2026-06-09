@@ -28,6 +28,13 @@ export const useFiltersStore = defineStore<
       this.filters = filters
     },
     /**
+     * @desc 重置过滤器
+     * @returns {void}
+     */
+    resetFilters() {
+      this.filters = []
+    },
+    /**
      * @desc 添加过滤器
      * @param filters {FilterOption[]}
      * @returns {void}

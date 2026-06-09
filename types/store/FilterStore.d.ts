@@ -54,7 +54,7 @@ declare namespace FilterStore {
   /**
    * @desc 过滤器操作
    */
-  type FilterActions = {
+  type FilterActions = BaseStore.ResetActions<Pick<FilterState, 'filters'>> & {
     setFilters: (filters: FilterOption[]) => void
     addFilters: (filters: FilterOption[]) => void
     removeFilter: (index: number) => void

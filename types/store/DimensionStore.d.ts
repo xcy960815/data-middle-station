@@ -48,7 +48,7 @@ declare namespace DimensionStore {
   /**
    * @desc action
    */
-  type DimensionActions = {
+  type DimensionActions = BaseStore.ResetActions<Pick<DimensionState, 'dimensions'>> & {
     /**
      * @desc 添加分组
      * @param dimensions {DimensionOption[]}

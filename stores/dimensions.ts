@@ -46,6 +46,14 @@ export const useDimensionsStore = defineStore<
     setDimensions(dimensions) {
       this.dimensions = dimensions
     },
+    /**
+     * @desc 重置分组和钻取状态
+     * @returns {void}
+     */
+    resetDimensions() {
+      this.dimensions = []
+      this.resetDrill()
+    },
     setDrillCurrentLevel(level: number) {
       this.drillCurrentLevel = Math.max(0, Math.floor(Number(level) || 0))
     },

@@ -24,6 +24,13 @@ export const useOrdersStore = defineStore<
       this.orders = orders
     },
     /**
+     * @desc 重置排序
+     * @returns {void}
+     */
+    resetOrders() {
+      this.orders = []
+    },
+    /**
      * @desc 添加排序
      * @param orders {OrderOption[]}
      * @returns {void}
