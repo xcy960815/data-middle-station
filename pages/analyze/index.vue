@@ -154,10 +154,10 @@
 </template>
 
 <script lang="ts" setup>
+import ListCard from '@/components/list-card/index.vue'
 import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import ListCard from '@/components/list-card/index.vue'
 
 const layoutName = 'analyze'
 const analyzeList = ref<AnalyzeVo.AnalyzeListItem[]>([])
@@ -382,6 +382,10 @@ const handleSavePermissions = async () => {
   }
 }
 
+/**
+ * 编辑分析
+ * @param id
+ */
 const handleEditAnalyze = async (id: number) => {
   const res = await httpRequest('/api/getAnalyze', {
     method: 'POST',

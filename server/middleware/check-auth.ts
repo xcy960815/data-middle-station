@@ -22,7 +22,8 @@ const WHITE_LIST: readonly string[] = [
   '/api/seedBigData',
   '/api/cleanAnalyzeConfigRuntimeFields',
   '/api/cleanAnalyzeConfigFieldRules',
-  '/api/cleanAnalyzeConfigDimensionRules'
+  '/api/cleanAnalyzeConfigDimensionRules',
+  '/api/cleanAnalyzeConfigTableColumnUi'
 ]
 
 /**

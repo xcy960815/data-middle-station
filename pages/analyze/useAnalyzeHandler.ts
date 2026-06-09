@@ -15,19 +15,28 @@ export const useAnalyzeHandler = () => {
   const chartConfigStore = useChartConfigStore()
   const { serializeAnalyzeDraft } = useAnalyzeDraft()
 
+  /**
+   * 将分析的配置 配置到各个 store 中
+   * @param {AnalyzeVo.AnalyzeDetailResponse} data
+   */
   const applyAnalyzeDetail = (data: AnalyzeVo.AnalyzeDetailResponse) => {
+    // 分析名称
     analyzeStore.setAnalyzeName(data.analyzeName)
+    // 分析描述
     analyzeStore.setAnalyzeDesc(data.analyzeDesc)
+    // 分析 id
     analyzeStore.setAnalyzeId(data.id)
+    // 分析配置 id
     analyzeStore.setCurrentConfigId(data.currentConfigId)
+    // 重置上卷下钻
     dimensionStore.resetDrill()
 
     const chartConfig = data.chartConfig
     analyzeStore.setChartType((chartConfig?.chartType as AnalyzeStore.ChartType) || 'table')
-    measureStore.setMeasures((chartConfig?.measures as MeasureStore.MeasureOption[]) || [])
-    filterStore.setFilters((chartConfig?.filters as FilterStore.FilterOption[]) || [])
-    dimensionStore.setDimensions((chartConfig?.dimensions as DimensionStore.DimensionOption[]) || [])
-    orderStore.setOrders((chartConfig?.orders as OrderStore.OrderOption[]) || [])
+    measureStore.setMeasures(chartConfig?.measures || [])
+    filterStore.setFilters(chartConfig?.filters || [])
+    dimensionStore.setDimensions(chartConfig?.dimensions || [])
+    orderStore.setOrders(chartConfig?.orders || [])
     chartConfigStore.setCommonChartConfig(chartConfig?.commonChartConfig || chartConfigStore.$state.commonChartConfig)
     chartConfigStore.setPrivateChartConfig(
       chartConfig?.privateChartConfig || chartConfigStore.$state.privateChartConfig
@@ -37,6 +46,8 @@ export const useAnalyzeHandler = () => {
     columnStore.setDataSourceMode(chartConfig?.commonChartConfig?.dataSourceMode || 'table')
     columnStore.setDatasetId(chartConfig?.commonChartConfig?.datasetId || null)
     columnStore.setDatasetName(chartConfig?.commonChartConfig?.datasetName || '')
+
+    // 所有 store 填充完毕后，再记录快照，确保脏检查基准正确
     analyzeStore.setLastSavedSnapshot(serializeAnalyzeDraft())
     analyzeStore.setEditorDirty(false)
     analyzeStore.setLastSavedAt(data.updateTime || '')

@@ -25,9 +25,9 @@ export interface BodyState {
 }
 
 export interface ColumnsInfo {
-  leftColumns: Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>
-  centerColumns: Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>
-  rightColumns: Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>
+  leftColumns: CanvasTable.ColumnOption[]
+  centerColumns: CanvasTable.ColumnOption[]
+  rightColumns: CanvasTable.ColumnOption[]
   leftPartWidth: number
   centerPartWidth: number
   rightPartWidth: number

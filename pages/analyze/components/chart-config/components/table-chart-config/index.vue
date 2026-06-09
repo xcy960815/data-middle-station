@@ -1,5 +1,84 @@
 <template>
   <el-form label-position="top" label-width="auto" :model="tableChartConfig">
+    <el-divider content-position="left">列配置</el-divider>
+    <div class="table-column-toolbar">
+      <el-button size="small" @click="handleSyncTableColumns">同步字段</el-button>
+      <el-button size="small" @click="handleResetAllTableColumns">重置全部</el-button>
+    </div>
+    <el-empty v-if="tableColumnRows.length === 0" description="暂无表格列" :image-size="64" />
+    <div v-else class="table-column-config-list">
+      <div
+        v-for="column in tableColumnRows"
+        :key="`${column.role}-${column.columnName}`"
+        class="table-column-config-row"
+      >
+        <div class="table-column-config-row__header">
+          <div class="table-column-config-row__title">
+            <span class="table-column-config-row__name">{{ getTableColumnLabel(column) }}</span>
+            <span class="table-column-config-row__field">{{ column.columnName }}</span>
+          </div>
+          <div class="table-column-config-row__actions">
+            <el-tag size="small" effect="plain">{{ column.role === 'dimension' ? '分组' : '值' }}</el-tag>
+            <el-button link size="small" @click="handleResetTableColumn(column)">重置</el-button>
+          </div>
+        </div>
+        <div class="table-column-config-row__controls">
+          <label class="table-column-config-control">
+            <span>宽度</span>
+            <el-input-number
+              size="small"
+              controls-position="right"
+              :min="1"
+              :max="2000"
+              :model-value="column.width || undefined"
+              @change="handleUpdateTableColumn(column, { width: Number($event) || null })"
+            />
+          </label>
+          <label class="table-column-config-control">
+            <span>固定</span>
+            <el-select
+              size="small"
+              :model-value="column.fixed ?? null"
+              @change="handleUpdateTableColumnFixed(column, $event)"
+            >
+              <el-option label="无" :value="null" />
+              <el-option label="左" value="left" />
+              <el-option label="右" value="right" />
+            </el-select>
+          </label>
+          <label class="table-column-config-control">
+            <span>对齐</span>
+            <el-select
+              size="small"
+              :model-value="column.align ?? null"
+              @change="handleUpdateTableColumnAlign(column, $event)"
+            >
+              <el-option label="默认" :value="null" />
+              <el-option label="左" value="left" />
+              <el-option label="中" value="center" />
+              <el-option label="右" value="right" />
+            </el-select>
+          </label>
+          <label class="table-column-config-switch">
+            <span>表头过滤</span>
+            <el-switch
+              size="small"
+              :model-value="Boolean(column.filterable)"
+              @change="handleUpdateTableColumn(column, { filterable: Boolean($event) })"
+            />
+          </label>
+          <label class="table-column-config-switch">
+            <span>排序</span>
+            <el-switch
+              size="small"
+              :model-value="Boolean(column.sortable)"
+              @change="handleUpdateTableColumn(column, { sortable: Boolean($event) })"
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+
     <el-divider content-position="left">高亮与交互</el-divider>
     <!-- 行高亮 -->
     <el-form-item label="行高亮">
@@ -678,12 +757,15 @@
 </template>
 
 <script lang="ts" setup>
+import { buildTableColumnsFromFields, defaultTableColumnUi, type TableColumnSetting } from '@/shared/tableColumnConfig'
 import { IconPark } from '@icon-park/vue-next/es/all'
 
 /**
  * @desc 图表配置store
  */
 const chartsConfigStore = useChartConfigStore()
+const dimensionStore = useDimensionsStore()
+const measureStore = useMeasuresStore()
 
 /**
  * @desc 表格配置数据
@@ -695,6 +777,78 @@ onMounted(() => {
     Object.assign(tableChartConfig, chartsConfigStore.privateChartConfig.table)
   }
 })
+
+watch(
+  () => chartsConfigStore.privateChartConfig?.table,
+  (tableConfig) => {
+    if (tableConfig) {
+      Object.assign(tableChartConfig, tableConfig)
+    }
+  },
+  { deep: true }
+)
+
+const dimensionFields = computed(() => dimensionStore.getDimensions)
+const measureFields = computed(() => measureStore.getMeasures)
+
+const tableColumnRows = computed(() =>
+  buildTableColumnsFromFields(dimensionFields.value, measureFields.value, tableChartConfig.columns || [])
+)
+
+const tableColumnFieldMap = computed(() => {
+  const entries = [...dimensionFields.value, ...measureFields.value].map((field) => [field.columnName, field] as const)
+  return new Map(entries)
+})
+
+const getTableColumnLabel = (column: TableColumnSetting) => {
+  const field = tableColumnFieldMap.value.get(column.columnName)
+  return field?.displayName || field?.columnComment || column.columnName
+}
+
+const setTableColumns = (columns: TableColumnSetting[]) => {
+  tableChartConfig.columns = columns
+  handleUpdateTableConfig()
+}
+
+const createDefaultTableColumns = (): TableColumnSetting[] => [
+  ...dimensionFields.value.map((field) => ({
+    columnName: field.columnName,
+    role: 'dimension' as const,
+    ...defaultTableColumnUi()
+  })),
+  ...measureFields.value.map((field) => ({
+    columnName: field.columnName,
+    role: 'measure' as const,
+    ...defaultTableColumnUi()
+  }))
+]
+
+const handleUpdateTableColumn = (column: TableColumnSetting, patch: Partial<TableColumnSetting>) => {
+  const nextColumns = tableColumnRows.value.map((item) =>
+    item.columnName === column.columnName && item.role === column.role ? { ...item, ...patch } : item
+  )
+  setTableColumns(nextColumns)
+}
+
+const handleUpdateTableColumnFixed = (column: TableColumnSetting, fixed: TableColumnSetting['fixed']) => {
+  handleUpdateTableColumn(column, { fixed })
+}
+
+const handleUpdateTableColumnAlign = (column: TableColumnSetting, align: TableColumnSetting['align']) => {
+  handleUpdateTableColumn(column, { align })
+}
+
+const handleResetTableColumn = (column: TableColumnSetting) => {
+  handleUpdateTableColumn(column, defaultTableColumnUi())
+}
+
+const handleSyncTableColumns = () => {
+  setTableColumns(tableColumnRows.value)
+}
+
+const handleResetAllTableColumns = () => {
+  setTableColumns(createDefaultTableColumns())
+}
 
 /**
  * @desc 更新表格配置
@@ -920,5 +1074,96 @@ const fontFamilyOptions = [
   .reset-icon {
     flex-shrink: 0;
   }
+}
+
+.table-column-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.table-column-config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.table-column-config-row {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.table-column-config-row__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.table-column-config-row__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.table-column-config-row__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-column-config-row__name,
+.table-column-config-row__field {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-column-config-row__name {
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.table-column-config-row__field {
+  margin-top: 2px;
+  color: #909399;
+  font-size: 12px;
+}
+
+.table-column-config-row__controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.table-column-config-control,
+.table-column-config-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  min-width: 0;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid #f3f4f6;
+  color: #606266;
+  font-size: 12px;
+}
+
+.table-column-config-control > span,
+.table-column-config-switch > span {
+  flex: 0 0 64px;
+  color: #374151;
+  font-weight: 500;
+}
+
+:deep(.table-column-config-control .el-input-number),
+:deep(.table-column-config-control .el-select) {
+  width: 168px;
 }
 </style>

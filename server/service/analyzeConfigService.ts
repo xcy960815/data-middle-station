@@ -6,6 +6,7 @@ import {
   createDefaultMeasureRule,
   createDefaultOrderRule
 } from '@/shared/analyzeFieldRules'
+import { migrateTableColumnUiFromFields, TABLE_COLUMN_UI_KEYS, type TableColumnUiKey } from '@/shared/tableColumnConfig'
 import type {
   FilterAggregationType,
   FilterType,
@@ -19,6 +20,15 @@ type CleanFieldRuleResult<T> = {
   changed: boolean
   normalizedFieldCount: number
   removedFieldCount: number
+}
+
+type TableColumnUiMigrationResult = {
+  measures: AnalyzeConfigDao.MeasureOption[]
+  dimensions: AnalyzeConfigDao.DimensionOption[]
+  privateChartConfig: AnalyzeConfigDao.PrivateChartConfig | undefined
+  removedFieldCount: number
+  migratedColumnCount: number
+  changed: boolean
 }
 
 type AnalyzeConfigField = Record<string, any>
@@ -97,15 +107,21 @@ export class AnalyzeConfigService extends BaseService {
   ): Promise<AnalyzeConfigVo.AnalyzeConfigResponse> {
     const { createdBy, createTime, updateTime } = await this.getDefaultInfo()
     const versionNo = await this.analyzeConfigMapper.getNextVersionNo(createRequest.analyzeId)
+    const tableColumnUiMigration = this.migrateTableColumnUiConfig({
+      chartType: createRequest.chartType,
+      measures: createRequest.measures || [],
+      dimensions: createRequest.dimensions || [],
+      privateChartConfig: createRequest.privateChartConfig
+    })
     const createParams: AnalyzeConfigDao.CreateAnalyzeConfigParams = {
       ...createRequest,
       versionNo,
-      measures: createRequest.measures || [],
+      measures: tableColumnUiMigration.measures,
       filters: createRequest.filters || [],
-      dimensions: createRequest.dimensions || [],
+      dimensions: tableColumnUiMigration.dimensions,
       orders: createRequest.orders || [],
       commonChartConfig: createRequest.commonChartConfig,
-      privateChartConfig: createRequest.privateChartConfig,
+      privateChartConfig: tableColumnUiMigration.privateChartConfig,
       createdBy,
       createTime,
       updateTime
@@ -157,6 +173,43 @@ export class AnalyzeConfigService extends BaseService {
       scannedCount: configs.length,
       updatedCount,
       removedFieldCount
+    }
+  }
+
+  public async cleanTableColumnUiFields(): Promise<AnalyzeConfigVo.CleanTableColumnUiFieldsResponse> {
+    const configs = await this.analyzeConfigMapper.getAnalyzeConfigsForFieldRuleCleaning()
+    let updatedCount = 0
+    let removedFieldCount = 0
+    let migratedColumnCount = 0
+
+    for (const config of configs) {
+      const migration = this.migrateTableColumnUiConfig({
+        chartType: config.chartType,
+        measures: config.measures || [],
+        dimensions: config.dimensions || [],
+        privateChartConfig: config.privateChartConfig
+      })
+
+      if (!migration.changed) continue
+
+      const updated = await this.analyzeConfigMapper.updateAnalyzeConfigTableColumnUiFields(config.id, {
+        measures: migration.measures,
+        dimensions: migration.dimensions,
+        privateChartConfig: migration.privateChartConfig
+      })
+
+      if (updated) {
+        updatedCount += 1
+        removedFieldCount += migration.removedFieldCount
+        migratedColumnCount += migration.migratedColumnCount
+      }
+    }
+
+    return {
+      scannedCount: configs.length,
+      updatedCount,
+      removedFieldCount,
+      migratedColumnCount
     }
   }
 
@@ -255,6 +308,83 @@ export class AnalyzeConfigService extends BaseService {
       dimensions: configRecord.dimensions || [],
       orders: configRecord.orders || []
     }
+  }
+
+  private migrateTableColumnUiConfig(config: {
+    chartType?: string | null
+    measures: AnalyzeConfigDao.MeasureOption[]
+    dimensions: AnalyzeConfigDao.DimensionOption[]
+    privateChartConfig?: AnalyzeConfigDao.PrivateChartConfig
+  }): TableColumnUiMigrationResult {
+    const removedFieldCount = this.countTableColumnUiFields([...config.dimensions, ...config.measures])
+    const fields = [...config.dimensions, ...config.measures]
+    const legacyColumnCount = this.countFieldsWithTableColumnUi(fields)
+    const shouldCreateTableColumns =
+      config.chartType === 'table' && fields.length > 0 && !config.privateChartConfig?.table?.columns?.length
+    const migratedColumnCount = shouldCreateTableColumns ? fields.length : legacyColumnCount
+    const migrated = migrateTableColumnUiFromFields(
+      config.dimensions as Array<{ columnName: string } & Record<string, unknown>>,
+      config.measures as Array<{ columnName: string } & Record<string, unknown>>,
+      config.privateChartConfig,
+      { forceColumns: shouldCreateTableColumns }
+    )
+    const measures = migrated.measures as AnalyzeConfigDao.MeasureOption[]
+    const dimensions = migrated.dimensions as AnalyzeConfigDao.DimensionOption[]
+    const privateChartConfig = migrated.privateChartConfig
+    const previousTableColumns = config.privateChartConfig?.table?.columns || []
+    const nextTableColumns = privateChartConfig?.table?.columns || []
+    const tableColumnsChanged = !this.isJsonEquivalent(previousTableColumns, nextTableColumns)
+    const changed =
+      removedFieldCount > 0 ||
+      !this.isJsonEquivalent(measures, config.measures) ||
+      !this.isJsonEquivalent(dimensions, config.dimensions) ||
+      tableColumnsChanged
+
+    return {
+      measures,
+      dimensions,
+      privateChartConfig,
+      removedFieldCount,
+      migratedColumnCount,
+      changed
+    }
+  }
+
+  private countTableColumnUiFields(fields: AnalyzeConfigField[]): number {
+    return fields.reduce((count, field) => {
+      if (!field || typeof field !== 'object') return count
+      return count + TABLE_COLUMN_UI_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(field, key)).length
+    }, 0)
+  }
+
+  private countFieldsWithTableColumnUi(fields: AnalyzeConfigField[]): number {
+    return fields.filter((field) => this.hasTableColumnUiField(field)).length
+  }
+
+  private hasTableColumnUiField(field: AnalyzeConfigField): boolean {
+    if (!field || typeof field !== 'object') return false
+    return TABLE_COLUMN_UI_KEYS.some((key: TableColumnUiKey) => Object.prototype.hasOwnProperty.call(field, key))
+  }
+
+  private isJsonEquivalent(left: unknown, right: unknown): boolean {
+    return JSON.stringify(this.normalizeJsonValue(left)) === JSON.stringify(this.normalizeJsonValue(right))
+  }
+
+  private normalizeJsonValue(value: unknown): unknown {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.normalizeJsonValue(item))
+    }
+
+    if (!value || typeof value !== 'object') {
+      return value
+    }
+
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .reduce<Record<string, unknown>>((result, key) => {
+        result[key] = this.normalizeJsonValue((value as Record<string, unknown>)[key])
+        return result
+      }, {})
   }
 
   private removeRuntimeValidationFields<T>(data: T): { data: T; removedCount: number } {

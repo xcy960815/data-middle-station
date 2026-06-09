@@ -1,9 +1,9 @@
 import {
-  getSourceRowIndex,
-  notifyCellValueChange,
-  getTableParams,
   getProcessedRows,
-  getRuntimeState
+  getRuntimeState,
+  getSourceRowIndex,
+  getTableParams,
+  notifyCellValueChange
 } from './parameter'
 import { measureTablePerf, updateTablePerfSnapshot } from './perf'
 import type { FilterItem } from './runtime-state'
@@ -223,13 +223,10 @@ export const getColumnSortStatus = (columnName: string): 'asc' | 'desc' | null =
 
 /**
  * 处理多列排序
- * @param {DimensionStore.DimensionOption | MeasureStore.MeasureOption} columnOption - 列配置
+ * @param {CanvasTable.ColumnOption} columnOption - 列配置
  * @param {'asc' | 'desc'} order - 排序方向
  */
-export const handleMultiColumnSort = (
-  columnOption: DimensionStore.DimensionOption | MeasureStore.MeasureOption,
-  order: 'asc' | 'desc'
-) => {
+export const handleMultiColumnSort = (columnOption: CanvasTable.ColumnOption, order: 'asc' | 'desc') => {
   const columnName = columnOption.columnName
   const sortColumns = getRuntimeState().data.sortColumns
   const existingIndex = sortColumns.findIndex((col) => col.columnName === columnName)

@@ -129,6 +129,13 @@ declare namespace AnalyzeConfigVo {
     normalizedDimensionCount: number
   }
 
+  type CleanTableColumnUiFieldsResponse = {
+    scannedCount: number
+    updatedCount: number
+    removedFieldCount: number
+    migratedColumnCount: number
+  }
+
   /**
    * @desc 饼图配置
    */

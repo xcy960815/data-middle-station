@@ -1,15 +1,10 @@
 declare namespace CanvasTable {
-  type DimensionOption = DimensionStore.DimensionOption & {
+  type TableColumnUi = Partial<Omit<AnalyzeConfigDao.TableColumnSetting, 'columnName' | 'role'>> & {
     width: number
     colIndex: number
     align: 'left' | 'right' | 'center'
     verticalAlign: 'top' | 'middle' | 'bottom'
   }
 
-  type MeasureOption = MeasureStore.MeasureOption & {
-    width: number
-    colIndex: number
-    align: 'left' | 'right' | 'center'
-    verticalAlign: 'top' | 'middle' | 'bottom'
-  }
+  type ColumnOption = (DimensionStore.DimensionOption | MeasureStore.MeasureOption) & TableColumnUi
 }

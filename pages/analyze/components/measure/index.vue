@@ -397,13 +397,7 @@ const handleConfirmCustomColumn = () => {
   // 自动添加到值区域
   addMeasure({
     ...newColumn,
-    measureRule: createDefaultMeasureRule(newColumn),
-    fixed: null,
-    align: null,
-    width: null,
-    showOverflowTooltip: false,
-    filterable: false,
-    sortable: false
+    measureRule: createDefaultMeasureRule(newColumn)
   })
 
   ElMessage.success('自定义列创建成功')

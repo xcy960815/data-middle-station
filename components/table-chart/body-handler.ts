@@ -212,7 +212,7 @@ export const calculateColumnsInfo = () => {
   const rightColumns = tableColumns.filter((c) => c.fixed === 'right')
   const centerColumns = tableColumns.filter((c) => !c.fixed)
 
-  const sumWidth = (columns: Array<CanvasTable.MeasureOption | CanvasTable.DimensionOption>) =>
+  const sumWidth = (columns: CanvasTable.ColumnOption[]) =>
     columns.reduce((acc, column) => acc + (column.width || 0), 0)
 
   columnsInfo.leftColumns = leftColumns
@@ -233,18 +233,14 @@ export const calculateColumnsInfo = () => {
  * @param {number} width - 单元格宽度
  * @param {number} height - 单元格高度
  * @param {number} rowIndex - 行索引
- * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} columnOption - 列配置
+ * @param {CanvasTable.ColumnOption} columnOption - 列配置
  * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
  * @param {number} bodyFontSize - 字体大小
  */
 /**
  * 为可编辑单元格绑定双击打开编辑器
  */
-const bindEditableCell = (
-  cellRect: Konva.Rect,
-  rowIndex: number,
-  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption
-) => {
+const bindEditableCell = (cellRect: Konva.Rect, rowIndex: number, columnOption: CanvasTable.ColumnOption) => {
   if (!columnOption.editable) return
 
   cellRect.on(
@@ -280,7 +276,7 @@ const drawMergedCell = (
   width: number,
   height: number,
   rowIndex: number,
-  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption
+  columnOption: CanvasTable.ColumnOption
 ) => {
   const row = getProcessedRows().value[rowIndex]
   // 绘制合并单元格背景
@@ -335,7 +331,7 @@ const drawMergedCell = (
  * @param {number} width - 单元格宽度
  * @param {number} height - 单元格高度
  * @param {number} rowIndex - 行索引
- * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} columnOption - 列配置
+ * @param {CanvasTable.ColumnOption} columnOption - 列配置
  * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
  * @param {number} bodyFontSize - 字体大小
  */
@@ -347,7 +343,7 @@ const drawNormalCell = (
   width: number,
   height: number,
   rowIndex: number,
-  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption
+  columnOption: CanvasTable.ColumnOption
 ) => {
   const row: AnalyzeDataVo.AnalyzeData = getProcessedRows().value[rowIndex]
   // 绘制单元格背景
@@ -396,14 +392,14 @@ const drawNormalCell = (
  * 计算单元格合并信息
  * @param {Function} spanMethod - 合并方法
  * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
- * @param {CanvasTable.DimensionOption | CanvasTable.MeasureOption} columnOption - 列配置
+ * @param {CanvasTable.ColumnOption} columnOption - 列配置
  * @param {number} rowIndex - 行索引
  * @returns {Object} 合并信息
  */
 export const calculateCellSpan = (
   spanMethod: Function,
   row: AnalyzeDataVo.AnalyzeData,
-  columnOption: CanvasTable.DimensionOption | CanvasTable.MeasureOption,
+  columnOption: CanvasTable.ColumnOption,
   rowIndex: number
 ) => {
   const spanMethodResult = spanMethod({ row, column: columnOption, rowIndex, colIndex: columnOption.colIndex || 0 })
@@ -427,14 +423,14 @@ export const calculateCellSpan = (
  * 计算合并单元格的总宽度
  * @param {number} spanCol - 跨列数
  * @param {number} colIndex - 列索引
- * @param {Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>} bodyCols - 列配置数组
+ * @param {CanvasTable.ColumnOption[]} bodyCols - 列配置数组
  * @param {number} columnWidth - 列宽度
  * @returns {number} 合并单元格总宽度
  */
 export const calculateMergedCellWidth = (
   spanCol: number,
   colIndex: number,
-  bodyCols: Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>,
+  bodyCols: CanvasTable.ColumnOption[],
   columnWidth: number
 ) => {
   if (spanCol <= 1) return columnWidth
@@ -450,13 +446,13 @@ export const calculateMergedCellWidth = (
 /**
  * 画body区域 只渲染可视区域的行
  * @param {Konva.Group | null} bodyGroup - 分组
- * @param {Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>} bodyCols - 列
+ * @param {CanvasTable.ColumnOption[]} bodyCols - 列
  * @param {KonvaNodePools} pools - 对象池
  * @returns {void}
  */
 export const drawBodyPart = (
   bodyGroup: Konva.Group | null,
-  bodyCols: Array<CanvasTable.DimensionOption | CanvasTable.MeasureOption>,
+  bodyCols: CanvasTable.ColumnOption[],
   pools: KonvaNodePools
 ) => {
   if (!stageVars.stage || !bodyGroup) return

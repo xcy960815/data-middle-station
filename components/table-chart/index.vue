@@ -3,8 +3,8 @@
     <client-only>
       <CanvasTable
         :data="data"
-        :x-axis-fields="xAxisFields"
-        :y-axis-fields="yAxisFields"
+        :x-axis-fields="resolvedXAxisFields"
+        :y-axis-fields="resolvedYAxisFields"
         :chart-width="chartWidth"
         :chart-height="chartHeight"
         :highlight-cell-background="resolvedTableChartConfig?.highlightCellBackground"
@@ -47,6 +47,8 @@
 </template>
 
 <script lang="ts" setup>
+import { defaultTableChartConfig } from '@/shared/chartDefaults'
+import { buildTableColumnsFromFields, mergeFieldWithTableColumn, stripTableColumnUi } from '@/shared/tableColumnConfig'
 import CanvasTable from './canvas-table.vue'
 import type { CellValueChangePayload, ColumnOrderChangePayload, ColumnWidthChangePayload } from './parameter'
 
@@ -54,6 +56,7 @@ const chartConfigStore = useChartConfigStore()
 const analyzeStore = useAnalyzeStore()
 const dimensionStore = useDimensionsStore()
 const measureStore = useMeasuresStore()
+
 const emit = defineEmits<{
   renderChartStart: []
   renderChartEnd: []
@@ -93,23 +96,43 @@ const resolvedTableChartConfig = computed(() => {
   return props.privateChartConfig || chartConfigStore.privateChartConfig?.table
 })
 
+const tableColumnSettings = computed(() => resolvedTableChartConfig.value?.columns || [])
+
+const resolvedXAxisFields = computed(
+  () =>
+    props.xAxisFields.map((field) =>
+      mergeFieldWithTableColumn(field, tableColumnSettings.value)
+    ) as CanvasTable.ColumnOption[]
+)
+
+const resolvedYAxisFields = computed(
+  () =>
+    props.yAxisFields.map((field) =>
+      mergeFieldWithTableColumn(field, tableColumnSettings.value)
+    ) as CanvasTable.ColumnOption[]
+)
+
+const buildCurrentFieldTableColumns = () =>
+  buildTableColumnsFromFields(props.xAxisFields, props.yAxisFields, tableColumnSettings.value)
+
+const setResolvedTableColumns = (columns: AnalyzeConfigDao.TableColumnSetting[]) => {
+  const tableConfig =
+    resolvedTableChartConfig.value || chartConfigStore.privateChartConfig?.table || defaultTableChartConfig
+  chartConfigStore.setTableChartConfig({
+    ...tableConfig,
+    columns
+  })
+}
+
 const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload) => {
-  const group = dimensionStore.getDimensions.find((item) => item.columnName === columnName)
-  if (group) {
-    dimensionStore.updateDimension({ ...group, width })
-  }
-
-  const measure = measureStore.getMeasures.find((item) => item.columnName === columnName)
-  if (measure) {
-    measureStore.updateMeasure({ ...measure, width })
-  }
-
+  const columns = buildCurrentFieldTableColumns()
+  setResolvedTableColumns(columns.map((column) => (column.columnName === columnName ? { ...column, width } : column)))
   analyzeStore.setEditorDirty(true)
 }
 
 const handleColumnOrderChange = ({ xAxisFields, yAxisFields }: ColumnOrderChangePayload) => {
-  dimensionStore.setDimensions(xAxisFields)
-  measureStore.setMeasures(yAxisFields)
+  dimensionStore.setDimensions(xAxisFields.map(stripTableColumnUi) as DimensionStore.DimensionOption[])
+  measureStore.setMeasures(yAxisFields.map(stripTableColumnUi) as MeasureStore.MeasureOption[])
   analyzeStore.setEditorDirty(true)
 }
 

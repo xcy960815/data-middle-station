@@ -72,36 +72,24 @@ export const getAnalyzeFieldDropTargetIndex = (
 /**
  * 创建“值/度量”区域字段配置。
  * @param {ColumnsStore.ColumnOptions} field 左侧候选字段或其他区域拖入的字段。
- * @returns {MeasureStore.MeasureOption} 带默认度量规则和表格展示配置的值字段。
+ * @returns {MeasureStore.MeasureOption} 带默认度量规则的值字段。
  */
 export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureStore.MeasureOption => {
   return {
     ...field,
-    measureRule: createDefaultMeasureRule(field),
-    fixed: null,
-    align: null,
-    width: null,
-    showOverflowTooltip: false,
-    filterable: false,
-    sortable: false
+    measureRule: createDefaultMeasureRule(field)
   }
 }
 
 /**
  * 创建“分组”区域字段配置。
  * @param {ColumnsStore.ColumnOptions} field 左侧候选字段或其他区域拖入的字段。
- * @returns {DimensionStore.DimensionOption} 带默认分组规则和表格展示配置的分组字段。
+ * @returns {DimensionStore.DimensionOption} 带默认分组规则的分组字段。
  */
 export const createDimensionOption = (field: ColumnsStore.ColumnOptions): DimensionStore.DimensionOption => {
   return {
     ...field,
-    dimensionRule: createDefaultDimensionRule(),
-    fixed: null,
-    align: null,
-    width: null,
-    showOverflowTooltip: false,
-    filterable: false,
-    sortable: false
+    dimensionRule: createDefaultDimensionRule()
   }
 }
 

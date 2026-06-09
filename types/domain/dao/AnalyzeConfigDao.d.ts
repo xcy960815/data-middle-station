@@ -421,7 +421,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 数据源
      */
-    dataSource: string
+    dataSource: string | null
     /**
      * 图表类型
      */

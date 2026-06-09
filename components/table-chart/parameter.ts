@@ -6,16 +6,14 @@ import { createCanvasTableRuntimeState, type CanvasTableRuntimeState } from './r
  */
 const defaultFontFamily = 'Arial, sans-serif'
 
-type TableColumn = DimensionStore.DimensionOption | MeasureStore.MeasureOption
-
 export interface ColumnWidthChangePayload {
   columnName: string
   width: number
 }
 
 export interface ColumnOrderChangePayload {
-  xAxisFields: DimensionStore.DimensionOption[]
-  yAxisFields: MeasureStore.MeasureOption[]
+  xAxisFields: CanvasTable.ColumnOption[]
+  yAxisFields: CanvasTable.ColumnOption[]
 }
 
 export interface CellValueChangePayload {
@@ -53,7 +51,7 @@ export const tableProps = {
    * 分组字段
    */
   xAxisFields: {
-    type: Array as PropType<DimensionStore.DimensionOption[]>,
+    type: Array as PropType<CanvasTable.ColumnOption[]>,
     required: true,
     default: () => []
   },
@@ -62,7 +60,7 @@ export const tableProps = {
    * 值/度量字段
    */
   yAxisFields: {
-    type: Array as PropType<MeasureStore.MeasureOption[]>,
+    type: Array as PropType<CanvasTable.ColumnOption[]>,
     required: true,
     default: () => []
   },
@@ -84,7 +82,7 @@ export const tableProps = {
     type: Function as PropType<
       (config: {
         row: AnalyzeDataVo.AnalyzeData
-        column: DimensionStore.DimensionOption | MeasureStore.MeasureOption
+        column: CanvasTable.ColumnOption
         rowIndex: number
         colIndex: number
       }) => { rowspan: number; colspan: number } | [number, number] | null | undefined
@@ -248,11 +246,11 @@ export interface CanvasTableParams {
   /**
    * 分组字段
    */
-  xAxisFields: Array<DimensionStore.DimensionOption>
+  xAxisFields: Array<CanvasTable.ColumnOption>
   /**
    * 值/度量字段
    */
-  yAxisFields: Array<MeasureStore.MeasureOption>
+  yAxisFields: Array<CanvasTable.ColumnOption>
   /**
    * 是否启用汇总
    */
@@ -392,7 +390,7 @@ export interface CanvasTableParams {
    */
   spanMethod?: (config: {
     row: AnalyzeDataVo.AnalyzeData
-    column: TableColumn
+    column: CanvasTable.ColumnOption
     rowIndex: number
     colIndex: number
   }) => { rowspan: number; colspan: number } | [number, number] | null | undefined
@@ -439,7 +437,7 @@ const createDefaultTableParams = (): CanvasTableParams => ({
   spanMethod: undefined
 })
 
-const cloneColumns = <T extends TableColumn>(columns: T[]): T[] => columns.map((column) => ({ ...column }))
+const cloneColumns = <T extends CanvasTable.ColumnOption>(columns: T[]): T[] => columns.map((column) => ({ ...column }))
 
 const SOURCE_ROW_INDEX_KEY = '__dmsTableSourceRowIndex__'
 
@@ -542,15 +540,16 @@ export const applyTableParams = (nextParams: Partial<CanvasTableParams>) => {
 
 export const updateTableColumnWidth = (columnName: string, width: number) => {
   const params = getTableParams()
-  const applyWidth = (column: TableColumn) => (column.columnName === columnName ? { ...column, width } : column)
-  params.xAxisFields = params.xAxisFields.map((column) => applyWidth(column) as DimensionStore.DimensionOption)
-  params.yAxisFields = params.yAxisFields.map((column) => applyWidth(column) as MeasureStore.MeasureOption)
+  const applyWidth = (column: CanvasTable.ColumnOption) =>
+    column.columnName === columnName ? { ...column, width } : column
+  params.xAxisFields = params.xAxisFields.map((column) => applyWidth(column) as CanvasTable.ColumnOption)
+  params.yAxisFields = params.yAxisFields.map((column) => applyWidth(column) as CanvasTable.ColumnOption)
   getCurrentTableContext().runtimeHandlers.onColumnWidthChange?.({ columnName, width })
 }
 
 export const updateTableColumnOrder = (
-  xAxisFields: DimensionStore.DimensionOption[],
-  yAxisFields: MeasureStore.MeasureOption[]
+  xAxisFields: CanvasTable.ColumnOption[],
+  yAxisFields: CanvasTable.ColumnOption[]
 ) => {
   const params = getTableParams()
   params.xAxisFields = cloneColumns(xAxisFields)

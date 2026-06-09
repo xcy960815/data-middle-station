@@ -17,30 +17,81 @@ export const TABLE_COLUMN_UI_KEYS = [
   'editOptions',
   'resizable',
   'draggable',
-  'colIndex',
-  'alias'
+  'colIndex'
 ] as const
 
 export type TableColumnUiKey = (typeof TABLE_COLUMN_UI_KEYS)[number]
 
+const buildTableColumnSettingKey = (role: TableColumnRole, columnName: string) => `${role}:${columnName}`
+
+const resolveTableColumnRole = (field: Record<string, unknown>): TableColumnRole => {
+  return 'measureRule' in field ? 'measure' : 'dimension'
+}
+
 export type TableColumnSetting = {
+  /**
+   * 列名
+   */
   columnName: string
+  /**
+   * 维度还是分组
+   */
   role: TableColumnRole
+  /**
+   * 固定方式
+   */
   fixed?: 'left' | 'right' | null
+  /**
+   * 横向排布方式
+   */
   align?: 'left' | 'right' | 'center' | null
+  /**
+   * 纵向排布方式
+   */
   verticalAlign?: 'top' | 'middle' | 'bottom' | null
+  /**
+   * 宽度
+   */
   width?: number | null
+  /**
+   * 是否显示 tooltip
+   */
   showOverflowTooltip?: boolean
+  /**
+   * 是否开启过滤
+   */
   filterable?: boolean
+  /**
+   * 是否开启排序
+   */
   sortable?: boolean
+  /**
+   * 是否可编辑
+   */
   editable?: boolean
+  /**
+   * 编辑组件类型
+   */
   editType?: 'input' | 'select' | 'date' | 'datetime'
+  /**
+   * 编辑组件下拉选选项
+   */
   editOptions?: Array<{
     label: string
     value: string | number
   }>
+  /**
+   * 是否可以拖拽调整列宽
+   */
   resizable?: boolean
+  /**
+   * 是否可以拖拽调整列顺序
+   */
   draggable?: boolean
+  /**
+   * 列下标
+   */
+  colIndex?: number
 }
 
 export type TableRenderColumn = ColumnsStore.ColumnOptions &
@@ -49,6 +100,10 @@ export type TableRenderColumn = ColumnsStore.ColumnOptions &
     dimensionRule?: import('@/shared/analyzeFieldRules').DimensionRule
   }
 
+/**
+ * 默认的表格样式配置
+ * @returns
+ */
 export const defaultTableColumnUi = (): Omit<TableColumnSetting, 'columnName' | 'role'> => ({
   fixed: null,
   align: null,
@@ -77,11 +132,21 @@ export const stripTableColumnUi = <T extends Record<string, unknown>>(field: T):
 
 const hasLegacyTableColumnUi = (field: Record<string, unknown>) => TABLE_COLUMN_UI_KEYS.some((key) => key in field)
 
+/**
+ * 构建 canvas table 所需要的列配置
+ * @param field
+ * @param columns
+ * @returns
+ */
 export const mergeFieldWithTableColumn = <T extends { columnName: string }>(
   field: T,
   columns: TableColumnSetting[] | undefined
-): TableRenderColumn => {
-  const columnSetting = columns?.find((item) => item.columnName === field.columnName)
+): T & Partial<TableColumnSetting> => {
+  const role = resolveTableColumnRole(field as Record<string, unknown>)
+  const columnSetting = columns?.find(
+    (item) =>
+      buildTableColumnSettingKey(item.role, item.columnName) === buildTableColumnSettingKey(role, field.columnName)
+  )
   return {
     ...defaultTableColumnUi(),
     ...field,
@@ -94,33 +159,37 @@ export const buildTableColumnsFromFields = (
   measures: Array<{ columnName: string } & Record<string, unknown>>,
   existing: TableColumnSetting[] = []
 ): TableColumnSetting[] => {
-  const existingMap = new Map(existing.map((item) => [item.columnName, item]))
+  const existingMap = new Map(
+    existing.map((item) => [buildTableColumnSettingKey(item.role, item.columnName), item] as const)
+  )
   const columns: TableColumnSetting[] = []
 
   for (const dimension of dimensions) {
     const columnName = dimension.columnName
-    const previous = existingMap.get(columnName)
+    const key = buildTableColumnSettingKey('dimension', columnName)
+    const previous = existingMap.get(key)
     columns.push({
       columnName,
       role: 'dimension',
       ...defaultTableColumnUi(),
-      ...previous,
-      ...pickDefinedTableColumnUi(dimension)
+      ...pickDefinedTableColumnUi(dimension),
+      ...previous
     })
-    existingMap.delete(columnName)
+    existingMap.delete(key)
   }
 
   for (const measure of measures) {
     const columnName = measure.columnName
-    const previous = existingMap.get(columnName)
+    const key = buildTableColumnSettingKey('measure', columnName)
+    const previous = existingMap.get(key)
     columns.push({
       columnName,
       role: 'measure',
       ...defaultTableColumnUi(),
-      ...previous,
-      ...pickDefinedTableColumnUi(measure)
+      ...pickDefinedTableColumnUi(measure),
+      ...previous
     })
-    existingMap.delete(columnName)
+    existingMap.delete(key)
   }
 
   return columns
@@ -129,24 +198,30 @@ export const buildTableColumnsFromFields = (
 export const migrateTableColumnUiFromFields = <
   TPrivateChartConfig extends { table?: AnalyzeConfigDao.TableChartConfig }
 >(
-  dimensions: Array<Record<string, unknown>>,
-  measures: Array<Record<string, unknown>>,
-  privateChartConfig?: TPrivateChartConfig | null
+  dimensions: Array<{ columnName: string } & Record<string, unknown>>,
+  measures: Array<{ columnName: string } & Record<string, unknown>>,
+  privateChartConfig?: TPrivateChartConfig | null,
+  options: { forceColumns?: boolean } = {}
 ): {
   dimensions: Array<Record<string, unknown>>
   measures: Array<Record<string, unknown>>
-  privateChartConfig: TPrivateChartConfig
+  privateChartConfig?: TPrivateChartConfig
 } => {
-  const table = privateChartConfig?.table || ({ conditions: [] } as AnalyzeConfigDao.TableChartConfig)
   const hasLegacyUi = [...dimensions, ...measures].some(hasLegacyTableColumnUi)
-  const columns = buildTableColumnsFromFields(dimensions, measures, table.columns || [])
-  const nextPrivateChartConfig = {
-    ...(privateChartConfig || ({} as TPrivateChartConfig)),
-    table: {
-      ...table,
-      columns: hasLegacyUi || !table.columns?.length ? columns : table.columns
-    }
-  }
+  const table = privateChartConfig?.table
+  const hasExistingColumns = Boolean(table?.columns?.length)
+  const shouldWriteColumns = hasLegacyUi || hasExistingColumns || options.forceColumns
+  const columns = buildTableColumnsFromFields(dimensions, measures, table?.columns || [])
+  const nextPrivateChartConfig =
+    privateChartConfig || hasLegacyUi || options.forceColumns
+      ? {
+          ...(privateChartConfig || ({} as TPrivateChartConfig)),
+          table: {
+            ...(table || ({ conditions: [] } as unknown as AnalyzeConfigDao.TableChartConfig)),
+            ...(shouldWriteColumns ? { columns } : {})
+          }
+        }
+      : privateChartConfig || undefined
 
   return {
     dimensions: dimensions.map(stripTableColumnUi),
