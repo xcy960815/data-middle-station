@@ -14,7 +14,7 @@ const logger = new Logger({
 /**
  * 不需要验证 token 的路由白名单（精确匹配或前缀匹配）
  */
-const WHITE_LIST: readonly string[] = ['/api/login', '/api/register', '/api/health', '/api/public']
+const WHITE_LIST: readonly string[] = ['/api/login', '/api/health']
 
 /**
  * 检查路径是否在白名单中

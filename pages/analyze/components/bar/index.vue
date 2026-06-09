@@ -167,9 +167,7 @@ const handleClickRefresh = async () => {
  * @desc 点报警按钮
  * @returns void
  */
-const handleClickAlarm = () => {
-  console.log('handleClickAlarm')
-}
+const handleClickAlarm = () => {}
 
 const loadAnalyzeVersionList = async () => {
   if (!analyzeStore.getAnalyzeId) {
@@ -259,9 +257,7 @@ const handleClickSetting = () => {
  * @desc 点全屏按钮
  * @returns void
  */
-const handleClickFullScreen = () => {
-  console.log('handleClickFullScreen')
-}
+const handleClickFullScreen = () => {}
 
 /**
  * @desc 点保存按钮

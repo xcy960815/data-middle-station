@@ -1,10 +1,20 @@
-import type { AnalyzeFilterAggregationType, AnalyzeOrderAggregationType } from '@/shared/analyzeConfigTypes'
+import {
+  ANALYZE_NUMERIC_DATABASE_COLUMN_TYPE_KEYWORDS,
+  type AnalyzeFilterAggregationType,
+  type AnalyzeOrderAggregationType
+} from '@/shared/analyzeConfigTypes'
 
+/**
+ * @desc 分析字段聚合选项，用于筛选和排序面板。
+ */
 type AnalyzeFieldAggregationOption = {
   label: string
   value: AnalyzeFilterAggregationType | AnalyzeOrderAggregationType
 }
 
+/**
+ * @desc 分析字段聚合方式下拉选项。
+ */
 const ANALYZE_FIELD_AGGREGATION_OPTIONS: AnalyzeFieldAggregationOption[] = [
   { label: '原始值', value: 'raw' },
   { label: '计数', value: 'count' },
@@ -15,22 +25,17 @@ const ANALYZE_FIELD_AGGREGATION_OPTIONS: AnalyzeFieldAggregationOption[] = [
   { label: '最小值', value: 'min' }
 ]
 
-const NUMERIC_DATABASE_COLUMN_TYPE_KEYWORDS = [
-  'int',
-  'integer',
-  'float',
-  'double',
-  'decimal',
-  'numeric',
-  'real',
-  'tinyint',
-  'smallint',
-  'bigint',
-  'number'
-]
-
+/**
+ * @desc 可按日期字段处理的数据库字段类型关键词。
+ */
 const DATE_DATABASE_COLUMN_TYPE_KEYWORDS = ['date', 'time', 'year']
 
+/**
+ * @desc 根据数据库字段类型返回可选聚合方式。
+ * @param {string} [columnType=''] 数据库字段类型。
+ * @param {boolean} [includeRaw=true] 是否包含原始值选项。
+ * @returns {AnalyzeFieldAggregationOption[]} 可用于下拉选择的聚合方式选项。
+ */
 export const getAnalyzeFieldAggregationOptions = (
   columnType = '',
   includeRaw = true
@@ -40,7 +45,7 @@ export const getAnalyzeFieldAggregationOptions = (
     ? ['raw', 'count', 'countDistinct']
     : ['count', 'countDistinct']
 
-  if (NUMERIC_DATABASE_COLUMN_TYPE_KEYWORDS.some((type) => normalizedColumnType.includes(type))) {
+  if (ANALYZE_NUMERIC_DATABASE_COLUMN_TYPE_KEYWORDS.some((type) => normalizedColumnType.includes(type))) {
     return ANALYZE_FIELD_AGGREGATION_OPTIONS.filter((item) => includeRaw || item.value !== 'raw')
   }
 
@@ -51,6 +56,11 @@ export const getAnalyzeFieldAggregationOptions = (
   return ANALYZE_FIELD_AGGREGATION_OPTIONS.filter((item) => baseValues.includes(item.value))
 }
 
+/**
+ * @desc 获取分析字段聚合方式的展示文案。
+ * @param {AnalyzeFilterAggregationType | AnalyzeOrderAggregationType} [aggregationType] 聚合方式值。
+ * @returns {string} 聚合方式中文文案。
+ */
 export const getAnalyzeFieldAggregationLabel = (
   aggregationType?: AnalyzeFilterAggregationType | AnalyzeOrderAggregationType
 ) => {

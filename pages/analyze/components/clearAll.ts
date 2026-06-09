@@ -28,7 +28,6 @@ export const clearAllHandler = () => {
         measureStore.setMeasures([])
         break
       default:
-        console.log('clearAll', type)
         break
     }
   }

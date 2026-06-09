@@ -74,10 +74,10 @@ export const getAnalyzeFieldDropTargetIndex = (
  * @param {ColumnsStore.ColumnOptions} field 左侧候选字段或其他区域拖入的字段。
  * @returns {MeasureStore.MeasureOption} 带默认度量规则的值字段。
  */
-export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureStore.MeasureOption => {
+const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureStore.MeasureOption => {
   return {
     ...field,
-    measureRule: createDefaultAnalyzeMeasureFieldRule(field)
+    measureRule: createDefaultAnalyzeMeasureFieldRule({ columnType: field.columnType })
   }
 }
 
@@ -86,7 +86,7 @@ export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureS
  * @param {ColumnsStore.ColumnOptions} field 左侧候选字段或其他区域拖入的字段。
  * @returns {DimensionStore.DimensionOption} 带默认分组规则的分组字段。
  */
-export const createDimensionOption = (field: ColumnsStore.ColumnOptions): DimensionStore.DimensionOption => {
+const createDimensionOption = (field: ColumnsStore.ColumnOptions): DimensionStore.DimensionOption => {
   return {
     ...field,
     dimensionRule: createDefaultAnalyzeDimensionFieldRule()
@@ -98,7 +98,7 @@ export const createDimensionOption = (field: ColumnsStore.ColumnOptions): Dimens
  * @param {ColumnsStore.ColumnOptions} field 左侧候选字段或其他区域拖入的字段。
  * @returns {FilterStore.FilterOption} 带默认筛选规则和展示名的筛选字段。
  */
-export const createFilterOption = (field: ColumnsStore.ColumnOptions): FilterStore.FilterOption => {
+const createFilterOption = (field: ColumnsStore.ColumnOptions): FilterStore.FilterOption => {
   const filterOption = {
     ...field,
     filterRule: createDefaultAnalyzeFilterFieldRule()
@@ -112,7 +112,7 @@ export const createFilterOption = (field: ColumnsStore.ColumnOptions): FilterSto
  * @param {ColumnsStore.ColumnOptions} field 左侧候选字段或其他区域拖入的字段。
  * @returns {OrderStore.OrderOption} 带默认排序规则和展示名的排序字段。
  */
-export const createOrderOption = (field: ColumnsStore.ColumnOptions): OrderStore.OrderOption => {
+const createOrderOption = (field: ColumnsStore.ColumnOptions): OrderStore.OrderOption => {
   const orderOption = {
     ...field,
     orderRule: createDefaultAnalyzeOrderFieldRule()
@@ -121,8 +121,18 @@ export const createOrderOption = (field: ColumnsStore.ColumnOptions): OrderStore
   return orderOption
 }
 
+/**
+ * 同步筛选选项展示名的便捷别名。
+ * @param {DisplayNameField} field 需要同步展示名的筛选字段对象。
+ * @returns {void}
+ */
 export const syncFilterOptionDisplayName = syncAnalyzeFieldDisplayName
 
+/**
+ * 同步排序选项展示名的便捷别名。
+ * @param {DisplayNameField} field 需要同步展示名的排序字段对象。
+ * @returns {void}
+ */
 export const syncOrderOptionDisplayName = syncAnalyzeFieldDisplayName
 
 /**

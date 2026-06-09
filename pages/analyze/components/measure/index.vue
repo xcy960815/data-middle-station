@@ -400,7 +400,9 @@ const handleConfirmCustomColumn = () => {
   // 自动添加到值区域
   addMeasure({
     ...newColumn,
-    measureRule: createDefaultAnalyzeMeasureFieldRule(newColumn)
+    measureRule: createDefaultAnalyzeMeasureFieldRule({
+      columnType: newColumn.columnType
+    })
   })
 
   ElMessage.success('自定义列创建成功')

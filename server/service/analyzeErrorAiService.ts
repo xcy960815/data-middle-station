@@ -50,8 +50,9 @@ export class AnalyzeErrorAiService {
           }
 
           await this.pipeDeepSeekStream(aiResponse, send)
-        } catch (error: any) {
-          send({ type: 'ai_chunk', content: `AI 分析失败: ${error.message}` })
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          send({ type: 'ai_chunk', content: `AI 分析失败: ${errorMessage}` })
         } finally {
           controller.close()
         }

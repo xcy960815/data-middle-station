@@ -1,9 +1,10 @@
-import type {
-  AnalyzeFilterAggregationType,
-  AnalyzeFilterOperator,
-  AnalyzeMeasureAggregationType,
-  AnalyzeOrderAggregationType,
-  AnalyzeOrderDirection
+import {
+  ANALYZE_NUMERIC_DATABASE_COLUMN_TYPE_KEYWORDS,
+  type AnalyzeFilterAggregationType,
+  type AnalyzeFilterOperator,
+  type AnalyzeMeasureAggregationType,
+  type AnalyzeOrderAggregationType,
+  type AnalyzeOrderDirection
 } from '@/shared/analyzeConfigTypes'
 
 /**
@@ -53,7 +54,7 @@ export type AnalyzeOrderFieldRule = {
  */
 type AnalyzeMeasureFieldRuleSource = {
   columnType?: string
-  fieldRole?: 'dimension' | 'metric'
+  fieldRole?: 'dimension' | 'measure'
 }
 
 /**
@@ -63,19 +64,7 @@ type AnalyzeMeasureFieldRuleSource = {
  */
 const isNumericDatabaseColumnType = (columnType?: string) => {
   const normalizedColumnType = columnType?.toLowerCase() || ''
-  return [
-    'int',
-    'integer',
-    'float',
-    'double',
-    'decimal',
-    'numeric',
-    'real',
-    'tinyint',
-    'smallint',
-    'bigint',
-    'number'
-  ].some((type) => normalizedColumnType.includes(type))
+  return ANALYZE_NUMERIC_DATABASE_COLUMN_TYPE_KEYWORDS.some((type) => normalizedColumnType.includes(type))
 }
 
 /**
@@ -95,14 +84,14 @@ export const setAnalyzeMeasureFieldAggregation = (
 /**
  * 创建默认值字段规则。
  *
- * metric 或数值字段默认求和，非数值字段默认计数。
+ * measure 或数值字段默认求和，非数值字段默认计数。
  * @param {AnalyzeMeasureFieldRuleSource} field 用于判断默认聚合方式的字段信息。
  * @returns {AnalyzeMeasureFieldRule} 默认值字段规则。
  */
 export const createDefaultAnalyzeMeasureFieldRule = (
   field: AnalyzeMeasureFieldRuleSource
 ): AnalyzeMeasureFieldRule => ({
-  aggregation: field.fieldRole === 'metric' || isNumericDatabaseColumnType(field.columnType) ? 'sum' : 'count'
+  aggregation: field.fieldRole === 'measure' || isNumericDatabaseColumnType(field.columnType) ? 'sum' : 'count'
 })
 
 /**
