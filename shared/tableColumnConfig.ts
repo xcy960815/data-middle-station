@@ -24,7 +24,7 @@ export type TableColumnUiKey = (typeof TABLE_COLUMN_UI_KEYS)[number]
 
 const buildTableColumnSettingKey = (role: TableColumnRole, columnName: string) => `${role}:${columnName}`
 
-const resolveTableColumnRole = (field: Record<string, unknown>): TableColumnRole => {
+const inferTableColumnRoleFromField = (field: Record<string, unknown>): TableColumnRole => {
   return 'measureRule' in field ? 'measure' : 'dimension'
 }
 
@@ -94,12 +94,6 @@ export type TableColumnSetting = {
   colIndex?: number
 }
 
-export type TableRenderColumn = ColumnsStore.ColumnOptions &
-  Partial<TableColumnSetting> & {
-    measureRule?: import('@/shared/analyzeFieldRules').MeasureRule
-    dimensionRule?: import('@/shared/analyzeFieldRules').DimensionRule
-  }
-
 /**
  * 默认的表格样式配置
  * @returns
@@ -142,7 +136,7 @@ export const mergeFieldWithTableColumn = <T extends { columnName: string }>(
   field: T,
   columns: TableColumnSetting[] | undefined
 ): T & Partial<TableColumnSetting> => {
-  const role = resolveTableColumnRole(field as Record<string, unknown>)
+  const role = inferTableColumnRoleFromField(field as Record<string, unknown>)
   const columnSetting = columns?.find(
     (item) =>
       buildTableColumnSettingKey(item.role, item.columnName) === buildTableColumnSettingKey(role, field.columnName)

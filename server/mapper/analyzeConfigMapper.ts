@@ -224,24 +224,4 @@ export class AnalyzeConfigMapper extends BaseMapper {
     ])
     return result.affectedRows > 0
   }
-
-  public async updateAnalyzeConfigTableColumnUiFields(
-    configId: number,
-    updateParams: Pick<AnalyzeConfigDao.AnalyzeConfigRecord, 'measures' | 'dimensions' | 'privateChartConfig'>
-  ): Promise<boolean> {
-    const sql = `
-      update ${ANALYZE_CONFIG_TABLE_NAME}
-      set measures = ?,
-          \`dimensions\` = ?,
-          private_chart_config = ?,
-          update_time = now()
-      where id = ? and is_deleted = 0`
-    const result = await this.exe<ResultSetHeader>(sql, [
-      JSON.stringify(updateParams.measures || []),
-      JSON.stringify(updateParams.dimensions || []),
-      JSON.stringify(updateParams.privateChartConfig || null),
-      configId
-    ])
-    return result.affectedRows > 0
-  }
 }

@@ -176,43 +176,6 @@ export class AnalyzeConfigService extends BaseService {
     }
   }
 
-  public async cleanTableColumnUiFields(): Promise<AnalyzeConfigVo.CleanTableColumnUiFieldsResponse> {
-    const configs = await this.analyzeConfigMapper.getAnalyzeConfigsForFieldRuleCleaning()
-    let updatedCount = 0
-    let removedFieldCount = 0
-    let migratedColumnCount = 0
-
-    for (const config of configs) {
-      const migration = this.migrateTableColumnUiConfig({
-        chartType: config.chartType,
-        measures: config.measures || [],
-        dimensions: config.dimensions || [],
-        privateChartConfig: config.privateChartConfig
-      })
-
-      if (!migration.changed) continue
-
-      const updated = await this.analyzeConfigMapper.updateAnalyzeConfigTableColumnUiFields(config.id, {
-        measures: migration.measures,
-        dimensions: migration.dimensions,
-        privateChartConfig: migration.privateChartConfig
-      })
-
-      if (updated) {
-        updatedCount += 1
-        removedFieldCount += migration.removedFieldCount
-        migratedColumnCount += migration.migratedColumnCount
-      }
-    }
-
-    return {
-      scannedCount: configs.length,
-      updatedCount,
-      removedFieldCount,
-      migratedColumnCount
-    }
-  }
-
   public async cleanFieldRules(): Promise<AnalyzeConfigVo.CleanFieldRulesResponse> {
     const configs = await this.analyzeConfigMapper.getAnalyzeConfigsForFieldRuleCleaning()
     let updatedCount = 0
