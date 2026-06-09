@@ -38,10 +38,10 @@
             <span>固定</span>
             <el-select
               size="small"
-              :model-value="column.fixed ?? null"
+              :model-value="column.fixed ?? ''"
               @change="handleUpdateTableColumnFixed(column, $event)"
             >
-              <el-option label="无" :value="null" />
+              <el-option label="无" value="" />
               <el-option label="左" value="left" />
               <el-option label="右" value="right" />
             </el-select>
@@ -50,10 +50,10 @@
             <span>对齐</span>
             <el-select
               size="small"
-              :model-value="column.align ?? null"
+              :model-value="column.align ?? ''"
               @change="handleUpdateTableColumnAlign(column, $event)"
             >
-              <el-option label="默认" :value="null" />
+              <el-option label="默认" value="" />
               <el-option label="左" value="left" />
               <el-option label="中" value="center" />
               <el-option label="右" value="right" />
@@ -757,7 +757,12 @@
 </template>
 
 <script lang="ts" setup>
-import { defaultAnalyzeTableChartConfig } from '@/shared/analyzeChartConfigDefaults'
+import {
+  defaultAnalyzeIntervalChartConfig,
+  defaultAnalyzeLineChartConfig,
+  defaultAnalyzePieChartConfig,
+  defaultAnalyzeTableChartConfig
+} from '@/shared/analyzeChartConfigDefaults'
 import {
   buildAnalyzeTableColumnsFromFields,
   createDefaultAnalyzeTableColumnUi,
@@ -773,31 +778,28 @@ const dimensionStore = useDimensionsStore()
 const measureStore = useMeasuresStore()
 
 /**
- * @desc 表格配置数据
+ * @desc 表格配置数据（直接读写 store，避免本地副本造成双源）
  */
-const tableChartConfig = reactive<ChartConfigStore.TableChartConfig>({ ...defaultAnalyzeTableChartConfig })
-
-onMounted(() => {
-  if (chartsConfigStore.privateChartConfig?.table) {
-    Object.assign(tableChartConfig, chartsConfigStore.privateChartConfig.table)
+const tableChartConfig = computed<ChartConfigStore.TableChartConfig>({
+  get() {
+    return chartsConfigStore.privateChartConfig?.table ?? defaultAnalyzeTableChartConfig
+  },
+  set(value: ChartConfigStore.TableChartConfig) {
+    const current = chartsConfigStore.privateChartConfig
+    chartsConfigStore.setPrivateChartConfig({
+      line: current?.line ?? defaultAnalyzeLineChartConfig,
+      table: value,
+      pie: current?.pie ?? defaultAnalyzePieChartConfig,
+      interval: current?.interval ?? defaultAnalyzeIntervalChartConfig
+    })
   }
 })
-
-watch(
-  () => chartsConfigStore.privateChartConfig?.table,
-  (tableConfig) => {
-    if (tableConfig) {
-      Object.assign(tableChartConfig, tableConfig)
-    }
-  },
-  { deep: true }
-)
 
 const dimensionFields = computed(() => dimensionStore.getDimensions)
 const measureFields = computed(() => measureStore.getMeasures)
 
 const tableColumnRows = computed(() =>
-  buildAnalyzeTableColumnsFromFields(dimensionFields.value, measureFields.value, tableChartConfig.columns || [])
+  buildAnalyzeTableColumnsFromFields(dimensionFields.value, measureFields.value, tableChartConfig.value.columns || [])
 )
 
 const tableColumnFieldMap = computed(() => {
@@ -811,8 +813,7 @@ const getTableColumnLabel = (column: AnalyzeTableColumnSetting) => {
 }
 
 const setTableColumns = (columns: AnalyzeTableColumnSetting[]) => {
-  tableChartConfig.columns = columns
-  handleUpdateTableConfig()
+  tableChartConfig.value = { ...tableChartConfig.value, columns }
 }
 
 const createDefaultTableColumns = (): AnalyzeTableColumnSetting[] => [
@@ -835,12 +836,14 @@ const handleUpdateTableColumn = (column: AnalyzeTableColumnSetting, patch: Parti
   setTableColumns(nextColumns)
 }
 
-const handleUpdateTableColumnFixed = (column: AnalyzeTableColumnSetting, fixed: AnalyzeTableColumnSetting['fixed']) => {
-  handleUpdateTableColumn(column, { fixed })
+const handleUpdateTableColumnFixed = (column: AnalyzeTableColumnSetting, fixed: unknown) => {
+  const normalizedFixed = fixed === 'left' || fixed === 'right' ? fixed : null
+  handleUpdateTableColumn(column, { fixed: normalizedFixed })
 }
 
-const handleUpdateTableColumnAlign = (column: AnalyzeTableColumnSetting, align: AnalyzeTableColumnSetting['align']) => {
-  handleUpdateTableColumn(column, { align })
+const handleUpdateTableColumnAlign = (column: AnalyzeTableColumnSetting, align: unknown) => {
+  const normalizedAlign = align === 'left' || align === 'center' || align === 'right' ? align : null
+  handleUpdateTableColumn(column, { align: normalizedAlign })
 }
 
 const handleResetTableColumn = (column: AnalyzeTableColumnSetting) => {
@@ -856,11 +859,11 @@ const handleResetAllTableColumns = () => {
 }
 
 /**
- * @desc 更新表格配置
+ * @desc 更新表格配置（v-model 已通过 computed setter 写入 store，此处保留兼容）
  * @returns {void}
  */
 const handleUpdateTableConfig = (): void => {
-  chartsConfigStore.setTableChartConfig(tableChartConfig)
+  // no-op: v-model write already persists via computed setter
 }
 
 /**
@@ -869,11 +872,13 @@ const handleUpdateTableConfig = (): void => {
  */
 const handleResetTableConfig = <K extends keyof ChartConfigStore.TableChartConfig>(chartConfigKey?: K): void => {
   if (chartConfigKey) {
-    tableChartConfig[chartConfigKey] = defaultAnalyzeTableChartConfig[chartConfigKey]
+    tableChartConfig.value = {
+      ...tableChartConfig.value,
+      [chartConfigKey]: defaultAnalyzeTableChartConfig[chartConfigKey]
+    }
   } else {
-    Object.assign(tableChartConfig, defaultAnalyzeTableChartConfig)
+    tableChartConfig.value = { ...defaultAnalyzeTableChartConfig }
   }
-  handleUpdateTableConfig()
 }
 
 /**

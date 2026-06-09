@@ -10,7 +10,7 @@ declare namespace AnalyzeStore {
   /**
    * @desc 图表key
    */
-  type AnalyzeKey = 'chart'
+  type AnalyzeKey = 'analyze'
 
   /**
    * @desc 图表状态

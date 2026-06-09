@@ -95,17 +95,14 @@
 </template>
 
 <script setup lang="ts">
-import { IconPark } from '@icon-park/vue-next/es/all'
-import { ElMessage } from 'element-plus'
-import { ANALYZE_FILTER_OPERATOR_MAP } from '@/shared/analyzeConfigTypes'
 import {
   prepareAnalyzeFilterFieldRuleForEdit,
   setAnalyzeFilterFieldAggregation
 } from '@/shared/analyzeConfigFieldRules'
-import {
-  getAnalyzeFieldAggregationLabel,
-  getAnalyzeFieldAggregationOptions
-} from '@/shared/analyzeFieldAggregationOptions'
+import { ANALYZE_FILTER_OPERATOR_MAP } from '@/shared/analyzeConfigTypes'
+import { IconPark } from '@icon-park/vue-next/es/all'
+import { ElMessage } from 'element-plus'
+import { getAnalyzeFieldAggregationLabel, getAnalyzeFieldAggregationOptions } from '../analyzeFieldAggregationOptions'
 import { clearAllHandler } from '../clearAll'
 import {
   addFieldToFilters,
@@ -256,7 +253,7 @@ const handlePrepareWherePanel = (item: FilterStore.FilterOption) => {
 
 const handleSelectAggregation = (
   item: FilterStore.FilterOption,
-  aggregationType: FilterStore.AnalyzeFilterAggregationType,
+  aggregationType: FilterStore.FilterAggregationType,
   closePopover?: () => void
 ) => {
   item.filterRule = setAnalyzeFilterFieldAggregation(item.filterRule, aggregationType)

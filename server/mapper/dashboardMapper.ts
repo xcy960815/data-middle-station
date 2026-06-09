@@ -77,6 +77,9 @@ export class DashboardMapping implements DashboardDao.DashboardRecord, IColumnTa
 }
 
 class DashboardConfigMapping implements DashboardDao.DashboardConfigRecord, IColumnTarget {
+  private mappedLayoutConfig: DashboardDao.LayoutConfig = DEFAULT_LAYOUT_CONFIG
+  private mappedWidgetsConfig: DashboardDao.DashboardWidgetConfigItem[] = []
+
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -91,19 +94,21 @@ class DashboardConfigMapping implements DashboardDao.DashboardConfigRecord, ICol
   versionNo!: number
 
   @Column('layout_config')
-  layoutConfig(value: string | DashboardDao.LayoutConfig | null): DashboardDao.LayoutConfig {
-    if (!value) return DEFAULT_LAYOUT_CONFIG
-    if (typeof value === 'string') return JSON.parse(value)
-    return value
+  get layoutConfig(): DashboardDao.LayoutConfig {
+    return this.mappedLayoutConfig
+  }
+
+  set layoutConfig(value: string | DashboardDao.LayoutConfig | null) {
+    this.mappedLayoutConfig = !value ? DEFAULT_LAYOUT_CONFIG : typeof value === 'string' ? JSON.parse(value) : value
   }
 
   @Column('widgets_config')
-  widgetsConfig(
-    value: string | DashboardDao.DashboardWidgetConfigItem[] | null
-  ): DashboardDao.DashboardWidgetConfigItem[] {
-    if (!value) return []
-    if (typeof value === 'string') return JSON.parse(value)
-    return value
+  get widgetsConfig(): DashboardDao.DashboardWidgetConfigItem[] {
+    return this.mappedWidgetsConfig
+  }
+
+  set widgetsConfig(value: string | DashboardDao.DashboardWidgetConfigItem[] | null) {
+    this.mappedWidgetsConfig = !value ? [] : typeof value === 'string' ? JSON.parse(value) : value
   }
 
   @Column('change_note')
@@ -156,6 +161,9 @@ export class DashboardListMapping implements DashboardVo.DashboardListItem, ICol
 }
 
 class DashboardConfigHistoryMapping implements DashboardVo.DashboardConfigHistoryItem, IColumnTarget {
+  private mappedLayoutConfig: DashboardDao.LayoutConfig = DEFAULT_LAYOUT_CONFIG
+  private mappedWidgetsConfig: DashboardDao.DashboardWidgetConfigItem[] = []
+
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
@@ -170,19 +178,21 @@ class DashboardConfigHistoryMapping implements DashboardVo.DashboardConfigHistor
   versionNo!: number
 
   @Column('layout_config')
-  layoutConfig(value: string | DashboardDao.LayoutConfig | null): DashboardDao.LayoutConfig {
-    if (!value) return DEFAULT_LAYOUT_CONFIG
-    if (typeof value === 'string') return JSON.parse(value)
-    return value
+  get layoutConfig(): DashboardDao.LayoutConfig {
+    return this.mappedLayoutConfig
+  }
+
+  set layoutConfig(value: string | DashboardDao.LayoutConfig | null) {
+    this.mappedLayoutConfig = !value ? DEFAULT_LAYOUT_CONFIG : typeof value === 'string' ? JSON.parse(value) : value
   }
 
   @Column('widgets_config')
-  widgetsConfig(
-    value: string | DashboardDao.DashboardWidgetConfigItem[] | null
-  ): DashboardDao.DashboardWidgetConfigItem[] {
-    if (!value) return []
-    if (typeof value === 'string') return JSON.parse(value)
-    return value
+  get widgetsConfig(): DashboardDao.DashboardWidgetConfigItem[] {
+    return this.mappedWidgetsConfig
+  }
+
+  set widgetsConfig(value: string | DashboardDao.DashboardWidgetConfigItem[] | null) {
+    this.mappedWidgetsConfig = !value ? [] : typeof value === 'string' ? JSON.parse(value) : value
   }
 
   @Column('change_note')
@@ -204,13 +214,30 @@ class DashboardConfigHistoryMapping implements DashboardVo.DashboardConfigHistor
   widgetCount!: number
 }
 
+/**
+ * @desc 看板 mapper，负责对看板及看板配置的增删改查
+ */
 export class DashboardMapper extends BaseMapper {
+  /**
+   * @desc 当前 mapper 使用的数据源名称
+   */
   public dataSourceName = DATA_SOURCE_NAME
 
+  /**
+   * @desc 执行 SQL 的便捷封装（保留泛型能力）
+   * @param sql 需要执行的 SQL 语句
+   * @param params 预编译参数数组
+   * @returns 查询或写入操作的执行结果
+   */
   public override async exe<T>(sql: string, params?: Array<any>): Promise<T> {
     return await super.exe<T>(sql, params)
   }
 
+  /**
+   * @desc 创建看板
+   * @param createParams 创建参数
+   * @returns 新创建的看板 ID
+   */
   public async createDashboard(createParams: DashboardDao.CreateDashboardParams): Promise<number> {
     const { keys, values } = convertToSqlProperties(createParams)
     const sql = `insert into ${DASHBOARD_TABLE_NAME} (${keys.join(',')}) values (${keys.map(() => '?').join(',')})`
@@ -218,6 +245,11 @@ export class DashboardMapper extends BaseMapper {
     return result.insertId
   }
 
+  /**
+   * @desc 更新看板基本信息
+   * @param updateParams 更新参数
+   * @returns 是否更新成功
+   */
   public async updateDashboard(updateParams: DashboardDao.UpdateDashboardParams): Promise<boolean> {
     const { keys, values } = convertToSqlProperties(updateParams)
     const setClause = keys.map((key) => `${key} = ?`).join(', ')
@@ -226,6 +258,11 @@ export class DashboardMapper extends BaseMapper {
     return result.affectedRows > 0
   }
 
+  /**
+   * @desc 删除看板（逻辑删除）
+   * @param deleteParams 删除参数
+   * @returns 是否删除成功
+   */
   public async deleteDashboard(deleteParams: DashboardDao.DeleteDashboardParams): Promise<boolean> {
     const sql = `update ${DASHBOARD_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ? and is_deleted = 0`
     const result = await this.exe<ResultSetHeader>(sql, [
@@ -236,6 +273,11 @@ export class DashboardMapper extends BaseMapper {
     return result.affectedRows > 0
   }
 
+  /**
+   * @desc 获取单个看板详情（含权限校验）
+   * @param query 查询参数
+   * @returns 看板记录
+   */
   @Mapping(DashboardMapping)
   public async getDashboard<T extends DashboardDao.DashboardRecord = DashboardDao.DashboardRecord>(
     query: DashboardDao.GetDashboardParams
@@ -249,6 +291,11 @@ export class DashboardMapper extends BaseMapper {
     return result?.[0]
   }
 
+  /**
+   * @desc 获取看板详情（不做权限校验，仅用于内部查询）
+   * @param id 看板 ID
+   * @returns 看板记录
+   */
   @Mapping(DashboardMapping)
   public async getDashboardWithoutAccess<T extends DashboardDao.DashboardRecord = DashboardDao.DashboardRecord>(
     id: number
@@ -261,6 +308,11 @@ export class DashboardMapper extends BaseMapper {
     return result?.[0]
   }
 
+  /**
+   * @desc 获取看板配置详情
+   * @param query 查询参数
+   * @returns 看板配置记录
+   */
   @Mapping(DashboardConfigMapping)
   public async getDashboardConfig<T extends DashboardDao.DashboardConfigRecord = DashboardDao.DashboardConfigRecord>(
     query: DashboardDao.GetDashboardConfigParams
@@ -288,6 +340,11 @@ export class DashboardMapper extends BaseMapper {
     return result?.[0]
   }
 
+  /**
+   * @desc 获取看板配置的下一个版本号
+   * @param dashboardId 看板 ID
+   * @returns 下一个版本号
+   */
   public async getNextVersionNo(dashboardId: number): Promise<number> {
     const sql = `
       select coalesce(max(version_no), 0) + 1 as nextVersionNo
@@ -297,6 +354,11 @@ export class DashboardMapper extends BaseMapper {
     return Number(result?.[0]?.nextVersionNo || 1)
   }
 
+  /**
+   * @desc 创建看板配置版本
+   * @param createParams 创建参数
+   * @returns 新创建的配置版本 ID
+   */
   public async createDashboardConfig(createParams: DashboardDao.CreateDashboardConfigParams): Promise<number> {
     const { keys, values } = convertToSqlProperties({
       ...createParams,
@@ -308,6 +370,11 @@ export class DashboardMapper extends BaseMapper {
     return result.insertId
   }
 
+  /**
+   * @desc 获取看板配置历史列表
+   * @param dashboardId 看板 ID
+   * @returns 看板配置历史列表
+   */
   @Mapping(DashboardConfigHistoryMapping)
   public async getDashboardConfigHistory<
     T extends DashboardVo.DashboardConfigHistoryItem = DashboardVo.DashboardConfigHistoryItem
@@ -322,6 +389,11 @@ export class DashboardMapper extends BaseMapper {
     return await this.exe<Array<T>>(sql, [dashboardId])
   }
 
+  /**
+   * @desc 获取看板数量
+   * @param query 列表查询参数
+   * @returns 看板数量
+   */
   public async countDashboards(query: DashboardDao.GetDashboardListParams): Promise<number> {
     const { whereClause, params } = this.buildDashboardListQuery(query)
     const sql = `
@@ -335,6 +407,11 @@ export class DashboardMapper extends BaseMapper {
     return Number(result?.[0]?.total || 0)
   }
 
+  /**
+   * @desc 获取看板列表（分页）
+   * @param query 列表查询参数
+   * @returns 看板列表
+   */
   @Mapping(DashboardListMapping)
   public async getDashboardList<T extends DashboardVo.DashboardListItem = DashboardVo.DashboardListItem>(
     query: DashboardDao.GetDashboardListParams

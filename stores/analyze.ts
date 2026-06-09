@@ -5,7 +5,7 @@ export const useAnalyzeStore = defineStore<
   BaseStore.State<AnalyzeStore.AnalyzeState>,
   BaseStore.Getters<AnalyzeStore.AnalyzeState, AnalyzeStore.AnalyzeGetters>,
   BaseStore.Actions<AnalyzeStore.AnalyzeState, AnalyzeStore.AnalyzeActions>
->(StoreNames.CHART, {
+>(StoreNames.ANALYZE, {
   state: () => ({
     analyzeName: '',
     analyzeId: null,
@@ -158,8 +158,8 @@ export const useAnalyzeStore = defineStore<
       this.chartUpdateTakesTime = chartUpdateTakesTime
     },
     /**
-     * @desc 设置图表错误信息
-     * @param chartErrorMessage {string}
+     * @desc 设置图表类型
+     * @param chartType {AnalyzeStore.ChartType}
      * @returns {void}
      */
     setChartType(chartType) {

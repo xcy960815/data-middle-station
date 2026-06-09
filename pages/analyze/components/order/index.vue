@@ -73,10 +73,7 @@
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
-import {
-  getAnalyzeFieldAggregationLabel,
-  getAnalyzeFieldAggregationOptions
-} from '@/shared/analyzeFieldAggregationOptions'
+import { getAnalyzeFieldAggregationLabel, getAnalyzeFieldAggregationOptions } from '../analyzeFieldAggregationOptions'
 import { setAnalyzeOrderFieldAggregation, toggleAnalyzeOrderFieldDirection } from '@/shared/analyzeConfigFieldRules'
 import {
   addFieldToOrders,
