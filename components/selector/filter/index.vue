@@ -23,7 +23,7 @@
         <el-popover
           :visible="wherePopoverVisible"
           placement="bottom-start"
-          trigger="manual"
+          :trigger="'manual' as any"
           width="auto"
           :teleported="true"
         >

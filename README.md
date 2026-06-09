@@ -76,6 +76,7 @@ PORT=12581
 # 应用标题
 APP_NAME=数据分析平台
 API_BASE=/api
+ENABLE_DEMO_PAGES=false
 
 # 数据库配置
 SERVICE_DB_HOST=127.0.0.1
@@ -102,6 +103,9 @@ LOG_TIME_FORMAT=YYYY-MM-DD HH:mm:ss
 # 认证和邮件
 JWT_SECRET_KEY=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=24h
+CORS_ALLOWED_ORIGINS=
+ENABLE_SOCKET_DEMO=false
+SOCKET_ALLOWED_ORIGINS=
 SMTP_HOST=smtp.example.com
 SMTP_PORT=465
 SMTP_SECURE=true
@@ -111,6 +115,7 @@ SMTP_PASS=your_smtp_password
 SMTP_FROM=your_email@example.com
 
 # AI 错误分析
+ANALYZE_ERROR_AI_ENABLED=false
 DEEPSEEK_API_KEY=
 DEEPSEEK_API_URL=https://api.deepseek.com/chat/completions
 DEEPSEEK_MODEL=deepseek-chat
@@ -156,19 +161,6 @@ docker compose --env-file .env.compose -p dms-service -f docker-compose.yml up -
 
 Docker Compose 版本只对外暴露 Nuxt Web 端口，Redis 和两个 MySQL 服务仅在 `dms-network` 内部可访问。
 
-预览生产构建：
-
-```bash
-# 使用 pnpm
-pnpm run preview
-
-# 或使用 npm
-npm run preview
-
-# 或使用 yarn
-yarn preview
-```
-
 ## 代码规范
 
 项目使用以下工具确保代码质量：
@@ -204,19 +196,13 @@ data-middle-station/
 - `docs/project-documentation.md` - 项目技术文档
 - `docs/analyze-config-field-consolidation-review.md` - 分析配置字段收拢复盘与 Review 清单
 
-## 版本管理
+## 版本与变更记录
 
-项目使用语义化版本控制，可以通过以下命令更新版本：
+项目当前未配置 `version:*` 脚本。需要生成变更记录时，以 `package.json` 中的 changelog scripts 为准：
 
 ```bash
-# 更新补丁版本
-pnpm run version:patch
-
-# 更新次要版本
-pnpm run version:minor
-
-# 更新主要版本
-pnpm run version:major
+pnpm changelog
+pnpm changelog:version
 ```
 
 ## 贡献指南
@@ -233,4 +219,4 @@ MIT License. 详见仓库根目录 `LICENSE` 文件。
 
 ## 联系方式
 
-如有问题或建议，请通过 GitHub Issues 提交，或发送邮件至：xuchongyu668@gmail.com。
+如有问题或建议，请通过 GitHub Issues 提交。

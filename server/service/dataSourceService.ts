@@ -57,6 +57,7 @@ export class DataSourceService extends BaseService {
   public async createDataSource(
     createRequest: DataSourceDto.CreateDataSourceRequest
   ): Promise<DataSourceVo.DataSourceDetailResponse> {
+    this.assertCurrentUserAdmin('仅管理员可创建数据源')
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
     const dataSourceId = await this.dataSourceMapper.createDataSource({
       sourceName: createRequest.sourceName,
@@ -78,6 +79,7 @@ export class DataSourceService extends BaseService {
   public async updateDataSource(
     updateRequest: DataSourceDto.UpdateDataSourceRequest
   ): Promise<DataSourceVo.DataSourceDetailResponse> {
+    this.assertCurrentUserAdmin('仅管理员可更新数据源')
     await this.getDataSource({ id: updateRequest.id })
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     const updateResult = await this.dataSourceMapper.updateDataSource({
@@ -92,6 +94,7 @@ export class DataSourceService extends BaseService {
   }
 
   public async deleteDataSource(deleteRequest: DataSourceDto.DeleteDataSourceRequest): Promise<boolean> {
+    this.assertCurrentUserAdmin('仅管理员可删除数据源')
     await this.getDataSource({ id: deleteRequest.id })
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     return await this.dataSourceMapper.deleteDataSource({
@@ -104,6 +107,7 @@ export class DataSourceService extends BaseService {
   public async syncDataSourceSchema(
     syncRequest: DataSourceDto.SyncDataSourceSchemaRequest
   ): Promise<DataSourceVo.SyncDataSourceSchemaResponse> {
+    this.assertCurrentUserAdmin('仅管理员可同步数据源表结构')
     const dataSource = await this.getDataSource({ id: syncRequest.id })
     if (dataSource.status !== 'enabled') {
       throw new Error('数据源已禁用')

@@ -7,10 +7,17 @@ import chalk from 'chalk'
  * @returns {void}
  */
 export default defineNitroPlugin((nitroApp) => {
+  if (String(useRuntimeConfig().enableSocketDemo ?? 'false') !== 'true') {
+    return
+  }
+
   const io = new Server(3001, {
     serveClient: false,
     cors: {
-      origin: '*'
+      origin: String(useRuntimeConfig().socketAllowedOrigins || '')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
     }
   })
   // 监听客户端的消息

@@ -1,6 +1,10 @@
 import dayjs from 'dayjs'
 
 export default defineEventHandler((event) => {
+  if (String(useRuntimeConfig().enableDemoPages ?? 'false') !== 'true') {
+    throw createError({ statusCode: 404, statusMessage: 'Page Not Found' })
+  }
+
   setHeader(event, 'cache-control', 'no-cache')
   setHeader(event, 'connection', 'keep-alive')
   setHeader(event, 'content-type', 'text/event-stream')

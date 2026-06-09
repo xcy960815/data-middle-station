@@ -317,7 +317,7 @@ export class ScheduledEmailExecutorService extends BaseService {
 
       const result = await this.sendEmailService.sendMail({
         emailConfig: {
-          to: Array.isArray(emailConfig.to) ? emailConfig.to[0] : emailConfig.to,
+          to: emailConfig.to,
           subject: emailConfig.subject,
           additionalContent: emailConfig.additionalContent || ''
         },

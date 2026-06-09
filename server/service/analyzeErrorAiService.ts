@@ -21,7 +21,15 @@ const DEFAULT_DEEP_SEEK_API_URL = 'https://api.deepseek.com/chat/completions'
 const DEFAULT_DEEP_SEEK_MODEL = 'deepseek-chat'
 
 const ANALYZE_ERROR_SYSTEM_PROMPT =
-  '你是一个资深的数据分析师和SQL专家。用户执行SQL查询失败了，请分析报错原因，并给出具体的修复建议。请直接给出结论，保持简洁。\n\n重要提示：\n如果涉及到具体的字段，请根据查询参数中的 measures, dimensions, orders, filters 等信息，找到该字段对应的中文名称（label或name），并在建议中使用中文名称。例如，不要说 "COUNT(DISTINCT month)"，而要说 "COUNT(DISTINCT 月份(英文缩写))"。'
+  '你是一个资深的数据分析师和SQL专家。用户执行数据分析查询失败了，请根据报错信息和脱敏后的查询上下文分析原因，并给出具体的修复建议。请直接给出结论，保持简洁。'
+
+type SafeAnalyzeQueryField = {
+  displayName: string
+  columnType?: string
+  aggregation?: string
+  operator?: string
+  hasOperand?: boolean
+}
 
 /**
  * @desc 分析查询错误的 AI 流式服务。
@@ -41,7 +49,7 @@ export class AnalyzeErrorAiService {
         try {
           const aiResponse = await this.requestDeepSeekAnalyzeErrorStream(request)
           if (!aiResponse) {
-            send({ type: 'ai_chunk', content: 'AI 分析服务未配置，请设置 DEEPSEEK_API_KEY' })
+            send({ type: 'ai_chunk', content: 'AI 分析服务未启用或未配置' })
             return
           }
           if (!aiResponse.ok || !aiResponse.body) {
@@ -63,9 +71,11 @@ export class AnalyzeErrorAiService {
   private async requestDeepSeekAnalyzeErrorStream(request: AnalyzeErrorAiRequest): Promise<Response | null> {
     const runtimeConfig = useRuntimeConfig()
     const apiKey = runtimeConfig.deepSeekApiKey
-    if (!apiKey) {
+    const isAnalyzeErrorAiEnabled = String(runtimeConfig.analyzeErrorAiEnabled ?? 'false') === 'true'
+    if (!isAnalyzeErrorAiEnabled || !apiKey) {
       return null
     }
+    const safeQueryParams = this.sanitizeQueryParams(request.queryParams)
 
     return await fetch(runtimeConfig.deepSeekApiUrl || DEFAULT_DEEP_SEEK_API_URL, {
       method: 'POST',
@@ -82,11 +92,61 @@ export class AnalyzeErrorAiService {
           },
           {
             role: 'user',
-            content: `报错信息：${request.errorMessage || ''}\n执行SQL：${request.sql || ''}\n查询参数：${JSON.stringify(request.queryParams ?? {})}`
+            content: `报错信息：${request.errorMessage || ''}\n脱敏查询上下文：${JSON.stringify(safeQueryParams)}`
           }
         ],
         stream: true
       })
+    })
+  }
+
+  private sanitizeQueryParams(queryParams: unknown): Record<string, unknown> {
+    if (!queryParams || typeof queryParams !== 'object') {
+      return {}
+    }
+    type SanitizableQuery = {
+      analyzeId?: number
+      dimensions?: Array<Record<string, unknown>>
+      measures?: Array<Record<string, unknown>>
+      filters?: Array<Record<string, unknown>>
+      orders?: Array<Record<string, unknown>>
+    }
+    const query = queryParams as SanitizableQuery
+    return {
+      analyzeId: query.analyzeId,
+      dimensions: this.sanitizeFields(query.dimensions),
+      measures: this.sanitizeFields(query.measures),
+      filters: this.sanitizeFields(query.filters, { includeOperator: true }),
+      orders: this.sanitizeFields(query.orders)
+    }
+  }
+
+  private sanitizeFields(
+    fields: Array<Record<string, unknown>> | undefined,
+    options: { includeOperator?: boolean } = {}
+  ): SafeAnalyzeQueryField[] {
+    if (!Array.isArray(fields)) {
+      return []
+    }
+    const getRule = (field: Record<string, unknown>, key: string): Record<string, unknown> | undefined => {
+      const value = field[key]
+      return value != null && typeof value === 'object' && !Array.isArray(value)
+        ? (value as Record<string, unknown>)
+        : undefined
+    }
+    return fields.map((field) => {
+      const filterRule = getRule(field, 'filterRule')
+      const measureRule = getRule(field, 'measureRule')
+      const orderRule = getRule(field, 'orderRule')
+      const displayName = String(field.displayName || field.columnComment || field.alias || '').trim() || '未命名字段'
+
+      return {
+        displayName,
+        columnType: typeof field.columnType === 'string' ? field.columnType : undefined,
+        aggregation: String(filterRule?.aggregation || measureRule?.aggregation || orderRule?.aggregation || ''),
+        operator: options.includeOperator && typeof filterRule?.operator === 'string' ? filterRule.operator : undefined,
+        hasOperand: options.includeOperator ? Boolean(filterRule?.operand) : undefined
+      }
     })
   }
 

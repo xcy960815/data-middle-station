@@ -29,6 +29,10 @@ declare namespace AnalyzeDataDto {
    */
   type AnalyzeDataQuery = {
     /**
+     * @desc 分析 ID。已有分析查询需要携带，用于服务端做资源权限校验。
+     */
+    analyzeId?: number
+    /**
      * @desc 过滤配置
      */
     filters: FilterOption[]

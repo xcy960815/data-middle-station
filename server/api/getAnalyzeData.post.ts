@@ -4,8 +4,8 @@ const chartDataService = new ChartDataService()
 
 /**
  * @desc 查询图表数据
- * @param {QueryChartDataParams} params
- * @returns {Promise<ResponseModule.Response<AnalyzeDataVo.AnalyzeData[]>>}
+ * @param event Nuxt 请求事件，请求体为 AnalyzeDataDto.AnalyzeDataQuery
+ * @returns {Promise<ApiResponseI<AnalyzeDataVo.AnalyzeData[]>>}
  */
 export default defineEventHandler<Promise<ApiResponseI<AnalyzeDataVo.AnalyzeData[]>>>(async (event) => {
   let analyzeDataQuery: AnalyzeDataDto.AnalyzeDataQuery | null = null
@@ -20,6 +20,6 @@ export default defineEventHandler<Promise<ApiResponseI<AnalyzeDataVo.AnalyzeData
     return ApiResponse.success(data)
   } catch (error: any) {
     console.error(error)
-    return ApiResponse.error(error.message, error.sql, analyzeDataQuery ?? undefined)
+    return ApiResponse.error(error.message)
   }
 })

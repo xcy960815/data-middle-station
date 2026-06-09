@@ -225,9 +225,9 @@ const dialogVisible = computed({
  * @desc 邮件表单数据
  */
 const emailFormData = reactive<EmailFormData>({
-  to: 'xuchongyu668@gmail.com',
+  to: '',
   subject: '',
-  additionalContent: '额外说明额外说明额外说明',
+  additionalContent: '',
   sendMode: 'immediate',
   taskName: '',
   scheduleTime: null,
@@ -241,6 +241,17 @@ const emailFormRef = ref<FormInstance | null>(null)
 
 // 发送状态
 const isSending = ref(false)
+
+const validateEmailRecipients = (rawInput: string): { valid: boolean; invalidEmails: string[] } => {
+  // 邮箱正则与后端 sendEmailService.ts 的 EMAIL_REGEXP 保持同步
+  const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emails = rawInput
+    .split(/[,;]/)
+    .map((email) => email.trim())
+    .filter(Boolean)
+  const invalidEmails = emails.filter((email) => !emailRegExp.test(email))
+  return { valid: emails.length > 0 && invalidEmails.length === 0, invalidEmails }
+}
 
 // 下次执行时间预览
 const nextExecutionTime = computed(() => {
@@ -307,16 +318,17 @@ const emailFormRules: FormRules<EmailFormData> = {
           callback(new Error('请输入收件人邮箱'))
           return
         }
-        // const emails = value
-        //   .split(',')
-        //   .map((email) => email.trim())
-        //   .filter((email) => email)
-        // const emailValidation = validateEmails(emails)
-        // if (!emailValidation.valid) {
-        //   callback(new Error(`邮件地址格式错误: ${emailValidation.invalidEmails.join(', ')}`))
-        // } else {
-        //   callback()
-        // }
+        const validation = validateEmailRecipients(value)
+        if (!validation.valid) {
+          callback(
+            new Error(
+              validation.invalidEmails.length > 0
+                ? `邮件地址格式错误: ${validation.invalidEmails.join(', ')}`
+                : '请输入收件人邮箱'
+            )
+          )
+          return
+        }
         callback()
       },
       trigger: 'blur'
@@ -484,6 +496,8 @@ watch(
   (newVisible) => {
     if (newVisible) {
       emailFormData.subject = generateDefaultSubject()
+      emailFormData.to = ''
+      emailFormData.additionalContent = ''
       // 重置发送设置
       emailFormData.sendMode = 'immediate'
       emailFormData.scheduleTime = null
@@ -660,7 +674,7 @@ const resetEmailForm = () => {
   if (emailFormRef.value) {
     emailFormRef.value.resetFields()
   }
-  emailFormData.to = 'xuchongyu668@gmail.com'
+  emailFormData.to = ''
   emailFormData.subject = ''
   emailFormData.additionalContent = ''
   emailFormData.sendMode = 'immediate'

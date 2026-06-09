@@ -19,6 +19,8 @@ export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginResponse>>>(
 
     setCookie(event, JwtUtils.TOKEN_NAME, result.token, {
       httpOnly: true,
+      sameSite: 'lax',
+      secure: isSecureCookieRequest(event),
       path: '/',
       maxAge: 60 * 60 * 24 * 7
     })

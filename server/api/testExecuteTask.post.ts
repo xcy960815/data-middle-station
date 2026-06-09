@@ -9,6 +9,7 @@ const scheduledEmailService = getScheduledEmailService()
  */
 export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
   try {
+    scheduledEmailService.assertCanManageScheduledEmailTasks()
     const { taskId } = await readBody<{ taskId: number }>(event)
 
     if (!taskId || typeof taskId !== 'number') {

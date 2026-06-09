@@ -1,5 +1,6 @@
 import { SUPPORTED_SERVER_RENDER_CHART_TYPES } from '@/server/features/email/service/chartSnapshotService'
 import { getScheduledEmailService } from '@/server/features/email/service/scheduledEmailService'
+import { emailRecipientsSchema } from '@/server/features/email/service/sendEmailService'
 import Joi from 'joi'
 
 const scheduledEmailService = getScheduledEmailService()
@@ -63,10 +64,7 @@ const createScheduledEmailSchema = Joi.object<ScheduledEmailDto.CreateScheduledE
     otherwise: Joi.optional()
   }),
   emailConfig: Joi.object<ScheduledEmailDto.EmailConfig>({
-    to: Joi.string().email().required().messages({
-      'string.email': '收件人邮箱格式不正确',
-      'any.required': '收件人不能为空'
-    }),
+    to: emailRecipientsSchema,
     subject: Joi.string().min(1).max(200).required().messages({
       'string.min': '邮件主题不能为空',
       'string.max': '邮件主题不能超过200个字符',

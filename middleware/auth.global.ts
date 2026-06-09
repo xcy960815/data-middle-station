@@ -4,9 +4,22 @@
  */
 export default defineNuxtRouteMiddleware((to) => {
   const publicRoutes = new Set(['/welcome'])
+  const demoRoutes = new Set([
+    '/table-demo',
+    '/indexdb',
+    '/particle-system',
+    '/monaco-editor',
+    '/lazy-load',
+    '/web-worker',
+    '/eventsource'
+  ])
 
   if (publicRoutes.has(to.path)) {
     return
+  }
+
+  if (demoRoutes.has(to.path) && String(useRuntimeConfig().public.enableDemoPages ?? 'false') !== 'true') {
+    return abortNavigation(createError({ statusCode: 404, statusMessage: 'Page Not Found' }))
   }
 
   if (!process.server) {

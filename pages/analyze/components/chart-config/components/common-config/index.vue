@@ -43,9 +43,9 @@ const chartsConfigStore = useChartConfigStore()
 /**
  * @desc 图表公共配置
  */
-const commonChartConfig = reactive<ChartConfigStore.CommonChartConfig>({
+const commonChartConfig = reactive({
   ...chartsConfigStore.commonChartConfig
-})
+} as ChartConfigStore.CommonChartConfig)
 
 /**
  * @desc 更新图表公共配置

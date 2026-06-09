@@ -215,6 +215,10 @@ export default defineNuxtConfig({
     // JWT配置
     jwtSecretKey: process.env.JWT_SECRET_KEY,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+    corsAllowedOrigins: process.env.CORS_ALLOWED_ORIGINS,
+    enableDemoPages: process.env.ENABLE_DEMO_PAGES,
+    enableSocketDemo: process.env.ENABLE_SOCKET_DEMO,
+    socketAllowedOrigins: process.env.SOCKET_ALLOWED_ORIGINS,
 
     // 邮件SMTP配置
     smtpHost: process.env.SMTP_HOST,
@@ -226,6 +230,7 @@ export default defineNuxtConfig({
     smtpFrom: process.env.SMTP_FROM,
 
     // AI 错误分析
+    analyzeErrorAiEnabled: process.env.ANALYZE_ERROR_AI_ENABLED,
     deepSeekApiKey: process.env.DEEPSEEK_API_KEY,
     deepSeekApiUrl: process.env.DEEPSEEK_API_URL,
     deepSeekModel: process.env.DEEPSEEK_MODEL,
@@ -233,7 +238,8 @@ export default defineNuxtConfig({
     // 公共键（在客户端和服务器端都可用）
     public: {
       apiBase: process.env.API_BASE,
-      appName: process.env.APP_NAME
+      appName: process.env.APP_NAME,
+      enableDemoPages: process.env.ENABLE_DEMO_PAGES
     }
   }
 })

@@ -5,6 +5,17 @@
 
 export default defineEventHandler((event) => {
   const requestOrigin = getHeader(event, 'origin') || ''
+  const requestUrl = getRequestURL(event)
+  const forwardedHost = getHeader(event, 'x-forwarded-host')
+  const forwardedProto = getHeader(event, 'x-forwarded-proto')
+  const requestHost = forwardedHost || getHeader(event, 'host') || requestUrl.host
+  const requestProto = forwardedProto || requestUrl.protocol.replace(':', '')
+  const sameOrigin = requestHost ? `${requestProto}://${requestHost}` : requestUrl.origin
+  const allowedOrigins = String(useRuntimeConfig().corsAllowedOrigins || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+  const isAllowedOrigin = requestOrigin && (requestOrigin === sameOrigin || allowedOrigins.includes(requestOrigin))
 
   const corsHeaders: Record<string, string> = {
     // 允许的请求方法
@@ -14,23 +25,24 @@ export default defineEventHandler((event) => {
     // 允许前端访问的响应头（这里放宽为与 Allow-Headers 一致）
     'Access-Control-Expose-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
     // 预检请求结果缓存时间（秒）
-    'Access-Control-Max-Age': '86400',
-    // 允许携带 Cookie 等凭证
-    'Access-Control-Allow-Credentials': 'true'
+    'Access-Control-Max-Age': '86400'
   }
 
-  if (requestOrigin) {
+  if (isAllowedOrigin) {
     // 按规范，携带凭证时不能使用通配符，需要回写具体 Origin
     corsHeaders['Access-Control-Allow-Origin'] = requestOrigin
+    // 允许携带 Cookie 等凭证
+    corsHeaders['Access-Control-Allow-Credentials'] = 'true'
     corsHeaders['Vary'] = 'Origin'
-  } else {
-    // 非浏览器请求或没有 Origin 时，退回为全量允许
-    corsHeaders['Access-Control-Allow-Origin'] = '*'
   }
 
   setResponseHeaders(event, corsHeaders)
 
   if (event.method === 'OPTIONS') {
+    if (requestOrigin && !isAllowedOrigin) {
+      setResponseStatus(event, 403, 'Forbidden')
+      return 'Forbidden'
+    }
     setResponseStatus(event, 204, 'No Content')
     return 'OK'
   }

@@ -7,7 +7,7 @@
 ### 版本信息
 
 - **项目名称**: data-middle-station
-- **版本**: 0.0.1
+- **版本**: 0.0.10
 - **描述**: 使用 Nuxt3 + Element-Plus + Pinia + MySQL + PM2 搭建的数据中台
 
 ## 技术架构
@@ -545,12 +545,7 @@ docker buildx build --platform linux/amd64 -t xcy960815/data-middle-station:1.0.
    mysql -u root -p data_middle_station < sql/data_middle_station.sql
    ```
 
-   如果从旧库升级分析配置字段命名，先执行迁移脚本：
-
-   ```bash
-   mysql -u root -p data_middle_station < sql/20260603_rename_analyze_config_dimensions_to_measures.sql
-   mysql -u root -p data_middle_station < sql/20260603_replace_dimension_path_values_to_measure.sql
-   ```
+   当前仓库未保留单独的历史迁移脚本；初始化以 `sql/data_middle_station.sql` 为准。
 
 5. **启动开发服务器**
 
@@ -970,7 +965,9 @@ A:
 
 ## 更新日志
 
-### v0.0.1 (当前版本)
+### v0.0.10 (当前版本)
+
+> 版本号从 0.0.1 跳至 0.0.10，中间版本为密集迭代期，未逐版发布 changelog。如需追溯变更，以 git log 为准。
 
 - 🎉 初始版本发布
 - ✨ 支持多种图表类型（表格、柱状图、折线图、饼图）

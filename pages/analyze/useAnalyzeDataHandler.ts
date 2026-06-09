@@ -51,6 +51,7 @@ export const useAnalyzeDataHandler = () => {
         : dimensionStore.getDimensions
 
     return {
+      analyzeId: analyzeStore.getAnalyzeId || undefined,
       dataSource: columnStore.getDataSource,
       // 过滤掉未完成的聚合条件
       filters: [...baseFilters, ...(isDrillQueryEnabled.value ? drillFilters.value : [])],
@@ -66,14 +67,12 @@ export const useAnalyzeDataHandler = () => {
   /**
    * 通过 SSE 流式接口请求 AI 对查询错误的分析，逐步更新分析文本。
    * @param {object} params 错误上下文。
-   * @param {string} params.sql 触发错误的 SQL 语句。
    * @param {string} params.errorMessage 后端返回的错误信息。
    * @param {AbortSignal} params.signal 请求中断信号。
    * @param {number} params.requestId 当前请求标识，用于判断是否已被新请求取代。
    * @returns {Promise<void>}
    */
   const streamAnalyzeErrorAnalysis = async (params: {
-    sql: string
     errorMessage: string
     signal: AbortSignal
     requestId: number
@@ -87,7 +86,6 @@ export const useAnalyzeDataHandler = () => {
         headers: { 'Content-Type': 'application/json' },
         signal: params.signal,
         body: JSON.stringify({
-          sql: params.sql,
           errorMessage: params.errorMessage,
           queryParams: queryAnalyzeDataParams.value
         })
@@ -211,14 +209,11 @@ export const useAnalyzeDataHandler = () => {
       analyzeStore.setAnalyzeData([])
       analyzeStore.setChartErrorMessage(`查询失败: ${result.message}`)
 
-      if (result.sql) {
-        await streamAnalyzeErrorAnalysis({
-          sql: result.sql,
-          errorMessage: result.message,
-          signal: requestController.signal,
-          requestId
-        })
-      }
+      await streamAnalyzeErrorAnalysis({
+        errorMessage: result.message,
+        signal: requestController.signal,
+        requestId
+      })
     }
 
     updateQueryTimingInfo(startTime)

@@ -112,11 +112,14 @@ export class ChartSnapshotService {
     }
 
     const analyzeData = await this.chartDataService.getAnalyzeData({
+      // analyzeId 来自上方 analyzeVo 查询，此处一定非空，携带后走资源权限校验而非 admin-only 路径
+      analyzeId,
       filters: drillQueryFields.filters,
       orders: chartConfig.orders || [],
       dimensions: drillQueryFields.dimensions,
       measures: chartConfig.measures,
-      dataSource: chartConfig.dataSource,
+      // dataSource 已在上方 validateAnalyzeChartConfig 中校验过非空
+      dataSource: chartConfig.dataSource!,
       commonChartConfig: chartConfig.commonChartConfig
     })
 

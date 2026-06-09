@@ -19,6 +19,7 @@ const SEND_EMAIL_VALIDATE_OPTIONS: Joi.ValidationOptions = {
   stripUnknown: true,
   convert: true
 }
+const EMAIL_REGEXP = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const sendEmailChartTypeSchema = Joi.string()
   .valid(...SUPPORTED_SERVER_RENDER_CHART_TYPES)
@@ -27,12 +28,38 @@ const sendEmailChartTypeSchema = Joi.string()
     'any.only': `图表类型必须是 ${SUPPORTED_SERVER_RENDER_CHART_TYPES.join('、')} 之一`
   })
 
+export const parseEmailRecipients = (recipients?: string | string[]): string[] => {
+  if (!recipients) {
+    return []
+  }
+  const recipientList = Array.isArray(recipients) ? recipients : recipients.split(/[,;]/)
+  return recipientList.map((recipient) => recipient.trim()).filter(Boolean)
+}
+
+export const emailRecipientsSchema = Joi.alternatives()
+  .try(Joi.string(), Joi.array().items(Joi.string()))
+  .custom((value, helpers) => {
+    const recipients = parseEmailRecipients(value)
+    if (recipients.length === 0) {
+      return helpers.error('emailRecipients.empty')
+    }
+    const invalidEmails = recipients.filter((recipient) => !EMAIL_REGEXP.test(recipient))
+    if (invalidEmails.length > 0) {
+      return helpers.error('emailRecipients.invalid', { invalidEmails: invalidEmails.join(', ') })
+    }
+    return value
+  }, 'validate email recipients')
+  .required()
+  .messages({
+    'alternatives.match': '收件人邮箱格式不正确',
+    'any.required': '收件人邮箱不能为空',
+    'emailRecipients.empty': '收件人邮箱不能为空',
+    'emailRecipients.invalid': '邮件地址格式错误: {#invalidEmails}'
+  })
+
 export const manualSendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
-    to: Joi.string().email().required().messages({
-      'string.email': '收件人邮箱格式不正确',
-      'any.required': '收件人邮箱不能为空'
-    }),
+    to: emailRecipientsSchema,
     subject: Joi.string().min(1).max(200).required().messages({
       'string.min': '邮件主题不能为空',
       'string.max': '邮件主题不能超过200个字符',
@@ -229,9 +256,13 @@ export class SendEmailService {
     attachments: Attachment[],
     analyzeOptions: SendEmailDto.AnalyzePayload
   ): SendMailPayload {
+    const recipients = parseEmailRecipients(sendEmailRequest.emailConfig.to)
+    if (recipients.length === 0) {
+      throw new Error('收件人邮箱不能为空')
+    }
     return {
       from: this.getSenderAddress(),
-      to: sendEmailRequest.emailConfig.to,
+      to: recipients,
       subject: sendEmailRequest.emailConfig.subject,
       html: this.buildEmailContent(sendEmailRequest.emailConfig, analyzeOptions),
       attachments
@@ -322,18 +353,21 @@ export class SendEmailService {
     emailConfig: SendEmailDto.EmailConfig,
     analyzeOptions: SendEmailDto.AnalyzePayload
   ): string {
+    const escapedSubject = this.escapeHtml(emailConfig.subject)
+    const escapedAnalyzeName = this.escapeHtml(analyzeOptions.analyzeName || '')
     const additionalContent = emailConfig.additionalContent
       ? `<div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
-           <p style="margin: 0; color: #495057;">${emailConfig.additionalContent.replace(/\n/g, '<br>')}</p>
+           <p style="margin: 0; color: #495057;">${this.escapeHtml(emailConfig.additionalContent).replace(/\n/g, '<br>')}</p>
          </div>`
       : ''
+    // 安全顺序：先 escapeHtml 再替换 \n。escapeHtml 不会产出 \n，所以替换阶段不会引入 XSS。
 
     return `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${emailConfig.subject}</title>
+        <title>${escapedSubject}</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -355,7 +389,7 @@ export class SendEmailService {
 
             <div class="chart-info">
               <h3 style="margin-top: 0; color: #495057;">📈 图表信息</h3>
-              <p style="margin: 5px 0;"><strong>图表标题:</strong> ${analyzeOptions.analyzeName}</p>
+              <p style="margin: 5px 0;"><strong>图表标题:</strong> ${escapedAnalyzeName}</p>
               <p style="margin: 5px 0;"><strong>生成时间:</strong> ${dayjs().locale('zh-cn').format('YYYY年MM月DD日 HH:mm:ss')}</p>
             </div>
 
@@ -370,6 +404,19 @@ export class SendEmailService {
       </body>
       </html>
     `
+  }
+
+  private escapeHtml(value: string): string {
+    return value.replace(/[&<>"']/g, (character) => {
+      const htmlEntities: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }
+      return htmlEntities[character] || character
+    })
   }
 
   /**

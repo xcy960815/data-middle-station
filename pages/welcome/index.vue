@@ -7,11 +7,16 @@
         <div class="login-panel__scanline"></div>
         <label class="login-field">
           <span>USER</span>
-          <input v-model.trim="loginForm.userName" autocomplete="username" placeholder="admin" />
+          <input v-model.trim="loginForm.userName" autocomplete="username" placeholder="请输入用户名" />
         </label>
         <label class="login-field">
           <span>PASS</span>
-          <input v-model="loginForm.password" autocomplete="current-password" placeholder="123456" type="password" />
+          <input
+            v-model="loginForm.password"
+            autocomplete="current-password"
+            placeholder="请输入密码"
+            type="password"
+          />
         </label>
         <p class="login-error" :class="{ 'login-error--visible': loginError }">{{ loginError || 'placeholder' }}</p>
         <button class="login-button" type="submit" :disabled="loginLoading">

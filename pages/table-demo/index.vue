@@ -171,7 +171,7 @@
         :summary-row-height="tableConfig.summaryRowHeight"
         :chart-height="tableConfig.chartHeight"
         :chart-width="tableConfig.chartWidth"
-        :x-axis-fields="xAxisFields"
+        :x-axis-fields="xAxisFields as CanvasTable.ColumnOption[]"
         :highlight-cell-background="tableConfig.highlightCellBackground"
         :header-text-color="tableConfig.headerTextColor"
         :body-text-color="tableConfig.bodyTextColor"
@@ -194,7 +194,7 @@
         :buffer-rows="tableConfig.bufferRows"
         :min-auto-col-width="tableConfig.minAutoColWidth"
         :sort-active-color="tableConfig.sortActiveColor"
-        :y-axis-fields="yAxisFields"
+        :y-axis-fields="yAxisFields as CanvasTable.ColumnOption[]"
         :data="data"
         :highlight-row-background="tableConfig.highlightRowBackground"
         :highlight-col-background="tableConfig.highlightColBackground"
@@ -306,7 +306,7 @@ const handleRunScrollStress = async () => {
   }
 }
 
-const createDimensionColumns = (): DimensionStore.DimensionOption[] => [
+const createDimensionColumns = (): DemoTableColumn[] => [
   {
     columnName: 'department',
     columnType: 'string',
@@ -322,7 +322,7 @@ const createDimensionColumns = (): DimensionStore.DimensionOption[] => [
   }
 ]
 
-const dimensionColumns = ref<DimensionStore.DimensionOption[]>(createDimensionColumns())
+const dimensionColumns = ref<DemoTableColumn[]>(createDimensionColumns())
 
 const xAxisFields = computed(() => (enableGroupColumns.value ? dimensionColumns.value : []))
 
@@ -349,9 +349,9 @@ const handleColumnOrderChange = ({
   xAxisFields: nextXAxisFields,
   yAxisFields: nextYAxisFields
 }: ColumnOrderChangePayload) => {
-  dimensionColumns.value = nextXAxisFields.map((column) => ({ ...column }))
+  dimensionColumns.value = nextXAxisFields.map((column) => ({ ...column })) as DemoTableColumn[]
   enableGroupColumns.value = nextXAxisFields.length > 0
-  yAxisFields.value = nextYAxisFields.map((column) => ({ ...column }))
+  yAxisFields.value = nextYAxisFields.map((column) => ({ ...column })) as DemoTableColumn[]
 }
 
 // 合并单元格配置
@@ -444,9 +444,33 @@ const spanMethod = ({
   }
 }
 /**
+ * Demo 页面松散列类型，混合了语义字段与表格 UI 属性。
+ * 仅用于演示，正式分析页中 UI 属性属于 privateChartConfig.table.columns。
+ */
+type DemoTableColumn = {
+  columnName: string
+  columnType: string
+  columnComment: string
+  displayName: string
+  fixed?: string | null
+  width?: number | null
+  align?: string | null
+  filterable?: boolean
+  editable?: boolean
+  editType?: string
+  editOptions?: unknown
+  resizable?: boolean
+  draggable?: boolean
+  sortable?: boolean
+  showOverflowTooltip?: boolean
+  measureRule?: MeasureStore.MeasureOption['measureRule']
+  dimensionRule?: DimensionStore.DimensionOption['dimensionRule']
+}
+
+/**
  * 维度列
  */
-const yAxisFields = ref<MeasureStore.MeasureOption[]>([
+const yAxisFields = ref<DemoTableColumn[]>([
   {
     columnName: '__index__',
     columnType: 'number',

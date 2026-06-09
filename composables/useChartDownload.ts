@@ -134,7 +134,7 @@ export const useChartDownload = () => {
    */
   const handleDownload = () => {
     // 获取所有的维度和分组
-    const fields = measureStore.getMeasures.concat(dimensionStore.getDimensions)
+    const fields = [...measureStore.getMeasures, ...dimensionStore.getDimensions]
     if (fields.length === 0) {
       ElMessage.warning('请先选择维度或分组')
       return

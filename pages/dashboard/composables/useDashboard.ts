@@ -286,7 +286,8 @@ export function useDashboard() {
   }
 
   const buildWidgetAnalyzeDataParams = (
-    chartConfig: AnalyzeConfigVo.ChartConfigResponse
+    chartConfig: AnalyzeConfigVo.ChartConfigResponse,
+    analyzeId?: number | null
   ): AnalyzeDataDto.AnalyzeDataQuery => {
     const dataSource = chartConfig.dataSource
     const drillQueryFields = resolveWidgetAnalyzeQueryFields(chartConfig)
@@ -300,6 +301,7 @@ export function useDashboard() {
     if (!dataSource) throw new Error('分析数据源不存在')
 
     return {
+      analyzeId: analyzeId || undefined,
       dataSource,
       filters: drillQueryFields.filters,
       orders: (chartConfig.orders || []).filter((item) => item.orderRule.direction),
@@ -319,7 +321,7 @@ export function useDashboard() {
     widget.loading = true
     widget.errorMessage = ''
     try {
-      const analyzeDataParams = buildWidgetAnalyzeDataParams(chartConfig)
+      const analyzeDataParams = buildWidgetAnalyzeDataParams(chartConfig, widget.analyzeId)
       widget.xAxisFields = analyzeDataParams.dimensions as DimensionStore.DimensionOption[]
       const res = await httpRequest<ApiResponseI<AnalyzeDataVo.AnalyzeData[]>>('/api/getAnalyzeData', {
         method: 'POST',

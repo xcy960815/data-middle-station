@@ -88,6 +88,7 @@ export class DatasetService extends BaseService {
    * @returns 创建后的数据集详情
    */
   public async createDataset(createRequest: DatasetDto.CreateDatasetRequest): Promise<DatasetVo.DatasetDetailResponse> {
+    this.assertCurrentUserAdmin('仅管理员可创建数据集')
     const dataSource = await this.dataSourceMapper.getDataSource({ id: createRequest.dataSourceId })
     if (!dataSource) {
       throw new Error('数据源不存在')
@@ -139,6 +140,7 @@ export class DatasetService extends BaseService {
    * @returns 更新后的数据集详情
    */
   public async updateDataset(updateRequest: DatasetDto.UpdateDatasetRequest): Promise<DatasetVo.DatasetDetailResponse> {
+    this.assertCurrentUserAdmin('仅管理员可更新数据集')
     const currentDataset = await this.getDataset({ id: updateRequest.id })
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
     const updateResult = await this.datasetMapper.updateDataset({
@@ -181,6 +183,7 @@ export class DatasetService extends BaseService {
    * @returns 是否删除成功
    */
   public async deleteDataset(deleteRequest: DatasetDto.DeleteDatasetRequest): Promise<boolean> {
+    this.assertCurrentUserAdmin('仅管理员可删除数据集')
     await this.getDataset({ id: deleteRequest.id })
     const { updatedBy, updateTime } = await this.getDefaultInfo()
     return await this.datasetMapper.deleteDataset({

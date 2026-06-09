@@ -49,10 +49,18 @@ export class ScheduledEmailService extends BaseService {
   /* ============================== CRUD ============================== */
 
   /**
+   * 校验当前请求是否可管理定时邮件任务。
+   */
+  assertCanManageScheduledEmailTasks(): void {
+    this.assertCurrentUserAdmin('仅管理员可管理定时邮件任务')
+  }
+
+  /**
    * 创建定时邮件任务
    */
   async createScheduledEmailTask(createRequest: ScheduledEmailDto.CreateScheduledEmailRequest): Promise<boolean> {
     try {
+      this.assertCanManageScheduledEmailTasks()
       this.assertCreateRequest(createRequest)
 
       const { createdBy, updatedBy, createTime, updateTime } = await super.getDefaultInfo()
@@ -112,6 +120,7 @@ export class ScheduledEmailService extends BaseService {
    * 更新定时邮件任务
    */
   async updateScheduledEmailTask(updateRequest: ScheduledEmailDto.UpdateScheduledEmailRequest): Promise<boolean> {
+    this.assertCanManageScheduledEmailTasks()
     const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: updateRequest.id })
     if (!existingRecord) {
       throw new Error('任务不存在')
@@ -193,6 +202,7 @@ export class ScheduledEmailService extends BaseService {
    */
   async deleteScheduledEmailTask(deleteRequest: ScheduledEmailDto.DeleteScheduledEmailRequest): Promise<boolean> {
     try {
+      this.assertCanManageScheduledEmailTasks()
       const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: deleteRequest.id })
       if (!existingRecord) {
         throw new Error('任务不存在')
@@ -227,6 +237,7 @@ export class ScheduledEmailService extends BaseService {
     listRequest: ScheduledEmailDto.ScheduledEmailListRequest
   ): Promise<ScheduledEmailVo.ScheduledEmailTaskListResponse> {
     try {
+      this.assertCanManageScheduledEmailTasks()
       const recordList = await this.scheduledEmailMapper.getScheduledEmailTaskList(listRequest)
       return recordList.map((dao) => this.convertDaoToVo(dao))
     } catch (error) {
@@ -240,6 +251,7 @@ export class ScheduledEmailService extends BaseService {
    */
   async toggleTaskStatus(taskIdRequest: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
     try {
+      this.assertCanManageScheduledEmailTasks()
       const existingRecord = await this.scheduledEmailMapper.getScheduledEmailTask({ id: taskIdRequest.id })
       if (!existingRecord) {
         throw new Error('任务不存在')
@@ -305,6 +317,7 @@ export class ScheduledEmailService extends BaseService {
    * 立即执行任务（手动触发）
    */
   async executeTask(taskIdRequest: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
+    this.assertCanManageScheduledEmailTasks()
     return this.scheduledEmailExecutorService.executeTask(taskIdRequest)
   }
 
