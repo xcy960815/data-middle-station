@@ -1,5 +1,6 @@
 import { httpRequest } from '@/composables/useHttpRequest'
 import { ElMessage } from 'element-plus'
+import { useAnalyzeHandler } from './useAnalyzeHandler'
 import { useAnalyzeDraft } from './useAnalyzeDraft'
 
 /**
@@ -8,6 +9,7 @@ import { useAnalyzeDraft } from './useAnalyzeDraft'
 export const updateAnalyzeHandler = () => {
   const analyzeStore = useAnalyzeStore()
   const { buildAnalyzeDraftPayload, serializeAnalyzeDraft } = useAnalyzeDraft()
+  const { applyAnalyzeDetail } = useAnalyzeHandler()
   /**
    * @desc 点击保存
    */
@@ -25,10 +27,12 @@ export const updateAnalyzeHandler = () => {
       analyzeStore.setEditorSaving(false)
     })
     if (result.code === 200 && result.data) {
-      analyzeStore.setCurrentConfigId(result.data.currentConfigId)
-      analyzeStore.setLastSavedSnapshot(serializeAnalyzeDraft())
-      analyzeStore.setEditorDirty(false)
-      analyzeStore.setLastSavedAt(result.data.updateTime || '')
+      analyzeStore.setEditorHydrating(true)
+      try {
+        applyAnalyzeDetail(result.data)
+      } finally {
+        analyzeStore.setEditorHydrating(false)
+      }
       ElMessage.success('保存成功')
       return true
     } else {

@@ -112,7 +112,7 @@ export function buildAnalyzeDrillFilters(drillPath: AnalyzeDrillPathItem[]): Ana
     filterRule: cloneAnalyzeFilterFieldRule({
       aggregation: 'raw',
       operator: 'eq',
-      operand: String(item.value)
+      operand: item.value == null ? '' : String(item.value)
     }),
     displayName: item.dimension.displayName || item.dimension.columnComment || item.dimension.columnName || '钻取路径'
   }))
