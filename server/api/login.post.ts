@@ -27,7 +27,7 @@ export default defineEventHandler<Promise<ApiResponseI<LoginVo.LoginResponse>>>(
       userId: result.userId,
       userName: result.userName
     })
-  } catch (error) {
+  } catch (_error) {
     return ApiResponse.error('服务器内部错误')
   }
 })

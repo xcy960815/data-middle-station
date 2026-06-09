@@ -31,9 +31,6 @@ export function useDashboard() {
   // --- Constants ---
   const GRID_COLUMNS = 24
   const ROW_HEIGHT = 60
-  const GRID_GAP = 12
-  const CANVAS_BOTTOM_SPACE = 320
-  const CANVAS_HORIZONTAL_PADDING = 28
   const MIN_WIDGET_WIDTH = 2
   const MIN_WIDGET_HEIGHT = 2
 

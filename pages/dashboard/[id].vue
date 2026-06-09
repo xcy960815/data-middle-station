@@ -190,8 +190,6 @@ import DashboardWidgetChart from './components/dashboard-widget-chart.vue'
 
 const layoutName = 'dashboard'
 const route = useRoute()
-const router = useRouter()
-const dashboardId = computed(() => Number(route.params.id))
 
 const dashboard = useDashboard()
 
@@ -214,7 +212,6 @@ const {
   analyzePageSize,
   analyzeTotal,
   analyzeKeyword,
-  draggingAnalyze,
   loadDashboardDetail,
   getAnalyzes,
   handleEnterEditorMode,
@@ -237,14 +234,11 @@ const canvasRef = ref<HTMLElement | null>(null)
 
 const {
   resizeHandles,
-  columnWidth,
-  canvasContentBottom,
   getWidgetStyle,
   getCanvasSpacerStyle,
   handleWidgetMoveStart,
   handleWidgetResizeStart,
   getDropGridPosition,
-  getNextWidgetPosition,
   updateCanvasWidth
 } = useWidgetDragResize({
   widgets,
