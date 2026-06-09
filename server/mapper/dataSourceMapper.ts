@@ -199,13 +199,30 @@ class DataSourceColumnMapping implements DataSourceDao.DataSourceColumnRecord, I
   isDeleted!: number | null
 }
 
+/**
+ * @desc 数据源 mapper，负责对数据源及其表、列信息的增删改查
+ */
 export class DataSourceMapper extends BaseMapper {
+  /**
+   * @desc 当前 mapper 使用的数据源名称
+   */
   public dataSourceName = DATA_SOURCE_NAME
 
+  /**
+   * @desc 执行 SQL 的便捷封装（保留泛型能力）
+   * @param sql 需要执行的 SQL 语句
+   * @param params 预编译参数数组
+   * @returns 查询或写入操作的执行结果
+   */
   public override async exe<T>(sql: string, params?: Array<any>): Promise<T> {
     return await super.exe<T>(sql, params)
   }
 
+  /**
+   * @desc 创建数据源
+   * @param createParams 创建参数
+   * @returns 新创建的数据源 ID
+   */
   public async createDataSource(createParams: DataSourceDao.CreateDataSourceParams): Promise<number> {
     const { keys, values } = convertToSqlProperties(createParams)
     const sql = `insert into ${DATA_SOURCE_TABLE_NAME} (${keys.join(',')}) values (${keys.map(() => '?').join(',')})`
@@ -213,6 +230,11 @@ export class DataSourceMapper extends BaseMapper {
     return result.insertId
   }
 
+  /**
+   * @desc 更新数据源
+   * @param updateParams 更新参数
+   * @returns 是否更新成功
+   */
   public async updateDataSource(updateParams: DataSourceDao.UpdateDataSourceParams): Promise<boolean> {
     const { keys, values } = convertToSqlProperties(updateParams)
     const setClause = keys.map((key) => `${key} = ?`).join(', ')
@@ -221,6 +243,11 @@ export class DataSourceMapper extends BaseMapper {
     return result.affectedRows > 0
   }
 
+  /**
+   * @desc 删除数据源（逻辑删除）
+   * @param deleteParams 删除参数
+   * @returns 是否删除成功
+   */
   public async deleteDataSource(deleteParams: DataSourceDao.DeleteDataSourceParams): Promise<boolean> {
     const sql = `update ${DATA_SOURCE_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ? and is_deleted = 0`
     const result = await this.exe<ResultSetHeader>(sql, [
@@ -231,6 +258,11 @@ export class DataSourceMapper extends BaseMapper {
     return result.affectedRows > 0
   }
 
+  /**
+   * @desc 获取单个数据源详情
+   * @param query 查询参数
+   * @returns 数据源记录
+   */
   @Mapping(DataSourceMapping)
   public async getDataSource<T extends DataSourceDao.DataSourceRecord = DataSourceDao.DataSourceRecord>(
     query: DataSourceDao.GetDataSourceParams
@@ -240,6 +272,11 @@ export class DataSourceMapper extends BaseMapper {
     return result?.[0]
   }
 
+  /**
+   * @desc 获取数据源数量
+   * @param query 列表查询参数
+   * @returns 数据源数量
+   */
   public async countDataSources(query: DataSourceDao.GetDataSourceListParams): Promise<number> {
     const { whereClause, params } = this.buildDataSourceListQuery(query)
     const sql = `select count(*) as total from ${DATA_SOURCE_TABLE_NAME} ds ${whereClause}`
@@ -247,6 +284,11 @@ export class DataSourceMapper extends BaseMapper {
     return Number(result?.[0]?.total || 0)
   }
 
+  /**
+   * @desc 获取数据源列表（分页）
+   * @param query 列表查询参数
+   * @returns 数据源列表
+   */
   @Mapping(DataSourceListMapping)
   public async getDataSourceList<T extends DataSourceVo.DataSourceListItem = DataSourceVo.DataSourceListItem>(
     query: DataSourceDao.GetDataSourceListParams
@@ -268,6 +310,12 @@ export class DataSourceMapper extends BaseMapper {
     return await this.exe<T[]>(sql, [...params, query.pageSize, offset])
   }
 
+  /**
+   * @desc 获取数据源下的表列表
+   * @param dataSourceId 数据源 ID
+   * @param keyword 搜索关键字
+   * @returns 数据源表列表
+   */
   @Mapping(DataSourceTableMapping)
   public async getDataSourceTables<T extends DataSourceDao.DataSourceTableRecord = DataSourceDao.DataSourceTableRecord>(
     dataSourceId: number,
@@ -287,6 +335,12 @@ export class DataSourceMapper extends BaseMapper {
     return await this.exe<T[]>(sql, params)
   }
 
+  /**
+   * @desc 获取数据源指定表的列信息
+   * @param dataSourceId 数据源 ID
+   * @param tableName 表名
+   * @returns 列信息列表
+   */
   @Mapping(DataSourceColumnMapping)
   public async getDataSourceColumns<
     T extends DataSourceDao.DataSourceColumnRecord = DataSourceDao.DataSourceColumnRecord
@@ -299,6 +353,10 @@ export class DataSourceMapper extends BaseMapper {
     return await this.exe<T[]>(sql, [dataSourceId, tableName])
   }
 
+  /**
+   * @desc 新增或更新数据源表信息（存在则更新，不存在则新增）
+   * @param upsertParams 表信息参数
+   */
   public async upsertDataSourceTable(upsertParams: DataSourceDao.UpsertDataSourceTableParams): Promise<void> {
     const sql = `
       insert into ${DATA_SOURCE_TABLE_TABLE_NAME}
@@ -318,6 +376,10 @@ export class DataSourceMapper extends BaseMapper {
     ])
   }
 
+  /**
+   * @desc 替换数据源指定表的列信息（先标记删除再批量插入）
+   * @param replaceParams 列信息替换参数
+   */
   public async replaceDataSourceColumns(replaceParams: DataSourceDao.ReplaceDataSourceColumnsParams): Promise<void> {
     await this.exe<ResultSetHeader>(
       `update ${DATA_SOURCE_COLUMN_TABLE_NAME} set is_deleted = 1 where data_source_id = ? and table_name = ?`,

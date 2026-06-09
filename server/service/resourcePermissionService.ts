@@ -15,6 +15,9 @@ const PERMISSION_LEVEL_MAP: Record<PermissionVo.ResourcePermissionType, number> 
   manage: 3
 }
 
+/**
+ * @desc 资源权限服务，负责资源级别的权限校验与管理
+ */
 export class ResourcePermissionService extends BaseService {
   private permissionMapper: PermissionMapper
   private analyzeMapper: AnalyzeMapper
@@ -27,6 +30,10 @@ export class ResourcePermissionService extends BaseService {
     this.dashboardMapper = new DashboardMapper()
   }
 
+  /**
+   * @desc 获取角色列表
+   * @returns 角色列表
+   */
   public async getRoles(): Promise<PermissionVo.RoleListResponse> {
     try {
       const list = await this.permissionMapper.getRoles()
@@ -38,6 +45,11 @@ export class ResourcePermissionService extends BaseService {
     }
   }
 
+  /**
+   * @desc 获取指定资源的角色权限列表
+   * @param request 查询参数
+   * @returns 资源角色权限列表
+   */
   public async getResourceRolePermissions(
     request: PermissionDto.GetResourceRolePermissionsRequest
   ): Promise<PermissionVo.ResourceRolePermissionsResponse> {
@@ -61,6 +73,11 @@ export class ResourcePermissionService extends BaseService {
     }
   }
 
+  /**
+   * @desc 更新指定资源的角色权限配置
+   * @param request 更新请求参数
+   * @returns 更新后的资源角色权限列表
+   */
   public async updateResourceRolePermissions(
     request: PermissionDto.UpdateResourceRolePermissionsRequest
   ): Promise<PermissionVo.ResourceRolePermissionsResponse> {
@@ -95,6 +112,11 @@ export class ResourcePermissionService extends BaseService {
     return await this.getResourceRolePermissions({ resourceType, resourceId })
   }
 
+  /**
+   * @desc 校验当前用户对指定资源的最低权限
+   * @param options 校验参数（资源类型、资源 ID、所需权限级别）
+   * @returns 当前用户对该资源的实际权限类型
+   */
   public async assertResourcePermission(options: {
     resourceType: PermissionVo.ResourceType
     resourceId: number
@@ -116,6 +138,14 @@ export class ResourcePermissionService extends BaseService {
     return permission
   }
 
+  /**
+   * @desc 获取当前用户对指定资源的权限级别
+   * @param resourceType 资源类型
+   * @param resourceId 资源 ID
+   * @param currentUserName 当前用户名
+   * @param roleCodes 用户角色编码列表
+   * @returns 权限类型
+   */
   public async getCurrentUserResourcePermission(
     resourceType: PermissionVo.ResourceType,
     resourceId: number,
@@ -138,23 +168,7 @@ export class ResourcePermissionService extends BaseService {
       return 'none'
     }
 
-    const roleInSql = roleCodes.map(() => '?').join(',')
-    const sql = `
-      select
-        case
-          when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 3 then 'manage'
-          when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 2 then 'edit'
-          when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 1 then 'view'
-          else 'none'
-        end as permissionType
-      from resource_role_permission rrp
-      inner join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
-      where rrp.resource_type = ? and rrp.resource_id = ? and r.role_code in (${roleInSql})`
-    const result = await this.permissionMapper.exe<Array<{ permissionType: PermissionVo.ResourcePermissionType }>>(
-      sql,
-      [resourceType, resourceId, ...roleCodes]
-    )
-    return result?.[0]?.permissionType || 'none'
+    return await this.permissionMapper.getMaxPermissionByRoles(resourceType, resourceId, roleCodes)
   }
 
   private async getResourceOwnerName(resourceType: PermissionVo.ResourceType, resourceId: number): Promise<string> {

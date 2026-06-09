@@ -10,6 +10,9 @@ const DEFAULT_LAYOUT_CONFIG: DashboardDao.LayoutConfig = {
 const MIN_WIDGET_WIDTH = 1
 const MIN_WIDGET_HEIGHT = 1
 
+/**
+ * @desc 看板服务，负责看板的 CRUD 业务编排
+ */
 export class DashboardService extends BaseService {
   private dashboardMapper: DashboardMapper
   private analyzeService: AnalyzeService
@@ -61,6 +64,11 @@ export class DashboardService extends BaseService {
     return resolvedWidgets
   }
 
+  /**
+   * @desc 获取看板列表（分页）
+   * @param queryRequest 分页查询参数
+   * @returns 看板列表及分页信息
+   */
   public async getDashboards(
     queryRequest: DashboardDto.GetDashboardListRequest = {}
   ): Promise<DashboardVo.DashboardListResponse> {
@@ -91,6 +99,11 @@ export class DashboardService extends BaseService {
     }
   }
 
+  /**
+   * @desc 获取单个看板详情
+   * @param queryRequest 查询参数
+   * @returns 看板详情（含组件列表）
+   */
   public async getDashboard(
     queryRequest: DashboardDto.GetDashboardRequest
   ): Promise<DashboardVo.DashboardDetailResponse> {
@@ -129,6 +142,11 @@ export class DashboardService extends BaseService {
     }
   }
 
+  /**
+   * @desc 获取看板配置历史
+   * @param queryRequest 查询参数
+   * @returns 看板配置历史列表
+   */
   public async getDashboardConfigHistory(
     queryRequest: DashboardDto.GetDashboardConfigHistoryRequest
   ): Promise<DashboardVo.DashboardConfigHistoryItem[]> {
@@ -140,6 +158,11 @@ export class DashboardService extends BaseService {
     return await this.dashboardMapper.getDashboardConfigHistory(queryRequest.dashboardId)
   }
 
+  /**
+   * @desc 创建看板
+   * @param createRequest 创建请求参数
+   * @returns 创建后的看板详情
+   */
   public async createDashboard(
     createRequest: DashboardDto.CreateDashboardRequest
   ): Promise<DashboardVo.DashboardDetailResponse> {
@@ -174,6 +197,11 @@ export class DashboardService extends BaseService {
     return await this.getDashboard({ id: dashboardId })
   }
 
+  /**
+   * @desc 更新看板（含布局与组件配置版本管理）
+   * @param updateRequest 更新请求参数
+   * @returns 更新后的看板详情
+   */
   public async updateDashboard(
     updateRequest: DashboardDto.UpdateDashboardRequest
   ): Promise<DashboardVo.DashboardDetailResponse> {
@@ -216,6 +244,11 @@ export class DashboardService extends BaseService {
     return await this.getDashboard({ id: updateRequest.id })
   }
 
+  /**
+   * @desc 删除看板（逻辑删除）
+   * @param deleteRequest 删除请求参数
+   * @returns 是否删除成功
+   */
   public async deleteDashboard(deleteRequest: DashboardDto.DeleteDashboardRequest): Promise<boolean> {
     await this.resourcePermissionService.assertResourcePermission({
       resourceType: 'dashboard',

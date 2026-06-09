@@ -8,6 +8,9 @@ const DEFAULT_PREVIEW_LIMIT = 100
 const MAX_PREVIEW_LIMIT = 500
 const SQL_IDENTIFIER_REGEXP = /^[a-zA-Z0-9_]+$/
 
+/**
+ * @desc 数据集服务，负责数据集的 CRUD 业务编排
+ */
 export class DatasetService extends BaseService {
   private datasetMapper: DatasetMapper
   private dataSourceMapper: DataSourceMapper
@@ -20,6 +23,11 @@ export class DatasetService extends BaseService {
     this.databaseMapper = new DatabaseMapper()
   }
 
+  /**
+   * @desc 获取数据集列表（分页）
+   * @param queryRequest 分页查询参数
+   * @returns 数据集列表及分页信息
+   */
   public async getDatasets(
     queryRequest: DatasetDto.GetDatasetListRequest = {}
   ): Promise<DatasetVo.DatasetListResponse> {
@@ -47,6 +55,11 @@ export class DatasetService extends BaseService {
     }
   }
 
+  /**
+   * @desc 获取单个数据集详情
+   * @param queryRequest 查询参数
+   * @returns 数据集详情
+   */
   public async getDataset(queryRequest: DatasetDto.GetDatasetRequest): Promise<DatasetVo.DatasetDetailResponse> {
     const dataset = await this.datasetMapper.getDataset(queryRequest)
     if (!dataset) {
@@ -69,6 +82,11 @@ export class DatasetService extends BaseService {
     }
   }
 
+  /**
+   * @desc 创建数据集
+   * @param createRequest 创建请求参数
+   * @returns 创建后的数据集详情
+   */
   public async createDataset(createRequest: DatasetDto.CreateDatasetRequest): Promise<DatasetVo.DatasetDetailResponse> {
     const dataSource = await this.dataSourceMapper.getDataSource({ id: createRequest.dataSourceId })
     if (!dataSource) {
@@ -115,6 +133,11 @@ export class DatasetService extends BaseService {
     return await this.getDataset({ id: datasetId })
   }
 
+  /**
+   * @desc 更新数据集（含字段配置版本管理）
+   * @param updateRequest 更新请求参数
+   * @returns 更新后的数据集详情
+   */
   public async updateDataset(updateRequest: DatasetDto.UpdateDatasetRequest): Promise<DatasetVo.DatasetDetailResponse> {
     const currentDataset = await this.getDataset({ id: updateRequest.id })
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
@@ -152,6 +175,11 @@ export class DatasetService extends BaseService {
     return await this.getDataset({ id: currentDataset.id })
   }
 
+  /**
+   * @desc 删除数据集（逻辑删除）
+   * @param deleteRequest 删除请求参数
+   * @returns 是否删除成功
+   */
   public async deleteDataset(deleteRequest: DatasetDto.DeleteDatasetRequest): Promise<boolean> {
     await this.getDataset({ id: deleteRequest.id })
     const { updatedBy, updateTime } = await this.getDefaultInfo()
@@ -162,6 +190,11 @@ export class DatasetService extends BaseService {
     })
   }
 
+  /**
+   * @desc 预览数据集内容（按字段配置查询样本数据）
+   * @param previewRequest 预览请求参数
+   * @returns 预览列定义与行数据
+   */
   public async previewDataset(
     previewRequest: DatasetDto.PreviewDatasetRequest
   ): Promise<DatasetVo.DatasetPreviewResponse> {
@@ -178,16 +211,12 @@ export class DatasetService extends BaseService {
       Math.max(1, Math.floor(Number(previewRequest.limit || DEFAULT_PREVIEW_LIMIT)))
     )
     const selectedColumns = visibleColumns.length ? visibleColumns : dataset.fieldsConfig
-    const selectClause = selectedColumns
-      .map((field) => {
-        const sourceColumnName = this.normalizeSqlIdentifier(field.sourceColumnName)
-        const fieldName = this.normalizeSqlIdentifier(field.fieldName)
-        return `\`${sourceColumnName}\` as \`${fieldName}\``
-      })
-      .join(', ')
     const baseTable = this.normalizeSqlIdentifier(dataset.baseTable)
-    const sql = `select ${selectClause} from \`${baseTable}\` limit ${limit}`
-    const rows = await this.databaseMapper.exe<AnalyzeDataVo.AnalyzeData[]>(sql)
+    const previewColumns = selectedColumns.map((field) => ({
+      sourceColumnName: this.normalizeSqlIdentifier(field.sourceColumnName),
+      fieldName: this.normalizeSqlIdentifier(field.fieldName)
+    }))
+    const rows = await this.databaseMapper.previewTableData(baseTable, previewColumns, limit)
     return {
       columns: selectedColumns,
       rows

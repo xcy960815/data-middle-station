@@ -142,6 +142,11 @@ export class AnalyzeService extends BaseService {
     }
   }
 
+  /**
+   * @desc 获取分析配置历史
+   * @param queryRequest 查询参数
+   * @returns 分析配置历史列表
+   */
   public async getAnalyzeConfigHistory(
     queryRequest: AnalyzeConfigDto.GetAnalyzeConfigHistoryRequest
   ): Promise<AnalyzeConfigVo.AnalyzeConfigResponse[]> {
@@ -149,6 +154,11 @@ export class AnalyzeService extends BaseService {
     return await this.analyzeConfigService.getAnalyzeConfigHistory(queryRequest.analyzeId)
   }
 
+  /**
+   * @desc 切换分析配置版本
+   * @param switchRequest 切换版本请求参数
+   * @returns 切换后的分析详情
+   */
   public async switchAnalyzeConfigVersion(
     switchRequest: AnalyzeConfigDto.SwitchAnalyzeConfigVersionRequest
   ): Promise<AnalyzeVo.AnalyzeDetailResponse> {

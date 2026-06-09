@@ -297,6 +297,13 @@ export class AnalyzeMapper extends BaseMapper {
     return await this.exe<Array<T>>(sql, [...params, pageSize, offset])
   }
 
+  /**
+   * @desc 获取当前用户对指定分析的权限级别
+   * @param analyzeId 分析 ID
+   * @param currentUserName 当前用户名
+   * @param roleCodes 用户角色编码列表
+   * @returns 权限类型
+   */
   public async getAnalyzePermission(
     analyzeId: number,
     currentUserName: string,

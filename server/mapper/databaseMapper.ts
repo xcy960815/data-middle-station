@@ -171,4 +171,21 @@ export class DatabaseMapper extends BaseMapper {
     const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsParams.tableName), tableSchema])
     return result
   }
+
+  /**
+   * @desc 预览指定表的数据，按字段配置查询并限制返回行数
+   * @param tableName 表名（已校验的 SQL 标识符）
+   * @param columns 字段映射列表，每项包含 sourceColumnName 和 fieldName
+   * @param limit 最大返回行数
+   * @returns 数据行列表
+   */
+  public async previewTableData(
+    tableName: string,
+    columns: Array<{ sourceColumnName: string; fieldName: string }>,
+    limit: number
+  ): Promise<AnalyzeDataVo.AnalyzeData[]> {
+    const selectClause = columns.map((col) => `\`${col.sourceColumnName}\` as \`${col.fieldName}\``).join(', ')
+    const sql = `select ${selectClause} from \`${tableName}\` limit ${limit}`
+    return await this.exe<AnalyzeDataVo.AnalyzeData[]>(sql)
+  }
 }
