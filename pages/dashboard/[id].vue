@@ -257,6 +257,10 @@ const {
 dashboard.getDropGridPosition = getDropGridPosition
 dashboard.updateCanvasWidth = updateCanvasWidth
 
+onMounted(() => {
+  loadDashboardDetail()
+})
+
 watch(
   () => route.params.id,
   () => {

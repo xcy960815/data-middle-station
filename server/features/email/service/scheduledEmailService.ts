@@ -237,7 +237,6 @@ export class ScheduledEmailService extends BaseService {
     listRequest: ScheduledEmailDto.ScheduledEmailListRequest
   ): Promise<ScheduledEmailVo.ScheduledEmailTaskListResponse> {
     try {
-      this.assertCanManageScheduledEmailTasks()
       const recordList = await this.scheduledEmailMapper.getScheduledEmailTaskList(listRequest)
       return recordList.map((dao) => this.convertDaoToVo(dao))
     } catch (error) {

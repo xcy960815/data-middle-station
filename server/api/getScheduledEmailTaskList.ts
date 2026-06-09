@@ -13,6 +13,7 @@ const logger = new Logger({
 export default defineEventHandler<Promise<ApiResponseI<ScheduledEmailVo.ScheduledEmailTaskListResponse>>>(
   async (event) => {
     try {
+      scheduledEmailService.assertCanManageScheduledEmailTasks()
       const scheduledEmailListQuery = getQuery<ScheduledEmailDto.ScheduledEmailListRequest>(event)
       const scheduledEmailList = await scheduledEmailService.getScheduledEmailTaskList(scheduledEmailListQuery)
       return ApiResponse.success(scheduledEmailList)
