@@ -2,12 +2,12 @@ import { AnalyzeMapper } from '@/server/mapper/analyzeMapper'
 import { DashboardMapper } from '@/server/mapper/dashboardMapper'
 import { PermissionMapper } from '@/server/mapper/permissionMapper'
 import { BaseService } from '@/server/service/baseService'
-import { RESOURCE_TYPES } from '@/shared/domainTypes'
+import { PERMISSION_RESOURCE_TYPES } from '@/shared/resourcePermissionTypes'
 
 type PermissionLevel = Exclude<PermissionVo.ResourcePermissionType, 'none'>
 
 const PERMISSION_TYPES = new Set<PermissionVo.ResourcePermissionType>(['none', 'view', 'edit', 'manage'])
-const RESOURCE_TYPE_SET = new Set<PermissionVo.ResourceType>(RESOURCE_TYPES)
+const RESOURCE_TYPE_SET = new Set<PermissionVo.ResourceType>(PERMISSION_RESOURCE_TYPES)
 const PERMISSION_LEVEL_MAP: Record<PermissionVo.ResourcePermissionType, number> = {
   none: 0,
   view: 1,

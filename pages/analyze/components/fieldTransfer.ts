@@ -1,9 +1,9 @@
 import {
-  createDefaultDimensionRule,
-  createDefaultFilterRule,
-  createDefaultMeasureRule,
-  createDefaultOrderRule
-} from '@/shared/analyzeFieldRules'
+  createDefaultAnalyzeDimensionFieldRule,
+  createDefaultAnalyzeFilterFieldRule,
+  createDefaultAnalyzeMeasureFieldRule,
+  createDefaultAnalyzeOrderFieldRule
+} from '@/shared/analyzeConfigFieldRules'
 
 type AnalyzeFieldTransferSource = Pick<DragData, 'from' | 'index'>
 
@@ -77,7 +77,7 @@ export const getAnalyzeFieldDropTargetIndex = (
 export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureStore.MeasureOption => {
   return {
     ...field,
-    measureRule: createDefaultMeasureRule(field)
+    measureRule: createDefaultAnalyzeMeasureFieldRule(field)
   }
 }
 
@@ -89,7 +89,7 @@ export const createMeasureOption = (field: ColumnsStore.ColumnOptions): MeasureS
 export const createDimensionOption = (field: ColumnsStore.ColumnOptions): DimensionStore.DimensionOption => {
   return {
     ...field,
-    dimensionRule: createDefaultDimensionRule()
+    dimensionRule: createDefaultAnalyzeDimensionFieldRule()
   }
 }
 
@@ -101,7 +101,7 @@ export const createDimensionOption = (field: ColumnsStore.ColumnOptions): Dimens
 export const createFilterOption = (field: ColumnsStore.ColumnOptions): FilterStore.FilterOption => {
   const filterOption = {
     ...field,
-    filterRule: createDefaultFilterRule()
+    filterRule: createDefaultAnalyzeFilterFieldRule()
   }
   syncAnalyzeFieldDisplayName(filterOption)
   return filterOption
@@ -115,7 +115,7 @@ export const createFilterOption = (field: ColumnsStore.ColumnOptions): FilterSto
 export const createOrderOption = (field: ColumnsStore.ColumnOptions): OrderStore.OrderOption => {
   const orderOption = {
     ...field,
-    orderRule: createDefaultOrderRule()
+    orderRule: createDefaultAnalyzeOrderFieldRule()
   }
   syncAnalyzeFieldDisplayName(orderOption)
   return orderOption

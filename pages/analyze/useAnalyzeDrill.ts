@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { createFilterRule } from '@/shared/analyzeFieldRules'
+import { cloneAnalyzeFilterFieldRule } from '@/shared/analyzeConfigFieldRules'
 
 export const useAnalyzeDrill = () => {
   const dimensionStore = useDimensionsStore()
@@ -34,7 +34,7 @@ export const useAnalyzeDrill = () => {
   const drillFilters = computed<FilterStore.FilterOption[]>(() => {
     return drillPath.value.map((item) => ({
       ...JSON.parse(JSON.stringify(item.dimension)),
-      filterRule: createFilterRule({
+      filterRule: cloneAnalyzeFilterFieldRule({
         aggregation: 'raw',
         operator: 'eq',
         operand: item.value == null ? '' : String(item.value)

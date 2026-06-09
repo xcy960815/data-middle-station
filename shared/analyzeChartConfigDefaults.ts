@@ -6,7 +6,7 @@
  * @desc 表格图默认配置
  * @returns {AnalyzeConfigVo.TableChartConfigItem}
  */
-export const defaultTableChartConfig: AnalyzeConfigVo.TableChartConfigItem = {
+export const defaultAnalyzeTableChartConfig: AnalyzeConfigVo.TableChartConfigItem = {
   /** 是否在行 hover 时高亮整行 */
   enableRowHoverHighlight: false,
   /** 是否在列 hover 时高亮整列 */
@@ -75,7 +75,7 @@ export const defaultTableChartConfig: AnalyzeConfigVo.TableChartConfigItem = {
  * @desc 饼图默认配置
  * @returns {AnalyzeConfigVo.PieChartConfigItem}
  */
-export const defaultPieChartConfig: AnalyzeConfigVo.PieChartConfigItem = {
+export const defaultAnalyzePieChartConfig: AnalyzeConfigVo.PieChartConfigItem = {
   /** 是否展示标签 */
   showLabel: false,
   /** 饼图类型 */
@@ -86,7 +86,7 @@ export const defaultPieChartConfig: AnalyzeConfigVo.PieChartConfigItem = {
  * @desc 柱状图默认配置
  * @returns {AnalyzeConfigVo.IntervalChartConfigItem}
  */
-export const defaultIntervalChartConfig: AnalyzeConfigVo.IntervalChartConfigItem = {
+export const defaultAnalyzeIntervalChartConfig: AnalyzeConfigVo.IntervalChartConfigItem = {
   /** 展示方式：层级 / 平铺 */
   displayMode: 'levelDisplay',
   /** 是否展示百分比 */
@@ -103,7 +103,7 @@ export const defaultIntervalChartConfig: AnalyzeConfigVo.IntervalChartConfigItem
  * @desc 折线图默认配置
  * @returns {AnalyzeConfigVo.LineChartConfigItem}
  */
-export const defaultLineChartConfig: AnalyzeConfigVo.LineChartConfigItem = {
+export const defaultAnalyzeLineChartConfig: AnalyzeConfigVo.LineChartConfigItem = {
   /** 折线节点是否展示 */
   showPoint: false,
   /** 是否显示标签 */
@@ -120,7 +120,7 @@ export const defaultLineChartConfig: AnalyzeConfigVo.LineChartConfigItem = {
  * @desc 公共图表默认配置
  * @returns {AnalyzeConfigVo.CommonChartConfigItem}
  */
-export const defaultCommonChartConfig: AnalyzeConfigVo.CommonChartConfigItem = {
+export const defaultAnalyzeCommonChartConfig: AnalyzeConfigVo.CommonChartConfigItem = {
   /** 查询数据量上限 */
   limit: 1000,
   /** 分析备注 */

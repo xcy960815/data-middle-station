@@ -5,7 +5,7 @@ declare namespace AnalyzeStore {
   /**
    * @desc 图表类型
    */
-  type ChartTypesEnums = typeof import('@/shared/domainTypes').CHART_TYPE_MAP
+  type ChartTypesEnums = typeof import('@/shared/analyzeConfigTypes').ANALYZE_CHART_TYPE_MAP
 
   /**
    * @desc 图表key
@@ -15,7 +15,7 @@ declare namespace AnalyzeStore {
   /**
    * @desc 图表类型
    */
-  type ChartType = import('@/shared/domainTypes').ChartType
+  type ChartType = import('@/shared/analyzeConfigTypes').AnalyzeChartType
 
   /**
    * @desc 图表状态

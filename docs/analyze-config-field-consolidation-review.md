@@ -9,7 +9,7 @@
 ```ts
 type MeasureOption = ColumnItem & {
   measureRule: {
-    aggregation?: MeasureAggregationType
+    aggregation?: AnalyzeMeasureAggregationType
   }
 }
 
@@ -24,16 +24,16 @@ type DimensionOption = ColumnItem & {
 
 type FilterOption = ColumnItem & {
   filterRule: {
-    operator: FilterType
+    operator: AnalyzeFilterOperator
     operand?: string
-    aggregation?: FilterAggregationType
+    aggregation?: AnalyzeFilterAggregationType
   }
 }
 
 type OrderOption = ColumnItem & {
   orderRule: {
-    direction: OrderType
-    aggregation?: OrderAggregationType
+    direction: AnalyzeOrderDirection
+    aggregation?: AnalyzeOrderAggregationType
   }
 }
 ```
@@ -65,7 +65,7 @@ type OrderOption = ColumnItem & {
 
 - `aggregationType` -> `measureRule.aggregation`
 
-`measureRule` 后续可以继续承载值字段自己的行为配置，例如展示口径、格式化规则、计算方式等。类型上也从排序聚合类型改回 `MeasureAggregationType`，避免 `raw` 这种排序/过滤可用但值字段不应使用的类型混进来。
+`measureRule` 后续可以继续承载值字段自己的行为配置，例如展示口径、格式化规则、计算方式等。类型上也从排序聚合类型改回 `AnalyzeMeasureAggregationType`，避免 `raw` 这种排序/过滤可用但值字段不应使用的类型混进来。
 
 ### Dimension
 
@@ -94,7 +94,7 @@ type OrderOption = ColumnItem & {
 - 行为对象名是否贴近业务语义：`orderRule / filterRule / measureRule / dimensionRule`。
 - 对象内部字段是否比旧字段更清楚：`direction / aggregation / operator / operand`。
 - 是否还有过于泛化的名字，例如无上下文的 `type / value / config / option`。
-- 类型名是否归属正确领域，例如值字段只能依赖 `MeasureAggregationType`，不要复用 `OrderAggregationType`。
+- 类型名是否归属正确领域，例如值字段只能依赖 `AnalyzeMeasureAggregationType`，不要复用 `AnalyzeOrderAggregationType`。
 
 ### 2. 是否有左手倒右手的方法调用
 
@@ -127,8 +127,8 @@ type OrderOption = ColumnItem & {
 
 ### 6. 类型是否能约束错误
 
-- `MeasureAggregationType` 不应包含 `raw`。
-- `OrderAggregationType` 和 `FilterAggregationType` 可以包含 `raw`。
+- `AnalyzeMeasureAggregationType` 不应包含 `raw`。
+- `AnalyzeOrderAggregationType` 和 `AnalyzeFilterAggregationType` 可以包含 `raw`。
 - 可选字段要符合真实业务：例如 `aggregation?` 可以缺省，由查询构造器按场景决定默认值。
 - 如果一个字段运行时必需，类型上不要为了省事写成可选。
 
@@ -148,7 +148,7 @@ type OrderOption = ColumnItem & {
 
 ### 9. TypeScript 类型是否清晰
 
-- Review 前要检查 IDE / TS 插件是否还有类型报错，尤其是聚合类型跨领域误用，例如把 `OrderAggregationType` 传给值字段。
+- Review 前要检查 IDE / TS 插件是否还有类型报错，尤其是聚合类型跨领域误用，例如把 `AnalyzeOrderAggregationType` 传给值字段。
 - 类型声明要清晰明了，不要把多个领域揉成一个大类型；排序、过滤、值、分组应该分别有自己的规则类型。
 - shared 类型只放跨层稳定复用的领域定义；只在组件内部使用的临时类型应留在组件内，不要上升到 shared。
 - dao / vo / store 类型要表达各自边界，不要为了省事互相穿透到难以判断来源。
@@ -162,8 +162,8 @@ type OrderOption = ColumnItem & {
 - 查询语义和 SQL 规则应留在 `server/service/analyzeQueryBuilder.ts`，不要放进 shared 或组件。
 - Store 类型放 `types/store`，接口持久化结构放 `types/domain/dao`、返回给前端的结构放 `types/domain/vo`。
 - 如果一个文件只为绕开循环依赖或路径引用而存在，应重新评估是不是抽象过度。
-- 字段规则类型集中放在 `shared/analyzeFieldRules.ts`，避免为几行规则拆出过多模块；如果后续某类规则明显膨胀，再按领域拆分。
-- 字段规则的默认创建和规则字段变更也集中放在 `shared/analyzeFieldRules.ts`，组件不要直接手写 rule 对象或到处修改 `xxxRule.xxx`。
+- 字段规则类型集中放在 `shared/analyzeConfigFieldRules.ts`，避免为几行规则拆出过多模块；如果后续某类规则明显膨胀，再按领域拆分。
+- 字段规则的默认创建和规则字段变更也集中放在 `shared/analyzeConfigFieldRules.ts`，组件不要直接手写 rule 对象或到处修改 `xxxRule.xxx`。
 
 ### 11. Selector Template 交互是否一致
 

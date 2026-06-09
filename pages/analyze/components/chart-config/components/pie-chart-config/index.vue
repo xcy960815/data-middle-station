@@ -17,26 +17,41 @@
 </template>
 
 <script setup lang="ts">
+import {
+  defaultAnalyzeIntervalChartConfig,
+  defaultAnalyzeLineChartConfig,
+  defaultAnalyzePieChartConfig,
+  defaultAnalyzeTableChartConfig
+} from '~/shared/analyzeChartConfigDefaults'
+
 const chartsConfigStore = useChartConfigStore()
-const pieChartConfigData = computed(() => {
-  return (
-    chartsConfigStore.privateChartConfig?.pie ?? {
-      showLabel: false,
-      chartType: 'pie' as 'pie' | 'rose'
-    }
-  )
+
+const pieChartConfigData = computed<ChartConfigStore.PieChartConfig>(() => {
+  return chartsConfigStore.privateChartConfig?.pie ?? defaultAnalyzePieChartConfig
 })
-const handleShowLabelChange = () => {
-  // chartsConfigStore.setPrivateChartConfig('pie', {
-  //   ...pieChartConfigData.value,
-  //   showLabel: !pieChartConfigData.value.showLabel
-  // })
+
+const updatePieChartConfig = (pieConfig: ChartConfigStore.PieChartConfig) => {
+  const privateChartConfig = chartsConfigStore.privateChartConfig
+  chartsConfigStore.setPrivateChartConfig({
+    line: privateChartConfig?.line ?? defaultAnalyzeLineChartConfig,
+    table: privateChartConfig?.table ?? defaultAnalyzeTableChartConfig,
+    pie: pieConfig,
+    interval: privateChartConfig?.interval ?? defaultAnalyzeIntervalChartConfig
+  })
 }
-const handleChartTypeChange = () => {
-  // chartsConfigStore.setPrivateChartConfig('pie', {
-  //   ...pieChartConfigData.value,
-  //   chartType: pieChartConfigData.value.chartType === 'pie' ? 'rose' : 'pie'
-  // })
+
+const handleShowLabelChange = (showLabel: boolean | string | number) => {
+  updatePieChartConfig({
+    ...pieChartConfigData.value,
+    showLabel: Boolean(showLabel)
+  })
+}
+
+const handleChartTypeChange = (chartType: ChartConfigStore.PieChartConfig['chartType']) => {
+  updatePieChartConfig({
+    ...pieChartConfigData.value,
+    chartType
+  })
 }
 </script>
 

@@ -110,8 +110,11 @@
 </template>
 
 <script setup lang="ts">
-import { createDefaultMeasureRule, setMeasureRuleAggregation } from '@/shared/analyzeFieldRules'
-import type { MeasureAggregationType } from '@/shared/domainTypes'
+import {
+  createDefaultAnalyzeMeasureFieldRule,
+  setAnalyzeMeasureFieldAggregation
+} from '@/shared/analyzeConfigFieldRules'
+import type { AnalyzeMeasureAggregationType } from '@/shared/analyzeConfigTypes'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
 import { defineAsyncComponent } from 'vue'
@@ -185,7 +188,7 @@ const isMeasureAggregationEnabled = (measure: MeasureStore.MeasureOption) => {
   return !!measure.columnName && dimensionList.value.length > 0
 }
 
-const aggregationLabelMap: Record<MeasureAggregationType, string> = {
+const aggregationLabelMap: Record<AnalyzeMeasureAggregationType, string> = {
   count: '计数',
   countDistinct: '计数(去重)',
   sum: '总计',
@@ -200,14 +203,14 @@ const resolveMeasureAggregationLabel = (measure: MeasureStore.MeasureOption) => 
 
 const handleChangeAggregationType = (
   index: number,
-  aggregationType: MeasureAggregationType,
+  aggregationType: AnalyzeMeasureAggregationType,
   closePopover?: () => void
 ) => {
   const measure = measures.value[index]
   if (!measure) return
   measureStore.updateMeasureByIndex(index, {
     ...measure,
-    measureRule: setMeasureRuleAggregation(measure.measureRule, aggregationType)
+    measureRule: setAnalyzeMeasureFieldAggregation(measure.measureRule, aggregationType)
   })
   closePopover?.()
 }
@@ -397,7 +400,7 @@ const handleConfirmCustomColumn = () => {
   // 自动添加到值区域
   addMeasure({
     ...newColumn,
-    measureRule: createDefaultMeasureRule(newColumn)
+    measureRule: createDefaultAnalyzeMeasureFieldRule(newColumn)
   })
 
   ElMessage.success('自定义列创建成功')

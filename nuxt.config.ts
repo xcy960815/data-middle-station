@@ -225,6 +225,11 @@ export default defineNuxtConfig({
     smtpPass: process.env.SMTP_PASS,
     smtpFrom: process.env.SMTP_FROM,
 
+    // AI 错误分析
+    deepSeekApiKey: process.env.DEEPSEEK_API_KEY,
+    deepSeekApiUrl: process.env.DEEPSEEK_API_URL,
+    deepSeekModel: process.env.DEEPSEEK_MODEL,
+
     // 公共键（在客户端和服务器端都可用）
     public: {
       apiBase: process.env.API_BASE,

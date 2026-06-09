@@ -97,9 +97,15 @@
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage } from 'element-plus'
-import { FILTER_TYPE_MAP } from '@/shared/domainTypes'
-import { prepareFilterRule, setFilterRuleAggregation } from '@/shared/analyzeFieldRules'
-import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
+import { ANALYZE_FILTER_OPERATOR_MAP } from '@/shared/analyzeConfigTypes'
+import {
+  prepareAnalyzeFilterFieldRuleForEdit,
+  setAnalyzeFilterFieldAggregation
+} from '@/shared/analyzeConfigFieldRules'
+import {
+  getAnalyzeFieldAggregationLabel,
+  getAnalyzeFieldAggregationOptions
+} from '@/shared/analyzeFieldAggregationOptions'
 import { clearAllHandler } from '../clearAll'
 import {
   addFieldToFilters,
@@ -152,11 +158,11 @@ const resolveFilterDisplayName = (item: FilterStore.FilterOption) => {
 }
 
 const resolveFilterAggregationLabel = (item: FilterStore.FilterOption) => {
-  return getOrderAggregationLabel(item.filterRule.aggregation)
+  return getAnalyzeFieldAggregationLabel(item.filterRule.aggregation)
 }
 
 const getFilterAggregationOptions = (columnType: string, includeRaw = true) => {
-  return getOrderAggregationOptions(columnType, includeRaw)
+  return getAnalyzeFieldAggregationOptions(columnType, includeRaw)
 }
 
 const isDateColumnType = (columnType = '') => {
@@ -180,42 +186,42 @@ const getFilterOptions = (columnType = ''): FilterOptionItem[] => {
     normalizedColumnType.includes('char') ||
     normalizedColumnType.includes('text')
   ) {
-    return [{ label: '包含', value: FILTER_TYPE_MAP.包含 }]
+    return [{ label: '包含', value: ANALYZE_FILTER_OPERATOR_MAP.包含 }]
   }
   if (isDateColumnType(columnType)) {
     return [
-      { label: '等于', value: FILTER_TYPE_MAP.等于 },
-      { label: '大于', value: FILTER_TYPE_MAP.大于 },
-      { label: '大于等于', value: FILTER_TYPE_MAP.大于等于 },
-      { label: '小于', value: FILTER_TYPE_MAP.小于 },
-      { label: '小于等于', value: FILTER_TYPE_MAP.小于等于 },
-      { label: '为空', value: FILTER_TYPE_MAP.为空 },
-      { label: '不为空', value: FILTER_TYPE_MAP.不为空 }
+      { label: '等于', value: ANALYZE_FILTER_OPERATOR_MAP.等于 },
+      { label: '大于', value: ANALYZE_FILTER_OPERATOR_MAP.大于 },
+      { label: '大于等于', value: ANALYZE_FILTER_OPERATOR_MAP.大于等于 },
+      { label: '小于', value: ANALYZE_FILTER_OPERATOR_MAP.小于 },
+      { label: '小于等于', value: ANALYZE_FILTER_OPERATOR_MAP.小于等于 },
+      { label: '为空', value: ANALYZE_FILTER_OPERATOR_MAP.为空 },
+      { label: '不为空', value: ANALYZE_FILTER_OPERATOR_MAP.不为空 }
     ]
   }
   if (isNumberColumnType(columnType)) {
     return [
-      { label: '等于', value: FILTER_TYPE_MAP.等于 },
-      { label: '不等于', value: FILTER_TYPE_MAP.不等于 },
-      { label: '大于', value: FILTER_TYPE_MAP.大于 },
-      { label: '大于等于', value: FILTER_TYPE_MAP.大于等于 },
-      { label: '小于', value: FILTER_TYPE_MAP.小于 },
-      { label: '小于等于', value: FILTER_TYPE_MAP.小于等于 },
-      { label: '为空', value: FILTER_TYPE_MAP.为空 },
-      { label: '不为空', value: FILTER_TYPE_MAP.不为空 }
+      { label: '等于', value: ANALYZE_FILTER_OPERATOR_MAP.等于 },
+      { label: '不等于', value: ANALYZE_FILTER_OPERATOR_MAP.不等于 },
+      { label: '大于', value: ANALYZE_FILTER_OPERATOR_MAP.大于 },
+      { label: '大于等于', value: ANALYZE_FILTER_OPERATOR_MAP.大于等于 },
+      { label: '小于', value: ANALYZE_FILTER_OPERATOR_MAP.小于 },
+      { label: '小于等于', value: ANALYZE_FILTER_OPERATOR_MAP.小于等于 },
+      { label: '为空', value: ANALYZE_FILTER_OPERATOR_MAP.为空 },
+      { label: '不为空', value: ANALYZE_FILTER_OPERATOR_MAP.不为空 }
     ]
   }
   return [
-    { label: '等于', value: FILTER_TYPE_MAP.等于 },
-    { label: '不等于', value: FILTER_TYPE_MAP.不等于 },
-    { label: '大于', value: FILTER_TYPE_MAP.大于 },
-    { label: '大于等于', value: FILTER_TYPE_MAP.大于等于 },
-    { label: '小于', value: FILTER_TYPE_MAP.小于 },
-    { label: '小于等于', value: FILTER_TYPE_MAP.小于等于 },
-    { label: '包含', value: FILTER_TYPE_MAP.包含 },
-    { label: '不包含', value: FILTER_TYPE_MAP.不包含 },
-    { label: '为空', value: FILTER_TYPE_MAP.为空 },
-    { label: '不为空', value: FILTER_TYPE_MAP.不为空 }
+    { label: '等于', value: ANALYZE_FILTER_OPERATOR_MAP.等于 },
+    { label: '不等于', value: ANALYZE_FILTER_OPERATOR_MAP.不等于 },
+    { label: '大于', value: ANALYZE_FILTER_OPERATOR_MAP.大于 },
+    { label: '大于等于', value: ANALYZE_FILTER_OPERATOR_MAP.大于等于 },
+    { label: '小于', value: ANALYZE_FILTER_OPERATOR_MAP.小于 },
+    { label: '小于等于', value: ANALYZE_FILTER_OPERATOR_MAP.小于等于 },
+    { label: '包含', value: ANALYZE_FILTER_OPERATOR_MAP.包含 },
+    { label: '不包含', value: ANALYZE_FILTER_OPERATOR_MAP.不包含 },
+    { label: '为空', value: ANALYZE_FILTER_OPERATOR_MAP.为空 },
+    { label: '不为空', value: ANALYZE_FILTER_OPERATOR_MAP.不为空 }
   ]
 }
 
@@ -232,22 +238,28 @@ const getFilterEditKey = (item: FilterStore.FilterOption) => filterList.value.in
 const getEditingFilterRule = (item: FilterStore.FilterOption) => {
   const index = getFilterEditKey(item)
   if (!editingFilterRuleMap[index]) {
-    editingFilterRuleMap[index] = prepareFilterRule(item.filterRule, getFilterOptions(item.columnType)[0]?.value)
+    editingFilterRuleMap[index] = prepareAnalyzeFilterFieldRuleForEdit(
+      item.filterRule,
+      getFilterOptions(item.columnType)[0]?.value
+    )
   }
   return editingFilterRuleMap[index]
 }
 
 const handlePrepareWherePanel = (item: FilterStore.FilterOption) => {
   const index = getFilterEditKey(item)
-  editingFilterRuleMap[index] = prepareFilterRule(item.filterRule, getFilterOptions(item.columnType)[0]?.value)
+  editingFilterRuleMap[index] = prepareAnalyzeFilterFieldRuleForEdit(
+    item.filterRule,
+    getFilterOptions(item.columnType)[0]?.value
+  )
 }
 
 const handleSelectAggregation = (
   item: FilterStore.FilterOption,
-  aggregationType: FilterStore.FilterAggregationType,
+  aggregationType: FilterStore.AnalyzeFilterAggregationType,
   closePopover?: () => void
 ) => {
-  item.filterRule = setFilterRuleAggregation(item.filterRule, aggregationType)
+  item.filterRule = setAnalyzeFilterFieldAggregation(item.filterRule, aggregationType)
   syncFilterOptionDisplayName(item)
   closePopover?.()
 }

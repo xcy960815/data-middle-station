@@ -110,7 +110,6 @@ const commonGlobals = {
   batchFormatSqlKey: 'readonly',
   batchFormatSqlSet: 'readonly',
   serverSleep: 'readonly',
-  defaultTableChartConfig: 'readonly',
   // Store 函数
   useAnalyzeStore: 'readonly',
   useColumnsStore: 'readonly',

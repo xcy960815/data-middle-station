@@ -1,10 +1,10 @@
 <template>
   <template v-if="inline">
     <div
-      v-for="aggregation in filteredAggregations"
+      v-for="aggregation in filteredMeasureAggregationOptions"
       :key="aggregation.value"
       class="aggregation-option flex items-center cursor-pointer hover:bg-gray-100 py-1 justify-between px-2"
-      @click="handleChangeAggregation(aggregation.value)"
+      @click="handleChangeMeasureAggregation(aggregation.value)"
     >
       <span class="text-xs">{{ aggregation.label }}</span>
       <icon-park
@@ -26,10 +26,10 @@
     </template>
     <template #default>
       <div
-        v-for="aggregation in filteredAggregations"
+        v-for="aggregation in filteredMeasureAggregationOptions"
         :key="aggregation.value"
         class="aggregation-option flex items-center cursor-pointer hover:bg-gray-100 py-1 justify-between px-2"
-        @click="handleChangeAggregation(aggregation.value)"
+        @click="handleChangeMeasureAggregation(aggregation.value)"
       >
         <span class="text-xs">{{ aggregation.label }}</span>
         <icon-park
@@ -45,21 +45,19 @@
 </template>
 
 <script setup lang="ts">
-import type { MeasureAggregationType } from '@/shared/domainTypes'
+import type { AnalyzeMeasureAggregationType } from '@/shared/analyzeConfigTypes'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElPopover } from 'element-plus'
 
-type AggregationType = MeasureAggregationType
-
 type AggregationOption = {
   label: string
-  value: AggregationType
+  value: AnalyzeMeasureAggregationType
 }
 
 const props = withDefaults(
   defineProps<{
     columnType?: string
-    aggregationType?: AggregationType
+    aggregationType?: AnalyzeMeasureAggregationType
     inline?: boolean
     tooltip?: string
     emptyLabel?: string
@@ -74,7 +72,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  'update:aggregationType': [aggregationType: AggregationType]
+  'update:aggregationType': [aggregationType: AnalyzeMeasureAggregationType]
 }>()
 
 const popoverRef = ref<InstanceType<typeof ElPopover>>()
@@ -82,7 +80,7 @@ const popoverRef = ref<InstanceType<typeof ElPopover>>()
 /**
  * 聚合选项
  */
-const aggregationOptions: AggregationOption[] = [
+const measureAggregationOptions: AggregationOption[] = [
   { label: '计数', value: 'count' },
   { label: '计数(去重)', value: 'countDistinct' },
   { label: '总计', value: 'sum' },
@@ -91,7 +89,7 @@ const aggregationOptions: AggregationOption[] = [
   { label: '最小值', value: 'min' }
 ]
 
-const numericTypes = [
+const numericDatabaseColumnTypeKeywords = [
   'int',
   'integer',
   'float',
@@ -105,28 +103,30 @@ const numericTypes = [
   'number'
 ]
 
-const dateTypes = ['date', 'time', 'year']
+const dateDatabaseColumnTypeKeywords = ['date', 'time', 'year']
 
-const filteredAggregations = computed(() => {
+const filteredMeasureAggregationOptions = computed(() => {
   const columnType = props.columnType?.toLowerCase() || ''
-  const baseValues: AggregationType[] = ['count', 'countDistinct']
+  const nonNumericAggregationValues: AnalyzeMeasureAggregationType[] = ['count', 'countDistinct']
 
-  if (numericTypes.some((type) => columnType.includes(type))) {
-    return aggregationOptions
+  if (numericDatabaseColumnTypeKeywords.some((type) => columnType.includes(type))) {
+    return measureAggregationOptions
   }
 
-  if (dateTypes.some((type) => columnType.includes(type))) {
-    return aggregationOptions.filter((item) => [...baseValues, 'max', 'min'].includes(item.value))
+  if (dateDatabaseColumnTypeKeywords.some((type) => columnType.includes(type))) {
+    return measureAggregationOptions.filter((item) =>
+      [...nonNumericAggregationValues, 'max', 'min'].includes(item.value)
+    )
   }
 
-  return aggregationOptions.filter((item) => baseValues.includes(item.value))
+  return measureAggregationOptions.filter((item) => nonNumericAggregationValues.includes(item.value))
 })
 
 const activeAggregationLabel = computed(() => {
-  return aggregationOptions.find((item) => item.value === props.aggregationType)?.label || props.emptyLabel
+  return measureAggregationOptions.find((item) => item.value === props.aggregationType)?.label || props.emptyLabel
 })
 
-const handleChangeAggregation = (aggregationType: AggregationType) => {
+const handleChangeMeasureAggregation = (aggregationType: AnalyzeMeasureAggregationType) => {
   emit('update:aggregationType', aggregationType)
   if (!props.inline) {
     popoverRef.value?.hide()

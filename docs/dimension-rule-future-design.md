@@ -1,4 +1,4 @@
-# DimensionRule 未来设计记录
+# AnalyzeDimensionFieldRule 未来设计记录
 
 ## 背景
 
@@ -6,14 +6,14 @@
 
 ```ts
 type DimensionOption = ColumnItem & {
-  dimensionRule: DimensionRule
+  dimensionRule: AnalyzeDimensionFieldRule
 }
 ```
 
 当前 `dimensionRule` 已开始承接上卷下钻的稳定配置：
 
 ```ts
-type DimensionRule = {
+type AnalyzeDimensionFieldRule = {
   drill?: {
     enabled?: boolean
     role?: 'level'
@@ -67,7 +67,7 @@ type DimensionRule = {
 上卷下钻的稳定配置放入 `dimensionRule`：
 
 ```ts
-type DimensionRule = {
+type AnalyzeDimensionFieldRule = {
   drill?: {
     enabled?: boolean
     role?: 'level'
@@ -132,7 +132,7 @@ type DimensionRule = {
 可选设计：
 
 ```ts
-type DimensionRule = {
+type AnalyzeDimensionFieldRule = {
   dateGranularity?: 'year' | 'quarter' | 'month' | 'week' | 'day' | 'hour'
 }
 ```
@@ -163,7 +163,7 @@ type DimensionRule = {
 可选设计：
 
 ```ts
-type DimensionRule = {
+type AnalyzeDimensionFieldRule = {
   bucket?: {
     size: number
     start?: number
@@ -199,7 +199,7 @@ type DimensionRule = {
 可选设计：
 
 ```ts
-type DimensionRule = {
+type AnalyzeDimensionFieldRule = {
   hierarchy?: {
     group: string
     level: string

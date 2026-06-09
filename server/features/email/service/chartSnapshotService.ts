@@ -10,7 +10,11 @@ import { renderIntervalChart } from '~/composables/useChartRender/renderInterval
 import { renderLineChart } from '~/composables/useChartRender/renderLineChart'
 import { renderPieChart } from '~/composables/useChartRender/renderPieChart'
 import type { ChartRenderConfig } from '~/composables/useChartRender/utils'
-import { defaultIntervalChartConfig, defaultLineChartConfig, defaultPieChartConfig } from '~/shared/chartDefaults'
+import {
+  defaultAnalyzeIntervalChartConfig,
+  defaultAnalyzeLineChartConfig,
+  defaultAnalyzePieChartConfig
+} from '~/shared/analyzeChartConfigDefaults'
 import { validateAnalyzeChartConfig } from '~/utils/validateAnalyzeChartConfig'
 
 echarts.use([
@@ -151,12 +155,12 @@ export class ChartSnapshotService {
   ): EChartsCoreOption | null {
     switch (chartType) {
       case 'line':
-        return renderLineChart(renderConfig, privateChartConfig?.line || defaultLineChartConfig)
+        return renderLineChart(renderConfig, privateChartConfig?.line || defaultAnalyzeLineChartConfig)
       case 'interval':
       case 'bar':
-        return renderIntervalChart(renderConfig, privateChartConfig?.interval || defaultIntervalChartConfig)
+        return renderIntervalChart(renderConfig, privateChartConfig?.interval || defaultAnalyzeIntervalChartConfig)
       case 'pie':
-        return renderPieChart(renderConfig, privateChartConfig?.pie || defaultPieChartConfig)
+        return renderPieChart(renderConfig, privateChartConfig?.pie || defaultAnalyzePieChartConfig)
       default:
         throw new Error(`暂不支持 ${chartType} 类型的服务端渲染`)
     }

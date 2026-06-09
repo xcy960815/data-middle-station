@@ -1,4 +1,8 @@
-import type { FilterType, MeasureAggregationType, OrderType } from '@/shared/domainTypes'
+import type {
+  AnalyzeFilterOperator,
+  AnalyzeMeasureAggregationType,
+  AnalyzeOrderDirection
+} from '@/shared/analyzeConfigTypes'
 import { toLine } from '@/server/utils/databaseHelper'
 
 // ---------------------------------------------------------------------------
@@ -44,7 +48,7 @@ export type AnalyzeSqlQuery = {
 // SQL 映射
 // ---------------------------------------------------------------------------
 
-const FILTER_TYPE_TO_SQL_OPERATOR: Record<FilterType, string> = {
+const FILTER_TYPE_TO_SQL_OPERATOR: Record<AnalyzeFilterOperator, string> = {
   eq: '=',
   neq: '!=',
   gt: '>',
@@ -67,7 +71,7 @@ const ANALYZE_AGGREGATION_SQL_MAP: Record<AnalyzeAggregationType, 'RAW' | string
   min: 'MIN'
 }
 
-const ORDER_DIRECTION_TO_SQL: Record<OrderType, 'ASC' | 'DESC'> = {
+const ORDER_DIRECTION_TO_SQL: Record<AnalyzeOrderDirection, 'ASC' | 'DESC'> = {
   asc: 'ASC',
   desc: 'DESC'
 }
@@ -377,9 +381,9 @@ export class AnalyzeQueryBuilder {
 
   private resolveMeasureAggregationType(option: {
     measureRule?: {
-      aggregation?: MeasureAggregationType
+      aggregation?: AnalyzeMeasureAggregationType
     }
-  }): MeasureAggregationType {
+  }): AnalyzeMeasureAggregationType {
     const configuredAggregation = option.measureRule?.aggregation
     if (configuredAggregation) {
       return configuredAggregation

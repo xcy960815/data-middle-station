@@ -31,6 +31,9 @@ services:
       NUXT_SERVICE_REDIS_PASSWORD: ${REDIS_PASSWORD}
       NUXT_SERVICE_REDIS_DB: '0'
       NUXT_SERVICE_REDIS_BASE: dms-redis
+      NUXT_DEEP_SEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      NUXT_DEEP_SEEK_API_URL: ${DEEPSEEK_API_URL:-https://api.deepseek.com/chat/completions}
+      NUXT_DEEP_SEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
     restart: always
     networks:
       - dms-network

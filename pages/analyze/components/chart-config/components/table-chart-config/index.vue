@@ -757,7 +757,12 @@
 </template>
 
 <script lang="ts" setup>
-import { buildTableColumnsFromFields, defaultTableColumnUi, type TableColumnSetting } from '@/shared/tableColumnConfig'
+import { defaultAnalyzeTableChartConfig } from '@/shared/analyzeChartConfigDefaults'
+import {
+  buildAnalyzeTableColumnsFromFields,
+  createDefaultAnalyzeTableColumnUi,
+  type AnalyzeTableColumnSetting
+} from '@/shared/analyzeTableColumnConfig'
 import { IconPark } from '@icon-park/vue-next/es/all'
 
 /**
@@ -770,7 +775,7 @@ const measureStore = useMeasuresStore()
 /**
  * @desc 表格配置数据
  */
-const tableChartConfig = reactive<ChartConfigStore.TableChartConfig>({ ...defaultTableChartConfig })
+const tableChartConfig = reactive<ChartConfigStore.TableChartConfig>({ ...defaultAnalyzeTableChartConfig })
 
 onMounted(() => {
   if (chartsConfigStore.privateChartConfig?.table) {
@@ -792,7 +797,7 @@ const dimensionFields = computed(() => dimensionStore.getDimensions)
 const measureFields = computed(() => measureStore.getMeasures)
 
 const tableColumnRows = computed(() =>
-  buildTableColumnsFromFields(dimensionFields.value, measureFields.value, tableChartConfig.columns || [])
+  buildAnalyzeTableColumnsFromFields(dimensionFields.value, measureFields.value, tableChartConfig.columns || [])
 )
 
 const tableColumnFieldMap = computed(() => {
@@ -800,46 +805,46 @@ const tableColumnFieldMap = computed(() => {
   return new Map(entries)
 })
 
-const getTableColumnLabel = (column: TableColumnSetting) => {
+const getTableColumnLabel = (column: AnalyzeTableColumnSetting) => {
   const field = tableColumnFieldMap.value.get(column.columnName)
   return field?.displayName || field?.columnComment || column.columnName
 }
 
-const setTableColumns = (columns: TableColumnSetting[]) => {
+const setTableColumns = (columns: AnalyzeTableColumnSetting[]) => {
   tableChartConfig.columns = columns
   handleUpdateTableConfig()
 }
 
-const createDefaultTableColumns = (): TableColumnSetting[] => [
+const createDefaultTableColumns = (): AnalyzeTableColumnSetting[] => [
   ...dimensionFields.value.map((field) => ({
     columnName: field.columnName,
     role: 'dimension' as const,
-    ...defaultTableColumnUi()
+    ...createDefaultAnalyzeTableColumnUi()
   })),
   ...measureFields.value.map((field) => ({
     columnName: field.columnName,
     role: 'measure' as const,
-    ...defaultTableColumnUi()
+    ...createDefaultAnalyzeTableColumnUi()
   }))
 ]
 
-const handleUpdateTableColumn = (column: TableColumnSetting, patch: Partial<TableColumnSetting>) => {
+const handleUpdateTableColumn = (column: AnalyzeTableColumnSetting, patch: Partial<AnalyzeTableColumnSetting>) => {
   const nextColumns = tableColumnRows.value.map((item) =>
     item.columnName === column.columnName && item.role === column.role ? { ...item, ...patch } : item
   )
   setTableColumns(nextColumns)
 }
 
-const handleUpdateTableColumnFixed = (column: TableColumnSetting, fixed: TableColumnSetting['fixed']) => {
+const handleUpdateTableColumnFixed = (column: AnalyzeTableColumnSetting, fixed: AnalyzeTableColumnSetting['fixed']) => {
   handleUpdateTableColumn(column, { fixed })
 }
 
-const handleUpdateTableColumnAlign = (column: TableColumnSetting, align: TableColumnSetting['align']) => {
+const handleUpdateTableColumnAlign = (column: AnalyzeTableColumnSetting, align: AnalyzeTableColumnSetting['align']) => {
   handleUpdateTableColumn(column, { align })
 }
 
-const handleResetTableColumn = (column: TableColumnSetting) => {
-  handleUpdateTableColumn(column, defaultTableColumnUi())
+const handleResetTableColumn = (column: AnalyzeTableColumnSetting) => {
+  handleUpdateTableColumn(column, createDefaultAnalyzeTableColumnUi())
 }
 
 const handleSyncTableColumns = () => {
@@ -864,9 +869,9 @@ const handleUpdateTableConfig = (): void => {
  */
 const handleResetTableConfig = <K extends keyof ChartConfigStore.TableChartConfig>(chartConfigKey?: K): void => {
   if (chartConfigKey) {
-    tableChartConfig[chartConfigKey] = defaultTableChartConfig[chartConfigKey]
+    tableChartConfig[chartConfigKey] = defaultAnalyzeTableChartConfig[chartConfigKey]
   } else {
-    Object.assign(tableChartConfig, defaultTableChartConfig)
+    Object.assign(tableChartConfig, defaultAnalyzeTableChartConfig)
   }
   handleUpdateTableConfig()
 }

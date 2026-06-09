@@ -18,7 +18,7 @@ declare namespace DimensionStore {
     /**
      * 分组规则：日期粒度、层级等分组行为配置
      */
-    dimensionRule: import('@/shared/analyzeFieldRules').DimensionRule
+    dimensionRule: import('@/shared/analyzeConfigFieldRules').AnalyzeDimensionFieldRule
   }
 
   type DrillPathItem = {

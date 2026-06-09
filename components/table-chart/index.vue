@@ -47,8 +47,12 @@
 </template>
 
 <script lang="ts" setup>
-import { defaultTableChartConfig } from '@/shared/chartDefaults'
-import { buildTableColumnsFromFields, mergeFieldWithTableColumn, stripTableColumnUi } from '@/shared/tableColumnConfig'
+import { defaultAnalyzeTableChartConfig } from '@/shared/analyzeChartConfigDefaults'
+import {
+  buildAnalyzeTableColumnsFromFields,
+  mergeAnalyzeFieldWithTableColumn,
+  stripAnalyzeTableColumnUiFromField
+} from '@/shared/analyzeTableColumnConfig'
 import CanvasTable from './canvas-table.vue'
 import type { CellValueChangePayload, ColumnOrderChangePayload, ColumnWidthChangePayload } from './parameter'
 
@@ -101,23 +105,23 @@ const tableColumnSettings = computed(() => resolvedTableChartConfig.value?.colum
 const resolvedXAxisFields = computed(
   () =>
     props.xAxisFields.map((field) =>
-      mergeFieldWithTableColumn(field, tableColumnSettings.value)
+      mergeAnalyzeFieldWithTableColumn(field, tableColumnSettings.value)
     ) as CanvasTable.ColumnOption[]
 )
 
 const resolvedYAxisFields = computed(
   () =>
     props.yAxisFields.map((field) =>
-      mergeFieldWithTableColumn(field, tableColumnSettings.value)
+      mergeAnalyzeFieldWithTableColumn(field, tableColumnSettings.value)
     ) as CanvasTable.ColumnOption[]
 )
 
 const buildCurrentFieldTableColumns = () =>
-  buildTableColumnsFromFields(props.xAxisFields, props.yAxisFields, tableColumnSettings.value)
+  buildAnalyzeTableColumnsFromFields(props.xAxisFields, props.yAxisFields, tableColumnSettings.value)
 
 const setResolvedTableColumns = (columns: AnalyzeConfigDao.TableColumnSetting[]) => {
   const tableConfig =
-    resolvedTableChartConfig.value || chartConfigStore.privateChartConfig?.table || defaultTableChartConfig
+    resolvedTableChartConfig.value || chartConfigStore.privateChartConfig?.table || defaultAnalyzeTableChartConfig
   chartConfigStore.setTableChartConfig({
     ...tableConfig,
     columns
@@ -131,8 +135,8 @@ const handleColumnWidthChange = ({ columnName, width }: ColumnWidthChangePayload
 }
 
 const handleColumnOrderChange = ({ xAxisFields, yAxisFields }: ColumnOrderChangePayload) => {
-  dimensionStore.setDimensions(xAxisFields.map(stripTableColumnUi) as DimensionStore.DimensionOption[])
-  measureStore.setMeasures(yAxisFields.map(stripTableColumnUi) as MeasureStore.MeasureOption[])
+  dimensionStore.setDimensions(xAxisFields.map(stripAnalyzeTableColumnUiFromField) as DimensionStore.DimensionOption[])
+  measureStore.setMeasures(yAxisFields.map(stripAnalyzeTableColumnUiFromField) as MeasureStore.MeasureOption[])
   analyzeStore.setEditorDirty(true)
 }
 

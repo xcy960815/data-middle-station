@@ -1,18 +1,18 @@
 import {
-  defaultCommonChartConfig,
-  defaultIntervalChartConfig,
-  defaultLineChartConfig,
-  defaultPieChartConfig,
-  defaultTableChartConfig
-} from '~/shared/chartDefaults'
+  defaultAnalyzeCommonChartConfig,
+  defaultAnalyzeIntervalChartConfig,
+  defaultAnalyzeLineChartConfig,
+  defaultAnalyzePieChartConfig,
+  defaultAnalyzeTableChartConfig
+} from '~/shared/analyzeChartConfigDefaults'
 import { StoreNames } from './store-names'
 
 export {
-  defaultCommonChartConfig,
-  defaultIntervalChartConfig,
-  defaultLineChartConfig,
-  defaultPieChartConfig,
-  defaultTableChartConfig
+  defaultAnalyzeCommonChartConfig,
+  defaultAnalyzeIntervalChartConfig,
+  defaultAnalyzeLineChartConfig,
+  defaultAnalyzePieChartConfig,
+  defaultAnalyzeTableChartConfig
 }
 
 export const useChartConfigStore = defineStore<
@@ -33,24 +33,24 @@ export const useChartConfigStore = defineStore<
       /**
        * @desc 折线图配置
        */
-      line: defaultLineChartConfig,
+      line: defaultAnalyzeLineChartConfig,
       /**
        * @desc 表格图配置
        */
-      table: defaultTableChartConfig,
+      table: defaultAnalyzeTableChartConfig,
       /**
        * @desc 饼图配置
        */
-      pie: defaultPieChartConfig,
+      pie: defaultAnalyzePieChartConfig,
       /**
        * @desc 柱状图配置
        */
-      interval: defaultIntervalChartConfig
+      interval: defaultAnalyzeIntervalChartConfig
     },
     /**
      * @desc 图表公共配置
      */
-    commonChartConfig: defaultCommonChartConfig
+    commonChartConfig: defaultAnalyzeCommonChartConfig
   }),
 
   getters: {
@@ -85,10 +85,10 @@ export const useChartConfigStore = defineStore<
       this.privateChartConfig = value
         ? (JSON.parse(JSON.stringify(value)) as ChartConfigStore.PrivateChartConfig)
         : {
-            line: defaultLineChartConfig,
-            table: defaultTableChartConfig,
-            pie: defaultPieChartConfig,
-            interval: defaultIntervalChartConfig
+            line: defaultAnalyzeLineChartConfig,
+            table: defaultAnalyzeTableChartConfig,
+            pie: defaultAnalyzePieChartConfig,
+            interval: defaultAnalyzeIntervalChartConfig
           }
     },
     /**

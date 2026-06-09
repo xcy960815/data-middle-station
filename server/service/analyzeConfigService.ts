@@ -1,6 +1,10 @@
 import { AnalyzeConfigMapper } from '@/server/mapper/analyzeConfigMapper'
 import { BaseService } from '@/server/service/baseService'
-import { migrateTableColumnUiFromFields, TABLE_COLUMN_UI_KEYS, type TableColumnUiKey } from '@/shared/tableColumnConfig'
+import {
+  migrateAnalyzeTableColumnUiFromFields,
+  ANALYZE_TABLE_COLUMN_UI_KEYS,
+  type AnalyzeTableColumnUiKey
+} from '@/shared/analyzeTableColumnConfig'
 
 type TableColumnUiMigrationResult = {
   measures: AnalyzeConfigDao.MeasureOption[]
@@ -120,7 +124,7 @@ export class AnalyzeConfigService extends BaseService {
     const shouldCreateTableColumns =
       config.chartType === 'table' && fields.length > 0 && !config.privateChartConfig?.table?.columns?.length
     const migratedColumnCount = shouldCreateTableColumns ? fields.length : legacyColumnCount
-    const migrated = migrateTableColumnUiFromFields(
+    const migrated = migrateAnalyzeTableColumnUiFromFields(
       config.dimensions as Array<{ columnName: string } & Record<string, unknown>>,
       config.measures as Array<{ columnName: string } & Record<string, unknown>>,
       config.privateChartConfig,
@@ -151,7 +155,9 @@ export class AnalyzeConfigService extends BaseService {
   private countTableColumnUiFields(fields: AnalyzeConfigField[]): number {
     return fields.reduce((count, field) => {
       if (!field || typeof field !== 'object') return count
-      return count + TABLE_COLUMN_UI_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(field, key)).length
+      return (
+        count + ANALYZE_TABLE_COLUMN_UI_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(field, key)).length
+      )
     }, 0)
   }
 
@@ -161,7 +167,9 @@ export class AnalyzeConfigService extends BaseService {
 
   private hasTableColumnUiField(field: AnalyzeConfigField): boolean {
     if (!field || typeof field !== 'object') return false
-    return TABLE_COLUMN_UI_KEYS.some((key: TableColumnUiKey) => Object.prototype.hasOwnProperty.call(field, key))
+    return ANALYZE_TABLE_COLUMN_UI_KEYS.some((key: AnalyzeTableColumnUiKey) =>
+      Object.prototype.hasOwnProperty.call(field, key)
+    )
   }
 
   private isJsonEquivalent(left: unknown, right: unknown): boolean {

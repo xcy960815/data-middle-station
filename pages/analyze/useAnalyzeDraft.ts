@@ -1,7 +1,7 @@
 /**
  * @desc 提供分析草稿的读取、保存和清理能力。
  */
-import { defaultCommonChartConfig } from '@/shared/chartDefaults'
+import { defaultAnalyzeCommonChartConfig } from '@/shared/analyzeChartConfigDefaults'
 
 export const useAnalyzeDraft = () => {
   const chartConfigStore = useChartConfigStore()
@@ -14,7 +14,7 @@ export const useAnalyzeDraft = () => {
 
   const buildAnalyzeDraftPayload = (): AnalyzeDto.UpdateAnalyzeRequest => {
     const commonChartConfig: AnalyzeConfigDao.CommonChartConfig = {
-      ...defaultCommonChartConfig,
+      ...defaultAnalyzeCommonChartConfig,
       ...(chartConfigStore.getCommonChartConfig || {}),
       dataSourceMode: columnStore.getDataSourceMode,
       datasetId: columnStore.getDatasetId,

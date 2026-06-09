@@ -31,7 +31,7 @@ declare namespace OrderStore {
    * @property {string} type 列类型
    */
   type OrderOption = ColumnsStore.ColumnOptions & {
-    orderRule: import('@/shared/analyzeFieldRules').OrderRule
+    orderRule: import('@/shared/analyzeConfigFieldRules').AnalyzeOrderFieldRule
   }
 
   /**

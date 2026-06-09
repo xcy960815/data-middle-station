@@ -35,7 +35,7 @@ declare namespace FilterStore {
     /**
      * 过滤条件：操作符 + 操作数 + 聚合方式
      */
-    filterRule: import('@/shared/analyzeFieldRules').FilterRule
+    filterRule: import('@/shared/analyzeConfigFieldRules').AnalyzeFilterFieldRule
   }
 
   /**

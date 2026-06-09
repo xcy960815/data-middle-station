@@ -109,6 +109,11 @@ SMTP_REJECT_UNAUTHORIZED=true
 SMTP_USER=your_email@example.com
 SMTP_PASS=your_smtp_password
 SMTP_FROM=your_email@example.com
+
+# AI 错误分析
+DEEPSEEK_API_KEY=
+DEEPSEEK_API_URL=https://api.deepseek.com/chat/completions
+DEEPSEEK_MODEL=deepseek-chat
 ```
 
 ## 开发

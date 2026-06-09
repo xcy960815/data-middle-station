@@ -2,11 +2,11 @@
  * 图表配置
  */
 declare namespace AnalyzeConfigDao {
-  type FilterTypeMap = typeof import('@/shared/domainTypes').FILTER_TYPE_MAP
-  type FilterAggregationMap = typeof import('@/shared/domainTypes').FILTER_AGGREGATION_MAP
-  type OrderTypeMap = typeof import('@/shared/domainTypes').ORDER_TYPE_MAP
-  type OrderAggregationMap = typeof import('@/shared/domainTypes').ORDER_AGGREGATION_MAP
-  type MeasureAggregationMap = typeof import('@/shared/domainTypes').MEASURE_AGGREGATION_MAP
+  type FilterTypeMap = typeof import('@/shared/analyzeConfigTypes').ANALYZE_FILTER_OPERATOR_MAP
+  type FilterAggregationMap = typeof import('@/shared/analyzeConfigTypes').ANALYZE_FILTER_AGGREGATION_MAP
+  type OrderTypeMap = typeof import('@/shared/analyzeConfigTypes').ANALYZE_ORDER_DIRECTION_MAP
+  type OrderAggregationMap = typeof import('@/shared/analyzeConfigTypes').ANALYZE_ORDER_AGGREGATION_MAP
+  type MeasureAggregationMap = typeof import('@/shared/analyzeConfigTypes').ANALYZE_MEASURE_AGGREGATION_MAP
 
   /**
    * 列配置
@@ -23,7 +23,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 值字段规则：聚合方式等度量行为配置
      */
-    measureRule: import('@/shared/analyzeFieldRules').MeasureRule
+    measureRule: import('@/shared/analyzeConfigFieldRules').AnalyzeMeasureFieldRule
   }
 
   /**
@@ -34,7 +34,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 值/度量聚合方式
    */
-  type MeasureAggregationType = import('@/shared/domainTypes').MeasureAggregationType
+  type MeasureAggregationType = import('@/shared/analyzeConfigTypes').AnalyzeMeasureAggregationType
 
   /**
    * 过滤聚合方式
@@ -49,12 +49,12 @@ declare namespace AnalyzeConfigDao {
   /**
    * 过滤类型
    */
-  type FilterType = import('@/shared/domainTypes').FilterType
+  type FilterType = import('@/shared/analyzeConfigTypes').AnalyzeFilterOperator
 
   /**
    * 过滤聚合方式
    */
-  type FilterAggregationsType = import('@/shared/domainTypes').FilterAggregationType
+  type FilterAggregationsType = import('@/shared/analyzeConfigTypes').AnalyzeFilterAggregationType
 
   /**
    * 过滤配置
@@ -63,7 +63,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 过滤条件：操作符 + 操作数 + 聚合方式
      */
-    filterRule: import('@/shared/analyzeFieldRules').FilterRule
+    filterRule: import('@/shared/analyzeConfigFieldRules').AnalyzeFilterFieldRule
   }
 
   /**
@@ -73,7 +73,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 分组规则：日期粒度、层级等分组行为配置
      */
-    dimensionRule: import('@/shared/analyzeFieldRules').DimensionRule
+    dimensionRule: import('@/shared/analyzeConfigFieldRules').AnalyzeDimensionFieldRule
   }
 
   /**
@@ -81,7 +81,7 @@ declare namespace AnalyzeConfigDao {
    */
   type OrderTypeEnums = OrderTypeMap
 
-  type OrderType = import('@/shared/domainTypes').OrderType
+  type OrderType = import('@/shared/analyzeConfigTypes').AnalyzeOrderDirection
 
   /**
    * 排序聚合方式
@@ -91,7 +91,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * 排序聚合方式
    */
-  type OrderAggregationsType = import('@/shared/domainTypes').OrderAggregationType
+  type OrderAggregationsType = import('@/shared/analyzeConfigTypes').AnalyzeOrderAggregationType
 
   /**
    * 排序配置
@@ -100,7 +100,7 @@ declare namespace AnalyzeConfigDao {
     /**
      * 排序规则：方向 + 聚合方式
      */
-    orderRule: import('@/shared/analyzeFieldRules').OrderRule
+    orderRule: import('@/shared/analyzeConfigFieldRules').AnalyzeOrderFieldRule
   }
 
   /**
@@ -236,7 +236,7 @@ declare namespace AnalyzeConfigDao {
   /**
    * @desc 表格列 UI 配置（与 measures/dimensions 查询字段分离）
    */
-  type TableColumnSetting = import('@/shared/tableColumnConfig').TableColumnSetting
+  type TableColumnSetting = import('@/shared/analyzeTableColumnConfig').AnalyzeTableColumnSetting
 
   /**
    * @desc 表格配置

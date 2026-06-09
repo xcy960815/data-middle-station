@@ -1,6 +1,6 @@
 declare namespace PermissionDto {
-  type ResourceType = import('@/shared/domainTypes').ResourceType
-  type ResourcePermissionType = import('@/shared/domainTypes').ResourcePermissionType
+  type ResourceType = import('@/shared/resourcePermissionTypes').PermissionResourceType
+  type ResourcePermissionType = import('@/shared/resourcePermissionTypes').ResourcePermissionLevel
   type AnalyzePermissionType = ResourcePermissionType
 
   type GetResourceRolePermissionsRequest = {

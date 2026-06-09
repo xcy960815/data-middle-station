@@ -2,9 +2,9 @@
  * @desc 表格列 UI 配置：与查询字段（measure/dimension）分离，保存在 privateChartConfig.table.columns
  */
 
-export type TableColumnRole = 'dimension' | 'measure'
+export type AnalyzeTableColumnRole = 'dimension' | 'measure'
 
-export const TABLE_COLUMN_UI_KEYS = [
+export const ANALYZE_TABLE_COLUMN_UI_KEYS = [
   'fixed',
   'align',
   'verticalAlign',
@@ -20,15 +20,15 @@ export const TABLE_COLUMN_UI_KEYS = [
   'colIndex'
 ] as const
 
-export type TableColumnUiKey = (typeof TABLE_COLUMN_UI_KEYS)[number]
+export type AnalyzeTableColumnUiKey = (typeof ANALYZE_TABLE_COLUMN_UI_KEYS)[number]
 
-const buildTableColumnSettingKey = (role: TableColumnRole, columnName: string) => `${role}:${columnName}`
+const buildAnalyzeTableColumnSettingKey = (role: AnalyzeTableColumnRole, columnName: string) => `${role}:${columnName}`
 
-const inferTableColumnRoleFromField = (field: Record<string, unknown>): TableColumnRole => {
+const inferAnalyzeTableColumnRoleFromField = (field: Record<string, unknown>): AnalyzeTableColumnRole => {
   return 'measureRule' in field ? 'measure' : 'dimension'
 }
 
-export type TableColumnSetting = {
+export type AnalyzeTableColumnSetting = {
   /**
    * 列名
    */
@@ -36,7 +36,7 @@ export type TableColumnSetting = {
   /**
    * 维度还是分组
    */
-  role: TableColumnRole
+  role: AnalyzeTableColumnRole
   /**
    * 固定方式
    */
@@ -98,7 +98,7 @@ export type TableColumnSetting = {
  * 默认的表格样式配置
  * @returns
  */
-export const defaultTableColumnUi = (): Omit<TableColumnSetting, 'columnName' | 'role'> => ({
+export const createDefaultAnalyzeTableColumnUi = (): Omit<AnalyzeTableColumnSetting, 'columnName' | 'role'> => ({
   fixed: null,
   align: null,
   width: null,
@@ -107,24 +107,25 @@ export const defaultTableColumnUi = (): Omit<TableColumnSetting, 'columnName' | 
   sortable: false
 })
 
-const pickDefinedTableColumnUi = (field: Record<string, unknown>): Partial<TableColumnSetting> => {
-  const picked: Partial<TableColumnSetting> = {}
-  for (const key of TABLE_COLUMN_UI_KEYS) {
+const pickAnalyzeTableColumnUiFromField = (field: Record<string, unknown>): Partial<AnalyzeTableColumnSetting> => {
+  const picked: Partial<AnalyzeTableColumnSetting> = {}
+  for (const key of ANALYZE_TABLE_COLUMN_UI_KEYS) {
     if (!(key in field)) continue
     ;(picked as Record<string, unknown>)[key] = field[key]
   }
   return picked
 }
 
-export const stripTableColumnUi = <T extends Record<string, unknown>>(field: T): T => {
+export const stripAnalyzeTableColumnUiFromField = <T extends Record<string, unknown>>(field: T): T => {
   const cleaned = { ...field }
-  for (const key of TABLE_COLUMN_UI_KEYS) {
+  for (const key of ANALYZE_TABLE_COLUMN_UI_KEYS) {
     delete cleaned[key]
   }
   return cleaned as T
 }
 
-const hasLegacyTableColumnUi = (field: Record<string, unknown>) => TABLE_COLUMN_UI_KEYS.some((key) => key in field)
+const hasLegacyAnalyzeTableColumnUi = (field: Record<string, unknown>) =>
+  ANALYZE_TABLE_COLUMN_UI_KEYS.some((key) => key in field)
 
 /**
  * 构建 canvas table 所需要的列配置
@@ -132,41 +133,42 @@ const hasLegacyTableColumnUi = (field: Record<string, unknown>) => TABLE_COLUMN_
  * @param columns
  * @returns
  */
-export const mergeFieldWithTableColumn = <T extends { columnName: string }>(
+export const mergeAnalyzeFieldWithTableColumn = <T extends { columnName: string }>(
   field: T,
-  columns: TableColumnSetting[] | undefined
-): T & Partial<TableColumnSetting> => {
-  const role = inferTableColumnRoleFromField(field as Record<string, unknown>)
+  columns: AnalyzeTableColumnSetting[] | undefined
+): T & Partial<AnalyzeTableColumnSetting> => {
+  const role = inferAnalyzeTableColumnRoleFromField(field as Record<string, unknown>)
   const columnSetting = columns?.find(
     (item) =>
-      buildTableColumnSettingKey(item.role, item.columnName) === buildTableColumnSettingKey(role, field.columnName)
+      buildAnalyzeTableColumnSettingKey(item.role, item.columnName) ===
+      buildAnalyzeTableColumnSettingKey(role, field.columnName)
   )
   return {
-    ...defaultTableColumnUi(),
+    ...createDefaultAnalyzeTableColumnUi(),
     ...field,
     ...columnSetting
   }
 }
 
-export const buildTableColumnsFromFields = (
+export const buildAnalyzeTableColumnsFromFields = (
   dimensions: Array<{ columnName: string } & Record<string, unknown>>,
   measures: Array<{ columnName: string } & Record<string, unknown>>,
-  existing: TableColumnSetting[] = []
-): TableColumnSetting[] => {
+  existing: AnalyzeTableColumnSetting[] = []
+): AnalyzeTableColumnSetting[] => {
   const existingMap = new Map(
-    existing.map((item) => [buildTableColumnSettingKey(item.role, item.columnName), item] as const)
+    existing.map((item) => [buildAnalyzeTableColumnSettingKey(item.role, item.columnName), item] as const)
   )
-  const columns: TableColumnSetting[] = []
+  const columns: AnalyzeTableColumnSetting[] = []
 
   for (const dimension of dimensions) {
     const columnName = dimension.columnName
-    const key = buildTableColumnSettingKey('dimension', columnName)
+    const key = buildAnalyzeTableColumnSettingKey('dimension', columnName)
     const previous = existingMap.get(key)
     columns.push({
       columnName,
       role: 'dimension',
-      ...defaultTableColumnUi(),
-      ...pickDefinedTableColumnUi(dimension),
+      ...createDefaultAnalyzeTableColumnUi(),
+      ...pickAnalyzeTableColumnUiFromField(dimension),
       ...previous
     })
     existingMap.delete(key)
@@ -174,13 +176,13 @@ export const buildTableColumnsFromFields = (
 
   for (const measure of measures) {
     const columnName = measure.columnName
-    const key = buildTableColumnSettingKey('measure', columnName)
+    const key = buildAnalyzeTableColumnSettingKey('measure', columnName)
     const previous = existingMap.get(key)
     columns.push({
       columnName,
       role: 'measure',
-      ...defaultTableColumnUi(),
-      ...pickDefinedTableColumnUi(measure),
+      ...createDefaultAnalyzeTableColumnUi(),
+      ...pickAnalyzeTableColumnUiFromField(measure),
       ...previous
     })
     existingMap.delete(key)
@@ -189,7 +191,7 @@ export const buildTableColumnsFromFields = (
   return columns
 }
 
-export const migrateTableColumnUiFromFields = <
+export const migrateAnalyzeTableColumnUiFromFields = <
   TPrivateChartConfig extends { table?: AnalyzeConfigDao.TableChartConfig }
 >(
   dimensions: Array<{ columnName: string } & Record<string, unknown>>,
@@ -201,11 +203,11 @@ export const migrateTableColumnUiFromFields = <
   measures: Array<Record<string, unknown>>
   privateChartConfig?: TPrivateChartConfig
 } => {
-  const hasLegacyUi = [...dimensions, ...measures].some(hasLegacyTableColumnUi)
+  const hasLegacyUi = [...dimensions, ...measures].some(hasLegacyAnalyzeTableColumnUi)
   const table = privateChartConfig?.table
   const hasExistingColumns = Boolean(table?.columns?.length)
   const shouldWriteColumns = hasLegacyUi || hasExistingColumns || options.forceColumns
-  const columns = buildTableColumnsFromFields(dimensions, measures, table?.columns || [])
+  const columns = buildAnalyzeTableColumnsFromFields(dimensions, measures, table?.columns || [])
   const nextPrivateChartConfig =
     privateChartConfig || hasLegacyUi || options.forceColumns
       ? {
@@ -218,8 +220,8 @@ export const migrateTableColumnUiFromFields = <
       : privateChartConfig || undefined
 
   return {
-    dimensions: dimensions.map(stripTableColumnUi),
-    measures: measures.map(stripTableColumnUi),
+    dimensions: dimensions.map(stripAnalyzeTableColumnUiFromField),
+    measures: measures.map(stripAnalyzeTableColumnUiFromField),
     privateChartConfig: nextPrivateChartConfig
   }
 }

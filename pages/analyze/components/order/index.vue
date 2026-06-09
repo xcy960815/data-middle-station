@@ -50,7 +50,7 @@
           </template>
           <template #aggregation-panel="{ closePopover }">
             <div
-              v-for="option in getOrderAggregationOptions(orderOptions.columnType, true)"
+              v-for="option in getAnalyzeFieldAggregationOptions(orderOptions.columnType, true)"
               :key="option.value"
               class="aggregation-option flex items-center cursor-pointer hover:bg-gray-100 py-1 justify-between px-2"
               @click="handleSelectAggregation(orderOptions, option.value, closePopover)"
@@ -73,8 +73,11 @@
 <script setup lang="ts">
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { clearAllHandler } from '../clearAll'
-import { getOrderAggregationLabel, getOrderAggregationOptions } from '@/shared/orderAggregationOptions'
-import { setOrderRuleAggregation, toggleOrderRuleDirection } from '@/shared/analyzeFieldRules'
+import {
+  getAnalyzeFieldAggregationLabel,
+  getAnalyzeFieldAggregationOptions
+} from '@/shared/analyzeFieldAggregationOptions'
+import { setAnalyzeOrderFieldAggregation, toggleAnalyzeOrderFieldDirection } from '@/shared/analyzeConfigFieldRules'
 import {
   addFieldToOrders,
   getAnalyzeFieldDropTargetIndex,
@@ -101,7 +104,7 @@ const resolveOrderDisplayName = (order: OrderStore.OrderOption) => {
 }
 
 const resolveOrderAggregationLabel = (order: OrderStore.OrderOption) => {
-  return getOrderAggregationLabel(order.orderRule.aggregation)
+  return getAnalyzeFieldAggregationLabel(order.orderRule.aggregation)
 }
 
 const getOrderInvalid = (order: OrderStore.OrderOption) => {
@@ -117,7 +120,7 @@ const getOrderInvalidMessage = (order: OrderStore.OrderOption) => {
 }
 
 const handleToggleDirection = (order: OrderStore.OrderOption) => {
-  order.orderRule = toggleOrderRuleDirection(order.orderRule)
+  order.orderRule = toggleAnalyzeOrderFieldDirection(order.orderRule)
   syncOrderOptionDisplayName(order)
 }
 
@@ -126,7 +129,7 @@ const handleSelectAggregation = (
   aggregationType: OrderStore.OrderAggregationsType,
   closePopover?: () => void
 ) => {
-  order.orderRule = setOrderRuleAggregation(order.orderRule, aggregationType)
+  order.orderRule = setAnalyzeOrderFieldAggregation(order.orderRule, aggregationType)
   syncOrderOptionDisplayName(order)
   closePopover?.()
 }
