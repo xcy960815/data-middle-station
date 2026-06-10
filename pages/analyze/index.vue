@@ -2,6 +2,7 @@
   <NuxtLayout :name="layoutName">
     <template #header>
       <custom-header>
+        <template #nav />
         <template #header-right>
           <el-tooltip effect="dark" content="创建分析" placement="bottom">
             <icon-park

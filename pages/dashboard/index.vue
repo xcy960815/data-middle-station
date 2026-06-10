@@ -2,6 +2,7 @@
   <NuxtLayout :name="layoutName">
     <template #header>
       <custom-header>
+        <template #nav />
         <template #header-right>
           <div class="dashboard-header-actions">
             <el-tooltip effect="dark" content="创建看板" placement="bottom">
