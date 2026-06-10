@@ -1,33 +1,23 @@
-import { DataSourceMapper } from '@/server/mapper/dataSourceMapper'
 import { DatabaseMapper } from '@/server/mapper/databaseMapper'
 import { DatasetMapper } from '@/server/mapper/datasetMapper'
 import { BaseService } from '@/server/service/baseService'
-import { toLine } from '@/server/utils/databaseHelper'
+import { assertReadOnlyDatasetSql } from '@/server/utils/datasetSql'
 
 const DEFAULT_PREVIEW_LIMIT = 100
 const MAX_PREVIEW_LIMIT = 500
-const SQL_IDENTIFIER_REGEXP = /^[a-zA-Z0-9_]+$/
+const DEFAULT_QUERY_SQL = 'SELECT 1 AS sample_value'
 
 /**
- * @desc 数据集服务，负责数据集的 CRUD 业务编排
+ * @desc 数据集服务，负责数据集的 CRUD 与 SQL 预览
  */
 export class DatasetService extends BaseService {
   private datasetMapper: DatasetMapper
-  private dataSourceMapper: DataSourceMapper
-  private databaseMapper: DatabaseMapper
 
   constructor() {
     super()
     this.datasetMapper = new DatasetMapper()
-    this.dataSourceMapper = new DataSourceMapper()
-    this.databaseMapper = new DatabaseMapper()
   }
 
-  /**
-   * @desc 获取数据集列表（分页）
-   * @param queryRequest 分页查询参数
-   * @returns 数据集列表及分页信息
-   */
   public async getDatasets(
     queryRequest: DatasetDto.GetDatasetListRequest = {}
   ): Promise<DatasetVo.DatasetListResponse> {
@@ -55,60 +45,31 @@ export class DatasetService extends BaseService {
     }
   }
 
-  /**
-   * @desc 获取单个数据集详情
-   * @param queryRequest 查询参数
-   * @returns 数据集详情
-   */
   public async getDataset(queryRequest: DatasetDto.GetDatasetRequest): Promise<DatasetVo.DatasetDetailResponse> {
     const dataset = await this.datasetMapper.getDataset(queryRequest)
     if (!dataset) {
       throw new Error('数据集不存在')
     }
-    const [dataSource, datasetConfig] = await Promise.all([
-      this.dataSourceMapper.getDataSource({ id: dataset.dataSourceId }),
-      dataset.currentConfigId ? this.datasetMapper.getDatasetConfig({ id: dataset.currentConfigId }) : null
-    ])
+    const datasetConfig = dataset.currentConfigId
+      ? await this.datasetMapper.getDatasetConfig({ id: dataset.currentConfigId })
+      : null
 
     return {
       ...dataset,
-      dataSource: dataSource
-        ? {
-            ...dataSource,
-            tableCount: (await this.dataSourceMapper.getDataSourceTables(dataSource.id)).length
-          }
-        : null,
+      querySql: datasetConfig?.querySql || '',
       fieldsConfig: datasetConfig?.fieldsConfig || []
     }
   }
 
-  /**
-   * @desc 创建数据集
-   * @param createRequest 创建请求参数
-   * @returns 创建后的数据集详情
-   */
   public async createDataset(createRequest: DatasetDto.CreateDatasetRequest): Promise<DatasetVo.DatasetDetailResponse> {
     this.assertCurrentUserAdmin('仅管理员可创建数据集')
-    const dataSource = await this.dataSourceMapper.getDataSource({ id: createRequest.dataSourceId })
-    if (!dataSource) {
-      throw new Error('数据源不存在')
-    }
-    if (dataSource.status !== 'enabled') {
-      throw new Error('数据源已禁用')
-    }
-    const columns = await this.dataSourceMapper.getDataSourceColumns(
-      createRequest.dataSourceId,
-      createRequest.baseTable
-    )
-    if (!columns.length) {
-      throw new Error('请先同步数据源表结构')
-    }
+    const querySql = String(createRequest.querySql || DEFAULT_QUERY_SQL).trim() || DEFAULT_QUERY_SQL
+    assertReadOnlyDatasetSql(querySql)
+
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
     const datasetId = await this.datasetMapper.createDataset({
       datasetName: createRequest.datasetName,
       datasetDesc: createRequest.datasetDesc || '',
-      dataSourceId: createRequest.dataSourceId,
-      baseTable: createRequest.baseTable,
       status: createRequest.status || 'enabled',
       currentConfigId: null,
       createdBy,
@@ -116,10 +77,16 @@ export class DatasetService extends BaseService {
       createTime,
       updateTime
     })
+
+    const fieldsConfig = createRequest.fieldsConfig?.length
+      ? createRequest.fieldsConfig
+      : (await this.previewDatasetSql({ querySql, limit: DEFAULT_PREVIEW_LIMIT })).columns
+
     const configId = await this.datasetMapper.createDatasetConfig({
       datasetId,
       versionNo: 1,
-      fieldsConfig: this.createDefaultFieldsConfig(columns),
+      querySql,
+      fieldsConfig,
       changeNote: '初始化版本',
       createdBy,
       createTime,
@@ -134,15 +101,15 @@ export class DatasetService extends BaseService {
     return await this.getDataset({ id: datasetId })
   }
 
-  /**
-   * @desc 更新数据集（含字段配置版本管理）
-   * @param updateRequest 更新请求参数
-   * @returns 更新后的数据集详情
-   */
   public async updateDataset(updateRequest: DatasetDto.UpdateDatasetRequest): Promise<DatasetVo.DatasetDetailResponse> {
     this.assertCurrentUserAdmin('仅管理员可更新数据集')
     const currentDataset = await this.getDataset({ id: updateRequest.id })
     const { createdBy, updatedBy, createTime, updateTime } = await this.getDefaultInfo()
+
+    if (updateRequest.querySql) {
+      assertReadOnlyDatasetSql(updateRequest.querySql)
+    }
+
     const updateResult = await this.datasetMapper.updateDataset({
       id: updateRequest.id,
       datasetName: updateRequest.datasetName,
@@ -155,12 +122,21 @@ export class DatasetService extends BaseService {
       throw new Error('保存数据集失败')
     }
 
-    if (updateRequest.fieldsConfig) {
+    const shouldCreateConfigVersion = Boolean(updateRequest.querySql || updateRequest.fieldsConfig)
+    if (shouldCreateConfigVersion) {
       const nextVersionNo = await this.datasetMapper.getNextVersionNo(updateRequest.id)
+      const querySql = String(updateRequest.querySql || currentDataset.querySql || DEFAULT_QUERY_SQL).trim()
+      assertReadOnlyDatasetSql(querySql)
+      const fieldsConfig =
+        updateRequest.fieldsConfig ||
+        currentDataset.fieldsConfig ||
+        (await this.previewDatasetSql({ querySql, limit: DEFAULT_PREVIEW_LIMIT })).columns
+
       const configId = await this.datasetMapper.createDatasetConfig({
         datasetId: updateRequest.id,
         versionNo: nextVersionNo,
-        fieldsConfig: updateRequest.fieldsConfig,
+        querySql,
+        fieldsConfig,
         changeNote: updateRequest.changeNote || null,
         createdBy,
         createTime,
@@ -177,11 +153,6 @@ export class DatasetService extends BaseService {
     return await this.getDataset({ id: currentDataset.id })
   }
 
-  /**
-   * @desc 删除数据集（逻辑删除）
-   * @param deleteRequest 删除请求参数
-   * @returns 是否删除成功
-   */
   public async deleteDataset(deleteRequest: DatasetDto.DeleteDatasetRequest): Promise<boolean> {
     this.assertCurrentUserAdmin('仅管理员可删除数据集')
     await this.getDataset({ id: deleteRequest.id })
@@ -193,49 +164,69 @@ export class DatasetService extends BaseService {
     })
   }
 
-  /**
-   * @desc 预览数据集内容（按字段配置查询样本数据）
-   * @param previewRequest 预览请求参数
-   * @returns 预览列定义与行数据
-   */
-  public async previewDataset(
-    previewRequest: DatasetDto.PreviewDatasetRequest
+  public async previewDatasetSql(
+    previewRequest: DatasetDto.PreviewDatasetSqlRequest
   ): Promise<DatasetVo.DatasetPreviewResponse> {
-    const dataset = await this.getDataset({ id: previewRequest.id })
-    if (!dataset.fieldsConfig.length) {
-      return {
-        columns: [],
-        rows: []
-      }
-    }
-    const visibleColumns = dataset.fieldsConfig.filter((field) => field.visible)
     const limit = Math.min(
       MAX_PREVIEW_LIMIT,
       Math.max(1, Math.floor(Number(previewRequest.limit || DEFAULT_PREVIEW_LIMIT)))
     )
-    const selectedColumns = visibleColumns.length ? visibleColumns : dataset.fieldsConfig
-    const baseTable = this.normalizeSqlIdentifier(dataset.baseTable)
-    const previewColumns = selectedColumns.map((field) => ({
-      sourceColumnName: this.normalizeSqlIdentifier(field.sourceColumnName),
-      fieldName: this.normalizeSqlIdentifier(field.fieldName)
-    }))
-    const rows = await this.databaseMapper.previewTableData(baseTable, previewColumns, limit)
+    const previewResult = await this.executeDatasetQuery(previewRequest.querySql, limit)
     return {
-      columns: selectedColumns,
-      rows
+      columns: this.createFieldsConfigFromPreviewColumns(previewResult.columns),
+      rows: previewResult.rows,
+      elapsedMs: previewResult.elapsedMs
     }
   }
 
-  private createDefaultFieldsConfig(
-    columns: DataSourceDao.DataSourceColumnRecord[]
+  public async previewDataset(
+    previewRequest: DatasetDto.PreviewDatasetRequest
+  ): Promise<DatasetVo.DatasetPreviewResponse> {
+    const dataset = await this.getDataset({ id: previewRequest.id })
+    if (!dataset.querySql?.trim()) {
+      throw new Error('数据集 SQL 为空，请先编写并保存 SQL')
+    }
+
+    const limit = Math.min(
+      MAX_PREVIEW_LIMIT,
+      Math.max(1, Math.floor(Number(previewRequest.limit || DEFAULT_PREVIEW_LIMIT)))
+    )
+    const previewResult = await this.executeDatasetQuery(dataset.querySql, limit)
+    const columns = dataset.fieldsConfig.length
+      ? dataset.fieldsConfig
+      : this.createFieldsConfigFromPreviewColumns(previewResult.columns)
+
+    return {
+      columns,
+      rows: previewResult.rows,
+      elapsedMs: previewResult.elapsedMs
+    }
+  }
+
+  private resolveQueryDataSourceName() {
+    const poolName = useRuntimeConfig().serviceDataDbName
+    if (!poolName) {
+      throw new Error('查询数据源未配置')
+    }
+    return poolName
+  }
+
+  private async executeDatasetQuery(querySql: string, limit: number) {
+    const mapper = new DatabaseMapper()
+    mapper.dataSourceName = this.resolveQueryDataSourceName()
+    return await mapper.previewDatasetQuery(querySql, limit)
+  }
+
+  private createFieldsConfigFromPreviewColumns(
+    columns: Array<{ columnName: string; columnType: string }>
   ): DatasetDao.DatasetFieldConfigItem[] {
     return columns.map((column, index) => {
       const normalizedColumnType = column.columnType.toLowerCase()
-      const isMetric = /int|decimal|float|double|number/.test(normalizedColumnType)
+      const isMetric = /int|decimal|float|double|number|bigint/.test(normalizedColumnType)
       return {
         sourceColumnName: column.columnName,
         fieldName: column.columnName,
-        displayName: column.columnComment || column.columnName,
+        displayName: column.columnName,
         fieldType: isMetric ? 'measure' : 'dimension',
         dataType: column.columnType,
         aggregationType: isMetric ? 'sum' : null,
@@ -244,13 +235,5 @@ export class DatasetService extends BaseService {
         sortOrder: index + 1
       }
     })
-  }
-
-  private normalizeSqlIdentifier(identifier: string): string {
-    const normalizedIdentifier = toLine(String(identifier || '').trim())
-    if (!normalizedIdentifier || !SQL_IDENTIFIER_REGEXP.test(normalizedIdentifier)) {
-      throw new Error(`非法 SQL 标识符: ${identifier}`)
-    }
-    return normalizedIdentifier
   }
 }

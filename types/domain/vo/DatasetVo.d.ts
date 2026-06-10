@@ -1,23 +1,14 @@
 declare namespace DatasetVo {
   type DatasetListItem = Pick<
     DatasetDao.DatasetRecord,
-    | 'id'
-    | 'datasetName'
-    | 'datasetDesc'
-    | 'dataSourceId'
-    | 'baseTable'
-    | 'status'
-    | 'createTime'
-    | 'updateTime'
-    | 'createdBy'
-    | 'updatedBy'
+    'id' | 'datasetName' | 'datasetDesc' | 'status' | 'createTime' | 'updateTime' | 'createdBy' | 'updatedBy'
   > & {
-    dataSourceName: string
+    querySql: string
     fieldCount: number
   }
 
   type DatasetDetailResponse = DatasetDao.DatasetRecord & {
-    dataSource: DataSourceVo.DataSourceDetailResponse | null
+    querySql: string
     fieldsConfig: DatasetDao.DatasetFieldConfigItem[]
   }
 
@@ -34,5 +25,6 @@ declare namespace DatasetVo {
   type DatasetPreviewResponse = {
     columns: DatasetDao.DatasetFieldConfigItem[]
     rows: AnalyzeDataVo.AnalyzeData[]
+    elapsedMs?: number
   }
 }

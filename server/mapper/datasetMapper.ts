@@ -11,8 +11,6 @@ const DATASET_FIELDS = [
   'id',
   'dataset_name',
   'dataset_desc',
-  'data_source_id',
-  'base_table',
   'status',
   'current_config_id',
   'create_time',
@@ -26,6 +24,7 @@ const DATASET_CONFIG_FIELDS = [
   'id',
   'dataset_id',
   'version_no',
+  'query_sql',
   'fields_config',
   'change_note',
   'create_time',
@@ -53,12 +52,6 @@ class DatasetMapping implements DatasetDao.DatasetRecord, IColumnTarget {
 
   @Column('dataset_desc')
   datasetDesc!: string
-
-  @Column('data_source_id')
-  dataSourceId!: number
-
-  @Column('base_table')
-  baseTable!: string
 
   @Column('status')
   status!: DatasetDao.DatasetStatus
@@ -97,6 +90,9 @@ class DatasetConfigMapping implements DatasetDao.DatasetConfigRecord, IColumnTar
 
   @Column('version_no')
   versionNo!: number
+
+  @Column('query_sql')
+  querySql!: string
 
   @Column('fields_config')
   get fieldsConfig(): DatasetDao.DatasetFieldConfigItem[] {
@@ -141,11 +137,8 @@ class DatasetListMapping implements DatasetVo.DatasetListItem, IColumnTarget {
   @Column('dataset_desc')
   datasetDesc!: string
 
-  @Column('data_source_id')
-  dataSourceId!: number
-
-  @Column('base_table')
-  baseTable!: string
+  @Column('query_sql')
+  querySql!: string
 
   @Column('status')
   status!: DatasetDao.DatasetStatus
@@ -161,9 +154,6 @@ class DatasetListMapping implements DatasetVo.DatasetListItem, IColumnTarget {
 
   @Column('updated_by')
   updatedBy!: string
-
-  @Column('data_source_name')
-  dataSourceName!: string
 
   @Column('field_count')
   fieldCount!: number
@@ -249,7 +239,11 @@ export class DatasetMapper extends BaseMapper {
    */
   public async countDatasets(query: DatasetDao.GetDatasetListParams): Promise<number> {
     const { whereClause, params } = this.buildDatasetListQuery(query)
-    const sql = `select count(*) as total from ${DATASET_TABLE_NAME} d ${whereClause}`
+    const sql = `
+      select count(*) as total
+      from ${DATASET_TABLE_NAME} d
+      left join ${DATASET_CONFIG_TABLE_NAME} dc on dc.id = d.current_config_id
+      ${whereClause}`
     const result = await this.exe<Array<{ total: number }>>(sql, params)
     return Number(result?.[0]?.total || 0)
   }
@@ -270,10 +264,9 @@ export class DatasetMapper extends BaseMapper {
     const sql = `
       select
         ${DATASET_FIELDS.map((field) => `d.${field}`).join(',\n        ')},
-        ds.source_name as data_source_name,
+        dc.query_sql as query_sql,
         json_length(dc.fields_config) as field_count
       from ${DATASET_TABLE_NAME} d
-      left join data_source ds on ds.id = d.data_source_id
       left join ${DATASET_CONFIG_TABLE_NAME} dc on dc.id = d.current_config_id
       ${whereClause}
       order by ${sortField} ${sortOrder}
@@ -327,7 +320,7 @@ export class DatasetMapper extends BaseMapper {
     const conditions = ['d.is_deleted = 0']
     const params: string[] = []
     if (query.keyword) {
-      conditions.push('(d.dataset_name like ? or d.dataset_desc like ? or d.base_table like ?)')
+      conditions.push('(d.dataset_name like ? or d.dataset_desc like ? or dc.query_sql like ?)')
       params.push(`%${query.keyword}%`, `%${query.keyword}%`, `%${query.keyword}%`)
     }
     return {

@@ -342,7 +342,7 @@ const queryDatasetColumns = async (datasetId: number) => {
   })
   if (result.code === 200 && result.data) {
     const columns = (result.data.fieldsConfig || []).filter((field) => field.visible).map(mapDatasetFieldToColumn)
-    columnStore.setDataSource(result.data.baseTable || '')
+    columnStore.setDataSource('')
     columnStore.setDataSourceMode('dataset')
     columnStore.setDatasetId(result.data.id)
     columnStore.setDatasetName(result.data.datasetName)

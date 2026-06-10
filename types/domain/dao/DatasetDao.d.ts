@@ -8,8 +8,6 @@ declare namespace DatasetDao {
     id: number
     datasetName: string
     datasetDesc: string
-    dataSourceId: number
-    baseTable: string
     status: DatasetStatus
     currentConfigId: number | null
     createTime: string
@@ -35,6 +33,7 @@ declare namespace DatasetDao {
     id: number
     datasetId: number
     versionNo: number
+    querySql: string
     fieldsConfig: DatasetFieldConfigItem[]
     changeNote: string | null
     createTime: string
@@ -57,8 +56,6 @@ declare namespace DatasetDao {
     DatasetRecord,
     | 'datasetName'
     | 'datasetDesc'
-    | 'dataSourceId'
-    | 'baseTable'
     | 'status'
     | 'currentConfigId'
     | 'createdBy'
@@ -68,9 +65,7 @@ declare namespace DatasetDao {
   >
 
   type UpdateDatasetParams = Pick<DatasetRecord, 'id' | 'updatedBy' | 'updateTime'> &
-    Partial<
-      Pick<DatasetRecord, 'datasetName' | 'datasetDesc' | 'dataSourceId' | 'baseTable' | 'status' | 'currentConfigId'>
-    >
+    Partial<Pick<DatasetRecord, 'datasetName' | 'datasetDesc' | 'status' | 'currentConfigId'>>
 
   type DeleteDatasetParams = Pick<DatasetRecord, 'id' | 'updatedBy' | 'updateTime'>
 
@@ -78,6 +73,6 @@ declare namespace DatasetDao {
 
   type CreateDatasetConfigParams = Pick<
     DatasetConfigRecord,
-    'datasetId' | 'versionNo' | 'fieldsConfig' | 'changeNote' | 'createdBy' | 'updateTime' | 'createTime'
+    'datasetId' | 'versionNo' | 'querySql' | 'fieldsConfig' | 'changeNote' | 'createdBy' | 'updateTime' | 'createTime'
   >
 }

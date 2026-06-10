@@ -68,8 +68,7 @@
         empty-text="暂无数据集"
       >
         <el-table-column prop="datasetName" label="数据集" min-width="150" />
-        <el-table-column prop="dataSourceName" label="数据源" min-width="120" />
-        <el-table-column prop="baseTable" label="物理表" min-width="140" />
+        <el-table-column prop="querySql" label="查询 SQL" min-width="180" show-overflow-tooltip />
         <el-table-column prop="fieldCount" label="字段数" width="90" />
       </el-table>
     </el-popover>
@@ -175,7 +174,7 @@ const handleSelectedDataset = async (row: DatasetVo.DatasetListItem) => {
   columnStore.setDataSourceMode('dataset')
   columnStore.setDatasetId(row.id)
   columnStore.setDatasetName(row.datasetName)
-  dataSource.value = row.baseTable
+  dataSource.value = ''
   isPopoverVisible.value = false
   emit('dataSource-change', { mode: 'dataset', dataset: row })
 }

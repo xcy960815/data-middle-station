@@ -1,6 +1,8 @@
 import type { IColumnTarget, Row } from '@/server/mapper/baseMapper'
 import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/server/mapper/baseMapper'
 import { toLine } from '@/server/utils/databaseHelper'
+import { buildDatasetPreviewSql } from '@/server/utils/datasetSql'
+import type { FieldPacket } from 'mysql2'
 
 /**
  * @desc 表列表映射
@@ -187,5 +189,48 @@ export class DatabaseMapper extends BaseMapper {
     const selectClause = columns.map((col) => `\`${col.sourceColumnName}\` as \`${col.fieldName}\``).join(', ')
     const sql = `select ${selectClause} from \`${tableName}\` limit ${limit}`
     return await this.exe<AnalyzeDataVo.AnalyzeData[]>(sql)
+  }
+
+  /**
+   * @desc 预览用户 SQL 数据集查询结果
+   */
+  public async previewDatasetQuery(
+    querySql: string,
+    limit: number
+  ): Promise<{
+    rows: AnalyzeDataVo.AnalyzeData[]
+    columns: Array<{ columnName: string; columnType: string }>
+    elapsedMs: number
+  }> {
+    const pool = useNitroApp().mysqlPools.get(this.dataSourceName)
+    if (!pool) {
+      throw new Error(`数据源 ${this.dataSourceName} 未配置`)
+    }
+
+    const sql = buildDatasetPreviewSql(querySql, limit)
+    const startedAt = Date.now()
+    const [rows, fields] = await pool.query(sql)
+    const elapsedMs = Date.now() - startedAt
+    const columns = ((fields || []) as FieldPacket[]).map((field) => ({
+      columnName: String(field.name || ''),
+      columnType: this.normalizeMysqlFieldType(field)
+    }))
+
+    return {
+      rows: rows as AnalyzeDataVo.AnalyzeData[],
+      columns,
+      elapsedMs
+    }
+  }
+
+  private normalizeMysqlFieldType(field: FieldPacket) {
+    if (field.columnType) {
+      return String(field.columnType)
+    }
+    if (typeof field.type === 'number') {
+      const numericTypes = new Set([1, 2, 3, 4, 5, 8, 9, 246, 247])
+      return numericTypes.has(field.type) ? 'number' : 'string'
+    }
+    return 'string'
   }
 }
