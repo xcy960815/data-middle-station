@@ -216,7 +216,7 @@ export const useChartDownload = () => {
   const executeDownload = async (selectedColumns: string[]): Promise<void> => {
     const data = analyzeStore.getAnalyzeData
     const fileName = `${analyzeStore.getAnalyzeName}.xlsx`
-    const sheetName = columnStore.getDataSource
+    const sheetName = columnStore.getDatasetName || '数据集'
 
     showDownloadStartMessage(fileName)
     await exportToExcel(data, fileName, sheetName, selectedColumns)

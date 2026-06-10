@@ -2,47 +2,29 @@ import { ChartDataMapper } from '@/server/mapper/chartDataMapper'
 import { AnalyzeService } from '@/server/service/analyzeService'
 import { AnalyzeQueryBuilder, type AnalyzeQueryContext } from '@/server/service/analyzeQueryBuilder'
 import { BaseService } from '@/server/service/baseService'
-import { DatabaseService } from '@/server/service/databaseService'
+import { DatasetService } from '@/server/service/datasetService'
 import { ResourcePermissionService } from '@/server/service/resourcePermissionService'
+import { buildDatasetAnalyzeFromClause } from '@/server/utils/datasetSql'
 
 /**
  * @desc 图表数据服务
  */
 export class ChartDataService extends BaseService {
-  /**
-   * @desc 图表数据mapper
-   */
   private chartDataMapper: ChartDataMapper
-
-  /**
-   * @desc 数据库服务
-   */
-  private databaseService: DatabaseService
-
-  /**
-   * @desc SQL 构建器
-   */
   private analyzeQueryBuilder: AnalyzeQueryBuilder
   private analyzeService: AnalyzeService
+  private datasetService: DatasetService
   private resourcePermissionService: ResourcePermissionService
 
-  /**
-   * @desc 构造函数
-   */
   constructor() {
     super()
     this.chartDataMapper = new ChartDataMapper()
-    this.databaseService = new DatabaseService()
     this.analyzeQueryBuilder = new AnalyzeQueryBuilder()
     this.analyzeService = new AnalyzeService()
+    this.datasetService = new DatasetService()
     this.resourcePermissionService = new ResourcePermissionService()
   }
 
-  /**
-   * @desc 将DAO对象转换为VO对象
-   * @param analyzeDataRecords {AnalyzeDataDao.AnalyzeData[]} 图表数据DAO列表
-   * @returns {AnalyzeDataVo.AnalyzeData[]} 图表数据VO列表
-   */
   private convertDaoToVo(analyzeDataRecords: Array<AnalyzeDataDao.AnalyzeData>): Array<AnalyzeDataVo.AnalyzeData> {
     return analyzeDataRecords.map((analyzeDataRecord) => ({
       ...analyzeDataRecord,
@@ -50,33 +32,42 @@ export class ChartDataService extends BaseService {
     }))
   }
 
-  /**
-   * @desc 创建查询上下文
-   * @param dataSource 数据源表名
-   * @returns 查询上下文
-   */
-  private async createQueryContext(dataSource: string): Promise<AnalyzeQueryContext> {
-    const normalizedTableName = this.analyzeQueryBuilder.normalizeIdentifier(dataSource, '数据源')
-    const columns = await this.databaseService.getTableColumnsForAnalyzeQuery({
-      tableName: normalizedTableName
-    })
+  private resolveAnalyzeDataPoolName() {
+    const poolName = useRuntimeConfig().serviceDataDbName || 'kanban_data'
+    if (!poolName) {
+      throw new Error('查询数据源未配置')
+    }
+    return poolName
+  }
 
-    if (columns.length === 0) {
-      throw new Error(`数据源不存在或无可用字段: ${normalizedTableName}`)
+  private async createDatasetQueryContext(datasetId: number): Promise<AnalyzeQueryContext> {
+    const dataset = await this.datasetService.getDataset({ id: datasetId })
+    if (!dataset.querySql?.trim()) {
+      throw new Error('数据集 SQL 为空，请先在数据集页面配置 SQL')
+    }
+    if (dataset.status !== 'enabled') {
+      throw new Error('数据集已禁用')
+    }
+
+    const allowedColumns = new Set<string>()
+    for (const field of dataset.fieldsConfig || []) {
+      if (!field.visible) continue
+      allowedColumns.add(this.analyzeQueryBuilder.normalizeIdentifier(field.sourceColumnName, '字段'))
+    }
+    if (allowedColumns.size === 0) {
+      throw new Error('数据集没有可用字段，请先配置并保存字段')
     }
 
     return {
-      tableName: normalizedTableName,
-      quotedTableName: this.analyzeQueryBuilder.quoteIdentifier(normalizedTableName),
-      allowedColumns: new Set(
-        columns.map((column) => this.analyzeQueryBuilder.normalizeIdentifier(column.columnName, '字段'))
-      )
+      tableName: `dataset:${datasetId}`,
+      quotedTableName: buildDatasetAnalyzeFromClause(dataset.querySql),
+      allowedColumns
     }
   }
 
   private async assertAnalyzeDataQueryAccess(analyzeDataQuery: AnalyzeDataDto.AnalyzeDataQuery): Promise<void> {
     if (!analyzeDataQuery.analyzeId) {
-      this.assertCurrentUserAdmin('未绑定分析资源的原始数据查询仅管理员可访问')
+      this.assertCurrentUserAdmin('未绑定分析资源的数据查询仅管理员可访问')
       return
     }
 
@@ -103,18 +94,16 @@ export class ChartDataService extends BaseService {
     analyzeDataQuery: AnalyzeDataDto.AnalyzeDataQuery,
     chartConfig: AnalyzeConfigVo.ChartConfigResponse
   ): void {
-    if (!chartConfig.dataSource || analyzeDataQuery.dataSource !== chartConfig.dataSource) {
-      throw new Error('无权查询该数据源')
+    if (!chartConfig.datasetId || analyzeDataQuery.datasetId !== chartConfig.datasetId) {
+      throw new Error('无权查询该数据集')
     }
 
     const savedDimensionColumns = this.getFieldColumnSet(chartConfig.dimensions || [])
     const savedMeasureColumns = this.getFieldColumnSet(chartConfig.measures || [])
-    // 筛选字段白名单包含 dimensions：用户在表格列头按维度字段做筛选是合法交互
     const savedFilterColumns = this.getFieldColumnSet([
       ...(chartConfig.filters || []),
       ...(chartConfig.dimensions || [])
     ])
-    // 排序字段白名单包含 dimensions + measures：用户点击表头按任意可见字段排序是合法交互
     const savedOrderColumns = this.getFieldColumnSet([
       ...(chartConfig.orders || []),
       ...(chartConfig.dimensions || []),
@@ -144,18 +133,19 @@ export class ChartDataService extends BaseService {
     }
   }
 
-  /**
-   * @desc 获取图表数据
-   * @param analyzeDataQuery {AnalyzeDataDto.AnalyzeDataQuery} 请求参数
-   * @returns {Promise<AnalyzeDataVo.AnalyzeData[]>}
-   */
   public async getAnalyzeData(
     analyzeDataQuery: AnalyzeDataDto.AnalyzeDataQuery
   ): Promise<Array<AnalyzeDataVo.AnalyzeData>> {
+    const datasetId = Number(analyzeDataQuery.datasetId)
+    if (!Number.isFinite(datasetId) || datasetId <= 0) {
+      throw new Error('请选择数据集')
+    }
+
     await this.assertAnalyzeDataQueryAccess(analyzeDataQuery)
-    const queryContext = await this.createQueryContext(analyzeDataQuery.dataSource)
+    const queryContext = await this.createDatasetQueryContext(datasetId)
     const { sql, params } = this.analyzeQueryBuilder.buildAnalyzeDataQuery(analyzeDataQuery, queryContext)
 
+    this.chartDataMapper.dataSourceName = this.resolveAnalyzeDataPoolName()
     const analyzeDataRecords = await this.chartDataMapper.getAnalyzeData(sql, params)
     return this.convertDaoToVo(analyzeDataRecords)
   }

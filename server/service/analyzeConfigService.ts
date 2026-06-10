@@ -78,6 +78,7 @@ export class AnalyzeConfigService extends BaseService {
     const createParams: AnalyzeConfigDao.CreateAnalyzeConfigParams = {
       ...createRequest,
       versionNo,
+      datasetId: createRequest.datasetId ?? null,
       measures: createRequest.measures || [],
       filters: createRequest.filters || [],
       dimensions: createRequest.dimensions || [],

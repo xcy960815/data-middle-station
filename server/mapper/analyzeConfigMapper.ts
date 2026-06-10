@@ -17,8 +17,8 @@ class AnalyzeConfigMapping implements AnalyzeConfigDao.AnalyzeConfigRecord, ICol
   @Column('version_no')
   versionNo!: number
 
-  @Column('data_source')
-  dataSource!: string | null
+  @Column('dataset_id')
+  datasetId!: number | null
 
   @Column('chart_type')
   chartType!: string
@@ -64,8 +64,8 @@ const ANALYZE_CONFIG_FIELDS = [
   'id',
   'analyze_id',
   'version_no',
+  'dataset_id',
   'chart_type',
-  'data_source',
   'measures',
   'filters',
   'dimensions',

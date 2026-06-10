@@ -34,7 +34,7 @@
           <DashboardChart
             :title="widget.widgetTitle"
             :chart-type="widget.chartType"
-            :data-source="widget.dataSource"
+            :dataset-id="widget.datasetId"
             :loading="widget.loading"
             :error-message="widget.errorMessage"
             :data="widget.data"

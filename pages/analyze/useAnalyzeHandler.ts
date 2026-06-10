@@ -40,9 +40,7 @@ export const useAnalyzeHandler = () => {
       chartConfig?.privateChartConfig || chartConfigStore.$state.privateChartConfig
     )
     columnStore.setColumns([])
-    columnStore.setDataSource(chartConfig?.dataSource || '')
-    columnStore.setDataSourceMode(chartConfig?.commonChartConfig?.dataSourceMode || 'table')
-    columnStore.setDatasetId(chartConfig?.commonChartConfig?.datasetId || null)
+    columnStore.setDatasetId(chartConfig?.datasetId || null)
     columnStore.setDatasetName(chartConfig?.commonChartConfig?.datasetName || '')
 
     // 所有 store 填充完毕后，再记录快照，确保脏检查基准正确

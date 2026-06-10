@@ -16,8 +16,6 @@ export const useAnalyzeDraft = () => {
     const commonChartConfig: AnalyzeConfigDao.CommonChartConfig = {
       ...defaultAnalyzeCommonChartConfig,
       ...(chartConfigStore.getCommonChartConfig || {}),
-      dataSourceMode: columnStore.getDataSourceMode,
-      datasetId: columnStore.getDatasetId,
       datasetName: columnStore.getDatasetName
     }
 
@@ -27,7 +25,7 @@ export const useAnalyzeDraft = () => {
       analyzeDesc: analyzeStore.getAnalyzeDesc,
       currentConfigId: analyzeStore.getCurrentConfigId,
       chartConfig: {
-        dataSource: columnStore.getDataSource,
+        datasetId: columnStore.getDatasetId,
         measures: measureStore.getMeasures,
         dimensions: dimensionStore.getDimensions,
         orders: orderStore.getOrders,

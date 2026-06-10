@@ -52,7 +52,7 @@ export const useAnalyzeDataHandler = () => {
 
     return {
       analyzeId: analyzeStore.getAnalyzeId || undefined,
-      dataSource: columnStore.getDataSource,
+      datasetId: columnStore.getDatasetId || 0,
       // 过滤掉未完成的聚合条件
       filters: [...baseFilters, ...(isDrillQueryEnabled.value ? drillFilters.value : [])],
       orders: orderStore.getOrders.filter((item) => item.orderRule?.direction),
@@ -143,7 +143,7 @@ export const useAnalyzeDataHandler = () => {
     const chartType = analyzeStore.getChartType
     const validation = validateAnalyzeChartConfig({
       chartType,
-      dataSource: columnStore.getDataSource,
+      datasetId: columnStore.getDatasetId,
       measures: measureStore.getMeasures,
       dimensions:
         isDrillQueryEnabled.value && currentDrillDimension.value
@@ -266,9 +266,9 @@ export const useAnalyzeDataHandler = () => {
   )
 
   watch(
-    () => [columnStore.getDataSourceMode, columnStore.getDataSource, columnStore.getDatasetId],
-    ([dataSourceMode, dataSource, datasetId]) => {
-      const nextDataSourceKey = `${dataSourceMode}:${dataSource}:${datasetId || ''}`
+    () => columnStore.getDatasetId,
+    (datasetId) => {
+      const nextDataSourceKey = String(datasetId || '')
       if (isEditorHydrating()) {
         lastDataSourceKey.value = nextDataSourceKey
         return

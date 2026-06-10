@@ -62,7 +62,7 @@ import LineChart from '~/components/line-chart/index.vue'
  * 表格
  */
 import TableChart from '~/components/table-chart/index.vue'
-import { useAnalyzeDrill } from '../../useAnalyzeDrill'
+import { resolveAnalyzeDrillQueryFields } from '@/shared/analyzeDrillState'
 
 /**
  * @desc 分析器 store
@@ -71,8 +71,8 @@ const analyzeStore = useAnalyzeStore()
 /**
  * @desc 维度 store
  */
+const dimensionStore = useDimensionsStore()
 const measureStore = useMeasuresStore()
-const { currentDrillDimension } = useAnalyzeDrill()
 
 /**
  * @desc 图表宽度
@@ -128,7 +128,9 @@ const yAxisFields = computed(() => {
  * @type {Array<DimensionStore.DimensionState['dimensions']>}
  */
 const xAxisFields = computed(() => {
-  return currentDrillDimension.value ? [currentDrillDimension.value] : []
+  return resolveAnalyzeDrillQueryFields({
+    dimensions: dimensionStore.getDimensions
+  }).dimensions
 })
 
 /**

@@ -103,7 +103,7 @@ export class ChartSnapshotService {
 
     const validation = validateAnalyzeChartConfig({
       chartType: chartConfig.chartType,
-      dataSource: chartConfig.dataSource,
+      datasetId: chartConfig.datasetId,
       measures: chartConfig.measures || [],
       dimensions: drillQueryFields.dimensions
     })
@@ -118,8 +118,7 @@ export class ChartSnapshotService {
       orders: chartConfig.orders || [],
       dimensions: drillQueryFields.dimensions,
       measures: chartConfig.measures,
-      // dataSource 已在上方 validateAnalyzeChartConfig 中校验过非空
-      dataSource: chartConfig.dataSource!,
+      datasetId: chartConfig.datasetId!,
       commonChartConfig: chartConfig.commonChartConfig
     })
 

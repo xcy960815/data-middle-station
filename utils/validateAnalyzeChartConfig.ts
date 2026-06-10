@@ -2,7 +2,7 @@ type AnalyzeChartConfigValidationInput = {
   chartType?: AnalyzeStore.ChartType | string
   measures?: MeasureStore.MeasureOption[] | AnalyzeConfigDao.MeasureOption[]
   dimensions?: DimensionStore.DimensionOption[] | AnalyzeConfigDao.DimensionOption[]
-  dataSource?: string | null
+  datasetId?: number | null
 }
 
 type AnalyzeChartConfigValidationResult = {
@@ -28,11 +28,12 @@ export const validateAnalyzeChartConfig = (
   const measures = config.measures || []
   const dimensions = config.dimensions || []
   const hasGroupBy = dimensions.length > 0
+  const datasetId = Number(config.datasetId)
 
-  if (!config.dataSource?.trim()) {
+  if (!Number.isFinite(datasetId) || datasetId <= 0) {
     return {
       valid: false,
-      message: '分析数据源不存在'
+      message: '请先选择数据集'
     }
   }
 
@@ -58,6 +59,6 @@ export const validateAnalyzeChartConfig = (
         ? { valid: true, message: '' }
         : { valid: false, message: `${chartName}需要一个值和一个分组` }
     default:
-      return { valid: true, message: '' }
+      return { valid: false, message: '不支持的图表类型' }
   }
 }

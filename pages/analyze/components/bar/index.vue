@@ -36,7 +36,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="chartType" label="图表类型" min-width="120" />
-        <el-table-column prop="dataSource" label="数据源" min-width="140" show-overflow-tooltip />
+        <el-table-column label="数据集" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ row.commonChartConfig?.datasetName || (row.datasetId ? `数据集 #${row.datasetId}` : '-') }}
+          </template>
+        </el-table-column>
         <el-table-column prop="createdBy" label="创建人" min-width="120" />
         <el-table-column prop="createTime" label="创建时间" min-width="180" />
         <el-table-column label="操作" width="120" align="center" fixed="right">
@@ -233,9 +237,7 @@ const handleSwitchVersion = async (versionItem: AnalyzeConfigVo.AnalyzeConfigRes
     chartConfigStore.setCommonChartConfig(versionItem.commonChartConfig || chartConfigStore.$state.commonChartConfig)
     chartConfigStore.setPrivateChartConfig(versionItem.privateChartConfig || chartConfigStore.$state.privateChartConfig)
     columnStore.setColumns([])
-    columnStore.setDataSource(versionItem.dataSource || '')
-    columnStore.setDataSourceMode(versionItem.commonChartConfig?.dataSourceMode || 'table')
-    columnStore.setDatasetId(versionItem.commonChartConfig?.datasetId || null)
+    columnStore.setDatasetId(versionItem.datasetId || null)
     columnStore.setDatasetName(versionItem.commonChartConfig?.datasetName || '')
   } finally {
     analyzeStore.setEditorHydrating(false)

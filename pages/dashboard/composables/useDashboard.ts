@@ -8,7 +8,7 @@ export type DashboardWidgetState = DashboardDto.DashboardWidgetPayload & {
   data: AnalyzeDataVo.AnalyzeData[]
   xAxisFields: DimensionStore.DimensionOption[]
   yAxisFields: MeasureStore.MeasureOption[]
-  dataSource: string | null
+  datasetId: number | null
   privateChartConfig: AnalyzeConfigVo.PrivateChartConfigItem | null
   loading: boolean
   errorMessage: string
@@ -164,7 +164,7 @@ export function useDashboard() {
       data: [],
       xAxisFields: (drillQueryFields?.dimensions || []) as DimensionStore.DimensionOption[],
       yAxisFields: (chartConfig?.measures || []) as MeasureStore.MeasureOption[],
-      dataSource: chartConfig?.dataSource ?? null,
+      datasetId: chartConfig?.datasetId ?? null,
       privateChartConfig: chartConfig?.privateChartConfig || null,
       loading: false,
       errorMessage: widget.analyze ? '' : '分析不存在或无权访问'
@@ -289,20 +289,20 @@ export function useDashboard() {
     chartConfig: AnalyzeConfigVo.ChartConfigResponse,
     analyzeId?: number | null
   ): AnalyzeDataDto.AnalyzeDataQuery => {
-    const dataSource = chartConfig.dataSource
+    const datasetId = chartConfig.datasetId
     const drillQueryFields = resolveWidgetAnalyzeQueryFields(chartConfig)
     const validation = validateAnalyzeChartConfig({
       chartType: chartConfig.chartType,
-      dataSource,
+      datasetId,
       measures: chartConfig.measures || [],
       dimensions: drillQueryFields.dimensions
     })
     if (!validation.valid) throw new Error(validation.message)
-    if (!dataSource) throw new Error('分析数据源不存在')
+    if (!datasetId) throw new Error('分析数据集不存在')
 
     return {
       analyzeId: analyzeId || undefined,
-      dataSource,
+      datasetId,
       filters: drillQueryFields.filters,
       orders: (chartConfig.orders || []).filter((item) => item.orderRule.direction),
       dimensions: drillQueryFields.dimensions,

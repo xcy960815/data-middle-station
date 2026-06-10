@@ -49,9 +49,9 @@ declare namespace AnalyzeDataDto {
      */
     measures: MeasureOption[]
     /**
-     * @desc 数据源
+     * @desc 数据集 ID
      */
-    dataSource: string
+    datasetId: number
     /**
      * @desc 公共图表配置
      */

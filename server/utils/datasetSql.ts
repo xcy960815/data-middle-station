@@ -47,3 +47,11 @@ export const buildDatasetPreviewSql = (querySql: string, limit: number) => {
   const normalizedSql = assertReadOnlyDatasetSql(querySql)
   return `SELECT * FROM (${normalizedSql}) AS dataset_preview LIMIT ${safeLimit}`
 }
+
+/**
+ * @desc 将用户 SQL 包装为分析查询 FROM 子句
+ */
+export const buildDatasetAnalyzeFromClause = (querySql: string) => {
+  const normalizedSql = assertReadOnlyDatasetSql(querySql)
+  return `(${normalizedSql}) AS dataset_query`
+}

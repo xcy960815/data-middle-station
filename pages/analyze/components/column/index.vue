@@ -1,7 +1,6 @@
 <template>
   <div class="column" @dragover="dragoverHandler" @drop="dropHandler">
-    <!-- 数据源 -->
-    <DataSourceSelector @dataSource-change="handleDataSourceChange" />
+    <DataSourceSelector @dataset-change="handleDatasetChange" />
     <div class="column__header flex items-center justify-between py-2">
       <span class="column__title">维度</span>
       <icon-park
@@ -44,34 +43,14 @@ import { useFiltersStore } from '~/stores/filters'
 import { useDimensionsStore } from '~/stores/dimensions'
 import { useOrdersStore } from '~/stores/orders'
 
-// 数字图标
 const NUMBER_ICON_NAME = 'ListNumbers'
-
-// 日期图标
 const DATE_ICON_NAME = 'calendar-thirty'
-
-// 字符串图标
 const STRING_ICON_NAME = 'text'
 
 const columnDisplayNames = (column: ColumnsStore.ColumnOptions) => {
   return column.displayName || column.columnName
 }
 
-type AnalyzeDataSourceChangePayload =
-  | {
-      mode: 'table'
-      tableName: string
-    }
-  | {
-      mode: 'dataset'
-      dataset: DatasetVo.DatasetListItem
-    }
-
-/**
- * @desc 列类名
- * @param column {ColumnsStore.ColumnOptions} 列选项
- * @returns {string} 类名
- */
 const columnClasses = computed(() => (column: ColumnsStore.ColumnOptions) => {
   const measureSelected = useMeasuresStore().getMeasures.find(
     (measureOption: MeasureStore.MeasureOption) => measureOption.columnName === column.columnName
@@ -80,17 +59,12 @@ const columnClasses = computed(() => (column: ColumnsStore.ColumnOptions) => {
     (dimensionOption: DimensionStore.DimensionOption) => dimensionOption.columnName === column.columnName
   )
   return {
-    column__item: true, // 默认类名
-    column__item_measure_selected: Boolean(measureSelected), // 值选中
-    column__item_dimension_selected: Boolean(dimensionSelected) // 分组选中
+    column__item: true,
+    column__item_measure_selected: Boolean(measureSelected),
+    column__item_dimension_selected: Boolean(dimensionSelected)
   }
 })
 
-/**
- * @desc 根据列类型返回对应的图标名称
- * @param column {ColumnsStore.ColumnOptions} 列选项
- * @returns {string} 图标名称
- */
 const columnIconName = computed(() => (column: ColumnsStore.ColumnOptions) => {
   const { columnType } = column
   const NumberTypes = [
@@ -119,27 +93,16 @@ const columnIconName = computed(() => (column: ColumnsStore.ColumnOptions) => {
   }
 })
 
-const columnStore = useColumnsStore()
 const analyzeStore = useAnalyzeStore()
+const columnStore = useColumnsStore()
+const measureStore = useMeasuresStore()
 const filterStore = useFiltersStore()
+const dimensionStore = useDimensionsStore()
 const orderStore = useOrdersStore()
 const chartConfigStore = useChartConfigStore()
-const measureStore = useMeasuresStore()
-const dimensionStore = useDimensionsStore()
 
-/**
- * @desc 列列表
- */
-const columnList = computed(() => {
-  return columnStore.getColumns
-})
+const columnList = computed(() => columnStore.getColumns)
 
-/**
- * @desc 拖拽开始事件
- * @param column {ColumnsStore.ColumnOptions} 列选项
- * @param index {number} 列索引
- * @param event {DragEvent} 拖拽事件
- */
 const dragstartHandler = (column: ColumnsStore.ColumnOptions, index: number, event: DragEvent) => {
   if (!event.dataTransfer) return
   event.dataTransfer.setData(
@@ -151,13 +114,11 @@ const dragstartHandler = (column: ColumnsStore.ColumnOptions, index: number, eve
       value: column
     })
   )
-  // 克隆字段项节点，保证拖影和原节点样式完全一致
   const target = event.target as HTMLElement
   if (target) {
     const parent = target.closest('.column-option') as HTMLElement
     if (parent) {
       const dragNode = parent.cloneNode(true) as HTMLElement
-      // 复制所有 data-v-xxx 属性
       for (const attr of parent.attributes) {
         if (attr.name.startsWith('data-v-')) {
           dragNode.setAttribute(attr.name, attr.value)
@@ -172,7 +133,6 @@ const dragstartHandler = (column: ColumnsStore.ColumnOptions, index: number, eve
       dragNode.style.width = `${parent.offsetWidth}px`
       dragNode.style.height = `${parent.offsetHeight}px`
       dragNode.style.background = '#f0f0f0'
-      // 同步padding、box-sizing、border-radius、box-shadow、height、line-height、font-size
       const computedStyle = window.getComputedStyle(parent)
       dragNode.style.padding = computedStyle.padding
       dragNode.style.boxSizing = computedStyle.boxSizing
@@ -188,26 +148,14 @@ const dragstartHandler = (column: ColumnsStore.ColumnOptions, index: number, eve
   }
 }
 
-/**
- * @desc 拖拽结束事件
- * @param event {DragEvent} 拖拽事件
- */
 const dragendHandler = (event: DragEvent) => {
   event.preventDefault()
 }
 
-/**
- * @desc 拖拽悬停事件
- * @param dragEvent {DragEvent} 拖拽事件
- */
 const dragoverHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
 }
 
-/**
- * @desc 拖拽放下事件
- * @param dragEvent {DragEvent} 拖拽事件
- */
 const dropHandler = (dragEvent: DragEvent) => {
   dragEvent.preventDefault()
   const data: DragData<ColumnsStore.ColumnOptions> = JSON.parse(dragEvent.dataTransfer?.getData('text') || '{}')
@@ -216,30 +164,22 @@ const dropHandler = (dragEvent: DragEvent) => {
   )
 
   switch (data.from) {
-    case 'measures': {
-      const measureStore = useMeasuresStore()
+    case 'measures':
       measureStore.removeMeasure(data.index)
       break
-    }
-    case 'filters': {
-      const filterStore = useFiltersStore()
+    case 'filters':
       filterStore.removeFilter(data.index)
       break
-    }
-    case 'orders': {
-      const orderStore = useOrdersStore()
+    case 'orders':
       orderStore.removeOrder(data.index)
       break
-    }
-    case 'dimensions': {
-      const dimensionStore = useDimensionsStore()
+    case 'dimensions':
       dimensionStore.removeDimension(data.index)
       columnStore.updateColumn({
         column: data.value,
         index: columnIndex
       })
       break
-    }
     case 'columns':
       break
     default:
@@ -248,80 +188,20 @@ const dropHandler = (dragEvent: DragEvent) => {
   }
 }
 
-/**
- * @desc 监听表格数据源变化
- */
 watch(
-  () => columnStore.getDataSource,
-  async (newDataSource) => {
-    if (!newDataSource) {
-      // 如果数据源为空，清空图表数据
+  () => columnStore.getDatasetId,
+  async (datasetId) => {
+    if (!datasetId) {
       analyzeStore.setAnalyzeData([])
-      // 如果数据源为空，清空筛选条件
       filterStore.resetFilters()
-      // 如果数据源为空，清空排序条件
       orderStore.resetOrders()
-      // 如果数据源为空，清空分组条件
       dimensionStore.resetDimensions()
-      // 如果数据源为空，清空值字段
       measureStore.resetMeasures()
-      // 如果数据源为空，清空图表配置
       chartConfigStore.setPrivateChartConfig(null)
-      // 如果数据源为空，清空图表配置条件
-      columnStore.setColumns([])
-      columnStore.setDataSourceMode('table')
-      columnStore.setDatasetId(null)
-      columnStore.setDatasetName('')
+      columnStore.resetDataset()
     }
-    // else {
-    //   await queryTableColumn(newDataSource)
-    //   const hasFilter = filterStore.getFilters.length > 0
-    //   hasFilter && filterStore.resetFilters()
-    //   const hasOrder = orderStore.getOrders.length > 0
-    //   hasOrder && orderStore.resetOrders()
-    //   const hasGroup = dimensionStore.getDimensions.length > 0
-    //   hasGroup && dimensionStore.resetDimensions()
-    //   const hasMeasure = measureStore.getMeasures.length > 0
-    //   hasMeasure && measureStore.resetMeasures()
-    // }
   }
 )
-
-/**
- * @desc 查询表格列
- * @param tableName
- * @returns {Promise<void>}
- */
-const queryTableColumn = async (tableName: string) => {
-  const result = await httpRequest<ApiResponseI<DatabaseVo.TableColumnItem[]>>('/api/getTableColumns', {
-    method: 'POST',
-    body: {
-      tableName
-    }
-  })
-  if (result.code === 200) {
-    const columns = result.data?.map((item) => {
-      return {
-        ...item,
-        columnName: item.columnName || '',
-        columnType: item.columnType || '',
-        columnComment: item.columnComment || '',
-        displayName: item.displayName || ''
-      }
-    })
-    columnStore.setColumns(columns || [])
-  } else {
-    columnStore.setDataSourceOptions([])
-  }
-}
-
-const clearAnalyzeSelections = () => {
-  analyzeStore.setAnalyzeData([])
-  filterStore.resetFilters()
-  orderStore.resetOrders()
-  dimensionStore.resetDimensions()
-  measureStore.resetMeasures()
-}
 
 const mapDatasetFieldToColumn = (field: DatasetDao.DatasetFieldConfigItem): ColumnsStore.ColumnOptions => {
   return {
@@ -342,8 +222,6 @@ const queryDatasetColumns = async (datasetId: number) => {
   })
   if (result.code === 200 && result.data) {
     const columns = (result.data.fieldsConfig || []).filter((field) => field.visible).map(mapDatasetFieldToColumn)
-    columnStore.setDataSource('')
-    columnStore.setDataSourceMode('dataset')
     columnStore.setDatasetId(result.data.id)
     columnStore.setDatasetName(result.data.datasetName)
     columnStore.setColumns(columns)
@@ -352,55 +230,35 @@ const queryDatasetColumns = async (datasetId: number) => {
   columnStore.setColumns([])
 }
 
-const handleRefreshColumns = async () => {
-  if (columnStore.getDataSourceMode === 'dataset') {
-    const datasetId = columnStore.getDatasetId
-    if (!datasetId) {
-      ElMessage.warning('请先选择数据集')
-      return
-    }
-    await queryDatasetColumns(datasetId)
-    return
-  }
+const clearAnalyzeSelections = () => {
+  analyzeStore.setAnalyzeData([])
+  filterStore.resetFilters()
+  orderStore.resetOrders()
+  dimensionStore.resetDimensions()
+  measureStore.resetMeasures()
+}
 
-  const tableName = columnStore.getDataSource
-  if (!tableName) {
-    ElMessage.warning('请先选择数据表')
+const handleRefreshColumns = async () => {
+  const datasetId = columnStore.getDatasetId
+  if (!datasetId) {
+    ElMessage.warning('请先选择数据集')
     return
   }
-  await queryTableColumn(tableName)
+  await queryDatasetColumns(datasetId)
 }
 
 watch(
   () => analyzeStore.getEditorHydrating,
   async (hydrating, wasHydrating) => {
     if (!wasHydrating || hydrating) return
-    if (!columnStore.getDataSource || columnStore.getColumns.length > 0) return
+    if (!columnStore.getDatasetId || columnStore.getColumns.length > 0) return
     await handleRefreshColumns()
   }
 )
 
-const handleDataSourceChange = async (payload: string | AnalyzeDataSourceChangePayload) => {
-  if (typeof payload === 'string') {
-    clearAnalyzeSelections()
-    columnStore.setDataSourceMode('table')
-    columnStore.setDatasetId(null)
-    columnStore.setDatasetName('')
-    await queryTableColumn(payload)
-    return
-  }
-
-  if (payload.mode === 'dataset') {
-    clearAnalyzeSelections()
-    await queryDatasetColumns(payload.dataset.id)
-    return
-  }
-
+const handleDatasetChange = async (dataset: DatasetVo.DatasetListItem) => {
   clearAnalyzeSelections()
-  columnStore.setDataSourceMode('table')
-  columnStore.setDatasetId(null)
-  columnStore.setDatasetName('')
-  await queryTableColumn(payload.tableName)
+  await queryDatasetColumns(dataset.id)
 }
 </script>
 
@@ -415,7 +273,6 @@ const handleDataSourceChange = async (payload: string | AnalyzeDataSourceChangeP
     flex: 1;
     overflow-y: auto;
     list-style: none;
-    // overflow: auto;
   }
 }
 </style>

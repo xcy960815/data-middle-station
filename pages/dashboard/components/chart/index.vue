@@ -29,7 +29,7 @@ import type { Component } from 'vue'
 const props = defineProps<{
   title: string
   chartType: AnalyzeStore.ChartType
-  dataSource: string | null
+  datasetId: number | null
   loading: boolean
   errorMessage: string
   data: AnalyzeDataVo.AnalyzeData[]
@@ -56,7 +56,7 @@ const activeErrorMessage = computed(() => {
   if (props.errorMessage) return props.errorMessage
   const validation = validateAnalyzeChartConfig({
     chartType: props.chartType,
-    dataSource: props.dataSource,
+    datasetId: props.datasetId,
     measures: props.yAxisFields,
     dimensions: props.xAxisFields
   })

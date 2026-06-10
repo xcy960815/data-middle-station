@@ -108,15 +108,7 @@ declare namespace AnalyzeConfigDao {
    */
   type CommonChartConfig = {
     /**
-     * 数据来源类型
-     */
-    dataSourceMode?: 'table' | 'dataset'
-    /**
-     * 数据集ID
-     */
-    datasetId?: number | null
-    /**
-     * 数据集名称
+     * 数据集名称（展示用，查询以 analyze_config.dataset_id 为准）
      */
     datasetName?: string
     /**
@@ -419,9 +411,9 @@ declare namespace AnalyzeConfigDao {
     analyzeId: number
     versionNo: number
     /**
-     * 数据源
+     * 绑定的数据集 ID
      */
-    dataSource: string | null
+    datasetId: number | null
     /**
      * 图表类型
      */
