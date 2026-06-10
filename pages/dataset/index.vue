@@ -1,7 +1,9 @@
 <template>
   <NuxtLayout :name="layoutName">
     <template #header>
-      <custom-header />
+      <custom-header>
+        <template #nav />
+      </custom-header>
     </template>
 
     <template #bar>

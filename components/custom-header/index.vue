@@ -54,10 +54,15 @@ const handleClickAppName = () => {
 
 const navItems = [
   { key: 'analyze', label: '分析', path: '/analyze', icon: 'Data' },
-  { key: 'dashboard', label: '看板', path: '/dashboard', icon: 'Dashboard' }
+  { key: 'dashboard', label: '看板', path: '/dashboard', icon: 'Dashboard' },
+  { key: 'dataset', label: '数据集', path: '/dataset', icon: 'DataFile' }
 ]
 
 const isActive = (key: string) => {
+  if (key === 'dataset') {
+    return route.path.startsWith('/dataset') || route.path.startsWith('/data-source')
+  }
+
   return route.path.startsWith(`/${key}`)
 }
 </script>

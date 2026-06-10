@@ -348,6 +348,7 @@ const handleLogin = async () => {
   gap: 14px;
   padding: 24px;
   overflow: hidden;
+  color-scheme: dark;
   background: linear-gradient(135deg, rgba(51, 181, 229, 0.16), rgba(170, 102, 204, 0.12)), rgba(4, 9, 18, 0.72);
   border: 1px solid rgba(93, 213, 255, 0.42);
   border-radius: 18px;
@@ -408,12 +409,33 @@ const handleLogin = async () => {
     padding: 0 14px 0 0;
     color: #fff;
     caret-color: #33b5e5;
+    color-scheme: dark;
     background: transparent;
     border: none;
     outline: none;
 
     &::placeholder {
       color: rgba(255, 255, 255, 0.34);
+    }
+
+    &:focus {
+      background: transparent;
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus,
+    &:-webkit-autofill:active,
+    &:autofill {
+      color: #fff;
+      -webkit-text-fill-color: #fff;
+      caret-color: #33b5e5;
+      background-color: transparent !important;
+      box-shadow: inset 0 0 0 1000px transparent !important;
+      -webkit-box-shadow: inset 0 0 0 1000px transparent !important;
+      transition:
+        background-color 99999s ease-out 0s,
+        color 99999s ease-out 0s;
     }
   }
 }
