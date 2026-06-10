@@ -14,7 +14,7 @@ import type { DashboardWidgetState, ResizeHandle } from './useDashboard'
  * @param options.gridGap - Gap between grid cells in pixels
  * @param options.minWidgetWidth - Minimum widget width in grid columns
  * @param options.minWidgetHeight - Minimum widget height in grid rows
- * @param options.canvasHorizontalPadding - Horizontal padding inside the canvas in pixels
+ * @param options.canvasHorizontalPadding - Per-side horizontal inset inside the canvas in pixels
  * @param options.canvasBottomSpace - Extra scrollable space below the last widget row in pixels
  */
 export function useWidgetDragResize(options: {
@@ -36,8 +36,9 @@ export function useWidgetDragResize(options: {
 
   // --- Computed ---
   const columnWidth = computed(() => {
-    const width = Math.max(1, (canvasWidth.value || 1) - options.canvasHorizontalPadding)
-    return (width - options.gridGap * (options.gridColumns - 1)) / options.gridColumns
+    const horizontalInset = options.canvasHorizontalPadding
+    const usableWidth = Math.max(1, (canvasWidth.value || 1) - horizontalInset * 2)
+    return (usableWidth - options.gridGap * (options.gridColumns - 1)) / options.gridColumns
   })
 
   const canvasContentBottom = computed(() => {
@@ -50,7 +51,7 @@ export function useWidgetDragResize(options: {
   // --- Functions ---
 
   const getWidgetStyle = (widget: DashboardWidgetState) => {
-    const left = widget.x * (columnWidth.value + options.gridGap)
+    const left = options.canvasHorizontalPadding + widget.x * (columnWidth.value + options.gridGap)
     const top = widget.y * (options.rowHeight + options.gridGap)
     const width = widget.w * columnWidth.value + (widget.w - 1) * options.gridGap
     const height = widget.h * options.rowHeight + (widget.h - 1) * options.gridGap
@@ -154,7 +155,8 @@ export function useWidgetDragResize(options: {
   const getDropGridPosition = (event: DragEvent) => {
     if (!options.canvasRef.value) return getNextWidgetPosition()
     const canvasRect = options.canvasRef.value.getBoundingClientRect()
-    const pointerX = event.clientX - canvasRect.left + options.canvasRef.value.scrollLeft
+    const pointerX =
+      event.clientX - canvasRect.left + options.canvasRef.value.scrollLeft - options.canvasHorizontalPadding
     const pointerY = event.clientY - canvasRect.top + options.canvasRef.value.scrollTop
     const gridX = Math.round(pointerX / (columnWidth.value + options.gridGap))
     const gridY = Math.round(pointerY / (options.rowHeight + options.gridGap))

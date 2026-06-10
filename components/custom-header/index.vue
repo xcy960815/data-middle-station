@@ -3,7 +3,7 @@
     <div class="header-left flex items-center cursor-pointer" @click="handleClickAppName">
       <h4 class="app-name">{{ appName }}</h4>
     </div>
-    <div v-if="$slots.title" class="header-center flex-1 flex items-center justify-center">
+    <div v-if="$slots.title" class="header-title flex-1 flex items-center justify-center">
       <slot name="title"></slot>
     </div>
     <nav v-else-if="$slots.nav" class="header-nav">
@@ -20,7 +20,7 @@
         </NuxtLink>
       </slot>
     </nav>
-    <div v-else class="header-center flex-1"></div>
+    <div v-else class="flex-1"></div>
     <header-right class="header-right w-[190px] flex items-center justify-between">
       <template #header-right>
         <slot name="header-right"></slot>

@@ -249,7 +249,7 @@ const {
   gridGap: 12,
   minWidgetWidth: 2,
   minWidgetHeight: 2,
-  canvasHorizontalPadding: 28,
+  canvasHorizontalPadding: 8,
   canvasBottomSpace: 320
 })
 

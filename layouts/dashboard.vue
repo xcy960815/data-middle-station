@@ -100,7 +100,7 @@ withDefaults(
 }
 
 .layout-dashboard-canvas--editing {
-  padding: 12px 16px 12px 12px;
+  padding: 12px;
   background-image: linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
   background-size: 32px 32px;
 }
