@@ -2,6 +2,7 @@
   <div class="canvas-table-chart h-full">
     <client-only>
       <CanvasTable
+        :title="title"
         :data="data"
         :x-axis-fields="resolvedXAxisFields"
         :y-axis-fields="resolvedYAxisFields"
@@ -67,6 +68,10 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps({
+  title: {
+    type: String,
+    default: ''
+  },
   data: {
     type: Array as PropType<Array<AnalyzeDataVo.AnalyzeData>>,
     default: () => []

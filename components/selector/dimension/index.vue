@@ -61,6 +61,7 @@
 
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useAnalyzeDrill } from '@/pages/analyze/useAnalyzeDrill'
 import ContextMenu from '../../context-menu/index.vue'
 
 defineOptions({
@@ -97,22 +98,6 @@ const props = defineProps({
     type: String as PropType<'path' | 'current' | 'next' | 'future'>,
     default: 'current'
   },
-  drillPathValue: {
-    type: [String, Number, Boolean] as PropType<DimensionStore.DrillPathItem['value']>,
-    default: null
-  },
-  currentLevelLabel: {
-    type: String,
-    default: ''
-  },
-  nextLevelLabel: {
-    type: String,
-    default: ''
-  },
-  canDrillDown: {
-    type: Boolean,
-    default: false
-  },
   availableDrillValues: {
     type: Array as PropType<Array<{ label: string; value: string }>>,
     default: () => []
@@ -127,6 +112,7 @@ const emit = defineEmits<{
 }>()
 
 const dimensionStore = useDimensionsStore()
+const { currentDrillDimension, nextDrillDimension, getDimensionLabel } = useAnalyzeDrill()
 
 const contextmenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 const drillValueDialogVisible = ref(false)
@@ -136,6 +122,22 @@ const selectValueThenDrill = ref(false)
 const dimensionLabel = computed(
   () => props.dimension.displayName || props.dimension.columnComment || props.dimension.columnName
 )
+
+const currentLevelLabel = computed(() =>
+  currentDrillDimension.value ? getDimensionLabel(currentDrillDimension.value) : ''
+)
+
+const nextLevelLabel = computed(() => (nextDrillDimension.value ? getDimensionLabel(nextDrillDimension.value) : ''))
+
+const canDrillDown = computed(() => {
+  const selected = dimensionStore.getSelectedDrillValue
+  return (
+    (props.drillLevelState === 'current' || props.drillLevelState === 'next') &&
+    selected !== null &&
+    typeof selected !== 'undefined' &&
+    selected !== ''
+  )
+})
 
 /**
  * @desc 当前选中的列
@@ -159,7 +161,7 @@ const handleRollUp = () => {
 }
 
 const handleDrillDown = () => {
-  if (!props.canDrillDown) {
+  if (!canDrillDown.value) {
     handleOpenSelectDrillValue(true)
     return
   }
@@ -168,7 +170,8 @@ const handleDrillDown = () => {
 
 const handleOpenSelectDrillValue = (thenDrill = false) => {
   selectValueThenDrill.value = thenDrill
-  draftDrillValue.value = props.drillPathValue == null ? '' : String(props.drillPathValue)
+  const drillValue = props.dimension.dimensionRule?.drill?.value
+  draftDrillValue.value = drillValue == null ? '' : String(drillValue)
   drillValueDialogVisible.value = true
 }
 

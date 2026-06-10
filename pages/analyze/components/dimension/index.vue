@@ -37,10 +37,6 @@
           :invalidMessage="getDimensionInvalidMessage(item)"
           :drill-enabled="isDimensionDrillMenuEnabled(item)"
           :drill-level-state="getDrillLevelState(index)"
-          :drill-path-value="getDrillPathValue(item)"
-          :current-level-label="currentDrillDimension ? getDimensionLabel(currentDrillDimension) : ''"
-          :next-level-label="nextDrillDimension ? getDimensionLabel(nextDrillDimension) : ''"
-          :can-drill-down="canDrillDown"
           :available-drill-values="availableDrillValues"
           @roll-up="handleRollUpFromMenu(index)"
           @drill-down="handleDrillDownFromMenu"
@@ -103,15 +99,6 @@ const measureColumnSet = computed(() => {
 })
 
 const drillEnabled = computed(() => drillDimensions.value.length > 1)
-const canDrillDown = computed(() => {
-  return (
-    drillEnabled.value &&
-    effectiveDrillLevel.value < drillDimensions.value.length - 1 &&
-    dimensionStore.getSelectedDrillValue !== null &&
-    typeof dimensionStore.getSelectedDrillValue !== 'undefined' &&
-    dimensionStore.getSelectedDrillValue !== ''
-  )
-})
 
 const availableDrillValues = computed(() => {
   const dimension = currentDrillDimension.value
@@ -140,12 +127,6 @@ const getDrillLevelState = (index: number): 'path' | 'current' | 'next' | 'futur
   if (drillIndex === effectiveDrillLevel.value) return 'current'
   if (drillIndex === effectiveDrillLevel.value + 1) return 'next'
   return 'future'
-}
-
-const getDrillPathValue = (dimension?: DimensionStore.DimensionOption) => {
-  const drillIndex = getDrillDimensionIndex(dimension)
-  if (drillIndex === -1) return null
-  return drillPath.value[drillIndex]?.value
 }
 
 const isDrillPathLevel = (dimension?: DimensionStore.DimensionOption) => {
