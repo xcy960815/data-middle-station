@@ -104,7 +104,7 @@
               </div>
             </div>
             <div class="dashboard-widget__body">
-              <DashboardWidgetChart
+              <DashboardChart
                 :title="widget.widgetTitle"
                 :chart-type="widget.chartType"
                 :data-source="widget.dataSource"
@@ -186,7 +186,7 @@ import { useWidgetDragResize } from './composables/useWidgetDragResize'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import HeaderTitle from '@/components/header-title/index.vue'
 import DashboardBar from './components/bar/index.vue'
-import DashboardWidgetChart from './components/dashboard-widget-chart.vue'
+import DashboardChart from './components/chart/index.vue'
 
 const layoutName = 'dashboard'
 const route = useRoute()

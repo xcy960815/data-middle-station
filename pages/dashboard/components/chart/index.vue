@@ -1,6 +1,6 @@
 <template>
-  <div ref="widgetChartRef" class="dashboard-widget-chart">
-    <div v-if="activeErrorMessage" class="dashboard-widget-chart__error">
+  <div ref="chartRef" class="dashboard-chart">
+    <div v-if="activeErrorMessage" class="dashboard-chart__error">
       {{ activeErrorMessage }}
     </div>
     <component
@@ -40,7 +40,7 @@ const props = defineProps<{
 
 const chartWidth = ref<string | number>('100%')
 const chartHeight = ref<string | number>('100%')
-const widgetChartRef = ref<HTMLElement | null>(null)
+const chartRef = ref<HTMLElement | null>(null)
 const resizeObserver = ref<ResizeObserver>()
 
 const chartComponentMap: Record<AnalyzeStore.ChartType, Component> = {
@@ -71,13 +71,13 @@ const activePrivateChartConfig = computed(() => {
 
 onMounted(() => {
   const updateSize = () => {
-    if (!widgetChartRef.value) return
-    chartWidth.value = widgetChartRef.value.clientWidth
-    chartHeight.value = widgetChartRef.value.clientHeight
+    if (!chartRef.value) return
+    chartWidth.value = chartRef.value.clientWidth
+    chartHeight.value = chartRef.value.clientHeight
   }
   resizeObserver.value = new ResizeObserver(updateSize)
-  if (widgetChartRef.value) {
-    resizeObserver.value.observe(widgetChartRef.value)
+  if (chartRef.value) {
+    resizeObserver.value.observe(chartRef.value)
     updateSize()
   }
 })
@@ -88,14 +88,14 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.dashboard-widget-chart {
+.dashboard-chart {
   position: relative;
   height: 100%;
   min-height: 0;
   width: 100%;
 }
 
-.dashboard-widget-chart__error {
+.dashboard-chart__error {
   display: flex;
   height: 100%;
   align-items: center;

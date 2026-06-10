@@ -123,7 +123,7 @@ data-middle-station/
 
 **核心组件:**
 
-- `DashboardWidgetChart`: 看板组件图表渲染容器
+- `DashboardChart` (`components/chart/index.vue`): 看板组件图表渲染容器
 - `dashboard/[id].vue`: 看板编辑、布局和组件数据加载页面
 
 #### 3. 图表可视化组件
