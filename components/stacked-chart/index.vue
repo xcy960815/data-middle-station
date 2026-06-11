@@ -21,6 +21,7 @@ import { init, type ECharts } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type PropType } from 'vue'
 import { useChartRender } from '~/composables/useChartRender/index'
+import { useChartConfigStore } from '~/stores/chart-config'
 
 // 注册必要的组件
 import { use } from 'echarts/core'

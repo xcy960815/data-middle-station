@@ -4,7 +4,6 @@
     <el-button link @click="handleClickAlarm">报警</el-button>
     <el-button link @click="handleOpenVersionDialog">历史版本</el-button>
     <el-button link @click="handleClickSetting">设置</el-button>
-    <el-button link @click="handleClickFullScreen">全屏</el-button>
     <el-button link @click="handleDownload">下载</el-button>
     <el-button link @click="handleClickSendEmailDto">邮件</el-button>
     <el-button link @click="handleAnalyze" :loading="editorSaving" :disabled="!editorDirty && !editorSaving"
@@ -144,12 +143,6 @@ const handleOpenVersionDialog = async () => {
 const handleClickSetting = () => {
   chartConfigStore.setChartConfigDrawer(true)
 }
-/**
- * @desc 点全屏按钮
- * @returns void
- */
-const handleClickFullScreen = () => {}
-
 /**
  * @desc 点保存按钮
  * @returns void

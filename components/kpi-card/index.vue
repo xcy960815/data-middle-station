@@ -1,47 +1,39 @@
 <template>
   <!-- KPI 指标卡 -->
-  <div
-    class="kpi-card h-full w-full flex flex-col justify-center items-center p-4"
-    data-canvas-type="kpi-card"
-    data-canvas-component="KpiCard"
-  >
+  <div class="kpi-card h-full w-full" data-canvas-type="kpi-card" data-canvas-component="KpiCard">
     <template v-if="hasData">
-      <!-- 标题 -->
-      <div v-if="title" class="kpi-title text-sm text-gray-500 mb-1 text-center">{{ title }}</div>
+      <div class="kpi-card-inner">
+        <!-- 头部: 标题和度量名称 -->
+        <div class="kpi-header">
+          <div v-if="title" class="kpi-title">{{ title }}</div>
+          <div v-if="mainMeasureName" class="kpi-subtitle">{{ mainMeasureName }}</div>
+        </div>
 
-      <!-- 主指标 -->
-      <div class="kpi-main-value text-3xl font-bold text-gray-900 mb-2">
-        {{ formattedMainValue }}
-      </div>
+        <!-- 主内容区: 主指标和对比 -->
+        <div class="kpi-body">
+          <div class="kpi-main-value">
+            {{ formattedMainValue }}
+          </div>
 
-      <!-- 指标名称 -->
-      <div v-if="mainMeasureName" class="kpi-measure-name text-xs text-gray-400 mb-3">
-        {{ mainMeasureName }}
-      </div>
-
-      <!-- 对比指标区域 -->
-      <div v-if="compareItems.length > 0" class="kpi-compare flex gap-4 items-center justify-center flex-wrap">
-        <div v-for="(item, index) in compareItems" :key="index" class="kpi-compare-item flex flex-col items-center">
-          <span class="kpi-compare-label text-xs text-gray-400">{{ item.label }}</span>
-          <span class="kpi-compare-value text-sm font-medium" :class="item.trendClass">
-            {{ item.displayValue }}
-          </span>
-          <span v-if="item.changeText" class="kpi-compare-change text-xs" :class="item.trendClass">
-            <span class="kpi-arrow" :class="item.direction">{{
-              item.direction === 'up' ? '↑' : item.direction === 'down' ? '↓' : '→'
-            }}</span>
-            {{ item.changeText }}
-          </span>
+          <div v-if="compareItems.length > 0" class="kpi-compare-group">
+            <div v-for="(item, index) in compareItems" :key="index" class="kpi-compare-pill" :class="item.direction">
+              <span class="kpi-compare-label">{{ item.label }}</span>
+              <span class="kpi-compare-val">{{ item.displayValue }}</span>
+              <span class="kpi-compare-change">
+                <span class="kpi-arrow">{{
+                  item.direction === 'up' ? '↑' : item.direction === 'down' ? '↓' : '→'
+                }}</span>
+                {{ item.changeText }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- 迷你趋势线 -->
-      <div
-        v-if="showSparkline && sparklineData.length > 1"
-        ref="sparklineContainer"
-        class="kpi-sparkline mt-3 w-full"
-        style="height: 40px"
-      ></div>
+      <!-- 底部迷你趋势线 -->
+      <div class="kpi-footer">
+        <div v-if="showSparkline && sparklineData.length > 1" ref="sparklineContainer" class="kpi-sparkline"></div>
+      </div>
     </template>
 
     <!-- 空状态 -->
@@ -275,9 +267,9 @@ const renderSparkline = () => {
       {
         type: 'line',
         data: sparklineData.value,
-        smooth: true,
+        smooth: 0.4,
         symbol: 'none',
-        lineStyle: { width: 2, color },
+        lineStyle: { width: 3, color },
         areaStyle: {
           color: {
             type: 'linear',
@@ -286,8 +278,8 @@ const renderSparkline = () => {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: color + '40' },
-              { offset: 1, color: color + '05' }
+              { offset: 0, color: color + '50' },
+              { offset: 1, color: color + '00' }
             ]
           }
         }
@@ -337,31 +329,182 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .kpi-card {
-  min-height: 120px;
+  min-height: 160px;
   position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f1f5f9;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   user-select: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px) scale(1.005);
+  box-shadow:
+    0 20px 40px -10px rgba(0, 0, 0, 0.12),
+    0 4px 10px -2px rgba(0, 0, 0, 0.05);
+}
+
+.kpi-card-inner {
+  padding: 40px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  position: relative;
+  text-align: center;
+  height: 100%;
+}
+
+.kpi-header {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.kpi-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.kpi-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.kpi-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
 }
 
 .kpi-main-value {
+  font-size: 84px;
+  font-weight: 900;
+  color: transparent;
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  letter-spacing: -2px;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(15, 23, 42, 0.08));
 }
 
-.kpi-arrow {
-  font-size: 0.75em;
-  margin-right: 2px;
+.kpi-compare-group {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.kpi-compare-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #f1f5f9;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+
+.kpi-compare-pill:hover {
+  transform: translateY(-2px);
+}
+
+.kpi-compare-pill.up {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+  color: #059669;
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+.kpi-compare-pill.up .kpi-compare-val {
+  color: #047857;
+}
+
+.kpi-compare-pill.down {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+  color: #dc2626;
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.2);
+}
+.kpi-compare-pill.down .kpi-compare-val {
+  color: #b91c1c;
+}
+
+.kpi-compare-pill.flat {
+  background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%);
+  color: #64748b;
+}
+
+.kpi-compare-label {
+  font-weight: 500;
+  opacity: 0.7;
+  font-size: 13px;
+}
+
+.kpi-compare-val {
+  font-weight: 800;
+}
+
+.kpi-footer {
+  width: 100%;
+  height: 35%;
+  min-height: 100px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .kpi-sparkline {
-  opacity: 0.8;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 1;
-  }
+  width: 100%;
+  height: 100%;
+  opacity: 0.9;
+  transition: opacity 0.4s ease;
 }
 
-.kpi-compare-item {
-  min-width: 60px;
+.kpi-card:hover .kpi-sparkline {
+  opacity: 1;
+}
+
+.kpi-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #cbd5e1;
+  flex: 1;
+}
+
+.kpi-empty-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.kpi-arrow {
+  font-size: 0.9em;
+  margin-right: 4px;
+  font-weight: 900;
 }
 </style>

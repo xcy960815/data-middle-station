@@ -64,19 +64,25 @@
             <el-option label="不等于 (!=)" value="!=" />
           </el-select>
           <el-input-number v-model="cond.threshold" :controls="false" placeholder="阈值" style="width: 120px" />
-          <el-button link type="danger" @click="removeCondition(index)" v-if="formData.conditions.length > 1"
+          <el-button
+            link
+            type="danger"
+            @click="removeCondition(index)"
+            v-if="formData.conditions && formData.conditions.length > 1"
             >移除</el-button
           >
         </div>
         <el-button type="primary" link @click="addCondition" class="mb-4">+ 添加条件</el-button>
 
         <div class="font-bold mb-2">通知配置：</div>
-        <el-form-item label="接收邮箱">
-          <el-input v-model="emailsStr" placeholder="多个邮箱请用逗号分隔" />
-        </el-form-item>
-        <el-form-item label="Webhook URL">
-          <el-input v-model="formData.notificationConfig.webhookUrl" placeholder="如钉钉/飞书机器人地址" />
-        </el-form-item>
+        <template v-if="formData.notificationConfig">
+          <el-form-item label="接收邮箱">
+            <el-input v-model="emailsStr" placeholder="多个邮箱请用逗号分隔" />
+          </el-form-item>
+          <el-form-item label="Webhook URL">
+            <el-input v-model="formData.notificationConfig.webhookUrl" placeholder="如钉钉/飞书机器人地址" />
+          </el-form-item>
+        </template>
       </el-form>
 
       <div class="text-right mt-6">

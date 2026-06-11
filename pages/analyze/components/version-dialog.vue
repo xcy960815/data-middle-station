@@ -41,9 +41,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { httpRequest } from '@/composables/useHttpRequest'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { nextTick, ref } from 'vue'
 import { updateAnalyzeHandler } from '../updateAnalyze'
 
 const analyzeStore = useAnalyzeStore()
@@ -110,6 +110,7 @@ const handleSwitchVersion = async (versionItem: AnalyzeConfigVo.AnalyzeConfigRes
 
   versionSwitching.value = true
   analyzeStore.setEditorHydrating(true)
+  await nextTick()
   try {
     analyzeStore.setCurrentConfigId(versionItem.id)
     analyzeStore.setChartType((versionItem.chartType as AnalyzeStore.ChartType) || 'table')

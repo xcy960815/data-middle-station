@@ -1,5 +1,6 @@
 import { httpRequest } from '@/composables/useHttpRequest'
 import { ElMessage } from 'element-plus'
+import { nextTick } from 'vue'
 import { useAnalyzeHandler } from './useAnalyzeHandler'
 import { useAnalyzeDraft } from './useAnalyzeDraft'
 
@@ -28,6 +29,7 @@ export const updateAnalyzeHandler = () => {
     })
     if (result.code === 200 && result.data) {
       analyzeStore.setEditorHydrating(true)
+      await nextTick()
       try {
         applyAnalyzeDetail(result.data)
       } finally {
