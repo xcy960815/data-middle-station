@@ -17,12 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  defaultAnalyzeIntervalChartConfig,
-  defaultAnalyzeLineChartConfig,
-  defaultAnalyzePieChartConfig,
-  defaultAnalyzeTableChartConfig
-} from '~/shared/analyzeChartConfigDefaults'
+import { defaultAnalyzePieChartConfig } from '~/shared/analyzeChartConfigDefaults'
 
 const chartsConfigStore = useChartConfigStore()
 
@@ -33,10 +28,8 @@ const pieChartConfigData = computed<ChartConfigStore.PieChartConfig>(() => {
 const updatePieChartConfig = (pieConfig: ChartConfigStore.PieChartConfig) => {
   const privateChartConfig = chartsConfigStore.privateChartConfig
   chartsConfigStore.setPrivateChartConfig({
-    line: privateChartConfig?.line ?? defaultAnalyzeLineChartConfig,
-    table: privateChartConfig?.table ?? defaultAnalyzeTableChartConfig,
-    pie: pieConfig,
-    interval: privateChartConfig?.interval ?? defaultAnalyzeIntervalChartConfig
+    ...privateChartConfig,
+    pie: pieConfig
   })
 }
 

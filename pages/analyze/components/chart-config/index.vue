@@ -31,6 +31,12 @@ import IntervalChartConfig from './components/interval-chart-config/index.vue'
 import LineChartConfig from './components/line-chart-config/index.vue'
 import PieChartConfig from './components/pie-chart-config/index.vue'
 import TableChartConfig from './components/table-chart-config/index.vue'
+import FunnelChartConfig from './components/funnel-chart-config/index.vue'
+import ScatterChartConfig from './components/scatter-chart-config/index.vue'
+import AreaChartConfig from './components/area-chart-config/index.vue'
+import StackedChartConfig from './components/stacked-chart-config/index.vue'
+import ComboChartConfig from './components/combo-chart-config/index.vue'
+import KpiCardConfig from './components/kpi-card-config/index.vue'
 
 const chartsConfigStore = useChartConfigStore()
 const analyzeStore = useAnalyzeStore()
@@ -58,6 +64,18 @@ const chartConfigComponent = computed(() => {
       return IntervalChartConfig
     case 'pie':
       return PieChartConfig
+    case 'funnel':
+      return FunnelChartConfig
+    case 'scatter':
+      return ScatterChartConfig
+    case 'area':
+      return AreaChartConfig
+    case 'stacked':
+      return StackedChartConfig
+    case 'combo':
+      return ComboChartConfig
+    case 'kpiCard':
+      return KpiCardConfig
     default:
       return TableChartConfig
   }

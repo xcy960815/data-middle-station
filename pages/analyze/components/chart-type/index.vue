@@ -2,11 +2,11 @@
   <div class="chart-type-container h-full overflow-y-auto">
     <ul class="chart-type">
       <li
-        v-for="(i, index) in chartsType"
+        v-for="i in chartsType"
         :key="i.name"
         class="chart-type-item"
         :class="{ active: i.name === chartType }"
-        @click="handleChangeChartType(i.name, index)"
+        @click="handleChangeChartType(i.name)"
       >
         <div class="chart-type-content">
           <img :src="i.image" :alt="i.name" class="chart-image" />
@@ -30,37 +30,61 @@ const chartsType = ref<Array<{ name: AnalyzeStore.ChartType; image: string }>>([
   },
   {
     name: 'interval',
-    image: '//si.geilicdn.com/hz_img_0a6900000160690fba580a026860_150_100_unadjust.png'
+    image: 'https://echarts.apache.org/examples/data/thumb/bar-simple.webp?_v_=1780587226823'
   },
   {
     name: 'line',
-    image: '//si.geilicdn.com/hz_img_12da00000160690fba720a02685e_150_100_unadjust.png'
+    image: 'https://echarts.apache.org/examples/data/thumb/line-simple.webp?_v_=1780587226823'
   },
   {
     name: 'pie',
-    image: '//si.geilicdn.com/hz_img_12d900000160690fba6d0a02685e_300_200.jpeg'
+    image: 'https://echarts.apache.org/examples/data/thumb/pie-simple.webp?_v_=1780587226823'
+  },
+  {
+    name: 'funnel',
+    image: 'https://echarts.apache.org/examples/data/thumb/funnel.webp?_v_=1780587226823'
+  },
+  {
+    name: 'scatter',
+    image: 'https://echarts.apache.org/examples/data/thumb/scatter-simple.webp?_v_=1780587226823'
+  },
+  {
+    name: 'area',
+    image: 'https://echarts.apache.org/examples/data/thumb/area-basic.webp?_v_=1780587226823'
+  },
+  {
+    name: 'stacked',
+    image: 'https://echarts.apache.org/examples/data/thumb/bar-stack.webp?_v_=1780587226823'
+  },
+  {
+    name: 'combo',
+    image: 'https://echarts.apache.org/examples/data/thumb/mix-line-bar.webp?_v_=1780587226823'
+  },
+  {
+    name: 'kpiCard',
+    image: 'https://echarts.apache.org/examples/data/thumb/gauge-simple.webp?_v_=1780587226823'
   }
 ])
 
 /**
  * @desc 切换图表类型
  * @param {AnalyzeStore.ChartType} chartType - 图表类型
- * @param {number} index - 图表类型索引
  * @returns {void}
  */
-const handleChangeChartType = (chartType: AnalyzeStore.ChartType, index: number): void => {
-  const chartTypeItems = document.querySelectorAll('.chart-type-item')
-  chartTypeItems.forEach((item) => {
-    item.classList.remove('active')
-  })
-  chartTypeItems[index].classList.add('active')
+const handleChangeChartType = (chartType: AnalyzeStore.ChartType): void => {
   analyzeStore.setChartType(chartType)
 }
-const nameMap = {
+const nameMap: Record<AnalyzeStore.ChartType, string> = {
   table: '表格',
   interval: '柱状图',
   line: '折线图',
-  pie: '饼图'
+  pie: '饼图',
+  funnel: '漏斗图',
+  scatter: '散点图',
+  area: '面积图',
+  stacked: '堆叠图',
+  combo: '双轴组合图',
+  kpiCard: 'KPI 指标卡'
 }
 /**
  * @desc 获取图表名称

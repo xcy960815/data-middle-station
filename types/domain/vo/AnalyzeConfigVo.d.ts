@@ -131,6 +131,36 @@ declare namespace AnalyzeConfigVo {
   type TableChartConfigItem = AnalyzeConfigDao.TableChartConfig
 
   /**
+   * @desc 双轴组合图配置
+   */
+  type ComboChartConfigItem = AnalyzeConfigDao.ComboChartConfig
+
+  /**
+   * @desc 堆叠图配置
+   */
+  type StackedChartConfigItem = AnalyzeConfigDao.StackedChartConfig
+
+  /**
+   * @desc 面积图配置
+   */
+  type AreaChartConfigItem = AnalyzeConfigDao.AreaChartConfig
+
+  /**
+   * @desc 漏斗图配置
+   */
+  type FunnelChartConfigItem = AnalyzeConfigDao.FunnelChartConfig
+
+  /**
+   * @desc 散点图配置
+   */
+  type ScatterChartConfigItem = AnalyzeConfigDao.ScatterChartConfig
+
+  /**
+   * @desc KPI 指标卡配置
+   */
+  type KpiCardConfigItem = AnalyzeConfigDao.KpiCardConfig
+
+  /**
    * @desc 表格配置条件选项
    */
   type ConditionItem = AnalyzeConfigDao.ConditionItem

@@ -28,6 +28,36 @@ declare namespace ChartConfigStore {
   type LineChartConfig = AnalyzeConfigVo.LineChartConfigItem
 
   /**
+   * @desc 双轴组合图配置
+   */
+  type ComboChartConfig = AnalyzeConfigVo.ComboChartConfigItem
+
+  /**
+   * @desc 堆叠图配置
+   */
+  type StackedChartConfig = AnalyzeConfigVo.StackedChartConfigItem
+
+  /**
+   * @desc 面积图配置
+   */
+  type AreaChartConfig = AnalyzeConfigVo.AreaChartConfigItem
+
+  /**
+   * @desc 漏斗图配置
+   */
+  type FunnelChartConfig = AnalyzeConfigVo.FunnelChartConfigItem
+
+  /**
+   * @desc 散点图配置
+   */
+  type ScatterChartConfig = AnalyzeConfigVo.ScatterChartConfigItem
+
+  /**
+   * @desc KPI 指标卡配置
+   */
+  type KpiCardConfig = AnalyzeConfigVo.KpiCardConfigItem
+
+  /**
    * @desc 图表公共配置
    */
   type CommonChartConfig = AnalyzeConfigVo.CommonChartConfigItem

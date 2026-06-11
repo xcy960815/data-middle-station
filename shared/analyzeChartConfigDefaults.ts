@@ -128,3 +128,93 @@ export const defaultAnalyzeCommonChartConfig: AnalyzeConfigVo.CommonChartConfigI
   /** 分享策略描述 */
   shareStrategy: ''
 }
+
+/**
+ * @desc 双轴组合图默认配置
+ * @returns {AnalyzeConfigVo.ComboChartConfigItem}
+ */
+export const defaultAnalyzeComboChartConfig: AnalyzeConfigVo.ComboChartConfigItem = {
+  /** 折线是否画圆点 */
+  showPoint: true,
+  /** 是否显示标签 */
+  showLabel: false,
+  /** 折线是否平滑 */
+  smooth: false,
+  /** 是否横向拖动条 */
+  horizontalBar: false
+}
+
+/**
+ * @desc 堆叠图默认配置
+ * @returns {AnalyzeConfigVo.StackedChartConfigItem}
+ */
+export const defaultAnalyzeStackedChartConfig: AnalyzeConfigVo.StackedChartConfigItem = {
+  /** 展示方式：堆叠柱状 */
+  displayMode: 'stackBar',
+  /** 是否百分比显示 */
+  showPercentage: false,
+  /** 是否显示标签 */
+  showLabel: false,
+  /** 堆叠面积图时是否平滑 */
+  smooth: false,
+  /** 是否横向拖动条 */
+  horizontalBar: false
+}
+
+/**
+ * @desc 面积图默认配置
+ * @returns {AnalyzeConfigVo.AreaChartConfigItem}
+ */
+export const defaultAnalyzeAreaChartConfig: AnalyzeConfigVo.AreaChartConfigItem = {
+  /** 是否画圆点 */
+  showPoint: false,
+  /** 是否显示标签 */
+  showLabel: false,
+  /** 是否平滑曲线 */
+  smooth: true,
+  /** 填充区域透明度 */
+  opacity: 0.3,
+  /** 是否横向拖动条 */
+  horizontalBar: false
+}
+
+/**
+ * @desc 漏斗图默认配置
+ * @returns {AnalyzeConfigVo.FunnelChartConfigItem}
+ */
+export const defaultAnalyzeFunnelChartConfig: AnalyzeConfigVo.FunnelChartConfigItem = {
+  /** 是否显示标签 */
+  showLabel: true,
+  /** 是否显示百分比 */
+  showPercentage: true,
+  /** 排序方式：降序 */
+  sort: 'descending',
+  /** 漏斗对齐：居中 */
+  funnelAlign: 'center'
+}
+
+/**
+ * @desc 散点图默认配置
+ * @returns {AnalyzeConfigVo.ScatterChartConfigItem}
+ */
+export const defaultAnalyzeScatterChartConfig: AnalyzeConfigVo.ScatterChartConfigItem = {
+  /** 是否显示标签 */
+  showLabel: false,
+  /** 散点大小 */
+  symbolSize: 10,
+  /** 是否显示趋势线 */
+  showTrendLine: false
+}
+
+/**
+ * @desc KPI 指标卡默认配置
+ * @returns {AnalyzeConfigVo.KpiCardConfigItem}
+ */
+export const defaultAnalyzeKpiCardConfig: AnalyzeConfigVo.KpiCardConfigItem = {
+  /** 是否显示对比指标 */
+  showComparison: true,
+  /** 是否显示迷你趋势线 */
+  showSparkline: true,
+  /** 对比类型：环比 */
+  comparisonType: 'chain'
+}

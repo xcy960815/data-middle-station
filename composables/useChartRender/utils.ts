@@ -21,6 +21,11 @@ export interface ChartRenderConfig {
  * @method renderIntervalChart 渲染柱状图
  * @method renderLineChart 渲染折线图
  * @method renderPieChart 渲染饼图
+ * @method renderComboChart 渲染双轴组合图
+ * @method renderStackedChart 渲染堆叠图
+ * @method renderAreaChart 渲染面积图
+ * @method renderFunnelChart 渲染漏斗图
+ * @method renderScatterChart 渲染散点图
  */
 export interface ChartRenderer {
   renderIntervalChart(
@@ -29,6 +34,20 @@ export interface ChartRenderer {
   ): EChartsCoreOption | null
   renderLineChart(config: ChartRenderConfig, chartConfig?: AnalyzeConfigDao.LineChartConfig): EChartsCoreOption | null
   renderPieChart(config: ChartRenderConfig, chartConfig?: AnalyzeConfigDao.PieChartConfig): EChartsCoreOption | null
+  renderComboChart(config: ChartRenderConfig, chartConfig?: AnalyzeConfigDao.ComboChartConfig): EChartsCoreOption | null
+  renderStackedChart(
+    config: ChartRenderConfig,
+    chartConfig?: AnalyzeConfigDao.StackedChartConfig
+  ): EChartsCoreOption | null
+  renderAreaChart(config: ChartRenderConfig, chartConfig?: AnalyzeConfigDao.AreaChartConfig): EChartsCoreOption | null
+  renderFunnelChart(
+    config: ChartRenderConfig,
+    chartConfig?: AnalyzeConfigDao.FunnelChartConfig
+  ): EChartsCoreOption | null
+  renderScatterChart(
+    config: ChartRenderConfig,
+    chartConfig?: AnalyzeConfigDao.ScatterChartConfig
+  ): EChartsCoreOption | null
 }
 
 /**

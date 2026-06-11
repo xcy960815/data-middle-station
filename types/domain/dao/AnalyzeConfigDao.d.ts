@@ -192,6 +192,138 @@ declare namespace AnalyzeConfigDao {
   }
 
   /**
+   * @desc 双轴组合图配置
+   */
+  type ComboChartConfig = {
+    /**
+     * 折线是否画圆点
+     */
+    showPoint: boolean
+    /**
+     * 是否显示文字
+     */
+    showLabel: boolean
+    /**
+     * 折线是否平滑
+     */
+    smooth: boolean
+    /**
+     * 是否横向拖动条
+     */
+    horizontalBar: boolean
+  }
+
+  /**
+   * @desc 堆叠图配置
+   */
+  type StackedChartConfig = {
+    /**
+     * 展示方式：堆叠柱状 / 堆叠面积
+     */
+    displayMode: string // 'stackBar' | 'stackArea'
+    /**
+     * 是否百分比显示
+     */
+    showPercentage: boolean
+    /**
+     * 是否显示文字
+     */
+    showLabel: boolean
+    /**
+     * 堆叠面积图时是否平滑
+     */
+    smooth: boolean
+    /**
+     * 是否横向拖动条
+     */
+    horizontalBar: boolean
+  }
+
+  /**
+   * @desc 面积图配置
+   */
+  type AreaChartConfig = {
+    /**
+     * 是否画圆点
+     */
+    showPoint: boolean
+    /**
+     * 是否显示文字
+     */
+    showLabel: boolean
+    /**
+     * 是否平滑曲线
+     */
+    smooth: boolean
+    /**
+     * 填充区域透明度（0-1）
+     */
+    opacity: number
+    /**
+     * 是否横向拖动条
+     */
+    horizontalBar: boolean
+  }
+
+  /**
+   * @desc 漏斗图配置
+   */
+  type FunnelChartConfig = {
+    /**
+     * 是否显示文字
+     */
+    showLabel: boolean
+    /**
+     * 是否显示百分比
+     */
+    showPercentage: boolean
+    /**
+     * 排序方式
+     */
+    sort: 'descending' | 'ascending' | 'none'
+    /**
+     * 漏斗对齐方式
+     */
+    funnelAlign: 'left' | 'center' | 'right'
+  }
+
+  /**
+   * @desc 散点图配置
+   */
+  type ScatterChartConfig = {
+    /**
+     * 是否显示文字
+     */
+    showLabel: boolean
+    /**
+     * 散点大小
+     */
+    symbolSize: number
+    /**
+     * 是否显示趋势线
+     */
+    showTrendLine: boolean
+  }
+
+  /**
+   * @desc KPI 指标卡配置
+   */
+  type KpiCardConfig = {
+    /**
+     * 是否显示对比指标
+     */
+    showComparison: boolean
+    /**
+     * 是否显示迷你趋势线
+     */
+    showSparkline: boolean
+    /**
+     * 对比类型
+     */
+    comparisonType: 'chain' | 'yoy' | 'both'
+  }
+
+  /**
    * @desc 表格配置条件选项
    */
   type ConditionItem = {
@@ -401,6 +533,30 @@ declare namespace AnalyzeConfigDao {
      * @desc 表格配置
      */
     table: TableChartConfig
+    /**
+     * @desc 双轴组合图配置
+     */
+    combo: ComboChartConfig
+    /**
+     * @desc 堆叠图配置
+     */
+    stacked: StackedChartConfig
+    /**
+     * @desc 面积图配置
+     */
+    area: AreaChartConfig
+    /**
+     * @desc 漏斗图配置
+     */
+    funnel: FunnelChartConfig
+    /**
+     * @desc 散点图配置
+     */
+    scatter: ScatterChartConfig
+    /**
+     * @desc KPI 指标卡配置
+     */
+    kpiCard: KpiCardConfig
   }
 
   /**

@@ -5,7 +5,17 @@ declare namespace AnalyzeStore {
   /**
    * @desc 图表类型
    */
-  type ChartType = 'table' | 'line' | 'pie' | 'interval'
+  type ChartType =
+    | 'table'
+    | 'line'
+    | 'pie'
+    | 'interval'
+    | 'funnel'
+    | 'scatter'
+    | 'area'
+    | 'stacked'
+    | 'combo'
+    | 'kpiCard'
 
   /**
    * @desc 图表key

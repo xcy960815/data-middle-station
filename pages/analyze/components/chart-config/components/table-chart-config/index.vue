@@ -757,12 +757,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  defaultAnalyzeIntervalChartConfig,
-  defaultAnalyzeLineChartConfig,
-  defaultAnalyzePieChartConfig,
-  defaultAnalyzeTableChartConfig
-} from '@/shared/analyzeChartConfigDefaults'
+import { defaultAnalyzeTableChartConfig } from '@/shared/analyzeChartConfigDefaults'
 import {
   buildAnalyzeTableColumnsFromFields,
   createDefaultAnalyzeTableColumnUi,
@@ -787,10 +782,8 @@ const tableChartConfig = computed<ChartConfigStore.TableChartConfig>({
   set(value: ChartConfigStore.TableChartConfig) {
     const current = chartsConfigStore.privateChartConfig
     chartsConfigStore.setPrivateChartConfig({
-      line: current?.line ?? defaultAnalyzeLineChartConfig,
-      table: value,
-      pie: current?.pie ?? defaultAnalyzePieChartConfig,
-      interval: current?.interval ?? defaultAnalyzeIntervalChartConfig
+      ...current,
+      table: value
     })
   }
 })

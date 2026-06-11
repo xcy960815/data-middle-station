@@ -62,6 +62,30 @@ import LineChart from '~/components/line-chart/index.vue'
  * 表格
  */
 import TableChart from '~/components/table-chart/index.vue'
+/**
+ * 漏斗图
+ */
+import FunnelChart from '~/components/funnel-chart/index.vue'
+/**
+ * 散点图
+ */
+import ScatterChart from '~/components/scatter-chart/index.vue'
+/**
+ * 面积图
+ */
+import AreaChart from '~/components/area-chart/index.vue'
+/**
+ * 堆叠图
+ */
+import StackedChart from '~/components/stacked-chart/index.vue'
+/**
+ * 双轴组合图
+ */
+import ComboChart from '~/components/combo-chart/index.vue'
+/**
+ * KPI 指标卡
+ */
+import KpiCard from '~/components/kpi-card/index.vue'
 import { resolveAnalyzeDrillQueryFields } from '@/shared/analyzeDrillState'
 
 /**
@@ -145,11 +169,17 @@ const data = computed(() => {
  * @desc 图表组件映射
  * @type {Record<string, Component>}
  */
-const chartComponentMap = {
+const chartComponentMap: Record<AnalyzeStore.ChartType, Component> = {
   table: TableChart,
   line: LineChart,
   interval: IntervalChart,
-  pie: PieChart
+  pie: PieChart,
+  funnel: FunnelChart,
+  scatter: ScatterChart,
+  area: AreaChart,
+  stacked: StackedChart,
+  combo: ComboChart,
+  kpiCard: KpiCard
 }
 
 /**
