@@ -68,12 +68,13 @@ const chartConfigStore = useChartConfigStore()
 const chartConfig = computed(() => {
   return (
     props.privateChartConfig ||
-    chartConfigStore.privateChartConfig?.funnel || {
+    chartConfigStore.privateChartConfig?.funnel ||
+    ({
       showLabel: true,
       showPercentage: true,
       sort: 'descending',
       funnelAlign: 'center'
-    }
+    } as AnalyzeConfigVo.FunnelChartConfigItem)
   )
 })
 

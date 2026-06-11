@@ -80,7 +80,7 @@ defineProps<{
   editorMode: boolean
   widgets: DashboardWidgetState[]
   resizeHandles: ResizeHandle[]
-  bindCanvasRef: (el: HTMLElement | null) => void
+  bindCanvasRef: (el: any) => void
   getWidgetStyle: (widget: DashboardWidgetState) => Record<string, string>
   getCanvasSpacerStyle: () => Record<string, string>
 }>()

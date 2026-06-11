@@ -101,5 +101,17 @@ declare namespace ChartConfigStore {
      * @desc 设置表格图配置
      */
     setTableChartConfig(config: TableChartConfig): void
+    /**
+     * @desc 设置私有图表配置
+     */
+    setPrivateChartConfig(config: Partial<PrivateChartConfig> | null): void
+    /**
+     * @desc 设置公共图表配置
+     */
+    setCommonChartConfig(config: CommonChartConfig | null): void
+    /**
+     * @desc 设置图表配置抽屉
+     */
+    setChartConfigDrawer(value: boolean): void
   }
 }

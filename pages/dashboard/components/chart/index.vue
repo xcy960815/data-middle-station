@@ -23,6 +23,12 @@ import IntervalChart from '~/components/interval-chart/index.vue'
 import LineChart from '~/components/line-chart/index.vue'
 import PieChart from '~/components/pie-chart/index.vue'
 import TableChart from '~/components/table-chart/index.vue'
+import FunnelChart from '~/components/funnel-chart/index.vue'
+import ScatterChart from '~/components/scatter-chart/index.vue'
+import AreaChart from '~/components/area-chart/index.vue'
+import StackedChart from '~/components/stacked-chart/index.vue'
+import ComboChart from '~/components/combo-chart/index.vue'
+import KpiCard from '~/components/kpi-card/index.vue'
 import { validateAnalyzeChartConfig } from '@/utils/validateAnalyzeChartConfig'
 import type { Component } from 'vue'
 
@@ -47,7 +53,13 @@ const chartComponentMap: Record<AnalyzeStore.ChartType, Component> = {
   table: TableChart,
   line: LineChart,
   interval: IntervalChart,
-  pie: PieChart
+  pie: PieChart,
+  funnel: FunnelChart,
+  scatter: ScatterChart,
+  area: AreaChart,
+  stacked: StackedChart,
+  combo: ComboChart,
+  kpiCard: KpiCard
 }
 
 const chartComponent = computed(() => chartComponentMap[props.chartType] || TableChart)
