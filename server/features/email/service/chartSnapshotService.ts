@@ -1,7 +1,7 @@
 import { AnalyzeService } from '@/server/service/analyzeService'
 import { ChartDataService } from '@/server/service/chartDataService'
 import dayjs from 'dayjs'
-import { BarChart, LineChart, PieChart } from 'echarts/charts'
+import { BarChart, LineChart, PieChart, FunnelChart, ScatterChart } from 'echarts/charts'
 import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
 import type { EChartsCoreOption } from 'echarts/core'
 import * as echarts from 'echarts/core'
@@ -9,11 +9,21 @@ import { SVGRenderer } from 'echarts/renderers'
 import { renderIntervalChart } from '~/composables/useChartRender/renderIntervalChart'
 import { renderLineChart } from '~/composables/useChartRender/renderLineChart'
 import { renderPieChart } from '~/composables/useChartRender/renderPieChart'
+import { renderStackedChart } from '~/composables/useChartRender/renderStackedChart'
+import { renderComboChart } from '~/composables/useChartRender/renderComboChart'
+import { renderAreaChart } from '~/composables/useChartRender/renderAreaChart'
+import { renderFunnelChart } from '~/composables/useChartRender/renderFunnelChart'
+import { renderScatterChart } from '~/composables/useChartRender/renderScatterChart'
 import type { ChartRenderConfig } from '~/composables/useChartRender/utils'
 import {
   defaultAnalyzeIntervalChartConfig,
   defaultAnalyzeLineChartConfig,
-  defaultAnalyzePieChartConfig
+  defaultAnalyzePieChartConfig,
+  defaultAnalyzeStackedChartConfig,
+  defaultAnalyzeComboChartConfig,
+  defaultAnalyzeAreaChartConfig,
+  defaultAnalyzeFunnelChartConfig,
+  defaultAnalyzeScatterChartConfig
 } from '~/shared/analyzeChartConfigDefaults'
 import { resolveAnalyzeDrillQueryFields } from '~/shared/analyzeDrillState'
 import { validateAnalyzeChartConfig } from '~/utils/validateAnalyzeChartConfig'
@@ -22,6 +32,8 @@ echarts.use([
   BarChart,
   LineChart,
   PieChart,
+  FunnelChart,
+  ScatterChart,
   DataZoomComponent,
   GridComponent,
   LegendComponent,
@@ -30,7 +42,17 @@ echarts.use([
   SVGRenderer
 ])
 
-export const SUPPORTED_SERVER_RENDER_CHART_TYPES = ['line', 'interval', 'bar', 'pie'] as const
+export const SUPPORTED_SERVER_RENDER_CHART_TYPES = [
+  'line',
+  'interval',
+  'bar',
+  'pie',
+  'stacked',
+  'combo',
+  'area',
+  'funnel',
+  'scatter'
+] as const
 
 /**
  * @desc 判断图表类型是否支持服务端渲染。
@@ -168,6 +190,16 @@ export class ChartSnapshotService {
         return renderIntervalChart(renderConfig, privateChartConfig?.interval || defaultAnalyzeIntervalChartConfig)
       case 'pie':
         return renderPieChart(renderConfig, privateChartConfig?.pie || defaultAnalyzePieChartConfig)
+      case 'stacked':
+        return renderStackedChart(renderConfig, privateChartConfig?.stacked || defaultAnalyzeStackedChartConfig)
+      case 'combo':
+        return renderComboChart(renderConfig, privateChartConfig?.combo || defaultAnalyzeComboChartConfig)
+      case 'area':
+        return renderAreaChart(renderConfig, privateChartConfig?.area || defaultAnalyzeAreaChartConfig)
+      case 'funnel':
+        return renderFunnelChart(renderConfig, privateChartConfig?.funnel || defaultAnalyzeFunnelChartConfig)
+      case 'scatter':
+        return renderScatterChart(renderConfig, privateChartConfig?.scatter || defaultAnalyzeScatterChartConfig)
       default:
         throw new Error(`暂不支持 ${chartType} 类型的服务端渲染`)
     }
