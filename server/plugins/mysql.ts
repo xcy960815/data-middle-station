@@ -151,7 +151,7 @@ export default defineNitroPlugin((nitroApp) => {
 
   const pools = new Map<string, mysql.Pool>()
   for (const [name, config] of Object.entries(dataSourceConfig)) {
-    pools.set(name, mysql.createPool(config))
+    pools.set(name, mysql.createPool({ ...config, connectionLimit: 20 }))
   }
   nitroApp.mysqlPools = pools
   logger.info(`mysql 插件初始化成功`)
