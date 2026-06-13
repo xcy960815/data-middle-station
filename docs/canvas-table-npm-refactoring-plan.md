@@ -12,6 +12,7 @@
 **目标：摒弃纯 Canvas 的物理滚动模拟，引入原生滚动代理（Native Scroll Proxy），彻底解决触控板体验和边界滚动等交互痛点。**
 
 - [ ] **剥离 Konva 绘制的滚动条**：删除 `scrollbar-handler.ts` 中手绘滚动条矩形和绑定拖拽的逻辑，因为这些工作以后将由原生 DOM 承担。
+  - **重要说明 (配置兼容性)**：剥离手绘滚动条后，原分析页的配置（如 `scrollbarSize`、`scrollbarBackground`）**不会失效**。我们将通过 Vue 的动态 CSS 绑定（CSS Variables）映射到 `.scroll-proxy::-webkit-scrollbar` 及其相关伪元素上，确保原生的滚动条依然能完美应用用户自定义的主题和尺寸。
 - [ ] **搭建原生滚动代理层**：
   - 在包裹 `<canvas>` 的容器上方，绝对定位覆盖一个原生 `<div>` (`overflow: auto`)。
   - 在这个透明代理内部放置一个空 `<div>`，动态设置其 `height` 和 `width` 等于表格在当前数据量下的**虚拟总宽高**。
