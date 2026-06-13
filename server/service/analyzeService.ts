@@ -4,20 +4,33 @@ import { AnalyzeConfigService } from '@/server/service/analyzeConfigService'
 import { ResourcePermissionService } from '@/server/service/resourcePermissionService'
 
 /**
- * @desc 分析服务
+ * 分析服务，提供分析图表实体的创建、查询、更新、删除、版本切换等业务逻辑
  */
 export class AnalyzeService extends BaseService {
   /**
-   * 图表mapper
+   * 图表映射器
+   * @private
+   * @type {AnalyzeMapper}
    */
   private analyzeMapper: AnalyzeMapper
 
   /**
    * 分析配置服务
+   * @private
+   * @type {AnalyzeConfigService}
    */
   private analyzeConfigService: AnalyzeConfigService
+
+  /**
+   * 资源权限服务
+   * @private
+   * @type {ResourcePermissionService}
+   */
   private resourcePermissionService: ResourcePermissionService
 
+  /**
+   * 构造函数，初始化服务依赖的各类 Mapper 与 Service 实例
+   */
   constructor() {
     super()
     this.analyzeMapper = new AnalyzeMapper()
@@ -26,10 +39,11 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc DAO 转 VO
-   * @param analyzeRecord {AnalyzeDao.AnalyzeRecord} 分析记录
-   * @param resolvedChartConfig {AnalyzeConfigVo.AnalyzeConfigResponse | null} 当前生效的分析配置
-   * @returns {AnalyzeVo.AnalyzeDetailResponse}
+   * 将 DAO 层的分析实体及对应的图表配置拼装转换为 VO 层的分析详情响应数据
+   * @private
+   * @param {AnalyzeDao.AnalyzeRecord} analyzeRecord DAO 层分析数据记录
+   * @param {AnalyzeConfigVo.AnalyzeConfigResponse | null} resolvedChartConfig 当前生效的分析配置详情，如果无配置则为 null
+   * @returns {AnalyzeVo.AnalyzeDetailResponse} VO 层分析详情数据
    */
   private convertDaoToVo(
     analyzeRecord: AnalyzeDao.AnalyzeRecord,
@@ -42,7 +56,12 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 校验当前用户对分析的最低权限。
+   * 校验当前用户对指定分析资源的最低权限
+   * @private
+   * @param {number} analyzeId 分析资源 ID
+   * @param {Exclude<PermissionVo.ResourcePermissionType, 'none'>} requiredPermission 所需权限级别
+   * @returns {Promise<void>}
+   * @throws {Error} 权限不足时抛出异常
    */
   private async assertAnalyzePermission(
     analyzeId: number,
@@ -56,9 +75,10 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 删除分析
-   * @param {AnalyzeDto.DeleteAnalyzeRequest} deleteRequest
-   * @returns {Promise<boolean>}
+   * 删除分析图表及其关联的配置版本信息
+   * @param {AnalyzeDto.DeleteAnalyzeRequest} deleteRequest 删除分析的请求参数
+   * @returns {Promise<boolean>} 是否删除成功
+   * @throws {Error} 分析不存在或权限不足时抛出异常
    */
   public async deleteAnalyze(deleteRequest: AnalyzeDto.DeleteAnalyzeRequest): Promise<boolean> {
     const queryParams: AnalyzeDao.GetAnalyzeParams = {
@@ -79,10 +99,12 @@ export class AnalyzeService extends BaseService {
     const deleteAnalyzeResult = await this.analyzeMapper.deleteAnalyze(deleteAnalyzeParams)
     return deleteAnalyzeResult
   }
+
   /**
-   * @desc 获取分析
-   * @param {AnalyzeDto.GetAnalyzeRequest} queryRequest
-   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>}
+   * 获取分析详情
+   * @param {AnalyzeDto.GetAnalyzeRequest} queryRequest 查询详情的请求参数，可包含是否追踪浏览量等
+   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>} 分析详情响应数据
+   * @throws {Error} 分析不存在或权限不足时抛出异常
    */
   public async getAnalyze(queryRequest: AnalyzeDto.GetAnalyzeRequest): Promise<AnalyzeVo.AnalyzeDetailResponse> {
     const { trackViewCount = false, ...analyzeQueryParams } = queryRequest
@@ -109,8 +131,9 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 获取所有图表
-   * @returns {Promise<AnalyzeVo.AnalyzeListResponse>}
+   * 分页获取分析图表列表
+   * @param {AnalyzeDto.GetAnalyzeListRequest} [queryRequest={}] 查询列表的请求参数
+   * @returns {Promise<AnalyzeVo.AnalyzeListResponse>} 分析图表列表分页响应数据
    */
   public async getAnalyzes(
     queryRequest: AnalyzeDto.GetAnalyzeListRequest = {}
@@ -143,9 +166,10 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 获取分析配置历史
-   * @param queryRequest 查询参数
-   * @returns 分析配置历史列表
+   * 获取分析图表的配置版本历史列表
+   * @param {AnalyzeConfigDto.GetAnalyzeConfigHistoryRequest} queryRequest 获取历史的请求参数，包含分析资源 ID
+   * @returns {Promise<AnalyzeConfigVo.AnalyzeConfigResponse[]>} 分析配置版本历史列表
+   * @throws {Error} 权限不足时抛出异常
    */
   public async getAnalyzeConfigHistory(
     queryRequest: AnalyzeConfigDto.GetAnalyzeConfigHistoryRequest
@@ -155,9 +179,10 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 切换分析配置版本
-   * @param switchRequest 切换版本请求参数
-   * @returns 切换后的分析详情
+   * 切换分析图表使用的配置版本
+   * @param {AnalyzeConfigDto.SwitchAnalyzeConfigVersionRequest} switchRequest 切换版本请求参数，包含分析资源 ID 和目标配置 ID
+   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>} 切换后的分析详情数据
+   * @throws {Error} 权限不足、配置不属于当前分析或更新失败时抛出异常
    */
   public async switchAnalyzeConfigVersion(
     switchRequest: AnalyzeConfigDto.SwitchAnalyzeConfigVersionRequest
@@ -181,9 +206,10 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 更新分析
-   * @param {AnalyzeDto.UpdateAnalyzeRequest} updateRequest
-   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>}
+   * 更新分析图表及其配置（会自动创建新的配置版本）
+   * @param {AnalyzeDto.UpdateAnalyzeRequest} updateRequest 更新请求参数
+   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>} 更新后的分析详情数据
+   * @throws {Error} 权限不足或保存失败时抛出异常
    */
   public async updateAnalyze(updateRequest: AnalyzeDto.UpdateAnalyzeRequest): Promise<AnalyzeVo.AnalyzeDetailResponse> {
     await this.assertAnalyzePermission(updateRequest.id, 'edit')
@@ -214,9 +240,9 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 创建图表
-   * @param {AnalyzeDto.CreateAnalyzeRequest} createRequest
-   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>}
+   * 创建分析图表
+   * @param {AnalyzeDto.CreateAnalyzeRequest} createRequest 创建分析请求参数
+   * @returns {Promise<AnalyzeVo.AnalyzeDetailResponse>} 创建后的分析详情数据
    */
   public async createAnalyze(createRequest: AnalyzeDto.CreateAnalyzeRequest): Promise<AnalyzeVo.AnalyzeDetailResponse> {
     const { chartConfig, ...restAnalyzePayload } = createRequest
@@ -246,9 +272,10 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 更新图表名称
-   * @param {AnalyzeDto.UpdateAnalyzeNameRequest} updateRequest
-   * @returns {Promise<boolean>}
+   * 更新分析图表的名称
+   * @param {AnalyzeDto.UpdateAnalyzeNameRequest} updateRequest 更新名称请求参数
+   * @returns {Promise<boolean>} 是否更新成功
+   * @throws {Error} 权限不足时抛出异常
    */
   public async updateAnalyzeName(updateRequest: AnalyzeDto.UpdateAnalyzeNameRequest): Promise<boolean> {
     await this.assertAnalyzePermission(updateRequest.id, 'edit')
@@ -263,9 +290,10 @@ export class AnalyzeService extends BaseService {
   }
 
   /**
-   * @desc 更新图表描述
-   * @param {AnalyzeDto.UpdateAnalyzeDescRequest} updateRequest
-   * @returns {Promise<boolean>}
+   * 更新分析图表的描述信息
+   * @param {AnalyzeDto.UpdateAnalyzeDescRequest} updateRequest 更新描述请求参数
+   * @returns {Promise<boolean>} 是否更新成功
+   * @throws {Error} 权限不足时抛出异常
    */
   public async updateAnalyzeDesc(updateRequest: AnalyzeDto.UpdateAnalyzeDescRequest): Promise<boolean> {
     await this.assertAnalyzePermission(updateRequest.id, 'edit')

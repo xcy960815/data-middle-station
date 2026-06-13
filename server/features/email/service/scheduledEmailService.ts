@@ -25,6 +25,10 @@ import { removeScheduledEmailJob, upsertScheduledEmailJob } from '../scheduler/s
 import { getScheduledEmailExecutorService, ScheduledEmailExecutorService } from './scheduledEmailExecutorService'
 import { getScheduledEmailLogService, ScheduledEmailLogService } from './scheduledEmailLogService'
 
+/**
+ * @desc 定时邮件门面服务专用日志记录器
+ * @type {Logger}
+ */
 const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
 
 /**
@@ -33,12 +37,32 @@ const logger = new Logger({ fileName: 'scheduled-email', folderName: 'server' })
  *  - 状态切换：CRUD + 调度器联动
  *  - 立即执行 / 重试 / 回收：委派给 Executor
  *  - 日志查询：委派给 LogService
+ * @class ScheduledEmailService
+ * @extends {BaseService}
  */
 export class ScheduledEmailService extends BaseService {
+  /**
+   * @desc 邮件任务数据库持久层操作 Mapper
+   * @type {ScheduledEmailMapper}
+   * @private
+   */
   private scheduledEmailMapper: ScheduledEmailMapper
+  /**
+   * @desc 邮件任务执行日志服务
+   * @type {ScheduledEmailLogService}
+   * @private
+   */
   private scheduledEmailLogService: ScheduledEmailLogService
+  /**
+   * @desc 邮件任务生命周期执行器服务
+   * @type {ScheduledEmailExecutorService}
+   * @private
+   */
   private scheduledEmailExecutorService: ScheduledEmailExecutorService
 
+  /**
+   * @desc 构造函数，初始化持久层 Mapper 及各类相关服务单例
+   */
   constructor() {
     super()
     this.scheduledEmailMapper = new ScheduledEmailMapper()
@@ -49,14 +73,18 @@ export class ScheduledEmailService extends BaseService {
   /* ============================== CRUD ============================== */
 
   /**
-   * 校验当前请求是否可管理定时邮件任务。
+   * @desc 校验当前请求的用户是否可管理定时邮件任务。
+   * @throws {Error} 若当前用户不是管理员，则抛出权限不足的异常
    */
   assertCanManageScheduledEmailTasks(): void {
     this.assertCurrentUserAdmin('仅管理员可管理定时邮件任务')
   }
 
   /**
-   * 创建定时邮件任务
+   * @desc 创建定时邮件任务
+   * @param {ScheduledEmailDto.CreateScheduledEmailRequest} createRequest 创建任务请求对象
+   * @returns {Promise<boolean>} 是否创建成功
+   * @throws {Error} 当无管理员权限、参数不合法或数据库写入异常时抛出错误
    */
   async createScheduledEmailTask(createRequest: ScheduledEmailDto.CreateScheduledEmailRequest): Promise<boolean> {
     try {
@@ -107,7 +135,9 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 获取定时邮件任务详情
+   * @desc 获取定时邮件任务详情
+   * @param {ScheduledEmailDto.GetScheduledEmailRequest} queryRequest 查询参数对象
+   * @returns {Promise<ScheduledEmailVo.ScheduledEmailTaskResponse | null>} 任务详情响应 Vo，若未找到则返回 null
    */
   async getScheduledEmailTask(
     queryRequest: ScheduledEmailDto.GetScheduledEmailRequest
@@ -117,7 +147,10 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 更新定时邮件任务
+   * @desc 更新定时邮件任务
+   * @param {ScheduledEmailDto.UpdateScheduledEmailRequest} updateRequest 更新字段的请求参数对象
+   * @returns {Promise<boolean>} 是否更新成功
+   * @throws {Error} 若当前用户非管理员、任务不存在、状态不合规或参数缺失则抛出异常
    */
   async updateScheduledEmailTask(updateRequest: ScheduledEmailDto.UpdateScheduledEmailRequest): Promise<boolean> {
     this.assertCanManageScheduledEmailTasks()
@@ -198,7 +231,10 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 删除定时邮件任务
+   * @desc 删除定时邮件任务
+   * @param {ScheduledEmailDto.DeleteScheduledEmailRequest} deleteRequest 删除请求参数对象
+   * @returns {Promise<boolean>} 是否删除成功
+   * @throws {Error} 若无权限、任务不存在或任务正在运行中则抛出异常
    */
   async deleteScheduledEmailTask(deleteRequest: ScheduledEmailDto.DeleteScheduledEmailRequest): Promise<boolean> {
     try {
@@ -231,7 +267,10 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 获取定时邮件任务列表
+   * @desc 获取定时邮件任务列表
+   * @param {ScheduledEmailDto.ScheduledEmailListRequest} listRequest 列表查询过滤条件请求
+   * @returns {Promise<ScheduledEmailVo.ScheduledEmailTaskListResponse>} 邮件任务 Vo 列表响应
+   * @throws {Error} 当数据库查询异常时抛出错误
    */
   async getScheduledEmailTaskList(
     listRequest: ScheduledEmailDto.ScheduledEmailListRequest
@@ -246,7 +285,10 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 切换任务状态（pending ↔ cancelled）
+   * @desc 切换任务状态（待执行 pending ↔ 已取消 cancelled）
+   * @param {ScheduledEmailDto.ScheduledEmailTaskIdRequest} taskIdRequest 任务 ID 请求对象
+   * @returns {Promise<boolean>} 状态变更是否成功
+   * @throws {Error} 当无权限、任务不存在或状态不支持切换（非待执行且非已取消）时抛出异常
    */
   async toggleTaskStatus(taskIdRequest: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
     try {
@@ -313,7 +355,9 @@ export class ScheduledEmailService extends BaseService {
   /* ============================== Executor 委派 ============================== */
 
   /**
-   * 立即执行任务（手动触发）
+   * @desc 立即执行任务（手动触发），将请求委派给 ScheduledEmailExecutorService 实例
+   * @param {ScheduledEmailDto.ScheduledEmailTaskIdRequest} taskIdRequest 任务 ID 请求对象
+   * @returns {Promise<boolean>} 是否执行发送成功
    */
   async executeTask(taskIdRequest: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
     this.assertCanManageScheduledEmailTasks()
@@ -321,28 +365,36 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * 简化版触发执行（调度器回调）
+   * @desc 简化版触发执行（调度器回调），将请求委派给 ScheduledEmailExecutorService 实例
+   * @param {ScheduledEmailDto.ScheduledEmailQueryRequest} queryRequest 查询过滤请求对象
+   * @returns {Promise<boolean>} 是否最终执行成功
    */
   async executeTaskByQuery(queryRequest: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
     return this.scheduledEmailExecutorService.executeTaskByQuery(queryRequest)
   }
 
   /**
-   * 批量重试可重试的失败任务
+   * @desc 批量重试所有状态为失败且未达到最大重试次数的任务，委派给 ScheduledEmailExecutorService
+   * @returns {Promise<void>} 无返回值
    */
   async retryFailedTasks(): Promise<void> {
     return this.scheduledEmailExecutorService.retryFailedTasks()
   }
 
   /**
-   * 回收卡死(running)的僵尸任务
+   * @desc 回收卡在 running 状态超过指定阈值的僵尸任务，委派给 ScheduledEmailExecutorService
+   * @param {number} thresholdMinutes 超时阈值分钟数
+   * @returns {Promise<number>} 实际回收并修复状态的任务数量
    */
   async recoverStaleRunningTasks(thresholdMinutes: number): Promise<number> {
     return this.scheduledEmailExecutorService.recoverStaleRunningTasks(thresholdMinutes)
   }
 
   /**
-   * 更新重复任务的下次执行时间
+   * @desc 更新重复任务的下一次执行时间
+   * @param {ScheduledEmailDto.ScheduledEmailQueryRequest} queryRequest 查询定位条件的请求对象
+   * @returns {Promise<boolean>} 更新操作是否成功
+   * @throws {Error} 当任务不存在时抛出异常
    */
   async updateNextExecutionTimeTask(queryRequest: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
     try {
@@ -391,7 +443,10 @@ export class ScheduledEmailService extends BaseService {
   /* ============================== 日志查询委派 ============================== */
 
   /**
-   * 获取任务执行日志
+   * @desc 获取任务的执行日志列表，支持限制条数和偏移分页，委派给 ScheduledEmailLogService
+   * @param {ScheduledEmailLogDto.LogListRequest} queryRequest 查询和分页条件对象
+   * @returns {Promise<ScheduledEmailDto.ExecutionLogItem[]>} 格式化后的执行日志数组
+   * @throws {Error} 当查询底层日志发生异常时抛出错误
    */
   async getScheduledEmailLogList(
     queryRequest: ScheduledEmailLogDto.LogListRequest
@@ -439,7 +494,10 @@ export class ScheduledEmailService extends BaseService {
   /* ============================== 内部辅助 ============================== */
 
   /**
-   * 校验创建参数
+   * @desc 校验创建任务请求参数的合规性
+   * @param {ScheduledEmailDto.CreateScheduledEmailRequest} createRequest 创建任务请求参数
+   * @throws {Error} 校验发现时间或重复天数等配置不合规时抛出对应的异常
+   * @private
    */
   private assertCreateRequest(createRequest: ScheduledEmailDto.CreateScheduledEmailRequest): void {
     if (createRequest.taskType === TaskType.Scheduled) {
@@ -460,7 +518,10 @@ export class ScheduledEmailService extends BaseService {
   }
 
   /**
-   * DAO -> VO
+   * @desc 将数据库查询出的一条原始任务记录转换为前端/调度接口的 Vo 层响应结构
+   * @param {ScheduledEmailDao.ScheduledEmailRecord} record 底层数据库记录对象
+   * @returns {ScheduledEmailVo.ScheduledEmailTaskResponse} 格式化转换后的前端 Vo 层响应对象
+   * @private
    */
   private convertDaoToVo(record: ScheduledEmailDao.ScheduledEmailRecord): ScheduledEmailVo.ScheduledEmailTaskResponse {
     return {
@@ -491,6 +552,12 @@ export class ScheduledEmailService extends BaseService {
     }
   }
 
+  /**
+   * @desc 确保输入的值最终以字符串数组格式输出（去除非空或兼容单字符串）
+   * @param {string | string[] | null | undefined} value 原始输入参数
+   * @returns {string[] | undefined} 返回字符串数组或 undefined
+   * @private
+   */
   private ensureStringArray(value: string | string[] | null | undefined): string[] | undefined {
     if (!value) {
       return undefined
@@ -501,6 +568,10 @@ export class ScheduledEmailService extends BaseService {
 
 /* ============================== 单例工厂 ============================== */
 
+/**
+ * @desc ScheduledEmailService 进程级单例存储变量
+ * @type {ScheduledEmailService | null}
+ */
 let scheduledEmailServiceInstance: ScheduledEmailService | null = null
 
 /**
@@ -510,6 +581,7 @@ let scheduledEmailServiceInstance: ScheduledEmailService | null = null
  *  - 每个 handler 顶层 `new ScheduledEmailService()` 时反复构造整条依赖链
  *    (Executor / LogService / SendEmailService / ChartSnapshotService / AnalyzeService / ChartDataService)
  *  - 不同实例间 transporter 状态不一致、runtimeConfig 读取时机不同等隐性 bug
+ * @returns {ScheduledEmailService} ScheduledEmailService 进程级单例对象
  */
 export const getScheduledEmailService = (): ScheduledEmailService => {
   if (!scheduledEmailServiceInstance) {

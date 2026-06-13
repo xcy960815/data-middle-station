@@ -3,7 +3,9 @@ import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/se
 import { convertToSqlProperties } from '@/server/utils/databaseHelper'
 import type { ResultSetHeader } from 'mysql2'
 
-// 基础字段字典
+/**
+ * 分析记录的基础字段列表（查询详情用）
+ */
 export const ANALYZE_BASE_FIELDS = [
   'id',
   'analyze_name',
@@ -17,6 +19,9 @@ export const ANALYZE_BASE_FIELDS = [
   'is_deleted'
 ]
 
+/**
+ * 分析记录的列表查询字段列表
+ */
 export const ANALYZE_LIST_FIELDS = [
   'a.id',
   'a.analyze_name',
@@ -29,97 +34,130 @@ export const ANALYZE_LIST_FIELDS = [
 ]
 
 /**
- * @desc 分析页面的行数据映射，将数据库字段转换为领域对象属性
+ * 分析页面的行数据映射类，将数据库字段转换为领域对象属性
+ *
+ * @implements {AnalyzeDao.AnalyzeRecord}
+ * @implements {IColumnTarget}
  */
 export class AnalyzeMapping implements AnalyzeDao.AnalyzeRecord, IColumnTarget {
+  /**
+   * 将数据库行数据映射为分析实体属性
+   *
+   * @param {Array<Row> | Row} data 数据库原始行数据
+   * @returns {Array<Row> | Row} 映射后的数据
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 
-  // 表名
+  /** 分析记录 ID */
   @Column('id')
   id!: number
 
-  // 图表名称
+  /** 分析（图表）名称 */
   @Column('analyze_name')
   analyzeName!: string
 
-  // 图表描述
+  /** 分析（图表）描述 */
   @Column('analyze_desc')
   analyzeDesc!: string
 
-  // 访问次数
+  /** 访问次数 */
   @Column('view_count')
   viewCount!: number
 
-  // 创建时间
+  /** 创建时间 */
   @Column('create_time')
   createTime!: string
 
-  // 更新时间
+  /** 更新时间 */
   @Column('update_time')
   updateTime!: string
 
-  // 创建人
+  /** 创建人 */
   @Column('created_by')
   createdBy!: string
 
-  // 更新人
+  /** 更新人 */
   @Column('updated_by')
   updatedBy!: string
 
-  // 当前生效的分析配置版本 ID
+  /** 当前生效的分析配置版本 ID */
   @Column('current_config_id')
   currentConfigId!: number | null
 
-  // 是否删除
+  /** 是否删除 (1: 已删除, 0: 未删除) */
   @Column('is_deleted')
   isDeleted!: number
 }
 
+/**
+ * 分析列表记录项的数据映射类
+ *
+ * @implements {AnalyzeVo.AnalyzeListItem}
+ * @implements {IColumnTarget}
+ */
 export class AnalyzeListMapping implements AnalyzeVo.AnalyzeListItem, IColumnTarget {
+  /**
+   * 将数据库行数据映射为分析列表项属性
+   *
+   * @param {Array<Row> | Row} data 数据库原始行数据
+   * @returns {Array<Row> | Row} 映射后的数据
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 
+  /** 分析记录 ID */
   @Column('id')
   id!: number
 
+  /** 分析（图表）名称 */
   @Column('analyze_name')
   analyzeName!: string
 
+  /** 分析（图表）描述 */
   @Column('analyze_desc')
   analyzeDesc!: string
 
+  /** 访问次数 */
   @Column('view_count')
   viewCount!: number
 
+  /** 创建时间 */
   @Column('create_time')
   createTime!: string
 
+  /** 更新时间 */
   @Column('update_time')
   updateTime!: string
 
+  /** 创建人 */
   @Column('created_by')
   createdBy!: string
 
+  /** 更新人 */
   @Column('updated_by')
   updatedBy!: string
 
+  /** 当前用户对该分析的最高权限级别 */
   @Column('analyze_permission')
   analyzePermission!: PermissionVo.AnalyzePermissionType
 }
 
 /**
- * @desc 本文件使用到的表
+ * 分析主表表名
  */
 const ANALYZE_TABLE_NAME = '`analyze`'
 
 /**
- * 本文件使用到的数据源
+ * 数据库所使用的数据源名称
  */
 const DATA_SOURCE_NAME = 'data_middle_station'
 
+/**
+ * 分析列表排序字段与数据库列的映射字典
+ */
 const ANALYZE_LIST_SORT_FIELD_MAP: Record<AnalyzeDao.AnalyzeListSortField, string> = {
   analyzeName: 'a.analyze_name',
   createTime: 'a.create_time',
@@ -128,28 +166,29 @@ const ANALYZE_LIST_SORT_FIELD_MAP: Record<AnalyzeDao.AnalyzeListSortField, strin
 }
 
 /**
- * @desc 分析 mapper，负责对分析配置的增删改查
+ * 分析数据访问层，负责对分析配置的增删改查
  */
 export class AnalyzeMapper extends BaseMapper {
-  /**
-   * @desc 当前 mapper 使用的数据源名称
-   */
+  /** 当前 mapper 使用的数据源名称 */
   public dataSourceName = DATA_SOURCE_NAME
 
   /**
-   * @desc 执行 SQL 的便捷封装（保留泛型能力）
-   * @param sql 需要执行的 SQL 语句
-   * @param params 预编译参数数组
-   * @returns 查询或写入操作的执行结果
+   * 执行 SQL 的便捷封装（保留泛型能力）
+   *
+   * @template T 返回值类型
+   * @param {string} sql 需要执行 of SQL 语句
+   * @param {Array<any>} [params] 预编译参数数组
+   * @returns {Promise<T>} 查询或写入操作的执行结果
    */
   public override async exe<T>(sql: string, params?: Array<any>): Promise<T> {
     return await super.exe<T>(sql, params)
   }
 
   /**
-   * @desc 新建分析配置
-   * @param {AnalyzeDao.CreateAnalyzeParams} createAnalyzeDao 新建分析所需的字段（名称、描述、图表配置等）
-   * @returns {Promise<number>} 创建成功后的 ID
+   * 新建分析配置记录
+   *
+   * @param {AnalyzeDao.CreateAnalyzeParams} createAnalyzeDao 新建分析所需的字段（名称、描述、创建人等）
+   * @returns {Promise<number>} 创建成功后返回的自增主键 ID
    */
   public async createAnalyze(createAnalyzeDao: AnalyzeDao.CreateAnalyzeParams): Promise<number> {
     const { keys, values } = convertToSqlProperties(createAnalyzeDao)
@@ -159,8 +198,9 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 更新分析配置（不包含访问统计相关字段）
-   * @param {AnalyzeDao.UpdateAnalyzeParams} updateAnalyzeDao 更新分析的请求参数
+   * 更新分析记录（不包含访问统计相关字段）
+   *
+   * @param {AnalyzeDao.UpdateAnalyzeParams} updateAnalyzeParams 更新分析的请求参数
    * @returns {Promise<boolean>} 是否更新成功
    */
   public async updateAnalyze(updateAnalyzeParams: AnalyzeDao.UpdateAnalyzeParams): Promise<boolean> {
@@ -173,7 +213,8 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 更新分析名称
+   * 更新分析的名称
+   *
    * @param {AnalyzeDao.UpdateAnalyzeNameParams} updateAnalyzeNameParams 更新分析名称的请求参数
    * @returns {Promise<boolean>} 是否更新成功
    */
@@ -187,7 +228,8 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 更新分析描述
+   * 更新分析的描述信息
+   *
    * @param {AnalyzeDao.UpdateAnalyzeDescParams} updateAnalyzeDescParams 更新分析描述的请求参数
    * @returns {Promise<boolean>} 是否更新成功
    */
@@ -201,9 +243,10 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 更新图表的访问次数（自增 1）
+   * 更新图表的访问次数（自增 1）
+   *
    * @param {number} analyzeId 图表主键 ID
-   * @returns {Promise<number>} 更新后的访问次数
+   * @returns {Promise<boolean>} 是否更新成功
    */
   public async updateViewCount(analyzeId: number): Promise<boolean> {
     const sql = `UPDATE ${ANALYZE_TABLE_NAME} SET view_count = view_count + 1 WHERE id = ?`
@@ -212,9 +255,11 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取单个分析详情
-   * @param {AnalyzeDao.GetAnalyzeParams} analyzeDao 查询参数（至少包含分析 ID，可附带创建/更新人等过滤条件）
-   * @returns {Promise<T>} 匹配的分析配置（若存在）
+   * 获取单个分析详情
+   *
+   * @template T 返回的记录类型，默认继承自 AnalyzeDao.AnalyzeRecord
+   * @param {AnalyzeDao.GetAnalyzeParams} getAnalyzeParams 查询参数
+   * @returns {Promise<T>} 匹配的分析配置记录
    */
   @Mapping(AnalyzeMapping)
   public async getAnalyze<T extends AnalyzeDao.AnalyzeRecord = AnalyzeDao.AnalyzeRecord>(
@@ -250,9 +295,10 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取分析数量
-   * @param query 列表查询参数
-   * @returns 数量
+   * 统计符合查询条件的分析配置总数
+   *
+   * @param {AnalyzeDao.GetAnalyzeListParams} query 列表查询参数
+   * @returns {Promise<number>} 分析配置总数
    */
   public async countAnalyzes(query: AnalyzeDao.GetAnalyzeListParams): Promise<number> {
     const { fromClause, whereClause, params } = this.buildAnalyzeListQuery(query)
@@ -262,9 +308,11 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取分析列表
-   * @param query 列表查询参数
-   * @returns 分析列表
+   * 获取分析列表（支持排序与分页）
+   *
+   * @template T 分析列表项类型
+   * @param {AnalyzeDao.GetAnalyzeListParams} query 列表查询参数
+   * @returns {Promise<Array<T>>} 分析列表数组 Promise
    */
   @Mapping(AnalyzeListMapping)
   public async getAnalyzeList<T extends AnalyzeVo.AnalyzeListItem = AnalyzeVo.AnalyzeListItem>(
@@ -298,11 +346,12 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取当前用户对指定分析的权限级别
-   * @param analyzeId 分析 ID
-   * @param currentUserName 当前用户名
-   * @param roleCodes 用户角色编码列表
-   * @returns 权限类型
+   * 获取指定用户对某个分析的权限级别
+   *
+   * @param {number} analyzeId 分析 ID
+   * @param {string} currentUserName 当前用户名
+   * @param {string[]} [roleCodes=[]] 当前用户的角色编码数组
+   * @returns {Promise<PermissionVo.AnalyzePermissionType>} 拥有的最高权限类型
    */
   public async getAnalyzePermission(
     analyzeId: number,
@@ -339,9 +388,10 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 删除图表（逻辑删除）
-   * @param {AnalyzeDao.DeleteAnalyzeParams} deleteAnalyzeDao 删除参数（包含 ID、操作者及时间）
-   * @returns 是否删除成功
+   * 逻辑删除图表分析配置
+   *
+   * @param {AnalyzeDao.DeleteAnalyzeParams} deleteAnalyzeDao 删除参数
+   * @returns {Promise<boolean>} 是否删除成功
    */
   public async deleteAnalyze(deleteAnalyzeDao: AnalyzeDao.DeleteAnalyzeParams): Promise<boolean> {
     const { id, updatedBy, updateTime } = deleteAnalyzeDao
@@ -351,8 +401,10 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取所有的图表
-   * @returns {Promise<Array<AnalyzeDao.AnalyzeRecord>>}
+   * 获取所有未删除的图表分析配置列表
+   *
+   * @template T 返回的分析记录类型
+   * @returns {Promise<Array<T>>} 未删除分析记录数组 Promise
    */
   @Mapping(AnalyzeMapping)
   public async getAnalyzes<T extends AnalyzeDao.AnalyzeRecord = AnalyzeDao.AnalyzeRecord>(): Promise<Array<T>> {
@@ -365,9 +417,10 @@ export class AnalyzeMapper extends BaseMapper {
   }
 
   /**
-   * @desc 构建列表查询条件
-   * @param keyword 搜索关键字
-   * @returns where 条件和参数
+   * 构建分析列表查询的 SQL 过滤条件及相关权限 SQL 片段
+   *
+   * @param {AnalyzeDao.GetAnalyzeListParams} query 查询参数
+   * @returns {{ fromClause: string, whereClause: string, params: string[], permissionSelectSql: string }}
    */
   private buildAnalyzeListQuery(query: AnalyzeDao.GetAnalyzeListParams): {
     fromClause: string
@@ -416,6 +469,12 @@ export class AnalyzeMapper extends BaseMapper {
     }
   }
 
+  /**
+   * 转义单引号以保证 SQL 拼接安全性
+   *
+   * @param {string} value 待转义的字符串
+   * @returns {string} 转义并包裹单引号后的 SQL 值片段
+   */
   private escapeValue(value: string) {
     return `'${value.replace(/'/g, "''")}'`
   }

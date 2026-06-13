@@ -13,14 +13,32 @@ import nodemailer, { type Transporter } from 'nodemailer'
 
 dayjs.extend(weekday)
 
+/**
+ * @desc 邮件服务专用的系统日志记录器
+ * @type {Logger}
+ */
 const logger = new Logger({ fileName: 'email', folderName: 'server' })
+
+/**
+ * @desc Joi 参数验证选项，包括不提前中止、剔除未知字段、自动转换类型
+ * @type {Joi.ValidationOptions}
+ */
 const SEND_EMAIL_VALIDATE_OPTIONS: Joi.ValidationOptions = {
   abortEarly: false,
   stripUnknown: true,
   convert: true
 }
+
+/**
+ * @desc 基础邮箱格式正则校验
+ * @type {RegExp}
+ */
 const EMAIL_REGEXP = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/**
+ * @desc 邮件发送图表类型参数校验 Schema
+ * @type {Joi.StringSchema}
+ */
 const sendEmailChartTypeSchema = Joi.string()
   .valid(...SUPPORTED_SERVER_RENDER_CHART_TYPES)
   .optional()
@@ -28,6 +46,11 @@ const sendEmailChartTypeSchema = Joi.string()
     'any.only': `图表类型必须是 ${SUPPORTED_SERVER_RENDER_CHART_TYPES.join('、')} 之一`
   })
 
+/**
+ * @desc 将收件人字符串或数组解析并去重为干净的邮箱数组
+ * @param {string | string[]} [recipients] 收件人（支持逗号/分号分隔的字符串，或字符串数组）
+ * @returns {string[]} 解析后的清洗邮箱地址数组
+ */
 export const parseEmailRecipients = (recipients?: string | string[]): string[] => {
   if (!recipients) {
     return []
@@ -36,6 +59,10 @@ export const parseEmailRecipients = (recipients?: string | string[]): string[] =
   return recipientList.map((recipient) => recipient.trim()).filter(Boolean)
 }
 
+/**
+ * @desc 邮件收件人 Joi 校验 Schema，内置邮箱格式及必填校验
+ * @type {Joi.AlternativesSchema}
+ */
 export const emailRecipientsSchema = Joi.alternatives()
   .try(Joi.string(), Joi.array().items(Joi.string()))
   .custom((value, helpers) => {
@@ -57,6 +84,10 @@ export const emailRecipientsSchema = Joi.alternatives()
     'emailRecipients.invalid': '邮件地址格式错误: {#invalidEmails}'
   })
 
+/**
+ * @desc 手动发送邮件接口请求的 Joi 校验 Schema
+ * @type {Joi.ObjectSchema<SendEmailDto.SendChartEmailRequest>}
+ */
 export const manualSendEmailSchema = Joi.object<SendEmailDto.SendChartEmailRequest>({
   emailConfig: Joi.object<SendEmailDto.EmailConfig>({
     to: emailRecipientsSchema,
@@ -82,7 +113,7 @@ export const manualSendEmailSchema = Joi.object<SendEmailDto.SendChartEmailReque
     analyzeId: Joi.number().integer().positive().required().messages({
       'number.base': '分析ID必须是数字',
       'number.integer': '分析ID必须是整数',
-      'number.positive': '分析ID必须大于0',
+      'number.positive': '分析ID must be positive',
       'any.required': '分析ID不能为空'
     })
   }).required()
@@ -90,28 +121,57 @@ export const manualSendEmailSchema = Joi.object<SendEmailDto.SendChartEmailReque
 
 /**
  * @desc 校验邮件发送请求参数。
+ * @template T
+ * @param {Joi.ObjectSchema<T>} schema Joi 校验规则对象
+ * @param {unknown} payload 待校验的请求参数载体
+ * @returns {Joi.ValidationResult<T>} 校验结果对象
  */
 export const validateSendEmailPayload = <T>(schema: Joi.ObjectSchema<T>, payload: unknown): Joi.ValidationResult<T> =>
   schema.validate(payload, SEND_EMAIL_VALIDATE_OPTIONS)
 
 /**
  * @desc 格式化邮件发送参数校验错误。
+ * @param {Joi.ValidationError} error Joi 校验错误对象
+ * @returns {string} 格式化后的错误信息拼接字符串
  */
 export const formatSendEmailValidationError = (error: Joi.ValidationError): string =>
   error.details.map((detail) => detail.message).join('; ')
 
 /**
- * @desc 邮件附件定义
+ * @desc 邮件附件定义接口
+ * @interface Attachment
  */
 interface Attachment {
+  /**
+   * @desc 附件文件名
+   * @type {string}
+   */
   filename: string
+  /**
+   * @desc 附件的 Content-Type 类型
+   * @type {string}
+   */
   contentType: string
+  /**
+   * @desc 附件的二进制或字符串内容
+   * @type {string | Buffer<ArrayBufferLike>}
+   */
   content?: string | Buffer<ArrayBufferLike>
+  /**
+   * @desc 附件的本地磁盘路径
+   * @type {string}
+   */
   path?: string
 }
 
 /**
- * @desc nodemailer 发送参数载体
+ * @desc nodemailer 发送参数载体类型定义
+ * @typedef {object} SendMailPayload
+ * @property {string} from 发件人邮箱及名称
+ * @property {string | string[]} to 收件人邮箱（字符串或数组）
+ * @property {string} subject 邮件主题
+ * @property {string} html 邮件正文 HTML 格式内容
+ * @property {Attachment[]} attachments 附件数组列表
  */
 type SendMailPayload = {
   from: string
@@ -120,35 +180,52 @@ type SendMailPayload = {
   html: string
   attachments: Attachment[]
 }
+
 /**
- * @desc 发送邮件服务
+ * @desc 发送邮件服务，处理邮件传输器创建、图表快照组装及邮件最终发送
+ * @class SendEmailService
  */
 export class SendEmailService {
   /**
-   * @desc 邮件传输器
+   * @desc nodemailer 邮件传输器对象
+   * @type {Transporter<SendEmailDao.SendEmailResultRecord> | null}
+   * @private
    */
   private transporter: Transporter<SendEmailDao.SendEmailResultRecord> | null = null
   /**
-   * @desc 发件人画像（地址 / 通道 / 传输信息），由 mailerProfile 统一解析
+   * @desc 发件人画像（地址 / 通道 / 传输信息）
+   * @type {MailerProfile}
+   * @private
    */
   private mailerProfile: MailerProfile
   /**
-   * @desc SMTP 鉴权用户
+   * @desc SMTP 鉴权用户名
+   * @type {string | null}
+   * @private
    */
   private smtpUser: string | null = null
   /**
    * @desc SMTP 鉴权密码
+   * @type {string | null}
+   * @private
    */
   private smtpPass: string | null = null
   /**
-   * @desc 是否校验证书
+   * @desc 是否拒绝未授权的 SSL 证书（默认为 true，若设为 false 则允许自签名证书）
+   * @type {boolean}
+   * @private
    */
   private smtpRejectUnauthorized: boolean = true
   /**
-   * @desc 图表快照服务
+   * @desc 图表快照服务实例
+   * @type {ChartSnapshotService}
+   * @private
    */
   private chartSnapshotService: ChartSnapshotService
 
+  /**
+   * @desc 构造函数，初始化发件配置及相关快照依赖服务
+   */
   constructor() {
     this.mailerProfile = resolveMailerProfile()
     this.smtpRejectUnauthorized = String(useRuntimeConfig().smtpRejectUnauthorized ?? 'true') !== 'false'
@@ -158,7 +235,9 @@ export class SendEmailService {
   }
 
   /**
-   * @desc 创建邮件传输器
+   * @desc 根据当前配置创建 nodemailer 邮件传输器
+   * @throws {Error} 当 host、user、pass 等 SMTP 配置缺失时抛出错误
+   * @private
    */
   private createTransporter(): void {
     const missingConfigs = [
@@ -188,9 +267,9 @@ export class SendEmailService {
   }
 
   /**
-   * @desc 发送邮件
-   * @param sendEmailRequest {SendEmailDto.SendChartEmailRequest}
-   * @returns {Promise<SendEmailVo.SendEmailResponse>} messageId
+   * @desc 发送邮件主逻辑，自动补全分析图表快照并构造 HTML 载体
+   * @param {SendEmailDto.SendChartEmailRequest} sendEmailRequest 邮件发送请求参数
+   * @returns {Promise<SendEmailVo.SendEmailResponse>} 返回邮件发送结果和响应参数
    */
   public async sendMail(sendEmailRequest: SendEmailDto.SendChartEmailRequest): Promise<SendEmailVo.SendEmailResponse> {
     if (!this.transporter) {
@@ -247,9 +326,12 @@ export class SendEmailService {
 
   /**
    * @desc 组装 nodemailer 发送参数。
-   * @param sendEmailRequest {SendEmailDto.SendChartEmailRequest} 邮件请求
-   * @param attachments {Attachment[]} 附件列表
-   * @param analyzeOptions {SendEmailDto.AnalyzePayload} 图表选项
+   * @param {SendEmailDto.SendChartEmailRequest} sendEmailRequest 邮件请求
+   * @param {Attachment[]} attachments 附件列表
+   * @param {SendEmailDto.AnalyzePayload} analyzeOptions 图表选项
+   * @returns {SendMailPayload} 包装后的 nodemailer 发送参数
+   * @throws {Error} 当收件人为空时抛出错误
+   * @private
    */
   private buildSendMailPayload(
     sendEmailRequest: SendEmailDto.SendChartEmailRequest,
@@ -270,8 +352,10 @@ export class SendEmailService {
   }
 
   /**
-   * @desc nodemailer 结果 -> 接口响应转换
-   * @param sendResult {SendEmailDao.SendEmailResultRecord} nodemailer 返回结果
+   * @desc nodemailer 原始数据库/API结果记录 -> 统一接口响应对象的转换
+   * @param {SendEmailDao.SendEmailResultRecord} sendResult nodemailer 返回的底层发送记录
+   * @returns {SendEmailVo.SendEmailResponse} 格式化后的邮件发送结果响应对象
+   * @private
    */
   private convertResultRecordToResponse(sendResult: SendEmailDao.SendEmailResultRecord): SendEmailVo.SendEmailResponse {
     return {
@@ -282,9 +366,10 @@ export class SendEmailService {
   }
 
   /**
-   * @desc 构建附件配置
-   * @param analyzeOptions {SendEmailDto.AnalyzePayload}
-   * @returns {Array}
+   * @desc 根据分析载体参数构建邮件附件配置
+   * @param {SendEmailDto.AnalyzePayload} analyzeOptions 包含图表文件信息的载体
+   * @returns {Attachment[]} 附件配置数组，如果缺少配置则返回空数组
+   * @private
    */
   private buildAttachments(analyzeOptions: SendEmailDto.AnalyzePayload): Array<Attachment> {
     if (!analyzeOptions.filename) {
@@ -315,7 +400,11 @@ export class SendEmailService {
   }
 
   /**
-   * 根据 analyzeId 自动生成附件所需的图表快照
+   * @desc 根据 analyzeId 自动生成附件所需的图表快照并补齐选项
+   * @param {SendEmailDto.AnalyzePayload} analyzeOptions 原始图表附件参数载体
+   * @returns {Promise<SendEmailDto.AnalyzePayload>} 补齐快照内容及文件名的图表附件参数
+   * @throws {Error} 当缺少参数或文件名无法生成快照时抛出错误
+   * @private
    */
   private async resolveAnalyzePayload(
     analyzeOptions: SendEmailDto.AnalyzePayload
@@ -344,10 +433,11 @@ export class SendEmailService {
   }
 
   /**
-   * @desc 构建邮件内容
-   * @param emailConfig {SendEmailDto.EmailConfig}
-   * @param analyzeOptions {SendEmailDto.AnalyzePayload}
-   * @returns {string}
+   * @desc 构建邮件 HTML 格式内容
+   * @param {SendEmailDto.EmailConfig} emailConfig 邮件正文基础配置
+   * @param {SendEmailDto.AnalyzePayload} analyzeOptions 图表详情信息
+   * @returns {string} 渲染后的完整 HTML 字符串
+   * @private
    */
   private buildEmailContent(
     emailConfig: SendEmailDto.EmailConfig,
@@ -406,6 +496,12 @@ export class SendEmailService {
     `
   }
 
+  /**
+   * @desc 转义 HTML 敏感字符，防止邮件渲染时产生 XSS 注入
+   * @param {string} value 原始字符串
+   * @returns {string} 转义后的安全字符串
+   * @private
+   */
   private escapeHtml(value: string): string {
     return value.replace(/[&<>"']/g, (character) => {
       const htmlEntities: Record<string, string> = {
@@ -420,21 +516,24 @@ export class SendEmailService {
   }
 
   /**
-   * 获取默认发件地址
+   * @desc 获取默认的发件人邮箱地址
+   * @returns {string} 发件人邮箱地址
    */
   public getSenderAddress(): string {
     return this.mailerProfile.senderAddress
   }
 
   /**
-   * 获取传输信息
+   * @desc 获取邮件通道底层的连接传输配置（host, port, secure）
+   * @returns {{ host: string; port: number; secure: boolean }} 传输参数配置对象
    */
   public getTransportInfo(): { host: string; port: number; secure: boolean } {
     return this.mailerProfile.transport
   }
 
   /**
-   * 获取当前通道
+   * @desc 获取当前生效的邮件发送通道标识
+   * @returns {string} 通道标识
    */
   public getChannel(): string {
     return this.mailerProfile.channel
@@ -443,6 +542,10 @@ export class SendEmailService {
 
 /* ============================== 单例工厂 ============================== */
 
+/**
+ * @desc SendEmailService 进程级单例存储变量
+ * @type {SendEmailService | null}
+ */
 let sendEmailServiceInstance: SendEmailService | null = null
 
 /**
@@ -450,6 +553,7 @@ let sendEmailServiceInstance: SendEmailService | null = null
  *  - 共享 transporter，避免每次请求重新构造 SMTP 连接
  *  - 共享 ChartSnapshotService（其内部还会拉起 AnalyzeService / ChartDataService）
  *  - 测试场景仍可直接 `new SendEmailService()`
+ * @returns {SendEmailService} SendEmailService 进程级单例
  */
 export const getSendEmailService = (): SendEmailService => {
   if (!sendEmailServiceInstance) {

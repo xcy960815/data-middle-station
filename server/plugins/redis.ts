@@ -1,33 +1,43 @@
 import RedisDriver from 'unstorage/drivers/redis'
 
+/**
+ * Redis 插件专用日志实例
+ * @type {Logger}
+ */
 const logger = new Logger({
   fileName: 'redis',
   folderName: 'plugins'
 })
 
 /**
- * Redis服务配置
+ * Redis数据库索引/前缀基础名
+ * @type {string}
  */
 const serviceRedisBase = useRuntimeConfig().serviceRedisBase // Redis数据库索引
 /**
  * Redis服务器主机地址
+ * @type {string}
  */
 const serviceRedisHost = useRuntimeConfig().serviceRedisHost // Redis服务器主机地址
 /**
  * Redis服务器端口
+ * @type {string}
  */
 const serviceRedisPort = useRuntimeConfig().serviceRedisPort // Redis服务器端口
 /**
  * Redis用户名
+ * @type {string}
  */
 const serviceRedisUsername = useRuntimeConfig().serviceRedisUsername // Redis用户名
 /**
  * Redis密码
+ * @type {string}
  */
 const serviceRedisPassword = useRuntimeConfig().serviceRedisPassword // Redis密码
 
 /**
- * 测试redis是否连接成功
+ * 测试 Redis 是否连接成功并能够读写临时数据
+ * @returns {Promise<void>}
  */
 export const isConnectedRedis = async () => {
   const storage = useStorage()
@@ -42,7 +52,8 @@ export const isConnectedRedis = async () => {
 }
 
 /**
- * @desc 初始化Redis 驱动
+ * 注册 Redis 插件并将其挂载到 nitroApp 上
+ * @param {NitroApp} nitroApp Nitro 应用对象
  * @returns {Promise<void>}
  */
 export default defineNitroPlugin(async (nitroApp) => {

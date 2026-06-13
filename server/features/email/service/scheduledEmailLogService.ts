@@ -3,22 +3,33 @@ import { resolveMailerProfile, type MailerProfile } from '../domain/mailerProfil
 import { ScheduledEmailLogMapper } from '../mapper/scheduledEmailLogMapper'
 import dayjs from 'dayjs'
 
+/**
+ * 定时邮件执行日志服务日志记录器
+ * @type {Logger}
+ */
 const logger = new Logger({ fileName: 'scheduled-email-log', folderName: 'server' })
 
 /**
- * 定时邮件日志服务
+ * 定时邮件日志服务类，提供执行日志的创建、查询、清理、以及格式转换等业务逻辑
+ * @extends {BaseService}
  */
 export class ScheduledEmailLogService extends BaseService {
   /**
-   * 定时邮件日志Mapper
+   * 定时邮件日志数据访问对象 (Mapper)
+   * @type {ScheduledEmailLogMapper}
+   * @private
    */
   private scheduledEmailLogMapper: ScheduledEmailLogMapper
   /**
-   * 发件人画像（仅用于写日志时记录 sender/channel/host/port）
-   * @description 通过 mailerProfile 模块解析，避免反向依赖 SendEmailService
+   * 发件人画像配置（用于写日志时记录 sender、channel、host、port 等环境配置信息）
+   * @type {MailerProfile}
+   * @private
    */
   private mailerProfile: MailerProfile
 
+  /**
+   * 构造并初始化定时邮件日志服务，获取 Mapper 实例和解析邮件配置画像
+   */
   constructor() {
     super()
     this.scheduledEmailLogMapper = new ScheduledEmailLogMapper()
@@ -26,7 +37,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 创建执行日志
+   * 创建定时任务的执行日志记录
+   * @param {ScheduledEmailLogDto.CreateExecutionLogRequest} createExecutionLogRequest 创建执行日志的请求参数
+   * @returns {Promise<number>} 创建成功的日志 ID，如果失败则返回 0
+   * @throws {Error} 创建过程中产生错误时抛出异常
    */
   async createExecutionLog(createExecutionLogRequest: ScheduledEmailLogDto.CreateExecutionLogRequest): Promise<number> {
     try {
@@ -81,7 +95,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 根据条件获取单条执行日志
+   * 根据指定条件获取单条任务执行日志
+   * @param {ScheduledEmailLogDto.GetExecutionLogRequest} queryOptions 获取单条日志的请求过滤参数
+   * @returns {Promise<ScheduledEmailLogVo.ExecutionLogResponse | null>} 匹配的执行日志 VO，若不存在则返回 null
+   * @throws {Error} 获取日志产生错误时抛出异常
    */
   async getExecutionLog(
     queryOptions: ScheduledEmailLogDto.GetExecutionLogRequest
@@ -96,7 +113,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 获取任务执行日志列表
+   * 获取任务执行日志的分页列表
+   * @param {ScheduledEmailLogDto.LogListRequest} listQuery 日志列表查询及分页条件
+   * @returns {Promise<ScheduledEmailLogVo.LogListResponse>} 包含日志列表及分页信息的响应对象
+   * @throws {Error} 获取日志列表产生错误时抛出异常
    */
   async getExecutionLogList(
     listQuery: ScheduledEmailLogDto.LogListRequest
@@ -127,7 +147,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 获取任务的最新执行日志
+   * 获取指定任务的最新一条执行日志记录
+   * @param {number} taskId 任务 ID
+   * @returns {Promise<ScheduledEmailLogVo.ExecutionLogResponse | null>} 最新日志记录，若无记录则返回 null
+   * @throws {Error} 获取最新日志产生错误时抛出异常
    */
   async getLatestExecutionLog(taskId: number): Promise<ScheduledEmailLogVo.ExecutionLogResponse | null> {
     try {
@@ -140,7 +163,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 根据条件删除执行日志
+   * 根据条件批量删除执行日志
+   * @param {ScheduledEmailLogDto.DeleteExecutionLogRequest} deleteCriteria 删除过滤条件
+   * @returns {Promise<boolean>} 是否成功删除记录
+   * @throws {Error} 删除日志时产生异常
    */
   async deleteExecutionLogs(deleteCriteria: ScheduledEmailLogDto.DeleteExecutionLogRequest): Promise<boolean> {
     try {
@@ -158,7 +184,9 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 清理过期日志
+   * 清理过期执行日志（默认只保留最近 30 天）
+   * @returns {Promise<number>} 成功清理的日志记录条数
+   * @throws {Error} 清理过期日志产生错误时抛出异常
    */
   async cleanupExpiredLogs(): Promise<number> {
     try {
@@ -176,7 +204,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 获取任务执行成功率统计
+   * 获取指定日期区间及任务过滤条件下的任务执行成功率统计数据
+   * @param {ScheduledEmailLogDto.TaskSuccessRateRequest} statsQuery 成功率统计查询参数
+   * @returns {Promise<Array<{ date: string; successRate: number; totalCount: number; successCount: number }>>} 按天统计成功率的数组
+   * @throws {Error} 统计产生异常
    */
   async getTaskSuccessRateStats(
     statsQuery: ScheduledEmailLogDto.TaskSuccessRateRequest
@@ -190,7 +221,14 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 记录任务执行成功日志
+   * 记录任务执行成功的便捷方法
+   * @param {number} taskId 定时邮件任务 ID
+   * @param {string} executionTime 任务执行时刻 (YYYY-MM-DD HH:mm:ss)
+   * @param {string} emailMessageId 邮件成功投递的 Message-ID
+   * @param {number} executionDuration 执行持续总时长 (毫秒)
+   * @param {string} [message] 可选的成功说明信息
+   * @param {Partial<ScheduledEmailLogDto.CreateExecutionLogRequest>} [metadata] 其它可覆盖的日志元数据字段
+   * @returns {Promise<number>} 新增的日志主键 ID
    */
   async logTaskSuccess(
     taskId: number,
@@ -212,7 +250,14 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 记录任务执行失败日志
+   * 记录任务执行失败的便捷方法
+   * @param {number} taskId 定时邮件任务 ID
+   * @param {string} executionTime 任务执行时刻 (YYYY-MM-DD HH:mm:ss)
+   * @param {string} errorDetails 错误异常细节堆栈或详细描述
+   * @param {number} executionDuration 执行持续总时长 (毫秒)
+   * @param {string} [message] 可选的失败摘要信息
+   * @param {Partial<ScheduledEmailLogDto.CreateExecutionLogRequest>} [metadata] 其它可覆盖的日志元数据字段
+   * @returns {Promise<number>} 新增的日志主键 ID
    */
   async logTaskFailure(
     taskId: number,
@@ -234,7 +279,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 转换DAO对象为VO对象
+   * 将数据库层面的日志 DAO 记录转换为前端接口返回的 VO 响应实体
+   * @param {ScheduledEmailLogDao.ScheduledEmailLogRecord} logRecord 数据库日志记录
+   * @returns {ScheduledEmailLogVo.ExecutionLogResponse} VO 转换响应实体
+   * @private
    */
   private convertDaoToVo(
     logRecord: ScheduledEmailLogDao.ScheduledEmailLogRecord
@@ -243,7 +291,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * DAO record -> VO item
+   * 将 DAO 记录详细属性解析为 VO 明细属性（包括 JSON 及字符串数组的反序列化）
+   * @param {ScheduledEmailLogDao.ScheduledEmailLogRecord} logRecord 数据库日志记录
+   * @returns {ScheduledEmailLogVo.ExecutionLogItem} 解析转换后的 VO 数据明细对象
+   * @private
    */
   private convertRecordToItem(
     logRecord: ScheduledEmailLogDao.ScheduledEmailLogRecord
@@ -284,7 +335,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * @desc 将收件人数组序列化为日志字段。
+   * 将字符串数组序列化为以 JSON/文本方式存储的数据库字段
+   * @param {string | string[] | null} [value] 原始值或数组
+   * @returns {string | undefined} 序列化后的字符串；若无效则返回 undefined
+   * @private
    */
   private stringifyStringArray(value?: string | string[] | null): string | undefined {
     if (!value) {
@@ -297,7 +351,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * @desc 将日志中的收件人字段解析为数组。
+   * 将数据库中的收件人等字符串字段反序列化为数组结构
+   * @param {string | string[] | null} [rawValue] 待解析的数据库内容
+   * @returns {string[] | undefined} 解析后的字符串数组
+   * @private
    */
   private parseStringArray(rawValue?: string | string[] | null): string[] | undefined {
     if (!rawValue) {
@@ -325,6 +382,13 @@ export class ScheduledEmailLogService extends BaseService {
     return undefined
   }
 
+  /**
+   * 安全地解析 JSON 字符串
+   * @template T
+   * @param {string | Record<string, any> | null} [jsonString] JSON 字符串或已经解析的对象
+   * @returns {T | undefined} 解析后的泛型对象
+   * @private
+   */
   private parseJson<T = Record<string, any>>(jsonString?: string | Record<string, any> | null): T | undefined {
     if (!jsonString) {
       return undefined
@@ -341,14 +405,19 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * @desc 获取当前运行环境的时区。
+   * 获取当前运行环境的时区，默认返回 'UTC'
+   * @returns {string} 时区标识符（如 'Asia/Shanghai'）
+   * @private
    */
   private getCurrentTimezone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   }
 
   /**
-   * 即时发送成功日志
+   * 记录即时/手动发送邮件成功的日志
+   * @param {SendEmailVo.SendEmailResponse} sendResult 发送成功的响应结果
+   * @param {SendEmailDto.SendChartEmailRequest} sendRequest 手动发送邮件的原始请求包
+   * @returns {Promise<void>}
    */
   async logManualSendSuccess(
     sendResult: SendEmailVo.SendEmailResponse,
@@ -367,7 +436,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * 即时发送失败日志
+   * 记录即时/手动发送邮件失败的日志
+   * @param {SendEmailDto.SendChartEmailRequest} sendRequest 手动发送邮件的原始请求包
+   * @param {string} errorMessage 投递失败的错误说明信息
+   * @returns {Promise<void>}
    */
   async logManualSendFailure(sendRequest: SendEmailDto.SendChartEmailRequest, errorMessage: string): Promise<void> {
     const executionTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
@@ -376,7 +448,13 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * @desc 构建定时邮件任务日志的基础元数据。
+   * 构建定时邮件任务的基础日志元数据 (获取发件人画像、主题、通道等)
+   * @param {object} emailConfig 邮件主题及收件人配置
+   * @param {string | string[]} emailConfig.to 收件人列表
+   * @param {string} emailConfig.subject 邮件主题
+   * @param {SendEmailDto.AnalyzePayload} analyzeOptions 分析快照图表配置
+   * @param {number} retryCount 重试次数
+   * @returns {Partial<ScheduledEmailLogDto.CreateExecutionLogPayload>} 日志的通用基础元数据对象
    */
   public buildTaskBaseMetadata(
     emailConfig: {
@@ -411,7 +489,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * @desc 使用邮件发送结果补充日志元数据。
+   * 使用实际邮件投递的结果来丰富并补全基础日志元数据 (添加服务商原始响应、实际接收与拒收的列表等)
+   * @param {Partial<ScheduledEmailLogDto.CreateExecutionLogPayload>} baseMetadata 基础元数据
+   * @param {SendEmailVo.SendEmailResponse} sendResult 邮件发送的响应结果
+   * @returns {Partial<ScheduledEmailLogDto.CreateExecutionLogPayload>} 填充完善后的日志元数据
    */
   public enrichSendResultMetadata(
     baseMetadata: Partial<ScheduledEmailLogDto.CreateExecutionLogPayload>,
@@ -446,7 +527,11 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * @desc 构建手动发送邮件的日志元数据。
+   * 构建手动发送邮件的日志元数据
+   * @param {SendEmailDto.SendChartEmailRequest} sendRequest 原始手动发送请求参数
+   * @param {SendEmailVo.SendEmailResponse} [sendResult] 手动发送响应（如果发送成功的话）
+   * @returns {Partial<ScheduledEmailLogDto.CreateExecutionLogRequest>} 构建好的手动发送日志元数据
+   * @private
    */
   private buildManualSendMetadata(
     sendRequest: SendEmailDto.SendChartEmailRequest,
@@ -481,7 +566,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * @desc 统一收件人字段为字符串数组。
+   * 将各种形式的收件人类型归一化为标准的收件人邮箱地址数组
+   * @param {string | string[]} [recipients] 收件人字符串或数组
+   * @returns {string[]} 规整后的邮箱地址数组
+   * @private
    */
   private normalizeRecipients(recipients?: string | string[]): string[] {
     if (!recipients) {
@@ -497,7 +585,10 @@ export class ScheduledEmailLogService extends BaseService {
   }
 
   /**
-   * @desc 将 Nodemailer 返回的收件人结构拍平为地址数组。
+   * 将 Nodemailer 接受/拒绝的收件人属性格式拍平为简洁的标准字符串数组
+   * @param {Array<string | { name?: string; address: string }>} [recipients] Nodemailer 收件人列表
+   * @returns {string[] | undefined} 拍平后的地址数组；如果为空则返回 undefined
+   * @private
    */
   private flattenNodemailerRecipients(
     recipients?: (string | { name?: string; address: string })[]
@@ -514,10 +605,15 @@ export class ScheduledEmailLogService extends BaseService {
 
 /* ============================== 单例工厂 ============================== */
 
+/**
+ * 进程内全局持有的 ScheduledEmailLogService 单例实例
+ * @type {ScheduledEmailLogService | null}
+ */
 let scheduledEmailLogServiceInstance: ScheduledEmailLogService | null = null
 
 /**
- * @desc 获取 ScheduledEmailLogService 的进程级单例
+ * 获取 ScheduledEmailLogService 的进程级单例
+ * @returns {ScheduledEmailLogService} 单例实例对象
  */
 export const getScheduledEmailLogService = (): ScheduledEmailLogService => {
   if (!scheduledEmailLogServiceInstance) {

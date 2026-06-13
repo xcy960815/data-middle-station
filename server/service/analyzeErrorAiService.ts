@@ -1,14 +1,32 @@
+/**
+ * 分析查询错误 AI 服务请求参数
+ * @typedef {object} AnalyzeErrorAiRequest
+ * @property {string} [sql] 执行失败的 SQL 语句
+ * @property {string} [errorMessage] 报错信息
+ * @property {unknown} [queryParams] 查询参数上下文
+ */
 type AnalyzeErrorAiRequest = {
   sql?: string
   errorMessage?: string
   queryParams?: unknown
 }
 
+/**
+ * AI 流式响应消息分片格式
+ * @typedef {object} AnalyzeErrorAiStreamMessage
+ * @property {'ai_chunk'} type 消息类型
+ * @property {string} content AI 响应的文本分片内容
+ */
 type AnalyzeErrorAiStreamMessage = {
   type: 'ai_chunk'
   content: string
 }
 
+/**
+ * DeepSeek 流式 API 返回的原始 Chunk 格式
+ * @typedef {object} DeepSeekStreamChunk
+ * @property {Array<{ delta?: { content?: string } }>} [choices] 响应的选择列表
+ */
 type DeepSeekStreamChunk = {
   choices?: Array<{
     delta?: {
@@ -17,12 +35,34 @@ type DeepSeekStreamChunk = {
   }>
 }
 
+/**
+ * 默认 DeepSeek API 地址
+ * @type {string}
+ */
 const DEFAULT_DEEP_SEEK_API_URL = 'https://api.deepseek.com/chat/completions'
+
+/**
+ * 默认 DeepSeek 模型名称
+ * @type {string}
+ */
 const DEFAULT_DEEP_SEEK_MODEL = 'deepseek-chat'
 
+/**
+ * AI 分析错误时的 System Prompt
+ * @type {string}
+ */
 const ANALYZE_ERROR_SYSTEM_PROMPT =
   '你是一个资深的数据分析师和SQL专家。用户执行数据分析查询失败了，请根据报错信息和脱敏后的查询上下文分析原因，并给出具体的修复建议。请直接给出结论，保持简洁。'
 
+/**
+ * 脱敏后用于发送给 AI 的查询字段格式
+ * @typedef {object} SafeAnalyzeQueryField
+ * @property {string} displayName 字段展示名称
+ * @property {string} [columnType] 字段在数据库中的类型
+ * @property {string} [aggregation] 聚合方式
+ * @property {string} [operator] 筛选条件操作符
+ * @property {boolean} [hasOperand] 是否有筛选值
+ */
 type SafeAnalyzeQueryField = {
   displayName: string
   columnType?: string
@@ -32,11 +72,13 @@ type SafeAnalyzeQueryField = {
 }
 
 /**
- * @desc 分析查询错误的 AI 流式服务。
+ * 分析查询错误的 AI 流式服务，用于将执行 SQL 时的错误信息通过 LLM (DeepSeek) 进行分析并流式输出
  */
 export class AnalyzeErrorAiService {
   /**
-   * @desc 生成前端消费的 NDJSON 分片流。
+   * 生成前端消费的 NDJSON 分片流，用以流式返回错误分析结果
+   * @param {AnalyzeErrorAiRequest} request AI 诊断请求参数
+   * @returns {ReadableStream<Uint8Array>} 编码为 Uint8Array 的 NDJSON 数据流
    */
   public streamAnalyzeError(request: AnalyzeErrorAiRequest): ReadableStream<Uint8Array> {
     return new ReadableStream({
@@ -68,6 +110,12 @@ export class AnalyzeErrorAiService {
     })
   }
 
+  /**
+   * 发起 DeepSeek API 的流式请求
+   * @private
+   * @param {AnalyzeErrorAiRequest} request AI 诊断请求参数
+   * @returns {Promise<Response | null>} Fetch API 响应对象，如果未启用 AI 则返回 null
+   */
   private async requestDeepSeekAnalyzeErrorStream(request: AnalyzeErrorAiRequest): Promise<Response | null> {
     const runtimeConfig = useRuntimeConfig()
     const apiKey = runtimeConfig.deepSeekApiKey
@@ -100,6 +148,12 @@ export class AnalyzeErrorAiService {
     })
   }
 
+  /**
+   * 脱敏并清洗查询参数以减少敏感信息泄露和降低 prompt 长度
+   * @private
+   * @param {unknown} queryParams 原始前端查询参数
+   * @returns {Record<string, unknown>} 脱敏后的安全查询参数字典
+   */
   private sanitizeQueryParams(queryParams: unknown): Record<string, unknown> {
     if (!queryParams || typeof queryParams !== 'object') {
       return {}
@@ -121,6 +175,14 @@ export class AnalyzeErrorAiService {
     }
   }
 
+  /**
+   * 脱敏并清洗具体维度的字段列表配置
+   * @private
+   * @param {Array<Record<string, unknown>>} [fields] 字段配置数组
+   * @param {object} [options={}] 清洗配置选项
+   * @param {boolean} [options.includeOperator] 是否保留筛选操作符与是否有值字段
+   * @returns {SafeAnalyzeQueryField[]} 脱敏后的字段属性列表
+   */
   private sanitizeFields(
     fields: Array<Record<string, unknown>> | undefined,
     options: { includeOperator?: boolean } = {}
@@ -150,6 +212,13 @@ export class AnalyzeErrorAiService {
     })
   }
 
+  /**
+   * 管道化传输 DeepSeek 流数据并实时回调 send
+   * @private
+   * @param {Response} aiResponse DeepSeek 接口的 Response 对象
+   * @param {(message: AnalyzeErrorAiStreamMessage) => void} send 发送分片的回调函数
+   * @returns {Promise<void>}
+   */
   private async pipeDeepSeekStream(
     aiResponse: Response,
     send: (message: AnalyzeErrorAiStreamMessage) => void
@@ -182,6 +251,13 @@ export class AnalyzeErrorAiService {
     }
   }
 
+  /**
+   * 校验并提取 DeepSeek 流中的 data 数据行，解析为 JSON 后回调发送
+   * @private
+   * @param {string} line 原始行文本
+   * @param {(message: AnalyzeErrorAiStreamMessage) => void} send 发送分片的回调函数
+   * @returns {void}
+   */
   private sendDeepSeekDataLine(line: string, send: (message: AnalyzeErrorAiStreamMessage) => void): void {
     const normalizedLine = line.trim()
     if (!normalizedLine.startsWith('data: ')) {

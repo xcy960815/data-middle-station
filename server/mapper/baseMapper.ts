@@ -37,8 +37,11 @@ const RETRYABLE_MYSQL_ERROR_CODES = new Set([
   'ETIMEDOUT'
 ])
 
-const READONLY_SQL_PATTERN = /^\s*(select|show|describe|desc|explain)\b/i
-
+/**
+ * 判断错误是否为只读 SQL 可重试的 MySQL 错误类型（如连接重置等）
+ * @param {unknown} error 捕获到的错误对象
+ * @returns {boolean} 如果可以重试返回 true，否则返回 false
+ */
 const isRetryableMysqlError = (error: unknown) => {
   const mysqlError = error as { code?: string; errno?: number; fatal?: boolean } | null
   return Boolean(
@@ -51,14 +54,25 @@ const isRetryableMysqlError = (error: unknown) => {
   )
 }
 
+/**
+ * 延迟休眠函数
+ * @param {number} ms 延迟的毫秒数
+ * @returns {Promise<void>}
+ */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /* ========== 装饰器：字段映射 & 数据源绑定 ========== */
+
+/**
+ * 实体类字段映射表弱引用 Map，用于存放实体构造函数对应的列名与属性名映射
+ * @type {WeakMap<Function, ColumnMapping>}
+ */
 export const entityColumnsMap = new WeakMap<Function, ColumnMapping>()
 
 /**
- * @desc 字段映射装饰器
- * @param columnName 数据库中的列名
+ * 字段映射装饰器
+ * @param {string} columnName 数据库中的列名
+ * @returns {PropertyDecorator} 属性装饰器函数
  * @description
  * 将数据库列与实体类属性建立映射关系，
  * 后续通过 `mapToTarget` 自动完成行数据到实体的转换。
@@ -73,11 +87,11 @@ export function Column(columnName: string): PropertyDecorator {
 }
 
 /**
- * @desc 将数据库行数据映射到目标对象
- * @param target 映射目标实例（一般为 *Mapping 类的实例）
- * @param data 原始查询结果，可以是单行或多行
- * @param columnsMap 列名到实体属性名的映射表
- * @returns 映射后的结果，类型与入参 `data` 保持一致
+ * 将数据库行数据映射到目标对象
+ * @param {IColumnTarget} target 映射目标实例（一般为 *Mapping 类的实例）
+ * @param {Array<Row> | Row} data 原始查询结果，可以是单行或多行
+ * @param {Map<string, string>} [columnsMap] 列名到实体属性名的映射表
+ * @returns {Array<Row> | Row} 映射后的结果，类型与入参 `data` 保持一致
  */
 export function mapToTarget(
   target: IColumnTarget,
@@ -113,8 +127,9 @@ export function mapToTarget(
 }
 
 /**
- * @desc 方法映射装饰器
- * @param mapping 列映射类的构造函数，用于将查询结果转换为领域实体
+ * 方法映射装饰器
+ * @param {Constructor<IColumnTarget>} mapping 列映射类的构造函数，用于将查询结果转换为领域实体
+ * @returns {MethodDecorator} 方法装饰器函数
  * @description
  * 装饰异步 mapper 方法，使其返回值自动通过对应的 *Mapping.columnsMapper 进行字段映射。
  */
@@ -138,19 +153,21 @@ export function Mapping(mapping: Constructor<IColumnTarget>): MethodDecorator {
 }
 
 /**
- * @desc 基础映射器，封装通用的数据源与 SQL 执行逻辑
+ * 基础映射器，封装通用的数据源与 SQL 执行逻辑
  */
 export abstract class BaseMapper {
   /**
-   * @desc 数据源名称，对应 `useNitroApp().mysqlPools` 中的 key
+   * 数据源名称，对应 `useNitroApp().mysqlPools` 中的 key
+   * @type {string}
    */
   abstract dataSourceName: string
 
   /**
-   * @desc 执行 SQL 并返回查询结果
-   * @param sql 需要执行的 SQL 语句
-   * @param params 预编译参数数组（可选）
-   * @returns 查询结果数组，默认类型为 `Row[]`
+   * 执行 SQL 并返回查询结果，包含只读 SQL 连接被重置时的自动重试逻辑
+   * @template R
+   * @param {string} sql 需要执行的 SQL 语句
+   * @param {any[]} [params] 预编译参数数组（可选）
+   * @returns {Promise<R>} 查询结果，默认类型为 `Row[]` 的 Promise
    */
   protected async exe<R = Row[]>(sql: string, params?: any[]): Promise<R> {
     const pool = useNitroApp().mysqlPools.get(this.dataSourceName)

@@ -5,7 +5,10 @@ import { RequestCodeEnum } from '~/utils/request-enmu'
 
 const { TokenExpiredError, JsonWebTokenError } = pkg
 
-// 创建认证中间件专用的日志实例
+/**
+ * 认证中间件专用的日志实例
+ * @type {Logger}
+ */
 const logger = new Logger({
   fileName: 'check-auth',
   folderName: 'middleware'
@@ -13,11 +16,14 @@ const logger = new Logger({
 
 /**
  * 不需要验证 token 的路由白名单（精确匹配或前缀匹配）
+ * @type {readonly string[]}
  */
 const WHITE_LIST: readonly string[] = ['/api/login', '/api/health']
 
 /**
  * 检查路径是否在白名单中
+ * @param {string} pathname 待检查的 URL 路径名
+ * @returns {boolean} 如果在白名单中返回 true，否则返回 false
  */
 function isWhitelisted(pathname: string): boolean {
   return WHITE_LIST.some((path) => pathname === path || pathname.startsWith(`${path}/`))
@@ -25,6 +31,8 @@ function isWhitelisted(pathname: string): boolean {
 
 /**
  * 获取客户端真实 IP 地址
+ * @param {H3Event<EventHandlerRequest>} event H3 事件对象
+ * @returns {string} 客户端真实 IP 地址
  */
 function getRealClientIP(event: H3Event<EventHandlerRequest>): string {
   // 优先从代理头中获取真实 IP
@@ -60,6 +68,9 @@ function getRealClientIP(event: H3Event<EventHandlerRequest>): string {
 
 /**
  * 构造统一的认证错误
+ * @param {number} statusCode HTTP 状态码/业务状态码
+ * @param {string} message 错误消息内容
+ * @returns {H3Error} H3Error 错误对象
  */
 function createAuthError(statusCode: number, message: string) {
   return createError({
@@ -73,6 +84,8 @@ function createAuthError(statusCode: number, message: string) {
 /**
  * JWT认证中间件
  * 对所有 /api 开头的请求进行权限校验（白名单除外）
+ * @param {H3Event<EventHandlerRequest>} event H3 事件对象
+ * @returns {Promise<any>} 返回认证错误或无返回值继续执行
  */
 export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) => {
   const url = getRequestURL(event)

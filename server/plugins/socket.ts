@@ -2,8 +2,9 @@ import { Server } from 'socket.io'
 import chalk from 'chalk'
 
 /**
- * @desc Socket.io 长连接
+ * Socket.io 长连接
  * @link https://github.com/nuxt/nuxt/pull/19230
+ * @param {NitroApp} nitroApp Nitro 应用对象
  * @returns {void}
  */
 export default defineNitroPlugin((nitroApp) => {

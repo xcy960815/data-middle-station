@@ -1,6 +1,8 @@
 /**
- * @desc 全局错误日志插件
- *       通过 Nitro hooks 在接口处理完成后统一记录错误状态码和请求信息
+ * 全局错误日志插件
+ * 通过 Nitro hooks 在接口处理完成后统一记录错误状态码和请求信息
+ * @param {NitroApp} nitroApp Nitro 应用对象
+ * @returns {void}
  */
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook('error', (error, context) => {

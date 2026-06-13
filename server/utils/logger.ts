@@ -28,7 +28,7 @@ const LOG_LEVELS = {
 }
 
 /**
- * 获取调用位置信息
+ * 获取日志调用位置信息
  * @returns {string} 调用位置信息
  */
 function getCallerInfo(): string {
@@ -60,33 +60,44 @@ function getCallerInfo(): string {
 }
 
 /**
- * @description 日志类
+ * 通用日志处理类，支持控制台彩色输出与基于文件的每日轮转日志
  */
 export class Logger {
   /**
-   * @description 日志实例
+   * winston 日志实例对象
+   * @type {LoggerType | null}
+   * @private
    */
   private logger: LoggerType | null = null
 
   /**
-   * @description 日志路径
+   * 日志文件存放根目录路径
+   * @type {string}
+   * @private
    */
   private logPath: string = useRuntimeConfig().logPath || 'logs'
 
   /**
-   * @description 日志时间格式
+   * 日志中的时间格式串
+   * @type {string}
+   * @private
    */
   private logTimeFormat: string = useRuntimeConfig().logTimeFormat || 'YYYY-MM-DD HH:mm:ss'
 
+  /**
+   * 构造函数，初始化并创建指定文件名和目录的日志实例
+   * @param {LoggerOptions} options 初始化参数，包含文件名与分类目录名
+   */
   constructor({ fileName, folderName }: LoggerOptions) {
     this._createLogger(fileName, folderName)
   }
 
   /**
-   * @description 创建日志实例
-   * @param {string} fileName
-   * @param {string} folderName
+   * 创建并配置 winston 日志器实例（包含控制台 Transport 和按天轮转文件 Transport）
+   * @param {string} fileName 日志文件名模板
+   * @param {string} folderName 日志存放子文件夹名称
    * @returns {void}
+   * @private
    */
   private _createLogger(fileName: string, folderName: string): void {
     this.logger = createLogger({
@@ -165,8 +176,8 @@ export class Logger {
   }
 
   /**
-   * @description 日志信息
-   * @param {string} message
+   * 记录信息（info）级别的日志
+   * @param {string} message 日志文本信息
    * @returns {void}
    */
   public info(message: string): void {
@@ -175,8 +186,8 @@ export class Logger {
   }
 
   /**
-   * @description 错误日志
-   * @param {string} message
+   * 记录错误（error）级别的日志
+   * @param {string} message 错误文本信息
    * @returns {void}
    */
   public error(message: string): void {
@@ -185,8 +196,8 @@ export class Logger {
   }
 
   /**
-   * @description 警告日志
-   * @param {string} message
+   * 记录警告（warn）级别的日志
+   * @param {string} message 警告文本信息
    * @returns {void}
    */
   public warn(message: string): void {
@@ -195,8 +206,8 @@ export class Logger {
   }
 
   /**
-   * @description 调试日志
-   * @param {string} message
+   * 记录调试（debug）级别的日志
+   * @param {string} message 调试文本信息
    * @returns {void}
    */
   public debug(message: string): void {

@@ -5,7 +5,8 @@ import { batchFormatSqlKey, convertToSqlProperties } from '@/server/utils/databa
 import type { ResultSetHeader } from 'mysql2'
 
 /**
- * @desc 执行日志基础字段
+ * 执行日志基础字段
+ * @type {string[]}
  */
 const SCHEDULED_EMAIL_LOG_BASE_FIELDS = [
   'id',
@@ -42,217 +43,258 @@ const SCHEDULED_EMAIL_LOG_BASE_FIELDS = [
 ]
 
 /**
- * @desc 执行日志表名
+ * 执行日志表名
+ * @type {string}
  */
 const SCHEDULED_EMAIL_LOG_TABLE_NAME = 'scheduled_email_logs'
 
 /**
- * @desc 数据源名称
+ * 数据源名称
+ * @type {string}
  */
 const DATA_SOURCE_NAME = 'data_middle_station'
 
 /**
- * @desc 执行日志映射
+ * 定时邮件执行日志实体属性映射类
+ * @implements {ScheduledEmailLogDao.ScheduledEmailLogRecord}
+ * @implements {IColumnTarget}
  */
 class ScheduledEmailLogMapping implements ScheduledEmailLogDao.ScheduledEmailLogRecord, IColumnTarget {
+  /**
+   * 属性与字段映射器
+   * @param {Array<Row> | Row} data 原始数据库行数据
+   * @returns {Array<Row> | Row} 映射后的属性对象
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 
   /**
-   * id
+   * 日志记录自增 ID
+   * @type {number}
    */
   @Column('id')
   id!: number
 
   /**
-   * 任务ID
+   * 定时邮件任务 ID
+   * @type {number}
    */
   @Column('task_id')
   taskId!: number
 
   /**
-   * 执行时间
+   * 任务实际执行时间
+   * @type {string}
    */
   @Column('execution_time')
   executionTime!: string
 
   /**
-   * 执行时区
+   * 执行时使用的时区
+   * @type {string}
    */
   @Column('execution_timezone')
   executionTimezone?: string
 
   /**
-   * 状态
+   * 邮件发送状态：success 成功，failed 失败
+   * @type {'success' | 'failed'}
    */
   @Column('status')
   status!: 'success' | 'failed'
 
   /**
-   * 消息
+   * 提示或摘要消息
+   * @type {string}
    */
   @Column('message')
   message?: string
 
   /**
-   * 错误详情
+   * 发送失败时的错误详细信息
+   * @type {string}
    */
   @Column('error_details')
   errorDetails?: string
 
   /**
-   * 邮件消息ID
+   * 邮件服务器或服务商返回的 Message-ID
+   * @type {string}
    */
   @Column('email_message_id')
   emailMessageId?: string
 
   /**
-   * 发件人邮箱
+   * 发件人邮箱地址
+   * @type {string}
    */
   @Column('sender_email')
   senderEmail?: string
 
   /**
-   * 发件人名称
+   * 发件人显示名称
+   * @type {string}
    */
   @Column('sender_name')
   senderName?: string
 
   /**
-   * 收件人(To)
+   * 收件人地址列表，以逗号分隔
+   * @type {string}
    */
   @Column('recipient_to')
   recipientTo?: string
 
   /**
-   * 抄送
+   * 抄送收件人地址列表，以逗号分隔
+   * @type {string}
    */
   @Column('recipient_cc')
   recipientCc?: string
 
   /**
-   * 密送
+   * 密送收件人地址列表，以逗号分隔
+   * @type {string}
    */
   @Column('recipient_bcc')
   recipientBcc?: string
 
   /**
    * 回复地址
+   * @type {string}
    */
   @Column('reply_to')
   replyTo?: string
 
   /**
    * 邮件主题
+   * @type {string}
    */
   @Column('email_subject')
   emailSubject?: string
 
   /**
-   * 附件数量
+   * 邮件附件总数
+   * @type {number}
    */
   @Column('attachment_count')
   attachmentCount?: number
 
   /**
-   * 附件名称
+   * 附件文件名列表，以逗号分隔
+   * @type {string}
    */
   @Column('attachment_names')
   attachmentNames?: string
 
   /**
-   * 邮件通道
+   * 邮件通道标识
+   * @type {string}
    */
   @Column('email_channel')
   emailChannel?: string
 
   /**
-   * 服务提供方
+   * 邮件发送服务商名称
+   * @type {string}
    */
   @Column('provider')
   provider?: string
 
   /**
-   * 服务响应
+   * 服务提供方的原始响应内容
+   * @type {string}
    */
   @Column('provider_response')
   providerResponse?: string
 
   /**
-   * 接收成功的收件人
+   * 接收成功的收件人列表，以逗号分隔
+   * @type {string}
    */
   @Column('accepted_recipients')
   acceptedRecipients?: string
 
   /**
-   * 拒收的收件人
+   * 拒收或发送失败的收件人列表，以逗号分隔
+   * @type {string}
    */
   @Column('rejected_recipients')
   rejectedRecipients?: string
 
   /**
-   * 重试次数
+   * 重试发送次数
+   * @type {number}
    */
   @Column('retry_count')
   retryCount?: number
 
   /**
-   * 原始请求
+   * 原始发送请求 Payload (JSON 字符串)
+   * @type {string}
    */
   @Column('raw_request_payload')
   rawRequestPayload?: string
 
   /**
-   * 原始响应
+   * 原始接收响应 Payload (JSON 字符串)
+   * @type {string}
    */
   @Column('raw_response_payload')
   rawResponsePayload?: string
 
   /**
-   * SMTP主机
+   * SMTP 服务器主机名
+   * @type {string}
    */
   @Column('smtp_host')
   smtpHost?: string
 
   /**
-   * SMTP端口
+   * SMTP 服务器端口号
+   * @type {number}
    */
   @Column('smtp_port')
   smtpPort?: number
 
   /**
-   * 执行时长
+   * 任务执行所消耗的时长（毫秒）
+   * @type {number}
    */
   @Column('execution_duration')
   executionDuration?: number
 
   /**
-   * 创建时间
+   * 日志记录创建时间
+   * @type {string}
    */
   @Column('created_time')
   createdTime!: string
 
   /**
-   * 创建人
+   * 创建人或创建系统
+   * @type {string}
    */
   @Column('created_by')
   createdBy!: string
 }
 
 /**
- * @desc 定时邮件执行日志 mapper，负责写入与查询任务执行记录
+ * 定时邮件执行日志数据访问对象 (Mapper)，负责日志的写入、查询和清理
+ * @extends {BaseMapper}
  */
 export class ScheduledEmailLogMapper extends BaseMapper {
   /**
-   * @desc 数据源名称
+   * 数据源名称
+   * @type {string}
    */
   public dataSourceName = DATA_SOURCE_NAME
 
   /**
-   * @desc 创建执行日志
-   * @param createScheduledEmailLogParams 创建执行日志所需字段（任务 ID、执行时间、结果等）
-   * @returns 新建日志记录的主键 ID
+   * 创建一条定时邮件执行日志记录
+   * @param {ScheduledEmailLogDao.CreateScheduledEmailLogParams} createScheduledEmailLogParams 创建执行日志所需的参数对象
+   * @returns {Promise<number>} 新增的日志记录主键 ID，如果失败则返回 0
    */
   public async createScheduledEmailLog(
     createScheduledEmailLogParams: ScheduledEmailLogDao.CreateScheduledEmailLogParams
@@ -267,9 +309,11 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 根据查询条件获取单条执行日志
-   * @param query 查询条件
-   * @returns 匹配的执行日志（若存在）
+   * 根据查询条件获取单条执行日志记录
+   * @template T
+   * @param {ScheduledEmailLogDao.GetScheduledEmailLogQuery} query 查询过滤条件
+   * @returns {Promise<T | null>} 匹配的执行日志记录；若未匹配则返回 null
+   * @throws {Error} 如果查询参数中没有任何有效过滤字段，则抛出异常
    */
   @Mapping(ScheduledEmailLogMapping)
   public async getScheduledEmailLog<
@@ -327,9 +371,9 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取任务执行日志列表
-   * @param query 查询参数
-   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogRecord[]>} 执行日志列表
+   * 获取定时邮件执行日志列表（支持分页、根据状态和时间范围过滤）
+   * @param {ScheduledEmailLogDao.LogListQuery} query 分页与过滤参数
+   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogRecord[]>} 日志记录数组
    */
   @Mapping(ScheduledEmailLogMapping)
   public async getScheduledEmailLogList(
@@ -376,9 +420,9 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取任务执行日志总数
-   * @param query 查询参数
-   * @returns {Promise<number>} 总数
+   * 获取符合指定查询条件的执行日志总条数，主要用于分页计算
+   * @param {ScheduledEmailLogDao.LogListQuery} query 查询与过滤参数
+   * @returns {Promise<number>} 日志记录的总条数
    */
   public async getScheduledEmailLogCount(query: ScheduledEmailLogDao.LogListQuery): Promise<number> {
     const whereConditions: string[] = []
@@ -418,9 +462,10 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 根据任务ID获取最新的执行日志
-   * @param {number} taskId  任务ID
-   * @returns {Promise<ScheduledEmailLogDao.ScheduledEmailLogRecord | null>} 最新执行日志
+   * 根据任务 ID 获取该任务最新的一条执行日志记录
+   * @template T
+   * @param {number} taskId 任务 ID
+   * @returns {Promise<T | null>} 最新的一条日志记录；若无记录则返回 null
    */
   @Mapping(ScheduledEmailLogMapping)
   public async getLatestLogByTaskId<
@@ -438,9 +483,10 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 根据条件删除日志
-   * @param query 查询条件
-   * @returns {Promise<number>} 删除的条数
+   * 根据指定条件批量删除执行日志
+   * @param {ScheduledEmailLogDao.DeleteScheduledEmailLogParams} query 删除过滤条件
+   * @returns {Promise<number>} 被删除的日志条数
+   * @throws {Error} 如果查询参数中没有任何过滤字段，则拒绝执行并抛出异常
    */
   public async deleteLogs(query: ScheduledEmailLogDao.DeleteScheduledEmailLogParams): Promise<number> {
     const whereConditions: string[] = []
@@ -493,8 +539,8 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 清理过期日志(保留最近30天)
-   * @returns {Promise<number>} 清理的日志数量
+   * 清理过期日志（保留最近 30 天的执行日志，多余的将被彻底删除）
+   * @returns {Promise<number>} 成功清理的日志行数
    */
   public async cleanupExpiredLogs(): Promise<number> {
     const sql = `
@@ -506,9 +552,10 @@ export class ScheduledEmailLogMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取任务的执行成功率统计
-   * @param query 查询参数
-   * @returns {Promise<Array<{date: string, successRate: number}>>} 成功率统计
+   * 获取任务的执行成功率统计（按天分组）
+   * @param {ScheduledEmailLogDao.TaskSuccessRateQuery} query 统计过滤参数与日期区间
+   * @returns {Promise<Array<{ date: string; successRate: number; totalCount: number; successCount: number }>>} 按天统计的成功率数组
+   * @throws {Error} 如果查询参数中没有任何过滤条件，则抛出异常
    */
   public async getTaskSuccessRateStats(
     query: ScheduledEmailLogDao.TaskSuccessRateQuery

@@ -1,23 +1,32 @@
 import { BaseMapper } from '@/server/mapper/baseMapper'
 import type { ResultSetHeader } from 'mysql2'
 
+/**
+ * 权限控制所使用的数据源名称
+ */
 const DATA_SOURCE_NAME = 'data_middle_station'
 
+/**
+ * 角色表表名
+ */
 const ROLE_TABLE_NAME = '`role`'
+
+/**
+ * 资源角色权限关联关系表表名
+ */
 const RESOURCE_ROLE_PERMISSION_TABLE_NAME = '`resource_role_permission`'
 
 /**
- * @desc 权限 mapper，负责角色与资源权限的查询和管理
+ * 权限数据访问层，负责角色与资源权限的查询和管理
  */
 export class PermissionMapper extends BaseMapper {
-  /**
-   * @desc 当前 mapper 使用的数据源名称
-   */
+  /** 当前 mapper 使用的数据源名称 */
   public dataSourceName = DATA_SOURCE_NAME
 
   /**
-   * @desc 获取所有有效角色列表
-   * @returns 角色列表
+   * 获取所有有效角色列表
+   *
+   * @returns {Promise<PermissionVo.RoleItem[]>} 角色列表 Promise
    */
   public async getRoles(): Promise<PermissionVo.RoleItem[]> {
     const sql = `
@@ -32,10 +41,11 @@ export class PermissionMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取指定资源的角色权限配置
-   * @param resourceType 资源类型
-   * @param resourceId 资源 ID
-   * @returns 角色权限列表
+   * 获取指定资源的角色权限配置列表
+   *
+   * @param {PermissionVo.ResourceType} resourceType 资源类型 (例如: 'dashboard'、'analyze')
+   * @param {number} resourceId 资源 ID
+   * @returns {Promise<Array<{ roleId: number; permissionType: string }>>} 角色权限映射数组 Promise
    */
   public async getResourceRolePermissions(
     resourceType: PermissionVo.ResourceType,
@@ -51,12 +61,13 @@ export class PermissionMapper extends BaseMapper {
   }
 
   /**
-   * @desc 替换指定资源的角色权限配置（先删后插）
-   * @param resourceType 资源类型
-   * @param resourceId 资源 ID
-   * @param permissions 权限列表
-   * @param operator 操作人
-   * @returns 是否操作成功
+   * 替换指定资源的角色权限配置（采用先清空旧权限，后批量插入新权限的幂等操作方式）
+   *
+   * @param {PermissionVo.ResourceType} resourceType 资源类型
+   * @param {number} resourceId 资源 ID
+   * @param {Array<{ roleId: number; permissionType: Exclude<PermissionVo.ResourcePermissionType, 'none'> }>} permissions 权限配置列表
+   * @param {string} operator 操作人账号/姓名
+   * @returns {Promise<boolean>} 是否操作成功
    */
   public async replaceResourceRolePermissions(
     resourceType: PermissionVo.ResourceType,
@@ -91,11 +102,12 @@ export class PermissionMapper extends BaseMapper {
   }
 
   /**
-   * @desc 根据角色列表查询用户在指定资源上的最高权限
-   * @param resourceType 资源类型
-   * @param resourceId 资源 ID
-   * @param roleCodes 角色编码列表
-   * @returns 最高权限类型
+   * 根据当前用户的角色列表，查询其在指定资源上的最高权限类型
+   *
+   * @param {PermissionVo.ResourceType} resourceType 资源类型
+   * @param {number} resourceId 资源 ID
+   * @param {string[]} roleCodes 角色编码数组
+   * @returns {Promise<PermissionVo.ResourcePermissionType>} 最高权限类型 ('manage' | 'edit' | 'view' | 'none')
    */
   public async getMaxPermissionByRoles(
     resourceType: PermissionVo.ResourceType,

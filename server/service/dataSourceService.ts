@@ -3,16 +3,38 @@ import { DatabaseMapper } from '@/server/mapper/databaseMapper'
 import { BaseService } from '@/server/service/baseService'
 import dayjs from 'dayjs'
 
+/**
+ * 数据源服务类，提供数据源列表查询、详情获取、增删改、同步表结构等业务逻辑
+ */
 export class DataSourceService extends BaseService {
+  /**
+   * 数据源映射器
+   * @private
+   * @type {DataSourceMapper}
+   */
   private dataSourceMapper: DataSourceMapper
+
+  /**
+   * 数据库元数据映射器
+   * @private
+   * @type {DatabaseMapper}
+   */
   private databaseMapper: DatabaseMapper
 
+  /**
+   * 构造函数，初始化服务依赖的各类 Mapper 实例
+   */
   constructor() {
     super()
     this.dataSourceMapper = new DataSourceMapper()
     this.databaseMapper = new DatabaseMapper()
   }
 
+  /**
+   * 分页获取数据源列表
+   * @param {DataSourceDto.GetDataSourceListRequest} [queryRequest={}] 查询请求参数
+   * @returns {Promise<DataSourceVo.DataSourceListResponse>} 数据源列表分页数据
+   */
   public async getDataSources(
     queryRequest: DataSourceDto.GetDataSourceListRequest = {}
   ): Promise<DataSourceVo.DataSourceListResponse> {
@@ -40,6 +62,12 @@ export class DataSourceService extends BaseService {
     }
   }
 
+  /**
+   * 获取指定数据源详情，包括其拥有的表数量
+   * @param {DataSourceDto.GetDataSourceRequest} queryRequest 查询参数，包含数据源 ID
+   * @returns {Promise<DataSourceVo.DataSourceDetailResponse>} 数据源详情响应数据
+   * @throws {Error} 数据源不存在时抛出异常
+   */
   public async getDataSource(
     queryRequest: DataSourceDto.GetDataSourceRequest
   ): Promise<DataSourceVo.DataSourceDetailResponse> {
@@ -54,6 +82,12 @@ export class DataSourceService extends BaseService {
     }
   }
 
+  /**
+   * 创建数据源（仅限管理员操作）
+   * @param {DataSourceDto.CreateDataSourceRequest} createRequest 创建数据源参数
+   * @returns {Promise<DataSourceVo.DataSourceDetailResponse>} 新增后的数据源详情
+   * @throws {Error} 当前用户非管理员时抛出异常
+   */
   public async createDataSource(
     createRequest: DataSourceDto.CreateDataSourceRequest
   ): Promise<DataSourceVo.DataSourceDetailResponse> {
@@ -76,6 +110,12 @@ export class DataSourceService extends BaseService {
     return await this.getDataSource({ id: dataSourceId })
   }
 
+  /**
+   * 更新数据源配置（仅限管理员操作）
+   * @param {DataSourceDto.UpdateDataSourceRequest} updateRequest 更新请求参数，包含数据源 ID
+   * @returns {Promise<DataSourceVo.DataSourceDetailResponse>} 更新后的数据源详情
+   * @throws {Error} 当前用户非管理员、或数据源不存在、或保存失败时抛出异常
+   */
   public async updateDataSource(
     updateRequest: DataSourceDto.UpdateDataSourceRequest
   ): Promise<DataSourceVo.DataSourceDetailResponse> {
@@ -93,6 +133,12 @@ export class DataSourceService extends BaseService {
     return await this.getDataSource({ id: updateRequest.id })
   }
 
+  /**
+   * 删除数据源（仅限管理员操作）
+   * @param {DataSourceDto.DeleteDataSourceRequest} deleteRequest 删除请求参数，包含数据源 ID
+   * @returns {Promise<boolean>} 是否删除成功
+   * @throws {Error} 当前用户非管理员或数据源不存在时抛出异常
+   */
   public async deleteDataSource(deleteRequest: DataSourceDto.DeleteDataSourceRequest): Promise<boolean> {
     this.assertCurrentUserAdmin('仅管理员可删除数据源')
     await this.getDataSource({ id: deleteRequest.id })
@@ -104,6 +150,12 @@ export class DataSourceService extends BaseService {
     })
   }
 
+  /**
+   * 同步数据源表结构（仅限管理员操作，且目前只支持同步内置业务数据库 kanban_data）
+   * @param {DataSourceDto.SyncDataSourceSchemaRequest} syncRequest 同步请求参数，包含数据源 ID
+   * @returns {Promise<DataSourceVo.SyncDataSourceSchemaResponse>} 同步结果，包含表数量和列数量
+   * @throws {Error} 当前用户非管理员、数据源被禁用或不是内置业务库时抛出异常
+   */
   public async syncDataSourceSchema(
     syncRequest: DataSourceDto.SyncDataSourceSchemaRequest
   ): Promise<DataSourceVo.SyncDataSourceSchemaResponse> {
@@ -148,6 +200,12 @@ export class DataSourceService extends BaseService {
     }
   }
 
+  /**
+   * 获取指定数据源拥有的表列表
+   * @param {DataSourceDto.GetDataSourceTablesRequest} queryRequest 查询参数，包含数据源 ID 和表名关键字
+   * @returns {Promise<DataSourceVo.DataSourceTableItem[]>} 表列表
+   * @throws {Error} 数据源不存在时抛出异常
+   */
   public async getDataSourceTables(
     queryRequest: DataSourceDto.GetDataSourceTablesRequest
   ): Promise<DataSourceVo.DataSourceTableItem[]> {
@@ -155,6 +213,12 @@ export class DataSourceService extends BaseService {
     return await this.dataSourceMapper.getDataSourceTables(queryRequest.id, queryRequest.keyword?.trim() || '')
   }
 
+  /**
+   * 获取指定数据源中某张表的所有列元数据列表
+   * @param {DataSourceDto.GetDataSourceColumnsRequest} queryRequest 查询参数，包含数据源 ID 和目标表名
+   * @returns {Promise<DataSourceVo.DataSourceColumnItem[]>} 列元数据列表
+   * @throws {Error} 数据源不存在时抛出异常
+   */
   public async getDataSourceColumns(
     queryRequest: DataSourceDto.GetDataSourceColumnsRequest
   ): Promise<DataSourceVo.DataSourceColumnItem[]> {

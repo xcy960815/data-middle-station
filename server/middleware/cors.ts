@@ -3,6 +3,11 @@
  * @link https://github.com/nuxt/nuxt/issues/14598
  */
 
+/**
+ * CORS 处理中间件事件处理器
+ * @param {H3Event} event H3 事件对象
+ * @returns {string | undefined} 返回响应状态内容或无返回值
+ */
 export default defineEventHandler((event) => {
   const requestOrigin = getHeader(event, 'origin') || ''
   const requestUrl = getRequestURL(event)

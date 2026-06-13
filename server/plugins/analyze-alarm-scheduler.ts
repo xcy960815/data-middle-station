@@ -2,17 +2,34 @@ import { getAnalyzeAlarmService } from '@/server/service/analyzeAlarmService'
 import { Logger } from '@/server/utils/logger'
 import schedule from 'node-schedule'
 
+/**
+ * 报警服务实例
+ * @type {AnalyzeAlarmService}
+ */
 const analyzeAlarmService = getAnalyzeAlarmService()
+
+/**
+ * 报警调度系统专用日志实例
+ * @type {Logger}
+ */
 const logger = new Logger({ fileName: 'analyze-alarm-scheduler', folderName: 'plugins' })
 
-// 存储内存中的 Job
+/**
+ * 存储内存中的 Job (键为 alarm.id，值为 schedule.Job)
+ * @type {Map<number, schedule.Job>}
+ */
 const scheduledJobs = new Map<number, schedule.Job>()
 
-// 正在执行中的报警检测（防止同一个 alarmId 并发执行）
+/**
+ * 正在执行中的报警检测集合（防止同一个 alarmId 并发执行）
+ * @type {Set<number>}
+ */
 const runningEvaluations = new Set<number>()
 
 /**
- * 刷新单个报警任务的调度
+ * 新增或更新单个报警任务的调度
+ * @param {AnalyzeAlarmDao.AnalyzeAlarmRecord} alarm 报警规则记录
+ * @returns {void}
  */
 export const upsertAlarmJob = (alarm: AnalyzeAlarmDao.AnalyzeAlarmRecord) => {
   const existingJob = scheduledJobs.get(alarm.id)
@@ -47,7 +64,9 @@ export const upsertAlarmJob = (alarm: AnalyzeAlarmDao.AnalyzeAlarmRecord) => {
 }
 
 /**
- * 移除报警任务的调度
+ * 移除报警任务的调度并取消 Job
+ * @param {number} alarmId 报警规则 ID
+ * @returns {void}
  */
 export const removeAlarmJob = (alarmId: number) => {
   const job = scheduledJobs.get(alarmId)
@@ -58,6 +77,11 @@ export const removeAlarmJob = (alarmId: number) => {
   }
 }
 
+/**
+ * 注册报警调度系统插件，在应用启动时加载已启用的报警规则并定期同步状态
+ * @param {NitroApp} nitroApp Nitro 应用对象
+ * @returns {Promise<void>}
+ */
 export default defineNitroPlugin(async (nitroApp) => {
   logger.info('🔔 报警调度系统初始化中...')
 

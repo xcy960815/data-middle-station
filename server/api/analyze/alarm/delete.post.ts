@@ -1,6 +1,11 @@
 import { getAnalyzeAlarmService } from '@/server/service/analyzeAlarmService'
 import { removeAlarmJob } from '@/server/plugins/analyze-alarm-scheduler'
 
+/**
+ * @desc API 处理器 - analyze/alarm/delete.post.ts (POST)
+ * @param {H3Event} event H3 请求事件对象
+ * @returns {Promise<any> | any} 响应数据
+ */
 export default defineEventHandler<Promise<ApiResponseI<boolean>>>(async (event) => {
   try {
     const body = await readBody<AnalyzeAlarmDto.AlarmIdRequest>(event)

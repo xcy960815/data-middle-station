@@ -18,21 +18,26 @@ export interface JwtPayload {
 }
 
 /**
- * JWT工具类
+ * JWT 工具类，提供 Token 签发、验证、生命周期校验及从 Cookie 获取 Token 等功能
  */
 export class JwtUtils {
   /**
-   * token 名称
+   * Token 存储于 Cookie 的名称
+   * @type {string}
    */
   public static readonly TOKEN_NAME: string = 'BearToken'
 
   /**
-   * 密钥
+   * 签名/验证密钥，从 runtimeConfig 获取
+   * @type {string}
+   * @private
    */
   private static readonly SECRET_KEY: string = useRuntimeConfig().jwtSecretKey
 
   /**
-   * 获取签名/验证使用的密钥
+   * 获取签名/验证使用的密钥，转换为 Buffer 类型以方便维护
+   * @returns {Secret} 密钥 Buffer
+   * @private
    */
   private static getSecretKey(): Secret {
     // 统一在这里将密钥转换为 Buffer，便于后续维护
@@ -40,14 +45,16 @@ export class JwtUtils {
   }
 
   /**
-   * token过期时间（默认24小时）
+   * Token 过期时间（例如 "24h"）
+   * @private
    */
   private static readonly JWT_EXPIRES_IN = useRuntimeConfig().jwtExpiresIn
 
   /**
-   * 生成token
-   * @param payload 载荷数据
-   * @returns token字符串
+   * 生成新的 JWT Token
+   * @param {JwtPayload} payload 载荷数据，包含用户信息
+   * @returns {string} 生成的 Token 字符串
+   * @throws {Error} 当生成失败时抛出异常
    */
   public static generateToken(payload: JwtPayload): string {
     try {
@@ -63,9 +70,12 @@ export class JwtUtils {
   }
 
   /**
-   * 验证token
-   * @param token token字符串
-   * @returns 解析后的payload数据
+   * 验证并解析 JWT Token
+   * @param {string} token 待验证的 Token 字符串
+   * @returns {JwtPayload} 解析后的 Payload 载荷数据
+   * @throws {TokenExpiredError} 当 Token 已过期时抛出
+   * @throws {JsonWebTokenError} 当 Token 无效时抛出
+   * @throws {Error} 当验证失败时抛出通用异常
    */
   public static verifyToken(token: string): JwtPayload {
     try {
@@ -85,17 +95,19 @@ export class JwtUtils {
   }
 
   /**
-   * 从请求头中获取token
-   * @param event H3事件对象
-   * @returns token字符串或null
+   * 从请求上下文中获取 Cookie 里的 Token
+   * @param {H3Event<EventHandlerRequest>} event H3 请求事件对象
+   * @returns {string | null} 找到的 Token 字符串，或 null
    */
   public static getTokenFromCookie(event: H3Event<EventHandlerRequest>): string | null {
     return getCookie(event, this.TOKEN_NAME) || null
   }
 
   /**
-   * @校验token是否过期
+   * 校验 Token 载荷是否已过期
    * @description 这里直接使用已解析的 payload，避免重复解析 token
+   * @param {JwtPayload} payload 已解析的 JWT 载荷数据
+   * @returns {boolean} 如果已过期返回 true，否则返回 false
    */
   public static checkTokenExpired(payload: JwtPayload): boolean {
     // 没有 exp 字段，视为不过期（由业务自行控制）

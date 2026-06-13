@@ -8,11 +8,36 @@ import { Logger } from '@/server/utils/logger'
 
 const logger = new Logger({ fileName: 'analyze-alarm-service', folderName: 'server' })
 
+/**
+ * @class AnalyzeAlarmService
+ * @extends BaseService
+ * @description 分析图表报警服务类，负责报警规则的 CRUD、报警规则调度与触发评估、发送通知以及报警日志记录。
+ */
 export class AnalyzeAlarmService extends BaseService {
+  /**
+   * 报警规则数据访问映射器
+   * @private
+   * @type {AnalyzeAlarmMapper}
+   */
   private analyzeAlarmMapper: AnalyzeAlarmMapper
+
+  /**
+   * 分析图表服务类，用于获取图表配置
+   * @private
+   * @type {AnalyzeService}
+   */
   private analyzeService: AnalyzeService
+
+  /**
+   * 图表数据服务类，用于获取图表当前的实时数据
+   * @private
+   * @type {ChartDataService}
+   */
   private chartDataService: ChartDataService
 
+  /**
+   * 构造函数，初始化映射器和服务实例
+   */
   constructor() {
     super()
     this.analyzeAlarmMapper = new AnalyzeAlarmMapper()
@@ -20,14 +45,32 @@ export class AnalyzeAlarmService extends BaseService {
     this.chartDataService = new ChartDataService()
   }
 
+  /**
+   * 获取报警规则列表
+   * @public
+   * @param {AnalyzeAlarmDao.GetAnalyzeAlarmParams} params 查询过滤参数
+   * @returns {Promise<AnalyzeAlarmDao.AnalyzeAlarmRecord[]>} 报警规则数组
+   */
   public async getAlarms(params: AnalyzeAlarmDao.GetAnalyzeAlarmParams) {
     return await this.analyzeAlarmMapper.getAnalyzeAlarms(params)
   }
 
+  /**
+   * 根据 ID 获取单个报警规则详情
+   * @public
+   * @param {number} id 报警规则 ID
+   * @returns {Promise<AnalyzeAlarmDao.AnalyzeAlarmRecord | null>} 报警规则记录，若不存在则返回 null
+   */
   public async getAlarmById(id: number) {
     return await this.analyzeAlarmMapper.getAnalyzeAlarmById(id)
   }
 
+  /**
+   * 创建新的报警规则，并尝试注册定时调度任务
+   * @public
+   * @param {Omit<AnalyzeAlarmDao.CreateAnalyzeAlarmParams, 'createdBy' | 'updatedBy'>} params 报警规则创建参数
+   * @returns {Promise<number>} 新创建的报警规则 ID
+   */
   public async createAlarm(params: Omit<AnalyzeAlarmDao.CreateAnalyzeAlarmParams, 'createdBy' | 'updatedBy'>) {
     const { createdBy, updatedBy } = await this.getDefaultInfo()
     const id = await this.analyzeAlarmMapper.createAnalyzeAlarm({
@@ -46,6 +89,12 @@ export class AnalyzeAlarmService extends BaseService {
     return id
   }
 
+  /**
+   * 更新报警规则，并同步更新定时调度任务
+   * @public
+   * @param {Omit<AnalyzeAlarmDao.UpdateAnalyzeAlarmParams, 'updatedBy'>} params 报警规则更新参数
+   * @returns {Promise<boolean>} 是否更新成功
+   */
   public async updateAlarm(params: Omit<AnalyzeAlarmDao.UpdateAnalyzeAlarmParams, 'updatedBy'>) {
     const { updatedBy } = await this.getDefaultInfo()
     const success = await this.analyzeAlarmMapper.updateAnalyzeAlarm({
@@ -63,20 +112,45 @@ export class AnalyzeAlarmService extends BaseService {
     return success
   }
 
+  /**
+   * 删除指定的报警规则
+   * @public
+   * @param {number} id 报警规则 ID
+   * @returns {Promise<boolean>} 是否删除成功
+   */
   public async deleteAlarm(id: number) {
     return await this.analyzeAlarmMapper.deleteAnalyzeAlarm(id)
   }
 
+  /**
+   * 获取指定报警规则的历史评估执行日志列表
+   * @public
+   * @param {number} alarmId 报警规则 ID
+   * @returns {Promise<AnalyzeAlarmDao.AnalyzeAlarmLogRecord[]>} 报警日志记录数组
+   */
   public async getAlarmLogs(alarmId: number) {
     return await this.analyzeAlarmMapper.getAnalyzeAlarmLogs(alarmId)
   }
 
+  /**
+   * 切换报警规则的激活/启用状态
+   * @public
+   * @param {number} id 报警规则 ID
+   * @throws {Error} 报警规则不存在时抛出异常
+   * @returns {Promise<boolean>} 更新后的状态是否保存成功
+   */
   public async toggleAlarmStatus(id: number) {
     const alarm = await this.getAlarmById(id)
     if (!alarm) throw new Error('报警规则不存在')
     return await this.updateAlarm({ id, isActive: alarm.isActive ? 0 : 1 })
   }
 
+  /**
+   * 评估单个报警规则。加载图表数据并校验条件，若触发则根据策略发送通知并记录日志。
+   * @public
+   * @param {AnalyzeAlarmDao.AnalyzeAlarmRecord} alarm 待评估的报警规则记录
+   * @returns {Promise<void>}
+   */
   public async evaluateAlarm(alarm: AnalyzeAlarmDao.AnalyzeAlarmRecord): Promise<void> {
     const executeTime = new Date().toISOString().slice(0, 19).replace('T', ' ')
     let isTriggered = 0
@@ -151,6 +225,13 @@ export class AnalyzeAlarmService extends BaseService {
     })
   }
 
+  /**
+   * 检查实时数据行是否满足报警条件。只要有一行数据满足全部条件即可触发。
+   * @private
+   * @param {Array<AnalyzeDataVo.AnalyzeData>} data 图表实时查询数据数组
+   * @param {AnalyzeAlarmDao.AlarmCondition[]} conditions 报警条件配置列表
+   * @returns {{ met: boolean, detail: any }} 包含是否触发(met)及触发行明细数据(detail)的对象
+   */
   private checkConditions(data: Array<AnalyzeDataVo.AnalyzeData>, conditions: AnalyzeAlarmDao.AlarmCondition[]) {
     // 简化逻辑：只要数据中有任何一行满足所有条件，即视为触发
     if (!data || data.length === 0) return { met: false, detail: null }
@@ -197,6 +278,12 @@ export class AnalyzeAlarmService extends BaseService {
     return { met: false, detail: null }
   }
 
+  /**
+   * 根据报警策略（如每次、每天一次、状态改变时）检查本次触发是否应该发送通知
+   * @private
+   * @param {AnalyzeAlarmDao.AnalyzeAlarmRecord} alarm 报警规则记录
+   * @returns {Promise<boolean>} 是否应发送通知
+   */
   private async checkAlarmStrategy(alarm: AnalyzeAlarmDao.AnalyzeAlarmRecord): Promise<boolean> {
     if (alarm.alarmStrategy === 'always') return true
 
@@ -221,6 +308,14 @@ export class AnalyzeAlarmService extends BaseService {
     return true
   }
 
+  /**
+   * 发送报警通知（支持邮件通知和 Webhook）
+   * @private
+   * @param {AnalyzeAlarmDao.AnalyzeAlarmRecord} alarm 报警规则记录
+   * @param {string} analyzeName 分析看板名称
+   * @param {*} detail 触发报警的行明细数据
+   * @returns {Promise<void>}
+   */
   private async sendNotification(alarm: AnalyzeAlarmDao.AnalyzeAlarmRecord, analyzeName: string, detail: any) {
     const config = alarm.notificationConfig
     if (config.emails && config.emails.length > 0) {
@@ -235,8 +330,16 @@ export class AnalyzeAlarmService extends BaseService {
   }
 }
 
+/**
+ * 单例报警服务实例
+ * @type {AnalyzeAlarmService | null}
+ */
 let analyzeAlarmServiceInstance: AnalyzeAlarmService | null = null
 
+/**
+ * 获取 AnalyzeAlarmService 的单例实例
+ * @returns {AnalyzeAlarmService} 报警服务实例
+ */
 export const getAnalyzeAlarmService = (): AnalyzeAlarmService => {
   if (!analyzeAlarmServiceInstance) {
     analyzeAlarmServiceInstance = new AnalyzeAlarmService()

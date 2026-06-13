@@ -5,11 +5,11 @@ import dayjs from 'dayjs'
  */
 
 /**
- * 计算重复任务的下次执行时间
- * @param recurringDays 重复日期数组 (0=周日, 1=周一, ..., 6=周六)
- * @param recurringTime 重复时间 (HH:mm 格式)
- * @param currentTime 当前时间（可选，默认为当前时间）
- * @returns 下次执行时间的ISO字符串，如果无效则返回null
+ * 计算循环（重复）定时任务的下一次实际执行时间
+ * @param {number[]} recurringDays 重复执行的星期天数数组 (0代表周日, 1-6代表周一至周六)
+ * @param {string} recurringTime 重复执行的每天时刻 (HH:mm 格式，如 "08:30")
+ * @param {Date} [currentTime] 用于计算的当前时间基准，默认使用当前系统时间
+ * @returns {string | null} 格式化后的下次执行时间字符串 (YYYY-MM-DD HH:mm:ss)；如果配置无效或无法计算，则返回 null
  */
 export function calculateNextExecutionTime(
   recurringDays: number[],

@@ -3,10 +3,28 @@ import { BaseMapper, Column, Mapping, entityColumnsMap, mapToTarget } from '@/se
 import { convertToSqlProperties } from '@/server/utils/databaseHelper'
 import type { ResultSetHeader } from 'mysql2'
 
+/**
+ * 默认使用的数据库连接池名称
+ * @type {string}
+ */
 const DATA_SOURCE_NAME = 'data_middle_station'
+
+/**
+ * 数据集主表的表名
+ * @type {string}
+ */
 const DATASET_TABLE_NAME = '`dataset`'
+
+/**
+ * 数据集配置历史表的表名
+ * @type {string}
+ */
 const DATASET_CONFIG_TABLE_NAME = '`dataset_config`'
 
+/**
+ * 数据集主表的所有字段列表
+ * @type {string[]}
+ */
 const DATASET_FIELDS = [
   'id',
   'dataset_name',
@@ -20,6 +38,10 @@ const DATASET_FIELDS = [
   'is_deleted'
 ]
 
+/**
+ * 数据集配置历史表的所有字段列表
+ * @type {string[]}
+ */
 const DATASET_CONFIG_FIELDS = [
   'id',
   'dataset_id',
@@ -33,67 +55,156 @@ const DATASET_CONFIG_FIELDS = [
   'is_deleted'
 ]
 
+/**
+ * 数据集列表排序字段映射表，将前端字段名映射为数据库带表前缀的列名
+ * @type {Record<DatasetDao.DatasetListSortField, string>}
+ */
 const DATASET_LIST_SORT_FIELD_MAP: Record<DatasetDao.DatasetListSortField, string> = {
   datasetName: 'd.dataset_name',
   createTime: 'd.create_time',
   updateTime: 'd.update_time'
 }
 
+/**
+ * 数据集基本信息实体映射类，用于把数据库行数据映射成数据集记录对象。
+ * @implements {DatasetDao.DatasetRecord}
+ * @implements {IColumnTarget}
+ */
 class DatasetMapping implements DatasetDao.DatasetRecord, IColumnTarget {
+  /**
+   * 列映射方法，将数据库原始行数据映射为当前类的属性
+   * @param {Array<Row> | Row} data 原始数据库行数据
+   * @returns {Array<Row> | Row} 映射后的数据
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 
+  /**
+   * 数据集 ID
+   * @type {number}
+   */
   @Column('id')
   id!: number
 
+  /**
+   * 数据集名称
+   * @type {string}
+   */
   @Column('dataset_name')
   datasetName!: string
 
+  /**
+   * 数据集描述
+   * @type {string}
+   */
   @Column('dataset_desc')
   datasetDesc!: string
 
+  /**
+   * 数据集状态
+   * @type {DatasetDao.DatasetStatus}
+   */
   @Column('status')
   status!: DatasetDao.DatasetStatus
 
+  /**
+   * 当前生效的配置 ID
+   * @type {number | null}
+   */
   @Column('current_config_id')
   currentConfigId!: number | null
 
+  /**
+   * 创建时间
+   * @type {string}
+   */
   @Column('create_time')
   createTime!: string
 
+  /**
+   * 更新时间
+   * @type {string}
+   */
   @Column('update_time')
   updateTime!: string
 
+  /**
+   * 创建人账号
+   * @type {string}
+   */
   @Column('created_by')
   createdBy!: string
 
+  /**
+   * 更新人账号
+   * @type {string}
+   */
   @Column('updated_by')
   updatedBy!: string
 
+  /**
+   * 是否删除标记
+   * @type {number | null}
+   */
   @Column('is_deleted')
   isDeleted!: number | null
 }
 
+/**
+ * 数据集配置实体映射类，用于把数据库行数据映射成数据集配置对象。
+ * @implements {DatasetDao.DatasetConfigRecord}
+ * @implements {IColumnTarget}
+ */
 class DatasetConfigMapping implements DatasetDao.DatasetConfigRecord, IColumnTarget {
+  /**
+   * 缓存的反序列化后的字段配置列表
+   * @type {DatasetDao.DatasetFieldConfigItem[]}
+   * @private
+   */
   private mappedFieldsConfig: DatasetDao.DatasetFieldConfigItem[] = []
 
+  /**
+   * 列映射方法，将数据库原始行数据映射为当前类的属性
+   * @param {Array<Row> | Row} data 原始数据库行数据
+   * @returns {Array<Row> | Row} 映射后的数据
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 
+  /**
+   * 配置 ID
+   * @type {number}
+   */
   @Column('id')
   id!: number
 
+  /**
+   * 数据集 ID
+   * @type {number}
+   */
   @Column('dataset_id')
   datasetId!: number
 
+  /**
+   * 版本号
+   * @type {number}
+   */
   @Column('version_no')
   versionNo!: number
 
+  /**
+   * 查询 SQL
+   * @type {string}
+   */
   @Column('query_sql')
   querySql!: string
 
+  /**
+   * 字段配置信息，包含 getter 和 setter，用于 JSON 字符串和对象的自动转换
+   * @type {DatasetDao.DatasetFieldConfigItem[]}
+   */
   @Column('fields_config')
   get fieldsConfig(): DatasetDao.DatasetFieldConfigItem[] {
     return this.mappedFieldsConfig
@@ -107,81 +218,155 @@ class DatasetConfigMapping implements DatasetDao.DatasetConfigRecord, IColumnTar
     this.mappedFieldsConfig = typeof value === 'string' ? JSON.parse(value) : value
   }
 
+  /**
+   * 变更说明
+   * @type {string | null}
+   */
   @Column('change_note')
   changeNote!: string | null
 
+  /**
+   * 创建时间
+   * @type {string}
+   */
   @Column('create_time')
   createTime!: string
 
+  /**
+   * 创建人
+   * @type {string}
+   */
   @Column('created_by')
   createdBy!: string
 
+  /**
+   * 更新时间
+   * @type {string}
+   */
   @Column('update_time')
   updateTime!: string
 
+  /**
+   * 是否删除标记
+   * @type {number | null}
+   */
   @Column('is_deleted')
   isDeleted!: number | null
 }
 
+/**
+ * 数据集列表项实体映射类，用于将包含关联字段的数据库行映射为列表展示对象。
+ * @implements {DatasetVo.DatasetListItem}
+ * @implements {IColumnTarget}
+ */
 class DatasetListMapping implements DatasetVo.DatasetListItem, IColumnTarget {
+  /**
+   * 列映射方法，将数据库原始行数据映射为当前类的属性
+   * @param {Array<Row> | Row} data 原始数据库行数据
+   * @returns {Array<Row> | Row} 映射后的数据
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
 
+  /**
+   * 数据集 ID
+   * @type {number}
+   */
   @Column('id')
   id!: number
 
+  /**
+   * 数据集名称
+   * @type {string}
+   */
   @Column('dataset_name')
   datasetName!: string
 
+  /**
+   * 数据集描述
+   * @type {string}
+   */
   @Column('dataset_desc')
   datasetDesc!: string
 
+  /**
+   * 数据集查询 SQL
+   * @type {string}
+   */
   @Column('query_sql')
   querySql!: string
 
+  /**
+   * 数据集状态
+   * @type {DatasetDao.DatasetStatus}
+   */
   @Column('status')
   status!: DatasetDao.DatasetStatus
 
+  /**
+   * 创建时间
+   * @type {string}
+   */
   @Column('create_time')
   createTime!: string
 
+  /**
+   * 更新时间
+   * @type {string}
+   */
   @Column('update_time')
   updateTime!: string
 
+  /**
+   * 创建人
+   * @type {string}
+   */
   @Column('created_by')
   createdBy!: string
 
+  /**
+   * 更新人
+   * @type {string}
+   */
   @Column('updated_by')
   updatedBy!: string
 
+  /**
+   * 字段数量
+   * @type {number}
+   */
   @Column('field_count')
   fieldCount!: number
 }
 
 /**
- * @desc 数据集 mapper，负责对数据集及数据集配置的增删改查
+ * 数据集 Mapper 类，负责对数据集基本信息及其配置版本进行增删改查。
+ * @extends {BaseMapper}
  */
 export class DatasetMapper extends BaseMapper {
   /**
-   * @desc 当前 mapper 使用的数据源名称
+   * 当前 mapper 使用的数据源名称
+   * @type {string}
    */
   public dataSourceName = DATA_SOURCE_NAME
 
   /**
-   * @desc 执行 SQL 的便捷封装（保留泛型能力）
-   * @param sql 需要执行的 SQL 语句
-   * @param params 预编译参数数组
-   * @returns 查询或写入操作的执行结果
+   * 执行 SQL 的便捷封装（保留泛型能力）
+   * @template T 返回的数据类型
+   * @param {string} sql 需要执行的 SQL 语句
+   * @param {Array<any>} [params] 预编译参数数组
+   * @returns {Promise<T>} 查询或写入操作的执行结果
+   * @override
    */
   public override async exe<T>(sql: string, params?: Array<any>): Promise<T> {
     return await super.exe<T>(sql, params)
   }
 
   /**
-   * @desc 创建数据集
-   * @param createParams 创建参数
-   * @returns 新创建的数据集 ID
+   * 创建数据集
+   * @param {DatasetDao.CreateDatasetParams} createParams 创建参数
+   * @returns {Promise<number>} 新创建的数据集 ID
    */
   public async createDataset(createParams: DatasetDao.CreateDatasetParams): Promise<number> {
     const { keys, values } = convertToSqlProperties(createParams)
@@ -191,9 +376,9 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * @desc 更新数据集基本信息
-   * @param updateParams 更新参数
-   * @returns 是否更新成功
+   * 更新数据集基本信息
+   * @param {DatasetDao.UpdateDatasetParams} updateParams 更新参数
+   * @returns {Promise<boolean>} 是否更新成功
    */
   public async updateDataset(updateParams: DatasetDao.UpdateDatasetParams): Promise<boolean> {
     const { keys, values } = convertToSqlProperties(updateParams)
@@ -204,9 +389,9 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * @desc 删除数据集（逻辑删除）
-   * @param deleteParams 删除参数
-   * @returns 是否删除成功
+   * 删除数据集（逻辑删除）
+   * @param {DatasetDao.DeleteDatasetParams} deleteParams 删除参数
+   * @returns {Promise<boolean>} 是否删除成功
    */
   public async deleteDataset(deleteParams: DatasetDao.DeleteDatasetParams): Promise<boolean> {
     const sql = `update ${DATASET_TABLE_NAME} set is_deleted = 1, updated_by = ?, update_time = ? where id = ? and is_deleted = 0`
@@ -219,9 +404,10 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取单个数据集详情
-   * @param query 查询参数
-   * @returns 数据集记录
+   * 获取单个数据集详情
+   * @template T 返回的数据集记录类型，默认继承自 DatasetDao.DatasetRecord
+   * @param {DatasetDao.GetDatasetParams} query 查询参数
+   * @returns {Promise<T>} 数据集记录
    */
   @Mapping(DatasetMapping)
   public async getDataset<T extends DatasetDao.DatasetRecord = DatasetDao.DatasetRecord>(
@@ -233,9 +419,9 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取数据集数量
-   * @param query 列表查询参数
-   * @returns 数据集数量
+   * 获取数据集数量
+   * @param {DatasetDao.GetDatasetListParams} query 列表查询参数
+   * @returns {Promise<number>} 数据集数量
    */
   public async countDatasets(query: DatasetDao.GetDatasetListParams): Promise<number> {
     const { whereClause, params } = this.buildDatasetListQuery(query)
@@ -249,9 +435,10 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取数据集列表（分页）
-   * @param query 列表查询参数
-   * @returns 数据集列表
+   * 获取数据集列表（分页）
+   * @template T 返回的列表项类型，默认继承自 DatasetVo.DatasetListItem
+   * @param {DatasetDao.GetDatasetListParams} query 列表查询参数
+   * @returns {Promise<T[]>} 数据集列表
    */
   @Mapping(DatasetListMapping)
   public async getDatasetList<T extends DatasetVo.DatasetListItem = DatasetVo.DatasetListItem>(
@@ -275,9 +462,10 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取数据集配置详情
-   * @param query 查询参数
-   * @returns 数据集配置记录
+   * 获取数据集配置详情
+   * @template T 返回配置记录类型，默认继承自 DatasetDao.DatasetConfigRecord
+   * @param {DatasetDao.GetDatasetConfigParams} query 查询参数
+   * @returns {Promise<T>} 数据集配置记录
    */
   @Mapping(DatasetConfigMapping)
   public async getDatasetConfig<T extends DatasetDao.DatasetConfigRecord = DatasetDao.DatasetConfigRecord>(
@@ -294,9 +482,9 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * @desc 创建数据集配置版本
-   * @param createParams 创建参数
-   * @returns 新创建的配置版本 ID
+   * 创建数据集配置版本
+   * @param {DatasetDao.CreateDatasetConfigParams} createParams 创建参数
+   * @returns {Promise<number>} 新创建的配置版本 ID
    */
   public async createDatasetConfig(createParams: DatasetDao.CreateDatasetConfigParams): Promise<number> {
     const { keys, values } = convertToSqlProperties(createParams)
@@ -306,9 +494,9 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取数据集配置的下一个版本号
-   * @param datasetId 数据集 ID
-   * @returns 下一个版本号
+   * 获取数据集配置的下一个版本号
+   * @param {number} datasetId 数据集 ID
+   * @returns {Promise<number>} 下一个版本号
    */
   public async getNextVersionNo(datasetId: number): Promise<number> {
     const sql = `select coalesce(max(version_no), 0) + 1 as next_version_no from ${DATASET_CONFIG_TABLE_NAME} where dataset_id = ?`
@@ -316,6 +504,12 @@ export class DatasetMapper extends BaseMapper {
     return Number(result?.[0]?.next_version_no || 1)
   }
 
+  /**
+   * 构造数据集列表查询的 where 子句及参数
+   * @param {DatasetDao.GetDatasetListParams} query 列表查询参数
+   * @returns {{ whereClause: string; params: string[] }} 返回的 where 子句和参数数组
+   * @private
+   */
   private buildDatasetListQuery(query: DatasetDao.GetDatasetListParams) {
     const conditions = ['d.is_deleted = 0']
     const params: string[] = []

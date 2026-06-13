@@ -14,6 +14,11 @@ const logger = new Logger({
   folderName: 'api'
 })
 
+/**
+ * @desc API 处理器 - sendEmail.post.ts (POST)
+ * @param {H3Event} event H3 请求事件对象
+ * @returns {Promise<any> | any} 响应数据
+ */
 export default defineEventHandler<Promise<ApiResponseI<SendEmailVo.SendEmailResponse>>>(async (event) => {
   let sendEmailRequest: SendEmailDto.SendChartEmailRequest | null = null
   try {

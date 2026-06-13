@@ -4,16 +4,20 @@ import figlet from 'figlet'
 import gradient from 'gradient-string'
 import mysql from 'mysql2/promise'
 
+/**
+ * 数据库模块专用日志实例
+ * @type {Logger}
+ */
 const logger = new Logger({
   fileName: 'database',
   folderName: 'database'
 })
 
 /**
- * @desc 获取数据库配置
- * @returns {Promise<Array<NodeJS.DataSourceItem>>}
+ * 获取数据库配置，并在控制台格式化输出酷炫的启动字样与连接信息
+ * @returns {NodeJS.DataSourceConfig} 数据库配置对象
  */
-const getDatasourceConfig = () => {
+const getDatasourceConfig = (): NodeJS.DataSourceConfig => {
   const serviceDbName = useRuntimeConfig().serviceDbName
   const serviceDbHost = useRuntimeConfig().serviceDbHost
   const serviceDbPort = useRuntimeConfig().serviceDbPort
@@ -124,6 +128,8 @@ const getDatasourceConfig = () => {
 
 /**
  * 检查所有 MySQL 连接池是否可用
+ * @param {Map<string, mysql.Pool>} pools 连接池 Map
+ * @returns {Promise<void>}
  */
 export async function checkMysqlConnection(pools: Map<string, mysql.Pool>) {
   for (const [name, pool] of pools.entries()) {
@@ -141,7 +147,9 @@ export async function checkMysqlConnection(pools: Map<string, mysql.Pool>) {
 }
 
 /**
- * 注册mysql插件
+ * 注册 mysql 插件并将其挂载到 nitroApp 上
+ * @param {NitroApp} nitroApp Nitro 应用对象
+ * @returns {void}
  */
 export default defineNitroPlugin((nitroApp) => {
   // 获取数据库配置

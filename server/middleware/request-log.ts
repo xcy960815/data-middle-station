@@ -1,6 +1,10 @@
 import { Logger } from '@/server/utils/logger'
 import type { EventHandlerRequest, H3Event } from 'h3'
 
+/**
+ * 请求日志中间件专用的日志实例
+ * @type {Logger}
+ */
 const logger = new Logger({
   fileName: 'log',
   folderName: 'middleware'
@@ -9,6 +13,8 @@ const logger = new Logger({
 /**
  * 获取客户端真实 IP 地址
  * 与 `check-auth` 中的实现保持一致，便于维护
+ * @param {H3Event<EventHandlerRequest>} event H3 事件对象
+ * @returns {string} 客户端真实 IP 地址
  */
 function getRealClientIP(event: H3Event<EventHandlerRequest>): string {
   // 优先从代理头中获取真实 IP
@@ -45,6 +51,8 @@ function getRealClientIP(event: H3Event<EventHandlerRequest>): string {
 /**
  * @desc API访问日志中间件
  * 记录用户访问API接口的详细信息
+ * @param {H3Event<EventHandlerRequest>} event H3 事件对象
+ * @returns {void}
  */
 export default defineEventHandler((event: H3Event<EventHandlerRequest>) => {
   const { pathname } = getRequestURL(event)

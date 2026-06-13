@@ -26,6 +26,7 @@ import { calculateNextExecutionTime } from '../scheduler/schedulerUtils'
  *  - completed: 执行完成（仅 scheduled 类型最终态）
  *  - failed:    执行失败
  *  - cancelled: 已取消
+ * @type {{ readonly Pending: "pending", readonly Running: "running", readonly Completed: "completed", readonly Failed: "failed", readonly Cancelled: "cancelled" }}
  */
 export const TaskStatus = {
   Pending: 'pending',
@@ -41,6 +42,7 @@ export type TaskStatusValue = ScheduledEmailDao.Status
  * @desc 任务类型枚举
  *  - scheduled: 一次性定时任务
  *  - recurring: 重复任务（按周天 + HH:mm 触发）
+ * @type {{ readonly Scheduled: "scheduled", readonly Recurring: "recurring" }}
  */
 export const TaskType = {
   Scheduled: 'scheduled',
@@ -54,6 +56,8 @@ export type TaskTypeValue = ScheduledEmailDao.TaskType
 /**
  * @desc 是否允许编辑该任务
  * 规则：仅 pending / failed 允许编辑
+ * @param {TaskStatusValue} status 任务状态
+ * @returns {boolean} 是否允许编辑
  */
 export const canEditTask = (status: TaskStatusValue): boolean =>
   status === TaskStatus.Pending || status === TaskStatus.Failed
@@ -61,12 +65,16 @@ export const canEditTask = (status: TaskStatusValue): boolean =>
 /**
  * @desc 是否允许删除该任务
  * 规则：running 状态禁止删除（防止抢占中被误删）
+ * @param {TaskStatusValue} status 任务状态
+ * @returns {boolean} 是否允许删除
  */
 export const canDeleteTask = (status: TaskStatusValue): boolean => status !== TaskStatus.Running
 
 /**
  * @desc 是否允许立即执行该任务
  * 规则：仅 pending / failed 允许手动触发
+ * @param {TaskStatusValue} status 任务状态
+ * @returns {boolean} 是否允许立即执行
  */
 export const canExecuteTask = (status: TaskStatusValue): boolean =>
   status === TaskStatus.Pending || status === TaskStatus.Failed
@@ -74,6 +82,8 @@ export const canExecuteTask = (status: TaskStatusValue): boolean =>
 /**
  * @desc 是否允许在 pending ↔ cancelled 之间切换
  * 规则：只有这两个状态可以互相切换
+ * @param {TaskStatusValue} status 任务状态
+ * @returns {boolean} 是否允许切换状态
  */
 export const canToggleTaskStatus = (status: TaskStatusValue): boolean =>
   status === TaskStatus.Pending || status === TaskStatus.Cancelled
@@ -86,6 +96,8 @@ export const canToggleTaskStatus = (status: TaskStatusValue): boolean =>
  *  - 未激活的任务不接管
  *  - scheduled 单次任务：仅当状态为 pending 且有 scheduleTime 时接管
  *  - recurring 重复任务：只要不是 cancelled 都接管（pending / failed 都可下次周期再触发）
+ * @param {ScheduledEmailVo.ScheduledEmailTaskResponse} task 任务配置及状态响应对象
+ * @returns {boolean} 是否应该被内存调度器接管
  */
 export const shouldScheduleTask = (task: ScheduledEmailVo.ScheduledEmailTaskResponse): boolean => {
   if (!task.isActive) {
@@ -104,6 +116,8 @@ export const shouldScheduleTask = (task: ScheduledEmailVo.ScheduledEmailTaskResp
  * @description
  *  - scheduled: 只允许 pending / failed → running（completed 是最终态，不可重抢）
  *  - recurring: 允许 pending / failed / completed → running（completed 仅在历史遗留数据中出现）
+ * @param {TaskTypeValue} taskType 任务类型
+ * @returns {TaskStatusValue[]} 允许抢占并转换为 running 的状态列表
  */
 export const getClaimAllowedStatuses = (taskType: TaskTypeValue): TaskStatusValue[] =>
   taskType === TaskType.Recurring
@@ -116,6 +130,12 @@ export const getClaimAllowedStatuses = (taskType: TaskTypeValue): TaskStatusValu
  * @desc 计算任务下一次执行时间
  *  - scheduled: 直接返回原 scheduleTime（一次性任务）
  *  - recurring: 根据 recurringDays / recurringTime 计算下一次匹配的时间
+ * @param {object} task 包含任务类型及触发配置的对象
+ * @param {TaskTypeValue} task.taskType 任务类型
+ * @param {string | null} [task.scheduleTime] 单次执行的计划时间
+ * @param {number[] | null} [task.recurringDays] 重复周期（周天数组，0为周日，1-6为周一至周六）
+ * @param {string | null} [task.recurringTime] 重复执行的时间点（格式 HH:mm）
+ * @returns {string | null} 下次执行的时间字符串，如果无法计算则返回 null
  */
 export const calculateTaskNextExecutionTime = (task: {
   taskType: TaskTypeValue

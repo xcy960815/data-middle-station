@@ -1,5 +1,10 @@
 import dayjs from 'dayjs'
 
+/**
+ * @desc API 处理器 - eventsource.ts (ALL)
+ * @param {H3Event} event H3 请求事件对象
+ * @returns {Promise<any> | any} 响应数据
+ */
 export default defineEventHandler((event) => {
   if (String(useRuntimeConfig().enableDemoPages ?? 'false') !== 'true') {
     throw createError({ statusCode: 404, statusMessage: 'Page Not Found' })

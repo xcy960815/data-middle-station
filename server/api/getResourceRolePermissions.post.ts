@@ -2,6 +2,11 @@ import { ResourcePermissionService } from '@/server/service/resourcePermissionSe
 
 const resourcePermissionService = new ResourcePermissionService()
 
+/**
+ * @desc API 处理器 - getResourceRolePermissions.post.ts (POST)
+ * @param {H3Event} event H3 请求事件对象
+ * @returns {Promise<any> | any} 响应数据
+ */
 export default defineEventHandler<Promise<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>>(
   async (event) => {
     try {

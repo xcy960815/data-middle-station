@@ -4,7 +4,8 @@ import { batchFormatSqlKey, batchFormatSqlSet, convertToSqlProperties } from '@/
 import type { ResultSetHeader } from 'mysql2'
 
 /**
- * @desc 定时邮件任务基础字段
+ * 定时邮件任务基础字段列表
+ * @type {string[]}
  */
 const SCHEDULED_EMAIL_TASK_BASE_FIELDS = [
   'id',
@@ -30,55 +31,70 @@ const SCHEDULED_EMAIL_TASK_BASE_FIELDS = [
 ]
 
 /**
- * @desc 定时邮件任务表名
+ * 定时邮件任务表名
+ * @type {string}
  */
 const SCHEDULED_EMAIL_TASK_TABLE_NAME = 'scheduled_email_tasks'
 
 /**
- * @desc 数据源名称
+ * 数据源名称
+ * @type {string}
  */
 const DATA_SOURCE_NAME = 'data_middle_station'
 
 /**
- * @desc 定时邮件任务行数据映射，将数据库字段转换为任务实体
+ * 定时邮件任务行数据映射，将数据库字段转换为任务实体
+ * @implements {ScheduledEmailDao.ScheduledEmailRecord}
+ * @implements {IColumnTarget}
  */
 export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEmailRecord, IColumnTarget {
+  /**
+   * 属性与字段映射器
+   * @param {Array<Row> | Row} data 原始数据库行数据
+   * @returns {Array<Row> | Row} 映射后的属性对象
+   */
   columnsMapper(data: Array<Row> | Row): Array<Row> | Row {
     return mapToTarget(this, data, entityColumnsMap.get(this.constructor))
   }
   /**
-   * id
+   * 任务 ID 自增主键
+   * @type {number}
    */
   @Column('id')
   id!: number
 
   /**
-   * 任务名称
+   * 定时邮件任务名称
+   * @type {string}
    */
   @Column('task_name')
   taskName!: string
 
   /**
-   * 定时任务执行时间
+   * 单次任务的执行时间
+   * @type {string | null}
    * @example 2023-01-01 00:00:00
    */
   @Column('schedule_time')
   scheduleTime?: string | null
 
   /**
-   * 任务类型
+   * 任务类型，一次性任务还是循环任务
+   * @type {ScheduledEmailDao.TaskType}
    */
   @Column('task_type')
   taskType!: ScheduledEmailDao.TaskType
 
   /**
-   * 定时任务重复执行天数
+   * 循环执行的星期天数（如 [1, 2, 3] 代表周一、周二、周三）
+   * @type {number[] | null}
    */
   @Column('recurring_days')
   recurringDays?: number[] | null
 
   /**
    * 定时任务重复执行时间
+   * @type {string | null}
    * @example 00:00:00
    */
   @Column('recurring_time')
@@ -86,103 +102,119 @@ export class ScheduledEmailTaskMapping implements ScheduledEmailDao.ScheduledEma
 
   /**
    * 任务是否激活
+   * @type {boolean}
    */
   @Column('is_active')
   isActive!: boolean
 
   /**
-   * 下次执行时间
+   * 下次预计执行时间
+   * @type {string | null}
    * @example 2023-01-01 00:00:00
    */
   @Column('next_execution_time')
   nextExecutionTime?: string | null
 
   /**
-   * 邮件配置
+   * 邮件发送配置，包含收件人、抄送人、主题及内容等
+   * @type {ScheduledEmailDao.EmailConfig}
    */
   @Column('email_config')
   emailConfig!: ScheduledEmailDao.EmailConfig
 
   /**
    * 分析选项
+   * @type {ScheduledEmailDao.AnalyzeSnapshot}
    */
   @Column('analyze_options')
   analyzeOptions!: ScheduledEmailDao.AnalyzeSnapshot
 
   /**
    * 任务状态
+   * @type {ScheduledEmailDao.Status}
    */
   @Column('status')
   status!: ScheduledEmailDao.Status
 
   /**
-   * 备注
+   * 备注说明
+   * @type {string}
    */
   @Column('remark')
   remark?: string
 
   /**
-   * 创建时间
+   * 记录创建时间
+   * @type {string}
    */
   @Column('created_time')
   createdTime!: string
 
   /**
-   * 更新时间
+   * 记录更新时间
+   * @type {string}
    */
   @Column('updated_time')
   updatedTime!: string
 
   /**
-   * 执行时间
+   * 最近一次执行开始时间
+   * @type {string}
    */
   @Column('executed_time')
   executedTime?: string
 
   /**
-   * 错误信息
+   * 错误日志信息
+   * @type {string}
    */
   @Column('error_message')
   errorMessage?: string
 
   /**
-   * 重试次数
+   * 当前重试次数
+   * @type {number}
    */
   @Column('retry_count')
   retryCount!: number
 
   /**
    * 最大重试次数
+   * @type {number}
    */
   @Column('max_retries')
   maxRetries!: number
 
   /**
    * 创建人
+   * @type {string}
    */
   @Column('created_by')
   createdBy!: string
 
   /**
    * 更新人
+   * @type {string}
    */
   @Column('updated_by')
   updatedBy!: string
 }
 
 /**
- * @desc 定时邮件任务 mapper，负责对任务的增删改查及调度相关查询
+ * 定时邮件任务 mapper，负责对任务的增删改查及调度相关查询
+ * @extends {BaseMapper}
  */
 export class ScheduledEmailMapper extends BaseMapper {
   /**
-   * @desc 数据源名称
+   * 数据库连接所用的数据源名称
+   * @type {string}
    */
   public dataSourceName = DATA_SOURCE_NAME
 
   /**
-   * @desc 创建定时邮件任务
-   * @param createScheduledEmailParams 创建定时任务所需字段（名称、时间、邮件/分析配置等）
-   * @returns 新建任务的主键 ID
+   * 创建定时邮件任务
+   * @param {ScheduledEmailDao.CreateScheduledEmailParams} createScheduledEmailParams 创建定时任务所需字段（名称、时间、邮件/分析配置等）
+   * @returns {Promise<number>} 新建任务的主键 ID，如果失败则返回 0
    */
   public async createScheduledEmailTask(
     createScheduledEmailParams: ScheduledEmailDao.CreateScheduledEmailParams
@@ -197,9 +229,11 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 根据主键 ID 获取单个定时邮件任务
-   * @param query 查询参数（至少包含任务 ID，可附带状态、类型、启用状态等条件）
-   * @returns 匹配的任务记录（若存在）
+   * 根据主键 ID 获取单个定时邮件任务
+   * @template T
+   * @param {ScheduledEmailDao.ScheduledEmailQuery} query 查询参数（至少包含任务 ID，可附带状态、类型、启用状态等条件）
+   * @returns {Promise<T | null>} 匹配的任务记录；若不存在则返回 null
+   * @throws {Error} 如果查询参数中没有任何过滤条件，则抛出异常
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getScheduledEmailTask<
@@ -225,9 +259,9 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 更新定时邮件任务
-   * @param updateScheduledEmailParams 更新任务所需字段（包含主键 ID）
-   * @returns 是否更新成功
+   * 更新定时邮件任务
+   * @param {ScheduledEmailDao.UpdateScheduledEmailParams} updateScheduledEmailParams 更新任务所需字段（包含主键 ID）
+   * @returns {Promise<boolean>} 是否更新成功
    */
   public async updateScheduledEmailTask(
     updateScheduledEmailParams: ScheduledEmailDao.UpdateScheduledEmailParams
@@ -245,6 +279,9 @@ export class ScheduledEmailMapper extends BaseMapper {
 
   /**
    * 原子抢占任务执行权，防止同一个任务被重复执行
+   * @param {number} taskId 定时邮件任务 ID
+   * @param {ScheduledEmailDao.Status[]} allowedStatuses 允许抢占的初始状态列表
+   * @returns {Promise<boolean>} 是否成功抢占执行权
    */
   public async claimTaskForExecution(taskId: number, allowedStatuses: ScheduledEmailDao.Status[]): Promise<boolean> {
     if (!allowedStatuses.length) {
@@ -266,9 +303,10 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 删除定时邮件任务（物理删除）
-   * @param deleteParams 删除参数，只需包含任务 ID
-   * @returns 是否删除成功
+   * 删除定时邮件任务（物理删除）
+   * @param {ScheduledEmailDao.DeleteScheduledEmailParams} query 删除参数，只需包含任务 ID
+   * @returns {Promise<number>} 被成功删除的任务行数
+   * @throws {Error} 如果查询参数中没有任何过滤条件，则抛出异常
    */
   public async deleteScheduledEmailTask(query: ScheduledEmailDao.DeleteScheduledEmailParams): Promise<number> {
     const { whereConditions, whereValues } = this.buildTaskQueryConditions(query)
@@ -287,9 +325,9 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 查询定时邮件任务列表
-   * @param params 查询条件（支持按状态、任务名模糊查询）
-   * @returns 匹配的任务列表
+   * 查询定时邮件任务列表，支持关键字搜索与分页排序
+   * @param {ScheduledEmailDao.ScheduledEmailListParams} scheduledEmailListQuery 查询条件（支持按状态、任务名模糊查询）
+   * @returns {Promise<ScheduledEmailDao.ScheduledEmailRecord[]>} 匹配的任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getScheduledEmailTaskList(
@@ -331,8 +369,8 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 获取需要重试的失败任务
-   * @returns 仍处于失败状态且未超过最大重试次数的任务列表
+   * 获取需要重试的失败任务列表
+   * @returns {Promise<ScheduledEmailDao.ScheduledEmailRecord[]>} 仍处于失败状态且未超过最大重试次数的任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async getRetryableTasks(): Promise<ScheduledEmailDao.ScheduledEmailRecord[]> {
@@ -347,11 +385,11 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 查找卡在 running 状态超过阈值的"僵尸任务"
+   * 查找卡在 running 状态超过阈值的"僵尸任务"
    * @description 此类任务通常由进程崩溃 / OOM / SIGKILL / 容器重启导致
    *              （已 claimTaskForExecution 但未能写回最终状态）
-   * @param thresholdMinutes 卡死阈值（分钟），超过该时长仍处于 running 视为僵尸
-   * @returns 卡死任务列表
+   * @param {number} thresholdMinutes 卡死阈值（分钟），超过该时长仍处于 running 视为僵尸
+   * @returns {Promise<ScheduledEmailDao.ScheduledEmailRecord[]>} 卡死任务列表
    */
   @Mapping(ScheduledEmailTaskMapping)
   public async findStaleRunningTasks(thresholdMinutes: number): Promise<ScheduledEmailDao.ScheduledEmailRecord[]> {
@@ -366,9 +404,15 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * @desc 条件性释放卡死的 running 任务（仅当当前状态仍为 running 时才更新）
+   * 条件性释放卡死的 running 任务（仅当当前状态仍为 running 时才更新）
    * @description WHERE status='running' 防止在回收窗口期内任务正常完成被覆盖的竞态
-   * @returns 是否成功释放
+   * @param {object} params 状态释放参数
+   * @param {number} params.id 任务 ID
+   * @param {ScheduledEmailDao.Status} params.status 变更后的目标状态
+   * @param {string | null} params.errorMessage 关联错误日志
+   * @param {number} params.retryCount 新的重试次数
+   * @param {string | null} params.nextExecutionTime 下次计划执行时间
+   * @returns {Promise<boolean>} 是否成功释放
    */
   public async releaseStaleRunningTask(params: {
     id: number
@@ -398,10 +442,13 @@ export class ScheduledEmailMapper extends BaseMapper {
   }
 
   /**
-   * 构建定时邮件任务查询条件
-   * @param query
-   * @param options 选项
-   * @returns 查询条件
+   * 构建定时邮件任务查询条件 SQL 子句及绑定值数组
+   * @private
+   * @param {ScheduledEmailDao.ScheduledEmailQuery} query 查询条件对象
+   * @param {object} [options] 查询构建配置
+   * @param {boolean} [options.allowEmpty] 是否允许最终条件为空，不抛出异常
+   * @returns {object} 包含构建好的 SQL whereConditions 和对应 values 的对象
+   * @throws {Error} 当查询条件完全为空且配置了不允许为空时抛出异常
    */
   private buildTaskQueryConditions(
     query: ScheduledEmailDao.ScheduledEmailQuery,

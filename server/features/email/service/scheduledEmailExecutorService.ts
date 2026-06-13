@@ -28,11 +28,17 @@ import { getScheduledEmailLogService, ScheduledEmailLogService } from './schedul
 import { getSendEmailService, SendEmailService } from './sendEmailService'
 import dayjs from 'dayjs'
 
+/**
+ * @desc 任务执行器专用日志记录器
+ * @type {Logger}
+ */
 const logger = new Logger({ fileName: 'scheduled-email-executor', folderName: 'server' })
 
 /**
  * @desc 把 DAO 数据转换为内存调度器/Vo 视图所需的形态
  * @description Executor 内部需要在回收成功后重新把任务加入调度器，调度器消费的是 Vo 形态
+ * @param {ScheduledEmailDao.ScheduledEmailRecord} record 数据库中查询出的原始任务记录
+ * @returns {ScheduledEmailVo.ScheduledEmailTaskResponse} 格式化后的 Vo 层任务响应对象
  */
 const convertDaoToVoForScheduler = (
   record: ScheduledEmailDao.ScheduledEmailRecord
@@ -64,13 +70,33 @@ const convertDaoToVoForScheduler = (
 })
 
 /**
- * @desc 定时邮件任务执行器
+ * @desc 定时邮件任务执行器服务类
+ * @class ScheduledEmailExecutorService
+ * @extends {BaseService}
  */
 export class ScheduledEmailExecutorService extends BaseService {
+  /**
+   * @desc 邮件任务数据库持久层操作 Mapper
+   * @type {ScheduledEmailMapper}
+   * @private
+   */
   private scheduledEmailMapper: ScheduledEmailMapper
+  /**
+   * @desc 邮件任务执行日志记录服务
+   * @type {ScheduledEmailLogService}
+   * @private
+   */
   private scheduledEmailLogService: ScheduledEmailLogService
+  /**
+   * @desc 邮件实际发送服务
+   * @type {SendEmailService}
+   * @private
+   */
   private sendEmailService: SendEmailService
 
+  /**
+   * @desc 构造函数，初始化映射器及关联依赖服务进程单例
+   */
   constructor() {
     super()
     this.scheduledEmailMapper = new ScheduledEmailMapper()
@@ -80,6 +106,9 @@ export class ScheduledEmailExecutorService extends BaseService {
 
   /**
    * @desc 立即执行指定任务（API 触发：手动执行 / 测试执行）
+   * @param {ScheduledEmailDto.ScheduledEmailTaskIdRequest} taskIdRequest 任务 ID 请求对象
+   * @returns {Promise<boolean>} 是否最终执行发送成功
+   * @throws {Error} 任务不存在或状态不合规（非 Pending / Failed）时抛出异常
    */
   async executeTask(taskIdRequest: ScheduledEmailDto.ScheduledEmailTaskIdRequest): Promise<boolean> {
     try {
@@ -101,6 +130,8 @@ export class ScheduledEmailExecutorService extends BaseService {
 
   /**
    * @desc 根据查询条件触发执行（调度器回调使用，容错版：失败返回 false）
+   * @param {ScheduledEmailDto.ScheduledEmailQueryRequest} queryRequest 任务查询条件请求对象
+   * @returns {Promise<boolean>} 是否正常触发并执行成功，若异常或未激活则返回 false
    */
   async executeTaskByQuery(queryRequest: ScheduledEmailDto.ScheduledEmailQueryRequest): Promise<boolean> {
     try {
@@ -140,6 +171,7 @@ export class ScheduledEmailExecutorService extends BaseService {
 
   /**
    * @desc 重试所有可重试的失败任务
+   * @returns {Promise<void>} 无返回值
    */
   async retryFailedTasks(): Promise<void> {
     try {
@@ -168,8 +200,8 @@ export class ScheduledEmailExecutorService extends BaseService {
    *
    *  对 release 失败（说明任务已被正常完成 / 状态已变化）的情况会自动跳过，避免覆盖。
    *
-   * @param thresholdMinutes 卡死阈值（分钟）
-   * @returns 实际回收的任务数
+   * @param {number} thresholdMinutes 卡死超时阈值（单位：分钟）
+   * @returns {Promise<number>} 实际回收处理成功的任务数量
    */
   async recoverStaleRunningTasks(thresholdMinutes: number): Promise<number> {
     try {
@@ -270,7 +302,9 @@ export class ScheduledEmailExecutorService extends BaseService {
    *  4. 成功 → 更新状态 + 计算 nextExecutionTime + 日志
    *  5. 失败 → retry_count + 1 / failed；若 recurring 超过 maxRetries 则归零并进入下一周期
    *
-   * @returns 是否最终发送成功
+   * @param {ScheduledEmailDao.ScheduledEmailRecord} taskRecord 待执行的任务数据库记录
+   * @returns {Promise<boolean>} 是否最终发送成功
+   * @private
    */
   private async processTask(taskRecord: ScheduledEmailDao.ScheduledEmailRecord): Promise<boolean> {
     const startTime = Date.now()
@@ -410,10 +444,15 @@ export class ScheduledEmailExecutorService extends BaseService {
 
 /* ============================== 单例工厂 ============================== */
 
+/**
+ * @desc Executor 进程级单例存储变量
+ * @type {ScheduledEmailExecutorService | null}
+ */
 let scheduledEmailExecutorServiceInstance: ScheduledEmailExecutorService | null = null
 
 /**
  * @desc 获取 ScheduledEmailExecutorService 的进程级单例
+ * @returns {ScheduledEmailExecutorService} ScheduledEmailExecutorService 实例
  */
 export const getScheduledEmailExecutorService = (): ScheduledEmailExecutorService => {
   if (!scheduledEmailExecutorServiceInstance) {
