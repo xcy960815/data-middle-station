@@ -9,6 +9,7 @@ declare namespace DashboardDao {
   type LayoutConfig = {
     columnCount: number
     rowHeight: number
+    refreshInterval?: number
   }
 
   type WidgetConfig = {

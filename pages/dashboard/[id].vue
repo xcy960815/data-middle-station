@@ -27,6 +27,8 @@
         :resource-name="dashboardForm.dashboardName"
         :saving="saving"
         :has-unsaved-changes="hasUnsavedChangesValue"
+        :global-refresh-interval="globalRefreshInterval"
+        @change-refresh-interval="handleChangeRefreshInterval"
         @refresh-dashboard="handleRefreshDashboard"
         @enter-editor-mode="handleEnterEditorMode"
         @cancel-editor-mode="handleCancelEditorMode"
@@ -109,6 +111,7 @@ const {
   versionListLoading,
   versionSwitching,
   versionList,
+  globalRefreshInterval,
   canEditDashboard,
   canManageDashboard,
   hasUnsavedChangesValue,
@@ -165,8 +168,39 @@ const {
 dashboard.getDropGridPosition = getDropGridPosition
 dashboard.updateCanvasWidth = updateCanvasWidth
 
+const handleChangeRefreshInterval = (val: number) => {
+  globalRefreshInterval.value = val
+}
+
+let refreshTimer: NodeJS.Timeout | null = null
+
+const startRefreshTimer = () => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
+  if (globalRefreshInterval.value > 0) {
+    refreshTimer = setInterval(() => {
+      handleRefreshDashboard()
+    }, globalRefreshInterval.value * 1000)
+  }
+}
+
+watch(
+  () => globalRefreshInterval.value,
+  () => {
+    startRefreshTimer()
+  }
+)
+
 onMounted(() => {
   loadDashboardDetail()
+})
+
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+  }
 })
 
 watch(

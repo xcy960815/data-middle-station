@@ -57,6 +57,7 @@ export function useDashboard() {
   const versionSwitching = ref(false)
   const versionList = ref<DashboardVo.DashboardConfigHistoryItem[]>([])
   const lastSavedSnapshot = ref('')
+  const globalRefreshInterval = ref(0)
 
   // Analyze list state
   const analyzes = ref<AnalyzeVo.AnalyzeListItem[]>([])
@@ -91,7 +92,8 @@ export function useDashboard() {
       dashboardDesc: dashboardForm.dashboardDesc.trim(),
       layoutConfig: {
         columnCount: GRID_COLUMNS,
-        rowHeight: ROW_HEIGHT
+        rowHeight: ROW_HEIGHT,
+        refreshInterval: globalRefreshInterval.value
       },
       widgets: widgets.value.map((widget) => ({
         analyzeId: widget.analyzeId,
@@ -188,6 +190,7 @@ export function useDashboard() {
     dashboardForm.id = dashboardDetail.id
     dashboardForm.dashboardName = dashboardDetail.dashboardName
     dashboardForm.dashboardDesc = dashboardDetail.dashboardDesc
+    globalRefreshInterval.value = dashboardDetail.layoutConfig?.refreshInterval || 0
     widgets.value = dashboardDetail.widgets.map((widget) => createWidgetState(widget))
     updateLastSavedSnapshot()
     await nextTick()
@@ -384,7 +387,8 @@ export function useDashboard() {
           dashboardDesc: dashboardForm.dashboardDesc,
           layoutConfig: {
             columnCount: GRID_COLUMNS,
-            rowHeight: ROW_HEIGHT
+            rowHeight: ROW_HEIGHT,
+            refreshInterval: globalRefreshInterval.value
           },
           widgets: widgets.value.map((widget) => ({
             analyzeId: widget.analyzeId,
@@ -528,6 +532,7 @@ export function useDashboard() {
     versionSwitching,
     versionList,
     lastSavedSnapshot,
+    globalRefreshInterval,
     analyzes,
     analyzeListLoading,
     analyzePage,

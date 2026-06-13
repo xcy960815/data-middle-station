@@ -1,11 +1,10 @@
 <template>
-  <div ref="chartRef" class="dashboard-chart">
+  <div ref="chartRef" class="dashboard-chart" v-loading="loading">
     <div v-if="activeErrorMessage" class="dashboard-chart__error">
       {{ activeErrorMessage }}
     </div>
     <component
       v-else
-      v-loading="loading"
       :is="chartComponent"
       :data="data"
       :title="title"

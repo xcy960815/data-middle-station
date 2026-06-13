@@ -48,6 +48,11 @@
         <el-table-column prop="datasetName" label="数据集" min-width="150" />
         <el-table-column prop="querySql" label="查询 SQL" min-width="180" show-overflow-tooltip />
         <el-table-column prop="fieldCount" label="字段数" width="90" />
+        <el-table-column label="操作" width="110" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click.stop="handleViewDataset(row)">查看数据集</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-popover>
   </client-only>
@@ -80,6 +85,10 @@ const handleSelectedDataset = async (row: DatasetVo.DatasetListItem) => {
   columnStore.setDatasetName(row.datasetName)
   isPopoverVisible.value = false
   emit('dataset-change', row)
+}
+
+const handleViewDataset = (row: DatasetVo.DatasetListItem) => {
+  window.open(`/dataset/${row.id}`, '_blank')
 }
 
 const datasetRowClassName = ({ row }: { row: DatasetVo.DatasetListItem }) => {
