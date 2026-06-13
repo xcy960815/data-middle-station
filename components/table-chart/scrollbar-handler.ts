@@ -460,17 +460,29 @@ export const drawHorizontalScrollbarPart = () => {
  * @returns {void}
  */
 const handleMouseWheel = (wheelEvent: WheelEvent) => {
-  wheelEvent.preventDefault()
-
   if (stageVars.stage) stageVars.stage.setPointersPositions(wheelEvent)
   if (filterDropdownRef.value) filterDropdownRef.value.closeFilterDropdown()
   if (summaryDropdownRef.value) summaryDropdownRef.value.closeSummaryDropdown()
   if (cellEditorRef.value) cellEditorRef.value.closeEditor()
+
+  const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
   const hasDeltaX = Math.abs(wheelEvent.deltaX) > 0
   const hasDeltaY = Math.abs(wheelEvent.deltaY) > 0
 
+  let shouldPreventDefault = false
+
   // 兼容 Shift + 滚轮用于横向滚动（常见于鼠标）
   if (wheelEvent.shiftKey && !hasDeltaX && hasDeltaY) {
+    if (maxHorizontalScroll > 0) {
+      const atLeft = scrollbarVars.stageScrollX <= 0 && wheelEvent.deltaY < 0
+      const atRight = scrollbarVars.stageScrollX >= maxHorizontalScroll && wheelEvent.deltaY > 0
+      if (!atLeft && !atRight) {
+        shouldPreventDefault = true
+      }
+    }
+    if (shouldPreventDefault) {
+      wheelEvent.preventDefault()
+    }
     updateHorizontalScroll(wheelEvent.deltaY)
     return
   }
@@ -479,13 +491,31 @@ const handleMouseWheel = (wheelEvent: WheelEvent) => {
   if (Math.abs(wheelEvent.deltaY) > Math.abs(wheelEvent.deltaX)) {
     // 主要是上下滚动
     if (hasDeltaY) {
+      if (maxVerticalScroll > 0) {
+        const atTop = scrollbarVars.stageScrollY <= 0 && wheelEvent.deltaY < 0
+        const atBottom = scrollbarVars.stageScrollY >= maxVerticalScroll && wheelEvent.deltaY > 0
+        if (!atTop && !atBottom) {
+          shouldPreventDefault = true
+        }
+      }
       updateVerticalScroll(wheelEvent.deltaY)
     }
   } else {
     // 主要是左右滚动
     if (hasDeltaX) {
+      if (maxHorizontalScroll > 0) {
+        const atLeft = scrollbarVars.stageScrollX <= 0 && wheelEvent.deltaX < 0
+        const atRight = scrollbarVars.stageScrollX >= maxHorizontalScroll && wheelEvent.deltaX > 0
+        if (!atLeft && !atRight) {
+          shouldPreventDefault = true
+        }
+      }
       updateHorizontalScroll(wheelEvent.deltaX)
     }
+  }
+
+  if (shouldPreventDefault) {
+    wheelEvent.preventDefault()
   }
 }
 
