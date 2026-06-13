@@ -48,9 +48,14 @@ declare namespace DatasetDao {
     keyword?: string
     sortField: DatasetListSortField
     sortOrder: DatasetListSortOrder
+    currentUserName?: string
+    roleCodes?: string[]
   }
 
-  type GetDatasetParams = Pick<DatasetRecord, 'id'>
+  type GetDatasetParams = Pick<DatasetRecord, 'id'> & {
+    currentUserName?: string
+    roleCodes?: string[]
+  }
 
   type CreateDatasetParams = Pick<
     DatasetRecord,

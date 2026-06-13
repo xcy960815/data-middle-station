@@ -66,7 +66,7 @@
                 v-if="canManageDashboard(dashboard)"
                 class="dashboard-card-action dashboard-card-action--permission"
                 type="button"
-                @click.stop="handleOpenPermissionDialog(dashboard)"
+                @click.stop="permissionDialogRef?.open(dashboard.id, dashboard.dashboardName)"
               >
                 <icon-park type="Permissions" size="14" fill="#333" />
               </button>
@@ -125,26 +125,11 @@
         </template>
       </el-dialog>
 
-      <el-dialog v-model="permissionDialogVisible" :title="permissionDialogTitle" width="520px">
-        <div v-loading="permissionLoading" class="permission-dialog">
-          <div v-for="item in permissionList" :key="item.id" class="permission-row">
-            <div class="permission-role">
-              <span class="permission-role__name">{{ item.roleName }}</span>
-              <span class="permission-role__code">{{ item.roleCode }}</span>
-            </div>
-            <el-select v-model="item.permissionType" class="permission-select">
-              <el-option label="无权限" value="none" />
-              <el-option label="仅查看" value="view" />
-              <el-option label="可编辑" value="edit" />
-              <el-option label="可管理" value="manage" />
-            </el-select>
-          </div>
-        </div>
-        <template #footer>
-          <el-button @click="permissionDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="permissionSaving" @click="handleSavePermissions">保存</el-button>
-        </template>
-      </el-dialog>
+      <ResourcePermissionDialog
+        ref="permissionDialogRef"
+        resource-type="dashboard"
+        @saved="getDashboards(dashboardPage)"
+      />
     </template>
   </NuxtLayout>
 </template>
@@ -154,6 +139,7 @@ import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import ListCard from '@/components/list-card/index.vue'
+import ResourcePermissionDialog from '@/components/resource-permission-dialog/index.vue'
 
 const layoutName = 'dashboard'
 const router = useRouter()
@@ -179,15 +165,7 @@ const createForm = reactive({
 const createRules: FormRules = {
   dashboardName: [{ required: true, message: '请输入看板名称', trigger: 'blur' }]
 }
-const permissionDialogVisible = ref(false)
-const permissionLoading = ref(false)
-const permissionSaving = ref(false)
-const permissionResourceId = ref<number | null>(null)
-const permissionResourceName = ref('')
-const permissionList = ref<PermissionVo.ResourceRolePermissionItem[]>([])
-const permissionDialogTitle = computed(
-  () => `看板授权${permissionResourceName.value ? `：${permissionResourceName.value}` : ''}`
-)
+const permissionDialogRef = ref<InstanceType<typeof ResourcePermissionDialog>>()
 const permissionLevelMap: Record<PermissionVo.ResourcePermissionType, number> = {
   none: 0,
   view: 1,
@@ -304,63 +282,6 @@ const handleDeleteDashboard = (dashboard: DashboardVo.DashboardListItem) => {
       ElMessage.error(res.message || '删除失败')
     }
   })
-}
-
-const handleOpenPermissionDialog = async (dashboard: DashboardVo.DashboardListItem) => {
-  permissionResourceId.value = dashboard.id
-  permissionResourceName.value = dashboard.dashboardName
-  permissionDialogVisible.value = true
-  permissionLoading.value = true
-  permissionList.value = []
-  try {
-    const res = await httpRequest<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>(
-      '/api/getResourceRolePermissions',
-      {
-        method: 'POST',
-        body: {
-          resourceType: 'dashboard',
-          resourceId: dashboard.id
-        }
-      }
-    )
-    if (res.code === 200 && res.data) {
-      permissionList.value = res.data.list
-    } else {
-      ElMessage.error(res.message || '获取看板授权失败')
-    }
-  } finally {
-    permissionLoading.value = false
-  }
-}
-
-const handleSavePermissions = async () => {
-  if (!permissionResourceId.value) return
-  permissionSaving.value = true
-  try {
-    const res = await httpRequest<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>(
-      '/api/updateResourceRolePermissions',
-      {
-        method: 'POST',
-        body: {
-          resourceType: 'dashboard',
-          resourceId: permissionResourceId.value,
-          permissions: permissionList.value.map((item) => ({
-            roleId: item.id,
-            permissionType: item.permissionType
-          }))
-        }
-      }
-    )
-    if (res.code === 200) {
-      ElMessage.success('授权已保存')
-      permissionDialogVisible.value = false
-      getDashboards(dashboardPage.value)
-    } else {
-      ElMessage.error(res.message || '保存看板授权失败')
-    }
-  } finally {
-    permissionSaving.value = false
-  }
 }
 
 onMounted(() => {
@@ -490,41 +411,5 @@ onMounted(() => {
   justify-content: flex-end;
   padding: 12px 16px;
   border-top: 1px solid #ebeef5;
-}
-
-.permission-dialog {
-  display: flex;
-  min-height: 160px;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.permission-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.permission-role {
-  display: flex;
-  min-width: 0;
-  flex: 1 1 0;
-  flex-direction: column;
-}
-
-.permission-role__name {
-  color: #303133;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.permission-role__code {
-  color: #909399;
-  font-size: 12px;
-}
-
-.permission-select {
-  width: 160px;
 }
 </style>

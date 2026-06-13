@@ -5,11 +5,13 @@ declare namespace DatasetVo {
   > & {
     querySql: string
     fieldCount: number
+    datasetPermission?: PermissionVo.ResourcePermissionType
   }
 
   type DatasetDetailResponse = DatasetDao.DatasetRecord & {
     querySql: string
     fieldsConfig: DatasetDao.DatasetFieldConfigItem[]
+    datasetPermission?: PermissionVo.ResourcePermissionType
   }
 
   type DatasetListResponse = {
@@ -26,5 +28,22 @@ declare namespace DatasetVo {
     columns: DatasetDao.DatasetFieldConfigItem[]
     rows: AnalyzeDataVo.AnalyzeData[]
     elapsedMs?: number
+  }
+
+  type DatasetSchemaColumn = {
+    columnName: string
+    columnType: string
+    columnComment: string
+  }
+
+  type DatasetSchemaTable = {
+    tableName: string
+    tableComment: string
+    columns: DatasetSchemaColumn[]
+  }
+
+  type DatasetSchemaResponse = {
+    databaseName: string
+    tables: DatasetSchemaTable[]
   }
 }

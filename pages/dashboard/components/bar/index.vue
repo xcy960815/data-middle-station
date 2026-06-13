@@ -7,6 +7,7 @@
     <div class="dashboard-bar__primary">
       <el-button link @click="emit('refresh-dashboard')">刷新</el-button>
       <el-button v-if="canEditDashboard && !editorMode" link @click="emit('enter-editor-mode')">编辑</el-button>
+      <el-button v-if="canManage" link @click="permissionDialogRef?.open(resourceId!, resourceName)">权限</el-button>
       <template v-if="editorMode">
         <el-button link @click="emit('open-version-dialog')">历史版本</el-button>
         <el-button link @click="emit('cancel-editor-mode')">退出编辑</el-button>
@@ -16,12 +17,19 @@
       </template>
     </div>
   </div>
+
+  <ResourcePermissionDialog v-if="resourceId" ref="permissionDialogRef" resource-type="dashboard" />
 </template>
 
 <script setup lang="ts">
+import ResourcePermissionDialog from '@/components/resource-permission-dialog/index.vue'
+
 defineProps<{
   editorMode: boolean
   canEditDashboard: boolean
+  canManage: boolean
+  resourceId: number | null
+  resourceName: string
   saving: boolean
   hasUnsavedChanges: boolean
 }>()
@@ -33,6 +41,8 @@ const emit = defineEmits<{
   'save-dashboard': []
   'open-version-dialog': []
 }>()
+
+const permissionDialogRef = ref<InstanceType<typeof ResourcePermissionDialog>>()
 </script>
 
 <style scoped lang="scss">

@@ -81,6 +81,10 @@ export function useDashboard() {
     return permissionLevelMap[activeDashboard.value?.dashboardPermission || 'none'] >= permissionLevelMap.edit
   })
 
+  const canManageDashboard = computed(() => {
+    return permissionLevelMap[activeDashboard.value?.dashboardPermission || 'none'] >= permissionLevelMap.manage
+  })
+
   const dashboardSnapshot = computed(() =>
     JSON.stringify({
       dashboardName: dashboardForm.dashboardName.trim(),
@@ -534,6 +538,7 @@ export function useDashboard() {
 
     // Computed
     canEditDashboard,
+    canManageDashboard,
     hasUnsavedChangesValue,
 
     // Functions

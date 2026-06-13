@@ -203,7 +203,7 @@ export class DatabaseMapper extends BaseMapper {
     getTablesParams: DatabaseDao.GetTablesParams
   ): Promise<Array<T>> {
     const whereConditions: string[] = ["table_type = 'BASE TABLE'", 'table_schema = ?']
-    const whereValues: Array<string> = [tableSchema]
+    const whereValues: Array<string> = [this.dataSourceName]
 
     if (getTablesParams.tableName) {
       whereConditions.push('table_name LIKE ?')
@@ -252,7 +252,7 @@ export class DatabaseMapper extends BaseMapper {
         table_name = ?
         AND table_schema = ?
       ORDER BY ordinal_position ASC;`
-    const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsParams.tableName), tableSchema])
+    const result = await this.exe<Array<T>>(sql, [toLine(getTableColumnsParams.tableName), this.dataSourceName])
     return result
   }
 

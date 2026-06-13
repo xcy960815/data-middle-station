@@ -15,6 +15,8 @@ export const useAnalyzeHandler = () => {
   const chartConfigStore = useChartConfigStore()
   const { serializeAnalyzeDraft } = useAnalyzeDraft()
 
+  const analyzePermission = ref<PermissionVo.AnalyzePermissionType>('view')
+
   /**
    * 将分析的配置 配置到各个 store 中
    * @param {AnalyzeVo.AnalyzeDetailResponse} data
@@ -72,6 +74,7 @@ export const useAnalyzeHandler = () => {
       })
       if (result.code === 200) {
         applyAnalyzeDetail(result.data!)
+        analyzePermission.value = result.data!.analyzePermission || 'view'
       }
     } finally {
       analyzeStore.setEditorHydrating(false)
@@ -79,6 +82,7 @@ export const useAnalyzeHandler = () => {
   }
 
   return {
+    analyzePermission,
     applyAnalyzeDetail,
     getAnalyze
   }

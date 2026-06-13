@@ -6,6 +6,7 @@
           <HeaderTitle
             v-model:title="datasetForm.datasetName"
             v-model:desc="datasetForm.datasetDesc"
+            :editable="!isReadonly"
             title-fallback="未命名数据集"
             desc-fallback="暂无描述"
             title-required-message="数据集名称不能为空"
@@ -21,6 +22,10 @@
         :preview-loading="previewLoading"
         :saving="saving"
         :preview-elapsed-ms="previewElapsedMs"
+        :readonly="isReadonly"
+        :can-manage="canManageDataset"
+        :resource-id="isNewDataset ? null : Number(datasetId)"
+        :resource-name="datasetForm.datasetName"
         @trial-run="handleTrialRun"
         @open-fields-dialog="handleOpenFieldsDialog"
         @save="handleSaveDataset"
@@ -36,6 +41,8 @@
             :height="'100%'"
             :width="'100%'"
             :monaco-editor-theme="'vs-dark'"
+            :monaco-editor-option="{ readOnly: isReadonly }"
+            :database-options="databaseOptions"
           />
         </section>
         <section class="dataset-detail__preview">
@@ -66,14 +73,14 @@
             <el-table-column prop="sourceColumnName" label="结果列" min-width="150" show-overflow-tooltip />
             <el-table-column prop="displayName" label="显示名" min-width="170">
               <template #default="{ row }">
-                <el-input v-model="row.displayName" size="small" />
+                <el-input v-model="row.displayName" size="small" :disabled="isReadonly" />
               </template>
             </el-table-column>
             <el-table-column prop="fieldName" label="字段标识" min-width="150" show-overflow-tooltip />
             <el-table-column prop="dataType" label="类型" min-width="130" show-overflow-tooltip />
             <el-table-column prop="fieldType" label="字段角色" width="120">
               <template #default="{ row }">
-                <el-select v-model="row.fieldType" size="small">
+                <el-select v-model="row.fieldType" size="small" :disabled="isReadonly">
                   <el-option label="维度" value="dimension" />
                   <el-option label="指标" value="measure" />
                 </el-select>
@@ -81,7 +88,7 @@
             </el-table-column>
             <el-table-column prop="aggregationType" label="默认聚合" width="130">
               <template #default="{ row }">
-                <el-select v-model="row.aggregationType" size="small" clearable>
+                <el-select v-model="row.aggregationType" size="small" clearable :disabled="isReadonly">
                   <el-option label="原始值" value="raw" />
                   <el-option label="计数" value="count" />
                   <el-option label="总计" value="sum" />
@@ -93,14 +100,14 @@
             </el-table-column>
             <el-table-column prop="visible" label="显示" width="90" align="center">
               <template #default="{ row }">
-                <el-switch v-model="row.visible" />
+                <el-switch v-model="row.visible" :disabled="isReadonly" />
               </template>
             </el-table-column>
           </el-table>
         </div>
         <template #footer>
           <el-button @click="fieldsDialogVisible = false">关闭</el-button>
-          <el-button type="primary" @click="handleApplyFields">应用到当前预览</el-button>
+          <el-button type="primary" :disabled="isReadonly" @click="handleApplyFields">应用到当前预览</el-button>
         </template>
       </el-dialog>
     </template>
@@ -109,6 +116,7 @@
 
 <script setup lang="ts">
 import { httpRequest } from '@/composables/useHttpRequest'
+import { useDatabaseSchema } from '@/composables/useDatabaseSchema'
 import HeaderTitle from '@/components/header-title/index.vue'
 import { createDefaultAnalyzeDimensionFieldRule } from '@/shared/analyzeConfigFieldRules'
 import TableChart from '~/components/table-chart/index.vue'
@@ -120,6 +128,7 @@ const MonacoEditor = defineAsyncComponent(() => import('~/components/monaco-edit
 const layoutName = 'dataset'
 const route = useRoute()
 const router = useRouter()
+const { databaseOptions, loadSchema } = useDatabaseSchema()
 
 const DEFAULT_QUERY_SQL = `SELECT *
 FROM operation_analysis
@@ -138,6 +147,21 @@ const previewLimit = ref(100)
 const previewRows = ref<AnalyzeDataVo.AnalyzeData[]>([])
 const previewColumns = ref<DatasetDao.DatasetFieldConfigItem[]>([])
 const previewChartHeight = ref(360)
+const datasetPermission = ref<PermissionVo.ResourcePermissionType>('manage')
+const permissionLevelMap: Record<PermissionVo.ResourcePermissionType, number> = {
+  none: 0,
+  view: 1,
+  edit: 2,
+  manage: 3
+}
+const isReadonly = computed(() => {
+  if (isNewDataset.value) return false
+  return permissionLevelMap[datasetPermission.value] < permissionLevelMap.edit
+})
+const canManageDataset = computed(() => {
+  if (isNewDataset.value) return false
+  return permissionLevelMap[datasetPermission.value] >= permissionLevelMap.manage
+})
 const datasetForm = reactive({
   datasetName: '未命名数据集',
   datasetDesc: '',
@@ -193,6 +217,7 @@ const loadDatasetDetail = async () => {
     datasetForm.datasetDesc = res.data.datasetDesc || ''
     datasetForm.querySql = res.data.querySql || DEFAULT_QUERY_SQL
     datasetForm.status = res.data.status
+    datasetPermission.value = res.data.datasetPermission || 'manage'
     previewColumns.value = res.data.fieldsConfig || []
     if (datasetForm.querySql.trim()) {
       await handleTrialRun()
@@ -235,6 +260,10 @@ const handleTrialRun = async () => {
 }
 
 const handleSaveDataset = async () => {
+  if (isReadonly.value) {
+    ElMessage.warning('当前权限不足，无法保存')
+    return
+  }
   if (!datasetForm.datasetName.trim()) {
     ElMessage.warning('请输入数据集名称')
     return
@@ -314,8 +343,12 @@ const updatePreviewChartHeight = () => {
 }
 
 onMounted(async () => {
+  loadSchema()
+  if (!isNewDataset.value) {
+    await loadDatasetDetail()
+  }
   editorReady.value = true
-  await loadDatasetDetail()
+  await nextTick()
   nextTick(() => {
     updatePreviewChartHeight()
     window.addEventListener('resize', updatePreviewChartHeight)
@@ -329,7 +362,9 @@ onUnmounted(() => {
 watch(
   () => route.params.id,
   async () => {
+    editorReady.value = false
     await loadDatasetDetail()
+    editorReady.value = true
   }
 )
 </script>

@@ -6,6 +6,7 @@
     <el-button link @click="handleClickSetting">设置</el-button>
     <el-button link @click="handleDownload">下载</el-button>
     <el-button link @click="handleClickSendEmailDto">邮件</el-button>
+    <el-button v-if="canManageAnalyze" link @click="handleOpenPermissionDialog">权限</el-button>
     <el-button link @click="handleAnalyze" :loading="editorSaving" :disabled="!editorDirty && !editorSaving"
       >保存</el-button
     >
@@ -28,6 +29,9 @@
   <AlarmDialog ref="alarmDialogRef" />
 
   <VersionDialog ref="versionDialogRef" />
+
+  <!-- 权限配置弹窗 -->
+  <ResourcePermissionDialog ref="permissionDialogRef" resource-type="analyze" />
 </template>
 
 <script setup lang="ts">
@@ -36,11 +40,14 @@ import { ElButton, ElMessage, ElMessageBox, ElTag } from 'element-plus'
 import { onBeforeRouteLeave } from 'vue-router'
 import { updateAnalyzeHandler } from '../../updateAnalyze'
 import { useAnalyzeDataHandler } from '../../useAnalyzeDataHandler'
+import { useAnalyzeHandler } from '../../useAnalyzeHandler'
 import SendEmailDtoDialog from './components/send-email-dialog.vue'
 import AlarmDialog from '../alarm-dialog.vue'
 import VersionDialog from '../version-dialog.vue'
+import ResourcePermissionDialog from '@/components/resource-permission-dialog/index.vue'
 const { handleUpdateAnalyze, serializeAnalyzeDraft } = updateAnalyzeHandler()
 const { getAnalyzeData } = useAnalyzeDataHandler()
+const { analyzePermission } = useAnalyzeHandler()
 const analyzeStore = useAnalyzeStore()
 const chartConfigStore = useChartConfigStore()
 const { handleDownload } = useChartDownload()
@@ -50,6 +57,23 @@ const editorDirty = computed(() => analyzeStore.getEditorDirty)
 const editorSaving = computed(() => analyzeStore.getEditorSaving)
 const lastSavedAt = computed(() => analyzeStore.getLastSavedAt)
 const draftSnapshot = computed(() => serializeAnalyzeDraft())
+
+const permissionDialogRef = ref<InstanceType<typeof ResourcePermissionDialog>>()
+const permissionLevelMap: Record<PermissionVo.AnalyzePermissionType, number> = {
+  none: 0,
+  view: 1,
+  edit: 2,
+  manage: 3
+}
+const canManageAnalyze = computed(() => {
+  return permissionLevelMap[analyzePermission.value] >= permissionLevelMap.manage
+})
+const handleOpenPermissionDialog = () => {
+  const id = analyzeStore.getAnalyzeId
+  if (id != null) {
+    permissionDialogRef.value?.open(id, analyzeStore.getAnalyzeName)
+  }
+}
 
 // 发送邮件对话框相关状态
 const emailDialogVisible = ref(false)

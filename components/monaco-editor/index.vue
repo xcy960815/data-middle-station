@@ -85,6 +85,11 @@ const monacoEditor = shallowRef<MonacoNS.editor.IStandaloneCodeEditor | null>(nu
 const completionItemProvider = shallowRef<MonacoNS.IDisposable>()
 
 /**
+ * @desc SqlSnippets 实例，用于动态更新联想数据
+ */
+const sqlSnippetsInstance = shallowRef<SqlSnippets | null>(null)
+
+/**
  * @desc resizeObserver for percent-based sizing
  */
 const resizeObserver = shallowRef<ResizeObserver | null>(null)
@@ -139,6 +144,19 @@ watch(
   (monacoEditorTheme: monaco.ThemeType) => {
     monaco.editor.setTheme(monacoEditorTheme)
   }
+)
+
+/**
+ * @desc 监听数据库选项变化，动态更新表/字段联想数据
+ */
+watch(
+  () => props.databaseOptions,
+  (newOptions) => {
+    if (newOptions && sqlSnippetsInstance.value) {
+      sqlSnippetsInstance.value.setDatabaseOption(newOptions)
+    }
+  },
+  { deep: true }
 )
 
 /**
@@ -201,6 +219,7 @@ const initResizeObserver = () => {
  */
 const initEditor = () => {
   const sqlSnippets = new SqlSnippets(props.customKeywords, props.databaseOptions)
+  sqlSnippetsInstance.value = sqlSnippets
   completionItemProvider.value = markRaw(
     monaco.languages.registerCompletionItemProvider('sql', {
       // 提示的触发字符
@@ -214,9 +233,11 @@ const initEditor = () => {
     })
   )
 
-  const monacoEditorOptionIsEmpty =
-    Object.keys(props.monacoEditorOption).length === 0 && props.monacoEditorOption.constructor === Object
-  const monacoEditorOption = monacoEditorOptionIsEmpty ? monacoEditorDefaultOption : props.monacoEditorOption
+  const monacoEditorOption = {
+    ...monacoEditorDefaultOption,
+    ...props.monacoEditorOption,
+    value: props.modelValue
+  }
   /* 创建editor实例 */
   monacoEditor.value = markRaw(monaco.editor.create(monacoEditorDom.value!, monacoEditorOption))
   /*  渲染 编译器 宽高 */
@@ -251,6 +272,7 @@ onBeforeUnmount(() => {
   monacoEditor.value = null
   completionItemProvider.value = undefined
   resizeObserver.value = null
+  sqlSnippetsInstance.value = null
 })
 
 /**

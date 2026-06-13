@@ -47,6 +47,15 @@
         >
           <template #actions>
             <button
+              v-if="canManageDataset(item)"
+              class="dataset-card-action dataset-card-action--permission"
+              type="button"
+              @click.stop="handleOpenPermissionDialog(item)"
+            >
+              <icon-park type="Permissions" size="14" fill="#333" />
+            </button>
+            <button
+              v-if="canManageDataset(item)"
               class="dataset-card-action dataset-card-action--delete"
               type="button"
               @click.stop="handleDeleteDataset(item)"
@@ -55,6 +64,12 @@
             </button>
           </template>
           <template #left-badges>
+            <span
+              class="dataset-permission-badge"
+              :class="`dataset-permission-badge--${item.datasetPermission || 'view'}`"
+            >
+              {{ getPermissionText(item.datasetPermission || 'view') }}
+            </span>
             <span class="dataset-badge" :class="`dataset-badge--${item.status}`">
               {{ item.status === 'enabled' ? '启用' : '禁用' }}
             </span>
@@ -78,12 +93,15 @@
         @current-change="getDatasets"
       />
     </template>
+
+    <ResourcePermissionDialog ref="permissionDialogRef" resource-type="dataset" @saved="getDatasets(page)" />
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
 import { httpRequest } from '@/composables/useHttpRequest'
 import ListCard from '@/components/list-card/index.vue'
+import ResourcePermissionDialog from '@/components/resource-permission-dialog/index.vue'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -98,6 +116,14 @@ const total = ref(0)
 const keyword = ref('')
 const sortField = ref<DatasetDto.DatasetListSortField>('updateTime')
 const sortOrder = ref<DatasetDto.DatasetListSortOrder>('desc')
+
+const permissionDialogRef = ref<InstanceType<typeof ResourcePermissionDialog>>()
+const permissionLevelMap: Record<PermissionVo.ResourcePermissionType, number> = {
+  none: 0,
+  view: 1,
+  edit: 2,
+  manage: 3
+}
 
 const getDatasets = async (targetPage = page.value) => {
   listLoading.value = true
@@ -139,6 +165,21 @@ const handleOpenDataset = (item: DatasetVo.DatasetListItem) => {
   router.push(`/dataset/${item.id}`)
 }
 
+const canManageDataset = (item: DatasetVo.DatasetListItem) => {
+  return permissionLevelMap[item.datasetPermission || 'none'] >= permissionLevelMap.manage
+}
+
+const getPermissionText = (permissionType: PermissionVo.ResourcePermissionType) => {
+  return (
+    {
+      none: '无权限',
+      view: '仅查看',
+      edit: '可编辑',
+      manage: '可管理'
+    }[permissionType] || '仅查看'
+  )
+}
+
 const handleDeleteDataset = (item: DatasetVo.DatasetListItem) => {
   ElMessageBox.confirm(`确定删除【${item.datasetName}】吗？`, '提示', {
     confirmButtonText: '确定',
@@ -155,6 +196,10 @@ const handleDeleteDataset = (item: DatasetVo.DatasetListItem) => {
       ElMessage.error(res.message || '删除失败')
     }
   })
+}
+
+const handleOpenPermissionDialog = (item: DatasetVo.DatasetListItem) => {
+  permissionDialogRef.value?.open(item.id, item.datasetName)
 }
 
 const formatDate = (value: string) => {
@@ -202,6 +247,10 @@ onMounted(() => {
   background: #eef6ff;
 }
 
+.dataset-card-action--permission:hover {
+  background: #f0f9eb;
+}
+
 .dataset-card-action--delete:hover {
   background: #ffeaea;
 }
@@ -226,6 +275,32 @@ onMounted(() => {
 .dataset-count {
   color: #2563eb;
   background: #dbeafe;
+}
+
+.dataset-permission-badge {
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 12px;
+}
+
+.dataset-permission-badge--view {
+  color: #2563eb;
+  background: #dbeafe;
+}
+
+.dataset-permission-badge--edit {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.dataset-permission-badge--manage {
+  color: #9333ea;
+  background: #f3e8ff;
+}
+
+.dataset-permission-badge--none {
+  color: #6b7280;
+  background: #f3f4f6;
 }
 
 .dataset-empty {

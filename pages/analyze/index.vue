@@ -64,7 +64,7 @@
                 v-if="canManageAnalyze(chart)"
                 class="analyze-list-card-action analyze-list-card-action--permission"
                 type="button"
-                @click.stop="handleOpenPermissionDialog(chart.id, chart.analyzeName)"
+                @click.stop="permissionDialogRef?.open(chart.id, chart.analyzeName)"
               >
                 <icon-park type="Permissions" size="14" fill="#333" />
               </button>
@@ -128,34 +128,14 @@
         </template>
       </el-dialog>
 
-      <el-dialog v-model="permissionDialogVisible" :title="permissionDialogTitle" width="520px">
-        <div v-loading="permissionLoading" class="permission-dialog">
-          <div v-for="item in permissionList" :key="item.id" class="permission-row">
-            <div class="permission-role">
-              <span class="permission-role__name">{{ item.roleName }}</span>
-              <span class="permission-role__code">{{ item.roleCode }}</span>
-            </div>
-            <el-select v-model="item.permissionType" class="permission-select">
-              <el-option label="无权限" value="none" />
-              <el-option label="仅查看" value="view" />
-              <el-option label="可编辑" value="edit" />
-              <el-option label="可管理" value="manage" />
-            </el-select>
-          </div>
-        </div>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="permissionDialogVisible = false">取消</el-button>
-            <el-button type="primary" :loading="permissionSaving" @click="handleSavePermissions">保存</el-button>
-          </span>
-        </template>
-      </el-dialog>
+      <ResourcePermissionDialog ref="permissionDialogRef" resource-type="analyze" @saved="getAnalyzes(page)" />
     </template>
   </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
 import ListCard from '@/components/list-card/index.vue'
+import ResourcePermissionDialog from '@/components/resource-permission-dialog/index.vue'
 import { httpRequest } from '@/composables/useHttpRequest'
 import { IconPark } from '@icon-park/vue-next/es/all'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
@@ -210,16 +190,7 @@ const addOrEditAnalyzeFormRules: FormRules = {
   ]
 }
 
-const permissionDialogVisible = ref(false)
-const permissionLoading = ref(false)
-const permissionSaving = ref(false)
-const permissionResourceType = ref<PermissionVo.ResourceType>('analyze')
-const permissionResourceId = ref<number | null>(null)
-const permissionResourceName = ref('')
-const permissionList = ref<PermissionVo.AnalyzeRolePermissionItem[]>([])
-const permissionDialogTitle = computed(
-  () => `分析授权${permissionResourceName.value ? `：${permissionResourceName.value}` : ''}`
-)
+const permissionDialogRef = ref<InstanceType<typeof ResourcePermissionDialog>>()
 const permissionLevelMap: Record<PermissionVo.AnalyzePermissionType, number> = {
   none: 0,
   view: 1,
@@ -322,65 +293,6 @@ const handleDeleteAnalyze = (id: number, analyzeName: string) => {
       ElMessage.error(res.message || '删除失败')
     }
   })
-}
-
-const handleOpenPermissionDialog = async (id: number, analyzeName: string) => {
-  permissionResourceType.value = 'analyze'
-  permissionResourceId.value = id
-  permissionResourceName.value = analyzeName
-  permissionDialogVisible.value = true
-  permissionLoading.value = true
-  permissionList.value = []
-  try {
-    const res = await httpRequest<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>(
-      '/api/getResourceRolePermissions',
-      {
-        method: 'POST',
-        body: {
-          resourceType: permissionResourceType.value,
-          resourceId: id
-        }
-      }
-    )
-    if (res.code === 200 && res.data) {
-      permissionList.value = res.data.list
-    } else {
-      ElMessage.error(res.message || '获取分析授权失败')
-    }
-  } finally {
-    permissionLoading.value = false
-  }
-}
-
-const handleSavePermissions = async () => {
-  if (!permissionResourceId.value) return
-
-  permissionSaving.value = true
-  try {
-    const res = await httpRequest<ApiResponseI<PermissionVo.ResourceRolePermissionsResponse>>(
-      '/api/updateResourceRolePermissions',
-      {
-        method: 'POST',
-        body: {
-          resourceType: permissionResourceType.value,
-          resourceId: permissionResourceId.value,
-          permissions: permissionList.value.map((item) => ({
-            roleId: item.id,
-            permissionType: item.permissionType
-          }))
-        }
-      }
-    )
-    if (res.code === 200) {
-      ElMessage.success('授权已保存')
-      permissionDialogVisible.value = false
-      getAnalyzes(page.value)
-    } else {
-      ElMessage.error(res.message || '保存分析授权失败')
-    }
-  } finally {
-    permissionSaving.value = false
-  }
 }
 
 /**
@@ -561,41 +473,5 @@ onMounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-}
-
-.permission-dialog {
-  min-height: 160px;
-}
-
-.permission-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #ebeef5;
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.permission-role {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.permission-role__name {
-  color: #303133;
-  font-weight: 600;
-}
-
-.permission-role__code {
-  font-size: 12px;
-  color: #909399;
-}
-
-.permission-select {
-  width: 140px;
 }
 </style>

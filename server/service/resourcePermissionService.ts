@@ -1,5 +1,6 @@
 import { AnalyzeMapper } from '@/server/mapper/analyzeMapper'
 import { DashboardMapper } from '@/server/mapper/dashboardMapper'
+import { DatasetMapper } from '@/server/mapper/datasetMapper'
 import { PermissionMapper } from '@/server/mapper/permissionMapper'
 import { BaseService } from '@/server/service/baseService'
 import { PERMISSION_RESOURCE_TYPES } from '@/shared/resourcePermissionTypes'
@@ -55,6 +56,13 @@ export class ResourcePermissionService extends BaseService {
   private dashboardMapper: DashboardMapper
 
   /**
+   * 数据集数据访问层映射器
+   * @private
+   * @type {DatasetMapper}
+   */
+  private datasetMapper: DatasetMapper
+
+  /**
    * 构造函数，初始化映射器
    */
   constructor() {
@@ -62,6 +70,7 @@ export class ResourcePermissionService extends BaseService {
     this.permissionMapper = new PermissionMapper()
     this.analyzeMapper = new AnalyzeMapper()
     this.dashboardMapper = new DashboardMapper()
+    this.datasetMapper = new DatasetMapper()
   }
 
   /**
@@ -227,6 +236,10 @@ export class ResourcePermissionService extends BaseService {
     if (resourceType === 'dashboard') {
       const dashboard = await this.dashboardMapper.getDashboardWithoutAccess(resourceId)
       return dashboard?.createdBy || ''
+    }
+    if (resourceType === 'dataset') {
+      const dataset = await this.datasetMapper.getDatasetWithoutAccess(resourceId)
+      return dataset?.createdBy || ''
     }
     throw new Error('暂不支持该资源类型')
   }

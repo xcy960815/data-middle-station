@@ -338,6 +338,13 @@ class DatasetListMapping implements DatasetVo.DatasetListItem, IColumnTarget {
    */
   @Column('field_count')
   fieldCount!: number
+
+  /**
+   * 当前用户对该数据集的最高权限类型
+   * @type {PermissionVo.ResourcePermissionType}
+   */
+  @Column('dataset_permission')
+  datasetPermission!: PermissionVo.ResourcePermissionType
 }
 
 /**
@@ -404,17 +411,33 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * 获取单个数据集详情
+   * 获取单个数据集详情（含资源权限校验）
    * @template T 返回的数据集记录类型，默认继承自 DatasetDao.DatasetRecord
-   * @param {DatasetDao.GetDatasetParams} query 查询参数
+   * @param {DatasetDao.GetDatasetParams} query 查询及权限判断参数
    * @returns {Promise<T>} 数据集记录
    */
   @Mapping(DatasetMapping)
   public async getDataset<T extends DatasetDao.DatasetRecord = DatasetDao.DatasetRecord>(
     query: DatasetDao.GetDatasetParams
   ): Promise<T> {
-    const sql = `select ${DATASET_FIELDS.join(', ')} from ${DATASET_TABLE_NAME} where id = ? and is_deleted = 0`
-    const result = await this.exe<Array<T>>(sql, [query.id])
+    const { whereClause, params } = this.buildDatasetAccessQuery(query)
+    const sql = `select ${DATASET_FIELDS.join(', ')} from ${DATASET_TABLE_NAME} d ${whereClause}`
+    const result = await this.exe<Array<T>>(sql, params)
+    return result?.[0]
+  }
+
+  /**
+   * 获取数据集详情（内部使用，跳过权限校验，仅用于获取 Owner 等内部信息）
+   * @template T 返回的数据集记录类型，默认继承自 DatasetDao.DatasetRecord
+   * @param {number} id 数据集 ID
+   * @returns {Promise<T>} 数据集记录
+   */
+  @Mapping(DatasetMapping)
+  public async getDatasetWithoutAccess<T extends DatasetDao.DatasetRecord = DatasetDao.DatasetRecord>(
+    id: number
+  ): Promise<T> {
+    const sql = `select ${DATASET_FIELDS.join(', ')} from ${DATASET_TABLE_NAME} d where d.id = ? and d.is_deleted = 0`
+    const result = await this.exe<Array<T>>(sql, [id])
     return result?.[0]
   }
 
@@ -426,9 +449,11 @@ export class DatasetMapper extends BaseMapper {
   public async countDatasets(query: DatasetDao.GetDatasetListParams): Promise<number> {
     const { whereClause, params } = this.buildDatasetListQuery(query)
     const sql = `
-      select count(*) as total
+      select count(distinct d.id) as total
       from ${DATASET_TABLE_NAME} d
       left join ${DATASET_CONFIG_TABLE_NAME} dc on dc.id = d.current_config_id
+      left join resource_role_permission rrp on rrp.resource_type = 'dataset' and rrp.resource_id = d.id
+      left join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
       ${whereClause}`
     const result = await this.exe<Array<{ total: number }>>(sql, params)
     return Number(result?.[0]?.total || 0)
@@ -444,7 +469,7 @@ export class DatasetMapper extends BaseMapper {
   public async getDatasetList<T extends DatasetVo.DatasetListItem = DatasetVo.DatasetListItem>(
     query: DatasetDao.GetDatasetListParams
   ): Promise<T[]> {
-    const { whereClause, params } = this.buildDatasetListQuery(query)
+    const { whereClause, params, permissionSelectSql } = this.buildDatasetListQuery(query)
     const sortField = DATASET_LIST_SORT_FIELD_MAP[query.sortField] || DATASET_LIST_SORT_FIELD_MAP.updateTime
     const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc'
     const offset = (query.page - 1) * query.pageSize
@@ -452,10 +477,14 @@ export class DatasetMapper extends BaseMapper {
       select
         ${DATASET_FIELDS.map((field) => `d.${field}`).join(',\n        ')},
         dc.query_sql as query_sql,
-        json_length(dc.fields_config) as field_count
+        json_length(dc.fields_config) as field_count,
+        ${permissionSelectSql} as dataset_permission
       from ${DATASET_TABLE_NAME} d
       left join ${DATASET_CONFIG_TABLE_NAME} dc on dc.id = d.current_config_id
+      left join resource_role_permission rrp on rrp.resource_type = 'dataset' and rrp.resource_id = d.id
+      left join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
       ${whereClause}
+      group by d.id, d.dataset_name, d.dataset_desc, d.status, d.create_time, d.update_time, d.created_by, d.updated_by, dc.query_sql, dc.fields_config
       order by ${sortField} ${sortOrder}
       limit ? offset ?`
     return await this.exe<T[]>(sql, [...params, query.pageSize, offset])
@@ -505,21 +534,87 @@ export class DatasetMapper extends BaseMapper {
   }
 
   /**
-   * 构造数据集列表查询的 where 子句及参数
+   * 构造数据集详情查询的 where 子句及参数（含权限过滤）
+   * @param {DatasetDao.GetDatasetParams} query 查询参数
+   * @returns {{ whereClause: string; params: Array<string | number> }} 返回的 where 子句和参数数组
+   * @private
+   */
+  private buildDatasetAccessQuery(query: DatasetDao.GetDatasetParams) {
+    const whereConditions = ['d.id = ?', 'd.is_deleted = 0']
+    const params: Array<string | number> = [query.id]
+    if (!query.roleCodes?.includes('admin')) {
+      if (query.roleCodes?.length) {
+        whereConditions.push(`(
+          d.created_by = ?
+          or exists (
+            select 1
+            from resource_role_permission rrp
+            inner join role r on r.id = rrp.role_id and r.is_deleted = 0 and r.status = 1
+            where rrp.resource_type = 'dataset'
+              and rrp.resource_id = d.id
+              and r.role_code in (${query.roleCodes.map(() => '?').join(',')})
+          )
+        )`)
+        params.push(query.currentUserName || '', ...query.roleCodes)
+      } else {
+        whereConditions.push('d.created_by = ?')
+        params.push(query.currentUserName || '')
+      }
+    }
+    return {
+      whereClause: `where ${whereConditions.join(' and ')}`,
+      params
+    }
+  }
+
+  /**
+   * 构造数据集列表查询的 where 子句及参数（含权限过滤与权限计算 SQL 片段）
    * @param {DatasetDao.GetDatasetListParams} query 列表查询参数
-   * @returns {{ whereClause: string; params: string[] }} 返回的 where 子句和参数数组
+   * @returns {{ whereClause: string; params: string[]; permissionSelectSql: string }} 返回的 where 子句和参数数组
    * @private
    */
   private buildDatasetListQuery(query: DatasetDao.GetDatasetListParams) {
+    const roleCodes = query.roleCodes || []
+    const isAdmin = roleCodes.includes('admin')
     const conditions = ['d.is_deleted = 0']
     const params: string[] = []
     if (query.keyword) {
       conditions.push('(d.dataset_name like ? or d.dataset_desc like ? or dc.query_sql like ?)')
       params.push(`%${query.keyword}%`, `%${query.keyword}%`, `%${query.keyword}%`)
     }
+
+    if (!isAdmin) {
+      if (roleCodes.length > 0) {
+        conditions.push(`(d.created_by = ? or r.role_code in (${roleCodes.map(() => '?').join(',')}))`)
+        params.push(query.currentUserName || '', ...roleCodes)
+      } else {
+        conditions.push('d.created_by = ?')
+        params.push(query.currentUserName || '')
+      }
+    }
+
     return {
       whereClause: `where ${conditions.join(' and ')}`,
-      params
+      params,
+      permissionSelectSql: isAdmin
+        ? `'manage'`
+        : `case
+            when d.created_by = ${this.escapeValue(query.currentUserName || '')} then 'manage'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 3 then 'manage'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 2 then 'edit'
+            when max(case rrp.permission_type when 'manage' then 3 when 'edit' then 2 when 'view' then 1 else 0 end) = 1 then 'view'
+            else 'none'
+          end`
     }
+  }
+
+  /**
+   * 转义单引号以保证 SQL 拼接安全性
+   * @param {string} value 待转义的字符串
+   * @returns {string} 转义并包裹单引号后的 SQL 值片段
+   * @private
+   */
+  private escapeValue(value: string) {
+    return `'${value.replace(/'/g, "''")}'`
   }
 }

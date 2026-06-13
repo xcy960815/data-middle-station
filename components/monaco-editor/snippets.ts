@@ -54,7 +54,7 @@ export class SqlSnippets {
    * @example [{ databaseName: '', tableOptions: [{ tableName: '', fielsOptions: [ {  fieldName: "" ,fieldType: "" ,fieldComment: "" ,databaseName: "" ,tableName: ""  }] }] }]
    * @returns { void }
    */
-  private setDatabaseOption(databaseOptions: Array<DatabaseOption>): void {
+  public setDatabaseOption(databaseOptions: Array<DatabaseOption>): void {
     this.databaseOptions = databaseOptions
   }
   /**
@@ -155,30 +155,22 @@ export class SqlSnippets {
         return {
           suggestions: [...this.getTableOptionsSuggestByDatabaseName(databaseName)]
         }
-      } else if (
-        this.getTableNameAndTableAlia(
+      } else {
+        // <表名>.<字段> 或 <别名>.<字段> 联想
+        const currentStatement =
           textBeforePointerMulti.split(';')[textBeforePointerMulti.split(';').length - 1] +
-            textAfterPointerMulti.split(';')[0]
-        )
-      ) {
-        const tableInfoList = this.getTableNameAndTableAlia(
-          textBeforePointerMulti.split(';')[textBeforePointerMulti.split(';').length - 1] +
-            textAfterPointerMulti.split(';')[0]
-        )
+          textAfterPointerMulti.split(';')[0]
+        const tableInfoList = this.getTableNameAndTableAlia(currentStatement)
+        const prefix = textBeforeLastTokenNoDot.replace(/^.*,/g, '')
+        // 优先匹配别名，别名不存在时回退到表名匹配
         const currentTable = tableInfoList.find(
-          (item) => item.tableAlia === textBeforeLastTokenNoDot.replace(/^.*,/g, '')
+          (item) => item.tableAlia === prefix || (!item.tableAlia && item.tableName === prefix)
         )
-        // <别名>.<字段> 联想
         if (currentTable && currentTable.tableName) {
           return {
             suggestions: this.getFieldOptionsSuggestByTableAlia(currentTable.tableName)
           }
-        } else {
-          return {
-            suggestions: []
-          }
         }
-      } else {
         return {
           suggestions: []
         }
@@ -326,12 +318,7 @@ export class SqlSnippets {
               detail: `<字段> ${fieldOption.fieldComment || ''} <${fieldOption.fieldName}>`,
               sortText: this.sortText.Column,
               insertText: fieldOption.fieldName || '',
-              documentation: {
-                value: `
-    ### 数据库: ${fieldOption.databaseName}
-    ### 表: ${fieldOption.tableName}
-    ### 注释: ${fieldOption.fieldComment || ''}`
-              }
+              documentation: `数据库: ${fieldOption.databaseName} | 表: ${fieldOption.tableName} | 注释: ${fieldOption.fieldComment || ''}`
             })
           })
       })
@@ -356,12 +343,7 @@ export class SqlSnippets {
                 detail: `<字段> ${fieldOption.fieldComment || ''} <${fieldOption.fieldType}>`,
                 sortText: this.sortText.Column,
                 insertText: fieldOption.fieldName || '',
-                documentation: {
-                  value: `
-    ### 数据库: ${fieldOption.databaseName}
-    ### 表: ${fieldOption.tableName}
-    ### 注释: ${fieldOption.fieldComment || ''}`
-                }
+                documentation: `数据库: ${fieldOption.databaseName} | 表: ${fieldOption.tableName} | 注释: ${fieldOption.fieldComment || ''}`
               })
             })
         }

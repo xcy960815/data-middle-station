@@ -22,6 +22,9 @@
       <DashboardBar
         :editor-mode="editorMode"
         :can-edit-dashboard="canEditDashboard"
+        :can-manage="canManageDashboard"
+        :resource-id="activeDashboard?.id ?? null"
+        :resource-name="dashboardForm.dashboardName"
         :saving="saving"
         :has-unsaved-changes="hasUnsavedChangesValue"
         @refresh-dashboard="handleRefreshDashboard"
@@ -107,6 +110,7 @@ const {
   versionSwitching,
   versionList,
   canEditDashboard,
+  canManageDashboard,
   hasUnsavedChangesValue,
   analyzes,
   analyzeListLoading,
