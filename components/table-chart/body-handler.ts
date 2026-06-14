@@ -2,7 +2,7 @@ import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import CellEditor from './components/cell-editor.vue'
 import { bindCurrentTableContext, getTableParams, getProcessedRows, getRuntimeState } from './parameter'
-import { calculateScrollRange, scrollbarVars } from './scrollbar-handler'
+import { scrollbarVars } from './scrollbar-handler'
 import { getStageSize, stageVars } from './stage-handler'
 import { getSummaryRowHeight } from './summary-handler'
 import {
@@ -106,17 +106,15 @@ export const createRightBodyClipGroup = (x: number, y: number, clipOptions: Clip
   createGroup('body', 'right', x, y, clipOptions)
 
 /**
- * 计算可视区域数据的起始行和结束行
+ * 计算可视区域行数
  * @returns {void}
  */
 export const calculateVisibleRows = () => {
   if (!stageVars.stage) return
 
   const { height: stageHeight } = getStageSize()
-  const { maxHorizontalScroll } = calculateScrollRange()
-  const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? getTableParams().scrollbarSize : 0
 
-  const bodyHeight = stageHeight - getTableParams().headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
+  const bodyHeight = stageHeight - getTableParams().headerRowHeight - getSummaryRowHeight()
 
   // 计算可视区域能显示的行数
   bodyVars.visibleRowCount = Math.ceil(bodyHeight / getTableParams().bodyRowHeight)
@@ -172,18 +170,11 @@ export const resetBodyState = () => {
  * 4. 数据总行数变化（影响垂直滚动条）
  */
 export const calculateColumnsInfo = () => {
-  const { width: stageWidthRaw, height: stageHeightRaw } = getStageSize()
-  const { xAxisFields, yAxisFields, bodyRowHeight, headerRowHeight, scrollbarSize, minAutoColWidth } = getTableParams()
+  const { width: stageWidthRaw } = getStageSize()
+  const { xAxisFields, yAxisFields, bodyRowHeight, minAutoColWidth } = getTableParams()
 
-  // 数据区高度
-  const contentHeight = getProcessedRows().value.length * bodyRowHeight
-
-  // 是否需要垂直滚动条
-  const needVScroll = contentHeight > stageHeightRaw - headerRowHeight - getSummaryRowHeight()
-  const verticalScrollbarSpace = needVScroll ? scrollbarSize : 0
-
-  // 可用宽度
-  const stageWidth = stageWidthRaw - verticalScrollbarSpace
+  // 可用宽度（由于使用了原生滚动条，代理层的 clientWidth 已自然减去了滚动条的宽度，无需再次手动扣除）
+  const stageWidth = stageWidthRaw
 
   // 🔹先拼出所有列
   const tableColumnsRaw = [...xAxisFields, ...yAxisFields].map((col, index) => ({
@@ -224,19 +215,6 @@ export const calculateColumnsInfo = () => {
   columnsInfo.totalWidth = columnsInfo.leftPartWidth + columnsInfo.centerPartWidth + columnsInfo.rightPartWidth
 }
 
-/**
- * 创建合并单元格
- * @param {KonvaNodePools} pools - 对象池
- * @param {Konva.Group} bodyGroup - 主体组
- * @param {number} x - x坐标
- * @param {number} y - y坐标
- * @param {number} width - 单元格宽度
- * @param {number} height - 单元格高度
- * @param {number} rowIndex - 行索引
- * @param {CanvasTable.ColumnOption} columnOption - 列配置
- * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
- * @param {number} bodyFontSize - 字体大小
- */
 /**
  * 为可编辑单元格绑定双击打开编辑器
  */
@@ -332,8 +310,6 @@ const drawMergedCell = (
  * @param {number} height - 单元格高度
  * @param {number} rowIndex - 行索引
  * @param {CanvasTable.ColumnOption} columnOption - 列配置
- * @param {AnalyzeDataVo.AnalyzeData} row - 行数据
- * @param {number} bodyFontSize - 字体大小
  */
 const drawNormalCell = (
   pools: KonvaNodePools,

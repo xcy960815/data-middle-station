@@ -37,17 +37,7 @@ import {
   runWithTableContext,
   updateTableColumnWidth
 } from './parameter'
-import {
-  calculateScrollRange,
-  createHorizontalScrollbarGroup,
-  createVerticalScrollbarGroup,
-  drawHorizontalScrollbarPart,
-  drawVerticalScrollbarPart,
-  resetScrollbarState,
-  scrollbarVars,
-  updateHorizontalScroll,
-  updateVerticalScroll
-} from './scrollbar-handler'
+import { resetScrollState, scrollbarVars } from './scrollbar-handler'
 
 import {
   createSummaryCenterGroup,
@@ -129,14 +119,6 @@ const clearSummaryGroups = () => {
   summaryVars.rightSummaryGroup = null
 }
 
-const clearScrollbarGroups = () => {
-  scrollbarVars.scrollbarLayer?.destroyChildren()
-  scrollbarVars.verticalScrollbarGroup = null
-  scrollbarVars.horizontalScrollbarGroup = null
-  scrollbarVars.verticalScrollbarThumb = null
-  scrollbarVars.horizontalScrollbarThumb = null
-}
-
 /**
  * 清除分组 清理所有分组
  * @returns {void}
@@ -145,7 +127,6 @@ export const clearGroups = () => {
   clearHeaderGroups()
   clearBodyGroups()
   clearSummaryGroups()
-  clearScrollbarGroups()
 }
 
 /**
@@ -183,25 +164,6 @@ export const initStage = (tableContainer?: HTMLDivElement | null) => {
     stageVars.stage.add(headerVars.headerLayer)
   }
 
-  // 4. 滚动条层（最高层）
-  if (!scrollbarVars.scrollbarLayer) {
-    scrollbarVars.scrollbarLayer = new Konva.Layer()
-    stageVars.stage.add(scrollbarVars.scrollbarLayer)
-  }
-
-  // 5. 滚动条组（根据滚动需求创建）
-  const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
-
-  if (maxVerticalScroll > 0 && !scrollbarVars.verticalScrollbarGroup) {
-    scrollbarVars.verticalScrollbarGroup = new Konva.Group()
-    scrollbarVars.scrollbarLayer.add(scrollbarVars.verticalScrollbarGroup)
-  }
-
-  if (maxHorizontalScroll > 0 && !scrollbarVars.horizontalScrollbarGroup) {
-    scrollbarVars.horizontalScrollbarGroup = new Konva.Group()
-    scrollbarVars.scrollbarLayer.add(scrollbarVars.horizontalScrollbarGroup)
-  }
-
   // 汇总层
   if (!summaryVars.summaryLayer) {
     summaryVars.summaryLayer = new Konva.Layer()
@@ -232,7 +194,7 @@ export const destroyStage = () => {
   resetHeaderState()
   resetBodyState()
   resetSummaryRuntimeState()
-  resetScrollbarState()
+  resetScrollState()
 }
 
 /**
@@ -244,6 +206,8 @@ export const refreshTable = (resetScroll: boolean) => {
     if (resetScroll) {
       scrollbarVars.stageScrollX = 0
       scrollbarVars.stageScrollY = 0
+      // 同步重置原生滚动代理层的 DOM 位置，防止 canvas 与 scrollbar 脱同步
+      getRuntimeState().scrollProxyResetHandler?.()
     }
     clearGroups()
     rebuildGroups()
@@ -285,17 +249,10 @@ export const refreshSummarySection = () => {
 }
 
 /**
- * @desc 刷新滚动条区域。
+ * @desc 刷新滚动条区域。(保留空方法以防别处调用报错，因为代理模式下直接利用原生事件触发刷新)
  */
 export const refreshScrollbarSection = () => {
-  if (!stageVars.stage) return
-  measureTablePerf('refreshScrollbar', () => {
-    clearScrollbarGroups()
-    rebuildVerticalScrollbarGroup()
-    rebuildHorizontalScrollbarGroup()
-    scheduleLayersBatchDraw(['scrollbar'])
-    syncTablePerfSnapshot()
-  })
+  // Native proxy handles scrollbars
 }
 
 /**
@@ -309,12 +266,10 @@ const rebuildHeaderGroup = () => {
     if (!headerLayer) return
 
     const { width: stageWidth } = getStageSize()
-    const { maxVerticalScroll } = calculateScrollRange()
-    const verticalScrollbarWidth = maxVerticalScroll > 0 ? getTableParams().scrollbarSize : 0
     const headerClipGroup = createHeaderClipGroup(0, 0, {
       x: 0,
       y: 0,
-      width: stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
+      width: stageWidth - columnsInfo.rightPartWidth,
       height: getTableParams().headerRowHeight
     })
 
@@ -322,10 +277,7 @@ const rebuildHeaderGroup = () => {
 
     headerVars.leftHeaderGroup = createHeaderLeftGroup(0, 0)
     headerVars.centerHeaderGroup = createHeaderCenterGroup(-scrollbarVars.stageScrollX + columnsInfo.leftPartWidth, 0)
-    headerVars.rightHeaderGroup = createHeaderRightGroup(
-      stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-      0
-    )
+    headerVars.rightHeaderGroup = createHeaderRightGroup(stageWidth - columnsInfo.rightPartWidth, 0)
 
     headerClipGroup.add(headerVars.centerHeaderGroup)
 
@@ -349,13 +301,8 @@ const rebuildBodyGroup = () => {
     if (!bodyLayer || !fixedBodyLayer) return
 
     const { width: stageWidth, height: stageHeight } = getStageSize()
-    const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
-    const verticalScrollbarWidth = maxVerticalScroll > 0 ? getTableParams().scrollbarSize : 0
-    const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? getTableParams().scrollbarSize : 0
-    const bodyClipGroupHeight =
-      stageHeight - getTableParams().headerRowHeight - getSummaryRowHeight() - horizontalScrollbarHeight
-    const bodyClipGroupWidth =
-      stageWidth - columnsInfo.leftPartWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth
+    const bodyClipGroupHeight = stageHeight - getTableParams().headerRowHeight - getSummaryRowHeight()
+    const bodyClipGroupWidth = stageWidth - columnsInfo.leftPartWidth - columnsInfo.rightPartWidth
     const centerBodyClipGroup = createCenterBodyClipGroup(columnsInfo.leftPartWidth, getTableParams().headerRowHeight, {
       x: 0,
       y: 0,
@@ -378,7 +325,7 @@ const rebuildBodyGroup = () => {
     })
 
     const rightBodyClipGroup = createRightBodyClipGroup(
-      stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
+      stageWidth - columnsInfo.rightPartWidth,
       getTableParams().headerRowHeight,
       {
         x: 0,
@@ -418,14 +365,11 @@ const rebuildSummaryGroup = () => {
 
     if (getTableParams().enableSummary) {
       const { width: stageWidth, height: stageHeight } = getStageSize()
-      const { maxHorizontalScroll, maxVerticalScroll } = calculateScrollRange()
-      const verticalScrollbarWidth = maxVerticalScroll > 0 ? getTableParams().scrollbarSize : 0
-      const horizontalScrollbarHeight = maxHorizontalScroll > 0 ? getTableParams().scrollbarSize : 0
-      const y = stageHeight - getSummaryRowHeight() - horizontalScrollbarHeight
+      const y = stageHeight - getSummaryRowHeight()
       const centerSummaryClipGroup = createSummaryClipGroup(0, y, {
         x: 0,
         y: 0,
-        width: stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
+        width: stageWidth - columnsInfo.rightPartWidth,
         height: getSummaryRowHeight()
       })
 
@@ -436,10 +380,7 @@ const rebuildSummaryGroup = () => {
         -scrollbarVars.stageScrollX + columnsInfo.leftPartWidth,
         0
       )
-      summaryVars.rightSummaryGroup = createSummaryRightGroup(
-        stageWidth - columnsInfo.rightPartWidth - verticalScrollbarWidth,
-        y
-      )
+      summaryVars.rightSummaryGroup = createSummaryRightGroup(stageWidth - columnsInfo.rightPartWidth, y)
 
       centerSummaryClipGroup.add(summaryVars.centerSummaryGroup)
       summaryLayer.add(summaryVars.leftSummaryGroup, summaryVars.rightSummaryGroup)
@@ -456,34 +397,6 @@ const rebuildSummaryGroup = () => {
 }
 
 /**
- * 重建垂直滚动条分组
- * @returns {void}
- */
-const rebuildVerticalScrollbarGroup = () => {
-  if (!scrollbarVars.scrollbarLayer) return
-  const { maxVerticalScroll } = calculateScrollRange()
-  if (maxVerticalScroll > 0) {
-    scrollbarVars.verticalScrollbarGroup = createVerticalScrollbarGroup()
-    scrollbarVars.scrollbarLayer.add(scrollbarVars.verticalScrollbarGroup)
-    drawVerticalScrollbarPart()
-  }
-}
-
-/**
- * 重建水平滚动条分组
- * @returns {void}
- */
-const rebuildHorizontalScrollbarGroup = () => {
-  if (!scrollbarVars.scrollbarLayer) return
-  const { maxHorizontalScroll } = calculateScrollRange()
-  if (maxHorizontalScroll > 0) {
-    scrollbarVars.horizontalScrollbarGroup = createHorizontalScrollbarGroup()
-    scrollbarVars.scrollbarLayer.add(scrollbarVars.horizontalScrollbarGroup)
-    drawHorizontalScrollbarPart()
-  }
-}
-
-/**
  * 重建所有分组
  * @returns {void}
  */
@@ -494,10 +407,8 @@ export const rebuildGroups = () => {
   rebuildHeaderGroup()
   rebuildBodyGroup()
   rebuildSummaryGroup()
-  rebuildVerticalScrollbarGroup()
-  rebuildHorizontalScrollbarGroup()
   // 批量绘制所有层 - 按正确的渲染顺序
-  scheduleLayersBatchDraw(['body', 'fixed', 'header', 'summary', 'scrollbar'])
+  scheduleLayersBatchDraw(['body', 'fixed', 'header', 'summary'])
   syncTablePerfSnapshot()
 }
 
@@ -508,54 +419,6 @@ export const rebuildGroups = () => {
 const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
   if (!stageVars.stage) return
   stageVars.stage.setPointersPositions(mouseEvent)
-
-  // 手动拖拽导致的垂直滚动
-  if (scrollbarVars.isDraggingVerticalThumb) {
-    const deltaY = mouseEvent.clientY - scrollbarVars.dragStartY
-    const { maxVerticalScroll, maxHorizontalScroll } = calculateScrollRange()
-    const { height: stageHeight } = getStageSize()
-    const trackHeight =
-      stageHeight -
-      getTableParams().headerRowHeight -
-      (getTableParams().enableSummary ? getTableParams().summaryRowHeight : 0) -
-      (maxHorizontalScroll > 0 ? getTableParams().scrollbarSize : 0)
-    const thumbHeight = Math.max(
-      20,
-      (trackHeight * trackHeight) / (getProcessedRows().value.length * getTableParams().bodyRowHeight)
-    )
-    const scrollRatio = deltaY / (trackHeight - thumbHeight)
-    const newScrollY = scrollbarVars.dragStartScrollY + scrollRatio * maxVerticalScroll
-
-    // 使用统一的垂直滚动方法 - 拖拽模式
-    updateVerticalScroll(newScrollY, {
-      isAbsolute: true,
-      skipThresholdCheck: true // 拖拽时保持原有的阈值检查逻辑
-    })
-    filterDropdownRef.value?.closeFilterDropdown()
-    summaryDropdownRef.value?.closeSummaryDropdown()
-    cellEditorRef.value?.closeEditor()
-    return
-  }
-
-  // 手动拖拽导致的水平滚动
-  if (scrollbarVars.isDraggingHorizontalThumb) {
-    const deltaX = mouseEvent.clientX - scrollbarVars.dragStartX
-    const { maxHorizontalScroll } = calculateScrollRange()
-    const { width: stageWidth } = getStageSize()
-    const { maxVerticalScroll } = calculateScrollRange()
-    const verticalScrollbarSpace = maxVerticalScroll > 0 ? getTableParams().scrollbarSize : 0
-    const visibleWidth = stageWidth - columnsInfo.leftPartWidth - columnsInfo.rightPartWidth - verticalScrollbarSpace
-    const thumbWidth = Math.max(20, (visibleWidth * visibleWidth) / columnsInfo.centerPartWidth)
-    const scrollRatio = deltaX / (visibleWidth - thumbWidth)
-    const newScrollX = scrollbarVars.dragStartScrollX + scrollRatio * maxHorizontalScroll
-
-    // 使用统一的水平滚动方法，传入绝对位置
-    updateHorizontalScroll(newScrollX, true)
-    filterDropdownRef.value?.closeFilterDropdown()
-    summaryDropdownRef.value?.closeSummaryDropdown()
-    cellEditorRef.value?.closeEditor()
-    return
-  }
 
   // 列拖拽移动处理
   if (headerVars.isDraggingColumn) {
@@ -588,26 +451,6 @@ const handleGlobalMouseMove = (mouseEvent: MouseEvent) => {
 const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
   if (stageVars.stage) stageVars.stage.setPointersPositions(mouseEvent)
 
-  // 垂直滚动条拖拽结束
-  if (scrollbarVars.isDraggingVerticalThumb) {
-    scrollbarVars.isDraggingVerticalThumb = false
-    setPointerStyle(stageVars.stage, false, 'default')
-    if (scrollbarVars.verticalScrollbarThumb) {
-      scrollbarVars.verticalScrollbarThumb.fill(getTableParams().scrollbarThumbBackground)
-    }
-    scheduleLayersBatchDraw(['scrollbar'])
-  }
-
-  // 横向滚动条拖拽结束
-  if (scrollbarVars.isDraggingHorizontalThumb) {
-    scrollbarVars.isDraggingHorizontalThumb = false
-    setPointerStyle(stageVars.stage, false, 'default')
-    if (scrollbarVars.horizontalScrollbarThumb) {
-      scrollbarVars.horizontalScrollbarThumb.fill(getTableParams().scrollbarThumbBackground)
-    }
-    scheduleLayersBatchDraw(['scrollbar'])
-  }
-
   // 列拖拽结束处理
   if (headerVars.isDraggingColumn) {
     handleColumnReorder(mouseEvent.offsetX)
@@ -631,29 +474,49 @@ const handleGlobalMouseUp = (mouseEvent: MouseEvent) => {
 }
 
 /**
- * 全局窗口尺寸变化处理
+ * 全局窗口尺寸变化处理（RAF 防抖：连续 resize 事件中只在最后一帧执行）
  * @returns {void}
  */
+let _resizeRAFId: number | null = null
+
 const handleGlobalResize = () => {
-  measureTablePerf('windowResize', () => {
-    initStage()
-    clearGroups()
-    rebuildGroups()
+  if (_resizeRAFId !== null) {
+    cancelAnimationFrame(_resizeRAFId)
+  }
+  _resizeRAFId = requestAnimationFrame(() => {
+    _resizeRAFId = null
+    measureTablePerf('windowResize', () => {
+      initStage()
+      clearGroups()
+      rebuildGroups()
+    })
   })
 }
 
 /**
  * 初始化全局事件监听器
+ * @param {HTMLDivElement} container - 表格容器 DOM 元素，用于 ResizeObserver 监听
  * @returns {void}
  */
-export const initStageListeners = () => {
+export const initStageListeners = (container: HTMLDivElement) => {
   const context = getCurrentTableContext()
   const listeners = getRuntimeState().listeners
-  listeners.resize = () => runWithTableContext(context, handleGlobalResize)
+
+  // ResizeObserver：监听容器自身尺寸变化（替代 window.resize，可捕获侧栏折叠、flex 布局变更等场景）
+  let isFirstResize = true
+  listeners.resizeObserver = new ResizeObserver(() => {
+    // ResizeObserver 在 observe() 后会立即触发一次初始回调，跳过它
+    if (isFirstResize) {
+      isFirstResize = false
+      return
+    }
+    runWithTableContext(context, handleGlobalResize)
+  })
+  listeners.resizeObserver.observe(container)
+
   listeners.mouseMove = (event) => runWithTableContext(context, () => handleGlobalMouseMove(event))
   listeners.mouseUp = (event) => runWithTableContext(context, () => handleGlobalMouseUp(event))
 
-  window.addEventListener('resize', listeners.resize)
   // 需要保留鼠标移动监听以支持列宽拖拽功能
   window.addEventListener('mousemove', listeners.mouseMove)
   window.addEventListener('mouseup', listeners.mouseUp)
@@ -664,12 +527,16 @@ export const initStageListeners = () => {
  * @returns {void}
  */
 export const cleanupStageListeners = () => {
-  const listeners = getRuntimeState().listeners
-  if (listeners.resize) {
-    window.removeEventListener('resize', listeners.resize)
-    listeners.resize = null
+  // 取消防抖 RAF，防止组件销毁后仍执行 rebuildGroups
+  if (_resizeRAFId !== null) {
+    cancelAnimationFrame(_resizeRAFId)
+    _resizeRAFId = null
   }
-  // 清理鼠标移动监听
+  const listeners = getRuntimeState().listeners
+  if (listeners.resizeObserver) {
+    listeners.resizeObserver.disconnect()
+    listeners.resizeObserver = null
+  }
   if (listeners.mouseMove) {
     window.removeEventListener('mousemove', listeners.mouseMove)
     listeners.mouseMove = null
@@ -703,10 +570,6 @@ export const scheduleLayersBatchDraw = (
       // 汇总相关
       case 'summary':
         summaryVars.summaryLayer?.batchDraw()
-        break
-      // 滚动条相关
-      case 'scrollbar':
-        scrollbarVars.scrollbarLayer?.batchDraw()
         break
     }
   })

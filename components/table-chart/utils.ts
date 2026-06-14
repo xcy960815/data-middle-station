@@ -154,36 +154,36 @@ export const recoverKonvaNode = (bodyGroup: Konva.Group, pools: KonvaNodePools) 
   rectsToRecover.forEach((rect) => returnToPool(pools.cellRects, rect))
 }
 
-/**
- * 将数值约束到指定区间 [min, max]
- * @param n 数值
- * @param min 最小值
- * @param max 最大值
- * @returns 限制后的数值
- */
-export const constrainToRange = (n: number, min: number, max: number) => {
-  return Math.max(min, Math.min(max, n))
-}
-
 const textMeasureCanvas = typeof document !== 'undefined' ? document.createElement('canvas') : null
 const textMeasureContext = textMeasureCanvas?.getContext('2d') || null
+const TEXT_WIDTH_CACHE_MAX = 4096
 const textWidthCache = new Map<string, number>()
 
 const measureTextWidth = (text: string, fontSize: number, fontFamily: string): number => {
   const cacheKey = `${fontSize}:${fontFamily}:${text}`
   const cachedWidth = textWidthCache.get(cacheKey)
   if (cachedWidth !== undefined) {
+    // LRU：命中后移至末尾（最近使用）
+    textWidthCache.delete(cacheKey)
+    textWidthCache.set(cacheKey, cachedWidth)
     return cachedWidth
   }
 
+  let measuredWidth: number
   if (!textMeasureContext) {
-    const fallbackWidth = text.length * fontSize
-    textWidthCache.set(cacheKey, fallbackWidth)
-    return fallbackWidth
+    measuredWidth = text.length * fontSize
+  } else {
+    textMeasureContext.font = `${fontSize}px ${fontFamily}`
+    measuredWidth = textMeasureContext.measureText(text).width
   }
 
-  textMeasureContext.font = `${fontSize}px ${fontFamily}`
-  const measuredWidth = textMeasureContext.measureText(text).width
+  // LRU：超容量时淘汰最旧条目（Map 头部）
+  if (textWidthCache.size >= TEXT_WIDTH_CACHE_MAX) {
+    const oldestKey = textWidthCache.keys().next().value
+    if (oldestKey !== undefined) {
+      textWidthCache.delete(oldestKey)
+    }
+  }
   textWidthCache.set(cacheKey, measuredWidth)
   return measuredWidth
 }

@@ -53,20 +53,9 @@ export interface HeaderState {
   dragDropIndicator: Konva.Rect | null
 }
 
-export interface ScrollbarState {
-  scrollbarLayer: Konva.Layer | null
-  verticalScrollbarGroup: Konva.Group | null
-  horizontalScrollbarGroup: Konva.Group | null
-  verticalScrollbarThumb: Konva.Rect | null
-  horizontalScrollbarThumb: Konva.Rect | null
-  isDraggingVerticalThumb: boolean
-  isDraggingHorizontalThumb: boolean
-  dragStartY: number
-  dragStartX: number
+export interface ScrollState {
   stageScrollY: number
   stageScrollX: number
-  dragStartScrollY: number
-  dragStartScrollX: number
 }
 
 export interface SummaryState {
@@ -100,7 +89,7 @@ export interface CanvasTableRuntimeState {
   body: BodyState
   columns: ColumnsInfo
   header: HeaderState
-  scrollbar: ScrollbarState
+  scroll: ScrollState
   summary: SummaryState
   data: DataState
   summaryRules: Record<string, string>
@@ -108,11 +97,11 @@ export interface CanvasTableRuntimeState {
   filterDropdownRef: Ref<InstanceType<typeof FilterDropdown> | null>
   summaryDropdownRef: Ref<InstanceType<typeof SummaryDropdown> | null>
   listeners: {
-    resize: (() => void) | null
+    resizeObserver: ResizeObserver | null
     mouseMove: ((event: MouseEvent) => void) | null
     mouseUp: ((event: MouseEvent) => void) | null
-    wheel: ((event: WheelEvent) => void) | null
   }
+  scrollProxyResetHandler: (() => void) | null
 }
 
 const createNodePools = (): KonvaNodePools => ({
@@ -164,18 +153,7 @@ const createHeaderState = (): HeaderState => ({
   dragDropIndicator: null
 })
 
-const createScrollbarState = (): ScrollbarState => ({
-  scrollbarLayer: null,
-  verticalScrollbarGroup: null,
-  horizontalScrollbarGroup: null,
-  verticalScrollbarThumb: null,
-  horizontalScrollbarThumb: null,
-  isDraggingVerticalThumb: false,
-  isDraggingHorizontalThumb: false,
-  dragStartY: 0,
-  dragStartX: 0,
-  dragStartScrollY: 0,
-  dragStartScrollX: 0,
+const createScrollState = (): ScrollState => ({
   stageScrollY: 0,
   stageScrollX: 0
 })
@@ -203,7 +181,7 @@ export const createCanvasTableRuntimeState = (): CanvasTableRuntimeState => ({
   body: createBodyState(),
   columns: createColumnsInfo(),
   header: createHeaderState(),
-  scrollbar: createScrollbarState(),
+  scroll: createScrollState(),
   summary: createSummaryState(),
   data: createDataState(),
   summaryRules: {},
@@ -211,9 +189,9 @@ export const createCanvasTableRuntimeState = (): CanvasTableRuntimeState => ({
   filterDropdownRef: ref(null),
   summaryDropdownRef: ref(null),
   listeners: {
-    resize: null,
+    resizeObserver: null,
     mouseMove: null,
-    mouseUp: null,
-    wheel: null
-  }
+    mouseUp: null
+  },
+  scrollProxyResetHandler: null
 })

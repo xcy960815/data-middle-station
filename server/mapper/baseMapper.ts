@@ -30,6 +30,9 @@ const logger = new Logger({
   folderName: 'database'
 })
 
+/** 只读 SQL 语句匹配（仅这类查询允许自动重试） */
+const READONLY_SQL_PATTERN = /^\s*(SELECT|SHOW|DESCRIBE|EXPLAIN)\b/i
+
 const RETRYABLE_MYSQL_ERROR_CODES = new Set([
   'ECONNRESET',
   'PROTOCOL_CONNECTION_LOST',

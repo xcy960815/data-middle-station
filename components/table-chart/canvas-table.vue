@@ -1,17 +1,48 @@
 <template>
-  <div ref="tableContainerRef" :title="title" class="table-container" :style="tableContainerStyle"></div>
-  <!-- 过滤器下拉组件 -->
-  <filter-dropdown ref="filterDropdownRef" />
-  <!-- 汇总下拉组件 -->
-  <summary-dropdown ref="summaryDropdownRef" />
-  <!-- 单元格编辑器组件 -->
-  <cell-editor ref="cellEditorRef" />
+  <div class="canvas-table-wrapper" :style="tableContainerStyle">
+    <!-- 原生滚动代理层 -->
+    <div ref="scrollProxyRef" class="scroll-proxy" @scroll="handleNativeScroll" :style="scrollProxyStyle">
+      <!-- 虚拟尺寸撑开层 -->
+      <div
+        class="virtual-spacer"
+        :style="{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: totalVirtualWidth + 'px',
+          height: totalVirtualHeight + 'px',
+          pointerEvents: 'none'
+        }"
+      ></div>
+
+      <!-- Sticky Canvas 容器 -->
+      <div
+        class="canvas-sticky-wrapper"
+        style="position: sticky; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none"
+      >
+        <div
+          ref="tableContainerRef"
+          :title="title"
+          class="table-container"
+          style="width: 100%; height: 100%; pointer-events: auto"
+        ></div>
+        <!-- 过滤器下拉组件 -->
+        <filter-dropdown ref="filterDropdownRef" style="pointer-events: auto" />
+        <!-- 汇总下拉组件 -->
+        <summary-dropdown ref="summaryDropdownRef" style="pointer-events: auto" />
+        <!-- 单元格编辑器组件 -->
+        <cell-editor ref="cellEditorRef" style="pointer-events: auto" />
+      </div>
+    </div>
+  </div>
 </template>
+
 <script lang="ts" setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import CellEditor from './components/cell-editor.vue'
 import FilterDropdown from './components/filter-dropdown.vue'
 import SummaryDropdown from './components/summary-dropdown.vue'
+import { columnsInfo } from './body-handler'
 import { handleTableData, resetTableDataState } from './data-handler'
 import {
   applyTableParams,
@@ -21,21 +52,18 @@ import {
   type ColumnOrderChangePayload,
   type ColumnWidthChangePayload,
   createCanvasTableContext,
+  getRuntimeState,
   resetCurrentTableContext,
   resetTableParams,
   getTableParams,
+  getProcessedRows,
   runWithTableContext,
   setCurrentTableContext,
   setTableRuntimeHandlers,
   tableProps
 } from './parameter'
 import { measureTablePerf, runTableScrollStressTest, type TableScrollStressOptions } from './perf'
-import {
-  cleanupWheelListener,
-  initWheelListener,
-  updateHorizontalScroll,
-  updateVerticalScroll
-} from './scrollbar-handler'
+import { updateHorizontalScroll, updateVerticalScroll } from './scrollbar-handler'
 import {
   cleanupStageListeners,
   destroyStage,
@@ -49,6 +77,7 @@ import {
   stageVars
 } from './stage-handler'
 import { resetSummaryState } from './summary-handler'
+
 const props = defineProps(tableProps)
 const emit = defineEmits<{
   renderChartStart: []
@@ -57,17 +86,54 @@ const emit = defineEmits<{
   columnOrderChange: [payload: ColumnOrderChangePayload]
   cellValueChange: [payload: CellValueChangePayload]
 }>()
+
 const tableContainerRef = ref<HTMLDivElement | null>(null)
+const scrollProxyRef = ref<HTMLDivElement | null>(null)
 const filterDropdownRef = ref<InstanceType<typeof FilterDropdown> | null>(null)
 const summaryDropdownRef = ref<InstanceType<typeof SummaryDropdown> | null>(null)
 const cellEditorRef = ref<InstanceType<typeof CellEditor> | null>(null)
 const tableContext = shallowRef<CanvasTableContext | null>(null)
+
+const totalVirtualWidth = ref(0)
+const totalVirtualHeight = ref(0)
 
 const runInTableContext = (handler: () => void) => {
   if (!tableContext.value) return false
 
   runWithTableContext(tableContext.value, handler)
   return true
+}
+
+const syncVirtualSize = () => {
+  runInTableContext(() => {
+    totalVirtualWidth.value = columnsInfo.totalWidth
+    const processedRows = getProcessedRows().value
+    const params = getTableParams()
+    const summaryRowHeight = params.enableSummary ? params.summaryRowHeight : 0
+    totalVirtualHeight.value = params.headerRowHeight + processedRows.length * params.bodyRowHeight + summaryRowHeight
+  })
+}
+
+// ---- RAF 合帧节流：将高频 scroll 事件合并到下一帧统一处理 ----
+let _latestScrollTop = 0
+let _latestScrollLeft = 0
+let _scrollRAFId: number | null = null
+
+const flushNativeScroll = () => {
+  _scrollRAFId = null
+  runInTableContext(() => {
+    updateVerticalScroll(_latestScrollTop, { skipThresholdCheck: true })
+    updateHorizontalScroll(_latestScrollLeft)
+  })
+}
+
+const handleNativeScroll = (e: Event) => {
+  const target = e.target as HTMLDivElement
+  _latestScrollTop = target.scrollTop
+  _latestScrollLeft = target.scrollLeft
+  if (_scrollRAFId === null) {
+    _scrollRAFId = requestAnimationFrame(flushNativeScroll)
+  }
 }
 
 const updateTableParams = (params: Partial<CanvasTableParams>) => {
@@ -129,6 +195,7 @@ const updateAndRefresh = (params: Partial<CanvasTableParams>, refreshHandler: ()
     applyTableParams(params)
     if (!stageVars.stage) return
     refreshHandler()
+    syncVirtualSize()
   })
 }
 
@@ -145,6 +212,23 @@ const tableContainerStyle = computed(() => {
   }
 })
 
+const scrollProxyStyle = computed(() => {
+  return {
+    '--sb-size': (props.scrollbarSize ?? 10) + 'px',
+    '--sb-track-bg': props.scrollbarBackground ?? '#f5f5f5',
+    '--sb-thumb-bg': props.scrollbarThumbBackground ?? '#c1c1c1',
+    '--sb-thumb-hover': props.scrollbarThumbHoverBackground ?? '#a8a8a8',
+    width: '100%',
+    height: '100%',
+    overflow: 'auto',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    right: '0',
+    bottom: '0'
+  } as Record<string, string>
+})
+
 watch(
   () => [props.data],
   async () => {
@@ -154,6 +238,7 @@ watch(
 
       handleTableData()
       refreshTable(true)
+      syncVirtualSize()
     })
   },
   {
@@ -168,6 +253,7 @@ watch(
       applyTableParams({ xAxisFields: props.xAxisFields, yAxisFields: props.yAxisFields })
       if (!stageVars.stage) return
       refreshTable(false)
+      syncVirtualSize()
     })
   },
   {
@@ -187,6 +273,7 @@ watch(
       initStage(tableContainerRef.value)
       handleTableData()
       refreshTable(true)
+      syncVirtualSize()
     })
   }
 )
@@ -376,6 +463,13 @@ onMounted(async () => {
   tableContext.value.runtimeState.filterDropdownRef.value = filterDropdownRef.value
   tableContext.value.runtimeState.summaryDropdownRef.value = summaryDropdownRef.value
   tableContext.value.runtimeState.cellEditorRef.value = cellEditorRef.value
+  // 注册 scroll proxy 重置回调，供 refreshTable(true) 调用时同步 DOM 位置
+  tableContext.value.runtimeState.scrollProxyResetHandler = () => {
+    if (scrollProxyRef.value) {
+      scrollProxyRef.value.scrollTop = 0
+      scrollProxyRef.value.scrollLeft = 0
+    }
+  }
   filterDropdownRef.value?.setTableContext(tableContext.value)
   summaryDropdownRef.value?.setTableContext(tableContext.value)
   cellEditorRef.value?.setTableContext(tableContext.value)
@@ -393,21 +487,26 @@ onMounted(async () => {
       initStage(tableContainerRef.value)
       handleTableData()
       refreshTable(true)
+      syncVirtualSize()
     })
     emit('renderChartEnd')
-    initWheelListener(tableContainerRef.value)
-    initStageListeners()
+    initStageListeners(tableContainerRef.value!)
   })
 })
 
 onUnmounted(() => {
+  // 取消可能残留的 RAF 回调，防止访问已销毁的 Stage
+  if (_scrollRAFId !== null) {
+    cancelAnimationFrame(_scrollRAFId)
+    _scrollRAFId = null
+  }
   runInTableContext(() => {
-    cleanupWheelListener(tableContainerRef.value)
     cleanupStageListeners()
     destroyStage()
     resetTableDataState()
     resetTableParams()
     resetSummaryState()
+    getRuntimeState().scrollProxyResetHandler = null
   })
   resetCurrentTableContext(tableContext.value)
   tableContext.value = null
@@ -419,8 +518,9 @@ const runScrollStressTest = async (options?: TableScrollStressOptions) => {
 
   return runTableScrollStressTest(
     {
-      verticalScroll: (delta) => runWithTableContext(context, () => updateVerticalScroll(delta)),
-      horizontalScroll: (delta) => runWithTableContext(context, () => updateHorizontalScroll(delta))
+      verticalScroll: (delta) =>
+        runWithTableContext(context, () => updateVerticalScroll(delta, { skipThresholdCheck: true })),
+      horizontalScroll: (delta) => runWithTableContext(context, () => updateHorizontalScroll(delta)) // Note: might need absolute conversion if this is used
     },
     {
       verticalDelta: runWithTableContext(context, () => getTableParams().bodyRowHeight),
@@ -433,3 +533,26 @@ defineExpose({
   runScrollStressTest
 })
 </script>
+
+<style scoped>
+.canvas-table-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 原生滚动条样式映射 */
+.scroll-proxy::-webkit-scrollbar {
+  width: var(--sb-size);
+  height: var(--sb-size);
+}
+.scroll-proxy::-webkit-scrollbar-track {
+  background: var(--sb-track-bg);
+}
+.scroll-proxy::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-bg);
+  border-radius: 4px;
+}
+.scroll-proxy::-webkit-scrollbar-thumb:hover {
+  background: var(--sb-thumb-hover);
+}
+</style>

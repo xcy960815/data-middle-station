@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { shallowReactive } from 'vue'
 
 export const TABLE_PERF_CORE_METRICS = [
   'firstRender',
@@ -124,7 +124,7 @@ const createSnapshot = (): TablePerfSnapshot => ({
   lastUpdatedAt: 0
 })
 
-export const tablePerfState = reactive({
+export const tablePerfState = shallowReactive({
   metrics: createMetrics(),
   snapshot: createSnapshot()
 })
